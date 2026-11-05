@@ -382,6 +382,160 @@ class DispatcherTests(unittest.TestCase):
             "0.2.0", ("0.1.0",),
         )
 
+    # r8-review D16 regression set: the lock is real Mint-shaped TOML —
+    # table scope (`[[package.requires]]` edges are not pins), quoted
+    # keys, and escaped basic strings are all legal forms that must
+    # resolve to the same pin (and never bypass it).
+
+    _PRESET_WITH_REQUIRES = (
+        '[[package]]\nname = "dataagent/preset-s0"\nversion = "0.1.0"\n'
+        'kind = "preset"\nsource = "path+file:///fixture"\n'
+        'integrity = "h1:fixture"\ncksum = ""\n'
+        'deps = ["dataagent/data-layer"]\n\n'
+        '[[package.requires]]\nname = "dataagent/data-layer"\nreq = "^0.1.0"\n\n'
+    )
+
+    _REAL_ENTRY = (
+        '[[package]]\nname = "dataagent/data-layer"\nversion = "0.1.0"\n'
+        'kind = "bundle"\nsource = "path+file:///fixture"\n'
+        'integrity = "h1:fixture"\ncksum = ""\n'
+    )
+
+    def _prep_other_layers(self):
+        for pkg in ("application-layer", "governance-layer"):
+            _make_layer(self.project, pkg, "0.1.0")
+        (self.out / "policy").write_text("{}\n", encoding="utf-8")
+
+    def test_nested_requires_before_real_pin_uses_pin(self):
+        """r8-review D16: a `[[package.requires]]` dependency edge ahead
+        of the real package entry is not a pin (it has `req`, not
+        `version`) — the pin comes from the later real entry (r8 exited
+        3 here, r7 executed the highest installed version)."""
+
+        self._prep_other_layers()
+        self._pin_matrix(
+            "v = 1\n\n" + self._PRESET_WITH_REQUIRES + self._REAL_ENTRY,
+            "0.1.0", ("0.1.0", "0.2.0"),
+        )
+
+    def test_nested_requires_only_falls_back(self):
+        """r8-review D16: a lock whose only mention of this layer is a
+        requires edge has no pin for the layer — it resolves exactly
+        like the no-lock case (r8 exited 3, blocking a legal lock)."""
+
+        self._prep_other_layers()
+        self._pin_matrix(
+            "v = 1\n\n" + self._PRESET_WITH_REQUIRES, "0.2.0", ("0.1.0", "0.2.0"),
+        )
+
+    def test_nested_requires_after_real_pin_uses_pin(self):
+        """r8-review D16: requires edges following the real package entry
+        must not shadow or corrupt its pin."""
+
+        self._prep_other_layers()
+        self._pin_matrix(
+            "v = 1\n\n" + self._REAL_ENTRY + self._PRESET_WITH_REQUIRES,
+            "0.1.0", ("0.1.0", "0.2.0"),
+        )
+
+    def test_real_mint_lock_shape_uses_pin(self):
+        """r8-review D16: a mint.lock with the shape real Mint generates
+        (`v`/`resolver`/`generated_at` headers, `[core]` tables,
+        multi-line `deps` arrays, `[[package.requires]]` edges for
+        registry packages, `[package.artifacts.any]` sub-tables) pins
+        the layer from its `[[package]]` entry."""
+
+        lock = (
+            "# 由 mint 自动生成，请勿手改（03 §3.5）。\n"
+            'v = 1\nresolver = "backtracking-v1"\n'
+            'generated_at = "2026-11-06T00:00:00Z"\n\n'
+            "[core]\nversion = \"0.1.43\"\nflavor = \"std\"\n\n"
+            "[[package]]\nname = \"dataagent/preset-s0\"\nversion = \"0.1.0\"\n"
+            "kind = \"preset\"\n"
+            'source = "path+file:///fixture"\nintegrity = "h1:fixture"\ncksum = ""\n'
+            "deps = [\n    \"dataagent/data-layer\",\n]\ntrust = \"T0\"\n\n"
+            "[[package]]\nname = \"dataagent/data-layer\"\nversion = \"0.1.0\"\n"
+            "kind = \"bundle\"\n"
+            'source = "path+file:///fixture"\nintegrity = "h1:fixture"\ncksum = ""\n'
+            "trust = \"T0\"\n\n"
+            "[[package]]\nname = \"mint/preset-default\"\nversion = \"0.1.1\"\n"
+            "kind = \"preset\"\n"
+            'source = "registry+https://example.invalid/index/"\n'
+            'integrity = "h1:fixture"\ncksum = "abc"\n'
+            "deps = [\"mint/tui\"]\ntrust = \"T1\"\n\n"
+            "[[package.requires]]\nname = \"mint/tui\"\nreq = \"^0.1.0\"\n\n"
+            "[package.artifacts.any]\nfile = \"mint-preset.mint.tar.zst\"\n"
+            'sha256 = "abc"\nsize = 5666\nintegrity = "h1:fixture"\n\n'
+        )
+        self._prep_other_layers()
+        self._pin_matrix(lock, "0.1.0", ("0.1.0", "0.2.0"))
+
+    def test_quoted_keys_pin_uses_pin(self):
+        """r8-review D16: quoted keys (`"name" = …` / `"version" = …`)
+        are legal TOML and the same keys — r8 read them as no pin and
+        silently executed the highest installed version."""
+
+        self._prep_other_layers()
+        self._pin_matrix(
+            'v = 1\n\n[[package]]\n"name" = "dataagent/data-layer"\n'
+            '"version" = "0.1.0"\nkind = "bundle"\n',
+            "0.1.0", ("0.1.0", "0.2.0"),
+        )
+
+    def test_escaped_name_pin_uses_pin(self):
+        """r8-review D16: `name = "dataagent\\u002fdata-layer"` is the
+        same package name as `dataagent/data-layer` — r8 read it as no
+        pin and bypassed the lock."""
+
+        self._prep_other_layers()
+        self._pin_matrix(
+            'v = 1\n\n[[package]]\nname = "dataagent\\u002fdata-layer"\n'
+            'version = "0.1.0"\nkind = "bundle"\n',
+            "0.1.0", ("0.1.0", "0.2.0"),
+        )
+
+    def test_escaped_version_pin_uses_pin(self):
+        """r8-review D16: `version = "0\\u002e1.0"` is the same version
+        as `0.1.0` — r8 treated it as unreadable and rejected an
+        installed, legally pinned version (exit 3)."""
+
+        self._prep_other_layers()
+        self._pin_matrix(
+            'v = 1\n\n[[package]]\nname = "dataagent/data-layer"\n'
+            'version = "0\\u002e1.0"\nkind = "bundle"\n',
+            "0.1.0", ("0.1.0", "0.2.0"),
+        )
+
+    def test_escaped_pin_missing_exits_3(self):
+        """r8-review D16 + r5-review D13: an escaped-string pin that is
+        not installed must fail closed — escaping is never a bypass."""
+
+        self._prep_other_layers()
+        self._pin_matrix(
+            'v = 1\n\n[[package]]\nname = "dataagent\\u002fdata-layer"\n'
+            'version = "0.2.0"\nkind = "bundle"\n',
+            "0.2.0", ("0.1.0",),
+        )
+
+    def test_trailing_garbage_version_fails_closed(self):
+        """r8-review D16 (negative): `version = "0.1.0" INVALID` is not
+        valid TOML (tomllib rejects the line) — the value is unreadable
+        and dispatch must fail closed instead of executing."""
+
+        _make_layer(self.project, "data-layer", "0.1.0")
+        (self.project / "mint.lock").write_text(
+            'v = 1\n\n[[package]]\nname = "dataagent/data-layer"\n'
+            'version = "0.1.0" INVALID\nkind = "bundle"\n',
+            encoding="utf-8",
+        )
+        result = self._run("data", "list")
+        self.assertEqual(result.returncode, 3)
+        self.assertIn("without a readable version", result.stderr)
+        self.assertFalse((self.out / "args").exists())
+        result = self._run("doctor")
+        self.assertEqual(result.returncode, 3)
+        self.assertIn("LOCK unreadable", result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

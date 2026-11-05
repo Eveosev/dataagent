@@ -61,44 +61,155 @@ module_of() {
 #   2  mint.lock has an entry for this package whose version cannot be
 #      read — a corrupt lock; callers must fail closed (exit 3)
 #
-# The lock is parsed with a TOML subset (POSIX awk, no Python): mint.lock
-# is generated TOML, and legal formatting variants — compact `name="…"`,
-# indented `  name = "…"`, literal '…' strings, trailing comments — must
-# all resolve to the same pin.
+# The lock is parsed with a TOML subset (POSIX awk, no Python) that
+# follows the real Mint lock structure (r8-review D16):
+#   - table scope: only `[[package]]` (or `[package]`) entries hold
+#     package pins; `[[package.requires]]` dependency edges and any
+#     other table (`[core]`, `[package.artifacts.any]`, …) may carry
+#     name/version keys that must be ignored, never read as a pin —
+#     when a requires edge precedes the real package entry the pin
+#     must still come from that entry;
+#   - quoted keys (`"name" = …` / `'name' = …`) are the same keys;
+#   - basic strings are unescaped (`\\ \" \b \f \n \r \t \uXXXX
+#     \UXXXXXXXX`), so "dataagent\u002fdata-layer" pins the same
+#     package as `dataagent/data-layer` and "0\u002e1.0" the same
+#     version as `0.1.0`;
+#   - anything but whitespace or a `#` comment after the closing
+#     quote makes the value unreadable (fail closed), and an entry
+#     whose name cannot be parsed might be this package, so it also
+#     fails closed — never a silent fall back to the highest
+#     installed version.
 pinned_version() {
     pkg=$1
     [ -f ./mint.lock ] || return 1
     ver=""
     rc=0
-    ver=$(awk -v want="dataagent/$pkg" '
-        # A table header ends the previous entry; evaluate it against
-        # want exactly once (first matching entry wins).
-        function flush() {
-            if (name == want && !seen) {
-                seen = 1
-                if (ver == "") bad = 1
-                else { print ver; got = 1 }
+    # sq is a single quote, passed via -v so the program body carries no
+    # quote that would end the shell's single-quoted awk argument.
+    ver=$(awk -v want="dataagent/$pkg" -v sq="'" '
+        BEGIN { mode = "other"; nameok = 1 }
+        function hexval(h,  i, c, d, n) {
+            n = 0
+            for (i = 1; i <= length(h); i++) {
+                c = tolower(substr(h, i, 1))
+                d = index("0123456789abcdef", c) - 1
+                if (d < 0) return -1
+                n = n * 16 + d
             }
-            name = ""; ver = ""
+            return n
         }
-        /^[[:space:]]*\[/ { flush(); next }
-        # key = "value" | key="value" | literal '\''value'\'' with any
-        # leading indentation and an optional trailing comment.
-        match($0, /^[[:space:]]*(name|version)[[:space:]]*=/) {
-            key = substr($0, RSTART, RLENGTH)
-            sub(/^[[:space:]]+/, "", key); sub(/[[:space:]]*=$/, "", key)
-            rest = substr($0, RSTART + RLENGTH)
-            sub(/^[[:space:]]*/, "", rest)
-            q = substr(rest, 1, 1)
-            if (q == "\"" || q == "'\''") {
-                i = index(substr(rest, 2), q)
-                if (i > 0) {
-                    if (key == "name") name = substr(rest, 2, i - 1)
-                    else ver = substr(rest, 2, i - 1)
+        # code point -> UTF-8 bytes (ASCII fast path covers real locks)
+        function utf8(cp) {
+            if (cp < 128) return sprintf("%c", cp)
+            if (cp < 2048) return sprintf("%c%c", 192 + int(cp / 64), 128 + cp % 64)
+            if (cp < 65536) return sprintf("%c%c%c", 224 + int(cp / 4096), 128 + int(cp / 64) % 64, 128 + cp % 64)
+            return sprintf("%c%c%c%c", 240 + int(cp / 262144), 128 + int(cp / 4096) % 64, 128 + int(cp / 64) % 64, 128 + cp % 64)
+        }
+        # Parse the value after `=` (s has leading blanks stripped) as a
+        # basic "…" / literal '\''…'\'' string (single-line; triple-quote
+        # forms accepted). Sets vok = 1 only for a complete, well-formed
+        # value with just whitespace or a comment after the closing
+        # quote; returns the decoded text.
+        function value(s,  q, t, ml, i, c, h, cp, closed, tail) {
+            vok = 0
+            q = substr(s, 1, 1)
+            if (q != "\"" && q != sq) return ""
+            t = q q q
+            ml = (substr(s, 1, 3) == t)
+            i = ml ? 4 : 2
+            val = ""
+            closed = 0
+            while (i <= length(s)) {
+                c = substr(s, i, 1)
+                if (c == q) {
+                    if (! ml || substr(s, i, 3) == t) {
+                        i += ml ? 3 : 1
+                        closed = 1
+                        break
+                    }
+                    val = val c
+                    i++
+                    continue
+                }
+                if (q == sq || c != "\\") {
+                    val = val c
+                    i++
+                    continue
+                }
+                # basic-string escape sequence
+                c = substr(s, i + 1, 1)
+                if (c == "n") { val = val "\n"; i += 2 }
+                else if (c == "t") { val = val "\t"; i += 2 }
+                else if (c == "r") { val = val "\r"; i += 2 }
+                else if (c == "b") { val = val "\b"; i += 2 }
+                else if (c == "f") { val = val "\f"; i += 2 }
+                else if (c == "\"") { val = val "\""; i += 2 }
+                else if (c == "\\") { val = val "\\"; i += 2 }
+                else if (c == "u" || c == "U") {
+                    h = substr(s, i + 2, c == "u" ? 4 : 8)
+                    cp = hexval(h)
+                    if (length(h) != (c == "u" ? 4 : 8) || cp < 0) return ""
+                    val = val utf8(cp)
+                    i += 2 + length(h)
+                }
+                else return ""
+                continue
+            }
+            if (! closed) return ""
+            tail = substr(s, i)
+            sub(/^[ \t\r]+/, "", tail)
+            if (tail != "" && substr(tail, 1, 1) != "#") return ""
+            vok = 1
+            return val
+        }
+        # A table header ends the previous entry; evaluate it against
+        # want exactly once (first matching entry wins). Only the
+        # package array itself is a package entry — the nested
+        # [[package.requires]] dependency edges are not (r8-review D16).
+        function flush() {
+            if (mode == "pkg" && ! seen) {
+                if (! nameok) bad = 1
+                else if (name == want) {
+                    seen = 1
+                    if (! verok || ver == "") bad = 1
+                    else { print ver; got = 1 }
                 }
             }
+            name = ""
+            ver = ""
+            nameok = 1
+            verok = 0
         }
-        END { flush(); exit got ? 0 : (bad ? 2 : 1) }
+        /^[[:space:]]*\[/ {
+            flush()
+            hdr = $0
+            sub(/#.*/, "", hdr)
+            gsub(/[[:space:]]/, "", hdr)
+            mode = (hdr == "[[package]]" || hdr == "[package]") ? "pkg" : "other"
+            next
+        }
+        # key = "value" | key="value" | quoted keys | literal values with
+        # any leading indentation; only name/version matter, only inside
+        # a package entry.
+        mode == "pkg" && index($0, "=") > 0 {
+            eq = index($0, "=")
+            key = substr($0, 1, eq - 1)
+            sub(/^[[:space:]]+/, "", key)
+            sub(/[[:space:]]+$/, "", key)
+            if (substr(key, 1, 1) == "\"" || substr(key, 1, 1) == sq) {
+                kq = substr(key, 1, 1)
+                k = substr(key, 2)
+                if (substr(k, length(k), 1) == kq) key = substr(k, 1, length(k) - 1)
+                else bad = 1
+            }
+            if (key != "name" && key != "version") next
+            s = substr($0, eq + 1)
+            sub(/^[[:space:]]+/, "", s)
+            v = value(s)
+            if (key == "name") { name = v; nameok = vok }
+            else { ver = v; verok = vok }
+        }
+        END { flush(); exit bad ? 2 : (got ? 0 : 1) }
     ' ./mint.lock) || rc=$?
     case $rc in
         0) printf '%s\n' "$ver"; return 0 ;;

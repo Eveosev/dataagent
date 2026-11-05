@@ -13,6 +13,9 @@ api = "^0.1"
 skills = ["dataagent-cli"]
 
 [artifacts]
+# 必填字段（Mint Artifacts 定义无 serde 默认值，缺整个表与缺表内字段语义不同）：
+# 本包唯一制品是平台无关的 POSIX sh 脚本 bin/dataagent，取 any 布局。
+layout = "any"
 bin = "dataagent"
 
 [capabilities]

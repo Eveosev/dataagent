@@ -55,3 +55,14 @@
 | [r8-runtime.score.json](r8-runtime.score.json) | r8 | 开发者自评结果（93.1 / A / 无闸门；D16 fixed；D2 partial、D3 open 留待后续轮） |
 | [r8-runtime.quality.md](r8-runtime.quality.md) | r8 | `quality_run.py` 机器测量报告（112 passed、重复率 2.13%、CC>10 28.32%、runtime 源零改动） |
 | [r8.score.txt](r8.score.txt) | r8 | 自评 `score_landing.py` 输出 |
+| [r8-review.md](r8-review.md) | r8 | 第 8 轮独立验收（**可验收 93.1 / A，无闸门**；D16 fixed——28+7 组合真实三层矩阵：合法 TOML pin 0.1.0 双版本已装 dispatch/doctor 均 0.1.0、pin 未装 exit 3 未执行、不可读 fail-closed；D5 fixed；D2 partial、D3 open 为非阻断 P2） |
+| [r8-tester-runtime.score.json](r8-tester-runtime.score.json) | r8 | 独立验收结果（93.1 / A / 无闸门；16 条缺陷完整复核；清单 done 17 / na 10；L2.1/L2.4 恢复 1） |
+| [r8-tester-runtime.quality.md](r8-tester-runtime.quality.md) | r8 | 独立机器测量（112 passed、重复率 2.13%、CC>10 28.32%、吞错 0、bundle 一致） |
+| [r8-tester.score.txt](r8-tester.score.txt) | r8 | 独立 `score_landing.py` 输出（93.1 / A / 无闸门）；此结论被下述 Reviewer 新增探针推翻 |
+| [r8-reviewer-supplement.md](r8-reviewer-supplement.md) | r8 补充评审 | **不可验收 79.0 / C**；同源码快照新增 P1 D17（真实 Mint 解析 CLI 清单失败，缺 artifacts.layout）与 D16 partial（嵌套 package.requires 被误认 pin、合法引号键/转义 pin 被绕过）；D5 保持 fixed；视觉截图失败、unverified |
+| [Reviewer 独立评分](/Users/payne/.dsh/state/agent-teamwork/team/r8-reviewer-evidence/runtime.score.json) / [评分输出](/Users/payne/.dsh/state/agent-teamwork/team/r8-reviewer-evidence/score.txt) | r8 补充评审 | 17 条缺陷全量保留，GATE-P1（D16/D17）+ GATE-CHECKLIST；done14 / partial3 / na10 |
+| [Reviewer 机器报告](/Users/payne/.dsh/state/agent-teamwork/team/r8-reviewer-evidence/runtime.quality.md) / [复现证据](/Users/payne/.dsh/state/agent-teamwork/team/r8-reviewer-evidence/) | r8 补充评审 | 独立五套 112/654/203/123/23 全绿、质量测量、真实 Mint 清单解析、24 组合锁探针、r7/r8 嵌套锁回归对照 |
+| [r9-fixes.md](r9-fixes.md) | r9 | 开发者修复记录：r8-reviewer D16/D17——D17 `mint.toml [artifacts]` 补必填 `layout="any"`（真实 Mint init+add+lock 全链路 exit 0，安装 5 包含 cli）；D16 `pinned_version` awk 解析器表作用域感知（仅 `[[package]]`/`[package]` 为 pin 条目，`[[package.requires]]` 依赖边忽略）+ 引号键 + basic 字符串完整转义（`\uXXXX` 等）+ 值后仅许空白/注释否则 fail-closed；reviewer 24 组合 lock_probe 全 PASS；cli 23→36（+9 D16、+4 D17 真实 Mint 清单/安装回归） |
+| [r9-runtime.score.json](r9-runtime.score.json) | r9 | 开发者自评结果（93.1 / A / 无闸门；D16/D17 fixed；D2 partial、D3 open 留待后续轮；runtime 源零改动） |
+| [r9-runtime.quality.md](r9-runtime.quality.md) | r9 | `quality_run.py` 机器测量报告（112 passed、重复率 2.13%、CC>10 28.32%） |
+| [r9.score.txt](r9.score.txt) | r9 | 自评 `score_landing.py` 输出（93.1 / A / 无闸门）；修复证据 [r9-fix-evidence](/Users/payne/.dsh/state/agent-teamwork/team/r9-fix-evidence/)（install-chain.log、lock-results.json、D16_pre_post_control.txt） |
