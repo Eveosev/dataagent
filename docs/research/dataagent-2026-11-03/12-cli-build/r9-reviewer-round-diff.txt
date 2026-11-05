@@ -1,0 +1,59 @@
+# 轮次对比 — dataagent-runtime（统一 CLI 内核 + 三层接入 + dataagent/cli 分发器 + preset 依赖）：r8-reviewer → r9-reviewer
+
+## 基线
+
+| 项 | r8-reviewer | r9-reviewer |
+|-|-|-|
+| 日期 | 2026-11-06 | 2026-11-06 |
+| rubric | 2.1 | 2.1 |
+| snapshot dataagent-cli | `sha256:6c65d4035dab` | `sha256:7e5277c313bb` |
+| snapshot dataagent-runtime | `sha256:8a7692b415f8` | `sha256:8a7692b415f8` |
+
+源码快照未变：dataagent-runtime。本轮结论与上轮不同只能来自判定变化，需说明原因。
+
+## 分数与闸门
+
+- r8-reviewer：79（C），不可验收；闸门 GATE-P1, GATE-CHECKLIST
+- r9-reviewer：79（C），不可验收；闸门 GATE-P1, GATE-CHECKLIST
+
+## 缺陷
+
+| ID | 级 | r8-reviewer | r9-reviewer | 结论 | 问题 | 位置 |
+|-|-|-|-|-|-|-|
+| D3 | P2 | open | open | 未修复 | 无默认超时、在途工作不可取消 | packages/capabilities/dataagent-runtime/src/dataagent_runtime/invoke.py:353-360,438-442; interfaces/unified.py:426-449 |
+| D16 | P1 | partial | partial | 部分修复 | r9 subset lock parser still bypasses equivalent TOML pins; newly regresses quoted-header missing-pin fail-closed | packages/capabilities/dataagent-cli/bin/dataagent:183-205,113-163,231-244,314-332 |
+| D2 | P2 | partial | partial | 部分修复 | CC>10 的 LOC 占比超阈 | packages/capabilities/dataagent-runtime/src/dataagent_runtime/enforcement.py:255 等 |
+| D17 | P1 | open | fixed | 已修复 | CLI Mint manifest cannot be parsed: [artifacts] omits required layout, blocking CLI and preset dependency resolution | packages/capabilities/dataagent-cli/mint.toml:15-19; packages/capabilities/dataagent-s0/mint.toml:21 |
+| D10 | P1 | fixed | fixed | 保持关闭 | --set 无法处理 anyOf/$ref 的标量字段（含必填 VersionedRef），与「按 inputSchema 转换类型」契约不符 | packages/capabilities/dataagent-runtime/src/dataagent_runtime/interfaces/unified.py:176-242 |
+| D12 | P1 | fixed | fixed | 保持关闭 | --ref cannot narrow rich CriteriaRef to VersionedRef | packages/capabilities/dataagent-runtime/src/dataagent_runtime/interfaces/unified.py:360-385 |
+| D13 | P1 | fixed | fixed | 保持关闭 | Missing mint.lock pinned version silently dispatches another version | packages/capabilities/dataagent-cli/bin/dataagent:63-71 |
+| D14 | P1 | fixed | fixed | 保持关闭 | doctor returns success when required policy is missing | packages/capabilities/dataagent-cli/bin/dataagent:177-206 |
+| D15 | P1 | fixed | fixed | 保持关闭 | Valid proposal-only second-stage input rejected before schema validation | packages/capabilities/dataagent-runtime/src/dataagent_runtime/interfaces/unified.py:142-154 |
+| D5 | P1 | fixed | fixed | 保持关闭 | Summary 32 KiB cap incomplete: exact encoded JSON limit omits stdout newline (long-handle case fixed) | packages/capabilities/dataagent-runtime/src/dataagent_runtime/interfaces/unified.py:674-678,776 |
+| D1 | P2 | fixed | fixed | 保持关闭 | 生产代码重复率 13.84% > 3% | packages/capabilities/dataagent-runtime/src/dataagent_runtime/adapters/sqlite.py:90 等 |
+| D11 | P2 | fixed | fixed | 保持关闭 | r4 证据链引用失效 tag object（8544568c，unreachable），与实际 ref 20022e0a 不一致 | docs/research/dataagent-2026-11-03/12-cli-build/r4-fixes.md:17；r4-runtime.score.json hard_rules.R13 |
+| D4 | P2 | fixed | fixed | 保持关闭 | 4 处吞错 | packages/capabilities/dataagent-runtime/src/dataagent_runtime/interfaces/unified.py 等 |
+| D6 | P2 | fixed | fixed | 保持关闭 | dispatcher usage 文本多写 <layer> | packages/capabilities/dataagent-cli/bin/dataagent:224-225 |
+| D7 | P2 | fixed | fixed | 保持关闭 | --detail full 未做外发剥离 | packages/capabilities/dataagent-runtime/src/dataagent_runtime/interfaces/unified.py:456-476,738-742 |
+| D8 | P2 | fixed | fixed | 保持关闭 | --file 指向不存在的文件抛未捕获 FileNotFoundError（traceback，无结构化输出） | packages/capabilities/dataagent-runtime/src/dataagent_runtime/interfaces/unified.py:572-579 |
+| D9 | P2 | fixed | fixed | 保持关闭 | gov confirm 收到非法 confirmation 载荷时抛未捕获 pydantic ValidationError | packages/capabilities/dataagent-governance/src/dataagent_governance/interfaces/cli.py:113-123 |
+
+计数：未修复 1，部分修复 2，已修复 1，保持关闭 13
+
+## 规则
+
+- 0→1：L6.2
+- 1→0（退化）：无
+- 已判定→未测量：无
+
+## 方案清单
+
+- 方案版本：r1; research v0.3 → r1; researchv0.3
+- done：14/27 → 16/28
+- done→未完成（退化）：无
+- 新增条目：1；移除条目：0
+
+## 退化汇总
+
+- 无
+

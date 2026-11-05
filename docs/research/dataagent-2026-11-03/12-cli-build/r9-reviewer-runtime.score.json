@@ -1,0 +1,809 @@
+{
+  "scope": "dataagent-runtime（统一 CLI 内核 + 三层接入 + dataagent/cli 分发器 + preset 依赖）",
+  "profile": "runtime",
+  "date": "2026-11-06",
+  "round": "r9-reviewer",
+  "facts_ref": "implementation@92fcd268feab58c9606a9a417fd1fe326184bbcb; agent-kernel@698ac1b2e89a8199c69f415d090d03167d24818e; origin/main@29dd1b7611390eadc471d4b013214cee78efbf2f; actual Mint0.1.26",
+  "snapshot": {
+    "dataagent-runtime": "sha256:8a7692b415f87eed92aa13c5afed968cf6a916f72d46e94a966c304f24e8ac66",
+    "dataagent-cli": "sha256:7e5277c313bb834161b15014f16040c82805b325dc0217cb20b80306307a811e"
+  },
+  "rubric_version": "2.1",
+  "rules": {
+    "A1.1": {
+      "score": 1,
+      "evidence": "quality_run 重复率 2.13%（53/2489 行，包内 20、跨包 33；同级包 5 个）；例：packages/capabilities/dataagent-runtime/src/dataagent_runtime/invoke.py:300, packages/capabilities/dataagent-data/src/dataagent_data/invoke.py:24, packages/capabilities/dataagent-scenarios/src/dataagent_scenarios/gate.py:127 | packages/capabilities/dataagent-runtime/src/dataagent_runtime/adapters/sqlite.py:101, packages/capabilities/dataagent-data/src/dataagent_data/adapters/storage/sqlite.py:140",
+      "measured_by": "quality_run"
+    },
+    "A1.2": {
+      "score": 1,
+      "evidence": "Four vendored unified.py copies byte-identical by cmp; bundle sync tests pass; duplication2.13%; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    "A2.1": {
+      "score": 1,
+      "evidence": "r9 independent recheck on unchanged runtime source: Independent r9 recheck on unchanged runtime snapshot: pyproject.toml:13-16 仅 dataagent-contracts/pydantic；grep runtime src 对 dataagent_data/application/governance/duckdb 0 处（rg 无输出）; current evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    "A2.2": {
+      "score": 1,
+      "evidence": "r9 independent recheck on unchanged runtime source: Independent r9 recheck on unchanged runtime snapshot: uv lock --check → Resolved 13 packages（rc=0）；无环（runtime→contracts 单边）; current evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    "A2.3": {
+      "score": 1,
+      "evidence": "r9 independent recheck on unchanged runtime source: Independent r9 recheck on unchanged runtime snapshot: LayerHooks.make_file_ref 注入点 interfaces/unified.py:82-90；runtime 不 import 层实现; current evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    "A3.1": {
+      "score": 1,
+      "evidence": "r9 independent recheck on unchanged runtime source: Independent r9 recheck on unchanged runtime snapshot: runtime/__init__.py 公开 28 个 __all__ 符号；19 个生产文件；LayerHooks 为唯一接缝; current evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    "A4.1": {
+      "score": 1,
+      "evidence": "r9 independent recheck on unchanged runtime source: Independent r9 recheck on unchanged runtime snapshot: quality_run：19 个生产文件；无 >300 行函数、无 >1500 行模块; current evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    "A5.1": {
+      "score": 0,
+      "evidence": "ast（radon 计数规则；radon 未安装）：CC>10 LOC 占比 28.32%（阈 7.3%）；最高：packages/capabilities/dataagent-runtime/src/dataagent_runtime/enforcement.py:255 CC=25（84 行代码） | packages/capabilities/dataagent-runtime/src/dataagent_runtime/invoke.py:299 CC=24（109 行代码）",
+      "measured_by": "quality_run"
+    },
+    "A5.2": {
+      "score": 1,
+      "evidence": "ast（radon 计数规则；radon 未安装）：CC>25 LOC 占比 0.0%（阈 1.1%）；最高：packages/capabilities/dataagent-runtime/src/dataagent_runtime/enforcement.py:255 CC=25（84 行代码） | packages/capabilities/dataagent-runtime/src/dataagent_runtime/invoke.py:299 CC=24（109 行代码）",
+      "measured_by": "quality_run"
+    },
+    "A5.3": {
+      "score": 1,
+      "evidence": "quality_run ast：无 >300 行函数、无 >1500 行模块",
+      "measured_by": "quality_run"
+    },
+    "A6.1": {
+      "score": 1,
+      "evidence": "Five independent suites112/654/203/123/36 all pass, no skipped CLI manifest tests; direct logs; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    "A6.2": {
+      "score": 1,
+      "evidence": "Runtime112 direct and quality_run independent venv112 pass; pyproject28-30 testpaths/addopts/pythonpath; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    "A7.1": {
+      "score": 1,
+      "evidence": "r9 independent recheck on unchanged runtime source: Independent r9 recheck on unchanged runtime snapshot: __all__=28；README 公共 API 与 ports/{content,decisions,inference,tabular,versioned}.py 对应; current evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    "A8.1": {
+      "score": 1,
+      "evidence": "r9 independent recheck on unchanged runtime source: Independent r9 recheck on unchanged runtime snapshot: ports/*.py 协议；LayerHooks/port 注入，无具体层 import; current evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    "A8.2": {
+      "score": 1,
+      "evidence": "Three suites654/203/123 pass and four vendored copies cmp exit0; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    "A9.1": {
+      "score": 1,
+      "evidence": "uv lock --check exit0 resolved13; versions0.1.0; uv-lock.log; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    "A9.2": {
+      "score": 1,
+      "evidence": "uv build exit0 wheel+sdist under evidence/dist; build.log; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    "A9.3": {
+      "score": 1,
+      "evidence": "Actual wheel inspection22 members/19py/0pyc; packaging-inspection.json; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    "A10.1": {
+      "score": 1,
+      "evidence": "Independent quality_run bare except0/swallowed errors0; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    "A10.2": {
+      "score": null,
+      "evidence": "",
+      "na_reason": "共享运行时未声明错误码登记源（错误码属各层 da* 命名空间）；profile=runtime 的 may_na 含 A10.2"
+    },
+    "A11.1": {
+      "score": 1,
+      "evidence": "r9 independent recheck on unchanged runtime source: Independent r9 recheck on unchanged runtime snapshot: pyproject 0.1.0 = packaging/bundle/mint.toml 0.1.0 = __version__ 0.1.0 = IMPLEMENTATION_REF dataagent-runtime/0.1.0; current evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    "A11.2": {
+      "score": 1,
+      "evidence": "preset mint.toml17-21 CLI and layer path dependencies installed by actual Mint; chain-add.json; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    "A12.1": {
+      "score": 1,
+      "evidence": "r9 independent recheck on unchanged runtime source: Independent r9 recheck on unchanged runtime snapshot: packaging/bundle 内 vendored dataagent_contracts；tests/test_bundle_sync 通过；quality_run bundle 漂移=一致; current evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    "A12.2": {
+      "score": 1,
+      "evidence": "r9 independent recheck on unchanged runtime source: Independent r9 recheck on unchanged runtime snapshot: unified.py 只 import dataagent_contracts.core 类型，未复刻 CallContext/CapabilityResult; current evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    "L1.1": {
+      "score": null,
+      "evidence": "",
+      "na_reason": "共享运行时不注册 operation；profile=runtime 的 may_na 含 L1.1"
+    },
+    "L1.2": {
+      "score": null,
+      "evidence": "",
+      "na_reason": "无 catalog snapshot；profile=runtime 的 may_na 含 L1.2"
+    },
+    "L1.3": {
+      "score": null,
+      "evidence": "",
+      "na_reason": "无 operation 即无桩面；profile=runtime 的 may_na 含 L1.3"
+    },
+    "L2.1": {
+      "score": 0,
+      "evidence": "#b9b374 remains partial. D17 fixed actual Mint installs five dataagent packages; original D16 matrix24/24 passes but actual Mint-accepted equivalent quoted table/escaped key/inline array pins still bypassed and multiline pins rejected; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    "L2.2": {
+      "score": 1,
+      "evidence": "cli_probe50 and management11 assertions pass; invalid field/op/bool/int/enum/ref/context/traversal/symlink reject; additional equivalent lock failures logged as D16; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    "L2.3": {
+      "score": 1,
+      "evidence": "full_equals_disk true;40K id preserved in durable result; probes/checks.json; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    "L2.4": {
+      "score": 0,
+      "evidence": "D16 partial: actual Mint+tomllib pin0.1.0; quoted_header/literal_header/escaped_header/escaped_name_key/inline_package_array dispatch+doctor execute0.2.0; escaped_version_key/multiline entries reject3.20/24 edge checks fail. quoted header pin0.9.9 missing r8 exits3->r9 exits0 executes0.2.0; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    "L2.5": {
+      "score": null,
+      "evidence": "",
+      "na_reason": "执行侧复检由 invoke 的 access recheck 承担（runtime/invoke.py）；CLI 无执行侧；profile=runtime 的 may_na 含 L2.5"
+    },
+    "L3.1": {
+      "score": 1,
+      "evidence": "Actual CLI absolute/traversal/symlink input failed1 without traceback; cli-probes.log; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    "L3.2": {
+      "score": 1,
+      "evidence": "Fresh enforce root doctor3/no policy; authorize3; policy apply0 then doctor0; runtime access-recheck tests pass; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    "L3.3": {
+      "score": 1,
+      "evidence": "Original egress probe summary/full both omit statement/fields; egress-probes.log; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    "L3.4": {
+      "score": 1,
+      "evidence": "Context injection2; interpreter env observation removes MINT_MODEL_API_KEY/PYTHONPATH, retains host subject/purpose; management-checks; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    "L3.5": {
+      "score": null,
+      "evidence": "",
+      "na_reason": "SQL/表达式白名单属应用层 execute_duckdb_sql；profile=runtime 的 may_na 含 L3.5"
+    },
+    "L4.1": {
+      "score": null,
+      "evidence": "",
+      "na_reason": "文件/页/行预算属数据/应用层 ops；profile=runtime 的 may_na 含 L4.1"
+    },
+    "L4.2": {
+      "score": 0,
+      "evidence": "D3 reproduced: CLI deadlineNone; explicit20ms finishes130ms statusok/handler_completedtrue; runtime-probes.log; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    "L4.3": {
+      "score": 1,
+      "evidence": "r9 independent recheck on unchanged runtime source: Independent r9 recheck on unchanged runtime snapshot: adapters/sqlite.py:63 PRAGMA journal_mode=WAL、:118 BEGIN IMMEDIATE；并发测试通过; current evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    "L5.1": {
+      "score": 1,
+      "evidence": "Independent112/654/203/123/36 suites all green; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    "L5.2": {
+      "score": 1,
+      "evidence": "Real --ref/--set table and criteria refs equal controls; three layer scalar audit249fields/121scalar/44ops mismatch0/computed0; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    "L5.3": {
+      "score": 1,
+      "evidence": "Real subprocess CLI tests; wrappers record chosen interpreter in24 original+24 equivalent matrix; real Mint install+frozen bundle environments+parse workflow pass; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    "L6.1": {
+      "score": 1,
+      "evidence": "Fresh snapshot runtime8a7692b4/67files CLI7e5277c3/6files at92fcd26; rubric SHA frozen; baseline tag20022e0a->fbe24d8 archive78c93a64; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    "L6.2": {
+      "score": 1,
+      "evidence": "D17 fixed: CLI manifest18 layoutany19 bin; real Mint init+add+post-add lock0; installed CLI bytes identical, actual bundle doctor0/list32,13,6/parse2rows; D11 record actual tag20022e0a; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    }
+  },
+  "hard_rules": {
+    "R01": {
+      "light": "green",
+      "evidence": "r9 independent recheck on unchanged runtime source: pyproject.toml:13-16 只 dataagent-contracts/pydantic；grep runtime src 对三层/duckdb 0 处；uv lock --check 13 packages"
+    },
+    "R03": {
+      "light": "green",
+      "evidence": "r9 independent recheck on unchanged runtime source: runtime -> contracts 单边；uv lock --check rc=0 resolved 13"
+    },
+    "D1": {
+      "light": "green",
+      "evidence": "quality_run 重复率 2.13%（53/2489 行，包内 20、跨包 33；同级包 5 个）；例：packages/capabilities/dataagent-runtime/src/dataagent_runtime/invoke.py:300, packages/capabilities/dataagent-data/src/dataagent_data/invoke.py:24, packages/capabilities/dataagent-scenarios/src/dataagent_scenarios/gate.py:127 | packages/capabilities/dataagent-runtime/src/dataagent_runtime/adapters/sqlite.py:101, packages/capabilities/dataagent-data/src/dataagent_data/adapters/storage/sqlite.py:140",
+      "measured_by": "quality_run"
+    },
+    "V1": {
+      "light": "green",
+      "evidence": "r9 independent recheck on unchanged runtime source: pyproject 0.1.0 = bundle/mint.toml 0.1.0 = __version__ 0.1.0 = IMPLEMENTATION_REF dataagent-runtime/0.1.0"
+    },
+    "E1": {
+      "light": "na",
+      "evidence": "r9 independent recheck on unchanged runtime source: 共享运行时未声明错误码登记源（错误码属各层 da* 命名空间）；profile=runtime may_na 含 A10.2"
+    },
+    "R13": {
+      "light": "green",
+      "evidence": "r9 actual tag20022e0a962ecd42fd575bd9b8872ca2f11c3f99 ->fbe24d8f4263513a711fc96126ded588b9650f2c; fresh archive snapshot78c93a64776a5dbc4ad45fd9c3f9f849d5d105b300f08179445fcaa2f9e1f400/67 files. r9 runtime source unchanged; legacy stdin/--list checks pass; baseline-refs.log"
+    },
+    "R14": {
+      "light": "green",
+      "evidence": "Four vendored copies byte-identical via cmp; runtime/data/application/governance bundle sync suites passed"
+    }
+  },
+  "checklist": {
+    "source": "docs/research/dataagent-2026-11-03/12-unified-cli-build-plan.md",
+    "plan_version": "r1; researchv0.3",
+    "items": [
+      {
+        "id": "统一CLI实现计划（r1）#7b941d",
+        "section": "统一 CLI 实现计划（r1）",
+        "kind": "bullet",
+        "must": false,
+        "text": "版本：r1（2026-11-06）",
+        "line": 3,
+        "verdict": "na",
+        "evidence": "metadata/background/record index row, not a product requirement"
+      },
+      {
+        "id": "统一CLI实现计划（r1）#88abdd",
+        "section": "统一 CLI 实现计划（r1）",
+        "kind": "bullet",
+        "must": false,
+        "text": "依据：[12-unified-cli-research.md](12-unified-cli-research.md) v0.3 §5（W0 契约以本文冻结的 r1 范围为准：stdin 旧模式保留，`--list` 旧 JSON 输出保留，`list` 为新格式）",
+        "line": 4,
+        "verdict": "na",
+        "evidence": "metadata/background/record index row, not a product requirement"
+      },
+      {
+        "id": "统一CLI实现计划（r1）#707495",
+        "section": "统一 CLI 实现计划（r1）",
+        "kind": "bullet",
+        "must": false,
+        "text": "目标包：`dataagent-runtime`（内核）、三层 `interfaces/cli.py`（接入）、`dataagent-cli`（新分发器包）、`dataagent-s0`（依赖）",
+        "line": 5,
+        "verdict": "na",
+        "evidence": "metadata/background/record index row, not a product requirement"
+      },
+      {
+        "id": "统一CLI实现计划（r1）#4c3282",
+        "section": "统一 CLI 实现计划（r1）",
+        "kind": "bullet",
+        "must": false,
+        "text": "范围外：MCP schema 压缩（§5.2 已定后续单列）、Mint Hub 发布（Q3）、治理/应用依赖对齐（Q5）",
+        "line": 6,
+        "verdict": "na",
+        "evidence": "metadata/background/record index row, not a product requirement"
+      },
+      {
+        "id": "W1共享内核实现（dataage#ceedd2",
+        "section": "W1 共享内核实现（dataagent-runtime）",
+        "kind": "bullet",
+        "must": false,
+        "text": "内核按 inputSchema 解析 argv 参数：`--input-file`、`--set k=v`（按 schema 转换类型）、`--set-json k=<json>`（优先于 `--input-file`）、`--file <path>`（由文件字节生成 FileRef 填入文件入参）、`--ref <field>=<id@revision>`（从 data_root 的 results 解析为完整对象）、`--proposal-file`（两段式第二阶段提案）、`--authorize`（先取 AccessDecision 填入 `authorization_ref`）。",
+        "line": 10,
+        "verdict": "done",
+        "evidence": "unified.py:95-242,360-385; cli_probe: --file/--set/--ref/authorize/proposal;249field scalar audit121/44 mismatch0; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+      },
+      {
+        "id": "W1共享内核实现（dataage#319aaa",
+        "section": "W1 共享内核实现（dataagent-runtime）",
+        "kind": "bullet",
+        "must": false,
+        "text": "`<op> --help` 输出扁平参数表（由 inputSchema 生成，不输出 `$defs`）。",
+        "line": 11,
+        "verdict": "done",
+        "evidence": "unified.py:479-514; help_data/help_gov assert no $defs and flat scalar types; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+      },
+      {
+        "id": "W1共享内核实现（dataage#14f03f",
+        "section": "W1 共享内核实现（dataagent-runtime）",
+        "kind": "bullet",
+        "must": false,
+        "text": "`list` 每个 op 一行：名称、能力编号、是否复检（resource_fields）、是否两段式。",
+        "line": 12,
+        "verdict": "done",
+        "evidence": "unified.py:517-522; list_data/app/gov32/13/6; actual installed bundle lists32/13/6; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+      },
+      {
+        "id": "W1共享内核实现（dataage#99a1de",
+        "section": "W1 共享内核实现（dataagent-runtime）",
+        "kind": "bullet",
+        "must": false,
+        "text": "stdout 摘要 JSON：`status`、`issues`、关键输出字段、新产生对象句柄（`id@revision`）、`result_path`；控制在 32 KiB 内；全文写 `.dataagent/results/<invocation_id>.json`；`--detail full` 直接输出全文。",
+        "line": 13,
+        "verdict": "done",
+        "evidence": "unified.py:676-679; real dispatcher boundary32767JSON ->stdout32768 not truncated;32768/32769/40000JSON ->stdout339 truncated; boundary-results.json; test_summary_boundary_counts_newline; long40K/Unicode ids capped and durable full matches; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+      },
+      {
+        "id": "W1共享内核实现（dataage#cd48f2",
+        "section": "W1 共享内核实现（dataagent-runtime）",
+        "kind": "bullet",
+        "must": false,
+        "text": "`needs_input` 时输出 `inference_request`（另存 `.dataagent/results/<invocation_id>.inference_request.json`）与建议的下一条命令。",
+        "line": 14,
+        "verdict": "done",
+        "evidence": "unified.py:760-774; two_phase_stage1 needs_input+next command; stage2 criteria success; inference persisted; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+      },
+      {
+        "id": "W1共享内核实现（dataage#7cf8d0",
+        "section": "W1 共享内核实现（dataagent-runtime）",
+        "kind": "bullet",
+        "must": false,
+        "text": "输出前做外发检查（W0 §5：enforce 模式下无 egress 决策引用时剥离 `inference_request` 内容键，与 MCP 通道一致）。",
+        "line": 15,
+        "verdict": "done",
+        "evidence": "unified.py:456-476,738-742; egress_probe summary/full both statementFalse, fields removed; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+      },
+      {
+        "id": "W1共享内核实现（dataage#1d1550",
+        "section": "W1 共享内核实现（dataagent-runtime）",
+        "kind": "bullet",
+        "must": false,
+        "text": "退出码 0 = ok/partial/needs_input；1 = failed；2 = 用法或 schema 错误；3 = 环境缺失（registry/catalog 校验失败）。",
+        "line": 16,
+        "verdict": "done",
+        "evidence": "unified.py:593-637; actual success0, failed1, usage2, missing policy/pin3; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+      },
+      {
+        "id": "W1共享内核实现（dataage#e0d221",
+        "section": "W1 共享内核实现（dataagent-runtime）",
+        "kind": "bullet",
+        "must": false,
+        "text": "身份与用途只取 `DATAAGENT_HOST_SUBJECT_REF` / `DATAAGENT_HOST_PURPOSE`（§5.4），不接受参数覆盖。",
+        "line": 17,
+        "verdict": "done",
+        "evidence": "unified.py:426-449; context_smuggle2, host environment identity retained; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+      },
+      {
+        "id": "W2三层接入实现#6ad74a",
+        "section": "W2 三层接入实现",
+        "kind": "bullet",
+        "must": false,
+        "text": "数据层、应用层、治理层 `interfaces/cli.py` 接入内核：`list`、`run <op>`、`<op> --help` 与旧 stdin 模式并存；改完重建 bundle，`test_bundle_sync` 通过。",
+        "line": 21,
+        "verdict": "done",
+        "evidence": "Three interfaces/cli.py; three suites654/203/123; legacy_stdin row_count2, old --list32; four cmp copies consistent; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+      },
+      {
+        "id": "W2三层接入实现#eb62aa",
+        "section": "W2 三层接入实现",
+        "kind": "bullet",
+        "must": false,
+        "text": "治理层增加 `confirm <file>`（判据确认，确认人仍来自 `DATAAGENT_CONFIRMERS`）与 `policy apply <file>`（写入访问策略到版本库）。",
+        "line": 22,
+        "verdict": "done",
+        "evidence": "governance interfaces/cli.py:113-123; policy0, confirm active r2/replay1/unauthorized1; malformed2; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+      },
+      {
+        "id": "W3分发器包实现#b9b374",
+        "section": "W3 分发器包实现",
+        "kind": "bullet",
+        "must": false,
+        "text": "新增 `packages/capabilities/dataagent-cli`（`kind=bundle`）：`bin/dataagent` POSIX sh 分发器，按层定位 `.mint/packages/dataagent/<layer>-layer@<ver>/`（mint.lock 优先，缺省取最高版本），exec `<包>/.venv/bin/python -m dataagent_<layer>.interfaces.cli`；启动时按白名单清洗环境变量后 exec（§5.4）。",
+        "line": 26,
+        "verdict": "partial",
+        "evidence": "bin/dataagent:183-205,113-163; original24/24 pass, equivalent20/24 fail actual Mint lock pin0.1->exec0.2 or rejection3; missing quoted pin r8exit3->r9exit0; scrub passes; D16 partial; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+      },
+      {
+        "id": "W3分发器包实现#61fb67",
+        "section": "W3 分发器包实现",
+        "kind": "bullet",
+        "must": false,
+        "text": "`dataagent link` 在项目根生成 `./dataagent`；`dataagent setup` 对三层执行 `uv sync --frozen`；`dataagent doctor` 检查三层包、`.venv`、策略、data_root、执行模式（缺失退 3）。",
+        "line": 27,
+        "verdict": "done",
+        "evidence": "bin/dataagent:278-298,304-396; link/foreign refusal/setup3 frozen calls; doctor missingpolicy3/configured0; version failures separately loggedD16; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+      },
+      {
+        "id": "W3分发器包实现#c9ab0b",
+        "section": "W3 分发器包实现",
+        "kind": "bullet",
+        "must": false,
+        "text": "`skills/dataagent-cli/SKILL.md` 用法文档；mint.toml 声明 `[artifacts] bin = \"dataagent\"`，无 Python 依赖、无 `.mcp.json`。",
+        "line": 28,
+        "verdict": "done",
+        "evidence": "CLI mint.toml:15-19 layoutany/bin dataagent; SKILL.md:14-42; no Python dependency/no MCP; actual Mint installs CLI and parses manifest; D17fixed; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+      },
+      {
+        "id": "W3分发器包实现#916584",
+        "section": "W3 分发器包实现",
+        "kind": "bullet",
+        "must": false,
+        "text": "`dataagent-s0` mint.toml 增加 `dataagent/cli` 依赖（path 指向包根，无构建步骤）。",
+        "line": 29,
+        "verdict": "done",
+        "evidence": "preset mint.toml:16-21; actual Mint init/add0 installs five dataagent packages; post-add lock0; D17fixed; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+      },
+      {
+        "id": "W4测试与交付#0d77f1",
+        "section": "W4 测试与交付",
+        "kind": "bullet",
+        "must": false,
+        "text": "内核单测（参数解析、类型转换、句柄解析、摘要上限、退出码、needs_input 建议、外发剥离）。",
+        "line": 33,
+        "verdict": "done",
+        "evidence": "runtime tests/test_unified_cli.py, independent112pass and quality_run112pass; all parameter/summary/egress tests pass; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+      },
+      {
+        "id": "W4测试与交付#8a5297",
+        "section": "W4 测试与交付",
+        "kind": "bullet",
+        "must": false,
+        "text": "三层 CLI 冒烟测试与既有套件全绿；分发器脚本在临时 mint 布局下的功能测试。",
+        "line": 34,
+        "verdict": "done",
+        "evidence": "Five suites112/654/203/123/36green; real cli_probe50 +management11 and original lock24; edge failures loggedD16; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+      },
+      {
+        "id": "W4测试与交付#979e1a",
+        "section": "W4 测试与交付",
+        "kind": "bullet",
+        "must": false,
+        "text": "源码快照 + rubric 评分（code-landing-quality r1）。",
+        "line": 35,
+        "verdict": "done",
+        "evidence": "Fresh snapshots runtime8a7692b4/67 and CLI7e5277c3/6; independent quality/scorer/round-diff evidence; evidence /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+      },
+      {
+        "id": "记录#2f6100",
+        "section": "记录",
+        "kind": "table",
+        "must": true,
+        "text": "r1：[r1-fixes.md](12-cli-build/r1-fixes.md)（实现）/ [r1.score.json](12-cli-build/r1.score.json)（自评）/ [r1-review.md](12-cli-build/r1-review.md)（验收）",
+        "line": 41,
+        "verdict": "na",
+        "evidence": "metadata/background/record index row, not a product requirement"
+      },
+      {
+        "id": "记录#b093e8",
+        "section": "记录",
+        "kind": "table",
+        "must": true,
+        "text": "r2：[r2-fixes.md](12-cli-build/r2-fixes.md)（修复）/ [r2-runtime.score.json](12-cli-build/r2-runtime.score.json)（自评）/ [r2-review.md](12-cli-build/r2-review.md)（验收）",
+        "line": 42,
+        "verdict": "na",
+        "evidence": "metadata/background/record index row, not a product requirement"
+      },
+      {
+        "id": "记录#281c86",
+        "section": "记录",
+        "kind": "table",
+        "must": true,
+        "text": "r4：[r4-fixes.md](12-cli-build/r4-fixes.md)（基线建立）/ [r4-runtime.score.json](12-cli-build/r4-runtime.score.json)（自评）/ [r4-review.md](12-cli-build/r4-review.md)（验收）",
+        "line": 44,
+        "verdict": "na",
+        "evidence": "metadata/background/record index row, not a product requirement"
+      },
+      {
+        "id": "记录#448f88",
+        "section": "记录",
+        "kind": "table",
+        "must": true,
+        "text": "r5：[r5-fixes.md](12-cli-build/r5-fixes.md)（修复）/ [r5-runtime.score.json](12-cli-build/r5-runtime.score.json)（自评）/ [r5-review.md](12-cli-build/r5-review.md)（验收）",
+        "line": 45,
+        "verdict": "na",
+        "evidence": "metadata/background/record index row, not a product requirement"
+      },
+      {
+        "id": "记录#b089c6",
+        "section": "记录",
+        "kind": "table",
+        "must": true,
+        "text": "r6：[r6-fixes.md](12-cli-build/r6-fixes.md)（修复）/ [r6-runtime.score.json](12-cli-build/r6-runtime.score.json)（自评）/ [r6-review.md](12-cli-build/r6-review.md)（独立验收）/ [r6-tester-runtime.score.json](12-cli-build/r6-tester-runtime.score.json)（独立评分）",
+        "line": 46,
+        "verdict": "na",
+        "evidence": "metadata/background/record index row, not a product requirement"
+      },
+      {
+        "id": "记录#3b1190",
+        "section": "记录",
+        "kind": "table",
+        "must": true,
+        "text": "r7：[r7-fixes.md](12-cli-build/r7-fixes.md)（修复）/ [r7-runtime.score.json](12-cli-build/r7-runtime.score.json)（自评）/ [r7-review.md](12-cli-build/r7-review.md)（独立验收）/ [r7-tester-runtime.score.json](12-cli-build/r7-tester-runtime.score.json)（独立评分）",
+        "line": 47,
+        "verdict": "na",
+        "evidence": "metadata/background/record index row, not a product requirement"
+      },
+      {
+        "id": "记录#3773f1",
+        "section": "记录",
+        "kind": "table",
+        "must": true,
+        "text": "r8：[r8-fixes.md](12-cli-build/r8-fixes.md)（修复）/ [r8-runtime.score.json](12-cli-build/r8-runtime.score.json)（自评）/ [r8-review.md](12-cli-build/r8-review.md)（独立验收）/ [r8-tester-runtime.score.json](12-cli-build/r8-tester-runtime.score.json)（独立评分）",
+        "line": 48,
+        "verdict": "na",
+        "evidence": "metadata/background/record index row, not a product requirement"
+      }
+    ]
+  },
+  "defects": [
+    {
+      "id": "D1",
+      "severity": "P2",
+      "status": "fixed",
+      "title": "生产代码重复率 13.84% > 3%",
+      "location": "packages/capabilities/dataagent-runtime/src/dataagent_runtime/adapters/sqlite.py:90 等",
+      "rules": [
+        "A1.1"
+      ],
+      "repro": {
+        "input": "quality_run --repo . --package packages/capabilities/dataagent-runtime",
+        "expected": "重复率 ≤3%",
+        "actual": "r1 13.84% → r2 2.21%（53/2399；包内 20、跨包 33）"
+      },
+      "fix_evidence": "r9 independent original/category recheck: cli_probe50checks0fail/management11checks0fail; scalar249/121/44 mismatch0; exactsummary boundary and longUnicode/full persistence pass; qualitydup2.13/swallow0; baseline actual refs/archive. /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence",
+      "first_seen": "r1"
+    },
+    {
+      "id": "D2",
+      "severity": "P2",
+      "status": "partial",
+      "title": "CC>10 的 LOC 占比超阈",
+      "location": "packages/capabilities/dataagent-runtime/src/dataagent_runtime/enforcement.py:255 等",
+      "rules": [
+        "A5.1"
+      ],
+      "repro": {
+        "input": "quality_run ast 复杂度",
+        "expected": "CC>10 占比 ≤7.3%",
+        "actual": "r9 quality_run CC>10 LOC28.32%>7.3%, CC>25=0.0%; unchanged runtime source"
+      },
+      "fix_evidence": "r9 remeasured partial: /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence/runtime.quality.md",
+      "first_seen": "r1"
+    },
+    {
+      "id": "D3",
+      "severity": "P2",
+      "status": "open",
+      "title": "无默认超时、在途工作不可取消",
+      "location": "packages/capabilities/dataagent-runtime/src/dataagent_runtime/invoke.py:353-360,438-442; interfaces/unified.py:426-449",
+      "rules": [
+        "L4.2"
+      ],
+      "repro": {
+        "input": "长耗时 op 经 dataagent <layer> run",
+        "expected": "非空默认 deadline 且超时可取消",
+        "actual": "r9 CLI deadlineNone, explicit20ms executes130ms and statusok/completedtrue"
+      },
+      "fix_evidence": "r9 rerun original behavior; remainsopen: /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence/runtime-probes.log",
+      "first_seen": "r1"
+    },
+    {
+      "id": "D4",
+      "severity": "P2",
+      "status": "fixed",
+      "title": "4 处吞错",
+      "location": "packages/capabilities/dataagent-runtime/src/dataagent_runtime/interfaces/unified.py 等",
+      "rules": [
+        "A10.1"
+      ],
+      "repro": {
+        "input": "AST 吞错扫描",
+        "expected": "0 处",
+        "actual": "r1 4 处 → r2 0 处（quality_run 吞错 0/0）"
+      },
+      "fix_evidence": "r9 independent original/category recheck: cli_probe50checks0fail/management11checks0fail; scalar249/121/44 mismatch0; exactsummary boundary and longUnicode/full persistence pass; qualitydup2.13/swallow0; baseline actual refs/archive. /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence",
+      "first_seen": "r1"
+    },
+    {
+      "id": "D5",
+      "severity": "P1",
+      "status": "fixed",
+      "title": "Summary 32 KiB cap incomplete: exact encoded JSON limit omits stdout newline (long-handle case fixed)",
+      "location": "packages/capabilities/dataagent-runtime/src/dataagent_runtime/interfaces/unified.py:674-678,776",
+      "rules": [
+        "L2.1"
+      ],
+      "repro": {
+        "input": "followup_probe.py: existing_criteria_id=criteria:exact-boundary, proposal.expected_outputs length32200; gov run draft_acceptance_criteria --input-file exact-input.json",
+        "expected": "Complete stdout <=32768 bytes",
+        "actual": "exit0, encoded JSON32768 bytes, stdout32769 bytes (newline not included in fit budget)"
+      },
+      "fix_evidence": "r9 real dispatcher precise JSON32767->stdout32768 no truncation; JSON32768/32769/40000->stdout339 truncated, durable full exact; long40K/Unicode handle and full_equals_disk probes pass. /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence/boundary-results.json",
+      "first_seen": "r1"
+    },
+    {
+      "id": "D6",
+      "severity": "P2",
+      "status": "fixed",
+      "title": "dispatcher usage 文本多写 <layer>",
+      "location": "packages/capabilities/dataagent-cli/bin/dataagent:224-225",
+      "rules": [],
+      "repro": {
+        "input": "dataagent bogus",
+        "expected": "usage 含 'dataagent gov policy apply <file>'",
+        "actual": "r1 为 'dataagent <layer> gov policy apply <file>'；r2 实跑第 14 行为正确文本"
+      },
+      "fix_evidence": "r9 independent original/category recheck: cli_probe50checks0fail/management11checks0fail; scalar249/121/44 mismatch0; exactsummary boundary and longUnicode/full persistence pass; qualitydup2.13/swallow0; baseline actual refs/archive. /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence",
+      "first_seen": "r1"
+    },
+    {
+      "id": "D7",
+      "severity": "P2",
+      "status": "fixed",
+      "title": "--detail full 未做外发剥离",
+      "location": "packages/capabilities/dataagent-runtime/src/dataagent_runtime/interfaces/unified.py:456-476,738-742",
+      "rules": [
+        "L3.3"
+      ],
+      "repro": {
+        "input": "r1-repro/probe_detail_egress.py（enforce + egress_decision_ref=None）",
+        "expected": "summary/full 均无 statement/fields",
+        "actual": "r2 两条通道 statement 均 False"
+      },
+      "fix_evidence": "r9 independent original/category recheck: cli_probe50checks0fail/management11checks0fail; scalar249/121/44 mismatch0; exactsummary boundary and longUnicode/full persistence pass; qualitydup2.13/swallow0; baseline actual refs/archive. /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence",
+      "first_seen": "r1"
+    },
+    {
+      "id": "D8",
+      "severity": "P2",
+      "status": "fixed",
+      "title": "--file 指向不存在的文件抛未捕获 FileNotFoundError（traceback，无结构化输出）",
+      "location": "packages/capabilities/dataagent-runtime/src/dataagent_runtime/interfaces/unified.py:572-579",
+      "rules": [
+        "L2.4"
+      ],
+      "repro": {
+        "input": "DATAAGENT_WORKSPACE=... python -m dataagent_data.interfaces.cli run parse_delimited_file --file nope.csv",
+        "expected": "exit 2 usage error（或 failed JSON），不抛 traceback",
+        "actual": "exit 1 + FileNotFoundError traceback，stdout 空"
+      },
+      "first_seen": "r2",
+      "fix_evidence": "r9 independent original/category recheck: cli_probe50checks0fail/management11checks0fail; scalar249/121/44 mismatch0; exactsummary boundary and longUnicode/full persistence pass; qualitydup2.13/swallow0; baseline actual refs/archive. /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    {
+      "id": "D9",
+      "severity": "P2",
+      "status": "fixed",
+      "title": "gov confirm 收到非法 confirmation 载荷时抛未捕获 pydantic ValidationError",
+      "location": "packages/capabilities/dataagent-governance/src/dataagent_governance/interfaces/cli.py:113-123",
+      "rules": [],
+      "repro": {
+        "input": "confirm 文件 {\"criteria_id\":\"c:1\",\"criteria_revision\":\"r1\",\"confirmation\":{\"confirmation_id\":\"conf:1\",\"confirmer_ref\":\"user:boss\",\"confirmed_at\":\"2026-11-04T12:00:00Z\"}}",
+        "expected": "exit 2 schema/usage error",
+        "actual": "exit 1 + pydantic_core ValidationError traceback"
+      },
+      "first_seen": "r2",
+      "fix_evidence": "r9 independent original/category recheck: cli_probe50checks0fail/management11checks0fail; scalar249/121/44 mismatch0; exactsummary boundary and longUnicode/full persistence pass; qualitydup2.13/swallow0; baseline actual refs/archive. /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    {
+      "id": "D10",
+      "severity": "P1",
+      "status": "fixed",
+      "title": "--set 无法处理 anyOf/$ref 的标量字段（含必填 VersionedRef），与「按 inputSchema 转换类型」契约不符",
+      "location": "packages/capabilities/dataagent-runtime/src/dataagent_runtime/interfaces/unified.py:176-242",
+      "rules": [],
+      "first_seen": "r4",
+      "repro": {
+        "input": "dataagent gov run check_access_scope --set resource_ref=table@*；dataagent data run parse_delimited_file --file sales.csv --set delimiter=,",
+        "expected": "exit 0（mint allow AccessDecision / 解析成功，与 --set-json 等价）",
+        "actual": "exit 2，stderr \"usage error: --set resource_ref: field is not a scalar; use --set-json resource_ref=<json>\"（delimiter 同）；--set-json '\"table@*\"' / '\",\"' 可用。探针统计 63 个字段/30 ops 受影响（data 15/32、app 11/13、gov 4/6），含 7 个必填字段（append_* 的 task_ref/target_ref、evaluate_business_acceptance 的两个 ref、check_access_scope.resource_ref）"
+      },
+      "fix_evidence": "r9 independent original/category recheck: cli_probe50checks0fail/management11checks0fail; scalar249/121/44 mismatch0; exactsummary boundary and longUnicode/full persistence pass; qualitydup2.13/swallow0; baseline actual refs/archive. /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    {
+      "id": "D11",
+      "severity": "P2",
+      "status": "fixed",
+      "title": "r4 证据链引用失效 tag object（8544568c，unreachable），与实际 ref 20022e0a 不一致",
+      "location": "docs/research/dataagent-2026-11-03/12-cli-build/r4-fixes.md:17；r4-runtime.score.json hard_rules.R13",
+      "rules": [
+        "L6.2"
+      ],
+      "first_seen": "r4",
+      "repro": {
+        "input": "git rev-parse dataagent-runtime-0.1.0；对比 r4-fixes.md:17 / r4-runtime.score.json 声明的 8544568cfbea078b3131d208b8e4d6a4193a9a87",
+        "expected": "声明对象 = ref 对象（同一个 tag object）",
+        "actual": "ref=20022e0a962ecd42fd575bd9b8872ca2f11c3f99；8544568c 为 unreachable tag（git fsck --unreachable），其 message 内 digest 为 68 位畸形串 78c93a64...dd94；实际 tag 20022e0a 的 message digest 正确。tag 由 03:42:32（8544568c）重建为 03:42:38（20022e0a），记录未同步"
+      },
+      "fix_evidence": "r9 independent original/category recheck: cli_probe50checks0fail/management11checks0fail; scalar249/121/44 mismatch0; exactsummary boundary and longUnicode/full persistence pass; qualitydup2.13/swallow0; baseline actual refs/archive. /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    {
+      "id": "D12",
+      "severity": "P1",
+      "status": "fixed",
+      "title": "--ref cannot narrow rich CriteriaRef to VersionedRef",
+      "location": "packages/capabilities/dataagent-runtime/src/dataagent_runtime/interfaces/unified.py:360-385",
+      "rules": [
+        "L2.4"
+      ],
+      "first_seen": "r5-reviewer",
+      "repro": {
+        "input": "draft criteria then gov run evaluate_business_acceptance --ref criteria_ref=<returned handle> --set evaluation_set_ref=set:missing@r1 --set-json deliveries=[{\"case_id\":\"case:1\",\"timed_out\":true}]",
+        "expected": "model schema validation succeeds exactly as --set control",
+        "actual": "--ref exit 2 with nine extra_forbidden errors; --set same handle exit 1 business not_found (criteria successfully loaded)"
+      },
+      "fix_evidence": "r9 independent original/category recheck: cli_probe50checks0fail/management11checks0fail; scalar249/121/44 mismatch0; exactsummary boundary and longUnicode/full persistence pass; qualitydup2.13/swallow0; baseline actual refs/archive. /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    {
+      "id": "D13",
+      "severity": "P1",
+      "status": "fixed",
+      "title": "Missing mint.lock pinned version silently dispatches another version",
+      "location": "packages/capabilities/dataagent-cli/bin/dataagent:63-71",
+      "rules": [],
+      "first_seen": "r5-reviewer",
+      "repro": {
+        "input": "mint.lock pins data-layer=0.2.0, only data-layer@0.1.0 installed; dataagent data list",
+        "expected": "exit 3 pinned package missing; do not execute unpinned code",
+        "actual": "exit 0 and 32 operation list from data-layer@0.1.0"
+      },
+      "fix_evidence": "r9 independent original/category recheck: cli_probe50checks0fail/management11checks0fail; scalar249/121/44 mismatch0; exactsummary boundary and longUnicode/full persistence pass; qualitydup2.13/swallow0; baseline actual refs/archive. /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    {
+      "id": "D14",
+      "severity": "P1",
+      "status": "fixed",
+      "title": "doctor returns success when required policy is missing",
+      "location": "packages/capabilities/dataagent-cli/bin/dataagent:177-206",
+      "rules": [
+        "L6.2"
+      ],
+      "first_seen": "r5-reviewer",
+      "repro": {
+        "input": "all real venvs present, fresh data_root, DATAAGENT_ENFORCEMENT_MODE=enforce; dataagent doctor",
+        "expected": "exit 3 missing policy",
+        "actual": "exit 0 with policy:none; subsequent data run --authorize exits 3"
+      },
+      "fix_evidence": "r9 independent original/category recheck: cli_probe50checks0fail/management11checks0fail; scalar249/121/44 mismatch0; exactsummary boundary and longUnicode/full persistence pass; qualitydup2.13/swallow0; baseline actual refs/archive. /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    {
+      "id": "D15",
+      "severity": "P1",
+      "status": "fixed",
+      "title": "Valid proposal-only second-stage input rejected before schema validation",
+      "location": "packages/capabilities/dataagent-runtime/src/dataagent_runtime/interfaces/unified.py:142-154",
+      "rules": [
+        "L2.4"
+      ],
+      "first_seen": "r5-reviewer",
+      "repro": {
+        "input": "gov run draft_acceptance_criteria --proposal-file proposal.json (complete valid CriteriaProposal)",
+        "expected": "exit 0 draft created; all remaining input model fields optional",
+        "actual": "exit 2 no input given; identical call plus --input-file empty.json exits 0"
+      },
+      "fix_evidence": "r9 independent original/category recheck: cli_probe50checks0fail/management11checks0fail; scalar249/121/44 mismatch0; exactsummary boundary and longUnicode/full persistence pass; qualitydup2.13/swallow0; baseline actual refs/archive. /Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence"
+    },
+    {
+      "id": "D16",
+      "severity": "P1",
+      "status": "partial",
+      "first_seen": "r6",
+      "title": "r9 subset lock parser still bypasses equivalent TOML pins; newly regresses quoted-header missing-pin fail-closed",
+      "location": "packages/capabilities/dataagent-cli/bin/dataagent:183-205,113-163,231-244,314-332",
+      "rules": [
+        "L2.1",
+        "L2.4"
+      ],
+      "repro": {
+        "input": "Actual Mint-accepted [[\"package\"]], [['package']], escaped quoted name/version keys, multiline basic/literal strings and inline package array; data-layer0.1+0.2 installed. Missing pin0.9.9 with quoted header pre/post r8/r9.",
+        "expected": "Resolve same pin0.1 as actual Mint; missing pin0.9.9 fails3 before execution.",
+        "actual": "Original24/24pass; edge20/24fail: header/escaped name key/inline array silently execute0.2; escaped version key/multiline reject3; missing quoted header r8exit3->r9exit0exec0.2 (new regression)."
+      },
+      "fix_evidence": "Original r8 inputs fixed24/24, equivalent variants remain and missing-pin regression confirmed; lock-results.json/lock-edges-results.json/lock-control-results.json"
+    },
+    {
+      "id": "D17",
+      "severity": "P1",
+      "status": "fixed",
+      "first_seen": "r8-reviewer",
+      "title": "CLI Mint manifest cannot be parsed: [artifacts] omits required layout, blocking CLI and preset dependency resolution",
+      "location": "packages/capabilities/dataagent-cli/mint.toml:15-19; packages/capabilities/dataagent-s0/mint.toml:21",
+      "rules": [
+        "L2.1",
+        "L6.2"
+      ],
+      "repro": {
+        "input": "Fresh temp agent project dependencies dataagent/cli path=actual CLI package; mint0.1.26 lock --dry-run --offline -y. Same with dataagent/preset-s0 path.",
+        "expected": "Manifest parses; resolution reaches install/lock stage. CLI bundle installable.",
+        "actual": "exit1, missing field `layout` in `artifacts` at CLI mint.toml; fails before packages can install."
+      },
+      "fix_evidence": "Actual Mint0.1.26 init/add/post-addlock0; five dataagent packages installed; CLI executable byte-identical; independent installed bundle frozen env+doctor/list/parse pass. Original fresh lock now reaches path-lock missing entry exit2 rather than manifest parse exit1, correct Mint semantics; chain-add.json/chain-lock.json/install-results.json.",
+      "waiver": null
+    }
+  ],
+  "rubric_sha256": "5e65f6c6006a28192894e531c362bfbf668e43bde338974f3ab1b0342a6d4f1c"
+}

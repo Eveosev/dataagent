@@ -66,3 +66,10 @@
 | [r9-runtime.score.json](r9-runtime.score.json) | r9 | 开发者自评结果（93.1 / A / 无闸门；D16/D17 fixed；D2 partial、D3 open 留待后续轮；runtime 源零改动） |
 | [r9-runtime.quality.md](r9-runtime.quality.md) | r9 | `quality_run.py` 机器测量报告（112 passed、重复率 2.13%、CC>10 28.32%） |
 | [r9.score.txt](r9.score.txt) | r9 | 自评 `score_landing.py` 输出（93.1 / A / 无闸门）；修复证据 [r9-fix-evidence](/Users/payne/.dsh/state/agent-teamwork/team/r9-fix-evidence/)（install-chain.log、lock-results.json、D16_pre_post_control.txt） |
+| [独立评审](<r9-review.md>) | r9 | **不可验收 79.0 / C**，GATE-P1 D16 + GATE-CHECKLIST #b9b374；D17 fixed、原锁24/24通过，但实际Mint可解析的quoted/escaped表头与键、inline package数组绕过pin、多行pin误拒（补充20/24失败）；quoted missing pin同输入r8exit3→r9exit0exec0.2回归；五套112/654/203/123/36全绿 |
+| [Reviewer独立评分](<r9-reviewer-runtime.score.json>) / [评分输出](<r9-reviewer.score.txt>) / [轮次对比](<r9-reviewer-round-diff.txt>) | r9 | 17条缺陷完整复核，done16 / partial1 / na11；D17关闭、D16部分修复、D2/D3保持P2；round_diff状态rc0不代表输入级无回归 |
+| [Reviewer机器报告](<r9-reviewer-runtime.quality.md>) / [复现证据](</Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence/>) / [真实stdout截图](</Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence/cli-actual-output.png>) | r9 | 独立质量、真实Mint安装及installed bundle执行、原24与补充24锁矩阵；截图为浏览器原样渲染真实CLI stdout，原生桌面截图失败未验证 |
+| [r10-fixes.md](r10-fixes.md) | r10 | 开发者修复记录：r9-review D16 残余——`pinned_version` 由逐行解析改为**单遍字符级 TOML 扫描器**（POSIX awk + LC_ALL=C，镜像 stdlib tomllib 文法：解码点路径表头/键、完整字符串/inline/数组值、根级 `package=[{…}]` 同一数组、tomllib 重复键注册表），不可解析/不可排除 pin 一律 exit 2 fail-closed；无 Python 依赖与三态出口语义逐字保留 |
+| [r10-runtime.score.json](r10-runtime.score.json) | r10 | 开发者自评结果（93.1 / A / 无闸门；D16 fixed；D2 partial、D3 open 留待后续轮；runtime 源零改动，cli@03c900e7…） |
+| [r10-runtime.quality.md](r10-runtime.quality.md) | r10 | `quality_run.py` 机器测量报告（112 passed、重复率 2.13%、CC>10 28.32%） |
+| [r10.score.txt](r10.score.txt) | r10 | 自评 `score_landing.py` 输出（93.1 / A / 无闸门）；round_diff r9→r10 rc=0 无回归；修复证据 [r10-fix-evidence](/Users/payne/.dsh/state/agent-teamwork/team/r10-fix-evidence/)（lock-results.json、lock-edges-results.json、lock-control-results.json、lock-fuzz-results.json、lock-fuzz-invalid-results.json 及探针脚本） |
