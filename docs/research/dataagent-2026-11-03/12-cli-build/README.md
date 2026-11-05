@@ -21,3 +21,6 @@
 | [r3-fixes.md](r3-fixes.md) | r3 | 开发者修复记录：D8/D9 两条 P2（结构化 exit 2，无 traceback）+ R13 更正为 unknown（自评与 Tester 评分同构 89.0） |
 | [r3-runtime.score.json](r3-runtime.score.json) | r3 | 开发者自评结果（89.0 / B / GATE-UNKNOWN；D8/D9 fixed、D2 partial、D3 open；R13 清除待 owner 决策） |
 | [r3.score.txt](r3.score.txt) | r3 | 自评 `score_landing.py` 输出 |
+| [r4-fixes.md](r4-fixes.md) | r4 | 开发者基线建立记录：owner 批准后 git init + tag `dataagent-runtime-0.1.0`（commit `fbe24d8`），R13 green；产品代码与 r3 零改动 |
+| [r4-runtime.score.json](r4-runtime.score.json) | r4 | 开发者自评结果（93.1 / A / 无闸门；R13 green 证据：基线 tag + 旧 wire 形状锁定测试 16 passed） |
+| [r4.score.txt](r4.score.txt) | r4 | 自评 `score_landing.py` 输出 |
