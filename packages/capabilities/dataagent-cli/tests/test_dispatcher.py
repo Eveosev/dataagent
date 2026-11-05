@@ -17,6 +17,17 @@ from pathlib import Path
 BIN = Path(__file__).resolve().parents[1] / "bin" / "dataagent"
 
 FAKE_PYTHON = """#!/bin/sh
+if [ "$1" = "-c" ]; then
+    case $2 in
+        *policy*)
+            # doctor policy probe (r5-review D14): configured iff the
+            # marker file exists, otherwise the "no policy" exit code.
+            [ -f "$DATAAGENT_FAKE_POLICY" ] && exit 0
+            exit 1
+            ;;
+    esac
+    exit 0
+fi
 printf '%s\\n' "$@" > "$DATAAGENT_FAKE_ARGS"
 printf '%s\\n' "$0" > "$DATAAGENT_FAKE_CWD"
 env | sort | grep -v '^_' > "$DATAAGENT_FAKE_ENV"
@@ -44,6 +55,7 @@ class DispatcherTests(unittest.TestCase):
             "DATAAGENT_FAKE_ARGS": str(self.out / "args"),
             "DATAAGENT_FAKE_CWD": str(self.out / "cwd"),
             "DATAAGENT_FAKE_ENV": str(self.out / "env"),
+            "DATAAGENT_FAKE_POLICY": str(self.out / "policy"),
             "DATAAGENT_HOST_SUBJECT_REF": "user:alice",
             "DATAAGENT_HOST_PURPOSE": "monthly_report",
             "MINT_MODEL_API_KEY": "secret-token",
@@ -92,6 +104,23 @@ class DispatcherTests(unittest.TestCase):
         result = self._run("gov", "list")
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("governance-layer@0.1.0", (self.out / "cwd").read_text())
+
+    def test_pinned_version_missing_exits_3(self):
+        """r5-review D13: a locked version that is not installed must not be
+        silently replaced by another installed version."""
+
+        _make_layer(self.project, "data-layer", "0.1.0")
+        (self.project / "mint.lock").write_text(
+            'v = 1\n\n[[package]]\nname = "dataagent/data-layer"\n'
+            'version = "0.2.0"\nkind = "bundle"\n',
+            encoding="utf-8",
+        )
+        result = self._run("data", "list")
+        self.assertEqual(result.returncode, 3)
+        self.assertIn("pins dataagent/data-layer@0.2.0", result.stderr)
+        self.assertIn("not installed", result.stderr)
+        # nothing was executed: the layer process never ran
+        self.assertFalse((self.out / "args").exists())
 
     def test_without_lock_highest_version_wins(self):
         _make_layer(self.project, "governance-layer", "0.1.0")
@@ -157,10 +186,43 @@ class DispatcherTests(unittest.TestCase):
     def test_doctor_all_layers_present_exits_0(self):
         for pkg in ("data-layer", "application-layer", "governance-layer"):
             _make_layer(self.project, pkg, "0.1.0")
+        (self.out / "policy").write_text("{}\n", encoding="utf-8")
         result = self._run("doctor")
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("venv     data-layer: ok", result.stdout)
+        self.assertIn("policy:   configured", result.stdout)
         self.assertIn("data_root:", result.stdout)
+
+    def test_doctor_missing_policy_exits_3(self):
+        """r5-review D14: a missing policy is a failing doctor check.
+
+        Packages, venvs and data_root are fine, but no policy is applied —
+        doctor used to print "policy: none" and still exit 0, while the
+        next --authorize call would exit 3.
+        """
+
+        for pkg in ("data-layer", "application-layer", "governance-layer"):
+            _make_layer(self.project, pkg, "0.1.0")
+        result = self._run("doctor")
+        self.assertEqual(result.returncode, 3)
+        self.assertIn("policy:   none", result.stderr)
+        self.assertIn("gov policy apply", result.stderr)
+
+    def test_doctor_pinned_version_missing_exits_3(self):
+        """r5-review D13 (doctor face): a locked version that is not
+        installed is reported as missing, not bypassed."""
+
+        for pkg in ("data-layer", "application-layer", "governance-layer"):
+            _make_layer(self.project, pkg, "0.1.0")
+        (self.out / "policy").write_text("{}\n", encoding="utf-8")
+        (self.project / "mint.lock").write_text(
+            'v = 1\n\n[[package]]\nname = "dataagent/data-layer"\n'
+            'version = "0.2.0"\nkind = "bundle"\n',
+            encoding="utf-8",
+        )
+        result = self._run("doctor")
+        self.assertEqual(result.returncode, 3)
+        self.assertIn("MISSING pinned 0.2.0", result.stderr)
 
 
 if __name__ == "__main__":

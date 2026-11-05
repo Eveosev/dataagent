@@ -139,8 +139,18 @@ def _parse_params(params: list[str]) -> Parsed:
             raise UsageError(f"{token} requires a value")
         _parse_pair(parsed, token, params[index + 1])
         index += 2
-    if not (parsed.input_file or parsed.sets or parsed.set_jsons or parsed.file or parsed.refs):
-        raise UsageError("no input given: use --input-file, --set/--set-json, --file or --ref")
+    if not (
+        parsed.input_file
+        or parsed.sets
+        or parsed.set_jsons
+        or parsed.file
+        or parsed.refs
+        or parsed.proposal_file
+    ):
+        raise UsageError(
+            "no input given: use --input-file, --set/--set-json, --file, "
+            "--ref or --proposal-file"
+        )
     return parsed
 
 
@@ -296,7 +306,7 @@ def _proposal_field(spec: Any, properties: dict[str, dict[str, Any]]) -> str:
     raise UsageError("--proposal-file: this operation has no proposal input field")
 
 
-def _resolve_handle(runtime: Any, handle: str, field_type: type | None = None) -> dict[str, Any]:
+def _resolve_handle(runtime: Any, handle: str, field_type: type | None = None) -> Any:
     """Resolve ``id@revision`` against previously written CLI results.
 
     Handles reference objects produced by earlier calls (tables, documents,
@@ -305,7 +315,10 @@ def _resolve_handle(runtime: Any, handle: str, field_type: type | None = None) -
     identity inside an object (a ``TableRef``'s asset, a plain
     ``VersionedRef``); when the target field declares a model type, the
     candidate chain (match, then its containers) is validated against it so
-    the field receives the whole wrapper object, not the inner asset.
+    the field receives the whole wrapper object, not the inner asset. A field
+    whose model takes the string form (``VersionedRef``) can be filled from
+    any handle, rich or plain: the handle string itself is the identity
+    (r5-review D12).
     """
 
     results_dir = Path(runtime.data_root) / "results"
@@ -324,16 +337,17 @@ def _resolve_handle(runtime: Any, handle: str, field_type: type | None = None) -
             continue
         chain = _find_chain(record.get("result", record), handle)
         if chain is not None:
-            return _pick_chain_candidate(chain, field_type)
+            return _pick_chain_candidate(chain, field_type, handle)
     raise UsageError(f"--ref: handle {handle!r} not found in any result record")
 
 
-def _validated_candidate(candidate: dict[str, Any], field_type: type) -> dict[str, Any] | None:
+def _validated_candidate(candidate: Any, field_type: type) -> Any:
     """The candidate validated against ``field_type``, or ``None``.
 
     Chain nodes that do not fit the declared field type are expected
     (the chain contains inner assets and their wrappers); validation is a
-    filter, and the miss is returned, not raised.
+    filter, and the miss is returned, not raised. Works for the dict and
+    the string form alike — ``VersionedRef`` validates from both.
     """
 
     try:
@@ -343,7 +357,18 @@ def _validated_candidate(candidate: dict[str, Any], field_type: type) -> dict[st
     return candidate
 
 
-def _pick_chain_candidate(chain: list[Any], field_type: type | None) -> dict[str, Any]:
+def _pick_chain_candidate(chain: list[Any], field_type: type | None, handle: str) -> Any:
+    """The value a ``--ref`` field receives for ``handle``.
+
+    Preference order when the field declares a model type (r5-review D12):
+
+    1. the first chain object (match, then its containers) that validates —
+       a ``TableRef`` field takes the whole wrapper object;
+    2. the handle string itself — identity fields (``VersionedRef``) accept
+       ``"<id>@<revision>"`` no matter how rich the stored object is;
+    3. neither fits → usage error, never a silently incompatible value.
+    """
+
     if field_type is not None:
         for candidate in chain:
             if not isinstance(candidate, dict):
@@ -351,6 +376,13 @@ def _pick_chain_candidate(chain: list[Any], field_type: type | None) -> dict[str
             validated = _validated_candidate(candidate, field_type)
             if validated is not None:
                 return validated
+        validated = _validated_candidate(handle, field_type)
+        if validated is not None:
+            return validated
+        raise UsageError(
+            f"--ref: handle {handle!r} does not fit field type "
+            f"{getattr(field_type, '__name__', field_type)!r}"
+        )
     for candidate in chain:
         if isinstance(candidate, dict):
             return candidate
@@ -630,9 +662,13 @@ def _fit_summary(summary: dict[str, Any]) -> dict[str, Any]:
 
     Steps, taken only while the encoded summary is still oversized: drop
     the ``data`` payload, cap the issue list, clip each remaining issue's
-    ``inference_request`` content. Nothing durable is lost — the untouched
-    record stays in ``result_path`` (and, for ``needs_input``, in the
-    ``.inference_request.json`` file).
+    ``inference_request`` content, clip oversized handles and finally shed
+    them. Nothing durable is lost — the untouched record stays in
+    ``result_path`` (and, for ``needs_input``, in the
+    ``.inference_request.json`` file). The returned summary always fits:
+    a single handle can alone exceed the limit (r5-review D5), so the
+    encoded size is re-checked after every step, down to a minimal
+    record identity.
     """
 
     def fits(candidate: dict[str, Any]) -> bool:
@@ -662,8 +698,22 @@ def _fit_summary(summary: dict[str, Any]) -> dict[str, Any]:
             "retryable": False,
         }
     ]
-    shrunk["handles"] = (shrunk.get("handles") or [])[:200]
-    return shrunk
+    handles = [
+        handle if len(handle) <= 200 else _clip_value(handle) for handle in shrunk.get("handles") or []
+    ]
+    while handles and not fits({**shrunk, "handles": handles}):
+        handles = handles[:-1]
+    shrunk["handles"] = handles
+    if fits(shrunk):
+        return shrunk
+    # Pathological residue (e.g. a runaway result_path): the identity of the
+    # record still fits — everything else is in result_path.
+    return {
+        "status": shrunk.get("status"),
+        "invocation_id": shrunk.get("invocation_id"),
+        "issues": shrunk["issues"],
+        "result_path": str(shrunk.get("result_path"))[:1024],
+    }
 
 
 def _emit(

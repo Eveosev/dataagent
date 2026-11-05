@@ -45,7 +45,9 @@ module_of() {
 }
 
 # Version pinned in mint.lock wins; without a pin the highest installed
-# version is used (12 §5.1: 按 mint.lock 取版本).
+# version is used (12 §5.1: 按 mint.lock 取版本). A pin that is not
+# installed is an environment error (exit 3) — never silently fall back
+# to another version (r5-review D13).
 pinned_version() {
     pkg=$1
     [ -f ./mint.lock ] || return 1
@@ -59,7 +61,9 @@ resolve_dir() {
     [ -d "$root" ] || die "no installed dataagent packages under $root (mint add dataagent/preset-s0)"
     dir=""
     if ver=$(pinned_version "$pkg"); then
-        [ -n "$ver" ] && [ -d "$root/$pkg@$ver" ] && dir="$root/$pkg@$ver"
+        [ -n "$ver" ] || die "mint.lock pins dataagent/$pkg without a readable version"
+        [ -d "$root/$pkg@$ver" ] || die "mint.lock pins dataagent/$pkg@$ver but that version is not installed (mint add dataagent/preset-s0)"
+        dir="$root/$pkg@$ver"
     fi
     if [ -z "$dir" ]; then
         dir=$(ls -d "$root/$pkg@"* 2>/dev/null | sort -V | tail -1) || dir=""
@@ -119,17 +123,32 @@ setup_cmd() {
     echo "setup: ok"
 }
 
+# doctor: report, don't die — collect every failing check into one exit
+# status (3). A missing policy is a failing check, not a success with a
+# note (r5-review D14): enforce-mode runs would exit 3 on the next
+# --authorize anyway.
 doctor_cmd() {
     status=0
     for layer in $LAYERS; do
         pkg=$(layer_pkg "$layer")
-        if dir=$(ls -d "./.mint/packages/dataagent/$pkg@"* 2>/dev/null | sort -V | tail -1) && [ -n "$dir" ]; then
-            echo "package  dataagent/$pkg: $dir"
-        else
+        dir=""
+        if ver=$(pinned_version "$pkg"); then
+            if [ -n "$ver" ] && [ ! -d "./.mint/packages/dataagent/$pkg@$ver" ]; then
+                echo "package  dataagent/$pkg: MISSING pinned $ver (mint add dataagent/preset-s0)" >&2
+                status=3
+                continue
+            fi
+            [ -n "$ver" ] && dir="./.mint/packages/dataagent/$pkg@$ver"
+        fi
+        if [ -z "$dir" ]; then
+            dir=$(ls -d "./.mint/packages/dataagent/$pkg@"* 2>/dev/null | sort -V | tail -1) || dir=""
+        fi
+        if [ -z "$dir" ]; then
             echo "package  dataagent/$pkg: MISSING (mint add dataagent/preset-s0)" >&2
             status=3
             continue
         fi
+        echo "package  dataagent/$pkg: $dir"
         if [ -x "$dir/.venv/bin/python" ]; then
             if "$dir/.venv/bin/python" -c "import $(module_of "$layer")" >/dev/null 2>&1; then
                 echo "venv     $pkg: ok"
@@ -148,20 +167,37 @@ doctor_cmd() {
     else
         echo "data_root: $root (will be created on first run)"
     fi
-    gov_dir=$(ls -d ./.mint/packages/dataagent/governance-layer@* 2>/dev/null | sort -V | tail -1)
+    gov_dir=""
+    if ver=$(pinned_version "governance-layer"); then
+        [ -n "$ver" ] && gov_dir="./.mint/packages/dataagent/governance-layer@$ver"
+    fi
+    if [ -z "$gov_dir" ]; then
+        gov_dir=$(ls -d ./.mint/packages/dataagent/governance-layer@* 2>/dev/null | sort -V | tail -1) || gov_dir=""
+    fi
     if [ -n "$gov_dir" ] && [ -x "$gov_dir/.venv/bin/python" ]; then
-        if "$gov_dir/.venv/bin/python" -c 'from dataagent_governance.runtime import default_runtime as d
+        # exit 0 = policy configured, 1 = none, anything else = probe broken
+        probe='
+try:
+    from dataagent_governance.runtime import default_runtime as d
+except Exception:
+    raise SystemExit(2)
 try:
     d().policy.load(None)
-    print("policy:   configured")
 except Exception:
-    print("policy:   none (run: dataagent gov policy apply <policy.json>)")' 2>/dev/null; then
-            :
-        else
-            echo "policy:   check failed" >&2
-        fi
+    raise SystemExit(1)
+'
+        rc=0
+        "$gov_dir/.venv/bin/python" -c "$probe" >/dev/null 2>&1 || rc=$?
+        case $rc in
+            0) echo "policy:   configured" ;;
+            1) echo "policy:   none (run: dataagent gov policy apply <policy.json>)" >&2
+               status=3 ;;
+            *) echo "policy:   check failed" >&2
+               status=3 ;;
+        esac
     else
         echo "policy:   governance layer unavailable" >&2
+        status=3
     fi
     echo "mode:     DATAAGENT_ENFORCEMENT_MODE=${DATAAGENT_ENFORCEMENT_MODE:-warn (default)}"
     if [ "$status" -ne 0 ]; then

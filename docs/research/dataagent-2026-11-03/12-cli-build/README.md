@@ -31,3 +31,11 @@
 | [r5-runtime.score.json](r5-runtime.score.json) | r5 | 开发者自评结果（93.1 / A / 无闸门；D10/D11 fixed、`#ceedd2` done；D2 partial、D3 open 留待后续轮） |
 | [r5-runtime.quality.md](r5-runtime.quality.md) | r5 | `quality_run.py` 机器测量报告 |
 | [r5.score.txt](r5.score.txt) | r5 | 自评 `score_landing.py` 输出 |
+| [r5-tester-runtime.score.json](r5-tester-runtime.score.json) | r5 | Tester 独立验收结果（93.1 / A / 可验收，无闸门；D10/D11 fixed、`#ceedd2` done；D2 partial、D3 open） |
+| [r5-tester.score.txt](r5-tester.score.txt) | r5 | Tester `score_landing.py` 输出 |
+| [r5-tester-runtime.quality.md](r5-tester-runtime.quality.md) | r5 | Tester 复跑的 `quality_run.py` 机器测量报告 |
+| [r5-review.md](r5-review.md) | r5 | 第 5 轮验收（可验收：D10/D11 复现通过、三层判型审计 121 字段/44 ops、R13 仍 green；93.1 / A，无闸门） |
+| [r6-fixes.md](r6-fixes.md) | r6 | 开发者修复记录：r5-review 后续探针 5 项——D12（`--ref` 富句柄进 VersionedRef 字段，字符串形回填）、D13（缺锁定版本 exit 3）、D14（doctor 缺策略 exit 3）、D15（proposal-only 输入判定）、D5 补全（32 KiB 兜底复检编码大小，单句柄裁剪） |
+| [r6-runtime.score.json](r6-runtime.score.json) | r6 | 开发者自评结果（93.1 / A / 无闸门；D12–D15 fixed、D5 re-fixed；D2 partial、D3 open 留待后续轮） |
+| [r6-runtime.quality.md](r6-runtime.quality.md) | r6 | `quality_run.py` 机器测量报告 |
+| [r6.score.txt](r6.score.txt) | r6 | 自评 `score_landing.py` 输出 |

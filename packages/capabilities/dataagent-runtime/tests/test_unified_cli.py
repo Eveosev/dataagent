@@ -48,7 +48,9 @@ class HandleOutput(BaseModel):
 
 
 class TwoPhaseInput(BaseModel):
-    value: int
+    # ``value`` optional so the proposal-only path (r5-review D15) is
+    # reachable without a second input flag.
+    value: int | None = None
     proposal: dict | None = None
 
 
@@ -66,6 +68,16 @@ class ScalarsInput(BaseModel):
     event_type: Literal["task_state", "note"] | None = None  # anyOf [$ref enum, null]
     note: Any = None  # anyOf [{}, null]
     sheets: list[str] | None = None  # anyOf [array, null] — not a scalar
+
+
+class FileFieldInput(BaseModel):
+    """An object-model field: --ref must fill it with a fitting object."""
+
+    f: FileRef
+
+
+class FileFieldOutput(BaseModel):
+    got: FileRef | None = None
 
 
 CAPTURED: dict[str, object] = {}
@@ -114,6 +126,13 @@ def _register():
     @operation("TEST.1.4", input_model=PingInput, output_model=PingOutput, description="big")
     def big(input_obj, ctx, runtime):  # noqa: ANN001
         return PingOutput(value=input_obj.value)
+
+    @operation(
+        "TEST.1.5", input_model=FileFieldInput, output_model=FileFieldOutput, description="file field"
+    )
+    def take_file(input_obj, ctx, runtime):  # noqa: ANN001
+        CAPTURED["payload"] = input_obj.model_dump(mode="json")
+        return FileFieldOutput(got=input_obj.f)
 
     @operation(
         "TEST.1.6", input_model=ScalarsInput, output_model=PingOutput, description="scalars"
@@ -348,6 +367,22 @@ def test_proposal_file_second_stage(env, capsys, tmp_path):
     assert summary["data"]["value"] == 5
 
 
+def test_proposal_file_alone_is_valid_input(env, capsys, tmp_path):
+    """r5-review D15: --proposal-file alone counts as input.
+
+    ``gov run draft_acceptance_criteria --proposal-file p.json`` used to
+    fail with "no input given" unless another input flag was present.
+    """
+
+    proposal = tmp_path / "proposal.json"
+    proposal.write_text(json.dumps({"measure": "sum"}))
+    code, out, err = _run_cli(["run", "two_phase", "--proposal-file", str(proposal)], capsys)
+    assert code == 0, err
+    summary = json.loads(out)
+    assert summary["status"] == "ok"
+    assert summary["data"]["value"] is None
+
+
 def test_ref_resolves_from_earlier_result(env, capsys):
     code, out, _ = _run_cli(
         ["run", "take_handle", "--set-json", "table=" + json.dumps({"id": "table:orders", "revision": "r2", "data_ref": "sha256:ab"})],
@@ -367,6 +402,71 @@ def test_ref_unknown_handle_is_usage(env, capsys):
     assert "unknown" in err
 
 
+def test_ref_rich_handle_fills_versioned_ref_field(env, capsys):
+    """r5-review D12: --ref reuses a rich (TableRef) handle in a VersionedRef field.
+
+    The stored object is a rich wrapper; the field only takes the identity,
+    so the handle string itself is the value — same result as --set.
+    """
+
+    rich = {
+        "id": "table:orders",
+        "revision": "r2",
+        "kind": "table",
+        "data_ref": "sha256:ab",
+        "columns": ["region", "amount"],
+    }
+    code, out, err = _run_cli(
+        ["run", "take_handle", "--set-json", "table=" + json.dumps(rich)], capsys
+    )
+    assert code == 0, err
+    code, out, err = _run_cli(
+        ["run", "scalars", "--ref", "resource_ref=table:orders@r2"], capsys
+    )
+    assert code == 0, err
+    payload = CAPTURED["scalars"]
+    assert payload["resource_ref"] == "table:orders@r2"
+
+
+def test_ref_incompatible_handle_is_usage_not_schema_error(env, capsys):
+    """r5-review D12: a handle that fits neither the chain nor the string form
+    is a usage error, not a silently incompatible value."""
+
+    rich = {"id": "table:orders", "revision": "r2", "kind": "table", "data_ref": "sha256:ab"}
+    code, out, _ = _run_cli(
+        ["run", "take_handle", "--set-json", "table=" + json.dumps(rich)], capsys
+    )
+    assert code == 0
+    code, _, err = _run_cli(["run", "take_file", "--ref", "f=table:orders@r2"], capsys)
+    assert code == 2
+    assert "does not fit field type" in err
+    assert "FileRef" in err
+
+
+def test_ref_rich_handle_still_fills_object_field(env, capsys):
+    """The D12 fix keeps the pre-existing behaviour: an object-model field
+    (FileRef) filled from a handle that names a fitting stored object."""
+
+    stored = {
+        "id": "file:doc",
+        "revision": "r1",
+        "kind": "file",
+        "scope_ref": "tenant:local",
+        "resolver": "local",
+        "locator": "files/doc",
+        "digest": "sha256:cd",
+        "content_digest": "sha256:cd",
+    }
+    code, out, _ = _run_cli(
+        ["run", "take_handle", "--set-json", "table=" + json.dumps(stored)], capsys
+    )
+    assert code == 0
+    code, out, err = _run_cli(["run", "take_file", "--ref", "f=file:doc@r1"], capsys)
+    assert code == 0, err
+    filled = CAPTURED["payload"]["f"]
+    assert {key: filled[key] for key in stored} == stored
+
+
 def test_summary_truncated_over_32kib(env, capsys):
     def invoke(op, payload, context):
         return CapabilityResult(
@@ -378,6 +478,33 @@ def test_summary_truncated_over_32kib(env, capsys):
     assert len(out.encode()) <= unified.SUMMARY_LIMIT
     summary = json.loads(out)
     assert summary["data"]["truncated"] is True
+
+
+def test_summary_single_oversized_handle_clipped(env, capsys):
+    """r5-review D5: the cap holds when one handle alone exceeds 32 KiB.
+
+    A legal input (a very long criteria id) produced a single 40 KiB
+    handle; the final fallback used to cap only the handle count, never
+    re-checking the encoded size.
+    """
+
+    big_id = "criteria:" + "c" * 40_000
+
+    def invoke(op, payload, context):
+        return CapabilityResult(
+            status=CapabilityStatus.ok, data={"ref": {"id": big_id, "revision": "r1"}}
+        )
+
+    code, out, _ = _run_cli(["run", "ping", "--set", "value=1"], capsys, invoke=invoke)
+    assert code == 0
+    assert len(out.encode()) <= unified.SUMMARY_LIMIT
+    summary = json.loads(out)
+    assert summary["data"]["truncated"] is True
+    handles = summary["handles"]
+    assert handles and all("clipped" in handle for handle in handles)
+    # nothing durable is lost: the un-clipped handle stays in result_path
+    saved = json.loads(Path(summary["result_path"]).read_text(encoding="utf-8"))
+    assert saved["data"]["ref"]["id"] == big_id
 
 
 def test_detail_full_prints_whole_result(env, capsys):
