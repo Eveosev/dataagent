@@ -1,0 +1,61 @@
+rubric: 2.1 sha256:5e65f6c6006a
+
+# 代码落地质检 — dataagent-runtime（统一 CLI 内核 + 三层接入 + dataagent/cli 分发器 + preset 依赖）；r7 修复 r6-review 两项阻断：D16（mint.lock 存在但无该层 pin 时，已安装层被误拒 exit 3，doctor/dispatch 解析不一致）、D5 残余（摘要恰 32,768 B JSON 时 print 换行使 stdout 32,769 B）；并补两项回归（真实 stdout 精确字节边界 + 无 pin 回退）（r7，2026-11-06，profile=runtime）
+facts_ref: dataagent-runtime@sha256:8a7692b415f87eed92aa13c5afed968cf6a916f72d46e94a966c304f24e8ac66
+snapshot: dataagent-runtime sha256:8a7692b415f87eed92aa13c5afed968cf6a916f72d46e94a966c304f24e8ac66
+
+总分: 93.1 / 100    等级: A 可交付    结论: 可验收    证据覆盖: 100.0%
+依据等级（按已判定权重）：A 46.0% / B 41.4% / C 12.6%
+
+| 闸门 | 封顶 | 触发项 |
+|-|-|-|
+| — | — | 无 |
+
+| 硬规则 | 依据 | 灯 |
+|-|-|-|
+| R01 依赖方向 | A | green |
+| R03 依赖无环 | A | green |
+| D1 重复率硬阈 | A | green |
+| V1 版本同步 | A | green |
+| E1 错误码登记 | A | na |
+| R13 破坏性变更升 major | A | green |
+| R14 契约对齐 | A | green |
+
+方案清单：docs/research/dataagent-2026-11-03/12-unified-cli-build-plan.md   共 25 条，done 17 / partial 0 / not_done 0 / 未判定 0 / na 8 / waived 0；完成率 100.0%
+缺陷：共 16 条；未关闭 P2 2（D2, D3）
+
+| 维度 | 权重 | 得分率 | 已判定 |
+|-|-|-|-|
+| 规模与重复率 | 6 | 100.0% | 2/2 |
+| 依赖与独立性 | 6 | 100.0% | 3/3 |
+| 抽象度 | 4 | 100.0% | 1/1 |
+| 内聚 | 4 | 100.0% | 1/1 |
+| 复杂度 | 7 | 42.9% | 3/3 |
+| 功能自足 | 5 | 100.0% | 2/2 |
+| 契约面（信息轴） | 0 | 0.0% | 1/1 |
+| 可替换性 | 4 | 100.0% | 2/2 |
+| 可装载性 | 6 | 100.0% | 3/3 |
+| 错误语义 | 5 | 100.0% | 1/2 |
+| 演进性 | 4 | 100.0% | 2/2 |
+| 契约对齐 | 4 | 100.0% | 2/2 |
+| 能力面落地 | 6 | 0.0% | 0/3 |
+| 语义正确性 | 12 | 100.0% | 4/5 |
+| 安全与治理 | 12 | 100.0% | 4/5 |
+| 健壮性与资源 | 6 | 50.0% | 2/3 |
+| 测试有效性 | 6 | 100.0% | 3/3 |
+| 发布与溯源 | 3 | 100.0% | 2/2 |
+
+得 0 的规则：
+- A5.1 CC>10 的 LOC 占比 ≤7.3%
+- L4.2 超时可中断
+
+不适用（出分母）：
+- A10.2：共享运行时未声明错误码登记源（错误码属各层 da* 命名空间）；rubric profile=runtime 的 may_na 含 A10.2
+- L1.1：共享运行时不注册 operation（registry.py 'ships zero operations'）；profile runtime 的 may_na
+- L1.2：无 catalog snapshot（packaging/source-ref.toml: 'no catalog snapshot applies'）；profile runtime 的 may_na
+- L1.3：无 operation 即无桩面；profile runtime 的 may_na
+- L2.5：执行侧复检由 invoke 的 access recheck 承担（enforcement.py:117），CLI 层无独立复检面；profile runtime 的 may_na
+- L3.5：SQL/表达式白名单属应用层 execute_duckdb_sql；profile runtime 的 may_na
+- L4.1：文件/页/行预算属数据/应用层 ops；profile runtime 的 may_na
+
+验收条件：总分 ≥80，且无闸门触发

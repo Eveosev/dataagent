@@ -507,6 +507,45 @@ def test_summary_single_oversized_handle_clipped(env, capsys):
     assert saved["data"]["ref"]["id"] == big_id
 
 
+def test_summary_boundary_counts_newline(env, capsys):
+    """r6-review D5: the 32 KiB cap is on real stdout, newline included.
+
+    A legal input whose summary JSON encoded to exactly SUMMARY_LIMIT
+    bytes used to pass the size check and print as SUMMARY_LIMIT + 1
+    bytes of stdout — the trailing newline that ``print`` appends.
+    """
+
+    def run(blob: str) -> str:
+        def invoke(op, payload, context):
+            return CapabilityResult(status=CapabilityStatus.ok, data={"blob": blob})
+
+        code, out, _ = _run_cli(["run", "ping", "--set", "value=1"], capsys, invoke=invoke)
+        assert code == 0
+        return out
+
+    # Calibrate: every summary component except the blob has a fixed size
+    # within one test (invocation_id and result_path lengths are stable),
+    # and the JSON grows one byte per extra "x".
+    probe = run("x" * 256)
+    assert probe.endswith("\n")
+    grow = unified.SUMMARY_LIMIT - len(probe.rstrip("\n").encode())
+
+    # Exactly at the old boundary: a SUMMARY_LIMIT-byte JSON must not be
+    # printed as SUMMARY_LIMIT + 1 bytes of stdout.
+    out = run("x" * (256 + grow))
+    assert out.endswith("\n")
+    assert len(out.encode()) <= unified.SUMMARY_LIMIT, len(out.encode())
+    summary = json.loads(out)
+    assert summary["data"]["truncated"] is True  # the boundary was really hit
+
+    # One byte below it passes through untruncated and exactly fills the
+    # budget: JSON + newline == SUMMARY_LIMIT bytes of stdout.
+    out = run("x" * (256 + grow - 1))
+    summary = json.loads(out)
+    assert summary["data"]["blob"] == "x" * (256 + grow - 1)
+    assert len(out.encode()) == unified.SUMMARY_LIMIT
+
+
 def test_detail_full_prints_whole_result(env, capsys):
     def invoke(op, payload, context):
         return CapabilityResult(status=CapabilityStatus.ok, data={"blob": "x" * (40 * 1024)})

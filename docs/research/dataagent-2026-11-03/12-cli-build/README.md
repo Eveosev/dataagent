@@ -39,3 +39,11 @@
 | [r6-runtime.score.json](r6-runtime.score.json) | r6 | 开发者自评结果（93.1 / A / 无闸门；D12–D15 fixed、D5 re-fixed；D2 partial、D3 open 留待后续轮） |
 | [r6-runtime.quality.md](r6-runtime.quality.md) | r6 | `quality_run.py` 机器测量报告 |
 | [r6.score.txt](r6.score.txt) | r6 | 自评 `score_landing.py` 输出 |
+| [r6-review.md](r6-review.md) | r6 | 第 6 轮独立验收：79.0 / C / 不可验收；D12–D15 fixed，但 D5 精确 stdout 边界仍 partial、新增 D16 无 pin 分发回归；GATE-P1 + GATE-CHECKLIST，视觉验收 unverified |
+| [r6-tester-runtime.score.json](r6-tester-runtime.score.json) | r6 | 独立评分，16 条缺陷完整复核：未关闭 P1 D5/D16、P2 D2/D3；清单 done15 / partial2 / na10 |
+| [r6-tester-runtime.quality.md](r6-tester-runtime.quality.md) | r6 | 独立机器测量：111 passed、重复率2.13%、CC>10 28.24%、吞错0、bundle一致 |
+| [r6-tester.score.txt](r6-tester.score.txt) | r6 | 独立 `score_landing.py` 输出：79.0 / C / GATE-P1 + GATE-CHECKLIST |
+| [r7-fixes.md](r7-fixes.md) | r7 | 开发者修复记录：r6-review 两项阻断——D16（`pinned_version` 无该层 pin → return 1，resolve_dir/doctor 同序回退最高已装）、D5 收口（`fits` 计入 print 换行，上限=整条 stdout 行）|
+| [r7-runtime.score.json](r7-runtime.score.json) | r7 | 开发者自评结果（93.1 / A / 无闸门；D16 fixed、D5 re-fixed；D2 partial、D3 open 留待后续轮）|
+| [r7-runtime.quality.md](r7-runtime.quality.md) | r7 | `quality_run.py` 机器测量报告（112 passed、重复率 2.13%、CC>10 28.32%）|
+| [r7.score.txt](r7.score.txt) | r7 | 自评 `score_landing.py` 输出 |

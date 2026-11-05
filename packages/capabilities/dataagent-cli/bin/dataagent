@@ -47,12 +47,18 @@ module_of() {
 # Version pinned in mint.lock wins; without a pin the highest installed
 # version is used (12 §5.1: 按 mint.lock 取版本). A pin that is not
 # installed is an environment error (exit 3) — never silently fall back
-# to another version (r5-review D13).
+# to another version (r5-review D13). A lock that has no entry for this
+# layer is simply "no pin" for this layer (r6-review D16): an installed
+# layer must resolve exactly like the no-lock case.
 pinned_version() {
     pkg=$1
     [ -f ./mint.lock ] || return 1
-    sed -n "/name = \"dataagent\\/$pkg\"/,/^\\[\\[/p" ./mint.lock |
-        grep -m1 '^version' | sed 's/.*"\(.*\)".*/\1/'
+    ver=$(sed -n "/name = \"dataagent\\/$pkg\"/,/^\\[\\[/p" ./mint.lock |
+        grep -m1 '^version' | sed 's/.*"\(.*\)".*/\1/')
+    # No lock entry for this package (or an unreadable one) is not a pin;
+    # failing here lets resolve_dir/doctor fall back to highest-installed.
+    [ -n "$ver" ] || return 1
+    printf '%s\n' "$ver"
 }
 
 resolve_dir() {
@@ -61,7 +67,6 @@ resolve_dir() {
     [ -d "$root" ] || die "no installed dataagent packages under $root (mint add dataagent/preset-s0)"
     dir=""
     if ver=$(pinned_version "$pkg"); then
-        [ -n "$ver" ] || die "mint.lock pins dataagent/$pkg without a readable version"
         [ -d "$root/$pkg@$ver" ] || die "mint.lock pins dataagent/$pkg@$ver but that version is not installed (mint add dataagent/preset-s0)"
         dir="$root/$pkg@$ver"
     fi
@@ -132,13 +137,16 @@ doctor_cmd() {
     for layer in $LAYERS; do
         pkg=$(layer_pkg "$layer")
         dir=""
+        # Same resolution order as resolve_dir (r6-review D16): pin when
+        # mint.lock pins this layer (and it is installed), otherwise the
+        # highest installed version — never a missing-pin rejection.
         if ver=$(pinned_version "$pkg"); then
-            if [ -n "$ver" ] && [ ! -d "./.mint/packages/dataagent/$pkg@$ver" ]; then
+            if [ ! -d "./.mint/packages/dataagent/$pkg@$ver" ]; then
                 echo "package  dataagent/$pkg: MISSING pinned $ver (mint add dataagent/preset-s0)" >&2
                 status=3
                 continue
             fi
-            [ -n "$ver" ] && dir="./.mint/packages/dataagent/$pkg@$ver"
+            dir="./.mint/packages/dataagent/$pkg@$ver"
         fi
         if [ -z "$dir" ]; then
             dir=$(ls -d "./.mint/packages/dataagent/$pkg@"* 2>/dev/null | sort -V | tail -1) || dir=""
@@ -169,7 +177,7 @@ doctor_cmd() {
     fi
     gov_dir=""
     if ver=$(pinned_version "governance-layer"); then
-        [ -n "$ver" ] && gov_dir="./.mint/packages/dataagent/governance-layer@$ver"
+        gov_dir="./.mint/packages/dataagent/governance-layer@$ver"
     fi
     if [ -z "$gov_dir" ]; then
         gov_dir=$(ls -d ./.mint/packages/dataagent/governance-layer@* 2>/dev/null | sort -V | tail -1) || gov_dir=""

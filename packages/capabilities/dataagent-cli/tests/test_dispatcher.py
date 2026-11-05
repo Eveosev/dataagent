@@ -224,6 +224,43 @@ class DispatcherTests(unittest.TestCase):
         self.assertEqual(result.returncode, 3)
         self.assertIn("MISSING pinned 0.2.0", result.stderr)
 
+    def test_lock_without_layer_pin_falls_back(self):
+        """r6-review D16: a mint.lock that pins other layers but not this
+        one is "no pin" for this layer — the installed layer resolves
+        like the no-lock case, and dispatch and doctor agree."""
+
+        for pkg in ("data-layer", "application-layer", "governance-layer"):
+            _make_layer(self.project, pkg, "0.1.0")
+        (self.out / "policy").write_text("{}\n", encoding="utf-8")
+        (self.project / "mint.lock").write_text(
+            'v = 1\n\n[[package]]\nname = "dataagent/governance-layer"\n'
+            'version = "0.1.0"\nkind = "bundle"\n',
+            encoding="utf-8",
+        )
+        result = self._run("data", "list")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("data-layer@0.1.0", (self.out / "cwd").read_text())
+        # the layer process really ran
+        self.assertEqual((self.out / "args").read_text().splitlines()[2], "list")
+        # doctor resolves the same layer the same way and stays green
+        result = self._run("doctor")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("package  dataagent/data-layer: ./.mint/packages/dataagent/data-layer@0.1.0",
+                      result.stdout)
+
+    def test_lock_unreadable_pin_falls_back(self):
+        """r6-review D16 (edge): a lock entry for the layer without a
+        readable version line is also not a pin — fall back, don't die."""
+
+        _make_layer(self.project, "data-layer", "0.1.0")
+        (self.project / "mint.lock").write_text(
+            'v = 1\n\n[[package]]\nname = "dataagent/data-layer"\nkind = "bundle"\n',
+            encoding="utf-8",
+        )
+        result = self._run("data", "list")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("data-layer@0.1.0", (self.out / "cwd").read_text())
+
 
 if __name__ == "__main__":
     unittest.main()

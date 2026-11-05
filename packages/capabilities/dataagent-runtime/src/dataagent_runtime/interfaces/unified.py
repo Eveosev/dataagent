@@ -668,11 +668,15 @@ def _fit_summary(summary: dict[str, Any]) -> dict[str, Any]:
     ``.inference_request.json`` file). The returned summary always fits:
     a single handle can alone exceed the limit (r5-review D5), so the
     encoded size is re-checked after every step, down to a minimal
-    record identity.
+    record identity. The cap is on the whole stdout line, so the trailing
+    newline ``print`` appends counts against the budget (r6-review D5:
+    an exactly 32,768-byte JSON used to print as 32,769 bytes of stdout).
     """
 
     def fits(candidate: dict[str, Any]) -> bool:
-        return len(json.dumps(candidate, ensure_ascii=False).encode("utf-8")) <= SUMMARY_LIMIT
+        # +1 for the "\n" print() writes after the JSON (stdout cap).
+        encoded = len(json.dumps(candidate, ensure_ascii=False).encode("utf-8"))
+        return encoded + 1 <= SUMMARY_LIMIT
 
     if fits(summary):
         return summary
