@@ -1,0 +1,1 @@
+How many pseudo users were active in the last 7 days but inactive in the last 2 days as of January 7, 2021?

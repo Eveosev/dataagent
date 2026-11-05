@@ -1,0 +1,38 @@
+[package]
+name = "dataagent/cli"
+version = "0.1.0"
+kind = "bundle"
+description = "DataAgent 统一 CLI 分发器：`dataagent <layer> <op>` 按层定位兄弟包 .venv 并 exec 各层 interfaces.cli，附 link/setup/doctor；无 Python 依赖、无 .mcp.json（12-unified-cli-research §5.1）"
+license = "Apache-2.0"
+keywords = ["dataagent", "cli", "dispatcher"]
+
+[requires]
+api = "^0.1"
+
+[provides]
+skills = ["dataagent-cli"]
+
+[artifacts]
+bin = "dataagent"
+
+[capabilities]
+exec = []
+fs.read = ["*"]
+fs.write = ["dataagent", ".dataagent/**"]
+
+[capabilities.reason]
+exec = "不拉起 MCP；bin/dataagent exec 兄弟层包 .venv 内的解释器（mint 不把包 bin/ 加入 PATH，12 §3.3）"
+"fs.read" = "读取项目内文件与共享 data_root；层进程自身的读取边界由各层声明"
+"fs.write" = "link 在项目根生成 ./dataagent；层进程仅在 data_root 写结果与内容寻址对象"
+
+[metadata.runtime]
+requires = []
+
+[metadata.env]
+# DECLARATION ONLY (W0 §6) — Mint 0.1.25 does not inject these from here.
+# The host sets them when launching `mint run` (12 §5.5): the executing
+# subject and the purpose are fixed by the user, never by the agent.
+DATAAGENT_HOST_SUBJECT_REF = "执行主体（如 user:alice）；只经宿主环境传入，不接受参数（12 §5.4）"
+DATAAGENT_HOST_PURPOSE = "调用用途（如 monthly_report）；只经宿主环境传入，不接受参数"
+DATAAGENT_DATA_ROOT = "共享 data_root（默认工作区 .dataagent/）；CLI 摘要与全文结果写 <data_root>/results/"
+DATAAGENT_ENFORCEMENT_MODE = "DA12.1 复检模式 off/warn/enforce；CLI 输出前的外发检查在 enforce 下剥离未决内容"

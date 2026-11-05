@@ -1,0 +1,1 @@
+Can you find the shortest distance between any two amenities (either a library, place of worship, or community center) located within Philadelphia?

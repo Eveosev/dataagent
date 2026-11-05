@@ -1,0 +1,50 @@
+{
+  "case_id": "B03-eb-0203",
+  "task_id": "B03",
+  "split_role": "regression",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://extractbench/docs/short/oklahoma_county_purchase_order_avl_systems.pdf",
+      "digest": null
+    },
+    {
+      "kind": "schema",
+      "ref": "fixtures/eb-short-oklahoma_county_purchase_order_avl_systems-schema.json",
+      "digest": null
+    },
+    {
+      "kind": "rules",
+      "ref": "fixtures/eb-short-oklahoma_county_purchase_order_avl_systems-rules.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-eb-0203.json"
+  },
+  "evidence": [
+    "bench://extractbench/docs/short/oklahoma_county_purchase_order_avl_systems.pdf",
+    "fixtures/eb-short-oklahoma_county_purchase_order_avl_systems-schema.json",
+    "fixtures/eb-short-oklahoma_county_purchase_order_avl_systems-rules.md"
+  ],
+  "tags": [
+    "extractbench",
+    "short",
+    "tag:source:real",
+    "tag:challenge:T3.b",
+    "tag:length:short",
+    "tag:domain:D5",
+    "fields:46"
+  ],
+  "source": "eb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

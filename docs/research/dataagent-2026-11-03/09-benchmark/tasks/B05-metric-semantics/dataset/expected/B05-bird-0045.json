@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 44,
+  "question": "I have a school on file with CDS code 1611430131177. Find the school in the same county as that school whose own SAT record shows the most students scoring at least 1500 (not a district-wide roll-up). If two schools tie on that count, use the one with the smaller CDS code. Send me that school's administrator's first and last name.",
+  "evidence": "CDS code: the County-District-School identifier assigned to each school; scoring at least 1500: a test taker whose combined SAT score is 1500 or higher.",
+  "gold_sql": "SELECT s.AdmFName1, s.AdmLName1 FROM satscores x JOIN schools s ON s.CDSCode = x.cds JOIN frpm f ON f.CDSCode = x.cds WHERE x.rtype = 'S' AND s.County = (SELECT County FROM schools WHERE CAST(CDSCode AS INTEGER) = 1611430131177) ORDER BY x.NumGE1500 DESC, CAST(f.`School Code` AS INTEGER) LIMIT 1",
+  "db_id": "california_schools",
+  "case_id": "B05-bird-0045",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT s.AdmFName1, s.AdmLName1 FROM satscores x JOIN schools s ON s.CDSCode = x.cds JOIN frpm f ON f.CDSCode = x.cds WHERE x.rtype = 'S' AND s.County = (SELECT County FROM schools WHERE CAST(CDSCode AS INTEGER) = 1611430131177) ORDER BY x.NumGE1500 DESC, CAST(f.`School Code` AS INTEGER) LIMIT 1",
+    "db_id": "california_schools",
+    "evidence": "CDS code: the County-District-School identifier assigned to each school; scoring at least 1500: a test taker whose combined SAT score is 1500 or higher."
+  }
+}

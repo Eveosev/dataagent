@@ -1,0 +1,67 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "redshift",
+  "pipeline": "world",
+  "data_model": {
+    "models": [
+      {
+        "name": "countries",
+        "description": "Each record represents a country.",
+        "columns": [
+          {
+            "name": "country_code",
+            "description": "The unique identifier of the country."
+          },
+          {
+            "name": "country_name",
+            "description": "The name of the country."
+          },
+          {
+            "name": "population",
+            "description": "The population of the country."
+          },
+          {
+            "name": "capital_name",
+            "description": "The name of the capital city of the country."
+          },
+          {
+            "name": "num_cities",
+            "description": "The number of cities in the country, replace NULL values with 0."
+          },
+          {
+            "name": "city_with_least_population",
+            "description": "The city in the country that has the least population, with ties broken by the ascending order of the city name"
+          },
+          {
+            "name": "GNP_growth_rate",
+            "description": "GNP growth rate of the country, expressed as a percentage."
+          },
+          {
+            "name": "use_most_widely_used_language_as_official_language",
+            "description": "Set to 1 if the country uses the language that is official in most countries as its official language, otherwise, set to 0"
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    redshift_definition_id: f7a7d195-377f-cf5b-70a5-be6b819019dc\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - City\nflat_files:\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=15QNS3D38PsRFdObjNUrleLfGPA6VNT03\n  sync_mode: full_refresh_append\n  table: CountryLanguage\npostgres:\n  config:\n    database: world\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - country\n    user: postgres\nredshift:\n  config:\n    host: <redshift_hostname>\n    port: <redshift_port>\n    database: <redshift_db>\n    username: <redshift_username>\n    password: <redshift_pwd>\n    schema: world\n    s3_bucket_name: <redshift_s3_bucket>\n    s3_bucket_region: <redshift_s3_region>\n    access_key_id: <redshift_s3_access_key>\n    secret_access_key: <redshift_s3_secret_key>\n",
+  "case_id": "B14-elt-0196",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "countries",
+        "columns": [
+          "country_code",
+          "country_name",
+          "population",
+          "capital_name",
+          "num_cities",
+          "city_with_least_population",
+          "GNP_growth_rate",
+          "use_most_widely_used_language_as_official_language"
+        ]
+      }
+    ]
+  }
+}

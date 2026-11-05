@@ -1,0 +1,21 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "uscis_3c7360ce",
+  "expect_label": "no",
+  "raw_label": "Dismissed",
+  "rule_predicates": [
+    "decision",
+    "catch",
+    "writeln",
+    "error",
+    "handle_undefined"
+  ],
+  "reference_prolog": "% Facts extracted from the Administrative Appeals Office case\n% (All boolean-style facts use arity 0 as required.)\n\n% The petitioner established the underlying EB-2 classification (not contested here).\neb2_eligibility.\n\n% The director treated the petitioner's business-plan-based description of operating her own\n% consulting company as a material change and did not consider that plan probative.\ndirector_treated_business_plan_as_material_change.\nbusiness_plan_not_considered_probative.\n\n% The petitioner did not contest the director's material-change determination on appeal,\n% and her appellate brief did not specifically address the national importance of the proposed endeavor.\npetitioner_did_not_challenge_material_change_on_appeal.\nappellate_brief_did_not_address_national_importance.\n\n% Because the principal evidence of the proposed endeavor (the business plan) was treated as\n% a material change and not probative, and the petitioner did not contest that determination,\n% the record cannot establish the national-importance prong.\ncannot_establish_national_importance.\n\n% For similar reasons the record does not show the petitioner is well-positioned to advance\n% the proposed endeavor (business-plan evidence not probative and left unchallenged).\ncannot_show_well_positioned.\n\n% Because the key evidentiary basis was disregarded and not contested, on balance waiving\n% the job-offer requirement does not favor the United States in this record.\nbalancing_not_met.\n\n% Dhanasar framework predicates (these succeed only if the corresponding negative flags are absent).\nsubstantial_merit_and_national_importance :-\n    \\+ cannot_establish_national_importance.\n\nwell_positioned_to_advance :-\n    \\+ cannot_show_well_positioned.\n\nbenefit_of_waiving_job_offer :-\n    \\+ balancing_not_met.\n\n% Eligibility is met only if EB-2 eligibility is established AND all Dhanasar prongs succeed.\neligibility_met :-\n    eb2_eligibility,\n    substantial_merit_and_national_importance,\n    well_positioned_to_advance,\n    benefit_of_waiving_job_offer.\n\n% Decision and entrypoint (must be last as requested).\ndecision(Result) :-\n    (   eligibility_met\n    ->  Result = 'Accepted'\n    ;   Result = 'Dismissed'\n    ).\n\nrun :-\n    catch(\n        (   decision(Result),\n            writeln(Result)\n        ),\n        error(existence_error(procedure, PI), _),\n        handle_undefined(PI)\n    ).\n\nhandle_undefined(Name/Arity) :-\n    (   current_predicate(Name/OtherArity),\n        OtherArity \\= Arity\n    ->  format('Programming error: called ~w/~w, but only ~w/~w is defined.~n',\n               [Name, Arity, Name, OtherArity])\n    ;   format('Lack of information: predicate ~w/~w is not defined.~n',\n               [Name, Arity])\n    ).",
+  "case_id": "B04-deon-5792",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "Dismissed",
+    "question": "Should this case be accepted or dismissed?"
+  }
+}

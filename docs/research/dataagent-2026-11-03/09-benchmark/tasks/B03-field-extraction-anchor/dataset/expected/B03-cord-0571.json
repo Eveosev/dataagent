@@ -1,0 +1,96 @@
+{
+  "source": "naver-clova-ix/cord-v2",
+  "split": "train",
+  "index": 149,
+  "gt_parse": {
+    "menu": {
+      "nm": "WAXING UNDER ARM",
+      "unitprice": "100,000",
+      "cnt": "1 x",
+      "discountprice": "0.00",
+      "price": "100,000"
+    },
+    "total": {
+      "total_price": "100,000",
+      "cashprice": "100,000"
+    }
+  },
+  "case_id": "B03-cord-0571",
+  "expected": {
+    "kind": "json",
+    "value": {
+      "menu": {
+        "nm": "WAXING UNDER ARM",
+        "unitprice": "100,000",
+        "cnt": "1 x",
+        "discountprice": "0.00",
+        "price": "100,000"
+      },
+      "total": {
+        "total_price": "100,000",
+        "cashprice": "100,000"
+      }
+    },
+    "fields": {
+      "menu.nm": "WAXING UNDER ARM",
+      "menu.unitprice": "100,000",
+      "menu.cnt": "1 x",
+      "menu.discountprice": "0.00",
+      "menu.price": "100,000",
+      "total.total_price": "100,000",
+      "total.cashprice": "100,000"
+    },
+    "anchored_fields": 0,
+    "no_anchor_fields": 7,
+    "spans": [
+      {
+        "field": "menu.nm",
+        "text": "WAXING UNDER ARM",
+        "page": 1
+      },
+      {
+        "field": "menu.unitprice",
+        "text": "100,000",
+        "page": 1
+      },
+      {
+        "field": "menu.cnt",
+        "text": "1 x",
+        "page": 1
+      },
+      {
+        "field": "menu.discountprice",
+        "text": "0.00",
+        "page": 1
+      },
+      {
+        "field": "menu.price",
+        "text": "100,000",
+        "page": 1
+      },
+      {
+        "field": "total.total_price",
+        "text": "100,000",
+        "page": 1
+      },
+      {
+        "field": "total.cashprice",
+        "text": "100,000",
+        "page": 1
+      }
+    ],
+    "pages": {
+      "menu.nm": 1,
+      "menu.unitprice": 1,
+      "menu.cnt": 1,
+      "menu.discountprice": 1,
+      "menu.price": 1,
+      "total.total_price": 1,
+      "total.cashprice": 1
+    },
+    "evidence_gold": {
+      "source": "cord-valid-line",
+      "version": 1
+    }
+  }
+}

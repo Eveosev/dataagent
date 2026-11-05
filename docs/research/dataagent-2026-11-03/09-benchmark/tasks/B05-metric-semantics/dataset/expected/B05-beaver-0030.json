@@ -1,0 +1,27 @@
+{
+  "source": "beaverbench/beaver-query",
+  "id": "dw_425",
+  "db": "dw",
+  "question": "For each HGN code in the Political Science department, what is the department name, the maximum number of lecture units among all subjects in the course catalog, and the subject title from the subject offered table, for subjects offered in the year 2012 with more than 2 lecture units, and only include those where the subject is also present in the SUBJECT_OFFERED table for the same year? Do not return any rounded answers.",
+  "sql": "WITH inner_cte AS ( SELECT c.HGN_CODE, c.DEPARTMENT_NAME, MAX(c.LECTURE_UNITS) AS max_lecture_units, s.SUBJECT_TITLE FROM COURSE_CATALOG_SUBJECT_OFFERED c JOIN SUBJECT_OFFERED s ON c.HGN_CODE = s.HGN_CODE WHERE c.ACADEMIC_YEAR = 2012 AND c.LECTURE_UNITS > 2 AND c.DEPARTMENT_NAME = 'Political Science' GROUP BY c.HGN_CODE, c.DEPARTMENT_NAME, s.SUBJECT_TITLE HAVING MAX(c.LECTURE_UNITS) > 2 ) SELECT i.HGN_CODE, i.DEPARTMENT_NAME, i.max_lecture_units, i.SUBJECT_TITLE FROM inner_cte i JOIN SUBJECT_OFFERED so ON i.HGN_CODE = so.HGN_CODE AND so.TERM_CODE LIKE '2012%'",
+  "tables": "[\"COURSE_CATALOG_SUBJECT_OFFERED\", \"SUBJECT_OFFERED\"]",
+  "join_keys": "[[\"COURSE_CATALOG_SUBJECT_OFFERED.HGN_CODE\", \"SUBJECT_OFFERED.HGN_CODE\"]]",
+  "column_mapping": "{\"HGN code\": [\"COURSE_CATALOG_SUBJECT_OFFERED.HGN_CODE\", \"SUBJECT_OFFERED.HGN_CODE\"], \"department name\": [\"COURSE_CATALOG_SUBJECT_OFFERED.DEPARTMENT_NAME\"], \"maximum number of lecture units\": [\"COURSE_CATALOG_SUBJECT_OFFERED.LECTURE_UNITS\"], \"subject title\": [\"SUBJECT_OFFERED.SUBJECT_TITLE\"], \"Political Science\": [\"COURSE_CATALOG_SUBJECT_OFFERED.DEPARTMENT_NAME\"], \"year 2012\": [\"COURSE_CATALOG_SUBJECT_OFFERED.ACADEMIC_YEAR\", \"SUBJECT_OFFERED.TERM_CODE\"], \"more than 2 lecture units\": [\"COURSE_CATALOG_SUBJECT_OFFERED.LECTURE_UNITS\"], \"subject is also present in the SUBJECT_OFFERED table for the same year\": [\"COURSE_CATALOG_SUBJECT_OFFERED.HGN_CODE\", \"SUBJECT_OFFERED.HGN_CODE\", \"SUBJECT_OFFERED.TERM_CODE\"]}",
+  "domain_knowledge": "[\"\\\"Political Science\\\" is predicated by \\\"TABLE.DEPARTMENT_NAME = 'Political Science'\\\"\", \"\\\"Course 17\\\" is predicated by \\\"TABLE.DEPARTMENT_NAME = 'Political Science'\\\"\"]",
+  "sub_questions": "[\"For each HGN code in the Political Science department, what is the department name, the maximum number of lecture units among all subjects in the course catalog, and the subject title from the subject offered table, for subjects offered in the year 2012 with more than 2 lecture units?\"]",
+  "sub_sqls": "[\"SELECT c.HGN_CODE, c.DEPARTMENT_NAME, MAX(c.LECTURE_UNITS) AS max_lecture_units, s.SUBJECT_TITLE FROM COURSE_CATALOG_SUBJECT_OFFERED c JOIN SUBJECT_OFFERED s ON c.HGN_CODE = s.HGN_CODE WHERE c.ACADEMIC_YEAR = 2012 AND c.LECTURE_UNITS > 2 AND c.DEPARTMENT_NAME = 'Political Science' GROUP BY c.HGN_CODE, c.DEPARTMENT_NAME, s.SUBJECT_TITLE HAVING MAX(c.LECTURE_UNITS) > 2;\"]",
+  "category": "domain-specific complex query",
+  "detailed_category": "nested",
+  "case_id": "B05-beaver-0030",
+  "expected": {
+    "kind": "sql",
+    "sql": "WITH inner_cte AS ( SELECT c.HGN_CODE, c.DEPARTMENT_NAME, MAX(c.LECTURE_UNITS) AS max_lecture_units, s.SUBJECT_TITLE FROM COURSE_CATALOG_SUBJECT_OFFERED c JOIN SUBJECT_OFFERED s ON c.HGN_CODE = s.HGN_CODE WHERE c.ACADEMIC_YEAR = 2012 AND c.LECTURE_UNITS > 2 AND c.DEPARTMENT_NAME = 'Political Science' GROUP BY c.HGN_CODE, c.DEPARTMENT_NAME, s.SUBJECT_TITLE HAVING MAX(c.LECTURE_UNITS) > 2 ) SELECT i.HGN_CODE, i.DEPARTMENT_NAME, i.max_lecture_units, i.SUBJECT_TITLE FROM inner_cte i JOIN SUBJECT_OFFERED so ON i.HGN_CODE = so.HGN_CODE AND so.TERM_CODE LIKE '2012%'",
+    "sub_sqls": "[\"SELECT c.HGN_CODE, c.DEPARTMENT_NAME, MAX(c.LECTURE_UNITS) AS max_lecture_units, s.SUBJECT_TITLE FROM COURSE_CATALOG_SUBJECT_OFFERED c JOIN SUBJECT_OFFERED s ON c.HGN_CODE = s.HGN_CODE WHERE c.ACADEMIC_YEAR = 2012 AND c.LECTURE_UNITS > 2 AND c.DEPARTMENT_NAME = 'Political Science' GROUP BY c.HGN_CODE, c.DEPARTMENT_NAME, s.SUBJECT_TITLE HAVING MAX(c.LECTURE_UNITS) > 2;\"]",
+    "db": "dw",
+    "tables": "[\"COURSE_CATALOG_SUBJECT_OFFERED\", \"SUBJECT_OFFERED\"]",
+    "join_keys": "[[\"COURSE_CATALOG_SUBJECT_OFFERED.HGN_CODE\", \"SUBJECT_OFFERED.HGN_CODE\"]]",
+    "column_mapping": "{\"HGN code\": [\"COURSE_CATALOG_SUBJECT_OFFERED.HGN_CODE\", \"SUBJECT_OFFERED.HGN_CODE\"], \"department name\": [\"COURSE_CATALOG_SUBJECT_OFFERED.DEPARTMENT_NAME\"], \"maximum number of lecture units\": [\"COURSE_CATALOG_SUBJECT_OFFERED.LECTURE_UNITS\"], \"subject title\": [\"SUBJECT_OFFERED.SUBJECT_TITLE\"], \"Political Science\": [\"COURSE_CATALOG_SUBJECT_OFFERED.DEPARTMENT_NAME\"], \"year 2012\": [\"COURSE_CATALOG_SUBJECT_OFFERED.ACADEMIC_YEAR\", \"SUBJECT_OFFERED.TERM_CODE\"], \"more than 2 lecture units\": [\"COURSE_CATALOG_SUBJECT_OFFERED.LECTURE_UNITS\"], \"subject is also present in the SUBJECT_OFFERED table for the same year\": [\"COURSE_CATALOG_SUBJECT_OFFERED.HGN_CODE\", \"SUBJECT_OFFERED.HGN_CODE\", \"SUBJECT_OFFERED.TERM_CODE\"]}",
+    "category": "domain-specific complex query",
+    "db_archive": "bench://beaver-table/beaver_db.zip"
+  }
+}

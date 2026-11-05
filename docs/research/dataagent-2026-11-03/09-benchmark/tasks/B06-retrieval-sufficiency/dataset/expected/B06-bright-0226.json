@@ -1,0 +1,30 @@
+{
+  "source": "xlangai/BRIGHT",
+  "query_id": "11",
+  "query": "## Identifying the Essential Problem:\n\nThe essential problem is the ambiguity surrounding the physical state of clouds. While often described as \"masses\" of water droplets or ice crystals, the use of terms like \"vapor\" and \"condensation\" creates confusion. Additionally, the claim that clouds are simultaneously solid, liquid, and gas further complicates understanding.\n\n## Relevant Information:\n\n* **States of Matter:** Understanding the distinct properties of solids, liquids, and gases is crucial. Solids have fixed shapes and volumes, liquids have fixed volumes but variable shapes, and gases have neither fixed shape nor volume.\n* **Water Cycle:** The water cycle, involving evaporation, condensation, and precipitation, plays a vital role in cloud formation. \n* **Cloud Composition:** Clouds primarily consist of water droplets or ice crystals, depending on the temperature.\n* **Compressibility:** Liquids are generally considered incompressible, while gases are highly compressible.\n\n## Addressing the Questions:\n\n**1. Are clouds a solid, liquid, or gas?**\n\nClouds are primarily **liquid** when composed of water droplets and **solid** when composed of ice crystals. However, they are not simply masses of these states.\n\n**2. Explanation of the ambiguity:**\n\nThe ambiguity arises from the complex nature of clouds. They are not pure liquids or solids but rather **suspensions of tiny water droplets or ice crystals within a gas (air).** This mixture explains the use of the term \"mass.\"\n\n**3. Condensation and vapor:**\n\nCondensation refers to the phase transition from gas to liquid. In the context of clouds, water vapor in the air condenses into tiny droplets, forming the visible cloud mass. However, the cloud itself is not simply water vapor.\n\n**4. The \"solid, liquid, gas\" claim:**\n\nThe statement that clouds are simultaneously solid, liquid, and gas is misleading. While clouds contain all three states, they are primarily a **suspension of liquid or solid particles within a gas.** This distinction is crucial for understanding their physical properties.\n\n**5. Compressibility:**\n\nClouds exhibit some compressibility due to the gaseous component (air). However, the extent of compressibility depends on factors like the type and concentration of the water particles.\n\n## Conclusion:\n\nClouds are not a single state of matter but rather a complex mixture of liquid or solid water particles suspended within a gas. This explains the ambiguity surrounding their physical state and clarifies the seemingly contradictory information found online.",
+  "gold_ids": [
+    "composition_of_cloud/Cloud_condensation_nuclei4.txt",
+    "composition_of_cloud/Cloud_condensation_nuclei1.txt",
+    "composition_of_cloud/Cloud_condensation_nuclei3.txt",
+    "composition_of_cloud/Cloud_condensation_nuclei2.txt"
+  ],
+  "gold_answer": "$\\begingroup$\n\nThe cloud that you see is a mixture of solids and liquids. The liquid is water\nand the solids are ice, [ cloud condensation nuclei\n](https://en.wikipedia.org/wiki/Cloud_condensation_nuclei) and ice\ncondensation nuclei (tiny particulates that water and ice condense on). The\ninvisible part of clouds that you cannot see is water vapor and dry air. The\nmajority of the cloud is just plain air in which the invisible water vapor is\nmixed with and the very tiny water drops and ice particles are suspended in.\n\nA cloud is a mixture of gas, liquid and solids.",
+  "corpus": "documents/earth_science-00000-of-00001.parquet",
+  "case_id": "B06-bright-0226",
+  "expected": {
+    "kind": "retrieval",
+    "gold_ids": [
+      "composition_of_cloud/Cloud_condensation_nuclei4.txt",
+      "composition_of_cloud/Cloud_condensation_nuclei1.txt",
+      "composition_of_cloud/Cloud_condensation_nuclei3.txt",
+      "composition_of_cloud/Cloud_condensation_nuclei2.txt"
+    ],
+    "gold_ids_long": [
+      "composition_of_cloud/Cloud_condensation_nuclei.txt"
+    ],
+    "gold_answer": "$\\begingroup$\n\nThe cloud that you see is a mixture of solids and liquids. The liquid is water\nand the solids are ice, [ cloud condensation nuclei\n](https://en.wikipedia.org/wiki/Cloud_condensation_nuclei) and ice\ncondensation nuclei (tiny particulates that water and ice condense on). The\ninvisible part of clouds that you cannot see is water vapor and dry air. The\nmajority of the cloud is just plain air in which the invisible water vapor is\nmixed with and the very tiny water drops and ice particles are suspended in.\n\nA cloud is a mixture of gas, liquid and solids.",
+    "excluded_ids": [
+      "N/A"
+    ]
+  }
+}

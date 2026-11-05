@@ -1,0 +1,54 @@
+{
+  "case_id": "B03-eb-0131",
+  "task_id": "B03",
+  "split_role": "regression",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://extractbench/docs/short/arif-2021.pdf",
+      "digest": null
+    },
+    {
+      "kind": "schema",
+      "ref": "fixtures/eb-short-arif-2021-schema.json",
+      "digest": null
+    },
+    {
+      "kind": "rules",
+      "ref": "fixtures/eb-short-arif-2021-rules.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-eb-0131.json"
+  },
+  "evidence": [
+    "bench://extractbench/docs/short/arif-2021.pdf",
+    "fixtures/eb-short-arif-2021-schema.json",
+    "fixtures/eb-short-arif-2021-rules.md"
+  ],
+  "tags": [
+    "extractbench",
+    "short",
+    "tag:source:real",
+    "tag:challenge:T3.a",
+    "tag:challenge:T3.e",
+    "tag:perception:P2",
+    "tag:delivery:G1",
+    "tag:delivery:G4",
+    "tag:length:short",
+    "tag:domain:D1",
+    "fields:266"
+  ],
+  "source": "eb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

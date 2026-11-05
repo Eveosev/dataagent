@@ -1,0 +1,1 @@
+What were the total amounts of building and contents damage reported under the National Flood Insurance Program in the City of New York for each year from 2010 to 2019?

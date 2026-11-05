@@ -1,0 +1,52 @@
+{
+  "case_id": "B03-eb-0136",
+  "task_id": "B03",
+  "split_role": "unseen_acceptance",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://extractbench/docs/short/brand_price_list_lifescience_2024_corrupted.pdf",
+      "digest": null
+    },
+    {
+      "kind": "schema",
+      "ref": "fixtures/eb-short-brand_price_list_lifescience_2024_corrupted-schema.json",
+      "digest": null
+    },
+    {
+      "kind": "rules",
+      "ref": "fixtures/eb-short-brand_price_list_lifescience_2024_corrupted-rules.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-eb-0136.json"
+  },
+  "evidence": [
+    "bench://extractbench/docs/short/brand_price_list_lifescience_2024_corrupted.pdf",
+    "fixtures/eb-short-brand_price_list_lifescience_2024_corrupted-schema.json",
+    "fixtures/eb-short-brand_price_list_lifescience_2024_corrupted-rules.md"
+  ],
+  "tags": [
+    "extractbench",
+    "short",
+    "tag:source:real",
+    "tag:challenge:T1.a",
+    "tag:perception:P1",
+    "tag:length:short",
+    "tag:slice:task_slice",
+    "tag:domain:D5",
+    "fields:4"
+  ],
+  "source": "eb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

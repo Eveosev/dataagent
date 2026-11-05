@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 329,
+  "question": "I'm preparing the year-end audit of club spending. For each item Sacha Harrison bought with club money, I need the item name and how many times she bought it. Can you give me that list?",
+  "evidence": "By \"item\" I mean an individual thing named in a record of what money was spent for.",
+  "gold_sql": "WITH RECURSIVE split(rest, item) AS (SELECT expense_description || ',', '' FROM expense WHERE link_to_member = (SELECT member_id FROM member WHERE first_name = 'Sacha' AND last_name = 'Harrison') UNION ALL SELECT substr(rest, instr(rest, ',') + 1), trim(substr(rest, 1, instr(rest, ',') - 1)) FROM split WHERE rest <> '') SELECT item, COUNT(*) AS times FROM split WHERE item <> '' GROUP BY item ORDER BY item",
+  "db_id": "student_club",
+  "case_id": "B05-bird-0330",
+  "expected": {
+    "kind": "sql",
+    "sql": "WITH RECURSIVE split(rest, item) AS (SELECT expense_description || ',', '' FROM expense WHERE link_to_member = (SELECT member_id FROM member WHERE first_name = 'Sacha' AND last_name = 'Harrison') UNION ALL SELECT substr(rest, instr(rest, ',') + 1), trim(substr(rest, 1, instr(rest, ',') - 1)) FROM split WHERE rest <> '') SELECT item, COUNT(*) AS times FROM split WHERE item <> '' GROUP BY item ORDER BY item",
+    "db_id": "student_club",
+    "evidence": "By \"item\" I mean an individual thing named in a record of what money was spent for."
+  }
+}

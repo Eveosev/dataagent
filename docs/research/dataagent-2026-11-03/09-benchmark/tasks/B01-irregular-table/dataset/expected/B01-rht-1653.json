@@ -1,0 +1,38 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 17,
+  "table": "employment-table02",
+  "structure": "ContentCompound",
+  "question_type": "Visualization",
+  "sub_type": "PieChart Generation",
+  "answer": "[0.05, 0.95]\n",
+  "cot": [
+    {
+      "planning": "First, identify the header rows and restructure the table to have meaningful column names."
+    },
+    {
+      "planning": "Locate data for the year 1984."
+    },
+    {
+      "planning": "Extract the columns related to employment in agriculture and non-agriculture sectors."
+    },
+    {
+      "planning": "Sum the values (if needed) and calculate percentages for each sector."
+    },
+    {
+      "planning": "Create a pie chart to illustrate the distribution."
+    },
+    {
+      "planning": "Proceeding with the data preparation."
+    },
+    {
+      "planning": "The employment data for 1984 is: Agriculture: 2,668,000, Non-agriculture: 56,423,000. Now, I will create a pie chart to illustrate the distribution between these two sectors."
+    }
+  ],
+  "case_id": "B01-rht-1653",
+  "expected": {
+    "kind": "answer",
+    "question": "Using the data, draw a pie chart to illustrate the distribution of employment between agriculture and non-agriculture sectors in 1984.",
+    "answer": "[0.05, 0.95]\n"
+  }
+}

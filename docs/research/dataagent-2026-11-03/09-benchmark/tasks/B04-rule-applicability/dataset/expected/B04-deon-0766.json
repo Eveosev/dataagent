@@ -1,0 +1,28 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_0d3a34c1",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "list_member",
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_tenant",
+    "scenario_tenant_requests_information_about_stay_reasons",
+    "statute_rcw_59_18_410_reason_to_request_stay",
+    "statute_rcw_59_18_410_3a_factor",
+    "statute_rcw_59_18_410_3a_factors_list",
+    "statute_rcw_59_18_410_4_requires_declaration_elements",
+    "law_specifies_reason_for_tenant_to_request_stay_of_writ",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: Washington\n    Focus year: 2021\n\n    Question: \"Is it specified for what reason a tenant can request that the issuance of a writ be stayed?\"\n    Statute encoded: WA Rev. Code (RCW) 59.18.410 (2021)\n*/\n\n% -----------------------------\n% Basic list helper (no modules)\n% -----------------------------\nlist_member(X, [X|_]) :- !.\nlist_member(X, [_|T]) :- list_member(X, T).\n\n% -----------------------------\n% Scenario facts (question's factual statement)\n% -----------------------------\nscenario_state(washington).\nscenario_focus_year(2021).\n\n% The scenario is a meta-question: we model that a tenant is asking whether the law\n% specifies reasons/grounds for requesting a stay of a writ of restitution.\nscenario_tenant(tenant1).\nscenario_tenant_requests_information_about_stay_reasons(tenant1).\n\n% Helper predicate that succeeds when the scenario statement holds (as required).\nscenario_statement :-\n    scenario_state(washington),\n    scenario_focus_year(2021),\n    scenario_tenant(Tenant),\n    scenario_tenant_requests_information_about_stay_reasons(Tenant).\n\n% -----------------------------\n% Statute translation: RCW 59.18.410 (2021)\n% -----------------------------\n\n/*\n  RCW 59.18.410(3)(a) (2021):\n  In nonpayment-of-rent restitution judgment context, court may stay the writ\n  \"upon good cause\" and on fair/just terms; court considers enumerated factors.\n*/\n\n% Grounds/reason explicitly specified for a tenant to request a stay under subsection (3):\nstatute_rcw_59_18_410_reason_to_request_stay(washington, 2021, good_cause_3a) :- !.\n% Grounds/reason explicitly specified for a tenant to request an ex parte stay under subsection (4):\nstatute_rcw_59_18_410_reason_to_request_stay(washington, 2021, immediate_or_irreparable_harm_4) :- !.\n\n% RCW 59.18.410(3)(a)(i)-(vii) factors the court must consider when deciding \"good cause\".\nstatute_rcw_59_18_410_3a_factor(washington, 2021, willful_or_intentional_default_or_failure_to_pay_rent) :- !.\nstatute_rcw_59_18_410_3a_factor(washington, 2021, nonpayment_caused_by_exigent_circumstances_beyond_tenant_control_not_likely_to_recur) :- !.\nstatute_rcw_59_18_410_3a_factor(washington, 2021, tenant_ability_to_timely_pay_judgment) :- !.\nstatute_rcw_59_18_410_3a_factor(washington, 2021, tenant_payment_history) :- !.\nstatute_rcw_59_18_410_3a_factor(washington, 2021, tenant_substantial_compliance_with_rental_agreement) :- !.\nstatute_rcw_59_18_410_3a_factor(washington, 2021, hardship_on_tenant_if_evicted) :- !.\nstatute_rcw_59_18_410_3a_factor(washington, 2021, conduct_related_to_other_notices_last_six_months) :- !.\n\n% Collect the factors into a list (deterministic list construction).\nstatute_rcw_59_18_410_3a_factors_list(washington, 2021, Factors) :-\n    Factors = [\n        willful_or_intentional_default_or_failure_to_pay_rent,\n        nonpayment_caused_by_exigent_circumstances_beyond_tenant_control_not_likely_to_recur,\n        tenant_ability_to_timely_pay_judgment,\n        tenant_payment_history,\n        tenant_substantial_compliance_with_rental_agreement,\n        hardship_on_tenant_if_evicted,\n        conduct_related_to_other_notices_last_six_months\n    ],\n    !.\n\n% RCW 59.18.410(4) (2021): ex parte stay requires certain showings in a declaration.\n% We encode the key \"reason\" component: immediate or irreparable harm if immediate stay not granted.\nstatute_rcw_59_18_410_4_requires_declaration_elements(washington, 2021, Elements) :-\n    Elements = [\n        good_faith_efforts_to_notify_other_party_or_explain_why_notice_not_provided,\n        describe_immediate_or_irreparable_harm_if_no_immediate_stay,\n        court_requires_service_of_order_and_motion_in_manner_likely_to_give_notice\n    ],\n    !.\n\n% -----------------------------\n% Reasoning layer\n% -----------------------------\n\n% The legal question we must answer: does the statute specify reasons/grounds for a tenant to request a stay?\n% We treat \"specified reasons\" as: there exists at least one enumerated reason/ground in the statute text.\nlaw_specifies_reason_for_tenant_to_request_stay_of_writ(State, Year) :-\n    statute_rcw_59_18_410_reason_to_request_stay(State, Year, _Reason),\n    !.\n\n% -----------------------------\n% Final answer predicate\n% -----------------------------\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_state(State),\n    scenario_focus_year(Year),\n    law_specifies_reason_for_tenant_to_request_stay_of_writ(State, Year),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n% -----------------------------\n% Main entrypoint (required)\n% -----------------------------\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-0766",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Is it specified for what reason a tenant can request that the issuance of a writ be stayed?"
+  }
+}

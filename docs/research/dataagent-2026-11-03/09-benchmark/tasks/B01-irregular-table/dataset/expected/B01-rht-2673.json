@@ -1,0 +1,29 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1037,
+  "table": "health-table13",
+  "structure": "MultiColumnClassified",
+  "question_type": "Numerical Reasoning",
+  "sub_type": "Multi-hop Numerical Reasoning",
+  "answer": "60",
+  "cot": [
+    {
+      "step": "First, locate the rows corresponding to Feb 2 and Feb 3 in the table."
+    },
+    {
+      "step": "Identify the activity durations (“MIN” column) for both dates."
+    },
+    {
+      "step": "Sum the durations for all activities on each date separately."
+    },
+    {
+      "step": "Calculate the difference between the total activity durations for Feb 2 and Feb 3."
+    }
+  ],
+  "case_id": "B01-rht-2673",
+  "expected": {
+    "kind": "answer",
+    "question": "What is the difference in total activity duration between Feb 2 and Feb 3?",
+    "answer": "60"
+  }
+}

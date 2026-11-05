@@ -1,0 +1,100 @@
+{
+  "source": "naver-clova-ix/cord-v2",
+  "split": "test",
+  "index": 5,
+  "gt_parse": {
+    "menu": {
+      "nm": "TRAD KY TOAST CARTE",
+      "price": "28.182"
+    },
+    "sub_total": {
+      "subtotal_price": "28.182",
+      "tax_price": "2.818"
+    },
+    "total": {
+      "total_price": "31.000",
+      "cashprice": "31.000",
+      "menuqty_cnt": "1.00"
+    }
+  },
+  "case_id": "B03-cord-0371",
+  "expected": {
+    "kind": "json",
+    "value": {
+      "menu": {
+        "nm": "TRAD KY TOAST CARTE",
+        "price": "28.182"
+      },
+      "sub_total": {
+        "subtotal_price": "28.182",
+        "tax_price": "2.818"
+      },
+      "total": {
+        "total_price": "31.000",
+        "cashprice": "31.000",
+        "menuqty_cnt": "1.00"
+      }
+    },
+    "fields": {
+      "menu.nm": "TRAD KY TOAST CARTE",
+      "menu.price": "28.182",
+      "sub_total.subtotal_price": "28.182",
+      "sub_total.tax_price": "2.818",
+      "total.total_price": "31.000",
+      "total.cashprice": "31.000",
+      "total.menuqty_cnt": "1.00"
+    },
+    "anchored_fields": 0,
+    "no_anchor_fields": 7,
+    "spans": [
+      {
+        "field": "menu.nm",
+        "text": "TRAD KY TOAST CARTE",
+        "page": 1
+      },
+      {
+        "field": "menu.price",
+        "text": "28.182",
+        "page": 1
+      },
+      {
+        "field": "sub_total.subtotal_price",
+        "text": "28.182",
+        "page": 1
+      },
+      {
+        "field": "sub_total.tax_price",
+        "text": "2.818",
+        "page": 1
+      },
+      {
+        "field": "total.total_price",
+        "text": "31.000",
+        "page": 1
+      },
+      {
+        "field": "total.cashprice",
+        "text": "31.000",
+        "page": 1
+      },
+      {
+        "field": "total.menuqty_cnt",
+        "text": "1.00",
+        "page": 1
+      }
+    ],
+    "pages": {
+      "menu.nm": 1,
+      "menu.price": 1,
+      "sub_total.subtotal_price": 1,
+      "sub_total.tax_price": 1,
+      "total.total_price": 1,
+      "total.cashprice": 1,
+      "total.menuqty_cnt": 1
+    },
+    "evidence_gold": {
+      "source": "cord-valid-line",
+      "version": 1
+    }
+  }
+}

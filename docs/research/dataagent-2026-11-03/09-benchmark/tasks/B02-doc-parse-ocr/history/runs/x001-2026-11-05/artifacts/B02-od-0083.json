@@ -1,0 +1,146 @@
+{
+  "text": "$$=  : {I}_{21} + {I}_{22} + {I}_{23} + {I}_{24}.$$\nSimilar to the estimation of $ {I}_{11} $ and $ {I}_{12} $ , we can derive\n$${I}_{21} \\leq  C{\\tau }^{\\frac{5}{2}\\left( {1 - \\varepsilon }\\right) },\\;{I}_{22} \\leq  C{\\tau }^{2\\left( {1 - \\varepsilon }\\right) }\\;\\text{ and }\\;{I}_{23} \\leq  C{\\tau }^{2\\left( {1 - \\varepsilon }\\right) }.$$\nFor $ {I}_{24} $ , by the Itô formula, we get\n$$I_{24}=\\left|\\mathbb{E}\\left[\\int_{t_{k}}^{t_{k+1}}\\int_{t_{k}}^{s}\\langle D\\tilde{g}_{i_{2}}(X_{\\tau}(t_{k},x;r),f_{\\tau}(X_{\\tau}(t_{k},x;r)\\rangle\\mathrm{d}r\\mathrm{d}B(s)\\cdot\\int_{t_{k}}^{t_{k+1}}\\tilde{g}_{i_{1}}(X_{\\tau}(t_{k},x;s))\\mathrm{d}B(s)\\right]\\right|$$\n$$+\\left|\\mathbb{E}\\left[\\int_{t_{k}}^{t_{k+1}}\\int_{t_{k}}^{s}\\langle D\\tilde{g}_{i_{2}}(X_{\\tau}(t_{k},x;r),g_{\\tau}(X_{\\tau}(t_{k},x;r)\\rangle\\mathrm{d}B(r)\\mathrm{d}B(s)\\cdot\\int_{t_{k}}^{t_{k+1}}\\tilde{g}_{i_{1}}(X_{\\tau}(t_{k},x;s))\\mathrm{d}B(s)\\right]\\right|$$\n$$+\\frac{1}{2}\\sum_{l=1}^{m}\\left|\\mathbb{E}\\left[\\int_{t_{k}}^{t_{k+1}}\\int_{t_{k}}^{s}\\text{trace}(g_{\\tau}^{T}(X_{\\tau}(t_{k},x;r))D^{2}g_{\\tau}^{i_{2},l}(X_{\\tau}(t_{k},x;r)g_{\\tau}(X_{\\tau}(t_{k},x;r)))\\mathrm{d}r\\mathrm{d}B^{l}(s)\\cdot\\int_{t_{k}}^{t_{k+1}}\\tilde{g}_{i_{1}}(X_{\\tau}(t_{k},x;s))\\mathrm{d}B(s)\\right]\\right|$$\n$$=:I_{241}+I_{242}+I_{243}.$$\nFor $ {I}_{242} $ , by using the Hölder inequality and the generalized Itô isometry, as well as the estimation of $ {I}_{132} $ , we have\n$$I_{242}=\\left|\\mathbb{E}\\left[\\int_{t_{k}}^{t_{k+1}}\\int_{t_{k}}^{s}\\langle D\\tilde{g}_{i_{2}}(X_{\\tau}(t_{k},x;r)),g_{\\tau}(X_{\\tau}(t_{k},x;r))\\rangle\\mathrm{d}B(r)\\mathrm{d}B(s)\\cdot\\int_{t_{k}}^{t_{k+1}}\\tilde{g}_{i_{1}}(X_{\\tau}(t_{k},x;s))-\\tilde{g}_{i_{1}}(x)\\mathrm{d}B(s)\\right]\\right|$$\n$$=\\Bigg|\\int_{t_{k}}^{t_{k+1}}\\mathbb{E}\\left[\\left(\\int_{t_{k}}^{s}\\langle D\\tilde{g}_{i_{2}}(X_{\\tau}(t_{k},x;r)),g_{\\tau}(X_{\\tau}(t_{k},x;r))\\rangle\\mathrm{d}B(r)\\right)\\cdot\\left(\\tilde{g}_{i_{1}}(X_{\\tau}(t_{k},x;s))-\\tilde{g}_{i_{1}}(x)\\right)\\right]\\mathrm{d}s\\Bigg|$$\n$$\\leq\\int_{t_{k}}^{t_{k+1}}\\|\\int_{t_{k}}^{s}D\\tilde{g}_{i_{2}}(X_{\\tau}(t_{k},x;r)g_{\\tau}(X_{\\tau}(t_{k},x;r)\\mathrm{d}B(r)\\|_{L^{2}(\\Omega,\\mathbb{R})}\\cdot\\|\\tilde{g}_{i_{1}}(X_{\\tau}(t_{k},x;s))-\\tilde{g}_{i_{1}}(x)\\|_{L^{2}(\\Omega,\\mathbb{R})}\\mathrm{d}s$$\n$$\\leq C(1+|\\mu^{-1}(\\hat{Y}\\tau^{-\\varepsilon})+C_{0}|^{w+2})\\tau^{\\frac{1}{2}}\\cdot(1+|\\mu^{-1}(\\hat{Y}\\tau^{-\\varepsilon})+C_{0}|^{w+2})^{\\frac{1}{2}}\\tau^{1+\\frac{1}{2}(1-\\varepsilon)}$$\n$$\\leq C\\tau^{2(1-\\varepsilon)}.$$\nSimilar to the estimation of $ {I}_{131} $ , we get\n$${I}_{241} \\leq  C{\\tau }^{2\\left( {1 - \\varepsilon }\\right) }\\text{ and }{I}_{243} \\leq  C{\\tau }^{2\\left( {1 - \\varepsilon }\\right) }.$$\nTherefore, we have\n$${I}_{2} \\leq  C{\\tau }^{2\\left( {1 - \\varepsilon }\\right) }.$$\nIt means that\n$$\\left| {\\mathbb{E}\\left\\lbrack  {{\\left( {\\delta }_{k}\\right) }^{{i}_{1}}{\\left( {\\delta }_{k}\\right) }^{{i}_{2}} - {\\left( {\\bar{\\delta }}_{k}\\right) }^{{i}_{1}}{\\left( {\\bar{\\delta }}_{k}\\right) }^{{i}_{2}}}\\right\\rbrack  }\\right|  \\leq  C{\\tau }^{2\\left( {1 - \\varepsilon }\\right) }. \\tag{F3}$$\nWhen $ r = 3 $ , we conclude that\n$$|\\mathbb{E}[(\\delta_{k})^{i_{1}}(\\delta_{k})^{i_{2}}(\\delta_{k})^{i_{3}}-(\\bar{\\delta}_{k})^{i_{1}}(\\bar{\\delta}_{k})^{i_{2}}(\\bar{\\delta}_{k})^{i_{3}}]|$$\n$$\\leq|\\mathbb{E}[(\\delta_{k})^{i_{1}}((\\delta_{k})^{i_{2}}(\\delta_{k})^{i_{3}}-(\\bar{\\delta}_{k})^{i_{2}}(\\bar{\\delta}_{k})^{i_{3}})]|+|\\mathbb{E}[((\\delta_{k})^{i_{1}}-(\\bar{\\delta}_{k})^{i_{1}})(\\bar{\\delta}_{k})^{i_{2}}(\\bar{\\delta}_{k})^{i_{3}}]|$$\n$$\\leq|\\mathbb{E}[(\\delta_{k})^{i_{1}}(\\delta_{k})^{i_{2}}((\\delta_{k})^{i_{3}}-(\\bar{\\delta}_{k})^{i_{3}})]|+|\\mathbb{E}[(\\delta_{k})^{i_{1}}(\\bar{\\delta}_{k})^{i_{3}}((\\delta_{k})^{i_{2}}-(\\bar{\\delta}_{k})^{i_{2}})]|+|\\mathbb{E}[((\\delta_{k})^{i_{1}}-(\\bar{\\delta}_{k})^{i_{1}})(\\bar{\\delta}_{k})^{i_{2}}(\\bar{\\delta}_{k})^{i_{3}}]|.$$\n41",
+  "blocks": [
+    {
+      "category": "equation_isolated",
+      "order": 0,
+      "latex": "$$=  : {I}_{21} + {I}_{22} + {I}_{23} + {I}_{24}.$$"
+    },
+    {
+      "category": "text_block",
+      "order": 1,
+      "text": "Similar to the estimation of $ {I}_{11} $ and $ {I}_{12} $ , we can derive"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 2,
+      "latex": "$${I}_{21} \\leq  C{\\tau }^{\\frac{5}{2}\\left( {1 - \\varepsilon }\\right) },\\;{I}_{22} \\leq  C{\\tau }^{2\\left( {1 - \\varepsilon }\\right) }\\;\\text{ and }\\;{I}_{23} \\leq  C{\\tau }^{2\\left( {1 - \\varepsilon }\\right) }.$$"
+    },
+    {
+      "category": "text_block",
+      "order": 3,
+      "text": "For $ {I}_{24} $ , by the Itô formula, we get"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 4,
+      "latex": "$$I_{24}=\\left|\\mathbb{E}\\left[\\int_{t_{k}}^{t_{k+1}}\\int_{t_{k}}^{s}\\langle D\\tilde{g}_{i_{2}}(X_{\\tau}(t_{k},x;r),f_{\\tau}(X_{\\tau}(t_{k},x;r)\\rangle\\mathrm{d}r\\mathrm{d}B(s)\\cdot\\int_{t_{k}}^{t_{k+1}}\\tilde{g}_{i_{1}}(X_{\\tau}(t_{k},x;s))\\mathrm{d}B(s)\\right]\\right|$$"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 5,
+      "latex": "$$+\\left|\\mathbb{E}\\left[\\int_{t_{k}}^{t_{k+1}}\\int_{t_{k}}^{s}\\langle D\\tilde{g}_{i_{2}}(X_{\\tau}(t_{k},x;r),g_{\\tau}(X_{\\tau}(t_{k},x;r)\\rangle\\mathrm{d}B(r)\\mathrm{d}B(s)\\cdot\\int_{t_{k}}^{t_{k+1}}\\tilde{g}_{i_{1}}(X_{\\tau}(t_{k},x;s))\\mathrm{d}B(s)\\right]\\right|$$"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 6,
+      "latex": "$$+\\frac{1}{2}\\sum_{l=1}^{m}\\left|\\mathbb{E}\\left[\\int_{t_{k}}^{t_{k+1}}\\int_{t_{k}}^{s}\\text{trace}(g_{\\tau}^{T}(X_{\\tau}(t_{k},x;r))D^{2}g_{\\tau}^{i_{2},l}(X_{\\tau}(t_{k},x;r)g_{\\tau}(X_{\\tau}(t_{k},x;r)))\\mathrm{d}r\\mathrm{d}B^{l}(s)\\cdot\\int_{t_{k}}^{t_{k+1}}\\tilde{g}_{i_{1}}(X_{\\tau}(t_{k},x;s))\\mathrm{d}B(s)\\right]\\right|$$"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 7,
+      "latex": "$$=:I_{241}+I_{242}+I_{243}.$$"
+    },
+    {
+      "category": "text_block",
+      "order": 8,
+      "text": "For $ {I}_{242} $ , by using the Hölder inequality and the generalized Itô isometry, as well as the estimation of $ {I}_{132} $ , we have"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 9,
+      "latex": "$$I_{242}=\\left|\\mathbb{E}\\left[\\int_{t_{k}}^{t_{k+1}}\\int_{t_{k}}^{s}\\langle D\\tilde{g}_{i_{2}}(X_{\\tau}(t_{k},x;r)),g_{\\tau}(X_{\\tau}(t_{k},x;r))\\rangle\\mathrm{d}B(r)\\mathrm{d}B(s)\\cdot\\int_{t_{k}}^{t_{k+1}}\\tilde{g}_{i_{1}}(X_{\\tau}(t_{k},x;s))-\\tilde{g}_{i_{1}}(x)\\mathrm{d}B(s)\\right]\\right|$$"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 10,
+      "latex": "$$=\\Bigg|\\int_{t_{k}}^{t_{k+1}}\\mathbb{E}\\left[\\left(\\int_{t_{k}}^{s}\\langle D\\tilde{g}_{i_{2}}(X_{\\tau}(t_{k},x;r)),g_{\\tau}(X_{\\tau}(t_{k},x;r))\\rangle\\mathrm{d}B(r)\\right)\\cdot\\left(\\tilde{g}_{i_{1}}(X_{\\tau}(t_{k},x;s))-\\tilde{g}_{i_{1}}(x)\\right)\\right]\\mathrm{d}s\\Bigg|$$"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 11,
+      "latex": "$$\\leq\\int_{t_{k}}^{t_{k+1}}\\|\\int_{t_{k}}^{s}D\\tilde{g}_{i_{2}}(X_{\\tau}(t_{k},x;r)g_{\\tau}(X_{\\tau}(t_{k},x;r)\\mathrm{d}B(r)\\|_{L^{2}(\\Omega,\\mathbb{R})}\\cdot\\|\\tilde{g}_{i_{1}}(X_{\\tau}(t_{k},x;s))-\\tilde{g}_{i_{1}}(x)\\|_{L^{2}(\\Omega,\\mathbb{R})}\\mathrm{d}s$$"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 12,
+      "latex": "$$\\leq C(1+|\\mu^{-1}(\\hat{Y}\\tau^{-\\varepsilon})+C_{0}|^{w+2})\\tau^{\\frac{1}{2}}\\cdot(1+|\\mu^{-1}(\\hat{Y}\\tau^{-\\varepsilon})+C_{0}|^{w+2})^{\\frac{1}{2}}\\tau^{1+\\frac{1}{2}(1-\\varepsilon)}$$"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 13,
+      "latex": "$$\\leq C\\tau^{2(1-\\varepsilon)}.$$"
+    },
+    {
+      "category": "text_block",
+      "order": 14,
+      "text": "Similar to the estimation of $ {I}_{131} $ , we get"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 15,
+      "latex": "$${I}_{241} \\leq  C{\\tau }^{2\\left( {1 - \\varepsilon }\\right) }\\text{ and }{I}_{243} \\leq  C{\\tau }^{2\\left( {1 - \\varepsilon }\\right) }.$$"
+    },
+    {
+      "category": "text_block",
+      "order": 16,
+      "text": "Therefore, we have"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 17,
+      "latex": "$${I}_{2} \\leq  C{\\tau }^{2\\left( {1 - \\varepsilon }\\right) }.$$"
+    },
+    {
+      "category": "text_block",
+      "order": 18,
+      "text": "It means that"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 19,
+      "latex": "$$\\left| {\\mathbb{E}\\left\\lbrack  {{\\left( {\\delta }_{k}\\right) }^{{i}_{1}}{\\left( {\\delta }_{k}\\right) }^{{i}_{2}} - {\\left( {\\bar{\\delta }}_{k}\\right) }^{{i}_{1}}{\\left( {\\bar{\\delta }}_{k}\\right) }^{{i}_{2}}}\\right\\rbrack  }\\right|  \\leq  C{\\tau }^{2\\left( {1 - \\varepsilon }\\right) }. \\tag{F3}$$"
+    },
+    {
+      "category": "text_block",
+      "order": 20,
+      "text": "When $ r = 3 $ , we conclude that"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 21,
+      "latex": "$$|\\mathbb{E}[(\\delta_{k})^{i_{1}}(\\delta_{k})^{i_{2}}(\\delta_{k})^{i_{3}}-(\\bar{\\delta}_{k})^{i_{1}}(\\bar{\\delta}_{k})^{i_{2}}(\\bar{\\delta}_{k})^{i_{3}}]|$$"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 22,
+      "latex": "$$\\leq|\\mathbb{E}[(\\delta_{k})^{i_{1}}((\\delta_{k})^{i_{2}}(\\delta_{k})^{i_{3}}-(\\bar{\\delta}_{k})^{i_{2}}(\\bar{\\delta}_{k})^{i_{3}})]|+|\\mathbb{E}[((\\delta_{k})^{i_{1}}-(\\bar{\\delta}_{k})^{i_{1}})(\\bar{\\delta}_{k})^{i_{2}}(\\bar{\\delta}_{k})^{i_{3}}]|$$"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 23,
+      "latex": "$$\\leq|\\mathbb{E}[(\\delta_{k})^{i_{1}}(\\delta_{k})^{i_{2}}((\\delta_{k})^{i_{3}}-(\\bar{\\delta}_{k})^{i_{3}})]|+|\\mathbb{E}[(\\delta_{k})^{i_{1}}(\\bar{\\delta}_{k})^{i_{3}}((\\delta_{k})^{i_{2}}-(\\bar{\\delta}_{k})^{i_{2}})]|+|\\mathbb{E}[((\\delta_{k})^{i_{1}}-(\\bar{\\delta}_{k})^{i_{1}})(\\bar{\\delta}_{k})^{i_{2}}(\\bar{\\delta}_{k})^{i_{3}}]|.$$"
+    },
+    {
+      "category": "page_number",
+      "order": 24,
+      "text": "41"
+    },
+    {
+      "category": "equation_semantic",
+      "order": null,
+      "latex": ""
+    },
+    {
+      "category": "equation_semantic",
+      "order": null,
+      "latex": ""
+    },
+    {
+      "category": "equation_semantic",
+      "order": null,
+      "latex": ""
+    }
+  ],
+  "tables": []
+}

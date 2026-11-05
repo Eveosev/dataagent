@@ -1,0 +1,46 @@
+## Identifying the problem:
+
+The problem asks us to determine if a given string `s` can be formed by taking a substring and repeating it multiple times. In other words, we need to check if `s` is composed of a substring that is concatenated with itself one or more times.
+
+## Step-by-step reasoning:
+
+1. **Finding the substring:**
+    - We can start by iterating through the string `s` with a loop.
+    - For each position `i` in the string, we can consider the substring starting at position 0 and ending at position `i`.
+    - We can then check if the remaining part of the string (`s[i+1:]`) is a multiple of the substring we identified.
+    - If it is, we can conclude that the string can be formed by repeating the substring.
+
+2. **Checking for multiples:**
+    - To check if the remaining part of the string is a multiple of the substring, we can use the modulo operator (`%`).
+    - We can calculate the length of the substring and the length of the remaining string.
+    - If the length of the remaining string is a multiple of the length of the substring, we can proceed to further verification.
+
+3. **Verification:**
+    - We can compare the characters of the remaining string with the corresponding characters in the first multiple of the substring.
+    - If all the characters match, we can conclude that the string can be formed by repeating the substring.
+
+## Drafting an answer:
+
+```pony
+fun repeatedSubstringPattern(s: String): Bool {
+    let n = s.length;
+
+    for i in 0..<n-1 {
+        let substring = s[0..i];
+        let substringLength = substring.length;
+
+        if n % substringLength == 0 {
+            let repetitions = n / substringLength;
+            let multiple = substring * repetitions;
+
+            if multiple == s {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+```
+
+This code iterates through potential substring lengths and checks if the remaining string is a multiple of the substring. If it is, it verifies if the characters match in the repeated substring and the original string. If all the characters match, it returns true, indicating that the string can be formed by repeating the substring. Otherwise, it returns false. 

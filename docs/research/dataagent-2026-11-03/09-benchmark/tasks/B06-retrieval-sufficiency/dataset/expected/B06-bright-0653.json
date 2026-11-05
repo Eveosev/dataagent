@@ -1,0 +1,30 @@
+{
+  "source": "xlangai/BRIGHT",
+  "query_id": "77",
+  "query": "## Essential Problem:\n\nThe problem is to write a function `defangIPaddr` that takes a valid IPv4 address as input and returns a defanged version of that address. Defanging involves replacing every period \".\" with \"[.]\".\n\n## Relevant Information:\n\n* **IPv4 address format:**\n    * Consists of four decimal numbers separated by periods.\n    * Each decimal number is between 0 and 255.\n    * Example: \"127.0.0.1\"\n* **Defanging:**\n    * Replace each period \".\" with \"[.]\".\n    * Example: \"127[.]0[.]0[.]1\"\n\n## Algorithm:\n\n1. **Split the input string:**\n    * Use the `split()` function to split the input string based on the delimiter \".\".\n    * This will create a list of four decimal numbers.\n2. **Iterate through the list:**\n    * For each element in the list:\n        * Replace \".\" with \"[.]\" using the `replace()` function.\n    * Append the modified element to a new list.\n3. **Join the list:**\n    * Use the `join()` function to join the elements in the new list back into a string using \".\" as the delimiter.\n4. **Return the defanged IP address:**\n    * Return the defanged IP address string.\n\n## Draft Answer:\n\n```pony\nfun defangIPaddr(address: String): String =>\n    address.split('.')\n           .map(|chunk| chunk.replace('.', '[.]'))\n           .join('.')\n```\n\n## Additional Thoughts:\n\n* This solution assumes the input is a valid IPv4 address. Error handling could be added to handle invalid input.\n* The solution uses list comprehensions for iterating and modifying elements. This is a concise and efficient way to achieve the desired result.\n* The `replace()` function is used to replace the \".\" with \"[.]\". This ensures the output matches the expected format.\n* The `join()` function is used to combine the modified elements back into a string with the \".\" delimiter.\n\n",
+  "gold_ids": [
+    "Pony/5_methods_1.txt",
+    "Pony/1_variables_2.txt",
+    "Pony/1_variables_1.txt"
+  ],
+  "gold_answer": "N/A",
+  "corpus": "documents/pony-00000-of-00001.parquet",
+  "case_id": "B06-bright-0653",
+  "expected": {
+    "kind": "retrieval",
+    "gold_ids": [
+      "Pony/5_methods_1.txt",
+      "Pony/1_variables_2.txt",
+      "Pony/1_variables_1.txt"
+    ],
+    "gold_ids_long": [
+      "Pony/builtin-String-.txt",
+      "Pony/5_methods.txt",
+      "Pony/1_variables.txt"
+    ],
+    "gold_answer": "N/A",
+    "excluded_ids": [
+      "N/A"
+    ]
+  }
+}

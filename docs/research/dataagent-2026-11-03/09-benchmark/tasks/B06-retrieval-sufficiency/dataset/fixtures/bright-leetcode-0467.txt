@@ -1,0 +1,28 @@
+## Essential Problem
+
+The main problem is to identify and return an edge that can be removed from the given graph such that the resulting graph is a tree with `n` nodes. The graph initially started as a tree, but an additional edge was added, creating a cycle. Removing this added edge will restore the tree structure.
+
+## Necessary Information
+
+1. **Graph Structure**: We are given the graph as an array of edges `edges`, where each edge is represented as a pair `[ai, bi]`, indicating a connection between nodes `ai` and `bi`.
+2. **Cycle Detection**: To identify the edge to be removed, we need to detect the cycle formed by the additional edge. This can be done using various algorithms like Depth-First Search (DFS) or Breadth-First Search (BFS).
+3. **Edge Removal**: Once the cycle is identified, we need to remove one edge from the cycle to break it and restore the tree structure. The edge to be removed should be the one that was added later, as mentioned in the problem statement.
+
+## Draft Answer
+
+Here's a possible approach to solve the problem:
+
+1. **DFS/BFS**: Perform a DFS or BFS traversal on the graph starting from any node. During the traversal, keep track of the visited nodes and the parent of each node.
+2. **Cycle Detection**: When a node is visited again (i.e., a back edge is encountered), it indicates the presence of a cycle. The path from the starting node to the revisited node forms the cycle.
+3. **Edge Identification**: Identify the additional edge within the cycle. This can be done by comparing the timestamps or order in which edges were added during the traversal. The edge with the latest timestamp or order is the one that was added later.
+4. **Edge Removal**: Remove the identified edge from the graph. This will break the cycle and restore the tree structure.
+5. **Return**: Return the removed edge as a pair `[ai, bi]`.
+
+## Additional Considerations
+
+*   There might be multiple cycles in the graph due to the additional edge. In such cases, any edge from any of the cycles can be removed to restore the tree. The provided solution will return the edge that was added later.
+*   The problem can also be solved using algorithms like Kruskal's Minimum Spanning Tree algorithm or Prim's Minimum Spanning Tree algorithm. These algorithms build the minimum spanning tree of the graph, which is a tree that includes all the nodes and has the minimum total edge weight. The additional edge can then be identified as the edge with the highest weight in the minimum spanning tree and removed.
+
+## Conclusion
+
+This draft answer provides a potential solution to the problem of identifying and removing an edge to restore the tree structure. The approach involves cycle detection using DFS or BFS and identifying the additional edge within the cycle. This solution can be further optimized and implemented using various algorithms like Kruskal's or Prim's algorithms. 

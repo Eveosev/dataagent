@@ -1,0 +1,936 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="./">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="Error Reports" href="error_report.html"><link rel="prev" title="Pandera Data Types" href="dtypes.html">
+        <link rel="prefetch" href="_static/pandera-banner.png" as="image">
+
+    <link rel="shortcut icon" href="_static/pandera-favicon.png"><!-- Generated with Sphinx 8.2.3 and Furo 2025.12.19 -->
+        <title>Lazy Validation - pandera documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinxcontrib_typer.css" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3" />
+    <link rel="stylesheet" type="text/css" href="_static/default.css?v=d0bf47e2" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  --color-brand-primary: #78ac1b;
+  --color-brand-content: #78ac1b;
+  --color-api-highlight-on-target: #e5fff5;
+  --color-announcement-background: #FEE7B8;
+  --color-announcement-text: #535353;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #78ac1b;
+  --color-brand-content: #78ac1b;
+  --color-api-highlight-on-target: #e5fff5;
+  --color-announcement-background: #493100;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #78ac1b;
+  --color-brand-content: #78ac1b;
+  --color-api-highlight-on-target: #e5fff5;
+  --color-announcement-background: #493100;
+  
+      }
+    }
+  }
+</style><script async type="text/javascript" src="/_/static/javascript/readthedocs-addons.js"></script><meta name="readthedocs-project-slug" content="pandera" /><meta name="readthedocs-version-slug" content="stable" /><meta name="readthedocs-resolver-filename" content="/lazy_validation.html" /><meta name="readthedocs-http-status" content="200" /></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+<div class="announcement">
+  <aside class="announcement-content">
+     
+📢 New in Pandera 0.35.0: validate pandas, Polars, Ibis, PyArrow and now
+<a href='./datafusion.html'>DataFusion</a> dataframes with the same schema
+and check patterns - Arrow-native query plans validated directly!
+ 
+  </aside>
+</div>
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">pandera  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/pandera-banner.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">pandera  documentation</span>
+  
+</a><div id="docsearch"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to Pandera</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://colab.research.google.com/github/unionai-oss/pandera/blob/main/docs/source/notebooks/try_pandera.ipynb">▶️ Try Pandera</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://union.ai/pandera">Official Website</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Basics</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="dataframe_schemas.html">DataFrame Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataframe_models.html">DataFrame Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="series_schemas.html">Series Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dtype_validation.html">Data Type Validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="checks.html">Validating with Checks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dtypes.html">Pandera Data Types</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Lazy Validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="error_report.html">Error Reports</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli_guide.html">Validating data with the CLI</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Advanced</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="hypothesis.html">Hypothesis Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parsers.html">Preprocessing with Parsers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="decorators.html">Decorators for Pipeline Integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="drop_invalid_rows.html">Dropping Invalid Rows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schema_inference.html">Schema Inference and Persistence</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_synthesis_strategies.html">Data Synthesis Strategies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_format_conversion.html">Data Format Conversion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extensions.html">Extensions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Integrations</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="supported_libraries.html">Supported DataFrame Libraries</a><input aria-label="Toggle navigation of Supported DataFrame Libraries" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="polars.html">Polars</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ibis.html">Ibis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyarrow.html">PyArrow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datafusion.html">DataFusion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyspark_sql.html">PySpark SQL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dask.html">Dask</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modin.html">Modin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyspark.html">Pyspark Pandas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geopandas.html">GeoPandas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="narwhals_backend.html">Narwhals-powered backend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fugue.html">Fugue</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="xarray_guide/index.html">Xarray Data Validation</a><input aria-label="Toggle navigation of Xarray Data Validation" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="xarray_guide/data_array_schema.html">DataArray Schemas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="xarray_guide/dataset_schema.html">Dataset Schemas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="xarray_guide/data_tree.html">DataTree Validation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="xarray_guide/data_models.html">Data Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="xarray_guide/checks_and_parsers.html">Checks and Parsers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="xarray_guide/decorators.html">Decorators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="xarray_guide/configuration.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="xarray_guide/duck_arrays.html">Dask and Duck Arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="xarray_guide/encoding.html">Encoding Validation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="xarray_guide/error_reporting.html">Error reports and lazy validation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="xarray_guide/cf_conventions.html">CF Convention Checks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="xarray_guide/schema_inference.html">Schema Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="xarray_guide/io_serialization.html">IO Serialization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="xarray_guide/hypothesis_strategies.html">Hypothesis Data Strategies</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="pytorch_guide/index.html">PyTorch Tensor Data Validation</a><input aria-label="Toggle navigation of PyTorch Tensor Data Validation" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="pytorch_guide/tensordict_schema.html">TensorDictSchema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pytorch_guide/tensordict_model.html">TensorDictModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pytorch_guide/tensordict_checks.html">Checks and Lazy Validation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pytorch_guide/tensordict_schema_inference.html">Schema Inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pytorch_guide/tensordict_io.html">Serialization and Deserialization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pytorch_guide/tensordict_strategies.html">Hypothesis Strategies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pytorch_guide/error_reporting.html">Error Reporting</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="integrations.html">Ecosystem Integrations</a><input aria-label="Toggle navigation of Ecosystem Integrations" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="fastapi.html">FastAPI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="frictionless.html">Frictionless</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_synthesis_strategies.html">Hypothesis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mypy_integration.html">Mypy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pydantic_integration.html">Pydantic</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">CLI</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="reference/index.html">API</a><input aria-label="Toggle navigation of API" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="reference/core.html">Core</a><input aria-label="Toggle navigation of Core" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.pandas.container.DataFrameSchema.html">pandera.api.pandas.container.DataFrameSchema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.geopandas.container.GeoDataFrameSchema.html">pandera.api.geopandas.container.GeoDataFrameSchema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.pandas.array.SeriesSchema.html">pandera.api.pandas.array.SeriesSchema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.polars.container.DataFrameSchema.html">pandera.api.polars.container.DataFrameSchema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.pyspark.container.DataFrameSchema.html">pandera.api.pyspark.container.DataFrameSchema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.dataframe.container.DataFrameSchema.html">pandera.api.dataframe.container.DataFrameSchema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.pandas.components.Column.html">pandera.api.pandas.components.Column</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.pandas.components.Index.html">pandera.api.pandas.components.Index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.pandas.components.MultiIndex.html">pandera.api.pandas.components.MultiIndex</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.polars.components.Column.html">pandera.api.polars.components.Column</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.pyspark.components.Column.html">pandera.api.pyspark.components.Column</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.dataframe.components.ComponentSchema.html">pandera.api.dataframe.components.ComponentSchema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.checks.Check.html">pandera.api.checks.Check</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.hypotheses.Hypothesis.html">pandera.api.hypotheses.Hypothesis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.polars.types.PolarsData.html">pandera.api.polars.types.PolarsData</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.pyspark.types.PysparkDataframeColumnObject.html">pandera.api.pyspark.types.PysparkDataframeColumnObject</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.config.PanderaConfig.html">pandera.config.PanderaConfig</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.config.ValidationDepth.html">pandera.config.ValidationDepth</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.config.ValidationScope.html">pandera.config.ValidationScope</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.config.config_context.html">pandera.config.config_context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.config.get_config_context.html">pandera.config.get_config_context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.config.get_config_global.html">pandera.config.get_config_global</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.config.reset_config_context.html">pandera.config.reset_config_context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.config.set_config.html">pandera.config.set_config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.set_config.html">pandera.set_config</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="reference/geopandas.html">GeoPandas</a><input aria-label="Toggle navigation of GeoPandas" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.geopandas.GeoDataFrameModel.html">pandera.geopandas.GeoDataFrameModel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.geopandas.GeoDataFrameSchema.html">pandera.geopandas.GeoDataFrameSchema</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="reference/dtypes.html">Data Types</a><input aria-label="Toggle navigation of Data Types" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.DataType.html">pandera.dtypes.DataType</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.Bool.html">pandera.dtypes.Bool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.Timestamp.html">pandera.dtypes.Timestamp</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.DateTime.html">pandera.dtypes.DateTime</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.Timedelta.html">pandera.dtypes.Timedelta</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.Category.html">pandera.dtypes.Category</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.Float.html">pandera.dtypes.Float</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.Float16.html">pandera.dtypes.Float16</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.Float32.html">pandera.dtypes.Float32</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.Float64.html">pandera.dtypes.Float64</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.Float128.html">pandera.dtypes.Float128</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.Int.html">pandera.dtypes.Int</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.Int8.html">pandera.dtypes.Int8</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.Int16.html">pandera.dtypes.Int16</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.Int32.html">pandera.dtypes.Int32</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.Int64.html">pandera.dtypes.Int64</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.UInt.html">pandera.dtypes.UInt</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.UInt8.html">pandera.dtypes.UInt8</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.UInt16.html">pandera.dtypes.UInt16</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.UInt32.html">pandera.dtypes.UInt32</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.UInt64.html">pandera.dtypes.UInt64</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.Complex.html">pandera.dtypes.Complex</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.Complex64.html">pandera.dtypes.Complex64</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.Complex128.html">pandera.dtypes.Complex128</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.Complex256.html">pandera.dtypes.Complex256</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.Decimal.html">pandera.dtypes.Decimal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.String.html">pandera.dtypes.String</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.BOOL.html">pandera.engines.pandas_engine.BOOL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.INT8.html">pandera.engines.pandas_engine.INT8</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.INT16.html">pandera.engines.pandas_engine.INT16</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.INT32.html">pandera.engines.pandas_engine.INT32</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.INT64.html">pandera.engines.pandas_engine.INT64</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.UINT8.html">pandera.engines.pandas_engine.UINT8</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.UINT16.html">pandera.engines.pandas_engine.UINT16</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.UINT32.html">pandera.engines.pandas_engine.UINT32</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.UINT64.html">pandera.engines.pandas_engine.UINT64</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.STRING.html">pandera.engines.pandas_engine.STRING</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.numpy_engine.Object.html">pandera.engines.numpy_engine.Object</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.Decimal.html">pandera.engines.pandas_engine.Decimal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.Category.html">pandera.engines.pandas_engine.Category</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.STRING.html">pandera.engines.pandas_engine.STRING</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.NpString.html">pandera.engines.pandas_engine.NpString</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.DateTime.html">pandera.engines.pandas_engine.DateTime</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.Date.html">pandera.engines.pandas_engine.Date</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.Period.html">pandera.engines.pandas_engine.Period</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.Sparse.html">pandera.engines.pandas_engine.Sparse</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.Interval.html">pandera.engines.pandas_engine.Interval</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.PydanticModel.html">pandera.engines.pandas_engine.PydanticModel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.PythonDict.html">pandera.engines.pandas_engine.PythonDict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.PythonList.html">pandera.engines.pandas_engine.PythonList</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.PythonTuple.html">pandera.engines.pandas_engine.PythonTuple</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.PythonTypedDict.html">pandera.engines.pandas_engine.PythonTypedDict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.PythonNamedTuple.html">pandera.engines.pandas_engine.PythonNamedTuple</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.ArrowBool.html">pandera.engines.pandas_engine.ArrowBool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.ArrowInt64.html">pandera.engines.pandas_engine.ArrowInt64</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.ArrowInt32.html">pandera.engines.pandas_engine.ArrowInt32</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.ArrowInt16.html">pandera.engines.pandas_engine.ArrowInt16</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.ArrowInt8.html">pandera.engines.pandas_engine.ArrowInt8</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.ArrowString.html">pandera.engines.pandas_engine.ArrowString</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.ArrowUInt64.html">pandera.engines.pandas_engine.ArrowUInt64</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.ArrowUInt32.html">pandera.engines.pandas_engine.ArrowUInt32</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.ArrowUInt16.html">pandera.engines.pandas_engine.ArrowUInt16</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.ArrowUInt8.html">pandera.engines.pandas_engine.ArrowUInt8</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.ArrowFloat64.html">pandera.engines.pandas_engine.ArrowFloat64</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.ArrowFloat32.html">pandera.engines.pandas_engine.ArrowFloat32</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.ArrowFloat16.html">pandera.engines.pandas_engine.ArrowFloat16</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.ArrowDecimal128.html">pandera.engines.pandas_engine.ArrowDecimal128</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.ArrowTimestamp.html">pandera.engines.pandas_engine.ArrowTimestamp</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.ArrowDictionary.html">pandera.engines.pandas_engine.ArrowDictionary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.ArrowList.html">pandera.engines.pandas_engine.ArrowList</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.ArrowStruct.html">pandera.engines.pandas_engine.ArrowStruct</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.ArrowNull.html">pandera.engines.pandas_engine.ArrowNull</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.ArrowDate32.html">pandera.engines.pandas_engine.ArrowDate32</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.ArrowDate64.html">pandera.engines.pandas_engine.ArrowDate64</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.ArrowDuration.html">pandera.engines.pandas_engine.ArrowDuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.ArrowTime32.html">pandera.engines.pandas_engine.ArrowTime32</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.ArrowTime64.html">pandera.engines.pandas_engine.ArrowTime64</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.ArrowTimestamp.html">pandera.engines.pandas_engine.ArrowTimestamp</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.ArrowBinary.html">pandera.engines.pandas_engine.ArrowBinary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.ArrowLargeBinary.html">pandera.engines.pandas_engine.ArrowLargeBinary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.ArrowLargeString.html">pandera.engines.pandas_engine.ArrowLargeString</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.geopandas_engine.Geometry.html">pandera.engines.geopandas_engine.Geometry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.PydanticModel.html">pandera.engines.pandas_engine.PydanticModel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.polars_engine.Int8.html">pandera.engines.polars_engine.Int8</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.polars_engine.Int16.html">pandera.engines.polars_engine.Int16</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.polars_engine.Int32.html">pandera.engines.polars_engine.Int32</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.polars_engine.Int64.html">pandera.engines.polars_engine.Int64</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.polars_engine.UInt8.html">pandera.engines.polars_engine.UInt8</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.polars_engine.UInt16.html">pandera.engines.polars_engine.UInt16</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.polars_engine.UInt32.html">pandera.engines.polars_engine.UInt32</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.polars_engine.UInt64.html">pandera.engines.polars_engine.UInt64</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.polars_engine.Float32.html">pandera.engines.polars_engine.Float32</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.polars_engine.Float64.html">pandera.engines.polars_engine.Float64</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.polars_engine.Decimal.html">pandera.engines.polars_engine.Decimal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.polars_engine.Date.html">pandera.engines.polars_engine.Date</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.polars_engine.DateTime.html">pandera.engines.polars_engine.DateTime</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.polars_engine.Time.html">pandera.engines.polars_engine.Time</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.polars_engine.Timedelta.html">pandera.engines.polars_engine.Timedelta</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.polars_engine.Array.html">pandera.engines.polars_engine.Array</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.polars_engine.List.html">pandera.engines.polars_engine.List</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.polars_engine.Struct.html">pandera.engines.polars_engine.Struct</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.polars_engine.Bool.html">pandera.engines.polars_engine.Bool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.polars_engine.String.html">pandera.engines.polars_engine.String</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.polars_engine.Enum.html">pandera.engines.polars_engine.Enum</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.polars_engine.Categorical.html">pandera.engines.polars_engine.Categorical</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.polars_engine.Category.html">pandera.engines.polars_engine.Category</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.polars_engine.Binary.html">pandera.engines.polars_engine.Binary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.polars_engine.Null.html">pandera.engines.polars_engine.Null</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.polars_engine.Object.html">pandera.engines.polars_engine.Object</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.is_subdtype.html">pandera.dtypes.is_subdtype</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.is_float.html">pandera.dtypes.is_float</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.is_int.html">pandera.dtypes.is_int</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.is_uint.html">pandera.dtypes.is_uint</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.is_complex.html">pandera.dtypes.is_complex</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.is_numeric.html">pandera.dtypes.is_numeric</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.is_bool.html">pandera.dtypes.is_bool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.is_string.html">pandera.dtypes.is_string</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.is_datetime.html">pandera.dtypes.is_datetime</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.is_timedelta.html">pandera.dtypes.is_timedelta</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.dtypes.immutable.html">pandera.dtypes.immutable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.xarray_engine.DataType.html">pandera.engines.xarray_engine.DataType</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.engine.Engine.html">pandera.engines.engine.Engine</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.numpy_engine.Engine.html">pandera.engines.numpy_engine.Engine</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pandas_engine.Engine.html">pandera.engines.pandas_engine.Engine</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.polars_engine.Engine.html">pandera.engines.polars_engine.Engine</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.pyspark_engine.Engine.html">pandera.engines.pyspark_engine.Engine</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.xarray_engine.Engine.html">pandera.engines.xarray_engine.Engine</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="reference/dataframe_models.html">DataFrame Models</a><input aria-label="Toggle navigation of DataFrame Models" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.pandas.model.DataFrameModel.html">pandera.api.pandas.model.DataFrameModel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.polars.model.DataFrameModel.html">pandera.api.polars.model.DataFrameModel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.pyspark.model.DataFrameModel.html">pandera.api.pyspark.model.DataFrameModel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.dataframe.model.DataFrameModel.html">pandera.api.dataframe.model.DataFrameModel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.dataframe.model_components.Field.html">pandera.api.dataframe.model_components.Field</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.dataframe.model_components.check.html">pandera.api.dataframe.model_components.check</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.dataframe.model_components.dataframe_check.html">pandera.api.dataframe.model_components.dataframe_check</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.dataframe.model_components.parser.html">pandera.api.dataframe.model_components.parser</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.dataframe.model_components.dataframe_parser.html">pandera.api.dataframe.model_components.dataframe_parser</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.pandas.model_config.BaseConfig.html">pandera.api.pandas.model_config.BaseConfig</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.polars.model_config.BaseConfig.html">pandera.api.polars.model_config.BaseConfig</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.pyspark.model_config.BaseConfig.html">pandera.api.pyspark.model_config.BaseConfig</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.typing.DataFrame.html">pandera.typing.DataFrame</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.typing.Series.html">pandera.typing.Series</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.typing.Index.html">pandera.typing.Index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.typing.FieldType.html">pandera.typing.FieldType</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.typing.geopandas.GeoDataFrame.html">pandera.typing.geopandas.GeoDataFrame</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.typing.geopandas.GeoSeries.html">pandera.typing.geopandas.GeoSeries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.typing.dask.DataFrame.html">pandera.typing.dask.DataFrame</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.typing.dask.Series.html">pandera.typing.dask.Series</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.typing.dask.Index.html">pandera.typing.dask.Index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.typing.pyspark.DataFrame.html">pandera.typing.pyspark.DataFrame</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.typing.pyspark.Series.html">pandera.typing.pyspark.Series</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.typing.pyspark.Index.html">pandera.typing.pyspark.Index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.typing.modin.DataFrame.html">pandera.typing.modin.DataFrame</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.typing.modin.Series.html">pandera.typing.modin.Series</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.typing.modin.Index.html">pandera.typing.modin.Index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.typing.fastapi.UploadFile.html">pandera.typing.fastapi.UploadFile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.typing.formats.Formats.html">pandera.typing.formats.Formats</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="reference/decorators.html">Decorators</a><input aria-label="Toggle navigation of Decorators" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.decorators.check_input.html">pandera.decorators.check_input</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.decorators.check_output.html">pandera.decorators.check_output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.decorators.check_io.html">pandera.decorators.check_io</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.decorators.check_types.html">pandera.decorators.check_types</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="reference/schema_inference.html">Schema Inference</a><input aria-label="Toggle navigation of Schema Inference" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.schema_inference.pandas.infer_schema.html">pandera.schema_inference.pandas.infer_schema</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="reference/io.html">IO Utilities</a><input aria-label="Toggle navigation of IO Utilities" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.io.pandas_io.from_yaml.html">pandera.io.pandas_io.from_yaml</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.io.pandas_io.to_yaml.html">pandera.io.pandas_io.to_yaml</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.io.pandas_io.to_script.html">pandera.io.pandas_io.to_script</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.io.pandas_io.from_json.html">pandera.io.pandas_io.from_json</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.io.pandas_io.to_json.html">pandera.io.pandas_io.to_json</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.io.polars_io.from_yaml.html">pandera.io.polars_io.from_yaml</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.io.polars_io.to_yaml.html">pandera.io.polars_io.to_yaml</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.io.polars_io.from_json.html">pandera.io.polars_io.from_json</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.io.polars_io.to_json.html">pandera.io.polars_io.to_json</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.io.pyspark_sql_io.from_yaml.html">pandera.io.pyspark_sql_io.from_yaml</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.io.pyspark_sql_io.to_yaml.html">pandera.io.pyspark_sql_io.to_yaml</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.io.pyspark_sql_io.from_json.html">pandera.io.pyspark_sql_io.from_json</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.io.pyspark_sql_io.to_json.html">pandera.io.pyspark_sql_io.to_json</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.io.ibis_io.from_yaml.html">pandera.io.ibis_io.from_yaml</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.io.ibis_io.to_yaml.html">pandera.io.ibis_io.to_yaml</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.io.ibis_io.from_json.html">pandera.io.ibis_io.from_json</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.io.ibis_io.to_json.html">pandera.io.ibis_io.to_json</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="reference/strategies.html">Data Synthesis Strategies</a><input aria-label="Toggle navigation of Data Synthesis Strategies" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.strategies.pandas_strategies.html">pandera.strategies.pandas_strategies</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="reference/narwhals.html">Narwhals Backend</a><input aria-label="Toggle navigation of Narwhals Backend" class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.narwhals.types.NarwhalsData.html">pandera.api.narwhals.types.NarwhalsData</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.narwhals.types.NarwhalsCheckResult.html">pandera.api.narwhals.types.NarwhalsCheckResult</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.backends.narwhals.base.NarwhalsSchemaBackend.html">pandera.backends.narwhals.base.NarwhalsSchemaBackend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.backends.narwhals.container.DataFrameSchemaBackend.html">pandera.backends.narwhals.container.DataFrameSchemaBackend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.backends.narwhals.components.ColumnBackend.html">pandera.backends.narwhals.components.ColumnBackend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.backends.narwhals.checks.NarwhalsCheckBackend.html">pandera.backends.narwhals.checks.NarwhalsCheckBackend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.narwhals_engine.DataType.html">pandera.engines.narwhals_engine.DataType</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.narwhals_engine.Int8.html">pandera.engines.narwhals_engine.Int8</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.narwhals_engine.Int16.html">pandera.engines.narwhals_engine.Int16</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.narwhals_engine.Int32.html">pandera.engines.narwhals_engine.Int32</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.narwhals_engine.Int64.html">pandera.engines.narwhals_engine.Int64</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.narwhals_engine.UInt8.html">pandera.engines.narwhals_engine.UInt8</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.narwhals_engine.UInt16.html">pandera.engines.narwhals_engine.UInt16</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.narwhals_engine.UInt32.html">pandera.engines.narwhals_engine.UInt32</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.narwhals_engine.UInt64.html">pandera.engines.narwhals_engine.UInt64</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.narwhals_engine.Float32.html">pandera.engines.narwhals_engine.Float32</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.narwhals_engine.Float64.html">pandera.engines.narwhals_engine.Float64</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.narwhals_engine.String.html">pandera.engines.narwhals_engine.String</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.narwhals_engine.Bool.html">pandera.engines.narwhals_engine.Bool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.narwhals_engine.Date.html">pandera.engines.narwhals_engine.Date</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.narwhals_engine.DateTime.html">pandera.engines.narwhals_engine.DateTime</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.narwhals_engine.Duration.html">pandera.engines.narwhals_engine.Duration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.narwhals_engine.Categorical.html">pandera.engines.narwhals_engine.Categorical</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.narwhals_engine.List.html">pandera.engines.narwhals_engine.List</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.narwhals_engine.Struct.html">pandera.engines.narwhals_engine.Struct</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.engines.narwhals_engine.Engine.html">pandera.engines.narwhals_engine.Engine</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.backends.narwhals.builtin_checks.equal_to.html">pandera.backends.narwhals.builtin_checks.equal_to</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.backends.narwhals.builtin_checks.not_equal_to.html">pandera.backends.narwhals.builtin_checks.not_equal_to</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.backends.narwhals.builtin_checks.greater_than.html">pandera.backends.narwhals.builtin_checks.greater_than</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.backends.narwhals.builtin_checks.greater_than_or_equal_to.html">pandera.backends.narwhals.builtin_checks.greater_than_or_equal_to</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.backends.narwhals.builtin_checks.less_than.html">pandera.backends.narwhals.builtin_checks.less_than</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.backends.narwhals.builtin_checks.less_than_or_equal_to.html">pandera.backends.narwhals.builtin_checks.less_than_or_equal_to</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.backends.narwhals.builtin_checks.in_range.html">pandera.backends.narwhals.builtin_checks.in_range</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.backends.narwhals.builtin_checks.isin.html">pandera.backends.narwhals.builtin_checks.isin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.backends.narwhals.builtin_checks.notin.html">pandera.backends.narwhals.builtin_checks.notin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.backends.narwhals.builtin_checks.str_matches.html">pandera.backends.narwhals.builtin_checks.str_matches</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.backends.narwhals.builtin_checks.str_contains.html">pandera.backends.narwhals.builtin_checks.str_contains</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.backends.narwhals.builtin_checks.str_startswith.html">pandera.backends.narwhals.builtin_checks.str_startswith</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.backends.narwhals.builtin_checks.str_endswith.html">pandera.backends.narwhals.builtin_checks.str_endswith</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.backends.narwhals.builtin_checks.str_length.html">pandera.backends.narwhals.builtin_checks.str_length</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="reference/extensions.html">Extensions</a><input aria-label="Toggle navigation of Extensions" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.extensions.html">pandera.extensions</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="reference/errors.html">Errors</a><input aria-label="Toggle navigation of Errors" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.errors.SchemaError.html">pandera.errors.SchemaError</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.errors.SchemaErrors.html">pandera.errors.SchemaErrors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.errors.SchemaInitError.html">pandera.errors.SchemaInitError</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.errors.SchemaDefinitionError.html">pandera.errors.SchemaDefinitionError</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="reference/xarray.html">Xarray</a><input aria-label="Toggle navigation of Xarray" class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.xarray.container.DataArraySchema.html">pandera.api.xarray.container.DataArraySchema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.xarray.container.DatasetSchema.html">pandera.api.xarray.container.DatasetSchema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.xarray.container.DataTreeSchema.html">pandera.api.xarray.container.DataTreeSchema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.xarray.components.DataVar.html">pandera.api.xarray.components.DataVar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.xarray.components.Coordinate.html">pandera.api.xarray.components.Coordinate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.xarray.model.DataArrayModel.html">pandera.api.xarray.model.DataArrayModel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.xarray.model.DatasetModel.html">pandera.api.xarray.model.DatasetModel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.xarray.model.DataTreeModel.html">pandera.api.xarray.model.DataTreeModel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.xarray.model_components.Field.html">pandera.api.xarray.model_components.Field</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.typing.xarray.Coordinate.html">pandera.typing.xarray.Coordinate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.typing.xarray.DataArray.html">pandera.typing.xarray.DataArray</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.typing.xarray.Dataset.html">pandera.typing.xarray.Dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.typing.xarray.DataTree.html">pandera.typing.xarray.DataTree</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.typing.xarray.XarrayAnnotationBase.html">pandera.typing.xarray.XarrayAnnotationBase</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.xarray.model_config.DataArrayConfig.html">pandera.api.xarray.model_config.DataArrayConfig</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.xarray.model_config.DatasetConfig.html">pandera.api.xarray.model_config.DatasetConfig</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.xarray.model_config.DataTreeConfig.html">pandera.api.xarray.model_config.DataTreeConfig</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.xarray.base.BaseDataArraySchema.html">pandera.api.xarray.base.BaseDataArraySchema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.xarray.base.BaseDatasetSchema.html">pandera.api.xarray.base.BaseDatasetSchema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.xarray.base.BaseDataTreeSchema.html">pandera.api.xarray.base.BaseDataTreeSchema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.xarray.types.XarrayData.html">pandera.api.xarray.types.XarrayData</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.xarray.types.XARRAY_CHECK_OBJECT_TYPES.html">pandera.api.xarray.types.XARRAY_CHECK_OBJECT_TYPES</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.xarray.types.XarrayCheckObjects.html">pandera.api.xarray.types.XarrayCheckObjects</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.config.ValidationDepth.html">pandera.config.ValidationDepth</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.config.ValidationScope.html">pandera.config.ValidationScope</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.xarray.utils.get_validation_depth.html">pandera.api.xarray.utils.get_validation_depth</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.schema_inference.xarray.infer_schema.html">pandera.schema_inference.xarray.infer_schema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.io.xarray_io.to_yaml.html">pandera.io.xarray_io.to_yaml</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.io.xarray_io.from_yaml.html">pandera.io.xarray_io.from_yaml</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.io.xarray_io.to_json.html">pandera.io.xarray_io.to_json</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.io.xarray_io.from_json.html">pandera.io.xarray_io.from_json</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.strategies.xarray_strategies.xarray_dtype_strategy.html">pandera.strategies.xarray_strategies.xarray_dtype_strategy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.strategies.xarray_strategies.data_array_strategy.html">pandera.strategies.xarray_strategies.data_array_strategy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.strategies.xarray_strategies.dataset_strategy.html">pandera.strategies.xarray_strategies.dataset_strategy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.strategies.xarray_strategies.data_array_schema_strategy.html">pandera.strategies.xarray_strategies.data_array_schema_strategy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.strategies.xarray_strategies.dataset_schema_strategy.html">pandera.strategies.xarray_strategies.dataset_schema_strategy</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="reference/pytorch.html">PyTorch</a><input aria-label="Toggle navigation of PyTorch" class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.tensordict.container.TensorDictSchema.html">pandera.api.tensordict.container.TensorDictSchema</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.tensordict.components.Tensor.html">pandera.api.tensordict.components.Tensor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.tensordict.model.TensorDictModel.html">pandera.api.tensordict.model.TensorDictModel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.api.tensordict.model_components.Field.html">pandera.api.tensordict.model_components.Field</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.config.ValidationDepth.html">pandera.config.ValidationDepth</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/generated/pandera.config.ValidationScope.html">pandera.config.ValidationScope</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Community</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="CONTRIBUTING.html">Contributing</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/pandera-dev/pandera/blob/main/docs/source/lazy_validation.md?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/pandera-dev/pandera/edit/main/docs/source/lazy_validation.md" rel="edit" title="Edit this page">
+    <svg><use href="#svg-pencil"></use></svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="lazy-validation">
+<span id="id1"></span><h1>Lazy Validation<a class="headerlink" href="#lazy-validation" title="Link to this heading">¶</a></h1>
+<p><em>New in version 0.4.0</em></p>
+<p>By default, when you call the <code class="docutils literal notranslate"><span class="pre">validate</span></code> method on schema or schema component
+objects, a <a class="reference internal" href="reference/generated/pandera.errors.SchemaError.html#pandera.errors.SchemaError" title="pandera.errors.SchemaError"><code class="xref py py-class docutils literal notranslate"><span class="pre">SchemaError</span></code></a> is raised as soon as one of the
+assumptions specified in the schema is falsified. For example, for a
+<a class="reference internal" href="reference/generated/pandera.api.pandas.container.DataFrameSchema.html#pandera.api.pandas.container.DataFrameSchema" title="pandera.api.pandas.container.DataFrameSchema"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrameSchema</span></code></a> object, the following situations will raise an
+exception:</p>
+<ul class="simple">
+<li><p>a column specified in the schema is not present in the dataframe.</p></li>
+<li><p>if <code class="docutils literal notranslate"><span class="pre">strict=True</span></code>, a column in the dataframe is not specified in the schema.</p></li>
+<li><p>the <code class="docutils literal notranslate"><span class="pre">data</span> <span class="pre">type</span></code> does not match.</p></li>
+<li><p>if <code class="docutils literal notranslate"><span class="pre">coerce=True</span></code>, the dataframe column cannot be coerced into the specified
+<code class="docutils literal notranslate"><span class="pre">data</span> <span class="pre">type</span></code>.</p></li>
+<li><p>the <a class="reference internal" href="reference/generated/pandera.api.checks.Check.html#pandera.api.checks.Check" title="pandera.api.checks.Check"><code class="xref py py-class docutils literal notranslate"><span class="pre">Check</span></code></a> specified in one of the columns returns <code class="docutils literal notranslate"><span class="pre">False</span></code> or
+a boolean series containing at least one <code class="docutils literal notranslate"><span class="pre">False</span></code> value.</p></li>
+</ul>
+<p>For example:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandera.pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pa</span>
+
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">"column"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"a"</span><span class="p">,</span> <span class="s2">"b"</span><span class="p">,</span> <span class="s2">"c"</span><span class="p">]})</span>
+
+<span class="n">schema</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">DataFrameSchema</span><span class="p">({</span><span class="s2">"column"</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">int</span><span class="p">)})</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">schema</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+<span class="k">except</span> <span class="n">pa</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">SchemaError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>expected series 'column' to have type int64, got object
+</pre></div>
+</div>
+</div>
+</div>
+<p>For more complex cases, it is useful to see all of the errors raised during
+the <code class="docutils literal notranslate"><span class="pre">validate</span></code> call so that you can debug the causes of errors on different
+columns and checks. The <code class="docutils literal notranslate"><span class="pre">lazy</span></code> keyword argument in the <code class="docutils literal notranslate"><span class="pre">validate</span></code> method
+of all schemas and schema components gives you the option of doing just this:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandera.pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pa</span>
+
+
+<span class="n">schema</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">DataFrameSchema</span><span class="p">(</span>
+    <span class="n">columns</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">"int_column"</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span>
+        <span class="s2">"float_column"</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">greater_than</span><span class="p">(</span><span class="mi">0</span><span class="p">)),</span>
+        <span class="s2">"str_column"</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">equal_to</span><span class="p">(</span><span class="s2">"a"</span><span class="p">)),</span>
+        <span class="s2">"date_column"</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">pa</span><span class="o">.</span><span class="n">DateTime</span><span class="p">),</span>
+    <span class="p">},</span>
+    <span class="n">strict</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+    <span class="s2">"int_column"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"a"</span><span class="p">,</span> <span class="s2">"b"</span><span class="p">,</span> <span class="s2">"c"</span><span class="p">],</span>
+    <span class="s2">"float_column"</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+    <span class="s2">"str_column"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"a"</span><span class="p">,</span> <span class="s2">"b"</span><span class="p">,</span> <span class="s2">"d"</span><span class="p">],</span>
+    <span class="s2">"unknown_column"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">})</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">schema</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">except</span> <span class="n">pa</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">SchemaErrors</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">exc</span><span class="o">.</span><span class="n">message</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{
+  "SCHEMA": {
+    "COLUMN_NOT_IN_SCHEMA": [
+      {
+        "schema": null,
+        "column": null,
+        "check": "column_in_schema",
+        "error": "column 'unknown_column' not in DataFrameSchema {'int_column': &lt;Schema Column(name=int_column, type=DataType(int64))&gt;, 'float_column': &lt;Schema Column(name=float_column, type=DataType(float64))&gt;, 'str_column': &lt;Schema Column(name=str_column, type=DataType(str))&gt;, 'date_column': &lt;Schema Column(name=date_column, type=DataType(datetime64[ns]))&gt;}"
+      }
+    ],
+    "COLUMN_NOT_IN_DATAFRAME": [
+      {
+        "schema": null,
+        "column": "date_column",
+        "check": "column_in_dataframe",
+        "error": "column 'date_column' not in dataframe. Columns in dataframe: ['int_column', 'float_column', 'str_column', 'unknown_column']"
+      }
+    ],
+    "WRONG_DATATYPE": [
+      {
+        "schema": null,
+        "column": "int_column",
+        "check": "dtype('int64')",
+        "error": "expected series 'int_column' to have type int64, got object"
+      },
+      {
+        "schema": null,
+        "column": "float_column",
+        "check": "dtype('float64')",
+        "error": "expected series 'float_column' to have type float64, got int64"
+      }
+    ]
+  },
+  "DATA": {
+    "DATAFRAME_CHECK": [
+      {
+        "schema": null,
+        "column": "float_column",
+        "check": "greater_than(0)",
+        "error": "Column 'float_column' failed element-wise validator number 0: greater_than(0) failure cases: 0"
+      },
+      {
+        "schema": null,
+        "column": "str_column",
+        "check": "equal_to(a)",
+        "error": "Column 'str_column' failed element-wise validator number 0: equal_to(a) failure cases: b, d"
+      }
+    ]
+  }
+}
+</pre></div>
+</div>
+</div>
+</div>
+<p>As you can see from the output above, a <a class="reference internal" href="reference/generated/pandera.errors.SchemaErrors.html#pandera.errors.SchemaErrors" title="pandera.errors.SchemaErrors"><code class="xref py py-class docutils literal notranslate"><span class="pre">SchemaErrors</span></code></a>
+exception is raised with a summary of the error counts and failure cases
+caught by the schema. This summary is called an <a class="reference internal" href="error_report.html#error-report"><span class="std std-ref">Error Reports</span></a>.</p>
+<p>You can also inspect the failure cases in a more granular form:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="p">:</span>
+    <span class="n">schema</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">except</span> <span class="n">pa</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">SchemaErrors</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Schema errors and failure cases:"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">exc</span><span class="o">.</span><span class="n">failure_cases</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">DataFrame object that failed validation:"</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">exc</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Schema errors and failure cases:
+    schema_context        column                check check_number  \
+6  DataFrameSchema          None     column_in_schema         None   
+7  DataFrameSchema          None  column_in_dataframe         None   
+0           Column    int_column       dtype('int64')         None   
+1           Column    int_column       dtype('int64')         None   
+2           Column    int_column       dtype('int64')         None   
+3           Column  float_column      greater_than(0)            0   
+4           Column    str_column          equal_to(a)            0   
+5           Column    str_column          equal_to(a)            0   
+8           Column  float_column     dtype('float64')         None   
+
+     failure_case index  
+6  unknown_column  None  
+7     date_column  None  
+0               a     0  
+1               b     1  
+2               c     2  
+3               0     0  
+4               b     1  
+5               d     2  
+8           int64  None  
+
+DataFrame object that failed validation:
+  int_column  float_column str_column unknown_column
+0          a             0          a           None
+1          b             1          b           None
+2          c             2          d           None
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="error_report.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Error Reports</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="dtypes.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Pandera Data Types</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2026, Pandera developers
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div>
+
+<!-- <div class="sponsorship">
+<a href="" target="_blank">
+    <button><i class="fa fa-heart"></i> Sponsor</button>
+</a>
+</div> --><script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=30646c52"></script>
+    <script defer="defer" src="_static/docsearch_config.js?v=090dd0cf"></script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script src="_static/custom.js?v=230a2847"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@docsearch/js@3"></script>
+    <script src="_static/docsearch_config.js?v=090dd0cf"></script>
+    </body>
+</html>

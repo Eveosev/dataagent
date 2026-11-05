@@ -1,0 +1,29 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 573,
+  "table": "health-table08",
+  "structure": "ExternalSupply",
+  "question_type": "Fact Checking",
+  "sub_type": "Multi-hop Fact Checking",
+  "answer": "Building closer relationships",
+  "cot": [
+    {
+      "planning": "First, we need to locate the row corresponding to the category “Safe, high quality, coordinated care”."
+    },
+    {
+      "planning": "Next, we locate the row corresponding to the category “Building closer relationships”."
+    },
+    {
+      "planning": "Then, we find the column corresponding to the year “2008-09” for both rows."
+    },
+    {
+      "planning": "Compare the scores for the two categories in that year to determine which one is higher."
+    }
+  ],
+  "case_id": "B01-rht-2209",
+  "expected": {
+    "kind": "answer",
+    "question": "Compare the scores for “Safe, high quality, coordinated care” and “Building closer relationships” in 2008-09. Which category had a higher score?",
+    "answer": "Building closer relationships"
+  }
+}

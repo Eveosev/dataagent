@@ -1,0 +1,24 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_f0d0dc06",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "question_about",
+    "statute_in_force",
+    "statute_notice_required_element",
+    "statute_specifies_notice_required_contents",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: Mississippi\n    Focus year: 2021\n    Question: \"Is it specified what is required to be in the notice?\"\n*/\n\n/* =========================\n   Scenario (factual statement)\n   ========================= */\n\n% The user-provided context.\nscenario_state(mississippi).\nscenario_focus_year(2021).\n\n% The user's question is about whether the law specifies required notice contents.\nquestion_about(notice_required_contents).\n\n% Helper predicate that succeeds exactly when the encoded scenario holds.\nscenario_statement :-\n    scenario_state(mississippi),\n    scenario_focus_year(2021),\n    question_about(notice_required_contents).\n\n/* =========================\n   Statute translation\n   MS Code  89-8-13 (2020)\n   ========================= */\n\n% Treat the 2020 statute text as applicable to the focus year 2021 for this encoding.\nstatute_in_force(ms_code_89_8_13, mississippi, 2021).\n\n/*\n  MS Code  89-8-13(3) (2020): For material noncompliance (general breach),\n  the notice must specify:\n    - the acts and omissions constituting the breach, and\n    - that the rental agreement will terminate on a date not less than 14 days after receipt\n      if the breach is not remedied within a reasonable time not in excess of 14 days.\n*/\nstatute_notice_required_element(ms_code_89_8_13, material_noncompliance_general, specify_acts_and_omissions_constituting_breach).\nstatute_notice_required_element(ms_code_89_8_13, material_noncompliance_general, specify_termination_upon_date_not_less_than_14_days_after_receipt_if_not_cured).\nstatute_notice_required_element(ms_code_89_8_13, material_noncompliance_general, specify_cure_time_reasonable_not_exceeding_14_days).\n\n/*\n  MS Code  89-8-13(3) (2020): For recurring substantially same noncompliance within six months,\n  the notice must specify:\n    - the breach, and\n    - the date of termination of the rental agreement.\n*/\nstatute_notice_required_element(ms_code_89_8_13, repeat_noncompliance_within_6_months, specify_the_breach).\nstatute_notice_required_element(ms_code_89_8_13, repeat_noncompliance_within_6_months, specify_termination_date).\n\n/* =========================\n   Reasoning helpers\n   ========================= */\n\n% The statute \"specifies what is required to be in the notice\" if it imposes at least one\n% required notice element for some covered situation.\nstatute_specifies_notice_required_contents(State, Year) :-\n    statute_in_force(ms_code_89_8_13, State, Year),\n    statute_notice_required_element(ms_code_89_8_13, _Situation, _Element),\n    !.\n\n/* =========================\n   Final answer\n   ========================= */\n\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_state(State),\n    scenario_focus_year(Year),\n    statute_specifies_notice_required_contents(State, Year),\n    !.\nhousing_answer(no) :-\n    !.\n\n/* =========================\n   Main entrypoint\n   ========================= */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-4686",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Is it specified what is required to be in the notice?"
+  }
+}

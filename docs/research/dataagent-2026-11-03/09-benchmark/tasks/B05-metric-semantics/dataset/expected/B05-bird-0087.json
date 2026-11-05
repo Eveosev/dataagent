@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 86,
+  "question": "Among the Commander-leadable cards that the Card Kingdom catalog lists for both a foil printing and a regular non-foil printing – cards listed for only one of the two printings don't count – I want the single most recent card frame year (the latest calendar year among the frame versions), and the count of cards in that group whose frame version is that year. Please return just that one row: the frame year and its card count.",
+  "evidence": "A card 'may lead a Commander deck' if it can be the deck's commander – the one card that leads the deck and sets its color identity – not merely be included among the deck's other cards.",
+  "gold_sql": "WITH cmd AS (SELECT frameVersion, substr(leadershipSkills, instr(leadershipSkills, 'commander')) AS tail FROM cards WHERE cardKingdomId IS NOT NULL AND cardKingdomFoilId IS NOT NULL) SELECT frameVersion AS frame_year, COUNT(*) AS card_count FROM cmd WHERE substr(tail, length('commander') + length('True'), length('True')) = 'True' GROUP BY frameVersion ORDER BY CAST(frameVersion AS INTEGER) DESC LIMIT 1",
+  "db_id": "card_games",
+  "case_id": "B05-bird-0087",
+  "expected": {
+    "kind": "sql",
+    "sql": "WITH cmd AS (SELECT frameVersion, substr(leadershipSkills, instr(leadershipSkills, 'commander')) AS tail FROM cards WHERE cardKingdomId IS NOT NULL AND cardKingdomFoilId IS NOT NULL) SELECT frameVersion AS frame_year, COUNT(*) AS card_count FROM cmd WHERE substr(tail, length('commander') + length('True'), length('True')) = 'True' GROUP BY frameVersion ORDER BY CAST(frameVersion AS INTEGER) DESC LIMIT 1",
+    "db_id": "card_games",
+    "evidence": "A card 'may lead a Commander deck' if it can be the deck's commander – the one card that leads the deck and sets its color identity – not merely be included among the deck's other cards."
+  }
+}

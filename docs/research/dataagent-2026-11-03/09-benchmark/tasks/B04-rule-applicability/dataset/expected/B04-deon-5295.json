@@ -1,0 +1,28 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_3b4f0a68",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "state",
+    "qa_item",
+    "statute",
+    "statute_of_state",
+    "allows_cure",
+    "must_accept_cure",
+    "tenant_may_cure_in_state",
+    "question_predicate",
+    "derived_answer",
+    "call",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": ":- format(\"Label: ~w~n\", [\"yes\"]).\n% HousingQA example: Missouri\nstate(missouri).\n\nqa_item(\n    missouri,\n    \"Must a landlord accept a tenant's attempt to cure for nonpayment of rent?\"\n).\n\nstatute(mo_rev_stat_535_160).\nstatute_of_state(mo_rev_stat_535_160, missouri).\nallows_cure(mo_rev_stat_535_160, date_of_judgment, rent_and_costs).\nallows_cure(mo_rev_stat_535_160, date_after_trial, rent_and_costs).\n\nmust_accept_cure(Law) :-\n    allows_cure(Law, _, rent_and_costs).\n\ntenant_may_cure_in_state(State) :-\n    statute_of_state(Law, State),\n    must_accept_cure(Law).\n\nquestion_predicate(\n    \"Must a landlord accept a tenant's attempt to cure for nonpayment of rent?\",\n    tenant_may_cure_in_state\n).\n\nderived_answer(yes) :-\n    qa_item(State, Question),\n    question_predicate(Question, Pred),\n    Goal =.. [Pred, State],\n    call(Goal), !.\nderived_answer(no) :-\n    qa_item(State, Question),\n    question_predicate(Question, Pred),\n    Goal =.. [Pred, State],\n    \\+ call(Goal).\n\nhousing_answer(Result) :-\n    derived_answer(Result).\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-5295",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Must a landlord accept a tenant's attempt to cure for nonpayment of rent?"
+  }
+}

@@ -1,0 +1,1 @@
+Which high-income country had the highest average crude birth rate respectively in each region, and what are their corresponding average birth rate, during the 1980s?

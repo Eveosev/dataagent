@@ -1,0 +1,1 @@
+Which merchant has the lowest average fraud rate for the year 2023?

@@ -1,0 +1,90 @@
+{
+  "dataset_id": "B06.dataset",
+  "task_id": "B06",
+  "revision": "v0.1",
+  "status": "collecting",
+  "unit": "query",
+  "sources": [
+    {
+      "name": "bright",
+      "locator": "xlangai/BRIGHT",
+      "license": "未声明",
+      "digest": "sha256:dcb0adc77d7c3b8d0843f97ba6d657607f5c3da176dc9e7a39b7e37294d84ed3",
+      "revision": null,
+      "files": 291,
+      "mb": 604.5,
+      "fetched_at": "2026-11-04T17:38:54+08:00"
+    }
+  ],
+  "splits": {
+    "development": {
+      "count": 120,
+      "frozen": false
+    },
+    "regression": {
+      "count": 60,
+      "frozen": false
+    },
+    "unseen_acceptance": {
+      "count": 60,
+      "frozen": false
+    }
+  },
+  "exposure": {
+    "ledger_ref": "exposure.jsonl",
+    "entries": 0
+  },
+  "fixtures": {
+    "storage": "local",
+    "path": "fixtures/",
+    "limits": "单文件 <= 2 MB；超出走对象存储并在 digest 记录"
+  },
+  "updated": "2026-11-04",
+  "notes": "由 build_cases.py 从 workspace/benchmark-data 构建；原始数据不入库",
+  "build": {
+    "version": 1,
+    "script": "tools/build_cases.py",
+    "built_at": "2026-11-04",
+    "policy": "全部查询入库；语料不进 docs，只登记 corpus 路径。split 按 query id 哈希。",
+    "available": {
+      "development": 767,
+      "regression": 364,
+      "unseen_acceptance": 253
+    },
+    "selected": {
+      "development": 120,
+      "regression": 60,
+      "unseen_acceptance": 60
+    },
+    "caps": {
+      "development": 120,
+      "regression": 60,
+      "unseen_acceptance": 60
+    },
+    "coverage": {
+      "covered_metrics": [
+        "recall_at_k",
+        "ndcg_at_10"
+      ],
+      "missing_metrics": [
+        "miss_on_stop_rate",
+        "redundant_step_rate"
+      ],
+      "note": "停止时机与多余步数需检索轨迹；先由 harness 记录 step 序列再补"
+    },
+    "domains": {
+      "aops": 111,
+      "biology": 103,
+      "earth_science": 116,
+      "economics": 103,
+      "leetcode": 142,
+      "pony": 112,
+      "psychology": 101,
+      "robotics": 101,
+      "stackoverflow": 117,
+      "sustainable_living": 108,
+      "theoremqa_questions": 194,
+      "theoremqa_theorems": 76
+    }
+  }
+}

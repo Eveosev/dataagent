@@ -1,0 +1,29 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 2467,
+  "table": "economy-table125",
+  "structure": "SingleRowClassified",
+  "question_type": "Visualization",
+  "sub_type": "BarChart Generation",
+  "answer": "[25.24, 2.82, 111.26]\n",
+  "cot": [
+    {
+      "step": "First, we need to identify the rows where the “Category” column contains “Edge.”"
+    },
+    {
+      "step": "From the table, the line items under “Edge” are “Valley metal,” “Gravel stop,” and “Rake Edge.”"
+    },
+    {
+      "step": "We need to extract their respective total costs, which are 111.26 for “Valley metal,” 25.24 for “Gravel stop,” and 2.82 for “Rake Edge.”"
+    },
+    {
+      "step": "Finally, we will create a bar chart to display these total costs for the line items under the “Edge” category."
+    }
+  ],
+  "case_id": "B01-rht-4103",
+  "expected": {
+    "kind": "answer",
+    "question": "According to the table, draw a bar chart to illustrate the total cost of each line item in the “Edge” category.",
+    "answer": "[25.24, 2.82, 111.26]\n"
+  }
+}

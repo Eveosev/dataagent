@@ -1,0 +1,27 @@
+{
+  "source": "beaverbench/beaver-query",
+  "id": "dw_463",
+  "db": "dw",
+  "question": "For each student in the Electrical Engineering and Computer Science department whose MIT ID is between 921145998 and 999756146 or whose department number is at least 4, and whose department number is between 4 and 6, and whose department number is 6, what are their minimum MIT ID, average department number, and email address? Do not return any rounded answers.",
+  "sql": "WITH inner_cte AS ( SELECT sp.FULL_NAME AS student_name, MIN(sp.MIT_ID) AS min_mit_id, AVG(msd.DEPARTMENT) AS avg_department_number FROM SE_PERSON sp JOIN MIT_STUDENT_DIRECTORY msd ON sp.FULL_NAME = msd.FULL_NAME WHERE ( (sp.MIT_ID BETWEEN 921145998 AND 999756146) OR (msd.DEPARTMENT >= 4) ) AND msd.DEPARTMENT BETWEEN 4 AND 6 AND sp.ORGANIZATION = 'Electrical Engineering-Computer Science' AND msd.DEPARTMENT = 6 GROUP BY sp.FULL_NAME ) SELECT ic.student_name, ic.min_mit_id, ic.avg_department_number, msd.EMAIL_ADDRESS FROM inner_cte ic JOIN MIT_STUDENT_DIRECTORY msd ON ic.student_name = msd.FULL_NAME;",
+  "tables": "[\"SE_PERSON\", \"MIT_STUDENT_DIRECTORY\"]",
+  "join_keys": "[[\"MIT_STUDENT_DIRECTORY.FULL_NAME\", \"SE_PERSON.FULL_NAME\"]]",
+  "column_mapping": "{\"student\": [\"SE_PERSON.FULL_NAME\", \"MIT_STUDENT_DIRECTORY.FULL_NAME\"], \"Electrical Engineering and Computer Science department\": [\"SE_PERSON.ORGANIZATION\"], \"MIT ID\": [\"SE_PERSON.MIT_ID\"], \"department number\": [\"MIT_STUDENT_DIRECTORY.DEPARTMENT\"], \"minimum MIT ID\": [\"SE_PERSON.MIT_ID\"], \"average department number\": [\"MIT_STUDENT_DIRECTORY.DEPARTMENT\"], \"email address\": [\"MIT_STUDENT_DIRECTORY.EMAIL_ADDRESS\"]}",
+  "domain_knowledge": "[\"\\\"Electrical Engineering and Computer Science department\\\" is predicated by \\\"TABLE.ORGANIZATION = 'Electrical Engineering-Computer Science'\\\"\", \"\\\"Electrical Engineering and Computer Science\\\" is predicated by \\\"TABLE.DEPARTMENT = '6'\\\"\"]",
+  "sub_questions": "[\"What are the minimum MIT ID and average department number for each student, where MIT IDs are between 921145998 and 999756146 or department numbers are at least 4, and department numbers are between 4 and 6, and the student is in the Electrical Engineering and Computer Science department?\"]",
+  "sub_sqls": "[\"SELECT sp.FULL_NAME AS student_name, MIN(sp.MIT_ID) AS min_mit_id, AVG(msd.DEPARTMENT) AS avg_department_number FROM SE_PERSON sp JOIN MIT_STUDENT_DIRECTORY msd ON sp.FULL_NAME = msd.FULL_NAME WHERE ( (sp.MIT_ID BETWEEN 921145998 AND 999756146) OR (msd.DEPARTMENT >= 4) ) AND msd.DEPARTMENT BETWEEN 4 AND 6 AND sp.ORGANIZATION = 'Electrical Engineering-Computer Science' AND msd.DEPARTMENT = 6 GROUP BY sp.FULL_NAME ;\"]",
+  "category": "domain-specific complex query",
+  "detailed_category": "nested",
+  "case_id": "B05-beaver-0035",
+  "expected": {
+    "kind": "sql",
+    "sql": "WITH inner_cte AS ( SELECT sp.FULL_NAME AS student_name, MIN(sp.MIT_ID) AS min_mit_id, AVG(msd.DEPARTMENT) AS avg_department_number FROM SE_PERSON sp JOIN MIT_STUDENT_DIRECTORY msd ON sp.FULL_NAME = msd.FULL_NAME WHERE ( (sp.MIT_ID BETWEEN 921145998 AND 999756146) OR (msd.DEPARTMENT >= 4) ) AND msd.DEPARTMENT BETWEEN 4 AND 6 AND sp.ORGANIZATION = 'Electrical Engineering-Computer Science' AND msd.DEPARTMENT = 6 GROUP BY sp.FULL_NAME ) SELECT ic.student_name, ic.min_mit_id, ic.avg_department_number, msd.EMAIL_ADDRESS FROM inner_cte ic JOIN MIT_STUDENT_DIRECTORY msd ON ic.student_name = msd.FULL_NAME;",
+    "sub_sqls": "[\"SELECT sp.FULL_NAME AS student_name, MIN(sp.MIT_ID) AS min_mit_id, AVG(msd.DEPARTMENT) AS avg_department_number FROM SE_PERSON sp JOIN MIT_STUDENT_DIRECTORY msd ON sp.FULL_NAME = msd.FULL_NAME WHERE ( (sp.MIT_ID BETWEEN 921145998 AND 999756146) OR (msd.DEPARTMENT >= 4) ) AND msd.DEPARTMENT BETWEEN 4 AND 6 AND sp.ORGANIZATION = 'Electrical Engineering-Computer Science' AND msd.DEPARTMENT = 6 GROUP BY sp.FULL_NAME ;\"]",
+    "db": "dw",
+    "tables": "[\"SE_PERSON\", \"MIT_STUDENT_DIRECTORY\"]",
+    "join_keys": "[[\"MIT_STUDENT_DIRECTORY.FULL_NAME\", \"SE_PERSON.FULL_NAME\"]]",
+    "column_mapping": "{\"student\": [\"SE_PERSON.FULL_NAME\", \"MIT_STUDENT_DIRECTORY.FULL_NAME\"], \"Electrical Engineering and Computer Science department\": [\"SE_PERSON.ORGANIZATION\"], \"MIT ID\": [\"SE_PERSON.MIT_ID\"], \"department number\": [\"MIT_STUDENT_DIRECTORY.DEPARTMENT\"], \"minimum MIT ID\": [\"SE_PERSON.MIT_ID\"], \"average department number\": [\"MIT_STUDENT_DIRECTORY.DEPARTMENT\"], \"email address\": [\"MIT_STUDENT_DIRECTORY.EMAIL_ADDRESS\"]}",
+    "category": "domain-specific complex query",
+    "db_archive": "bench://beaver-table/beaver_db.zip"
+  }
+}

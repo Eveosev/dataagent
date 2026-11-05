@@ -1,0 +1,22 @@
+{
+  "source": "KAKA22/SpreadsheetBench",
+  "raw": {
+    "id": "368-44",
+    "instruction": "I need a VB (Visual Basic) Code that will extract the Date, Employee Name, Clock In, and Clock Out times from my employees' Clock In-Out data, currently displayed in columns A to C of my Excel file. The extracted data should be formatted and displayed in columns G through J. Additionally, the format for the Clock In and Out times in the output should exclude colons, so times like 10:14 should appear as 1014, and 12:59 as 1259. Also, the code should be able to handle cases where an employee clocks in and out multiple times within the same day, as the initial code provided seems to only account for one clock in and out per day, as indicated by 'STEP 5' in the code. Please find the attached file named 'ClockInOut.xlsb' (and a subsequent version 'ClockInOut (2).xlsb') for reference.",
+    "spreadsheet_path": "spreadsheet/368-44",
+    "instruction_type": "Sheet-Level Manipulation",
+    "answer_position": "'Sheet1'!G2:J10",
+    "answer_sheet": "Sheet1",
+    "data_position": "A1:J87"
+  },
+  "case_id": "B09-ssb-0211",
+  "expected": {
+    "kind": "sheet_answer",
+    "instruction": "I need a VB (Visual Basic) Code that will extract the Date, Employee Name, Clock In, and Clock Out times from my employees' Clock In-Out data, currently displayed in columns A to C of my Excel file. The extracted data should be formatted and displayed in columns G through J. Additionally, the format for the Clock In and Out times in the output should exclude colons, so times like 10:14 should appear as 1014, and 12:59 as 1259. Also, the code should be able to handle cases where an employee clocks in and out multiple times within the same day, as the initial code provided seems to only account for one clock in and out per day, as indicated by 'STEP 5' in the code. Please find the attached file named 'ClockInOut.xlsb' (and a subsequent version 'ClockInOut (2).xlsb') for reference.",
+    "answer": null,
+    "answer_sheet": "Sheet1",
+    "answer_position": "'Sheet1'!G2:J10",
+    "data_position": "A1:J87",
+    "instruction_type": "Sheet-Level Manipulation"
+  }
+}

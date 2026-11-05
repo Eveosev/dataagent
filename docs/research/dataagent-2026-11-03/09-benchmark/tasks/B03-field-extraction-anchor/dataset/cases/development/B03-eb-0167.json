@@ -1,0 +1,50 @@
+{
+  "case_id": "B03-eb-0167",
+  "task_id": "B03",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://extractbench/docs/short/dc-pepco-residential-bill.pdf",
+      "digest": null
+    },
+    {
+      "kind": "schema",
+      "ref": "fixtures/eb-short-dc-pepco-residential-bill-schema.json",
+      "digest": null
+    },
+    {
+      "kind": "rules",
+      "ref": "fixtures/eb-short-dc-pepco-residential-bill-rules.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-eb-0167.json"
+  },
+  "evidence": [
+    "bench://extractbench/docs/short/dc-pepco-residential-bill.pdf",
+    "fixtures/eb-short-dc-pepco-residential-bill-schema.json",
+    "fixtures/eb-short-dc-pepco-residential-bill-rules.md"
+  ],
+  "tags": [
+    "extractbench",
+    "short",
+    "tag:source:real",
+    "tag:challenge:T3.a",
+    "tag:length:short",
+    "tag:domain:D2",
+    "fields:21"
+  ],
+  "source": "eb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

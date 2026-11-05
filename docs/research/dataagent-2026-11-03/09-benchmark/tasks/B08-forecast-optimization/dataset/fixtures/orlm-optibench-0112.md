@@ -1,0 +1,1 @@
+A box with square base and no top is to hold a volume 100. Find the dimensions of the box that requires the least material for the five sides. Also find the ratio of height to side of the base.

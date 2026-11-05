@@ -1,0 +1,1 @@
+I am looking for a VB (Visual Basic) Code that can process my Payroll data in Excel. The code should iterate through the 'Num' column (Column C) and delete all extra occurrences of data, leaving only the first instance for each unique 'Num'. An example of the rows to be deleted is highlighted in the attached Excel file, 'Delete unwanted.xlsx'.

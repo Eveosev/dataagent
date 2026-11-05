@@ -1,0 +1,33 @@
+{
+  "case_id": "B10-tsbad-0211",
+  "task_id": "B10",
+  "split_role": "regression",
+  "inputs": [
+    {
+      "kind": "series",
+      "ref": "bench://tsb-ad-u/TSB-AD-U/421_UCR_id_119_HumanActivity_tr_48750_1st_130700.csv",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B10-tsbad-0211.json"
+  },
+  "evidence": [
+    "bench://tsb-ad-u/TSB-AD-U/421_UCR_id_119_HumanActivity_tr_48750_1st_130700.csv"
+  ],
+  "tags": [
+    "tsb-ad",
+    "u"
+  ],
+  "source": "tsbad",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

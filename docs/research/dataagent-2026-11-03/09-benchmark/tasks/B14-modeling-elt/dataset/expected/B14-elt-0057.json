@@ -1,0 +1,159 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "databricks",
+  "pipeline": "movies_4",
+  "data_model": {
+    "models": [
+      {
+        "name": "movies4__movies",
+        "description": "Each record represents a movie.",
+        "columns": [
+          {
+            "name": "movie_id",
+            "description": "Unique identifier for the movie."
+          },
+          {
+            "name": "title",
+            "description": "The title of the movie."
+          },
+          {
+            "name": "movie_status",
+            "description": "The status of the movie."
+          },
+          {
+            "name": "number_of_production_companies",
+            "description": "The number of production companies that produced the movie, replace NULL values with 0."
+          },
+          {
+            "name": "percentage_of_male_characters",
+            "description": "The percentage of male characters in the movie."
+          },
+          {
+            "name": "number_of_crews",
+            "description": "The number of distinct crew members that worked on the movie, replace NULL values with 0."
+          },
+          {
+            "name": "number_of_main_characters",
+            "description": "The number of main characters in the movie. A main character is a cast member cast earliest. Replace NULL values with 0."
+          },
+          {
+            "name": "ratio_between_male_and_female_cast_members",
+            "description": "The ratio between male and female cast members in the movie, computed as the number of male cast members divided by the number of female cast members"
+          }
+        ]
+      },
+      {
+        "name": "movies4__production_company",
+        "description": "Each record represents a production company.",
+        "columns": [
+          {
+            "name": "company_id",
+            "description": "Unique identifier for the production company."
+          },
+          {
+            "name": "company_name",
+            "description": "The name of the production company."
+          },
+          {
+            "name": "latest_released_movie",
+            "description": "The latest released movie by the production company, with ties broken by the descending order of the movie title."
+          },
+          {
+            "name": "most_popular_movie",
+            "description": "The most popular movie by the production company, with ties broken by the ascending order of the movie title."
+          },
+          {
+            "name": "number_of_movies_released",
+            "description": "The number of movies released by the production company, replace NULL values with 0."
+          },
+          {
+            "name": "highest_revenue_movie",
+            "description": "The movie title made the highest revenue among the production company's movies, with ties broken by the descending order of the movie title"
+          },
+          {
+            "name": "category_running_time_per_movie_2016",
+            "description": "Set to 3 if the production company’s average movie running time in 2016 exceeds 75% of the overall 2016 average runtime, to 2 if it exceeds 55%, to 1 if it exceeds 35%, and to 0 otherwise"
+          }
+        ]
+      },
+      {
+        "name": "movies4__person",
+        "description": "Each record represents a person.",
+        "columns": [
+          {
+            "name": "person_id",
+            "description": "Unique identifier for the person."
+          },
+          {
+            "name": "person_name",
+            "description": "The name of the person"
+          },
+          {
+            "name": "lastest_movie",
+            "description": "The latest movie in which the person worked as a crew member, with ties broken by the ascending order of the movie title"
+          },
+          {
+            "name": "percentage_of_movie_vote_average_over_5",
+            "description": "The percentage of movies, in which the person worked as a crew member, that have a vote average over 5.0."
+          },
+          {
+            "name": "has_worked_as_a_music_editor",
+            "description": "Set to 1 if the person has worked as a 'Music Editor' in the movie, otherwise, set to 0"
+          },
+          {
+            "name": "movie_with_the_highest_average_vote",
+            "description": "The movie title with the highest average vote in which the person worked as a crew member, with ties broken by the descending order of the movie title"
+          },
+          {
+            "name": "has_movie_between_19160101_19251231",
+            "description": "Set to 1 if the person worked as a crew member in the movies released between 1/01/1916 and 12/31/1925, otherwise, set it to 0"
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    databricks_definition_id: 072d5540-f236-4294-ba7c-ade8fd918496\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://movies-4-bucket/department.jsonl\n    sync_mode: full_refresh_append\n    table: department\n  - path: s3://movies-4-bucket/genre.csv\n    sync_mode: full_refresh_append\n    table: genre\n  - path: s3://movies-4-bucket/language.jsonl\n    sync_mode: full_refresh_append\n    table: language\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - keyword\n    - movie_genres\n    - movie_keywords\n    - movie_languages\nflat_files:\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=15VKkeHY0IbG1uUvvY2GxG_Yxg_DspXTC\n  sync_mode: full_refresh_append\n  table: country\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=1xgvOQVoHqk1Lzj81ZmbgC2mj1nkXlqnm\n  sync_mode: full_refresh_append\n  table: language_role\n- format: csv\n  path: https://drive.google.com/uc?export=download&id=172ilyK0v3x-xGwdBohmSVPDT0aDu8Iab\n  sync_mode: full_refresh_append\n  table: gender\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: movies_4\n    sync_mode: full_refresh_append\n    tables:\n    - movie\n    - person\n    - production_company\npostgres:\n  config:\n    database: movies_4\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - movie_cast\n    - movie_company\n    - movie_crew\n    - production_country\n    user: postgres\ndatabricks:\n  config:\n    database: <db_database>\n    hostname: <db_hostname>\n    client_id: <db_client_id>\n    secret: <db_secret>\n    schema: movies_4\n    http_path: <db_path>\n",
+  "case_id": "B14-elt-0057",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "movies4__movies",
+        "columns": [
+          "movie_id",
+          "title",
+          "movie_status",
+          "number_of_production_companies",
+          "percentage_of_male_characters",
+          "number_of_crews",
+          "number_of_main_characters",
+          "ratio_between_male_and_female_cast_members"
+        ]
+      },
+      {
+        "name": "movies4__production_company",
+        "columns": [
+          "company_id",
+          "company_name",
+          "latest_released_movie",
+          "most_popular_movie",
+          "number_of_movies_released",
+          "highest_revenue_movie",
+          "category_running_time_per_movie_2016"
+        ]
+      },
+      {
+        "name": "movies4__person",
+        "columns": [
+          "person_id",
+          "person_name",
+          "lastest_movie",
+          "percentage_of_movie_vote_average_over_5",
+          "has_worked_as_a_music_editor",
+          "movie_with_the_highest_average_vote",
+          "has_movie_between_19160101_19251231"
+        ]
+      }
+    ]
+  }
+}

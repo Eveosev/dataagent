@@ -1,0 +1,35 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_2103095b",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "scenario_state",
+    "focus_year",
+    "question_target",
+    "scenario_eviction_case",
+    "case_kind",
+    "case_state",
+    "case_year",
+    "statute_id",
+    "statute_topic",
+    "statute_392_route92_segment",
+    "statute_392_relinquished_former_portion_not_state_highway",
+    "statute_392_relinquished_former_portion_ineligible_for_adoption_under_section_81",
+    "statute_392_city_must_maintain_signs_for_relinquished_portion",
+    "statute_392_commission_may_relinquish_to_city_if_agreement_exists",
+    "statute_addresses_eviction_jurisdiction",
+    "legal_eviction_first_heard_in_court",
+    "statute_establishes_first_forum_for_eviction",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n\n    Encodes:\n      (1) The provided statute: CA St & Hwy Code  392 (as amended; used here for focus_year 2021)\n      (2) The question scenario facts\n      (3) A deterministic yes/no answer derived from the encoded statute logic (no hardcoded final answer)\n*/\n\n% --------------------------\n% Scenario facts (question)\n% --------------------------\n\nscenario_state(california).\nfocus_year(2021).\n\n% The question being asked (modeled as a query target, not assumed true)\nquestion_target(eviction_cases_first_heard_in(circuit_court)).\n\n% Representative \"eviction case\" type for the scenario (generic, not a specific litigant)\nscenario_eviction_case(case1).\ncase_kind(case1, eviction).\ncase_state(case1, california).\ncase_year(case1, 2021).\n\n/* Helper predicate required by the prompt:\n   Succeeds when the factual statement(s) of the scenario are satisfied. */\nscenario_statement :-\n    scenario_state(california),\n    focus_year(2021),\n    question_target(eviction_cases_first_heard_in(circuit_court)),\n    scenario_eviction_case(Case),\n    case_kind(Case, eviction),\n    case_state(Case, california),\n    case_year(Case, 2021).\n\n% -----------------------------------------------\n% Statute translation: CA St & Hwy Code  392\n% (Note: statute content is about Route 92, not eviction courts.)\n% -----------------------------------------------\n\n/* Topic metadata to support reasoning about whether the provided statute is relevant\n   to eviction-court jurisdiction questions. */\nstatute_id(ca_st_hwy_code_392, california, 2021).\n\nstatute_topic(ca_st_hwy_code_392, highways).\n\n/* CA St & Hwy Code  392(a) (route description) */\nstatute_392_route92_segment(1, route_1_near_half_moon_bay, route_280).\nstatute_392_route92_segment(2, route_280, route_238_in_hayward).\n\n/* CA St & Hwy Code  392(b) (relinquished former portion in City of Hayward) */\nstatute_392_relinquished_former_portion_not_state_highway(city_of_hayward).\nstatute_392_relinquished_former_portion_ineligible_for_adoption_under_section_81(city_of_hayward).\n\n/* CA St & Hwy Code  392(b) and (c)(4) (duty to maintain signs) */\nstatute_392_city_must_maintain_signs_for_relinquished_portion(city_of_hayward).\n\n/* CA St & Hwy Code  392(c)(1) (commission may relinquish upon agreement) */\nstatute_392_commission_may_relinquish_to_city_if_agreement_exists(commission, city_of_hayward).\n\n/* CA St & Hwy Code  392(c)(2) (effective immediately after recordation) */\nstatute_392_relinquishment_effective_upon_recordation.\n\n% -----------------------------------------------\n% Legal reasoning helpers\n% -----------------------------------------------\n\n/* A statute addresses eviction jurisdiction only if its topic is eviction_jurisdiction.\n   (No such statute is provided in this problem.) */\nstatute_addresses_eviction_jurisdiction(StatuteId) :-\n    statute_topic(StatuteId, eviction_jurisdiction).\n\n/* Derive a legal rule for \"eviction cases are first heard in Court\" only if there exists\n   a statute addressing eviction jurisdiction that establishes that forum.\n   Since the only provided statute is about highways, this will not derive any forum. */\nlegal_eviction_first_heard_in_court(State, Court, Year) :-\n    statute_id(StatuteId, State, Year),\n    statute_addresses_eviction_jurisdiction(StatuteId),\n    statute_establishes_first_forum_for_eviction(StatuteId, Court).\n\n/* No provided statute establishes a first forum for eviction; keep predicate defined\n   (but with no facts) to avoid undefined predicate errors. */\nstatute_establishes_first_forum_for_eviction(_StatuteId, _Court) :-\n    fail.\n\n% -----------------------------------------------\n% Answer predicate (must be deterministic yes/no)\n% -----------------------------------------------\n\nhousing_answer(Result) :-\n    scenario_statement,\n    scenario_state(State),\n    focus_year(Year),\n    (   legal_eviction_first_heard_in_court(State, circuit_court, Year)\n    ->  Result = yes\n    ;   Result = no\n    ),\n    !.\n\n% -----------------------------------------------\n% Main entrypoint (required)\n% -----------------------------------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-5007",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Are eviction cases first heard in circuit court?"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 2878,
+  "table": "environment-table16",
+  "structure": "SingleRowClassified",
+  "question_type": "Structure Comprehending",
+  "sub_type": "Structure Comprehending",
+  "answer": null,
+  "cot": [
+    {
+      "planning": "First, we need to clean the dataset by aligning headers and ensuring proper column names."
+    },
+    {
+      "planning": "Next, we strip any leading or trailing spaces from the 'Species' column to avoid mismatches."
+    },
+    {
+      "planning": "We filter the data for 'Mouse' and ensure all relevant columns are numeric."
+    },
+    {
+      "planning": "Finally, we sum up the total procedures for 'Mouse' across all primary purposes."
+    }
+  ],
+  "case_id": "B01-rht-4514",
+  "expected": {
+    "kind": "answer",
+    "question": "What is the total number of procedures for 'Mouse' across all primary purposes?",
+    "answer": null
+  }
+}

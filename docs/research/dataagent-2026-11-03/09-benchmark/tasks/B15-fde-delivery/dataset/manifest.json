@@ -1,0 +1,44 @@
+{
+  "dataset_id": "B15.dataset",
+  "task_id": "B15",
+  "revision": "v0.0",
+  "status": "planned",
+  "unit": "engagement",
+  "sources": [
+    {
+      "name": "真实客户交付记录（脱敏）",
+      "license": "待核",
+      "digest": null
+    },
+    {
+      "name": "影子运行日志",
+      "license": "待核",
+      "digest": null
+    }
+  ],
+  "splits": {
+    "development": {
+      "count": 0,
+      "frozen": false
+    },
+    "regression": {
+      "count": 0,
+      "frozen": false
+    },
+    "unseen_acceptance": {
+      "count": 0,
+      "frozen": false
+    }
+  },
+  "exposure": {
+    "ledger_ref": "exposure.jsonl",
+    "entries": 0
+  },
+  "fixtures": {
+    "storage": "local",
+    "path": "fixtures/",
+    "limits": "单文件 <= 2 MB；超出走对象存储并在 digest 记录"
+  },
+  "updated": null,
+  "notes": "无公开 benchmark 可下载：B15 度量交付过程（首次可信答案时间、返工轮次、验收通过率），只能从真实客户 engagement 的脱敏记录与影子运行日志中采集。需要动作：① 取得客户授权并脱敏（合同/DPA）；② 记录 engagement 台账（开始/首次可信答案/验收时间、返工次数）；③ 影子运行日志接入 harness；④ 累计 ≥3 个 engagement 后才建 development 集。"
+}

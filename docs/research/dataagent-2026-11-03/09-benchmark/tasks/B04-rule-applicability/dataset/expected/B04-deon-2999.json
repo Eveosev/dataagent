@@ -1,0 +1,35 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_be7289f8",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "statute_mdluc_20_705_may_submit_recommendation",
+    "municipal_corporation_prior_established",
+    "action_is_planning_or_zoning",
+    "action_under_consideration_by",
+    "statute_mdluc_20_705_shall_incorporate_recommendation",
+    "recommendation_submitted_to",
+    "submitter_is_commission",
+    "submitter_is_county_planning_board",
+    "scenario_state",
+    "scenario_focus_year",
+    "tenant",
+    "landlord",
+    "eviction_action",
+    "experienced_domestic_violence",
+    "landlord_evicted",
+    "eviction_reason",
+    "legal_unlawful_eviction_due_to_domestic_violence",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/* Self-contained SWI-Prolog program\n   State: Maryland\n   Focus year: 2021\n   Question: Is it unlawful to evict a tenant because they experienced domestic violence?\n*/\n\n/* -------------------------\n   Encoded statutes\n   ------------------------- */\n\n/* MD. Land Use Code Ann.  20-705 (2021)\n   (a) The Commission or the county planning board may submit recommendations\n       to any prior established municipal corporation regarding any planning\n       or zoning action under consideration by the municipal corporation.\n*/\nstatute_mdluc_20_705_may_submit_recommendation(Submitter, MunicipalCorp, Action) :-\n    ( submitter_is_commission(Submitter)\n    ; submitter_is_county_planning_board(Submitter)\n    ),\n    municipal_corporation_prior_established(MunicipalCorp),\n    action_is_planning_or_zoning(Action),\n    action_under_consideration_by(MunicipalCorp, Action).\n\n/* MD. Land Use Code Ann.  20-705 (2021)\n   (b) The prior established municipal corporation shall incorporate the\n       recommendation ... as a part of the record of the planning or zoning action.\n*/\nstatute_mdluc_20_705_shall_incorporate_recommendation(MunicipalCorp, Recommendation, Action) :-\n    municipal_corporation_prior_established(MunicipalCorp),\n    action_is_planning_or_zoning(Action),\n    recommendation_submitted_to(Recommender, MunicipalCorp, Recommendation, Action),\n    ( submitter_is_commission(Recommender)\n    ; submitter_is_county_planning_board(Recommender)\n    ).\n\n/* Helper vocabulary used by the statute encoding. */\nsubmitter_is_commission(maryland_commission).\nsubmitter_is_county_planning_board(county_planning_board).\n\nmunicipal_corporation_prior_established(prior_established_municipal_corp).\n\naction_is_planning_or_zoning(planning_action1).\naction_under_consideration_by(prior_established_municipal_corp, planning_action1).\n\n/* A recommendation fact pattern (not required by the question, but included for completeness). */\nrecommendation_submitted_to(maryland_commission, prior_established_municipal_corp, rec1, planning_action1).\n\n/* -------------------------\n   Encoded scenario facts (question statement)\n   ------------------------- */\n\nscenario_state(maryland).\nscenario_focus_year(2021).\n\ntenant(t1).\nlandlord(l1).\neviction_action(e1).\n\nexperienced_domestic_violence(t1).\n\n/* \"Evict a tenant because they experienced domestic violence\" */\nlandlord_evicted(l1, t1, e1).\neviction_reason(e1, because_experienced_domestic_violence).\n\n/* scenario_statement/0 succeeds when the scenario as described is present. */\nscenario_statement :-\n    scenario_state(maryland),\n    scenario_focus_year(2021),\n    tenant(t1),\n    landlord(l1),\n    eviction_action(e1),\n    experienced_domestic_violence(t1),\n    landlord_evicted(l1, t1, e1),\n    eviction_reason(e1, because_experienced_domestic_violence).\n\n/* -------------------------\n   Reasoning: apply the encoded statutes to the scenario\n   ------------------------- */\n\n/* This predicate would capture any statute-based rule making such an eviction unlawful.\n   Under the provided statute (MD Land Use  20-705), there is no eviction-related prohibition. */\nlegal_unlawful_eviction_due_to_domestic_violence(_Landlord, _Tenant, _EvictionAction) :-\n    fail.\n\n/* The eviction in the scenario is unlawful if there exists a statute-based prohibition. */\nscenario_eviction_is_unlawful :-\n    scenario_statement,\n    landlord_evicted(Landlord, Tenant, EvictionAction),\n    eviction_reason(EvictionAction, because_experienced_domestic_violence),\n    legal_unlawful_eviction_due_to_domestic_violence(Landlord, Tenant, EvictionAction).\n\n/* -------------------------\n   Answer\n   ------------------------- */\n\nhousing_answer(yes) :-\n    scenario_eviction_is_unlawful,\n    !.\nhousing_answer(no) :-\n    !.\n\n/* -------------------------\n   Main entrypoint\n   ------------------------- */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-2999",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is it unlawful to evict a tenant because they experienced domestic violence?"
+  }
+}

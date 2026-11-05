@@ -1,0 +1,30 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_4eccad29",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_claimed_good_cause_basis",
+    "scenario_claimed_court_can_postpone_if_additional_time_appropriate",
+    "statute_wy_1_21_1013_applicable",
+    "statute_wy_1_21_1013_execution_deadline_days",
+    "statute_wy_1_21_1013_exception_if_appeal_taken",
+    "legal_officer_must_execute_writ_within_days",
+    "legal_execution_deadline_applies_only_if_no_appeal",
+    "legal_postponement_required_for_good_cause",
+    "statute_explicitly_requires_good_cause_postponement",
+    "statute_marked_requires_good_cause_postponement",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: Wyoming\n    Focus year: 2021\n\n    Question: Does the law require that writs of execution be postponed for good cause\n    (including standards like considering harm to parties, or allowing the court to postpone\n    execution for additional time)?\n*/\n\n/* =========================\n   Scenario (question) facts\n   ========================= */\n\nscenario_state(wyoming).\nscenario_focus_year(2021).\n\n/* The question frames \"good cause\" postponement concepts (harm to parties, material facts,\n   court postponement discretion) as the type of rule being asked about. */\nscenario_claimed_good_cause_basis(harm_to_parties_and_material_facts).\nscenario_claimed_court_can_postpone_if_additional_time_appropriate(true).\n\n/* Helper predicate that succeeds when the encoded scenario statement holds. */\nscenario_statement :-\n    scenario_state(wyoming),\n    scenario_focus_year(2021),\n    scenario_claimed_good_cause_basis(harm_to_parties_and_material_facts),\n    scenario_claimed_court_can_postpone_if_additional_time_appropriate(true).\n\n/* =========================\n   Statute translations\n   ========================= */\n\n/* WY Stat  1-21-1013 (2021)\n   \"Unless the defendant takes an appeal, the officer shall execute the writ of restitution\n    within two (2) days after receiving it, Sundays excepted, by restoring the plaintiff to\n    possession of the premises.\"\n*/\nstatute_wy_1_21_1013_applicable(wyoming, 2021).\n\nstatute_wy_1_21_1013_execution_deadline_days(2).\nstatute_wy_1_21_1013_exception_if_appeal_taken(true).\n\n/* Legal meaning extracted from the statute: a mandatory execution deadline (when no appeal). */\nlegal_officer_must_execute_writ_within_days(State, Year, Days) :-\n    statute_wy_1_21_1013_applicable(State, Year),\n    statute_wy_1_21_1013_execution_deadline_days(Days).\n\n/* Exception extracted from the statute: the 2-day mandate is conditioned on \"unless appeal\". */\nlegal_execution_deadline_applies_only_if_no_appeal(State, Year) :-\n    statute_wy_1_21_1013_applicable(State, Year),\n    statute_wy_1_21_1013_exception_if_appeal_taken(true).\n\n/* =========================\n   Reasoning about postponement\n   ========================= */\n\n/* This predicate is meant to capture whether Wyoming law (as encoded here) contains a rule\n   requiring postponement of execution for good cause (e.g., harm considerations, material facts,\n   court-granted extra time).\n\n   Based on WY Stat  1-21-1013 (2021) provided, there is:\n   - a mandatory execution timeline (within 2 days, Sundays excepted) if no appeal,\n   - but no text requiring postponement for \"good cause\" and no postponement discretion described.\n\n   Therefore, under the provided statute set, postponement-for-good-cause is not required.\n*/\nlegal_postponement_required_for_good_cause(State, Year) :-\n    statute_explicitly_requires_good_cause_postponement(State, Year),\n    !.\n\nlegal_postponement_required_for_good_cause(_State, _Year) :-\n    fail.\n\n/* Only succeeds if a statute in our encoding explicitly requires good-cause postponement.\n   For this task, we encode the given statute(s) only. WY 1-21-1013 does not contain such a rule.\n*/\nstatute_explicitly_requires_good_cause_postponement(State, Year) :-\n    statute_marked_requires_good_cause_postponement(State, Year),\n    !.\n\nstatute_explicitly_requires_good_cause_postponement(_State, _Year) :-\n    fail.\n\n/* No Wyoming 2021 statute provided in the prompt includes a good-cause postponement requirement.\n   We keep this predicate defined (with a failing clause) to avoid undefined-predicate errors.\n*/\nstatute_marked_requires_good_cause_postponement(_State, _Year) :-\n    fail.\n\n/* =========================\n   Answer\n   ========================= */\n\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_state(State),\n    scenario_focus_year(Year),\n    legal_postponement_required_for_good_cause(State, Year),\n    !.\n\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n/* =========================\n   Main entrypoint\n   ========================= */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-4995",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Does the law require that writs of execution be postponed for good cause? This includes when the law states that the court shall specify the time when the tenant must vacate the property, taking into consideration the possibility of harm to the parties and other material facts; or when the court can postpone execution if it deemed additional time was appropriate."
+  }
+}

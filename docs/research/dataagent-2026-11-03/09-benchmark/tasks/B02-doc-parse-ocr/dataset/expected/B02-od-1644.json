@@ -1,0 +1,71 @@
+{
+  "source": "opendatalab/OmniDocBench",
+  "page_no": 7,
+  "image": "PPT_lecture1_page_007.png",
+  "attribute": {
+    "data_source": "PPT2PDF",
+    "language": "english",
+    "layout": "single_column",
+    "special_issue": [
+      "None"
+    ],
+    "subset": "v1.5"
+  },
+  "reading_order": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "blocks": [
+    {
+      "category": "title",
+      "order": 1,
+      "text": "Matrix representation of system of linear equations"
+    },
+    {
+      "category": "text_block",
+      "order": 2,
+      "text": "Given a system of linear equations $ \\begin{cases} x_1 - 2x_2 + x_3 = 0 \\\\ 2x_2 - 8x_3 = 8 \\\\ -4x_1 + 5x_2 + 9x_3 = -9 \\end{cases} $"
+    },
+    {
+      "category": "text_block",
+      "order": 3,
+      "text": "The coefficient matrix is $\\begin{bmatrix} 1 & -2 & 1 \\\\ 0 & 2 & -8 \\\\ -4 & 5 & 9 \\end{bmatrix}$"
+    },
+    {
+      "category": "text_block",
+      "order": 4,
+      "text": "The augmented matrix is $ \\begin{bmatrix} 1 & -2 & 1 & 0 \\\\ 0 & 2 & -8 & 8 \\\\ -4 & 5 & 9 & -9 \\end{bmatrix} $"
+    }
+  ],
+  "tables": [],
+  "case_id": "B02-od-1644",
+  "expected": {
+    "kind": "document",
+    "text": "Matrix representation of system of linear equations\nGiven a system of linear equations $ \\begin{cases} x_1 - 2x_2 + x_3 = 0 \\\\ 2x_2 - 8x_3 = 8 \\\\ -4x_1 + 5x_2 + 9x_3 = -9 \\end{cases} $\nThe coefficient matrix is $\\begin{bmatrix} 1 & -2 & 1 \\\\ 0 & 2 & -8 \\\\ -4 & 5 & 9 \\end{bmatrix}$\nThe augmented matrix is $ \\begin{bmatrix} 1 & -2 & 1 & 0 \\\\ 0 & 2 & -8 & 8 \\\\ -4 & 5 & 9 & -9 \\end{bmatrix} $",
+    "tables": [],
+    "blocks": [
+      {
+        "category": "title",
+        "order": 1,
+        "text": "Matrix representation of system of linear equations"
+      },
+      {
+        "category": "text_block",
+        "order": 2,
+        "text": "Given a system of linear equations $ \\begin{cases} x_1 - 2x_2 + x_3 = 0 \\\\ 2x_2 - 8x_3 = 8 \\\\ -4x_1 + 5x_2 + 9x_3 = -9 \\end{cases} $"
+      },
+      {
+        "category": "text_block",
+        "order": 3,
+        "text": "The coefficient matrix is $\\begin{bmatrix} 1 & -2 & 1 \\\\ 0 & 2 & -8 \\\\ -4 & 5 & 9 \\end{bmatrix}$"
+      },
+      {
+        "category": "text_block",
+        "order": 4,
+        "text": "The augmented matrix is $ \\begin{bmatrix} 1 & -2 & 1 & 0 \\\\ 0 & 2 & -8 & 8 \\\\ -4 & 5 & 9 & -9 \\end{bmatrix} $"
+      }
+    ]
+  }
+}

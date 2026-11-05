@@ -1,0 +1,24 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_6e1ac499",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "state",
+    "focus_year",
+    "query_topic",
+    "statute_applicable",
+    "ors_90_260_amount_cap_type",
+    "statute_directly_regulates_late_charge_amount",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: Oregon\n    Focus year: 2021\n\n    Question: Does the law directly regulate the amount a landlord can charge as a fee for late rent?\n*/\n\n/* -----------------------------\n   Scenario facts (question statement)\n   ----------------------------- */\n\nstate(oregon).\nfocus_year(2021).\n\n/* The question is about whether the law directly regulates/caps the AMOUNT of late rent fees. */\nquery_topic(late_rent_fee_amount_regulation).\n\n/* Helper predicate that succeeds when the scenario statement (as encoded) holds. */\nscenario_statement :-\n    state(oregon),\n    focus_year(2021),\n    query_topic(late_rent_fee_amount_regulation).\n\n/* -----------------------------\n   Statute encoding: OR Rev Stat  90.260 (2021)\n   ----------------------------- */\n\n/* ORS 90.260 applies in Oregon in 2021. */\nstatute_applicable(oregon, 2021, ors_90_260).\n\n/*\n  OR Rev Stat  90.260(2) (2021) directly regulates (caps) the amount of any late charge.\n\n  We encode the three alternative statutory \"amount may not exceed\" caps:\n\n  (2)(a) A reasonable flat amount (customary for that rental market), once per rental period.\n  (2)(b) A reasonable per-day amount beginning on the 5th day; per-day amount may not exceed 6%\n         of the flat amount described in (2)(a).\n  (2)(c) 5% of the periodic rent payment amount, charged once for each succeeding 5-day period\n         (or portion), beginning on the 5th day, accumulating through that rental period only.\n*/\n\n% (2)(a) cap type exists.\nors_90_260_amount_cap_type(flat_reasonable_customary_market).\n\n% (2)(b) cap type exists.\nors_90_260_amount_cap_type(per_day_reasonable_max_6_percent_of_flat_cap).\n\n% (2)(c) cap type exists.\nors_90_260_amount_cap_type(five_percent_of_periodic_rent_per_each_5_day_period_or_portion).\n\n/* Predicate capturing the key legal conclusion for this question:\n   the statute directly regulates the AMOUNT (i.e., imposes maxima/limits) of late charges. */\nstatute_directly_regulates_late_charge_amount(State, Year) :-\n    statute_applicable(State, Year, ors_90_260),\n    ors_90_260_amount_cap_type(_),  % existence of any explicit cap type is enough to show direct regulation\n    !.\n\n/* -----------------------------\n   Reasoning to answer the question\n   ----------------------------- */\n\nhousing_answer(yes) :-\n    scenario_statement,\n    state(State),\n    focus_year(Year),\n    statute_directly_regulates_late_charge_amount(State, Year),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n/* -----------------------------\n   Main entrypoint (required)\n   ----------------------------- */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-1737",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Does the law directly regulate the amount a landlord can charge as a fee for late rent?"
+  }
+}

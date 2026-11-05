@@ -1,0 +1,23 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 90,
+  "table": "employment-table19",
+  "structure": "ContentCompound",
+  "question_type": "Fact Checking",
+  "sub_type": "Inference-based Fact Checking",
+  "answer": "Crop production",
+  "cot": [
+    {
+      "planning": "First, we need to locate the percentage representation of Black or African American workers in both 'Crop production' and 'Forestry, except logging' industries from the table."
+    },
+    {
+      "planning": "We then compare the percentage values to determine which industry has a higher representation."
+    }
+  ],
+  "case_id": "B01-rht-1726",
+  "expected": {
+    "kind": "answer",
+    "question": "Compare the representation of Black or African American workers in 'Crop production' and 'Forestry, except logging' industries. Which one has a higher percentage?",
+    "answer": "Crop production"
+  }
+}

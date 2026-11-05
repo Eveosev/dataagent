@@ -1,0 +1,38 @@
+{
+  "case_id": "B05-spider2-0149",
+  "task_id": "B05",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "question",
+      "ref": "fixtures/spider2-bq161.md",
+      "digest": null
+    },
+    {
+      "kind": "corpus",
+      "ref": "bench://spider2-lite/spider2-lite.jsonl",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B05-spider2-0149.json"
+  },
+  "evidence": [
+    "fixtures/spider2-bq161.md"
+  ],
+  "tags": [
+    "spider2",
+    "pancancer_atlas_2"
+  ],
+  "source": "spider2",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

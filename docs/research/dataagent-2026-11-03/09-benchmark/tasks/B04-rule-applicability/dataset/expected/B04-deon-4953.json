@@ -1,0 +1,30 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_028f5992",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_year",
+    "scenario_question",
+    "statute_citation",
+    "eviction_record_type",
+    "rcw_59_18_367_limited_dissemination_ground",
+    "rcw_59_18_367_court_may_order_limited_dissemination",
+    "rcw_59_18_367_order_valid",
+    "rcw_59_18_367_prohibited_action",
+    "rcw_59_18_367_limited_dissemination_order_exists",
+    "rcw_59_18_367_tenant_screening_provider_must_not",
+    "regulates_access_to_eviction_records",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: Washington\n    Focus year: 2021\n\n    Question: \"Is there a law regulating access to eviction records?\"\n*/\n\n/* -----------------------------\n   Scenario facts (question statement)\n   ----------------------------- */\n\nscenario_state(washington).\nscenario_year(2021).\nscenario_question(is_there_a_law_regulating_access_to_eviction_records).\n\n/* Helper predicate that succeeds when the encoded scenario statement holds. */\nscenario_statement :-\n    scenario_state(washington),\n    scenario_year(2021),\n    scenario_question(is_there_a_law_regulating_access_to_eviction_records).\n\n/* -----------------------------\n   Statute translation: RCW 59.18.367 (2021)\n   Unlawful detainer action-Limited dissemination authorized, when.\n   ----------------------------- */\n\n/* Citation metadata */\nstatute_citation(rcw_59_18_367, washington, 2021).\n\n/* We treat \"eviction records\" as including \"unlawful detainer action\" court records. */\neviction_record_type(unlawful_detainer_action).\n\n/*\n  RCW 59.18.367(1): A court may order an unlawful detainer action to be of limited dissemination\n  for one or more persons if any of the listed conditions is met.\n*/\nrcw_59_18_367_limited_dissemination_ground(without_basis_in_fact_or_law).  % (1)(a)\nrcw_59_18_367_limited_dissemination_ground(tenancy_reinstated).           % (1)(b)\nrcw_59_18_367_limited_dissemination_ground(other_good_cause).             % (1)(c)\n\n/*\n  Deterministic check: whether the court is authorized to enter a limited dissemination order\n  given a particular ground.\n*/\nrcw_59_18_367_court_may_order_limited_dissemination(Ground, yes) :-\n    rcw_59_18_367_limited_dissemination_ground(Ground),\n    !.\nrcw_59_18_367_court_may_order_limited_dissemination(_Ground, no) :-\n    !.\n\n/*\n  RCW 59.18.367(2): An order to limit dissemination must be in writing.\n*/\nrcw_59_18_367_order_valid(WritingStatus, yes) :-\n    WritingStatus == in_writing,\n    !.\nrcw_59_18_367_order_valid(_WritingStatus, no) :-\n    !.\n\n/*\n  RCW 59.18.367(3): When an order for limited dissemination has been entered with respect\n  to a person, a tenant screening service provider must not:\n   (a) disclose the existence of the unlawful detainer action in a tenant screening report, OR\n   (b) use the unlawful detainer action as a factor in determining any score/recommendation.\n\n  We encode these as prohibited actions when a valid limited-dissemination order exists.\n*/\n\nrcw_59_18_367_prohibited_action(disclose_existence_in_report).  % (3)(a)\nrcw_59_18_367_prohibited_action(use_as_scoring_factor).         % (3)(b)\n\n/* A limited dissemination order exists if the court may order it on a ground AND it is in writing. */\nrcw_59_18_367_limited_dissemination_order_exists(Ground, WritingStatus, yes) :-\n    rcw_59_18_367_court_may_order_limited_dissemination(Ground, yes),\n    rcw_59_18_367_order_valid(WritingStatus, yes),\n    !.\nrcw_59_18_367_limited_dissemination_order_exists(_Ground, _WritingStatus, no) :-\n    !.\n\n/* If an order exists, then the tenant screening service provider is prohibited from each action. */\nrcw_59_18_367_tenant_screening_provider_must_not(Action, OrderExists, yes) :-\n    OrderExists == yes,\n    rcw_59_18_367_prohibited_action(Action),\n    !.\nrcw_59_18_367_tenant_screening_provider_must_not(_Action, _OrderExists, no) :-\n    !.\n\n/* -----------------------------\n   Higher-level legal conclusion used to answer the question\n   ----------------------------- */\n\n/*\n  This statute regulates access/dissemination of eviction-record information by:\n   - authorizing limited dissemination orders for unlawful detainer actions, and\n   - prohibiting tenant screening service providers from disclosing/using those records\n     when such an order exists.\n  Therefore it is a law that regulates access to eviction records (at least in this context).\n*/\nregulates_access_to_eviction_records(State, Year, yes) :-\n    statute_citation(rcw_59_18_367, State, Year),\n    eviction_record_type(unlawful_detainer_action),\n    !.\nregulates_access_to_eviction_records(_State, _Year, no) :-\n    !.\n\n/* -----------------------------\n   Answer\n   ----------------------------- */\n\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_state(State),\n    scenario_year(Year),\n    regulates_access_to_eviction_records(State, Year, yes),\n    !.\nhousing_answer(no) :-\n    !.\n\n/* -----------------------------\n   Main entrypoint (required)\n   ----------------------------- */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-4953",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Is there a law regulating access to eviction records?"
+  }
+}

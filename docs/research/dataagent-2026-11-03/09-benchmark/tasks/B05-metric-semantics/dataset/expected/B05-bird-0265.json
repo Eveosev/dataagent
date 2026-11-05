@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 264,
+  "question": "I'm researching the generation of drivers born in the 1980s and want to know how much final-session qualifying that generation actually did as a whole cohort. How many Q3 lap times did a driver born between 1981 and 1991 set on average? Count every driver born in that period in the average, including any who never set a Q3 lap time. Please give me the average rounded to two decimal places.",
+  "evidence": "Q3: the third and final qualifying session of a race weekend, whose times decide the top starting grid positions.",
+  "gold_sql": "SELECT ROUND(COUNT(q.q3 > '' OR NULL) * 1.0 / COUNT(DISTINCT d.driverId), 2) AS avg_q3_times_per_driver FROM drivers d LEFT JOIN qualifying q ON q.driverId = d.driverId WHERE STRFTIME('%Y', d.dob) BETWEEN '1981' AND '1991'",
+  "db_id": "formula_1",
+  "case_id": "B05-bird-0265",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT ROUND(COUNT(q.q3 > '' OR NULL) * 1.0 / COUNT(DISTINCT d.driverId), 2) AS avg_q3_times_per_driver FROM drivers d LEFT JOIN qualifying q ON q.driverId = d.driverId WHERE STRFTIME('%Y', d.dob) BETWEEN '1981' AND '1991'",
+    "db_id": "formula_1",
+    "evidence": "Q3: the third and final qualifying session of a race weekend, whose times decide the top starting grid positions."
+  }
+}

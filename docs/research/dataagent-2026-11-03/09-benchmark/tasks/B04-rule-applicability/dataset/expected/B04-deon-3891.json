@@ -1,0 +1,27 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_aaf67d95",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "legal_writ_eviction_type",
+    "legal_executor_entity_type_for_writ",
+    "empowered_by_law_to_execute_writ",
+    "entity_type",
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_entity",
+    "scenario_writ_type",
+    "scenario_entity_empowered",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program encoding:\n    - Nevada statute NV Rev Stat  40.420 (2021)\n    - The question's factual statement (municipal police department)\n    - Reasoning to answer: whether the municipal police department is empowered by law\n      to execute a writ of eviction (writ of restitution).\n*/\n\n% -------------------------\n% Statute translation\n% -------------------------\n\n/*\n  NV Rev Stat  40.420(1) (2021) (relevant part):\n  The writ of restitution is addressed \"to the sheriff or constable of the county...\"\n  NV Rev Stat  40.420(2) (2021):\n  \"The sheriff or constable shall execute the writ ...\"\n*/\n\n% legal_writ_eviction_type(State, Year, WritType).\n% (Defines that in Nevada the eviction writ is a \"writ of restitution\".)\nlegal_writ_eviction_type(nevada, 2021, writ_of_restitution).\n\n% legal_executor_entity_type_for_writ(State, Year, WritType, EntityType).\n% (Encodes which entity types are empowered/commanded by law to execute the writ.)\nlegal_executor_entity_type_for_writ(nevada, 2021, writ_of_restitution, sheriff).\nlegal_executor_entity_type_for_writ(nevada, 2021, writ_of_restitution, constable).\n\n% empowered_by_law_to_execute_writ(Entity, State, Year, WritType).\n% True when Entity's type is among the statute-authorized executors for that writ.\nempowered_by_law_to_execute_writ(Entity, State, Year, WritType) :-\n    entity_type(Entity, EntityType),\n    legal_executor_entity_type_for_writ(State, Year, WritType, EntityType).\n\n% -------------------------\n% Scenario (question) facts\n% -------------------------\n\n% Provided question context\nscenario_state(nevada).\nscenario_focus_year(2021).\n\n% The entity asked about in the question\nscenario_entity(municipal_police_department).\n\n% Classify the entity (as stated: municipal police department)\nentity_type(municipal_police_department, municipal_police_department).\n\n% The question is about executing a \"writ of eviction\".\n% We map that to the legal eviction writ type for the jurisdiction/year.\nscenario_writ_type(WritType) :-\n    scenario_state(State),\n    scenario_focus_year(Year),\n    legal_writ_eviction_type(State, Year, WritType).\n\n% Helper predicate that succeeds when the factual statement is satisfied.\n% (Summarizes: in NV 2021, the entity is the municipal police department, and the writ is eviction.)\nscenario_statement :-\n    scenario_state(nevada),\n    scenario_focus_year(2021),\n    scenario_entity(municipal_police_department),\n    entity_type(municipal_police_department, municipal_police_department),\n    scenario_writ_type(writ_of_restitution).\n\n% -------------------------\n% Reasoning + Answer\n% -------------------------\n\n% scenario_entity_empowered(Result).\nscenario_entity_empowered(yes) :-\n    scenario_statement,\n    scenario_state(State),\n    scenario_focus_year(Year),\n    scenario_entity(Entity),\n    scenario_writ_type(WritType),\n    empowered_by_law_to_execute_writ(Entity, State, Year, WritType),\n    !.\nscenario_entity_empowered(no) :-\n    scenario_statement,\n    !.\n\n% Required predicate: housing_answer(Result) where Result is yes/no, deterministic.\nhousing_answer(Result) :-\n    scenario_entity_empowered(Result),\n    !.\n\n% -------------------------\n% Main entrypoint (required)\n% -------------------------\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-3891",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is the municipal police department an entity empowered by law to execute a writ of eviction?"
+  }
+}

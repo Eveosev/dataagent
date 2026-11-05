@@ -1,0 +1,109 @@
+{
+  "source": "naver-clova-ix/cord-v2",
+  "split": "train",
+  "index": 6,
+  "gt_parse": {
+    "menu": {
+      "nm": "Nu Greentea 330",
+      "unitprice": "6.000",
+      "cnt": "1x",
+      "price": "6.000"
+    },
+    "sub_total": {
+      "subtotal_price": "6.000",
+      "tax_price": "-"
+    },
+    "total": {
+      "total_price": "6.000",
+      "cashprice": "6.000"
+    }
+  },
+  "case_id": "B03-cord-0486",
+  "expected": {
+    "kind": "json",
+    "value": {
+      "menu": {
+        "nm": "Nu Greentea 330",
+        "unitprice": "6.000",
+        "cnt": "1x",
+        "price": "6.000"
+      },
+      "sub_total": {
+        "subtotal_price": "6.000",
+        "tax_price": "-"
+      },
+      "total": {
+        "total_price": "6.000",
+        "cashprice": "6.000"
+      }
+    },
+    "fields": {
+      "menu.nm": "Nu Greentea 330",
+      "menu.unitprice": "6.000",
+      "menu.cnt": "1x",
+      "menu.price": "6.000",
+      "sub_total.subtotal_price": "6.000",
+      "sub_total.tax_price": "-",
+      "total.total_price": "6.000",
+      "total.cashprice": "6.000"
+    },
+    "anchored_fields": 0,
+    "no_anchor_fields": 8,
+    "spans": [
+      {
+        "field": "menu.nm",
+        "text": "Nu Greentea 330",
+        "page": 1
+      },
+      {
+        "field": "menu.unitprice",
+        "text": "6.000",
+        "page": 1
+      },
+      {
+        "field": "menu.cnt",
+        "text": "1x",
+        "page": 1
+      },
+      {
+        "field": "menu.price",
+        "text": "6.000",
+        "page": 1
+      },
+      {
+        "field": "sub_total.subtotal_price",
+        "text": "6.000",
+        "page": 1
+      },
+      {
+        "field": "sub_total.tax_price",
+        "text": "-",
+        "page": 1
+      },
+      {
+        "field": "total.total_price",
+        "text": "6.000",
+        "page": 1
+      },
+      {
+        "field": "total.cashprice",
+        "text": "6.000",
+        "page": 1
+      }
+    ],
+    "pages": {
+      "menu.nm": 1,
+      "menu.unitprice": 1,
+      "menu.cnt": 1,
+      "menu.price": 1,
+      "sub_total.subtotal_price": 1,
+      "sub_total.tax_price": 1,
+      "total.total_price": 1,
+      "total.cashprice": 1
+    },
+    "evidence_gold": {
+      "source": "cord-valid-line",
+      "version": 1
+    }
+  }
+}

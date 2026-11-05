@@ -1,0 +1,121 @@
+{
+  "dataset_id": "B05.dataset",
+  "task_id": "B05",
+  "revision": "v0.10",
+  "status": "collecting",
+  "unit": "question",
+  "sources": [
+    {
+      "name": "bird-mini-dev",
+      "locator": "birdsql/bird_mini_dev",
+      "license": "未声明",
+      "digest": "sha256:aa00587df8e8f2961cebcac3711cda66700c09414a5f7b99cdb055f46832cdce",
+      "revision": "5b256b5a9c17478f06ed6912612e9a14d17065c8",
+      "files": 66,
+      "mb": 17.5,
+      "fetched_at": "2026-11-04T17:33:47+08:00"
+    },
+    {
+      "name": "cwd",
+      "locator": "https://github.com/datadotworld/cwd-benchmark-data",
+      "license": "Apache-2.0",
+      "digest": "sha256:eac76aa6ba5dcd6f45adb148cdbc5ead542b250bcd0852e4427f3f8ed63a0cb2",
+      "revision": "0b75eb62eaf7ea315a863cd7611ebc908149f7e0",
+      "files": 63,
+      "mb": 0.4,
+      "fetched_at": "2026-11-04T17:33:49+08:00"
+    },
+    {
+      "name": "spider2-lite",
+      "locator": "xlangai/spider2-lite",
+      "license": "MIT",
+      "digest": "sha256:a10ad060243ab461d4309c603d052fb043a43c0640b93f7c39ac50c6c4e9980d",
+      "revision": "ce2e836654acc548dad7d348b1ad0e5ad0564f9e",
+      "files": 12,
+      "mb": 0.1,
+      "fetched_at": "2026-11-04T17:54:12+08:00"
+    },
+    {
+      "name": "beaver-table",
+      "locator": "beaverbench/beaver-table",
+      "license": "MIT",
+      "digest": "sha256:54e7c7c7f05f12ccd76271702239a571d82b0473e55c003bb9fdd7b558b1b207",
+      "revision": "86f2c4ec45990ac30677dfdfec9826f28171000a",
+      "files": 21,
+      "mb": 261.8,
+      "fetched_at": "2026-11-04T21:16:59+08:00"
+    },
+    {
+      "name": "beaver",
+      "locator": "beaverbench/beaver-query",
+      "license": "MIT",
+      "digest": "sha256:912465e6ac80fa2a9a28345d05b183d23bc54182c04094b933a53a596b34d693",
+      "revision": "3c8eb607ee2b7709ad4b1d53243e04af1b9eda4b",
+      "files": 18,
+      "mb": 8.4,
+      "fetched_at": "2026-11-04T21:03:17+08:00"
+    }
+  ],
+  "splits": {
+    "development": {
+      "count": 120,
+      "frozen": false
+    },
+    "regression": {
+      "count": 60,
+      "frozen": false
+    },
+    "unseen_acceptance": {
+      "count": 60,
+      "frozen": false
+    }
+  },
+  "exposure": {
+    "ledger_ref": "exposure.jsonl",
+    "entries": 0
+  },
+  "fixtures": {
+    "storage": "local",
+    "path": "fixtures/",
+    "limits": "单文件 <= 2 MB；超出走对象存储并在 digest 记录"
+  },
+  "updated": "2026-11-04",
+  "notes": "由 build_cases.py 从 workspace/benchmark-data 构建；原始数据不入库",
+  "build": {
+    "version": 10,
+    "script": "tools/build_cases.py",
+    "built_at": "2026-11-04",
+    "policy": "四类来源合计入库（BEAVER 按 8% 确定性抽样，全量见 available）；BIRD 只带 schema 不带库，CWD 带完整 CSV 与 DDL，Spider2 lite 与 BEAVER 只有查询与表线索。split 按题目 id 哈希。",
+    "available": {
+      "development": 863,
+      "regression": 283,
+      "unseen_acceptance": 250
+    },
+    "selected": {
+      "development": 120,
+      "regression": 60,
+      "unseen_acceptance": 60
+    },
+    "caps": {
+      "development": 120,
+      "regression": 60,
+      "unseen_acceptance": 60
+    },
+    "coverage": {
+      "covered_metrics": [
+        "execution_accuracy",
+        "unexpressible_refusal_rate"
+      ],
+      "partial_metrics": [
+        "metric_definition_consistency"
+      ],
+      "note": "执行准确率需本地起库：CWD 可用 CSV 建库；BEAVER 已取 beaver_db.zip（dw/nova/neutron 的 MySQL dump，解压 2.1 GB），装载后可按 SQL 执行比对；BIRD 与 Spider2 的库仍需另行申请。BEAVER 全量 7,978 条按 8% 抽样 592 条入库，全量留在原始目录；任务卡已并入 beaver-table 的列名/类型/示例行（381 张表），join_keys 与 domain_knowledge 用于口径与连接语义判分"
+    },
+    "counts": {
+      "bird": 500,
+      "cwd": 44,
+      "spider2": 260,
+      "beaver": 592
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_8c106375",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "jurisdiction",
+    "focus_year",
+    "statute_78b_6_808_grants_order_of_restitution_when_no_timely_remedy",
+    "statute_78b_6_808_authority_executes_return_possession",
+    "legal_court_order",
+    "legal_order_name_in_statute",
+    "legal_order_executed_by",
+    "legal_order_effect",
+    "legal_concept",
+    "legal_order_matches_concept",
+    "legal_term_used_in_statute",
+    "statute_term_refers_to_concept",
+    "scenario_term_under_question",
+    "scenario_concept_under_question",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: Utah\n    Focus year: 2021\n    Question: Is the term 'Writ of possession' used to refer to the order from the court\n              to the authorities to remove a tenant?\n*/\n\n/* -------------------------\n   Basic jurisdiction facts\n   ------------------------- */\n\njurisdiction(utah).\nfocus_year(2021).\n\n/* -------------------------\n   Statute translation (UT Code  78B-6-808, 2021)\n   ------------------------- */\n\n/* UT Code  78B-6-808(5): if defendant does not elect/comply with remedies, plaintiff granted an\n   order of restitution; constable or sheriff returns possession promptly. */\nstatute_78b_6_808_grants_order_of_restitution_when_no_timely_remedy(order_of_restitution).\n\n/* UT Code  78B-6-808(6): after hearing, if court rules plaintiff entitled to possession,\n   constable or sheriff shall promptly return possession. */\nstatute_78b_6_808_authority_executes_return_possession(constable).\nstatute_78b_6_808_authority_executes_return_possession(sheriff).\n\n/* Encode the legal concept: an \"order of restitution\" is the court order used here and it is\n   executed by a constable or sheriff to return possession to the plaintiff. */\nlegal_court_order(order_of_restitution).\nlegal_order_name_in_statute(order_of_restitution, order_of_restitution).\nlegal_order_executed_by(order_of_restitution, constable) :-\n    statute_78b_6_808_authority_executes_return_possession(constable).\nlegal_order_executed_by(order_of_restitution, sheriff) :-\n    statute_78b_6_808_authority_executes_return_possession(sheriff).\nlegal_order_effect(order_of_restitution, return_possession_to_plaintiff) :-\n    statute_78b_6_808_grants_order_of_restitution_when_no_timely_remedy(order_of_restitution).\n\n/* Bridge from \"return possession to plaintiff\" to the question's concept \"remove tenant\":\n   If authorities return possession to the plaintiff, that necessarily entails removing the\n   defendant/tenant from possession (as a concept, not a quoted statutory phrase). */\nlegal_concept(order_from_court_to_authorities_to_remove_tenant).\nlegal_order_matches_concept(order_of_restitution, order_from_court_to_authorities_to_remove_tenant) :-\n    legal_order_effect(order_of_restitution, return_possession_to_plaintiff),\n    ( legal_order_executed_by(order_of_restitution, constable)\n    ; legal_order_executed_by(order_of_restitution, sheriff)\n    ).\n\n/* Identify which TERMS are used in this statute, for term-usage reasoning. */\nlegal_term_used_in_statute(order_of_restitution).\nlegal_term_used_in_statute(possession_bond).\nlegal_term_used_in_statute(counter_bond).\nlegal_term_used_in_statute(unlawful_detainer).\nlegal_term_used_in_statute(plaintiff).\nlegal_term_used_in_statute(defendant).\n\n/* Determine whether a given Term is used by the statute to refer to the relevant concept. */\nstatute_term_refers_to_concept(Term, Concept) :-\n    legal_term_used_in_statute(Term),\n    legal_order_name_in_statute(Order, Term),\n    legal_order_matches_concept(Order, Concept).\n\n/* -------------------------\n   Scenario translation (the question's factual statement)\n   ------------------------- */\n\n/* The question asks about the term \"writ of possession\" and the concept of an order to authorities\n   to remove a tenant. We encode that as the scenario under evaluation. */\nscenario_term_under_question(writ_of_possession).\nscenario_concept_under_question(order_from_court_to_authorities_to_remove_tenant).\n\n/* Succeeds when the encoded scenario is present. */\nscenario_statement :-\n    jurisdiction(utah),\n    focus_year(2021),\n    scenario_term_under_question(writ_of_possession),\n    scenario_concept_under_question(order_from_court_to_authorities_to_remove_tenant).\n\n/* -------------------------\n   Answer derivation\n   ------------------------- */\n\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_term_under_question(Term),\n    scenario_concept_under_question(Concept),\n    statute_term_refers_to_concept(Term, Concept),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n/* -------------------------\n   Main entrypoint\n   ------------------------- */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-4866",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is the term 'Writ of possession' used to refer to the order from the court to the authorities to remove a tenant?"
+  }
+}

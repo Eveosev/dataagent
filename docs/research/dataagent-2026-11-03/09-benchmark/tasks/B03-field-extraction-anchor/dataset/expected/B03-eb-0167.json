@@ -1,0 +1,198 @@
+{
+  "source": "llamaindex/ExtractBench",
+  "id": "short/dc-pepco-residential-bill",
+  "pdf": "docs/short/dc-pepco-residential-bill.pdf",
+  "schema": {
+    "type": "object",
+    "title": "UtilityBill",
+    "description": "A residential utility bill (electric and/or gas) from a single provider. Covers single-meter bills (Pepco electric, PPL electric) and dual-commodity bills (We Energies electric+gas). Top-level fields are flat bill-level identifiers and totals; per-meter usage is the repeated list `meters[]`.",
+    "properties": {
+      "utility_provider": {
+        "type": "string",
+        "description": "Name of the utility company that issued the bill. Aliases: 'utility', 'company', the brand printed beside the bill title and in the payment remittance address. Examples: 'We Energies', 'Pepco', 'PPL Electric Utilities'. CASING: use the Title-Case brand exactly as it appears in the running body text and the remittance/return-payment block; do NOT copy the stylized all-lowercase logo wordmark (e.g. the Pepco logo renders 'pepco' but the company is 'Pepco'). Do NOT confuse with the competitive generation supplier (e.g. 'WGL Energy Svcs' on Pepco supply pages; the separate supplier referenced on PPL) — that is the third-party supplier, not the issuing distribution utility. Location: bill header/title and the 'make payable to' / remittance block."
+      },
+      "account_number": {
+        "type": "string",
+        "description": "The customer's utility account number. Aliases: 'Account Number', 'Account number', 'Account #'. Format: VERBATIM as printed, preserving internal spaces and dashes (e.g. We Energies '0123456789-00003', Pepco '0123 4567 890'). Do NOT confuse with: invoice_number (Pepco '200000088589'), service_number, the long barcode/scanline digit string at the bottom of a payment stub, or the meter number. Location: top summary table or the 'Account number:' label near the customer name; the payment stub repeats it."
+      },
+      "invoice_number": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "The bill/invoice number uniquely identifying this statement, ONLY if the bill prints an explicit 'Invoice Number'/'Bill Number' label. Example: Pepco '200000088589' (printed as 'Invoice Number: 200000088589' on the coupon tear line). Format: verbatim digits as printed. Do NOT confuse with account_number, service_number, or an archive/page/system tag — in particular the We Energies 'WEC_PDF_Out_Archive 00001' string is an internal archive tag, NOT an invoice number, so We Energies invoice_number is null. Return null when no field is explicitly labeled invoice/bill number. Location: near the 'Please tear on the dotted line' coupon line or the bill header."
+      },
+      "service_number": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "The service / point-of-delivery (POD) number distinct from the account number, ONLY if printed. Aliases: 'service number', 'Service No', 'POD ID'. Example: Pepco '0012 3456 7890 7001 6762 64' (printed as 'Residential-R - service number ...' on the 'Details of your Electric Charges' page). Format: verbatim including spaces. Do NOT confuse with account_number or meter_number. Return null if the bill shows no separate service number (e.g. We Energies prints none → null). Location: the per-service detail section header."
+      },
+      "customer_name": {
+        "type": "string",
+        "description": "The name of the customer/account holder the bill is addressed to. Aliases: 'Customer Name', 'Service to', 'Bill to'. Format: verbatim as printed (e.g. We Energies 'JOHN Q CUSTOMER', Pepco 'PEPCO CUSTOMER'). Do NOT confuse with the utility_provider name or the remittance payee. Location: the addressee block near the service address or above the service-address label."
+      },
+      "service_address": {
+        "type": "string",
+        "description": "The address where utility service is delivered. Aliases: 'Service Address', 'Your service address', 'Service to'. Format: full street address as printed, single line, including city/state/ZIP if shown (e.g. We Energies '123 MAIN ST NEENAH WI 54956-1802', Pepco '123 9TH ST NW WASHINGTON DC 20012'). Do NOT confuse with the utility's remittance/PO-Box mailing address or the regulator addresses. Location: under the 'Service Address'/'Your service address' label near the customer name."
+      },
+      "bill_date": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "The date the bill was issued/printed, VERBATIM as printed. Aliases: 'Bill Date', 'Bill Issue date', 'Statement Date'. Examples: '02/03/2026', 'May 11, 2015'. RULE: return null if the bill prints no explicit bill/issue/statement date — some bills (e.g. PPL) show only a Due Date and a billing period and have NO issue date; in that case do NOT substitute the due date, the billing-period end, the 'balance as of' date, or a meter-read date. Do NOT confuse with payment_due_date, billing_period_start/end, or the next-meter-read date. Location: top summary table ('Bill Date') or the 'Bill Issue date:' label."
+      },
+      "billing_period_start": {
+        "type": "string",
+        "description": "Start date of the service/billing period this bill covers. Aliases: 'Bill Period' (first date), 'for the period' (first date), 'Usage from' (first date). Format: VERBATIM as printed; e.g. We Energies '01/05/2026', Pepco 'April 4, 2015'. Do NOT confuse with bill_date or billing_period_end. Location: the 'Bill Period: X to Y' / 'for the period X to Y' line — take the FIRST (earlier) date."
+      },
+      "billing_period_end": {
+        "type": "string",
+        "description": "End date of the service/billing period this bill covers. Aliases: 'Bill Period' (second date), 'for the period' (second date), 'Usage from' (second date). Format: VERBATIM as printed; e.g. We Energies '02/02/2026', Pepco 'May 5, 2015'. Do NOT confuse with bill_date, payment_due_date, or the next-meter-read date. Location: the 'Bill Period: X to Y' / 'for the period X to Y' line — take the SECOND (later) date."
+      },
+      "payment_due_date": {
+        "type": "string",
+        "description": "The date payment is due. Aliases: 'Due Date', 'Total amount due by', 'Payment Transfer Date' (for autopay-withdrawal bills). Format: VERBATIM as printed; e.g. Pepco 'Jun 1, 2015' (from 'Total amount due by Jun 1, 2015'). Do NOT confuse with bill_date or billing_period_end, and do NOT use the later late-payment date ('after Jun 1, 2015'). For We Energies (autopay) use the 'Payment Transfer Date' '02/25/2026'. Location: top summary box ('Due Date'/'Payment Transfer Date') or the 'Total amount due by <date>' line."
+      },
+      "amount_due": {
+        "type": "number",
+        "description": "The total amount due for this bill by the due date, as a number (strip '$' and commas; e.g. We Energies 246.40, Pepco 176.31). Aliases: 'Amount Due', 'Total amount due by <date>', 'Total Current Balance'. Do NOT confuse with: the higher late-payment amount (Pepco 'amount due after Jun 1' 179.06), previous_balance, total_current_charges (when it differs), or a single service subtotal. Location: top 'Amount Due' box or the 'Total amount due by <date>' summary line."
+      },
+      "previous_balance": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "description": "The balance carried from the prior bill before this period's payments/charges, as a number. Aliases: 'Previous Balance', 'Balance from your last bill'. Example: We Energies 277.79, Pepco 287.32. Do NOT confuse with amount_due, balance_forward ($0.00 after payment), or total_current_charges. Use the TOP-LEVEL bill summary value, NOT a per-service sub-summary's 'Balance from last bill'. Return null if not printed. Location: the 'Activity Since Last Bill' / 'Summary of your charges' / 'Billing Summary' block."
+      },
+      "total_current_charges": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "description": "The total NEW charges for the current billing period, taken VERBATIM from a single line that the bill explicitly labels as the combined current-period charges. Accepted labels: 'Total Current Charges', 'Total Current Balance' (We Energies), or an equivalently-labeled single combined-charges total. Example: We Energies 'Total Current Charges $246.40' -> 246.40. RULE: return null if the bill shows no such single combined-current-charges line — do NOT compute it by summing delivery + supply, and do NOT substitute the amount due or a single-service subtotal. Pepco (separate 'New electric distribution charges' + 'New WGL Energy Svcs supply charges', no combined current-charges line) -> null. PPL (separate 'Total Delivery Charges' + 'Total Supply Charges', no combined current-charges line) -> null. Do NOT confuse with amount_due, previous_balance, total_delivery_charges, or total_supply_charges. Location: the charges-summary / billing-summary block."
+      },
+      "total_delivery_charges": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "description": "Total distribution/delivery charges billed by the regulated utility for the current period, as a number, ONLY when the bill cleanly separates delivery from supply. Aliases: 'Total Delivery Charges', 'Total Electric Delivery Charges', 'New electric distribution charges'. Example: Pepco 21.01 ('New electric distribution charges - Pepco'). Return null when the bill does NOT split delivery vs supply: We Energies shows commodity totals (Electric Service Total + Gas Service Total) with no delivery/supply split → null. Do NOT use a commodity subtotal (e.g. We Energies gas distribution line) as the delivery total. Location: the delivery/distribution charges subtotal."
+      },
+      "total_supply_charges": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "description": "Total supply/generation charges (often billed for a competitive/third-party supplier) for the current period, as a number, ONLY when the bill cleanly separates supply from delivery. Aliases: 'Total Supply Charges', 'supply charges', 'Generation & Transmission Charges'. Example: Pepco 155.30 ('New WGL Energy Svcs supply charges'). Return null when the bill does NOT split supply vs delivery (bundled): We Energies is bundled (no delivery/supply split) → null. Do NOT use a commodity subtotal (e.g. We Energies 'Gas Supply Service' line) as the supply total. Location: the supply/generation charges subtotal."
+      },
+      "meters": {
+        "type": "array",
+        "description": "One entry per metered service on the bill. Single-meter electric bills have one entry (Pepco: one electric meter); dual-commodity bills have one electric + one gas entry (We Energies: meter NZT0123456 electric + meter 0WG0123456 gas). Aligned by meter_number.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "meter_number": {
+              "type": "string",
+              "description": "The meter identifier for this metered service. Aliases: 'Meter', 'Meter Number', 'Meter No'. Format: VERBATIM alphanumeric as printed (e.g. We Energies 'NZT0123456' / '0WG0123456', Pepco '1ND344415274'). Do NOT confuse with account_number, service_number, or the rate/schedule code (e.g. 'Rg1', 'Residential-R'). Location: the per-service block ('Meter <id>') or the 'Meter Number' column of the usage table."
+            },
+            "service_type": {
+              "type": "string",
+              "enum": [
+                "electric",
+                "gas",
+                "water"
+              ],
+              "description": "The commodity this meter measures. 'electric' for kWh electric service, 'gas' for natural-gas service (therms/CCF), 'water' for water. Infer from the service section heading ('Electric Service', 'Gas Service', 'Residential Electric Service', 'Use (kWh)'). Do NOT guess: choose by the section the meter appears under and its usage unit. We Energies meter NZT0123456 is electric; meter 0WG0123456 is gas."
+            },
+            "current_reading": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "The most recent (ending) meter reading for this period, as a number (drop any leading zeros' formatting; the numeric value). Aliases: 'Current Reading', 'Actual Reading <later date>'. Example: We electric 40705, We gas 1464, Pepco 57043 (printed '057043'). Do NOT confuse with previous_reading (the earlier/beginning reading) or usage_quantity (the difference). Return null if no numeric reading is printed. Location: the meter-reading rows/table for this meter — the later of the two read dates ('Current Reading' column)."
+            },
+            "previous_reading": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "description": "The prior (beginning) meter reading for this period, as a number (the numeric value). Aliases: 'Previous Reading', 'Actual Reading <earlier date>'. Example: We electric 40036, We gas 1385, Pepco 55628 (printed '055628'). Do NOT confuse with current_reading (the later reading) or usage_quantity. Return null if not printed. Location: the meter-reading rows/table for this meter — the earlier of the two read dates ('Previous Reading' column)."
+            },
+            "usage_quantity": {
+              "type": "number",
+              "description": "The billed consumption for this meter over the period, as a number. For electric use the billed kWh; for gas use the billed therms (the unit the gas charges are calculated on), NOT the raw CCF reading difference. Example: We electric 669 (kWh), We gas 83.9 (therms — the '79 CCF x 1.062 BTU = 83.9 Therms' converted value, NOT 79), Pepco 1415 (kWh). Do NOT confuse with current_reading/previous_reading or the raw reading difference when a meter constant/CCF→therms conversion applies. Location: the 'Total Use'/'KWH'/'Therms Used'/'Total Difference' figure for this meter."
+            },
+            "usage_unit": {
+              "type": "string",
+              "enum": [
+                "kWh",
+                "therms",
+                "CCF",
+                "gallons"
+              ],
+              "description": "The unit of usage_quantity. 'kWh' for electric, 'therms' for gas billed on therms, 'CCF' only if the gas bill is billed on CCF with no therms conversion, 'gallons' for water. Must match the unit usage_quantity is expressed in. For We Energies gas, usage_quantity is 83.9 therms so usage_unit='therms' (NOT 'CCF', even though the raw reading difference is 79 CCF)."
+            }
+          },
+          "required": [
+            "meter_number",
+            "service_type",
+            "usage_quantity",
+            "usage_unit"
+          ]
+        }
+      }
+    },
+    "required": [
+      "utility_provider",
+      "account_number",
+      "customer_name",
+      "service_address",
+      "billing_period_start",
+      "billing_period_end",
+      "payment_due_date",
+      "amount_due",
+      "meters"
+    ]
+  },
+  "expected": {
+    "kind": "json",
+    "schema_ref": "fixtures/eb-short-dc-pepco-residential-bill-schema.json",
+    "value": {
+      "utility_provider": "Pepco",
+      "account_number": "0123 4567 890",
+      "invoice_number": "200000088589",
+      "service_number": "0012 3456 7890 7001 6762 64",
+      "customer_name": "PEPCO CUSTOMER",
+      "service_address": "123 9TH ST NW WASHINGTON DC 20012",
+      "bill_date": "May 11, 2015",
+      "billing_period_start": "April 4, 2015",
+      "billing_period_end": "May 5, 2015",
+      "payment_due_date": "Jun 1, 2015",
+      "amount_due": 176.31,
+      "previous_balance": 287.32,
+      "total_current_charges": null,
+      "total_delivery_charges": 21.01,
+      "total_supply_charges": 155.3,
+      "meters": [
+        {
+          "meter_number": "1ND344415274",
+          "service_type": "electric",
+          "current_reading": 57043,
+          "previous_reading": 55628,
+          "usage_quantity": 1415.0,
+          "usage_unit": "kWh"
+        }
+      ]
+    },
+    "anchored_fields": 22,
+    "no_anchor_fields": 0
+  },
+  "field_rules": "{\"utility_provider\": {\"comparator\": \"address\", \"evidence\": [{\"page\": 1, \"bbox\": [0.22905, 0.73316, 0.0573, 0.0174], \"quote\": \"Pepco\", \"value\": \"Pepco\", \"coarse\": false, \"layer\": \"word\"}, {\"page\": 1, \"bbox\": [0.22905, 0.73316, 0.0573, 0.0174], \"quote\": \"Pepco\", \"value\": \"Pepco\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"account_number\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.21123, 0.26356, 0.10902, 0.01056], \"quote\": \"0123 4567 890\", \"value\": \"0123 4567 890\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"invoice_number\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.72097, 0.68315, 0.10902, 0.01066], \"quote\": \"200000088589\", \"value\": \"200000088589\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"service_number\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.25082, 0.1294, 0.20032, 0.00967], \"quote\": \"0012 3456 7890 7001 6762 64\", \"value\": \"0012 3456 7890 7001 6762 64\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"customer_name\": {\"comparator\": \"address\", \"evidence\": [{\"page\": 1, \"bbox\": [0.07353, 0.22611, 0.16998, 0.01226], \"quote\": \"PEPCO CUSTOMER\", \"value\": \"PEPCO CUSTOMER\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"service_address\": {\"comparator\": \"address\", \"evidence\": [{\"page\": 1, \"bbox\": [0.2472, 0.27831, 0.17831, 0.02533], \"quote\": \"123 9TH ST NW WASHINGTON DC 20012\", \"value\": \"123 9TH ST NW WASHINGTON DC 20012\", \"coarse\": false, \"layer\": \"word\"}, {\"page\": 1, \"bbox\": [0.05882, 0.89596, 0.20921, 0.02286], \"quote\": \"123 9TH ST NW WASHINGTON DC 20012-1604\", \"value\": \"123 9TH ST NW WASHINGTON DC 20012\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"bill_date\": {\"comparator\": \"date\", \"evidence\": [{\"page\": 1, \"bbox\": [0.18761, 0.30792, 0.09751, 0.01288], \"quote\": \"May 11, 2015\", \"value\": \"May 11, 2015\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"billing_period_start\": {\"comparator\": \"date\", \"evidence\": [{\"page\": 1, \"bbox\": [0.46843, 0.08126, 0.09627, 0.0132], \"quote\": \"April 4, 2015\", \"value\": \"April 4, 2015\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"billing_period_end\": {\"comparator\": \"date\", \"evidence\": [{\"page\": 1, \"bbox\": [0.59013, 0.0817, 0.09265, 0.01276], \"quote\": \"May 5, 2015\", \"value\": \"May 5, 2015\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"payment_due_date\": {\"comparator\": \"date\", \"evidence\": [{\"page\": 1, \"bbox\": [0.23879, 0.43083, 0.08538, 0.01496], \"quote\": \"Jun 1, 2015\", \"value\": \"Jun 1, 2015\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"amount_due\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.4306, 0.42941, 0.05878, 0.01485], \"quote\": \"$176.31\", \"value\": 176.31, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"previous_balance\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.4306, 0.35485, 0.05847, 0.01164], \"quote\": \"$287.32\", \"value\": 287.32, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"total_current_charges\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"total_delivery_charges\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": [0.53855, 0.60931, 0.03993, 0.01028], \"quote\": \"21.01\", \"value\": 21.01, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"total_supply_charges\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.4306, 0.41568, 0.05905, 0.01466], \"quote\": \"$155.30\", \"value\": 155.3, \"coarse\": false, \"layer\": \"word\"}, {\"page\": 3, \"bbox\": [0.84729, 0.71576, 0.05315, 0.01347], \"quote\": \"$155.30\", \"value\": 155.3, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"meters\": {\"comparator\": {\"meter_number\": \"case_insensitive\", \"service_type\": \"enum\", \"current_reading\": \"number\", \"previous_reading\": \"number\", \"usage_quantity\": \"number\", \"usage_unit\": \"enum\"}, \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": \"1ND344415274\", \"value\": {\"meter_number\": \"1ND344415274\", \"service_type\": \"electric\", \"current_reading\": 57043, \"previous_reading\": 55628, \"usage_quantity\": 1415.0, \"usage_unit\": \"kWh\"}, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"structural\": \"match_by:meter_number\"}, \"meters[0].meter_number\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.0594, 0.18987, 0.09098, 0.00855], \"quote\": \"1ND344415274\", \"value\": \"1ND344415274\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"meters[0].service_type\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.20164, 0.1071, 0.0642, 0.0127], \"quote\": \"Electric\", \"value\": \"electric\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"meters[0].current_reading\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": [0.22059, 0.20193, 0.04906, 0.00988], \"quote\": \"057043\", \"value\": 57043, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"meters[0].previous_reading\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": [0.30471, 0.20193, 0.04906, 0.00988], \"quote\": \"055628\", \"value\": 55628, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"meters[0].usage_quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": [0.5561, 0.20237, 0.03214, 0.00943], \"quote\": \"1415\", \"value\": 1415.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"meters[0].usage_unit\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.09411, 0.20238, 0.02992, 0.00838], \"quote\": \"kWh\", \"value\": \"kWh\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}}",
+  "repeated_structure": "{\"meters\": {\"identity_key\": \"meter_number\"}}",
+  "anchored_fields": 22,
+  "no_anchor_fields": 0,
+  "case_id": "B03-eb-0167"
+}

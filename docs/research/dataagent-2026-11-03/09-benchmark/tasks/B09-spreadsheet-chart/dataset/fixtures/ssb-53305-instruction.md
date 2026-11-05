@@ -1,0 +1,6 @@
+I need to sum all prices in cell K3, where it should meet several criteria: 1) Match the 'Part' column range A2 to A4 with cell J1, 2) Match the column headings from B1 to G1 with cell I1, and 3) The 'Month and Year' from two date column ranges (B2 to B4 and E2 to E4) should correspond with K2 and J3, respectively. Additionally, the sums should include prices from two ranges (D2 to D4 and G2 to G4), considering the mentioned matches. I am using MS Excel 2007, and I have provided an attachment named 'Book1.xlsx' for reference.         For cell K3, I would like to sum all price matching the criteria of (Part column (A2 to A4) should be matched with J1, Column heading (B1 to G1) should match with I1, Month and year from date column (B2 to B4) should be mayched with K2 and J3 respectively, price column (D2 to D4)) + (Part column (A2 to A4) should be matched with J1, Column heading (B1 to G1) should match with I1, Month and year from date column (E2 to E4) should be mayched with K2 and J3 respectively, price column (G2 to G4))     Conditions to sum prices
+1) A2:A4 = J1
+2) column heading B1:G1 = I1
+3) Month of B2:B4 = K2:V2
+4) Year of B2:B4 = J3:J4
+5) Sum D2:D4

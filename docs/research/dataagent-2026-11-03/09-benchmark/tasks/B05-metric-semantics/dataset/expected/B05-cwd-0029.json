@@ -1,0 +1,21 @@
+{
+  "source": "datadotworld/cwd-benchmark-data",
+  "inquiry_id": "IQ_aa04aad4b2ef9941a9ae456e5ac2efb9",
+  "prompt": "Return all the claims we have by claim number, open date and close date?",
+  "sql": [
+    "SELECT company_claim_number, claim_open_date, claim_close_date\nFROM claim\n"
+  ],
+  "sparql": [
+    "PREFIX : <https://myinsurancecompany.linked.data.world/d/chat-with-the-data-benchmark/>\nPREFIX in: <http://data.world/schema/insurance/>\n\nselect ?ClaimNumber ?ClaimOpenDate ?ClaimCloseDate\nwhere{\n    SERVICE :mapped {\n        ?claim rdf:type in:Claim;\n            in:claimNumber ?ClaimNumber;\n            in:claimOpenDate ?ClaimOpenDate;\n            in:claimCloseDate ?ClaimCloseDate;\n        .\n    }\n\n}\n"
+  ],
+  "case_id": "B05-cwd-0029",
+  "expected": {
+    "kind": "query",
+    "question": "Return all the claims we have by claim number, open date and close date?",
+    "sql": "SELECT company_claim_number, claim_open_date, claim_close_date\nFROM claim\n",
+    "alternate_sql": [],
+    "sparql": [
+      "PREFIX : <https://myinsurancecompany.linked.data.world/d/chat-with-the-data-benchmark/>\nPREFIX in: <http://data.world/schema/insurance/>\n\nselect ?ClaimNumber ?ClaimOpenDate ?ClaimCloseDate\nwhere{\n    SERVICE :mapped {\n        ?claim rdf:type in:Claim;\n            in:claimNumber ?ClaimNumber;\n            in:claimOpenDate ?ClaimOpenDate;\n            in:claimCloseDate ?ClaimCloseDate;\n        .\n    }\n\n}\n"
+    ]
+  }
+}

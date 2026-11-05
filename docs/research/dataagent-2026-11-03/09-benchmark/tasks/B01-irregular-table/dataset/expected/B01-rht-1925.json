@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 289,
+  "table": "agriculture-table04",
+  "structure": "ColumnHeaderMerge",
+  "question_type": "Numerical Reasoning",
+  "sub_type": "Calculation",
+  "answer": "25.20",
+  "cot": [
+    {
+      "planning": "Identify the column % Yield 50th centile corresponding to “Removal of negative changes in crop yield.”"
+    },
+    {
+      "planning": "Extract the numerical yield values for all crops, excluding non-crop entries."
+    },
+    {
+      "planning": "Calculate the mean of these values to determine the average yield."
+    }
+  ],
+  "case_id": "B01-rht-1925",
+  "expected": {
+    "kind": "answer",
+    "question": "What is the mean percentage yield for all crops under the condition of removal of negative changes in crop yield where data is not NA?",
+    "answer": "25.20"
+  }
+}

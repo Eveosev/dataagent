@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 299,
+  "question": "Which closed events are tied for the highest ratio of total spending to total budget amount?",
+  "evidence": "",
+  "gold_sql": "WITH ratios AS ( SELECT e.event_id, e.event_name, CAST(SUM(b.spent) AS DECIMAL(20,4)) / NULLIF(SUM(b.amount), 0) AS ratio FROM event AS e JOIN budget AS b ON b.link_to_event = e.event_id WHERE e.status = 'Closed' GROUP BY e.event_id, e.event_name HAVING SUM(b.amount) > 0 ) SELECT event_name FROM ratios WHERE ratio = (SELECT MAX(ratio) FROM ratios)",
+  "db_id": "student_club",
+  "case_id": "B05-bird-0300",
+  "expected": {
+    "kind": "sql",
+    "sql": "WITH ratios AS ( SELECT e.event_id, e.event_name, CAST(SUM(b.spent) AS DECIMAL(20,4)) / NULLIF(SUM(b.amount), 0) AS ratio FROM event AS e JOIN budget AS b ON b.link_to_event = e.event_id WHERE e.status = 'Closed' GROUP BY e.event_id, e.event_name HAVING SUM(b.amount) > 0 ) SELECT event_name FROM ratios WHERE ratio = (SELECT MAX(ratio) FROM ratios)",
+    "db_id": "student_club",
+    "evidence": ""
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 281,
+  "question": "For the 2017 Italian Grand Prix, which driver set the second-fastest time in the second qualifying session (Q2), and which constructor did he drive for that weekend? By second-fastest I mean the driver whose Q2 time comes next after the quickest one, counting every driver who took part in that session. If two drivers tie on Q2 time, the one who started the race higher up the grid counts as the faster of the two. Please give me the driver's forename, the driver's surname, and the constructor name.",
+  "evidence": "Q2: the second of the weekend's qualifying sessions; its times are measured to the thousandth of a second.",
+  "gold_sql": "WITH t AS (SELECT d.driverId, d.forename, d.surname, co.name AS constructor, q.q2, q.position, CAST(SUBSTR(q.q2, 1, INSTR(q.q2, ':') - 1) AS INTEGER) AS mins, CAST(SUBSTR(q.q2, INSTR(q.q2, ':') + 1) AS REAL) AS secs FROM qualifying q JOIN races r ON r.raceId = q.raceId JOIN drivers d ON d.driverId = q.driverId JOIN constructors co ON co.constructorId = q.constructorId WHERE r.year = 2017 AND r.name = 'Italian Grand Prix' AND q.q2 IS NOT NULL AND q.q2 <> '') SELECT forename, surname, constructor FROM t ORDER BY mins ASC, secs ASC, position ASC, driverId ASC LIMIT 1 OFFSET 1",
+  "db_id": "formula_1",
+  "case_id": "B05-bird-0282",
+  "expected": {
+    "kind": "sql",
+    "sql": "WITH t AS (SELECT d.driverId, d.forename, d.surname, co.name AS constructor, q.q2, q.position, CAST(SUBSTR(q.q2, 1, INSTR(q.q2, ':') - 1) AS INTEGER) AS mins, CAST(SUBSTR(q.q2, INSTR(q.q2, ':') + 1) AS REAL) AS secs FROM qualifying q JOIN races r ON r.raceId = q.raceId JOIN drivers d ON d.driverId = q.driverId JOIN constructors co ON co.constructorId = q.constructorId WHERE r.year = 2017 AND r.name = 'Italian Grand Prix' AND q.q2 IS NOT NULL AND q.q2 <> '') SELECT forename, surname, constructor FROM t ORDER BY mins ASC, secs ASC, position ASC, driverId ASC LIMIT 1 OFFSET 1",
+    "db_id": "formula_1",
+    "evidence": "Q2: the second of the weekend's qualifying sessions; its times are measured to the thousandth of a second."
+  }
+}

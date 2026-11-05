@@ -1,0 +1,864 @@
+{
+  "source": "llamaindex/ExtractBench",
+  "id": "short/H9-53-319_311",
+  "pdf": "docs/short/H9-53-319_311.pdf",
+  "schema": {
+    "$defs": {
+      "OperationCovered": {
+        "properties": {
+          "rrc_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Box 12, left column 'RRC ID# of Operation(s) to be Covered by This Certificate', for this row. The Railroad Commission identification number of one oil/gas operation (lease, well, gathering system, plant, etc.) that this Rule 36 certificate covers. Transcribe verbatim exactly as written, preserving all leading zeros, hyphens, and spacing. This is the row identity (identity_key). Do NOT confuse with operator_number (item 2, the operator's RRC P-5 number in the address block) or with type_id_code (the adjacent middle column of this same row).",
+            "title": "RRC ID Of Operation S To Be Covered By This Certificate"
+          },
+          "type_id_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Box 12, middle column 'Type ID Code (See Instruction 12)', for this row. A short alphanumeric code that classifies what kind of RRC ID is given in the rrc_id cell of the same row (per the form's Instruction 12). Transcribe verbatim, preserving casing and leading zeros; null if blank. Do NOT confuse with rrc_id (the left column of this row) or with the operation-type letters in item 11.",
+            "title": "Type ID Code See Instruction 12"
+          },
+          "storage_yes": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Box 12, right column 'Indicate if Filing for Storage Facility Only', the **YES** checkbox for this row. True if the YES box is marked/checked on the scan, false if it is left blank. This is an INDEPENDENT checkbox from storage_no (the NO box in the same row) — the two boxes are captured as separate booleans, not merged. Do NOT confuse with the item 11 General Operation Type selections or with the type_id_code column.",
+            "title": "Filing For Storage Facility Only — YES"
+          },
+          "storage_no": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Box 12, right column 'Indicate if Filing for Storage Facility Only', the **NO** checkbox for this row. True if the NO box is marked/checked on the scan, false if it is left blank. This is an INDEPENDENT checkbox from storage_yes (the YES box in the same row) — the two boxes are captured as separate booleans, not merged. Do NOT confuse with the item 11 General Operation Type selections or with the type_id_code column.",
+            "title": "Filing For Storage Facility Only — NO"
+          }
+        },
+        "title": "OperationCovered",
+        "type": "object"
+      }
+    },
+    "properties": {
+      "operator": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 1 'Operator' at the top-left of the form: the name of the company or person operating the lease/facility and filing this certificate. Transcribe verbatim as written, preserving casing and punctuation; null if blank. Do NOT confuse with item 8 'Name of Lease, Facility or Operation' (the property name, not the company) or with the 'Representative of Company' name in the certificate signature block at the bottom.",
+        "title": "Operator"
+      },
+      "operator_number": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 2 'Operator Number' (top center, next to Operator): the RRC-assigned operator (P-5) number. Transcribe verbatim as a string, preserving all leading zeros; null if blank. Do NOT confuse with item 3 'RRC Dist.' (the district number), with the Box 12 'RRC ID#' values, or with the 'CERTIFICATION NUMBER' in the Railroad Commission Use Only block.",
+        "title": "Operator Number"
+      },
+      "rrc_district": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 3 'RRC Dist.' (top right of the operator row): the Railroad Commission district number for this operation (Texas RRC districts, e.g. '01', '7B', '08', '10'). Transcribe verbatim including any letter suffix and leading zeros; null if blank. Do NOT confuse with operator_number (item 2) or with zip_code (item 7).",
+        "title": "RRC Dist"
+      },
+      "street_or_po_box": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 4 'Street or P.O. Box No.': the operator's mailing street address or post-office box, the first line of the operator address row (items 4-7). Transcribe verbatim, preserving abbreviations (P.O. BOX, STE, etc.) and numbers; null if blank. Do NOT confuse with item 5 'City', item 6 'State', or item 7 'Zip Code', which are separate cells to the right on the same row.",
+        "title": "Street Or P O Box No"
+      },
+      "city": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 5 'City': the city of the operator's mailing address (second cell of the operator address row). Transcribe verbatim; null if blank. Do NOT confuse with item 10 'County' (the county where the operation is located) or with item 9 'Field or Area Name'.",
+        "title": "City"
+      },
+      "state": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 6 'State': the state of the operator's mailing address, typically the two-letter abbreviation (e.g. 'TX'). Transcribe verbatim; null if blank. Do NOT confuse with item 5 'City' or item 7 'Zip Code' on the same row.",
+        "title": "State"
+      },
+      "zip_code": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 7 'Zip Code': the ZIP/postal code of the operator's mailing address (right-most cell of the operator address row). Transcribe verbatim as a string preserving leading zeros and any ZIP+4 suffix; null if blank. Do NOT confuse with item 3 'RRC Dist.' or with the 'Phone No.' in the certificate block.",
+        "title": "Zip Code"
+      },
+      "lease_facility_operation_name": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 8 'Name of Lease, Facility or Operation': the name of the lease, facility, or operation that this certificate covers (left cell of the row below the operator address). Transcribe verbatim; null if blank. Do NOT confuse with item 1 'Operator' (the operating company) or with item 9 'Field or Area Name'.",
+        "title": "Name Of Lease Facility Or Operation"
+      },
+      "field_or_area_name": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 9 'Field or Area Name': the oil/gas field or area name for this operation (center cell of the row, between item 8 and item 10). Transcribe verbatim; null if blank. Do NOT confuse with item 8 'Name of Lease, Facility or Operation' or with item 10 'County'.",
+        "title": "Field Or Area Name"
+      },
+      "county": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 10 'County': the Texas county where the operation is located (right cell of the lease/field row). Transcribe verbatim; null if blank. Do NOT confuse with item 5 'City' (the operator's mailing city) or with item 9 'Field or Area Name'.",
+        "title": "County"
+      },
+      "optype_a_oil_field": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 11 'General Operation Type - Circle One', option 'A - Oil Field Production'. The form instructs the filer to circle/mark one of options A-H. Return true if option A is circled or otherwise marked, false if it is clearly not the selected option, null if item 11 has no mark at all. Do NOT confuse with the other item 11 options B-H, each captured in its own field.",
+        "title": "A Oil Field Production"
+      },
+      "optype_b_gas_field": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 11 'General Operation Type - Circle One', option 'B - Gas Field Production'. Return true if option B is circled/marked, false if not selected, null if item 11 has no mark at all. Do NOT confuse with item 11 option A ('Oil Field Production') or the remaining C-H options.",
+        "title": "B Gas Field Production"
+      },
+      "optype_c_pipeline_gathering": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 11 'General Operation Type - Circle One', option 'C - Pipeline or Gathering Sys.'. Return true if option C is circled/marked, false if not selected, null if item 11 has no mark at all. Do NOT confuse with item 11 option D ('Gasoline Plant') or the other A-H options.",
+        "title": "C Pipeline Or Gathering Sys"
+      },
+      "optype_d_gasoline_plant": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 11 'General Operation Type - Circle One', option 'D - Gasoline Plant'. Return true if option D is circled/marked, false if not selected, null if item 11 has no mark at all. Do NOT confuse with item 11 option C ('Pipeline or Gathering Sys.') or option F ('Sweetening Unit').",
+        "title": "D Gasoline Plant"
+      },
+      "optype_e_drilling_workover": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 11 'General Operation Type - Circle One', option 'E - Drilling or Workover'. Return true if option E is circled/marked, false if not selected, null if item 11 has no mark at all. Do NOT confuse with item 19 (workover/drilling well with 100 PPM ROE Yes/No) or with the other item 11 options.",
+        "title": "E Drilling Or Workover"
+      },
+      "optype_f_sweetening_unit": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 11 'General Operation Type - Circle One', option 'F - Sweetening Unit'. Return true if option F is circled/marked, false if not selected, null if item 11 has no mark at all. Do NOT confuse with item 11 option D ('Gasoline Plant') or option H ('Other').",
+        "title": "F Sweetening Unit"
+      },
+      "optype_g_combination": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 11 'General Operation Type - Circle One', option 'G - Combination (explain)'. Return true if option G is circled/marked, false if not selected, null if item 11 has no mark at all. When marked, the filer is expected to explain in the 'Other Explanation' area (captured in operation_type_other_explanation). Do NOT confuse with item 11 option H ('Other (explain)').",
+        "title": "G Combination Explain"
+      },
+      "optype_h_other": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 11 'General Operation Type - Circle One', option 'H - Other (explain)'. Return true if option H is circled/marked, false if not selected, null if item 11 has no mark at all. When marked, the filer is expected to describe the operation in the 'Other Explanation' area (captured in operation_type_other_explanation). Do NOT confuse with item 11 option G ('Combination (explain)').",
+        "title": "H Other Explain"
+      },
+      "operation_type_other_explanation": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 11 free-text 'Other Explanation' written in the open area to the right of the A-H option grid (used to explain a 'G - Combination' or 'H - Other' selection). Transcribe the handwritten/typed explanation verbatim; null if blank. Do NOT confuse with the A-H option booleans (which only record whether an option is marked) or with item 26 'Location of data used to prepare this certificate'.",
+        "title": "Other Explanation"
+      },
+      "h2s_concentration": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 13 'Hydrogen Sulfide Concentration', stated in PPM (the unit 'PPM' is preprinted to the right of the entry). Transcribe the value verbatim as written, including the 'PPM' unit if the filer wrote it; null if blank. Kept as a string (not a number) because it is a written reading that may include the printed unit. Do NOT confuse with item 14 'Maximum Escape Volume' (MCF/Day) or with items 15/16 (Radius of Exposure, in feet).",
+        "title": "Hydrogen Sulfide Concentration"
+      },
+      "maximum_escape_volume": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 14 'Maximum Escape Volume', stated in MCF/Day (the unit 'MCF/Day' is preprinted to the right of the entry). Transcribe verbatim including the 'MCF/Day' unit if written; null if blank. Kept as a string because of the printed unit. Do NOT confuse with item 13 'Hydrogen Sulfide Concentration' (PPM) or with items 15/16 ROE (feet).",
+        "title": "Maximum Escape Volume"
+      },
+      "roe_100ppm": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 15 '100 PPM Radius of Exposure (ROE)', stated in feet (the unit 'Ft.' is preprinted after the blank). Transcribe the value verbatim including the 'Ft.' unit if written; null if blank. Kept as a string because of the printed unit. Do NOT confuse with item 16 '500 PPM Radius of Exposure (ROE)' (the larger-concentration ROE) or with item 21 (whether the 100 PPM ROE includes a public area, a Yes/No).",
+        "title": "100 PPM Radius Of Exposure ROE"
+      },
+      "roe_500ppm": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 16 '500 PPM Radius of Exposure (ROE)', stated in feet (the unit 'Ft.' is preprinted after the blank). Transcribe verbatim including the 'Ft.' unit if written; null if blank. Kept as a string because of the printed unit. Do NOT confuse with item 15 '100 PPM Radius of Exposure (ROE)' or with item 22 (whether the 500 PPM ROE includes a public road, a Yes/No).",
+        "title": "500 PPM Radius Of Exposure ROE"
+      },
+      "operation_existing": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 17 'Operation is', the 'Existing' checkbox (item 17 offers two boxes, 'Existing' and 'New'). Return true if the 'Existing' box is checked, false if not, null if item 17 has no mark. Do NOT confuse with the sibling operation_new ('New' box of item 17) or with item 18 (Modification Resulting in Certificate Change Yes/No).",
+        "title": "Existing"
+      },
+      "operation_new": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 17 'Operation is', the 'New' checkbox (item 17 offers two boxes, 'Existing' and 'New'). Return true if the 'New' box is checked, false if not, null if item 17 has no mark. Do NOT confuse with the sibling operation_existing ('Existing' box of item 17) or with item 18.",
+        "title": "New"
+      },
+      "modification_cert_change_yes": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 18 'Modification Resulting in Certificate Change', the 'Yes' checkbox (item 18 has a Yes box and a No box at the right of the row). Return true if the 'Yes' box is checked, false if not, null if item 18 has no mark. Do NOT confuse with modification_cert_change_no (the 'No' box of item 18) or with the Yes/No of item 19.",
+        "title": "Yes"
+      },
+      "modification_cert_change_no": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 18 'Modification Resulting in Certificate Change', the 'No' checkbox. Return true if the 'No' box is checked, false if not, null if item 18 has no mark. Do NOT confuse with modification_cert_change_yes (the 'Yes' box of item 18) or with item 19's No box.",
+        "title": "No"
+      },
+      "workover_100ppm_3000ft_yes": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 19 'Workover or Drilling Well with 100 PPM ROE Greater than 3000 feet on Rule 36 Certified Well/Lease', the 'Yes' checkbox (Yes/No pair at the right of the item 19 row). Return true if 'Yes' is checked, false if not, null if item 19 has no mark. Do NOT confuse with workover_100ppm_3000ft_no (the 'No' box of item 19), with item 11 option E ('Drilling or Workover'), or with item 18's Yes box.",
+        "title": "Yes"
+      },
+      "workover_100ppm_3000ft_no": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 19 'Workover or Drilling Well with 100 PPM ROE Greater than 3000 feet on Rule 36 Certified Well/Lease', the 'No' checkbox. Return true if 'No' is checked, false if not, null if item 19 has no mark. Do NOT confuse with workover_100ppm_3000ft_yes (the 'Yes' box of item 19) or with item 18's No box.",
+        "title": "No"
+      },
+      "previous_certificate_number": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 20 'Previous Certificate Number if Available (For Amended Certificates)': the prior H-9 certificate number when this is an amended filing. Transcribe verbatim as a string preserving leading zeros; null if blank. Do NOT confuse with the 'CERTIFICATION NUMBER' assigned by the RRC in the 'Railroad Commission Use Only' block at the very bottom, or with operator_number (item 2).",
+        "title": "Previous Certificate Number If Available For Amended Certificates"
+      },
+      "roe_100ppm_public_area_yes": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 21 'The 100 PPM ROE includes any part of a public area except a public road', the 'Yes' checkbox (Yes/No pair at the right of the item 21 row). Return true if 'Yes' is checked, false if not, null if item 21 has no mark. Do NOT confuse with roe_100ppm_public_area_no (the 'No' box of item 21) or with item 22 ('The 500 PPM ROE includes any part of a public road').",
+        "title": "Yes"
+      },
+      "roe_100ppm_public_area_no": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 21 'The 100 PPM ROE includes any part of a public area except a public road', the 'No' checkbox. Return true if 'No' is checked, false if not, null if item 21 has no mark. Do NOT confuse with roe_100ppm_public_area_yes (the 'Yes' box of item 21) or with item 22's No box.",
+        "title": "No"
+      },
+      "roe_500ppm_public_road_yes": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 22 'The 500 PPM ROE includes any part of a public road', the 'Yes' checkbox (Yes/No pair at the right of the item 22 row). Return true if 'Yes' is checked, false if not, null if item 22 has no mark. Do NOT confuse with roe_500ppm_public_road_no (the 'No' box of item 22) or with item 21 ('The 100 PPM ROE includes any part of a public area except a public road').",
+        "title": "Yes"
+      },
+      "roe_500ppm_public_road_no": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 22 'The 500 PPM ROE includes any part of a public road', the 'No' checkbox. Return true if 'No' is checked, false if not, null if item 22 has no mark. Do NOT confuse with roe_500ppm_public_road_yes (the 'Yes' box of item 22) or with item 21's No box.",
+        "title": "No"
+      },
+      "injection_h2s_fluid_yes": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 23 'Injection of fluid containing Hydrogen Sulfide (See Instruction 14)', the 'Yes' checkbox (Yes/No pair at the right of the item 23 row). Return true if 'Yes' is checked, false if not, null if item 23 has no mark. Do NOT confuse with injection_h2s_fluid_no (the 'No' box of item 23) or with item 22's Yes box.",
+        "title": "Yes"
+      },
+      "injection_h2s_fluid_no": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 23 'Injection of fluid containing Hydrogen Sulfide (See Instruction 14)', the 'No' checkbox. Return true if 'No' is checked, false if not, null if item 23 has no mark. Do NOT confuse with injection_h2s_fluid_yes (the 'Yes' box of item 23) or with item 22's No box.",
+        "title": "No"
+      },
+      "compliance_date_mo": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 24 'Date (or Depth) of Compliance with all applicable provisions of Rule 36', the 'Mo' (month) sub-field of the printed Mo / Day / Year date. Transcribe verbatim as a string preserving any leading zero (e.g. '03'); null if blank. Do NOT confuse with compliance_date_day, compliance_date_year (the other two date sub-fields of item 24), or with depth_of_compliance_drilling (the alternative depth entry for drilling operations).",
+        "title": "Mo"
+      },
+      "compliance_date_day": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 24 'Date (or Depth) of Compliance with all applicable provisions of Rule 36', the 'Day' sub-field of the printed Mo / Day / Year date. Transcribe verbatim preserving any leading zero; null if blank. Do NOT confuse with compliance_date_mo or compliance_date_year (the other date sub-fields of item 24).",
+        "title": "Day"
+      },
+      "compliance_date_year": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 24 'Date (or Depth) of Compliance with all applicable provisions of Rule 36', the 'Year' sub-field of the printed Mo / Day / 19__ date (the form preprints '19' before the year blank). Transcribe the year digits verbatim as written; null if blank. Do NOT confuse with compliance_date_mo or compliance_date_day, or with the certificate_date / rrc_use_date elsewhere on the form.",
+        "title": "Year"
+      },
+      "depth_of_compliance_drilling": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 24 'Depth of Compliance for Drilling Operation', the alternative depth entry below the Mo/Day/Year date, stated in 'Ft. from Surface' (the unit is preprinted to the right). Used instead of a date when compliance is keyed to a drilling depth. Transcribe verbatim including the 'Ft. from Surface' unit if written; null if blank. Do NOT confuse with the compliance date sub-fields (compliance_date_mo/day/year) or with items 15/16 ROE feet.",
+        "title": "Depth Of Compliance For Drilling Operation"
+      },
+      "contingency_plan_prepared_yes": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Has been prepared' Yes/No question for the Contingency Plan (printed just above item 25, to the right of the 'Has been prepared' label), the 'Yes' checkbox. Return true if 'Yes' is checked, false if not, null if no mark. Indicates whether the Rule 36 contingency plan has been prepared. Do NOT confuse with contingency_plan_prepared_no (the 'No' box) or with item 25 'Contingency Plan Location of Plan' (the free-text location).",
+        "title": "Yes"
+      },
+      "contingency_plan_prepared_no": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Has been prepared' Yes/No question for the Contingency Plan (printed just above item 25), the 'No' checkbox. Return true if 'No' is checked, false if not, null if no mark. Do NOT confuse with contingency_plan_prepared_yes (the 'Yes' box) or with the item 23 injection Yes/No.",
+        "title": "No"
+      },
+      "contingency_plan_location": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 25 'Contingency Plan - Location of Plan (See Instruction 15)': free-text describing where the H2S contingency plan is kept. Transcribe verbatim; null if blank. Do NOT confuse with the 'Has been prepared' Yes/No boxes above it, or with item 26 'Location of data used to prepare this certificate'.",
+        "title": "Contingency Plan Location Of Plan"
+      },
+      "data_location": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 26 'Location of data used to prepare this certificate (See Instruction 15)': free-text describing where the supporting data is held. Transcribe verbatim; null if blank. Do NOT confuse with item 25 'Contingency Plan Location of Plan' (the contingency-plan location) directly above it.",
+        "title": "Location Of Data Used To Prepare This Certificate"
+      },
+      "signature_present": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Whether a handwritten signature mark is present on the representative entry line in the CERTIFICATE block near the bottom of the form (the blank line printed directly ABOVE the 'Representative of Company' caption). Return true if any handwritten signature/mark is present on that line, false if the line is blank, null if indeterminate. This is a presence flag only (boolean), NOT the signer's typed name. Do NOT confuse with representative_of_company (the typed/printed name of the representative on that same line) or with the 'APPROVED BY' name in the Railroad Commission Use Only block.",
+        "title": "Signature"
+      },
+      "representative_of_company": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Representative of Company' name in the CERTIFICATE block at the bottom of the form: the typed/printed name of the person certifying on the operator's behalf, written on the entry line printed directly ABOVE the 'Representative of Company' caption (the left-most of the Representative / Title / Phone No. / Date caption row). Transcribe verbatim; null if blank. Do NOT confuse with signature_present (the boolean presence of the handwritten signature mark on that same line), with item 1 'Operator' (the company), or with the 'Title' field to its right.",
+        "title": "Representative Of Company"
+      },
+      "title": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Title' of the company representative, printed in the CERTIFICATE block to the right of 'Representative of Company' (e.g. 'Regulatory Manager', 'Agent'). Transcribe verbatim; null if blank. Do NOT confuse with representative_of_company (the person's name), with the form title at the top of the page, or with the 'Phone No.' field to its right.",
+        "title": "Title"
+      },
+      "phone_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Phone No.' of the company representative, printed in the CERTIFICATE block to the right of 'Title'. Transcribe verbatim as a string preserving formatting (parentheses, dashes); null if blank. Do NOT confuse with item 7 'Zip Code' or with any RRC use-only number.",
+        "title": "Phone No"
+      },
+      "certificate_date": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Date' the certificate was signed, printed at the far right of the CERTIFICATE signature row (after Representative / Title / Phone No.). Transcribe verbatim exactly as written (e.g. 'MM/DD/YYYY'); null if blank. Do NOT confuse with item 24 compliance date sub-fields (compliance_date_mo/day/year) or with the 'DATE' in the Railroad Commission Use Only block (rrc_use_date).",
+        "title": "Date"
+      },
+      "approved_by": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "'APPROVED BY' in the 'RAILROAD COMMISSION USE ONLY' block at the very bottom of the form: the name/initials of the RRC reviewer who approved the certificate (RRC staff use). Transcribe verbatim; null if blank. Do NOT confuse with representative_of_company (the filer's representative in the CERTIFICATE block) or with the 'CERTIFICATION NUMBER' field.",
+        "title": "APPROVED BY"
+      },
+      "rrc_use_date": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "'DATE' in the 'RAILROAD COMMISSION USE ONLY' block at the bottom (the date the RRC approved/processed the certificate; RRC staff use). Transcribe verbatim as written; null if blank. Do NOT confuse with certificate_date (the filer's signing date in the CERTIFICATE block above) or with item 24 compliance date.",
+        "title": "DATE"
+      },
+      "remarks": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "'REMARKS' in the 'RAILROAD COMMISSION USE ONLY' block at the bottom: free-text notes added by RRC staff. Transcribe verbatim; null if blank. Do NOT confuse with the filer-entered free-text fields (item 11 Other Explanation, item 25, item 26).",
+        "title": "REMARKS"
+      },
+      "certification_number": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "'CERTIFICATION NUMBER' in the 'RAILROAD COMMISSION USE ONLY' block at the bottom: the certificate number assigned by the RRC upon approval (RRC staff use). Transcribe verbatim as a string preserving leading zeros; null if blank. Do NOT confuse with item 20 'Previous Certificate Number' (the prior number supplied by the filer for amendments) or with operator_number (item 2).",
+        "title": "CERTIFICATION NUMBER"
+      },
+      "exempt_stamp_present": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Whether a large stylized 'EXEMPT' stamp/determination appears near the bottom-right of the form, in the same visual region as the CERTIFICATION NUMBER / RAILROAD COMMISSION USE ONLY block (below or beside REMARKS). This is a distinct RRC exemption determination stamp, not the printed REMARKS free-text field. Set true if the 'EXEMPT' stamp is visibly present anywhere in that block, false if that area is present but does not carry the stamp. Do NOT confuse with 'REMARKS' free text (e.g. 'CHANGE OF OPERATOR'), which is a separate field captured in `remarks`.",
+        "title": "Exempt Stamp Present"
+      },
+      "operations_covered": {
+        "anyOf": [
+          {
+            "items": {
+              "$ref": "#/$defs/OperationCovered"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 12 table 'RRC ID# of Operation(s) to be Covered by This Certificate'. A 7-row grid with four cells per row: 'RRC ID# …' (rrc_id), 'Type ID Code (See Instruction 12)' (type_id_code), and the 'Indicate if Filing for Storage Facility Only' YES and NO boxes as two SEPARATE booleans (storage_yes, storage_no). Emit one OperationCovered object per FILLED row, top-to-bottom; return null or an empty array if the table is blank. The row identity is rrc_id. Do NOT confuse with item 11 General Operation Type or with operator_number (item 2).",
+        "title": "Operations Covered"
+      }
+    },
+    "title": "RRCH9Extraction",
+    "type": "object"
+  },
+  "expected": {
+    "kind": "json",
+    "schema_ref": "fixtures/eb-short-H9-53-319_311-schema.json",
+    "value": {
+      "operator": "ANADARKO E&P ONSHORE LLC",
+      "operator_number": "020528",
+      "rrc_district": "01",
+      "street_or_po_box": "P.O. BOX 1330",
+      "city": "HOUSTON",
+      "state": "TX",
+      "zip_code": "77251",
+      "lease_facility_operation_name": "CHAPARRAL WILDLIFE 8H",
+      "field_or_area_name": "BRISCOE RANCH (EAGLEFORD)",
+      "county": "DIMMIT",
+      "optype_a_oil_field": false,
+      "optype_b_gas_field": false,
+      "optype_c_pipeline_gathering": false,
+      "optype_d_gasoline_plant": false,
+      "optype_e_drilling_workover": true,
+      "optype_f_sweetening_unit": false,
+      "optype_g_combination": false,
+      "optype_h_other": false,
+      "operation_type_other_explanation": null,
+      "h2s_concentration": "5 PPM",
+      "maximum_escape_volume": "3,300 MCF/Day",
+      "roe_100ppm": "0 Ft.",
+      "roe_500ppm": "0 Ft.",
+      "operation_existing": false,
+      "operation_new": true,
+      "modification_cert_change_yes": false,
+      "modification_cert_change_no": true,
+      "workover_100ppm_3000ft_yes": false,
+      "workover_100ppm_3000ft_no": true,
+      "previous_certificate_number": null,
+      "roe_100ppm_public_area_yes": false,
+      "roe_100ppm_public_area_no": true,
+      "roe_500ppm_public_road_yes": false,
+      "roe_500ppm_public_road_no": true,
+      "injection_h2s_fluid_yes": false,
+      "injection_h2s_fluid_no": true,
+      "compliance_date_mo": null,
+      "compliance_date_day": null,
+      "compliance_date_year": null,
+      "depth_of_compliance_drilling": "9250 Ft. from Surface",
+      "contingency_plan_prepared_yes": false,
+      "contingency_plan_prepared_no": true,
+      "contingency_plan_location": null,
+      "data_location": "1201 LAKE ROBBINS DR., THE WOODLANDS, TX 77380",
+      "signature_present": true,
+      "representative_of_company": null,
+      "title": "EHS Southern Region Drilling",
+      "phone_no": "(832) 636-7047",
+      "certificate_date": "05/14/13",
+      "approved_by": "Wesley Dresch",
+      "rrc_use_date": "6-11-2013",
+      "remarks": null,
+      "certification_number": "075408",
+      "exempt_stamp_present": true,
+      "operations_covered": [
+        {
+          "rrc_id": "740292",
+          "type_id_code": "5",
+          "storage_yes": false,
+          "storage_no": true
+        }
+      ]
+    },
+    "anchored_fields": 55,
+    "no_anchor_fields": 0
+  },
+  "field_rules": "{\"operator\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.14605, 0.21282, 0.23448, 0.01625], \"quote\": \"ANADARKO E&P ONSHORE LLC\", \"value\": \"ANADARKO E&P ONSHORE LLC\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"operator_number\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.50792, 0.21343, 0.06166, 0.01593], \"quote\": \"020528\", \"value\": \"020528\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"rrc_district\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.80577, 0.21726, 0.01667, 0.01105], \"quote\": \"01\", \"value\": \"01\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"street_or_po_box\": {\"comparator\": \"address\", \"evidence\": [{\"page\": 1, \"bbox\": [0.15813, 0.24165, 0.10457, 0.01149], \"quote\": \"P.O. BOX 1330\", \"value\": \"P.O. BOX 1330\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"city\": {\"comparator\": \"address\", \"evidence\": [{\"page\": 1, \"bbox\": [0.48977, 0.24257, 0.06686, 0.01011], \"quote\": \"HOUSTON\", \"value\": \"HOUSTON\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"state\": {\"comparator\": \"address\", \"evidence\": [{\"page\": 1, \"bbox\": [0.71129, 0.24347, 0.02223, 0.01065], \"quote\": \"TX\", \"value\": \"TX\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"zip_code\": {\"comparator\": \"address\", \"evidence\": [{\"page\": 1, \"bbox\": [0.79879, 0.24125, 0.04503, 0.01375], \"quote\": \"77251\", \"value\": \"77251\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"lease_facility_operation_name\": {\"comparator\": \"address\", \"evidence\": [{\"page\": 1, \"bbox\": [0.13672, 0.2675, 0.18985, 0.01157], \"quote\": \"CHAPARRAL WILDLIFE 8H\", \"value\": \"CHAPARRAL WILDLIFE 8H\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"field_or_area_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.47416, 0.26665, 0.22441, 0.01149], \"quote\": \"BRISCOE RANCH (EAGLEFORD)\", \"value\": \"BRISCOE RANCH (EAGLEFORD)\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"county\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.73486, 0.26837, 0.05378, 0.01088], \"quote\": \"DIMMIT\", \"value\": \"DIMMIT\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"optype_a_oil_field\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.1494, 0.2973, 0.1433, 0.0141], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"optype_b_gas_field\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.3294, 0.2979, 0.1433, 0.0135], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"optype_c_pipeline_gathering\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.1502, 0.3143, 0.1703, 0.0135], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"optype_d_gasoline_plant\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.3286, 0.3143, 0.1122, 0.0135], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"optype_e_drilling_workover\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.1495, 0.3276, 0.1356, 0.0148], \"quote\": \"True\", \"value\": true, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"optype_f_sweetening_unit\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.3294, 0.3295, 0.1163, 0.0148], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"optype_g_combination\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.1502, 0.344, 0.1466, 0.0135], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"optype_h_other\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.3294, 0.344, 0.1097, 0.0122], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"operation_type_other_explanation\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"h2s_concentration\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.5828068607639877, 0.332203608350749, 0.09320732327100917, 0.009409287550693092], \"quote\": \"5 PPM\", \"value\": \"5 PPM\", \"coarse\": true}, {\"page\": 1, \"bbox\": [0.5798, 0.3311, 0.0132, 0.0123], \"quote\": \"5\", \"value\": \"5\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"optional_terminal_punctuation\"]}, \"maximum_escape_volume\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.70223, 0.32938, 0.1708, 0.01405], \"quote\": \"3,300 MCF/Day\", \"value\": \"3,300 MCF/Day\", \"coarse\": true}, {\"page\": 1, \"bbox\": [0.6998, 0.3247, 0.0485, 0.0198], \"quote\": \"3,300\", \"value\": \"3,300\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\", \"normalizers\": [\"optional_terminal_punctuation\"]}, \"roe_100ppm\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.6149473539589093, 0.353993554177454, 0.059138404375092705, 0.014361509646440436], \"quote\": \"0 Ft.\", \"value\": \"0 Ft.\", \"coarse\": true}, {\"page\": 1, \"bbox\": [0.6142, 0.35252, 0.0172, 0.01288], \"quote\": \"0\", \"value\": \"0\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"optional_terminal_punctuation\"]}, \"roe_500ppm\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.8122897137173941, 0.3510221834521352, 0.058495612019346506, 0.01733288037175921], \"quote\": \"0 Ft.\", \"value\": \"0 Ft.\", \"coarse\": true}, {\"page\": 1, \"bbox\": [0.8105, 0.3509, 0.0155, 0.0139], \"quote\": \"0\", \"value\": \"0\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"optional_terminal_punctuation\"]}, \"operation_existing\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.6013110844441607, 0.3812724017961528, 0.02082383419870523, 0.014257349389186156], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"operation_new\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.6498691912515303, 0.38266458290297384, 0.019643503854546426, 0.012379393113797536], \"quote\": \"True\", \"value\": true, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"modification_cert_change_yes\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.8262145974146028, 0.38300845854734233, 0.018750706364539564, 0.012723255749819314], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"modification_cert_change_no\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.8495726430257978, 0.3811473552286043, 0.02121268271094284, 0.015930821557846843], \"quote\": \"True\", \"value\": true, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"workover_100ppm_3000ft_yes\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.8257681986695994, 0.40673560483348536, 0.020089970153839357, 0.011347766180692179], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"workover_100ppm_3000ft_no\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.8508581791035339, 0.40617017094590774, 0.019927146633206643, 0.01517407208208966], \"quote\": \"True\", \"value\": true, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"previous_certificate_number\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"roe_100ppm_public_area_yes\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.8257681986695994, 0.4572847391800475, 0.019197105109542995, 0.01306711838584109], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"roe_100ppm_public_area_no\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.8495726430257978, 0.455885260277586, 0.02249831605619144, 0.015476753761325244], \"quote\": \"True\", \"value\": true, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"roe_500ppm_public_road_yes\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.8253217661474511, 0.4830751003073612, 0.019643537631691178, 0.012379380105450862], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"roe_500ppm_public_road_no\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.8495726430257978, 0.482627441208385, 0.02056989035519664, 0.014981546644306593], \"quote\": \"True\", \"value\": true, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"injection_h2s_fluid_yes\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.8253217661474511, 0.5092093240706967, 0.02053640267598754, 0.011691654833407308], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"injection_h2s_fluid_no\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.8502154353815441, 0.5075401136925827, 0.02056989035519664, 0.01483015324426232], \"quote\": \"True\", \"value\": true, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"compliance_date_mo\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"compliance_date_day\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"compliance_date_year\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"depth_of_compliance_drilling\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.7267960932503641, 0.5486172407506253, 0.1067063031779728, 0.02178992709276977], \"quote\": \"9250 Ft. from Surface\", \"value\": \"9250 Ft. from Surface\", \"coarse\": true}, {\"page\": 1, \"bbox\": [0.7254, 0.5488, 0.0393, 0.0113], \"quote\": \"9250\", \"value\": \"9250\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"optional_terminal_punctuation\", \"case_insensitive\"]}, \"contingency_plan_prepared_yes\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.8253217661474511, 0.582797853414665, 0.020089970153839357, 0.014442607954968226], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"contingency_plan_prepared_no\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.8495726430257978, 0.5817828001733687, 0.021855426432932833, 0.01586178590295619], \"quote\": \"True\", \"value\": true, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"contingency_plan_location\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"data_location\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.13916, 0.63765, 0.39035, 0.01277], \"quote\": \"1201 LAKE ROBBINS DR., THE WOODLANDS, TX 77380\", \"value\": \"1201 LAKE ROBBINS DR., THE WOODLANDS, TX 77380\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"signature_present\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.1544, 0.7303, 0.1323, 0.0174], \"quote\": \"True\", \"value\": true, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"representative_of_company\": {\"comparator\": \"case_insensitive\", \"evidence\": [], \"source_policy\": \"verbatim\", \"evidence_required\": false, \"verified\": false, \"verified_by\": \"agent\"}, \"title\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.3926, 0.73155, 0.19756, 0.01308], \"quote\": \"EHS Southern Region Drilling\", \"value\": \"EHS Southern Region Drilling\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"phone_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.6586583527260437, 0.730365093673048, 0.10284945177598319, 0.013866334271703657], \"quote\": \"(832) 636-7047\", \"value\": \"(832) 636-7047\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\", \"normalizers\": [\"phone_digits\"]}, \"certificate_date\": {\"comparator\": \"date\", \"evidence\": [{\"page\": 1, \"bbox\": [0.78704, 0.73122, 0.06002, 0.01067], \"quote\": \"05/14/13\", \"value\": \"05/14/13\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"approved_by\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.2176912948008083, 0.8036585052402938, 0.28476443024338766, 0.033675335058304126], \"quote\": \"Wesley Dresch\", \"value\": \"Wesley Dresch\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"rrc_use_date\": {\"comparator\": \"date\", \"evidence\": [{\"page\": 1, \"bbox\": [0.54745, 0.81038, 0.14785, 0.02167], \"quote\": \"6-11-2013\", \"value\": \"6-11-2013\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"remarks\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"certification_number\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.66652, 0.83563, 0.12049, 0.02188], \"quote\": \"075408\", \"value\": \"075408\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"exempt_stamp_present\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.69087, 0.88718, 0.13266, 0.02813], \"quote\": \"EXEMPT\", \"value\": true, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"operations_covered[0].rrc_id\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.13214, 0.40195, 0.05105, 0.01105], \"quote\": \"740292\", \"value\": \"740292\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"operations_covered[0].type_id_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.28278, 0.40147, 0.0149, 0.01366], \"quote\": \"5\", \"value\": \"5\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"operations_covered[0].storage_yes\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.3498830778579125, 0.39374757408447136, 0.06555639944762155, 0.02673251044121235], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"operations_covered[0].storage_no\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.41543947730553404, 0.39374757408447136, 0.05784382179784877, 0.0255444073556905], \"quote\": \"True\", \"value\": true, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"operations_covered\": {\"comparator\": {\"rrc_id\": \"address\", \"type_id_code\": \"case_insensitive\", \"storage_yes\": \"boolean\", \"storage_no\": \"boolean\"}, \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": {\"rrc_id\": \"740292\", \"type_id_code\": \"5\", \"storage_yes\": false, \"storage_no\": true}, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"structural\": \"match_by:rrc_id\", \"verified_by\": \"human\"}}",
+  "repeated_structure": "{}",
+  "anchored_fields": 55,
+  "no_anchor_fields": 0,
+  "case_id": "B03-eb-0064"
+}

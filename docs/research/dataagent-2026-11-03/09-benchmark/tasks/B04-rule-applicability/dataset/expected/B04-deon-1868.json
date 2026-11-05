@@ -1,0 +1,43 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_310ae2b0",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "tenant",
+    "landlord",
+    "possessory_action",
+    "action_tenant",
+    "action_landlord",
+    "based_solely_on_nonpayment_of_rent",
+    "hearing_on_merits_day",
+    "rent_due_through_time_of_payment",
+    "other_lawful_charges_in_lease",
+    "filing_fee_incurred",
+    "service_charges_incurred",
+    "liquidated_damages_amount",
+    "tendered_payment",
+    "payment_refused_by_landlord",
+    "prior_cure_defeats_under_540_9_last_12_months",
+    "integer",
+    "statute_540_9_allowed_payment_form",
+    "statute_540_9_required_cure_amount",
+    "statute_540_9_timely_before_hearing",
+    "statute_540_9_use_permitted",
+    "statute_540_9_qualifying_cure_payment",
+    "statute_540_9a_voucher_constitutes_payment",
+    "statute_540_9a_is_partial_payment",
+    "statute_540_9a_affirmative_defense_refused_voucher",
+    "legal_landlord_must_accept_cure_attempt",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: New Hampshire\n    Focus year: 2021\n\n    Question: Must a landlord accept a tenant's attempt to cure for nonpayment of rent?\n*/\n\n/* ----------------------------- */\n/* Scenario facts (question)      */\n/* ----------------------------- */\n\n% Parties\ntenant(t1).\nlandlord(l1).\n\n% A possessory (eviction) action based solely on nonpayment of rent.\npossessory_action(a1).\naction_tenant(a1, t1).\naction_landlord(a1, l1).\nbased_solely_on_nonpayment_of_rent(a1).\n\n% Hearing on the merits date (modeled as an integer day count).\nhearing_on_merits_day(a1, 30).\n\n% Amounts due for a cure under RSA 540:9 I(a).\nrent_due_through_time_of_payment(a1, 1000).\nother_lawful_charges_in_lease(a1, 50).\nfiling_fee_incurred(a1, 150).\nservice_charges_incurred(a1, 60).\nliquidated_damages_amount(15).\n\n% Tenant's attempt to cure: timely tender of a municipal/state/federally-funded voucher payment.\n% Modeled as a \"written promise to pay on behalf of the tenant\" (RSA 540:9-a I).\ntendered_payment(a1, t1, l1, day(20), voucher_written_promise, 1275).\n\n% Landlord refused the voucher tender.\npayment_refused_by_landlord(a1).\n\n% Tenant has not already used RSA 540:9 to defeat eviction 3 times in the last 12 months.\n% (This matters for RSA 540:9 II; our scenario uses RSA 540:9-a defense, but we encode it.)\nprior_cure_defeats_under_540_9_last_12_months(t1, 0).\n\n/* Helper predicate summarizing the factual statement encoded above. */\nscenario_statement :-\n    possessory_action(A),\n    action_tenant(A, T),\n    action_landlord(A, L),\n    based_solely_on_nonpayment_of_rent(A),\n    hearing_on_merits_day(A, HearingDay),\n    tendered_payment(A, T, L, day(TenderDay), voucher_written_promise, _Amount),\n    TenderDay < HearingDay,\n    payment_refused_by_landlord(A),\n    prior_cure_defeats_under_540_9_last_12_months(T, PriorUses),\n    integer(PriorUses),\n    PriorUses >= 0.\n\n/* ----------------------------- */\n/* Statute translations           */\n/* ----------------------------- */\n\n% --- RSA 540:9 (2021) Payment After Notice ---\n\n% RSA 540:9 I(a): Allowed forms include those specified in 540:9-a I.\n% We model payment forms as atoms.\nstatute_540_9_allowed_payment_form(cash).\nstatute_540_9_allowed_payment_form(certified_check).\nstatute_540_9_allowed_payment_form(prepaid_money_order).\nstatute_540_9_allowed_payment_form(electronic_transfer).\nstatute_540_9_allowed_payment_form(guaranteed_funds).\nstatute_540_9_allowed_payment_form(voucher_written_promise). % via reference to 540:9-a I\n\n% RSA 540:9 I(a): Required cure amount = all rent due + other lawful charges + $15 + filing fee + service charges.\nstatute_540_9_required_cure_amount(Action, Required) :-\n    rent_due_through_time_of_payment(Action, Rent),\n    other_lawful_charges_in_lease(Action, Charges),\n    liquidated_damages_amount(Liq),\n    filing_fee_incurred(Action, Filing),\n    service_charges_incurred(Action, Service),\n    Required is Rent + Charges + Liq + Filing + Service.\n\n% RSA 540:9 I(a): Timely cure payment must be \"at any time prior to the hearing on the merits\".\nstatute_540_9_timely_before_hearing(Action, day(Day)) :-\n    hearing_on_merits_day(Action, HearingDay),\n    Day < HearingDay.\n\n% RSA 540:9 II: A tenant may not defeat an eviction for nonpayment by use of this section\n% more than 3 times within a 12-month period.\n% Interpreted as: the (next) use is permitted only if PriorUses < 3.\nstatute_540_9_use_permitted(Tenant) :-\n    prior_cure_defeats_under_540_9_last_12_months(Tenant, PriorUses),\n    PriorUses < 3.\n\n% RSA 540:9 I (dismissal conditions) involves landlord filing receipt, but the key cure condition is payment.\n% We encode a \"qualifying cure payment\" under 540:9 I(a) (ignoring filing/receipt mechanics because\n% the question is about accepting the cure attempt, not court filing).\nstatute_540_9_qualifying_cure_payment(Action, Tenant, Landlord) :-\n    based_solely_on_nonpayment_of_rent(Action),\n    action_tenant(Action, Tenant),\n    action_landlord(Action, Landlord),\n    tendered_payment(Action, Tenant, Landlord, Time, Form, Amount),\n    statute_540_9_timely_before_hearing(Action, Time),\n    statute_540_9_allowed_payment_form(Form),\n    statute_540_9_required_cure_amount(Action, Required),\n    Amount >= Required,\n    statute_540_9_use_permitted(Tenant).\n\n% --- RSA 540:9-a (2021) Payment by Voucher; affirmative defense ---\n\n% RSA 540:9-a I: Voucher payments tendered by tenant (written promise to pay by state/county/municipality or org funds)\n% \"shall constitute payment by the tenant of the amount represented in the voucher\".\nstatute_540_9a_voucher_constitutes_payment(Action, Tenant, Landlord, Amount) :-\n    tendered_payment(Action, Tenant, Landlord, _Time, voucher_written_promise, Amount),\n    Amount > 0.\n\n% RSA 540:9-a I: \"shall not be construed to obligate a landlord to accept partial rental payments.\"\n% We encode a guard: this statute does not require accepting a tender that is less than the full cure amount.\nstatute_540_9a_is_partial_payment(Action, Amount) :-\n    statute_540_9_required_cure_amount(Action, Required),\n    Amount < Required.\n\n% RSA 540:9-a II(a): Affirmative defense if tenant tendered timely payment pursuant to paragraph I and it was refused.\nstatute_540_9a_affirmative_defense_refused_voucher(Action, Tenant) :-\n    based_solely_on_nonpayment_of_rent(Action),\n    action_tenant(Action, Tenant),\n    action_landlord(Action, Landlord),\n    tendered_payment(Action, Tenant, Landlord, Time, voucher_written_promise, Amount),\n    statute_540_9_timely_before_hearing(Action, Time),\n    statute_540_9a_voucher_constitutes_payment(Action, Tenant, Landlord, Amount),\n    payment_refused_by_landlord(Action),\n    \\+ statute_540_9a_is_partial_payment(Action, Amount).\n\n/* ----------------------------- */\n/* Reasoning about \"must accept\"  */\n/* ----------------------------- */\n\n% A landlord \"must accept\" the attempt to cure (for purposes of avoiding eviction for nonpayment)\n% if the tenant has a legally effective cure/defense based on timely full tender/payment.\n%\n% We treat either of these as making refusal ineffective:\n%  (1) a qualifying cure payment under RSA 540:9 I(a) (within the 3-times/12-month limit), or\n%  (2) an affirmative defense under RSA 540:9-a II(a) for refused timely full voucher tender.\nlegal_landlord_must_accept_cure_attempt(Action, Tenant, Landlord) :-\n    statute_540_9_qualifying_cure_payment(Action, Tenant, Landlord),\n    !.\nlegal_landlord_must_accept_cure_attempt(Action, Tenant, Landlord) :-\n    statute_540_9a_affirmative_defense_refused_voucher(Action, Tenant),\n    action_landlord(Action, Landlord),\n    !.\n\n/* ----------------------------- */\n/* Answer                         */\n/* ----------------------------- */\n\nhousing_answer(yes) :-\n    scenario_statement,\n    possessory_action(A),\n    action_tenant(A, T),\n    action_landlord(A, L),\n    legal_landlord_must_accept_cure_attempt(A, T, L),\n    !.\nhousing_answer(no) :-\n    !.\n\n/* ----------------------------- */\n/* Main                           */\n/* ----------------------------- */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-1868",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Must a landlord accept a tenant's attempt to cure for nonpayment of rent?"
+  }
+}

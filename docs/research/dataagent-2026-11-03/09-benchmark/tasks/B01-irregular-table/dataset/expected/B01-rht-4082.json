@@ -1,0 +1,35 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 2446,
+  "table": "economy-table123",
+  "structure": "MultiColumnClassified",
+  "question_type": "Numerical Reasoning",
+  "sub_type": "Ranking",
+  "answer": "June, July, August, October, November, January, February, March, April, May, September, December",
+  "cot": [
+    {
+      "step": "First, locate the “Internal” row under the “Costs” section in the table."
+    },
+    {
+      "step": "Extract the monthly values for Internal costs from January to December."
+    },
+    {
+      "step": "Rank the months in descending order based on these values:"
+    },
+    {
+      "step": "• Highest value is $20.00, which occurs in June, July, August, October, and November."
+    },
+    {
+      "step": "• Lowest value is $10.00, which occurs in January, February, March, April, May, September, and December."
+    },
+    {
+      "step": "Arrange the months based on this ranking."
+    }
+  ],
+  "case_id": "B01-rht-4082",
+  "expected": {
+    "kind": "answer",
+    "question": "Rank the months with the highest to lowest Internal costs across the entire year.",
+    "answer": "June, July, August, October, November, January, February, March, April, May, September, December"
+  }
+}

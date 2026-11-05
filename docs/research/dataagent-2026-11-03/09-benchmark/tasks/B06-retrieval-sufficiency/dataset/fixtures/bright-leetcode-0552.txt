@@ -1,0 +1,40 @@
+## Identifying the essential problem:
+
+The problem asks us to find the number of flowers in full bloom when each person arrives. This means we need to compare the arrival times of each person with the bloom times of each flower.
+
+## Relevant information:
+
+* **Flowers:** We have information about the start and end times of each flower's bloom period.
+* **People:** We have information about the arrival time of each person.
+* **Output:** We need to return an array where each element represents the number of flowers in bloom when the corresponding person arrives.
+
+## Step-by-step approach:
+
+1. **Iterate through each person's arrival time:**
+    * For each person, compare their arrival time with the start and end times of each flower.
+    * If the person's arrival time falls within the bloom period of a flower, increment a counter.
+    * Once all flowers have been checked, append the counter value to the output array.
+    * Reset the counter to 0 for the next person.
+
+## Draft answer:
+
+Here's a draft answer using Python:
+
+```python
+def fullBloomFlowers(flowers, people):
+  answer = []
+  for arrival_time in people:
+    flower_count = 0
+    for start, end in flowers:
+      if start <= arrival_time <= end:
+        flower_count += 1
+    answer.append(flower_count)
+  return answer
+```
+
+This code iterates through each person's arrival time, checks each flower's bloom period, and counts the number of blooming flowers for each person. Finally, it returns an array with the count for each person.
+
+## Additional considerations:
+
+* This solution has a time complexity of O(N * M) where N is the number of people and M is the number of flowers. We can potentially optimize this by using techniques like binary search or sorting.
+* We could also consider using a data structure like a segment tree to efficiently track the number of blooming flowers at any given time. 

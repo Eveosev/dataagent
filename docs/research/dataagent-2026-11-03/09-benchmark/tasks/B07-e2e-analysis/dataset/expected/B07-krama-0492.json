@@ -1,0 +1,24 @@
+{
+  "source": "mitdbg/KramaBench",
+  "file": "dr-input/legal/legal_random.json",
+  "raw": {
+    "id": "legal-easy-20",
+    "query": "What is the percentage of fraud reporters in 2024?",
+    "answer": 40,
+    "answer_type": "numeric_exact",
+    "runtime": 1,
+    "data_sources": [
+      "2024_CSN_Number_of_Reports_by_Type.csv"
+    ]
+  },
+  "case_id": "B07-krama-0492",
+  "expected": {
+    "kind": "answer",
+    "answer": 40,
+    "answer_type": "numeric_exact",
+    "runtime_s": 1,
+    "data_sources": [
+      "2024_CSN_Number_of_Reports_by_Type.csv"
+    ]
+  }
+}

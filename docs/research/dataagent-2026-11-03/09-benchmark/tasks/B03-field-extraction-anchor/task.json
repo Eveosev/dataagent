@@ -1,0 +1,118 @@
+{
+  "id": "B03",
+  "slug": "field-extraction-anchor",
+  "title": "字段抽取与锚点",
+  "plan_row": 3,
+  "plan_ref": "../../../09-benchmark-plan.md",
+  "catalog_atoms": [
+    "DA02.12.1",
+    "DA02.12.3",
+    "DA02.12.4"
+  ],
+  "slice": "S0",
+  "unit": "document",
+  "why_not_unit_tested": "编造值、遗漏重复记录、证据位置错误都是分布相关行为，单测无法给出发生率",
+  "reference_benchmarks": [
+    {
+      "name": "ExtractBench",
+      "url": "https://arxiv.org/abs/2607.29677",
+      "scale_note": "370 份企业文档 / 4,869 页 / 67 类；值 F1、证据定位 F1、成本"
+    },
+    {
+      "name": "VRDU",
+      "url": "https://arxiv.org/abs/2211.15421",
+      "scale_note": "新模板泛化、嵌套重复字段"
+    },
+    {
+      "name": "DocILE",
+      "url": "https://arxiv.org/abs/2304.01242",
+      "scale_note": "6,680 份真实业务文档；关键信息定位与明细行识别"
+    }
+  ],
+  "dataset": {
+    "sources": [
+      "ExtractBench 式自建集",
+      "VRDU",
+      "DocILE",
+      "脱敏单据"
+    ],
+    "composition": "Round 4 锚点反例矩阵直接作对抗子集；每份文档同时带金标与页码锚点",
+    "manifest_ref": "dataset/manifest.json",
+    "refresh": {
+      "unseen_acceptance_every_rounds": 6,
+      "replace_ratio": 0.25,
+      "rule": "样本一经暴露即降级为 regression；unseen_acceptance 不得参与调参"
+    }
+  },
+  "graders": [
+    "field_value_f1",
+    "hallucination_probe",
+    "page_match",
+    "record_recall",
+    "span_f1"
+  ],
+  "metrics": [
+    {
+      "id": "value_f1",
+      "label": "值 F1",
+      "direction": "higher",
+      "primary": true,
+      "unit": "ratio",
+      "aggregation": "mean_over_cases",
+      "grader": "field_value_f1",
+      "threshold_status": "pending_baseline"
+    },
+    {
+      "id": "record_completeness",
+      "label": "记录完整率",
+      "direction": "higher",
+      "primary": false,
+      "unit": "ratio",
+      "aggregation": "mean_over_cases",
+      "grader": "record_recall",
+      "threshold_status": "pending_baseline"
+    },
+    {
+      "id": "evidence_span_f1",
+      "label": "证据定位 F1（词级）",
+      "direction": "higher",
+      "primary": false,
+      "unit": "ratio",
+      "aggregation": "mean_over_cases",
+      "grader": "span_f1",
+      "threshold_status": "pending_baseline"
+    },
+    {
+      "id": "evidence_page_f1",
+      "label": "证据定位 F1（页级）",
+      "direction": "higher",
+      "primary": false,
+      "unit": "ratio",
+      "aggregation": "mean_over_cases",
+      "grader": "page_match",
+      "threshold_status": "pending_baseline"
+    },
+    {
+      "id": "hallucination_rate",
+      "label": "编造率（应为 null 却给值）",
+      "direction": "lower",
+      "primary": false,
+      "unit": "ratio",
+      "aggregation": "mean_over_cases",
+      "grader": "hallucination_probe",
+      "threshold_status": "pending_baseline"
+    }
+  ],
+  "gate": {
+    "tier": "block",
+    "in_ci": true,
+    "blocking_metrics": [
+      "value_f1"
+    ],
+    "ref": "../../monitor/thresholds.json"
+  },
+  "status": "collecting",
+  "owner": "TBD",
+  "notes_ref": "NOTES.md",
+  "created": "2026-11-04"
+}

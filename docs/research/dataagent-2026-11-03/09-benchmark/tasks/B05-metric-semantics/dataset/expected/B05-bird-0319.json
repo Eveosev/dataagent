@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 318,
+  "question": "What is the date of the Vice President's most recent expense on record, and what is the total cost of all expenses incurred on that date? Consider all expenses on record with no earlier cut-off, and give the total exactly as it appears in the records, without rounding.",
+  "evidence": "Vice President is a position of the Student Club.",
+  "gold_sql": "SELECT e.expense_date, SUM(e.cost) AS total_cost FROM expense e JOIN member m ON m.member_id = e.link_to_member WHERE m.position = 'Vice President' AND e.expense_date = (SELECT MAX(e2.expense_date) FROM expense e2 JOIN member m2 ON m2.member_id = e2.link_to_member WHERE m2.position = 'Vice President') GROUP BY e.expense_date",
+  "db_id": "student_club",
+  "case_id": "B05-bird-0319",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT e.expense_date, SUM(e.cost) AS total_cost FROM expense e JOIN member m ON m.member_id = e.link_to_member WHERE m.position = 'Vice President' AND e.expense_date = (SELECT MAX(e2.expense_date) FROM expense e2 JOIN member m2 ON m2.member_id = e2.link_to_member WHERE m2.position = 'Vice President') GROUP BY e.expense_date",
+    "db_id": "student_club",
+    "evidence": "Vice President is a position of the Student Club."
+  }
+}

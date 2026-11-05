@@ -1,0 +1,104 @@
+{
+  "source": "naver-clova-ix/cord-v2",
+  "split": "train",
+  "index": 22,
+  "gt_parse": {
+    "menu": {
+      "nm": "APUCINO MEDIUM",
+      "price": "18,182",
+      "sub": {
+        "nm": "Gula Murni 100%"
+      }
+    },
+    "sub_total": {
+      "subtotal_price": "18.182",
+      "tax_price": "1,818"
+    },
+    "total": {
+      "total_price": "20.000",
+      "cashprice": "20.000"
+    }
+  },
+  "case_id": "B03-cord-0443",
+  "expected": {
+    "kind": "json",
+    "value": {
+      "menu": {
+        "nm": "APUCINO MEDIUM",
+        "price": "18,182",
+        "sub": {
+          "nm": "Gula Murni 100%"
+        }
+      },
+      "sub_total": {
+        "subtotal_price": "18.182",
+        "tax_price": "1,818"
+      },
+      "total": {
+        "total_price": "20.000",
+        "cashprice": "20.000"
+      }
+    },
+    "fields": {
+      "menu.nm": "APUCINO MEDIUM",
+      "menu.price": "18,182",
+      "menu.sub.nm": "Gula Murni 100%",
+      "sub_total.subtotal_price": "18.182",
+      "sub_total.tax_price": "1,818",
+      "total.total_price": "20.000",
+      "total.cashprice": "20.000"
+    },
+    "anchored_fields": 0,
+    "no_anchor_fields": 7,
+    "spans": [
+      {
+        "field": "menu.nm",
+        "text": "APUCINO MEDIUM",
+        "page": 1
+      },
+      {
+        "field": "menu.price",
+        "text": "18,182",
+        "page": 1
+      },
+      {
+        "field": "menu.sub.nm",
+        "text": "Gula Murni 100%",
+        "page": 1
+      },
+      {
+        "field": "sub_total.subtotal_price",
+        "text": "18.182",
+        "page": 1
+      },
+      {
+        "field": "sub_total.tax_price",
+        "text": "1,818",
+        "page": 1
+      },
+      {
+        "field": "total.total_price",
+        "text": "20.000",
+        "page": 1
+      },
+      {
+        "field": "total.cashprice",
+        "text": "20.000",
+        "page": 1
+      }
+    ],
+    "pages": {
+      "menu.nm": 1,
+      "menu.price": 1,
+      "menu.sub.nm": 1,
+      "sub_total.subtotal_price": 1,
+      "sub_total.tax_price": 1,
+      "total.total_price": 1,
+      "total.cashprice": 1
+    },
+    "evidence_gold": {
+      "source": "cord-valid-line",
+      "version": 1
+    }
+  }
+}

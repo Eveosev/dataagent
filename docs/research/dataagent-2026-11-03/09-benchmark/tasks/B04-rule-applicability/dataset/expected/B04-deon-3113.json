@@ -1,0 +1,37 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_29a7006a",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "same_day",
+    "scenario_state",
+    "scenario_focus_year",
+    "action",
+    "action_pursuant_to_chapter",
+    "material_breach",
+    "tenant_attempt_to_cure",
+    "cure_method",
+    "money_judgment_entered",
+    "judgment_date",
+    "tender_date",
+    "tender_includes_all_rent_in_arrears",
+    "tender_includes_all_costs",
+    "tender_made_to",
+    "landlord_refused_tender",
+    "statute_535_160_tender_condition_on_judgment_date",
+    "statute_535_160_further_proceedings_stayed",
+    "statute_535_160_imposes_landlord_duty_to_accept_tender",
+    "landlord_must_accept_attempt_to_cure",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: Missouri\n    Focus year: 2021\n\n    Question: Must a landlord accept a tenant's attempt to cure for material breach?\n\n    Statute encoded:\n      - MO Rev Stat  535.160 (2021)\n*/\n\n% -----------------------\n% Basic helpers\n% -----------------------\n\nsame_day(D, D).\n\n% -----------------------\n% Scenario facts (question statement)\n% -----------------------\n\n% State and year context (not used for branching here, but encoded as requested).\nscenario_state(missouri).\nscenario_focus_year(2021).\n\n% We model a single eviction-type action \"a1\" brought \"pursuant to this chapter\".\naction(a1).\naction_pursuant_to_chapter(a1).\n\n% Tenant's breach characterized as \"material\" in the question.\nmaterial_breach(a1).\n\n% The tenant attempts to \"cure\" by tendering arrears and costs (the only cure mechanism\n% described in  535.160 is tender/payment of rent in arrears + costs, tied to money judgment).\ntenant_attempt_to_cure(a1).\ncure_method(a1, tender_of_rent_and_costs).\n\n% Judgment facts.\nmoney_judgment_entered(a1).\njudgment_date(a1, date(2021,10,1)).\n\n% Tenant tenders all rent in arrears and all costs on the judgment date (a statutory trigger).\ntender_date(a1, date(2021,10,1)).\ntender_includes_all_rent_in_arrears(a1).\ntender_includes_all_costs(a1).\ntender_made_to(a1, landlord).  % tender \"to the landlord\" (alternative would be \"into court\").\n\n% Landlord refuses/does not accept the tender (relevant to the \"must accept\" question).\nlandlord_refused_tender(a1).\n\n% Helper predicate that succeeds exactly when the encoded scenario is satisfied.\nscenario_statement :-\n\tscenario_state(missouri),\n\tscenario_focus_year(2021),\n\taction(a1),\n\taction_pursuant_to_chapter(a1),\n\tmaterial_breach(a1),\n\ttenant_attempt_to_cure(a1),\n\tcure_method(a1, tender_of_rent_and_costs),\n\tmoney_judgment_entered(a1),\n\tjudgment_date(a1, JD),\n\ttender_date(a1, TD),\n\tsame_day(JD, TD),\n\ttender_includes_all_rent_in_arrears(a1),\n\ttender_includes_all_costs(a1),\n\ttender_made_to(a1, landlord),\n\tlandlord_refused_tender(a1).\n\n% -----------------------\n% Statute translation: MO Rev Stat  535.160 (2021)\n% -----------------------\n\n/*\n   535.160 (2021) relevant operative rule (paraphrased into logic):\n\n  If the defendant, on the date any money judgment is given in any action pursuant to this chapter,\n  either tenders to the landlord, or brings into the court where the suit is pending,\n  all the rent then in arrears, and all the costs,\n  further proceedings in the action shall cease and be stayed.\n\n  NOTE: The statute describes the effect of a valid tender/payment (a stay), and does not impose an\n  explicit duty on the landlord to \"accept\" a tenant's attempt to cure.\n*/\n\n% Deterministic predicate for whether tenant has satisfied the  535.160 tender condition on the judgment date.\nstatute_535_160_tender_condition_on_judgment_date(Action) :-\n\taction(Action),\n\taction_pursuant_to_chapter(Action),\n\tmoney_judgment_entered(Action),\n\tjudgment_date(Action, JD),\n\ttender_date(Action, TD),\n\tsame_day(JD, TD),\n\ttender_includes_all_rent_in_arrears(Action),\n\ttender_includes_all_costs(Action),\n\t(\n\t\ttender_made_to(Action, landlord)\n\t;\n\t\ttender_made_to(Action, court)\n\t).\n\n% Effect predicate: if tender condition met, further proceedings are stayed.\n% (This is the statutory consequence; it does not require landlord \"acceptance\".)\nstatute_535_160_further_proceedings_stayed(Action) :-\n\tstatute_535_160_tender_condition_on_judgment_date(Action).\n\n/*\n  Duty-to-accept:\n   535.160 creates a stay effect upon tender/payment, but does not state \"landlord must accept\"\n  the tender as a duty. We therefore encode no statutory duty to accept under this section.\n*/\nstatute_535_160_imposes_landlord_duty_to_accept_tender(_Action) :-\n\tfalse.\n\n% -----------------------\n% Reasoning: answer the question asked\n% -----------------------\n\n% A landlord \"must accept\" only if some encoded statute imposes that duty in this scenario.\nlandlord_must_accept_attempt_to_cure(Action) :-\n\t% Currently, only  535.160 is provided; it does not impose an acceptance duty.\n\tstatute_535_160_imposes_landlord_duty_to_accept_tender(Action).\n\n% Deterministic yes/no answer.\nhousing_answer(yes) :-\n\tscenario_statement,\n\tlandlord_must_accept_attempt_to_cure(a1),\n\t!.\nhousing_answer(no) :-\n\tscenario_statement,\n\t!.\n\n% -----------------------\n% Main entrypoint\n% -----------------------\n\nmain :-\n\thousing_answer(Result),\n\tformat('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-3113",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Must a landlord accept a tenant's attempt to cure for material breach?"
+  }
+}

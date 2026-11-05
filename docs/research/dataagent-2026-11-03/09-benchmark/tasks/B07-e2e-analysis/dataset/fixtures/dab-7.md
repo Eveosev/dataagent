@@ -1,0 +1,1 @@
+What percentage of transactions have an associated email address?

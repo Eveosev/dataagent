@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 2563,
+  "table": "health-table45",
+  "structure": "MultiColumnClassified",
+  "question_type": "Fact Checking",
+  "sub_type": "Multi-hop Fact Checking",
+  "answer": "Decreased",
+  "cot": [
+    {
+      "planning": "First, we need to examine the 'Handling emergency/critical cases' row for changes."
+    },
+    {
+      "planning": "Then, we need to compare the percentages of 'Same as before', 'Decreased', and 'Increased'."
+    },
+    {
+      "planning": "Finally, we need to identify which category has the largest percentage change."
+    }
+  ],
+  "case_id": "B01-rht-4199",
+  "expected": {
+    "kind": "answer",
+    "question": "Which aspect of patient management showed the most significant change in 'Handling emergency/critical cases'?",
+    "answer": "Decreased"
+  }
+}

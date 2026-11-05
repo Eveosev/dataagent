@@ -1,0 +1,51 @@
+{
+  "$comment": "generated from dataagent_contracts.core:OcrInfo; do not edit",
+  "$id": "dataagent-contracts/0.1/core/OcrInfo",
+  "additionalProperties": false,
+  "properties": {
+    "engine_ref": {
+      "minLength": 1,
+      "title": "Engine Ref",
+      "type": "string"
+    },
+    "engine_version": {
+      "minLength": 1,
+      "title": "Engine Version",
+      "type": "string"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "low_confidence_pages": {
+      "items": {
+        "type": "integer"
+      },
+      "title": "Low Confidence Pages",
+      "type": "array"
+    },
+    "mean_confidence": {
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Mean Confidence",
+      "type": "number"
+    }
+  },
+  "required": [
+    "engine_ref",
+    "engine_version",
+    "mean_confidence"
+  ],
+  "title": "OcrInfo",
+  "type": "object"
+}

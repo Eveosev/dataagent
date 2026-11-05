@@ -1,0 +1,119 @@
+{
+  "id": "B11",
+  "slug": "action-policy",
+  "title": "动作执行与策略遵从〔FDE〕",
+  "plan_row": 11,
+  "plan_ref": "../../../09-benchmark-plan.md",
+  "catalog_atoms": [
+    "DA06.6.1",
+    "DA06.6.2",
+    "DA06.6.3",
+    "DA06.7.1",
+    "DA06.7.2",
+    "DA06.7.3",
+    "DA07.7.1",
+    "DA07.7.2",
+    "DA07.7.3",
+    "DA07.7.4",
+    "DA07.8.1",
+    "DA07.8.2",
+    "DA07.8.3",
+    "DA15.1.1",
+    "DA15.1.2",
+    "DA15.1.3",
+    "DA16.2.1",
+    "DA16.2.2",
+    "DA16.2.3",
+    "DA16.2.4",
+    "DA16.2.5"
+  ],
+  "slice": "S1",
+  "unit": "scenario",
+  "why_not_unit_tested": "多轮交互中违反策略、该拒未拒、重复执行结果不一致，需要真实环境状态才能判定",
+  "reference_benchmarks": [
+    {
+      "name": "τ²-bench",
+      "url": "https://arxiv.org/abs/2406.12045",
+      "scale_note": "零售 / 航空 / 电信；数据库最终状态与断言判定，pass^k"
+    },
+    {
+      "name": "CRMArena-Pro",
+      "url": "https://arxiv.org/abs/2505.18878",
+      "scale_note": "19 类 CRM 任务 / 4,280 实例；单轮约 58%、多轮约 35%"
+    }
+  ],
+  "dataset": {
+    "sources": [
+      "τ²-bench（官方推荐 τ³）",
+      "CRMArena-Pro",
+      "自建动作策略用例"
+    ],
+    "composition": "环境用沙箱数据库，最终状态比对；断言与状态判定并用",
+    "manifest_ref": "dataset/manifest.json",
+    "refresh": {
+      "unseen_acceptance_every_rounds": 6,
+      "replace_ratio": 0.25,
+      "rule": "样本一经暴露即降级为 regression；unseen_acceptance 不得参与调参"
+    }
+  },
+  "graders": [
+    "approval_trigger_match",
+    "policy_violation_scan",
+    "refusal_policy_check",
+    "tau_pass_k"
+  ],
+  "metrics": [
+    {
+      "id": "pass_k_stability",
+      "label": "pass^k（k=3）",
+      "direction": "higher",
+      "primary": true,
+      "unit": "ratio",
+      "aggregation": "mean_over_cases",
+      "grader": "tau_pass_k",
+      "threshold_status": "pending_baseline"
+    },
+    {
+      "id": "violation_rate",
+      "label": "违规动作率",
+      "direction": "lower",
+      "primary": false,
+      "unit": "ratio",
+      "aggregation": "mean_over_cases",
+      "grader": "policy_violation_scan",
+      "threshold_status": "pending_baseline"
+    },
+    {
+      "id": "missed_refusal_rate",
+      "label": "该拒未拒率",
+      "direction": "lower",
+      "primary": false,
+      "unit": "ratio",
+      "aggregation": "mean_over_cases",
+      "grader": "refusal_policy_check",
+      "threshold_status": "pending_baseline"
+    },
+    {
+      "id": "approval_trigger_accuracy",
+      "label": "审批触发准确率",
+      "direction": "higher",
+      "primary": false,
+      "unit": "ratio",
+      "aggregation": "mean_over_cases",
+      "grader": "approval_trigger_match",
+      "threshold_status": "pending_baseline"
+    }
+  ],
+  "gate": {
+    "tier": "warn",
+    "in_ci": true,
+    "blocking_metrics": [
+      "pass_k_stability"
+    ],
+    "ref": "../../monitor/thresholds.json"
+  },
+  "status": "collecting",
+  "owner": "TBD",
+  "notes_ref": "NOTES.md",
+  "created": "2026-11-04"
+}

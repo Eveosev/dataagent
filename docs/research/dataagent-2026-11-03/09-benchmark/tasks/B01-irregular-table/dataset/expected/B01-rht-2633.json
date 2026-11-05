@@ -1,0 +1,29 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 997,
+  "table": "labor-table29",
+  "structure": "MultiColumnClassified",
+  "question_type": "Numerical Reasoning",
+  "sub_type": "Ranking",
+  "answer": "MILANI, 2879",
+  "cot": [
+    {
+      "step": "First, we filtered the rows where the “Types” column is “NEW ACTIVATION.”"
+    },
+    {
+      "step": "Then, we located the row with the highest value in the “Total” column."
+    },
+    {
+      "step": "We extracted the corresponding carrier name and the highest total transactions value."
+    },
+    {
+      "step": "The result shows an issue where the carrier name is missing (NaN), but the highest total is 2879. Further inspection of the dataset may be required to correct the missing carrier name."
+    }
+  ],
+  "case_id": "B01-rht-2633",
+  "expected": {
+    "kind": "answer",
+    "question": "Which carrier has the highest total transactions for “NEW ACTIVATION,” and what is the corresponding total?",
+    "answer": "MILANI, 2879"
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "case_id": "B10-tsbad-0123",
+  "task_id": "B10",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "series",
+      "ref": "bench://tsb-ad-u/TSB-AD-U/243_SVDB_id_7_Medical_tr_11393_1st_11493.csv",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B10-tsbad-0123.json"
+  },
+  "evidence": [
+    "bench://tsb-ad-u/TSB-AD-U/243_SVDB_id_7_Medical_tr_11393_1st_11493.csv"
+  ],
+  "tags": [
+    "tsb-ad",
+    "u",
+    "Medical"
+  ],
+  "source": "tsbad",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "title": "Real-content county AP check register extraction schema",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "organization": {
+      "type": "string"
+    },
+    "report_title": {
+      "type": "string"
+    },
+    "period_start": {
+      "type": "string"
+    },
+    "period_end": {
+      "type": "string"
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "check_number": {
+            "type": "string"
+          },
+          "vendor_name": {
+            "type": "string"
+          },
+          "state_fund_amount": {
+            "type": "string",
+            "description": "Dollar amount as printed, e.g. $1,234.56"
+          },
+          "federal_fund_amount": {
+            "type": "string",
+            "description": "Dollar amount as printed, e.g. $1,234.56"
+          },
+          "local_fund_amount": {
+            "type": "string",
+            "description": "Dollar amount as printed, e.g. $1,234.56"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source_page": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "check_number",
+          "vendor_name",
+          "state_fund_amount",
+          "federal_fund_amount",
+          "local_fund_amount",
+          "description"
+        ]
+      }
+    },
+    "state_fund_total": {
+      "type": "string",
+      "description": "Dollar amount as printed, e.g. $1,234.56"
+    },
+    "federal_fund_total": {
+      "type": "string",
+      "description": "Dollar amount as printed, e.g. $1,234.56"
+    },
+    "local_fund_total": {
+      "type": "string",
+      "description": "Dollar amount as printed, e.g. $1,234.56"
+    }
+  },
+  "required": [
+    "organization",
+    "report_title",
+    "period_start",
+    "period_end",
+    "checks"
+  ]
+}

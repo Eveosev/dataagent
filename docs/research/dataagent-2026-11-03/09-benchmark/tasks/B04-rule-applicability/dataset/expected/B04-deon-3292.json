@@ -1,0 +1,25 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_63dd69f3",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "statute_in_force",
+    "statute_rcw_59_18_030_dwelling_unit_includes",
+    "statute_rcw_59_18_030_defines_landlord_as",
+    "statute_rcw_59_20_030_defines_home_type",
+    "explicit_mobile_home_landlord_regulation",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: Washington\n    Focus year: 2021\n\n    Question:\n    \"Does state/territory eviction law explicitly regulate mobile/manufactured home landlords?\"\n\n    We treat \"explicitly regulate\" as: the landlord-tenant/eviction-related statutory scheme\n    expressly addresses mobile/manufactured homes or mobile home park landlords in its text\n    (e.g., by defining \"landlord\" specifically for mobile home parks, or by including mobile\n    homes within covered dwelling units).\n*/\n\n% -----------------------------\n% Scenario facts (question statement)\n% -----------------------------\n\nscenario_state(washington).\nscenario_focus_year(2021).\n\n/* scenario_statement/0\n   Succeeds when the encoded factual statement for this QA is in place.\n*/\nscenario_statement :-\n    scenario_state(washington),\n    scenario_focus_year(2021).\n\n% -----------------------------\n% Statute applicability (as provided)\n% -----------------------------\n\n/* statute_in_force(State, Year, StatuteId). */\nstatute_in_force(washington, 2021, rcw_59_18_030).\nstatute_in_force(washington, 2021, rcw_59_20_030).\n\n% -----------------------------\n% Statute translations (deterministic predicates)\n% -----------------------------\n\n/* RCW 59.18.030 (2021) - Definitions (Residential Landlord-Tenant Act)\n   Key portion for this question:\n   \"Dwelling unit\" includes ... \"mobile homes\".  (subsection (10))\n*/\nstatute_rcw_59_18_030_dwelling_unit_includes(mobile_home) :- !.\n\n% Also relevant context: RCW 59.18.030 defines landlord broadly (subsection (16)).\nstatute_rcw_59_18_030_defines_landlord_as(owner_lessor_or_sublessor_of_dwelling_unit_or_property) :- !.\n\n\n/* RCW 59.20.030 (2021) - Definitions (Mobile Home Park Landlord-Tenant Act)\n   Key portion for this question:\n   \"Landlord\" means the owner of a mobile home park and includes the agents of a landlord. (subsection (6))\n   Definitions also expressly define manufactured home and mobile home. (subsections (8) and (10))\n*/\nstatute_rcw_59_20_030_defines_landlord_as_owner_of_mobile_home_park :- !.\nstatute_rcw_59_20_030_defines_home_type(manufactured_home) :- !.\nstatute_rcw_59_20_030_defines_home_type(mobile_home) :- !.\n\n% -----------------------------\n% Helper predicates: detect explicit regulation of mobile/manufactured home landlords\n% -----------------------------\n\n/* explicit_mobile_home_landlord_regulation(State, Year)\n   True if the statutory scheme expressly speaks to mobile/manufactured home landlords.\n*/\nexplicit_mobile_home_landlord_regulation(State, Year) :-\n    statute_in_force(State, Year, rcw_59_20_030),\n    statute_rcw_59_20_030_defines_landlord_as_owner_of_mobile_home_park,\n    !.\n\nexplicit_mobile_home_landlord_regulation(State, Year) :-\n    statute_in_force(State, Year, rcw_59_18_030),\n    statute_rcw_59_18_030_dwelling_unit_includes(mobile_home),\n    statute_rcw_59_18_030_defines_landlord_as(owner_lessor_or_sublessor_of_dwelling_unit_or_property),\n    !.\n\n% -----------------------------\n% Answer predicate (deterministic)\n% -----------------------------\n\nhousing_answer(Result) :-\n    (   scenario_statement,\n        scenario_state(State),\n        scenario_focus_year(Year),\n        explicit_mobile_home_landlord_regulation(State, Year)\n    ->  Result = yes\n    ;   Result = no\n    ),\n    !.\n\n% -----------------------------\n% Main entrypoint\n% -----------------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-3292",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Does state/territory eviction law explicitly regulate mobile/manufactured home landlords?"
+  }
+}

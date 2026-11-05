@@ -1,0 +1,50 @@
+{
+  "case_id": "B03-eb-0226",
+  "task_id": "B03",
+  "split_role": "unseen_acceptance",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://extractbench/docs/short/ppl-two-bill-example.pdf",
+      "digest": null
+    },
+    {
+      "kind": "schema",
+      "ref": "fixtures/eb-short-ppl-two-bill-example-schema.json",
+      "digest": null
+    },
+    {
+      "kind": "rules",
+      "ref": "fixtures/eb-short-ppl-two-bill-example-rules.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-eb-0226.json"
+  },
+  "evidence": [
+    "bench://extractbench/docs/short/ppl-two-bill-example.pdf",
+    "fixtures/eb-short-ppl-two-bill-example-schema.json",
+    "fixtures/eb-short-ppl-two-bill-example-rules.md"
+  ],
+  "tags": [
+    "extractbench",
+    "short",
+    "tag:source:real",
+    "tag:challenge:T3.a",
+    "tag:length:short",
+    "tag:domain:D2",
+    "fields:21"
+  ],
+  "source": "eb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "case_id": "B03-eb-0153",
+  "task_id": "B03",
+  "split_role": "regression",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://extractbench/docs/short/ccc_online_0005_american_family_chevrolet_sonic_corrupted.pdf",
+      "digest": null
+    },
+    {
+      "kind": "schema",
+      "ref": "fixtures/eb-short-ccc_online_0005_american_family_chevrolet_sonic_corrupted-schema.json",
+      "digest": null
+    },
+    {
+      "kind": "rules",
+      "ref": "fixtures/eb-short-ccc_online_0005_american_family_chevrolet_sonic_corrupted-rules.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-eb-0153.json"
+  },
+  "evidence": [
+    "bench://extractbench/docs/short/ccc_online_0005_american_family_chevrolet_sonic_corrupted.pdf",
+    "fixtures/eb-short-ccc_online_0005_american_family_chevrolet_sonic_corrupted-schema.json",
+    "fixtures/eb-short-ccc_online_0005_american_family_chevrolet_sonic_corrupted-rules.md"
+  ],
+  "tags": [
+    "extractbench",
+    "short",
+    "tag:source:real",
+    "tag:challenge:T1.a",
+    "tag:perception:P1",
+    "tag:delivery:G2",
+    "tag:delivery:G4",
+    "tag:length:short",
+    "tag:domain:D4",
+    "fields:48"
+  ],
+  "source": "eb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 3004,
+  "table": "religion-table01",
+  "structure": "MultiColumnClassified",
+  "question_type": "Structure Comprehending",
+  "sub_type": "Structure Comprehending",
+  "answer": null,
+  "cot": [
+    {
+      "planning": "Identify the religion 'Sikh' in the table."
+    },
+    {
+      "planning": "Find the 'Estimate' row under 'Sikh.'"
+    },
+    {
+      "planning": "Examine the values in the 'Estimate' row from 2012 to 2018 to find the first year where the value exceeds 70%."
+    }
+  ],
+  "case_id": "B01-rht-4640",
+  "expected": {
+    "kind": "answer",
+    "question": "In which year did the employment rate for Sikhs exceed 70% for the first time? (Final answer should be a specific year.)",
+    "answer": null
+  }
+}

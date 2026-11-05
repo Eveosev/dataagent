@@ -1,0 +1,34 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_a4797858",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "al_24_8_4_protected_basis",
+    "al_24_8_4_action_category",
+    "al_24_8_4_unlawful_housing_practice",
+    "nonvar",
+    "person",
+    "dwelling",
+    "tenant_of",
+    "landlord_of",
+    "housing_action",
+    "action_type",
+    "actor",
+    "target_person",
+    "target_dwelling",
+    "because_of",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program encoding:\n    - Alabama housing discrimination statute (AL Code  24-8-4 (2021))\n    - Scenario: eviction based on political affiliations\n    - A derived yes/no answer for whether that eviction is unlawful under the encoded statute\n*/\n\n% -------------------------\n% Jurisdiction / year facts\n% -------------------------\n\nscenario_state(alabama).\nscenario_focus_year(2021).\n\n% -------------------------\n% Statute translation\n% AL Code  24-8-4 (2021)\n% Unlawful discriminatory housing practices\n% -------------------------\n\n/* Protected bases enumerated in AL Code  24-8-4 (2021):\n   race, color, religion, sex, familial status, national origin, handicap.\n*/\nal_24_8_4_protected_basis(race).\nal_24_8_4_protected_basis(color).\nal_24_8_4_protected_basis(religion).\nal_24_8_4_protected_basis(sex).\nal_24_8_4_protected_basis(familial_status).\nal_24_8_4_protected_basis(national_origin).\nal_24_8_4_protected_basis(handicap).\n\n/* Map real-world conduct into statute-relevant categories.\n\n   The statute prohibits, among other things:\n   - making unavailable or denying a dwelling because of a protected basis ( 24-8-4(1))\n   - discrimination in terms/conditions/privileges of rental because of a protected basis ( 24-8-4(2))\n\n   Eviction is treated here as:\n   - making a dwelling unavailable/denying it; and\n   - a discriminatory term/condition of rental.\n*/\nal_24_8_4_action_category(evict, make_unavailable_or_deny).\nal_24_8_4_action_category(evict, discriminate_terms_conditions_privileges).\n\nal_24_8_4_action_category(refuse_to_rent, make_unavailable_or_deny).\nal_24_8_4_action_category(refuse_to_sell, make_unavailable_or_deny).\nal_24_8_4_action_category(refuse_to_negotiate_rental, make_unavailable_or_deny).\nal_24_8_4_action_category(refuse_to_negotiate_sale, make_unavailable_or_deny).\n\nal_24_8_4_action_category(discriminate_terms, discriminate_terms_conditions_privileges).\n\n/* Core statute rule:\n   It is unlawful if a housing action that (i) makes unavailable/denies or (ii) discriminates in\n   terms/conditions/privileges is taken \"because of\" a protected basis.\n\n   Citation: AL Code  24-8-4(1)-(2) (2021)\n*/\nal_24_8_4_unlawful_housing_practice(Action, Actor, TargetPerson, Dwelling, BecauseOfBasis) :-\n    nonvar(Action),\n    nonvar(Actor),\n    nonvar(TargetPerson),\n    nonvar(Dwelling),\n    nonvar(BecauseOfBasis),\n    al_24_8_4_action_category(Action, Category),\n    ( Category = make_unavailable_or_deny\n    ; Category = discriminate_terms_conditions_privileges\n    ),\n    al_24_8_4_protected_basis(BecauseOfBasis).\n\n% -------------------------\n% Scenario (question) translation as facts\n% -------------------------\n\n% Entities\nperson(landlord_1).\nperson(tenant_1).\ndwelling(unit_1).\n\n% Relationship / context\ntenant_of(tenant_1, unit_1).\nlandlord_of(landlord_1, unit_1).\n\n% The factual statement: \"evict a tenant based on their political affiliations\"\n% We encode a specific contemplated act/event with a stated reason.\nhousing_action(event_1).\naction_type(event_1, evict).\nactor(event_1, landlord_1).\ntarget_person(event_1, tenant_1).\ntarget_dwelling(event_1, unit_1).\nbecause_of(event_1, political_affiliation).\n\n/* Helper predicate that succeeds when the scenario's factual statement is satisfied.\n   This is intended to \"summarize the scenario in logic form\" for reuse.\n*/\nscenario_statement :-\n    scenario_state(alabama),\n    scenario_focus_year(2021),\n    housing_action(E),\n    action_type(E, evict),\n    actor(E, L),\n    target_person(E, T),\n    target_dwelling(E, D),\n    because_of(E, political_affiliation),\n    person(L),\n    person(T),\n    dwelling(D),\n    landlord_of(L, D),\n    tenant_of(T, D).\n\n% -------------------------\n% Reasoning: apply the statute to the scenario\n% -------------------------\n\n/* Under the encoded Alabama statute, an eviction is unlawful only if it is\n   \"because of\" a protected basis listed in  24-8-4.\n*/\nscenario_unlawful_under_al_24_8_4 :-\n    scenario_statement,\n    housing_action(E),\n    action_type(E, Action),\n    actor(E, Actor),\n    target_person(E, Target),\n    target_dwelling(E, Dwelling),\n    because_of(E, Basis),\n    al_24_8_4_unlawful_housing_practice(Action, Actor, Target, Dwelling, Basis).\n\n% -------------------------\n% Final answer (deterministic)\n% -------------------------\n\nhousing_answer(yes) :-\n    scenario_unlawful_under_al_24_8_4,\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n% -------------------------\n% Main entrypoint (required)\n% -------------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-4758",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is it unlawful to evict a tenant based on their political affiliations?"
+  }
+}

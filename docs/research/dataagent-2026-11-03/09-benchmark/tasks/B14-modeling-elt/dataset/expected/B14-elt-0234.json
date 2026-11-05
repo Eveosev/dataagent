@@ -1,0 +1,67 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "snowflake",
+  "pipeline": "formula_1",
+  "data_model": {
+    "models": [
+      {
+        "name": "formula__drivers",
+        "description": "Each record represents a driver.",
+        "columns": [
+          {
+            "name": "driverId",
+            "description": "Unique identifier for the driver."
+          },
+          {
+            "name": "fullname",
+            "description": "Full name of the driver. Concatenate the first name and last name with a space separating them."
+          },
+          {
+            "name": "nationality",
+            "description": "The nationality of the driver."
+          },
+          {
+            "name": "num_winnings",
+            "description": "The number of races where the driver finished first; replace NULL values with 0."
+          },
+          {
+            "name": "year_and_race_of_fastest_lap",
+            "description": "Concatenate the year and the name of the race, separated by a space, in which the driver had his fastest lap, with ties broken by the ascending of the year first, then descending order of the name of the race"
+          },
+          {
+            "name": "points_recorded_for_first_race",
+            "description": "The points recorded for the driver's first race event, with ties broken by the descending order of the points."
+          },
+          {
+            "name": "num_accidents",
+            "description": "The number of accidents the driver has been involved in, replace NULL values with 0. Accident refers to status = \"Accident\"."
+          },
+          {
+            "name": "avg_pit_stop_duration",
+            "description": "The average duration (in milliseconds) of the pit stops the driver has made."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    snowflake_definition_id: 424892c4-daac-4491-b35d-c6688ba547ba\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://formula-1-bucket/status.csv\n    sync_mode: full_refresh_append\n    table: status\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - driverStandings\n    - pitStops\nflat_files:\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=1GMEruiggk8M17fCETdTvESSrl21yoinD\n  sync_mode: full_refresh_append\n  table: seasons\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: formula_1\n    sync_mode: full_refresh_append\n    tables:\n    - circuits\n    - constructors\n    - drivers\n    - races\npostgres:\n  config:\n    database: formula_1\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - constructor_results\n    - constructor_standings\n    - qualifying\n    - results\n    - lap_times\n    user: postgres\nsnowflake:\n  config:\n    database: formula_1\n    password: Snowflake@123\n    role: AIRBYTE_ROLE\n    schema: AIRBYTE_SCHEMA\n    username: AIRBYTE_USER\n    warehouse: AIRBYTE_WAREHOUSE\n",
+  "case_id": "B14-elt-0234",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "formula__drivers",
+        "columns": [
+          "driverId",
+          "fullname",
+          "nationality",
+          "num_winnings",
+          "year_and_race_of_fastest_lap",
+          "points_recorded_for_first_race",
+          "num_accidents",
+          "avg_pit_stop_duration"
+        ]
+      }
+    ]
+  }
+}

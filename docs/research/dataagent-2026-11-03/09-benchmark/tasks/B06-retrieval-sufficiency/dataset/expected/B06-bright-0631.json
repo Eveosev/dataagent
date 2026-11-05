@@ -1,0 +1,62 @@
+{
+  "source": "xlangai/BRIGHT",
+  "query_id": "55",
+  "query": "## Identifying the Essential Problem\n\nThe problem requires us to find the maximum number of consecutive 1's in a binary array `nums`. This means we need to identify the longest sequence of 1's within the array and return its length. \n\n## Step-by-Step Reasoning\n\n1. **Initialization**: Start with a variable `max_count` initialized to 0. This variable will store the maximum number of consecutive 1's found so far.\n2. **Iteration**: Loop through each element in the array `nums`.\n3. **Counting Consecutive 1's**: \n    - If the current element is 1:\n        - Increment a `current_count` variable. \n        - If `current_count` is greater than `max_count`, update `max_count` with the value of `current_count`.\n    - If the current element is 0:\n        - Reset `current_count` to 0.\n4. **Return**: After iterating through the entire array, return the value of `max_count`.\n\n## Draft Answer\n\n```pony\nfun findMaxConsecutiveOnes(nums: Array[I32]): I32 =>\n    var max_count = 0\n    var current_count = 0\n\n    for num in nums {\n        if num == 1 {\n            current_count += 1\n            if current_count > max_count {\n                max_count = current_count\n            }\n        } else {\n            current_count = 0\n        }\n    }\n\n    return max_count\n```\n\n## Additional Thoughts\n\n- This solution assumes that the input array is not empty. If the input array is empty, the function should return 0.\n- This solution has a time complexity of O(n) and a space complexity of O(1).\n- There might be alternative solutions using different approaches, such as using recursion or more advanced data structures. However, this solution provides a straightforward and efficient way to solve the problem.\n\n",
+  "gold_ids": [
+    "Pony/5_methods_1.txt",
+    "Pony/4_control-structures_12.txt",
+    "Pony/4_control-structures_13.txt",
+    "Pony/1_variables_1.txt",
+    "Pony/4_control-structures_16.txt",
+    "Pony/4_control-structures_3.txt",
+    "Pony/1_variables_2.txt",
+    "Pony/4_control-structures_17.txt",
+    "Pony/4_control-structures_2.txt",
+    "Pony/4_control-structures_11.txt",
+    "Pony/4_control-structures_1.txt",
+    "Pony/4_control-structures_19.txt",
+    "Pony/4_control-structures_14.txt",
+    "Pony/4_control-structures_15.txt",
+    "Pony/2_ops_1.txt",
+    "Pony/4_control-structures_18.txt",
+    "Pony/2_primitives_3.txt",
+    "Pony/2_ops_2.txt"
+  ],
+  "gold_answer": "N/A",
+  "corpus": "documents/pony-00000-of-00001.parquet",
+  "case_id": "B06-bright-0631",
+  "expected": {
+    "kind": "retrieval",
+    "gold_ids": [
+      "Pony/5_methods_1.txt",
+      "Pony/4_control-structures_12.txt",
+      "Pony/4_control-structures_13.txt",
+      "Pony/1_variables_1.txt",
+      "Pony/4_control-structures_16.txt",
+      "Pony/4_control-structures_3.txt",
+      "Pony/1_variables_2.txt",
+      "Pony/4_control-structures_17.txt",
+      "Pony/4_control-structures_2.txt",
+      "Pony/4_control-structures_11.txt",
+      "Pony/4_control-structures_1.txt",
+      "Pony/4_control-structures_19.txt",
+      "Pony/4_control-structures_14.txt",
+      "Pony/4_control-structures_15.txt",
+      "Pony/2_ops_1.txt",
+      "Pony/4_control-structures_18.txt",
+      "Pony/2_primitives_3.txt",
+      "Pony/2_ops_2.txt"
+    ],
+    "gold_ids_long": [
+      "Pony/4_control-structures.txt",
+      "Pony/5_methods.txt",
+      "Pony/1_variables.txt",
+      "Pony/2_primitives.txt",
+      "Pony/2_ops.txt"
+    ],
+    "gold_answer": "N/A",
+    "excluded_ids": [
+      "N/A"
+    ]
+  }
+}

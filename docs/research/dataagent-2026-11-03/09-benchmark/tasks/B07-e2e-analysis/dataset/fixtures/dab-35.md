@@ -1,0 +1,1 @@
+How many shoppers have made more than one transaction based on email addresses?

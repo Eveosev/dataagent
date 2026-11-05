@@ -1,0 +1,35 @@
+{
+  "case_id": "B14-elt-0096",
+  "task_id": "B14",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "config",
+      "ref": "fixtures/elt-databricks-world-config.yaml",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B14-elt-0096.json"
+  },
+  "evidence": [
+    "bench://elt-bench/elt-bench/databricks/world/data_model.yaml"
+  ],
+  "tags": [
+    "elt-bench",
+    "databricks",
+    "world",
+    "models:1"
+  ],
+  "source": "elt",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

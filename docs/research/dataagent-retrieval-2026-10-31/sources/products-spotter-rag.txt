@@ -1,0 +1,1122 @@
+
+ Context retrieval and ranking :: ThoughtSpot Documentation
+ Cloud
+ Cloud
+ Software
+ Mobile
+ AgentSpot
+ Embedded
+ 26.10.0.cl
+ 26.11.0.cl
+ 26.10.0.cl
+ Cloud
+ Software
+ Mobile
+ AgentSpot
+ Embedded
+ LLMs.txt directory
+Context retrieval and ranking
+When a user asks a question, the context layer determines which context entries reach the Spotter agent.
+The process uses agentic RAG (retrieval-augmented generation), where the Spotter agent actively steers retrieval rather than receiving a static set of results.
+Fetch
+The system retrieves context entries that the question can reach.
+Scope is the boundary.
+The context considered for each question can come from any combination of organization, data model, agent, analyst, and user levels.
+Out-of-scope context never enters the retrieval process.
+Rank
+A context ranking function scores every retrieved entry using the following signals:
+Signal
+Description
+Relevance
+How well the context matches the question. Always applied.
+Scope
+The level at which the context was defined (data model, analyst, organization, or user).
+Source
+Where the context was learned from.
+Recency
+When the context was learned.
+Deliver to the agent
+The ranking function produces an ordered list.
+The top-K entries are delivered to the Spotter agent.
+The rest are logged but not included.
+The Spotter agent uses what it needs and cites the context entries it relied on.
+Guardrails skip the ranking process and are always included.
+Live facts such as calendar dates and data freshness are read in real time, never stored.
+Example
+Consider a question from Priya: "What was our churn last quarter?"
+The system fetches context entries in scope for Priya, including:
+Churn = churned ARR + downgrades (organization scope, from a Liveboard, March)
+Fiscal quarters start in February (organization scope, analyst instruction, January)
+Churn = churned ARR only (data model scope, stated by Priya, August)
+Priya prefers charts over tables (user scope, Priya’s preference, July)
+An entry from a different agent’s scope is dropped at fetch and never enters ranking.
+After ranking:
+Churn = churned ARR only moves to rank 1: data model scope beats organization scope, and it was used 14 times.
+Fiscal quarters start in February stays at rank 2: it is an organization guardrail.
+Priya prefers charts over tables moves to rank 3: user scope, personal preference.
+Churn = churned ARR + downgrades drops below the cut: older, unused since June.
+The Spotter agent receives three entries, uses two (the churn definition and the fiscal calendar), and does not use the chart preference because the answer is a single number.
+The answer carries citations for the context entries it used.
+Lifecycle management
+The context layer stays current through two types of maintenance.
+Source-triggered updates
+When an external source changes, the context layer responds automatically:
+Source added: New knowledge is learned from the source.
+Source updated: Everything derived from the source is updated to match.
+Source removed: Derived knowledge is retired, never silently kept.
+Example: Rename a metric in dbt, and the context layer’s definition follows the change.
+Internal self-maintenance
+Even when nothing changes outside, the context layer continuously refines itself:
+Deduplication: Copies of the same fact merge into one.
+Conflict resolution: Contradictions are surfaced and settled, never silently picked.
+This creates a natural progression: many raw observations are refined into confirmed rules, which mature into the governed model.
+Related resources
+Context layer
+Context layer sources and learning
+Context layer security and governance
+ Release notes
+ Monthly
+ Weekly
+ Release history
+ 2026
+ September
+ August
+ July
+ June
+ May
+ April
+ March
+ February
+ 2025
+ December
+ November
+ October
+ September
+ July
+ June
+ May
+ April
+ February
+ 2024
+ December
+ November
+ October
+ August
+ July
+ June
+ May
+ April
+ February
+ January
+ 2023
+ November
+ October
+ September
+ August
+ June
+ May
+ February
+ January
+ 2022
+ November
+ October
+ September
+ August
+ June
+ May
+ April
+ March
+ January
+ Deprecated and removed features
+ Getting started
+ Requirements
+ Web browser
+ Activate your account
+ Getting started for end users
+ Finding your way around
+ Your user profile
+ System language
+ Web notifications
+ Use tags to organize
+ Business user onboarding
+ Analyst onboarding
+ Spotter agents
+ Spotter
+ Using Spotter
+ Getting started
+ Spotter versions
+ Capabilities of Spotter
+ Why questions in Spotter
+ Supported languages in Spotter
+ Cross data model search in Spotter
+ Spotter Analysts
+ Spotter Analysts deep dive
+ Search and Deep analysis modes
+ Advanced analysis capabilities
+ AgentQL
+ Using connectors within Spotter
+ Chat history
+ Share a Spotter chat
+ Spotter app in Slack
+ Best practices for prompting Spotter
+ Troubleshooting
+ Spotter limitations
+ Setting up Spotter
+ Before you start with Spotter
+ Spotter starter prompts
+ Enabling Spotter
+ Connect to your Large Language Model (LLM)
+ Enabling chat history
+ Integrate your tools into Spotter with Connectors
+ Connector marketplace
+ Connector reference
+ Slack connector in Spotter
+ Spotter security
+ Spotter 3 data handling
+ Integrating Spotter in external apps
+ Getting Spotter ready
+ Use case discovery
+ How Spotter answers
+ How Spotter uses context
+ When sources disagree
+ Where to write context
+ Make your data model AI-ready
+ Optimize your data model
+ AI Context
+ Diagnose problems with Spotter
+ Spotter memory
+ Add memory from Liveboards
+ Add memory from conversations
+ Spotter personal memory
+ Manage and migrate memory
+ Manage memory
+ Migrate memory
+ Migrate instructions
+ Migrate legacy memory sources
+ Data model instructions
+ Spotter instructions
+ Legacy memory sources
+ Reference questions
+ Adding context to reference questions
+ Business terms
+ Memory permissions and governance
+ Frequently asked questions for getting Spotter ready
+ Monitoring and refining Spotter
+ Roll out and improve Spotter
+ Spotter Conversations Liveboard
+ Frequently asked questions
+ Context layer
+ Sources and learning
+ Retrieval and ranking
+ Security and governance
+ SpotterModel
+ SpotterViz
+ Insights
+ Home page and navigation
+ Search your library
+ Search
+ Search Data
+ Choose a data source
+ Spreadsheet
+ Search bar features
+ Search suggestions
+ Search results and column types
+ Search techniques
+ Use keywords in search
+ Time series analysis
+ Search using growth over time
+ Using the keyword in for nested searches
+ Proximity search: near and farther than
+ Add a hyperlink to a search
+ Other search actions
+ Change result display options
+ Show underlying data
+ See the search behind a result
+ Apply conditional formatting
+ Download your search
+ Query and autocomplete options
+ AI-suggested searches
+ Formulas
+ Add formula to search
+ View or edit formula in search
+ Semi-additive measures
+ Last_value and first_value functions
+ Last_value_in_period and first_value_in_period functions
+ Aggregate formulas
+ Cumulative functions
+ Moving functions
+ Flexible aggregation functions
+ Grouping functions
+ Reaggregation in practice
+ Keywords "of", "percentage of"
+ Filtered aggregation functions
+ Aggregate filters
+ Conversion functions
+ Date functions
+ Percent calculations
+ Formula operators
+ Nested formulas
+ Formulas for chasm traps
+ Parameters
+ Create Parameters
+ Use Parameters
+ Sets
+ Column Sets
+ Query Sets
+ Liveboards
+ Liveboard experience
+ Edit Liveboard layouts
+ Liveboard tabs
+ Liveboard note tiles
+ Liveboard filters
+ Personalized Liveboard views
+ Answer Explorer
+ AI Highlights
+ Search actions within a Liveboard
+ Copy a Liveboard
+ Copy a Liveboard or visualization link
+ Reset a Liveboard visualization
+ Present Liveboard as slideshow
+ Download a Liveboard
+ Linked Liveboard filters
+ Selective Liveboard filters
+ Mandatory Liveboard filters
+ Liveboard cross filters
+ Link parameters across Models in a Liveboard
+ Answers
+ Work with Answers
+ Results that are tables
+ Date filters for Answers
+ Custom sort order
+ Translation of Answers and Liveboards
+ AI translation of Answers and Liveboards
+ Manual translation of Answers and Liveboards
+ Charts
+ New charts library
+ Configuration
+ Gradient legends
+ Marker styles
+ Chart types
+ Column charts
+ New column charts
+ Stacked column charts
+ New stacked column charts
+ Line charts
+ New line charts
+ KPI charts
+ Pivot table
+ Donut charts
+ New donut charts
+ Bar charts
+ New bar charts
+ Stacked bar charts
+ New stacked bar charts
+ Line column charts
+ New line column charts
+ Area charts
+ New area charts
+ Stacked area charts
+ New stacked area charts
+ Line stacked column charts
+ New line stacked column charts
+ Scatter charts
+ New scatter charts
+ Bubble charts
+ New bubble charts
+ Waterfall charts
+ New waterfall charts
+ Heatmap charts
+ New heatmap charts
+ Treemap charts
+ Funnel charts
+ New funnel charts
+ Geo charts
+ Geo bubble charts
+ Geo heatmap charts
+ Geo area charts
+ Sankey charts
+ Radar charts
+ Candlestick charts
+ Pareto charts
+ New pareto charts
+ Changing charts
+ Change axes options
+ Configure the columns
+ Rename columns and axes
+ Customize titles and descriptions with HTML
+ Reorder labels
+ Set the y-axis range
+ Hide and show values
+ Charts with a large number of data values
+ Change chart colors
+ Show data labels
+ Show data markers
+ Null and missing values in charts
+ Add regression lines
+ Display gridlines
+ Zoom into chart
+ New chart settings experience
+ Custom charts
+ Muze Studio
+ Agentic charts
+ Supported data sources
+ Edit charts with natural language
+ Examples
+ Progressive rendering
+ Filters
+ Add a filter to a table
+ Add a filter to a chart
+ Create a bulk filter
+ Delete a filter
+ Filter on null, blank, or empty values
+ Collections
+ Sharing
+ Share Liveboards
+ Share Answers
+ Request access
+ Revoke access
+ Analysis & Alerts
+ Schedule a Liveboard job
+ Gating conditions
+ Monitor KPI
+ Anomaly alerts
+ Threshold alerts
+ Scheduled alerts
+ Alerts by attribute
+ Webhooks for Monitor
+ SpotIQ
+ Custom SpotIQ analysis
+ SpotIQ change analysis
+ Forecasting
+ Anomaly detection
+ SpotIQ preferences
+ Insight feedback
+ Best practices for SpotIQ Analyze
+ Plug-ins
+ ThoughtSpot plug-ins
+ Google Sheets add-on
+ Google Slides add-on
+ Microsoft Excel add-in
+ Microsoft PowerPoint add-in
+ Lightning Web Component for Salesforce
+ Salesforce and ThoughtSpot integration setup guide
+ Spotter in Microsoft Teams
+ Spotter for Slack
+ Data workspace
+ Semantic layer
+ Models
+ Create Models
+ Join tables
+ Supported join types
+ Sync Model column properties
+ Aggregate-aware query execution
+ Create a formula in a Model
+ Create a Model filter
+ How the Model join rule works
+ Create join rule or RLS for a Model
+ Create a join relationship
+ Modify joins between Model tables
+ Delete Models or tables
+ Define a custom sort order for a Model
+ Data value casing
+ Disable Answer Search for specific Models
+ Views
+ SQL-based views
+ Save a search as a view
+ Create a search from a view
+ View example scenarios
+ Tables
+ Change a table’s data model
+ Data value casing for tables
+ Edit system-wide data model
+ Data model settings
+ Set column name, description, and type
+ Set additive and aggregate values
+ Hide a column or define a synonym
+ Suggestion settings
+ Manage suggestion indexing
+ Add a geographical data setting
+ Upload custom geo maps
+ Set number, date, and currency formats
+ Change the attribution dimension
+ Exclude from SpotIQ analyses
+ Chasm traps
+ Data types
+ Link tables using relationships
+ Create a relationship
+ Connections
+ Connect to your data
+ About connections
+ Categorizing connections
+ Cloud data warehouse driver details for connections
+ New connection configuration experience
+ Share a connection
+ ThoughtSpot query comments
+ Column indexing with OAuth
+ OAuth sign-in for Liveboards
+ Connect to Amazon Athena
+ Add connection
+ Edit connection
+ Remap connection
+ Delete table
+ Delete table with dependencies
+ Delete connection
+ Deactivate connection
+ Connection reference
+ Passthrough functions for Amazon Athena
+ Connect to Amazon Aurora MySQL
+ Add connection
+ Edit connection
+ Remap connection
+ Delete table
+ Delete table with dependencies
+ Delete connection
+ Deactivate connection
+ Enable a PrivateLink
+ Connection reference
+ Passthrough functions for Amazon Aurora MySQL
+ Connect to Amazon Aurora PostgreSQL
+ Add connection
+ Edit connection
+ Remap connection
+ Delete table
+ Delete table with dependencies
+ Delete connection
+ Deactivate connection
+ Enable a PrivateLink
+ Connection reference
+ Passthrough functions for Amazon Aurora PostgreSQL
+ Connect to Amazon RDS MySQL
+ Add connection
+ Edit connection
+ Remap connection
+ Delete table
+ Delete table with dependencies
+ Delete connection
+ Deactivate connection
+ Enable a PrivateLink
+ Connection reference
+ Passthrough functions for Amazon RDS MySQL
+ Connect to Amazon RDS PostgreSQL
+ Add connection
+ Edit connection
+ Remap connection
+ Delete table
+ Delete table with dependencies
+ Delete connection
+ Deactivate connection
+ Enable a PrivateLink
+ Connection reference
+ Passthrough functions for Amazon RDS PostgreSQL
+ Connect to Amazon Redshift
+ Add connection
+ Edit connection
+ Remap connection
+ Query external tables
+ Delete table
+ Delete table with dependencies
+ Delete connection
+ Deactivate connection
+ Configure AWS IDC OAuth
+ Configure Azure AD OAuth
+ Best practices
+ Enable a PrivateLink
+ Enable a Redshift-managed PrivateLink
+ Connection reference
+ Redshift Partner Connect overview
+ Passthrough functions for Redshift
+ Connect to Azure Synapse
+ Add connection
+ Edit connection
+ Remap connection
+ Delete table
+ Delete table with dependencies
+ Delete connection
+ Deactivate connection
+ Configure OAuth
+ Connection reference
+ Passthrough functions for Synapse
+ Connect to Bridge
+ Connect to ClickHouse
+ Add connection
+ Edit connection
+ Remap connection
+ Delete table
+ Delete table with dependencies
+ Delete connection
+ Deactivate connection
+ Enable a PrivateLink
+ Connection reference
+ Connect to Databricks
+ Add connection
+ Edit connection
+ Upload a CSV file in your Databricks connection
+ Remap connection
+ Delete table
+ Delete table with dependencies
+ Delete connection
+ Deactivate connection
+ Configure OAuth
+ Configure OAuth with AAD
+ Configure OAuth with Service Principal for a Databricks connection
+ Configure CSV upload for your Databricks connection
+ Databricks Unity Catalog FAQs
+ Enable a PrivateLink
+ Connection reference
+ Databricks best practices
+ Databricks Partner Connect overview
+ Passthrough functions for Databricks
+ Connect to Denodo
+ Add connection
+ Edit connection
+ Remap connection
+ Delete table
+ Delete table with dependencies
+ Delete connection
+ Deactivate connection
+ Configure OAuth
+ Enable a PrivateLink
+ Connection reference
+ Passthrough functions for Denodo
+ Connect to Dremio
+ Add connection
+ Edit connection
+ Remap connection
+ Delete table
+ Delete table with dependencies
+ Delete connection
+ Deactivate connection
+ Configure OAuth
+ Enable a PrivateLink
+ Connection reference
+ Passthrough functions for Dremio
+ Connect to Generic JDBC
+ Add connection
+ Edit connection
+ Remap connection
+ Delete table
+ Delete table with dependencies
+ Delete connection
+ Deactivate connection
+ Connection reference
+ Passthrough functions for Generic JDBC
+ Connect to Google AlloyDB for PostgreSQL
+ Add connection
+ Edit connection
+ Remap connection
+ Delete table
+ Delete table with dependencies
+ Delete connection
+ Deactivate connection
+ Connection reference
+ Passthrough functions for Google AlloyDB for PostgreSQL
+ Connect to Google BigQuery
+ Prerequisites
+ Access levels and ingress rules for Google BigQuery
+ Add connection
+ Edit connection
+ Upload a CSV file in your Google BigQuery connection
+ Remap connection
+ Query external tables
+ Delete table
+ Delete table with dependencies
+ Delete connection
+ Deactivate connection
+ Configure OAuth
+ Configure CSV upload for your Google BigQuery connection
+ Connection reference
+ Passthrough functions
+ Connect to Google Cloud SQL for MySQL
+ Add connection
+ Edit connection
+ Remap connection
+ Delete table
+ Delete table with dependencies
+ Delete connection
+ Deactivate connection
+ Connection reference
+ Passthrough functions for Google Cloud SQL for MySQL
+ Connect to Google Cloud SQL for PostgreSQL
+ Add connection
+ Edit connection
+ Remap connection
+ Delete table
+ Delete table with dependencies
+ Delete connection
+ Deactivate connection
+ Connection reference
+ Passthrough functions for Google Cloud SQL for PostgreSQL
+ Connect to Google Cloud SQL for SQL Server
+ Add connection
+ Edit connection
+ Remap connection
+ Delete table
+ Delete table with dependencies
+ Delete connection
+ Deactivate connection
+ Connection reference
+ Passthrough functions for Google Cloud SQL for SQL Server
+ Connect to Looker
+ Add connection
+ Edit connection
+ Remap connection
+ Delete table
+ Delete table with dependencies
+ Delete connection
+ Deactivate connection
+ Connection reference
+ Connect to MySQL
+ Add connection
+ Edit connection
+ Remap connection
+ Delete table
+ Delete table with dependencies
+ Delete connection
+ Deactivate connection
+ Connection reference
+ Passthrough functions for MySQL
+ Connect to Oracle
+ Add connection
+ Edit connection
+ Remap connection
+ Delete table
+ Delete table with dependencies
+ Delete connection
+ Deactivate connection
+ Enable a PrivateLink
+ Connection reference
+ Passthrough functions for Oracle
+ Connect to PostgreSQL
+ Add connection
+ Edit connection
+ Remap connection
+ Delete table
+ Delete table with dependencies
+ Delete connection
+ Deactivate connection
+ Enable a PrivateLink
+ Connection reference
+ Passthrough functions for PostgreSQL
+ Connect to Presto
+ Add connection
+ Edit connection
+ Remap connection
+ Delete table
+ Delete table with dependencies
+ Delete connection
+ Deactivate connection
+ Connection reference
+ Passthrough functions for Presto
+ Connect to SAP HANA
+ Add connection
+ Edit connection
+ Remap connection
+ Delete table
+ Delete table with dependencies
+ Delete connection
+ Deactivate connection
+ Enable a PrivateLink
+ Connection reference
+ Passthrough functions for SAP HANA
+ Connect to SingleStore
+ Add connection
+ Edit connection
+ Remap connection
+ Delete table
+ Delete table with dependencies
+ Delete connection
+ Deactivate connection
+ Connection reference
+ Passthrough functions for SingleStore
+ Connect to Snowflake
+ Add connection
+ Edit connection
+ Configure query tags
+ Migrating Snowflake connections from Service Account to Key Pair authentication
+ Remap connection
+ Upload CSV
+ CSV upload to Answers
+ Query external tables
+ Delete table
+ Delete table with dependencies
+ Delete connection
+ Deactivate connection
+ Configure OAuth
+ Configure OAuth with Client Credentials
+ Configure Azure AD OAuth
+ Configure Okta OAuth
+ Configure Auth0
+ Configure CSV Upload
+ Best practices
+ Enable a PrivateLink
+ Enable a GCP Private Service Connect between ThoughtSpot Cloud and your Snowflake data warehouse
+ Connection reference
+ Passthrough functions
+ Snowflake Marketplace overview
+ Connect to SQL Server
+ Add connection
+ Edit connection
+ Remap connection
+ Delete table
+ Delete table with dependencies
+ Delete connection
+ Deactivate connection
+ Enable a PrivateLink
+ Connection reference
+ Passthrough functions for SQL Server
+ Connect to Starburst
+ Add connection
+ Edit connection
+ Remap connection
+ Delete table
+ Delete table with dependencies
+ Delete connection
+ Deactivate connection
+ Configure OAuth
+ Enable a PrivateLink
+ Connection reference
+ Passthrough functions for Starburst
+ Connect to Teradata
+ Add connection
+ Edit connection
+ Remap connection
+ Delete table
+ Delete table with dependencies
+ Delete connection
+ Deactivate connection
+ Enable a PrivateLink
+ Connection reference
+ Passthrough functions for Teradata
+ Connect to Trino
+ Add connection
+ Edit connection
+ Remap connection
+ Delete table
+ Delete table with dependencies
+ Delete connection
+ Deactivate connection
+ Enable a PrivateLink
+ Connection reference
+ Passthrough functions for Trino
+ Custom calendar
+ Create custom calendar
+ Update custom calendar
+ Delete custom calendar
+ AWS PrivateLink
+ Enable a PrivateLink for Amazon Redshift
+ Enable a PrivateLink for Databricks
+ Enable a PrivateLink for Denodo
+ Enable a PrivateLink for Dremio
+ Enable a PrivateLink for Oracle
+ Enable a PrivateLink for PostgreSQL
+ Enable a PrivateLink for SAP HANA
+ Enable a PrivateLink for Snowflake
+ Enable a PrivateLink for SQL Server
+ Enable a PrivateLink for Starburst
+ Enable a PrivateLink for Teradata
+ Enable a PrivateLink for ClickHouse
+ Query external tables
+ Query external tables from your Amazon Redshift connection
+ Query external tables from your Google BigQuery connection
+ Query external tables from your Snowflake connection
+ OpenVPN for Google BigQuery
+ OpenVPN for Azure Synapse and Snowflake on Azure
+ Configure IPSec VPN for your cloud data connection
+ Delete a data source
+ How to view a data schema
+ Bring Your Own Key (BYOK) for ThoughtSpot
+ Bring Your Own Key (BYOK) for ThoughtSpot on AWS VPT
+ Semantic integrations
+ Integrate Databricks Metric Views
+ Column and description aliases for localization
+ User-defined column aliases
+ Tenant-based column aliasing
+ Analyst Studio
+ Release notes
+ Open Source Code Attributions
+ Supported browsers
+ Navigate and organize content
+ Collections
+ Organizing Reports
+ Collaboration and discovery
+ Connect your database
+ Connecting Analyst Studio to your database
+ Supported databases
+ Connect to Amazon Athena in Analyst Studio
+ Connect to Amazon Redshift in Analyst Studio
+ Connect to Amazon Web Services in Analyst Studio
+ Connect to Apache Druid in Analyst Studio
+ Connect to Arrow Flight SQL in Analyst Studio
+ Connect to Azure SQL Database in Analyst Studio
+ Connect to ClickHouse in Analyst Studio
+ Connect to Databricks in Analyst Studio
+ Connect to dbt semantic layer in Analyst Studio
+ Connect to Denodo in Analyst Studio
+ Connect to Dremio in Analyst Studio
+ Connect to Google AlloyDB in Analyst Studio
+ Connect to Google BigQuery in Analyst Studio
+ Connect to Heap SQL in Analyst Studio
+ Connect to Hive in Analyst Studio
+ Connect to Impala in Analyst Studio
+ Connect to Looker SQL in Analyst Studio
+ Connect to Microsoft SQL Server in Analyst Studio
+ Connect to MySQL in Analyst Studio
+ Connect to Oracle in Analyst Studio
+ Connect to PostgreSQL in Analyst Studio
+ Connect to Presto in Analyst Studio
+ Connect to Snowflake in Analyst Studio
+ Connect to Starburst in Analyst Studio
+ Connect to Teradata in Analyst Studio
+ Connect to Treasure Data in Analyst Studio
+ Connect to Trino in Analyst Studio
+ Connect to Vertica in Analyst Studio
+ Managing database connections
+ Query and analyze data
+ Querying data
+ AI Assist
+ Datasets
+ Query datasets
+ The Notebook
+ Parameters
+ Visualization filters
+ Definitions
+ Visualize data
+ Visualizations
+ Visual Explorer
+ Visual Explorer guides
+ Stacked bars
+ 100% stacked bars
+ Grouped bars
+ Combination: multiple panes
+ Dual axes
+ Faceting/ small multiples
+ Funnel
+ Line
+ Pie
+ Pivot table
+ Conditional formatting
+ Scatter
+ Calculated fields
+ Spreadsheet View
+ Schedule a Report
+ Report scheduling
+ Admin-managed schedules
+ Integrations
+ dbt data freshness
+ Semantic layer integrations
+ Webhooks
+ Connect to external data sources
+ Google Sheets
+ Microsoft Excel
+ Local file
+ Administration
+ Access control and permissions
+ Data retention policy
+ Administration permissions
+ API tokens
+ API
+ API reference
+ Discovery API
+ FAQs
+ Utilities
+ Content management with ThoughtSpot Modeling Language
+ Import and export TML files
+ Migrate multiple TML files
+ TML for Answers
+ TML for Collections
+ TML for connections
+ TML for feedback
+ TML for joins
+ TML for Liveboards
+ TML for Models
+ TML for Monitor alerts
+ TML for Sets
+ TML for SQL views
+ TML for tables
+ TML for views
+ Sync
+ Sync data to Excel
+ Sync data to Gainsight
+ Sync to Google BigQuery
+ Sync data to Google Sheets
+ Sync data to HubSpot
+ Sync data to Microsoft Teams
+ Sync data to Redshift
+ Sync data to Salesforce
+ Sync data to ServiceNow
+ Sync data to Snowflake
+ Sync data to Slack
+ Sync data to Zoho
+ Spotter memory
+ Governance
+ Data catalog
+ Alation catalog integration
+ Atlan catalog integration
+ Collibra catalog integration
+ Usage
+ User Adoption Liveboard
+ Object Usage Liveboard
+ Performance Tracking Liveboard
+ AI and BI System Liveboard
+ Billable Query Stats Liveboard
+ Indexing Queries Liveboard
+ Index Statistics Liveboard
+ dbt
+ Metadata tags for dbt
+ Integrate with dbt MetricFlow
+ Writeback
+ Liveboard verification
+ Administration
+ Admin portal enhancements
+ User Management
+ Users
+ Groups
+ Roles
+ Understand groups and privileges
+ Manage users and groups
+ Create, edit, or delete a group
+ Create, edit, or delete a user
+ Create, edit, or delete a user using IAMv2
+ Act as user
+ Manage user logins and sessions
+ Allow users to sign up
+ Manage users and groups with SCIM
+ Configure SCIM for multi-Org deployments
+ Manage users and groups overview
+ End user privileges
+ Authentication
+ Managing local authentication
+ Identity and Access Management
+ After migrating to IAMv2
+ Managing authentication with SAML using IAMv2
+ Configure SAML SSO with Microsoft Entra ID
+ Configure SAML group mapping
+ OIDC authentication
+ OIDC authentication with IAMv2
+ Configure OIDC SSO with Microsoft Entra ID
+ Org-scoped IdP connections and login page rendering
+ Multifactor authentication
+ Login flow with Multiple IdPs
+ Managing authentication with SAML
+ Security
+ Security overview
+ System security
+ Data security
+ Data and object security
+ Share tables and columns
+ Share Models
+ Share views
+ Column security rules
+ Set up column security rules
+ Row-level security
+ How rule-based RLS works
+ Set rule-based RLS
+ Variables in row-level security
+ Data masking with system variables
+ Multi-tenancy with Orgs
+ Orgs administration
+ User management
+ Group managements
+ Publishing
+ Unparameterize metadata objects
+ Variables
+ Admin Console for Orgs
+ Create, edit, and delete Orgs
+ Managing users in a multi-tenant environment
+ Managing groups in a multi-tenant environment
+ Managing authentication with SAML
+ Deployment options
+ High Availability and resilience
+ Data Protection and Disaster Recovery
+ Application Settings
+ Onboarding
+ Communication service (COMS)
+ Email customizations
+ Style customization
+ Custom announcements
+ Version Control
+ Home Page & App Experience
+ Search and SpotIQ settings
+ Early Access features
+ Help customization
+ System
+ Scheduled maintenance
+ Terms
+ Administer ThoughtSpot
+ Administration in ThoughtSpot editions
+ TSA and TSE defined
+ Consumption-based pricing
+ Query-based usage
+ User actions and queries
+ Subscription and rollover
+ Time-based usage
+ Consumption data storage
+ Usage limits
+ Cloud and Software support
+ Monitoring
+ System Models
+ TS: AI and BI Stats
+ TS: BI Server system Model
+ TS: Entitlement Tracking system Model
+ TS: Login Activity Tracking system Model
+ TS: Object Tracking system Model
+ TS: Provisioned Users system Model
+ System Liveboards
+ Troubleshooting
+ Generate a HAR file for ThoughtSpot Support
+ Clear the browser cache
+ Cannot open a saved Answer that contains a formula
+ Search results contain too many blanks
+ Custom domain configuration
+ Manage scheduled jobs
+ Browser caching for Liveboards
+ Scheduled Liveboards management
+ Reference
+ TML properties glossary
+ Keyword reference
+ Dansk: Danish keyword reference
+ Deutsch: German keyword reference
+ Deutsch (Switzerland): German keyword reference
+ English (American) keyword reference
+ Period to-date keywords
+ Español (España): Spanish keyword reference
+ Español (Latinoamérica): Spanish Latin American keyword reference
+ Español (Mexico): Spanish keyword reference
+ Français (Canada): French Canadian keyword reference
+ Français (France): French keyword reference
+ Italiano: Italian keyword reference
+ Nederland: Dutch keyword reference
+ Norsk: Norwegian keyword reference
+ Polski: Polish keyword reference
+ Português (Portugal): Portuguese keyword reference
+ Português (Brasil): Portuguese Brazilian keyword reference
+ Română: Romanian keyword reference
+ русский (ограниченный выпуск): Russian (Limited Edition) keyword reference
+ Suomi: Finnish keyword reference
+ Svenska: Swedish keyword reference
+ Türkçe: Turkish keyword reference
+ Українська: Ukrainian keyword reference
+ 中文 (简体): Chinese (Simplified) keyword reference
+ 中文 (繁體): Chinese (Traditional) keyword reference
+ 日本語: Japanese keyword reference
+ 한국어: Korean keyword reference
+ Timezone-aware keywords and filters
+ Date and time formats reference
+ Row-level security rules reference
+ Formula function reference
+ Alert codes reference
+ Search data error reference
+ Cluster-level settings
+ User action codes reference
+ Query stats action code reference
+ Geo map reference
+ REST API reference
+ Glossary
+ Frequently asked questions
+ Help and support
+ ThoughtSpot Status
+ Contact support
+ Support Handbook
+ Cloud releases
+ Release lifecycle
+ Accessibility

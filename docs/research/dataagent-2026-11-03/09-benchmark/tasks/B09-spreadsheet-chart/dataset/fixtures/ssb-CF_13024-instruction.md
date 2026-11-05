@@ -1,0 +1,1 @@
+How can I automatically highlight each staff's Saturday or Sunday off in an attendance/holiday planner, using Conditional formatting, for two different roster groups (one works from Monday to Saturday and the other from Sunday to Friday)?I want to use yellow to highlight these days off. How can this be achieved?

@@ -1,0 +1,303 @@
+{
+  "atoms": [
+    {
+      "group": "DA01.4",
+      "group_name": "文件解析",
+      "id": "DA01.4.1",
+      "name": "规整 Excel 解析：提取明确表头的单表或多 sheet 表",
+      "operation": "parse_regular_excel",
+      "s0_family": "骨干",
+      "source_file": "src/dataagent_data/ingestion/files.py"
+    },
+    {
+      "group": "DA01.4",
+      "group_name": "文件解析",
+      "id": "DA01.4.2",
+      "name": "不规则 Excel 提取：从混合布局中恢复逻辑表",
+      "operation": "extract_irregular_excel",
+      "s0_family": "计算族",
+      "source_file": "src/dataagent_data/ingestion/files.py"
+    },
+    {
+      "group": "DA01.4",
+      "group_name": "文件解析",
+      "id": "DA01.4.3",
+      "name": "CSV/TSV 解析：处理分隔符与编码",
+      "operation": "parse_delimited_file",
+      "s0_family": "骨干",
+      "source_file": "src/dataagent_data/ingestion/files.py"
+    },
+    {
+      "group": "DA01.4",
+      "group_name": "文件解析",
+      "id": "DA01.4.4",
+      "name": "JSON/JSONL 解析：保留嵌套记录",
+      "operation": "parse_json_records",
+      "s0_family": "骨干",
+      "source_file": "src/dataagent_data/ingestion/files.py"
+    },
+    {
+      "group": "DA01.4",
+      "group_name": "文件解析",
+      "id": "DA01.4.5",
+      "name": "文本型 PDF 解析：读取文字与版面位置",
+      "operation": "parse_text_pdf",
+      "s0_family": "骨干",
+      "source_file": "src/dataagent_data/ingestion/files.py"
+    },
+    {
+      "group": "DA01.4",
+      "group_name": "文件解析",
+      "id": "DA01.4.6",
+      "name": "工作簿日期系统与公式缓存识别",
+      "operation": "inspect_workbook_calc_state",
+      "s0_family": "计算族",
+      "source_file": "src/dataagent_data/ingestion/files.py"
+    },
+    {
+      "group": "DA01.5",
+      "group_name": "OCR",
+      "id": "DA01.5.1",
+      "name": "扫描 PDF OCR",
+      "operation": "ocr_pdf",
+      "s0_family": "骨干",
+      "source_file": "src/dataagent_data/ingestion/ocr.py"
+    },
+    {
+      "group": "DA01.5",
+      "group_name": "OCR",
+      "id": "DA01.5.2",
+      "name": "图片 OCR",
+      "operation": "ocr_image",
+      "s0_family": "骨干",
+      "source_file": "src/dataagent_data/ingestion/ocr.py"
+    },
+    {
+      "group": "DA02.1",
+      "group_name": "表格区域识别",
+      "id": "DA02.1.1",
+      "name": "工作簿表块检测",
+      "operation": "detect_workbook_regions",
+      "s0_family": "计算族",
+      "source_file": "src/dataagent_data/preparation/regions.py"
+    },
+    {
+      "group": "DA02.12",
+      "group_name": "文档信息抽取",
+      "id": "DA02.12.1",
+      "name": "按目标结构抽取字段",
+      "operation": "extract_fields_to_schema",
+      "s0_family": "判定族",
+      "source_file": "src/dataagent_data/preparation/extraction.py"
+    },
+    {
+      "group": "DA02.12",
+      "group_name": "文档信息抽取",
+      "id": "DA02.12.3",
+      "name": "抽取结果原文锚定",
+      "operation": "anchor_extracted_values",
+      "s0_family": "判定族",
+      "source_file": "src/dataagent_data/preparation/extraction.py"
+    },
+    {
+      "group": "DA02.12",
+      "group_name": "文档信息抽取",
+      "id": "DA02.12.4",
+      "name": "抽取标签体系版本化",
+      "operation": "register_extraction_schema_version",
+      "s0_family": "判定族",
+      "source_file": "src/dataagent_data/preparation/extraction.py"
+    },
+    {
+      "group": "DA02.2",
+      "group_name": "表格结构恢复",
+      "id": "DA02.2.1",
+      "name": "多行表头恢复",
+      "operation": "recover_headers",
+      "s0_family": "计算族",
+      "source_file": "src/dataagent_data/preparation/structure.py"
+    },
+    {
+      "group": "DA02.2",
+      "group_name": "表格结构恢复",
+      "id": "DA02.2.2",
+      "name": "合并单元格展开",
+      "operation": "expand_merged_cells",
+      "s0_family": "计算族",
+      "source_file": "src/dataagent_data/preparation/structure.py"
+    },
+    {
+      "group": "DA02.2",
+      "group_name": "表格结构恢复",
+      "id": "DA02.2.3",
+      "name": "明细/合计行识别",
+      "operation": "classify_table_rows",
+      "s0_family": "计算族",
+      "source_file": "src/dataagent_data/preparation/structure.py"
+    },
+    {
+      "group": "DA02.4",
+      "group_name": "数据画像",
+      "id": "DA02.4.1",
+      "name": "表结构画像",
+      "operation": "profile_table_structure",
+      "s0_family": "计算族",
+      "source_file": "src/dataagent_data/preparation/profiles.py"
+    },
+    {
+      "group": "DA02.4",
+      "group_name": "数据画像",
+      "id": "DA02.4.3",
+      "name": "字段类型推断",
+      "operation": "infer_field_types",
+      "s0_family": "计算族",
+      "source_file": "src/dataagent_data/preparation/profiles.py"
+    },
+    {
+      "group": "DA02.8",
+      "group_name": "文档加工",
+      "id": "DA02.8.1",
+      "name": "章节/表格切分",
+      "operation": "segment_document",
+      "s0_family": "判定族",
+      "source_file": "src/dataagent_data/preparation/documents.py"
+    },
+    {
+      "group": "DA02.8",
+      "group_name": "文档加工",
+      "id": "DA02.8.2",
+      "name": "原文引用锚点维护",
+      "operation": "maintain_source_anchors",
+      "s0_family": "判定族",
+      "source_file": "src/dataagent_data/preparation/documents.py"
+    },
+    {
+      "group": "DA03.15",
+      "group_name": "可判定性评估",
+      "id": "DA03.15.1",
+      "name": "自动判断能力评估",
+      "operation": "assess_automatic_decidability",
+      "s0_family": "判定族",
+      "source_file": "src/dataagent_data/semantics/decidability.py"
+    },
+    {
+      "group": "DA03.15",
+      "group_name": "可判定性评估",
+      "id": "DA03.15.2",
+      "name": "补证与人工需求识别",
+      "operation": "identify_evidence_or_human_gaps",
+      "s0_family": "判定族",
+      "source_file": "src/dataagent_data/semantics/decidability.py"
+    },
+    {
+      "group": "DA03.15",
+      "group_name": "可判定性评估",
+      "id": "DA03.15.3",
+      "name": "自动处理范围标注",
+      "operation": "mark_automation_coverage",
+      "s0_family": "判定族",
+      "source_file": "src/dataagent_data/semantics/decidability.py"
+    },
+    {
+      "group": "DA03.15",
+      "group_name": "可判定性评估",
+      "id": "DA03.15.4",
+      "name": "判定缓存与依赖失效",
+      "operation": "resolve_decidability_cache",
+      "s0_family": "判定族",
+      "source_file": "src/dataagent_data/semantics/decidability.py"
+    },
+    {
+      "group": "DA03.16",
+      "group_name": "适用范围建模",
+      "id": "DA03.16.1",
+      "name": "适用范围表达：本条管哪些单据与场景",
+      "operation": "define_rule_applicability",
+      "s0_family": "判定族",
+      "source_file": "src/dataagent_data/semantics/applicability.py"
+    },
+    {
+      "group": "DA03.16",
+      "group_name": "适用范围建模",
+      "id": "DA03.16.2",
+      "name": "生效前提表达：前置条件及其组合",
+      "operation": "define_rule_preconditions",
+      "s0_family": "判定族",
+      "source_file": "src/dataagent_data/semantics/applicability.py"
+    },
+    {
+      "group": "DA03.16",
+      "group_name": "适用范围建模",
+      "id": "DA03.16.3",
+      "name": "前置引用与去重：同义前置只留一条",
+      "operation": "normalize_precondition_references",
+      "s0_family": "判定族",
+      "source_file": "src/dataagent_data/semantics/applicability.py"
+    },
+    {
+      "group": "DA03.16",
+      "group_name": "适用范围建模",
+      "id": "DA03.16.4",
+      "name": "适用性未知处置",
+      "operation": "resolve_unknown_applicability",
+      "s0_family": "判定族",
+      "source_file": "src/dataagent_data/semantics/applicability.py"
+    },
+    {
+      "group": "DA03.4",
+      "group_name": "指标与规则定义",
+      "id": "DA03.4.1",
+      "name": "指标公式定义",
+      "operation": "define_metric_formula",
+      "s0_family": "计算族",
+      "source_file": "src/dataagent_data/semantics/metrics_rules.py"
+    },
+    {
+      "group": "DA03.4",
+      "group_name": "指标与规则定义",
+      "id": "DA03.4.3",
+      "name": "业务规则定义",
+      "operation": "define_business_rules",
+      "s0_family": "判定族",
+      "source_file": "src/dataagent_data/semantics/metrics_rules.py"
+    },
+    {
+      "group": "DA04.1",
+      "group_name": "任务轨迹存储",
+      "id": "DA04.1.1",
+      "name": "任务事件记录",
+      "operation": "append_task_event",
+      "s0_family": "骨干",
+      "source_file": "src/dataagent_data/memory/traces.py"
+    },
+    {
+      "group": "DA04.1",
+      "group_name": "任务轨迹存储",
+      "id": "DA04.1.2",
+      "name": "查询/工具调用记录",
+      "operation": "append_invocation_record",
+      "s0_family": "骨干",
+      "source_file": "src/dataagent_data/memory/traces.py"
+    },
+    {
+      "group": "DA04.1",
+      "group_name": "任务轨迹存储",
+      "id": "DA04.1.3",
+      "name": "用户纠正记录",
+      "operation": "append_user_correction",
+      "s0_family": "骨干",
+      "source_file": "src/dataagent_data/memory/traces.py"
+    }
+  ],
+  "counts": {
+    "atoms": 32,
+    "by_family": {
+      "判定族": 14,
+      "计算族": 9,
+      "骨干": 9
+    }
+  },
+  "generated_from": "docs/research/dataagent-2026-11-03/catalog/atomic-capability-catalog.json",
+  "source_sha256": "fbd48e5a54ac5277ec7f8c5a7d623299bb91c5089b1f95456d392cb1fb81c3ae",
+  "version": "0.1.0"
+}

@@ -1,0 +1,23 @@
+## Essential Problem
+
+The essential problem is to determine the minimum number of guests we need to invite to guarantee either 3 football fans or 3 basketball fans at the party. This is a classic application of the Pigeonhole Principle, which states that if we have n+1 items to put into n boxes, then at least one box must contain two or more items.
+
+## Step-by-Step Reasoning
+
+Here's how we can approach the problem step-by-step:
+
+1. **Pigeonhole Setup:** We can consider the "boxes" in the Pigeonhole Principle as groups of 3 guests. Each guest can either be a football fan or a basketball fan, so there are 2 "boxes" (one for each sport).
+
+2. **Minimum Guests:** We want to find the minimum number of guests (items) that guarantees at least one "box" (group of 3) to have the same type of fan (football or basketball).
+
+3. **Applying the Pigeonhole Principle:** With 2 "boxes" (groups of 3) and 2 types of fans (football or basketball), the Pigeonhole Principle tells us that we need at least 2*2 + 1 = 5 guests. This ensures that at least one "box" (group of 3) will have fans of the same sport (either 3 football fans or 3 basketball fans).
+
+4. **Verification:** We can check that with 4 guests, it's possible to have 2 football fans and 2 basketball fans, without any group of 3 having the same preference. However, with 5 guests, we are guaranteed to have either 3 football fans or 3 basketball fans.
+
+## Draft Answer
+
+Therefore, we need to invite a minimum of 5 guests to ensure that there are either 3 football fans or 3 basketball fans at the party. This is based on the Pigeonhole Principle, which guarantees that with 5 guests, at least one group of 3 will have the same preference for sports. 
+
+## Additional Thoughts
+
+It's important to note that this problem assumes that everyone invited will attend the party. If there's a possibility of guests not showing up, we might need to invite a few more people to be safe. Additionally, this solution only guarantees the existence of a group of 3 fans of the same sport, but it doesn't tell us anything about their overall distribution or the size of the other group. 

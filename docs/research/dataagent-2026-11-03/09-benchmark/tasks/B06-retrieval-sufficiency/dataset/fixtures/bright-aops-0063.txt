@@ -1,0 +1,45 @@
+##  Problem Identification:
+
+The problem asks us to determine the ratio in which point $E$ divides side $BC$ of $\triangle ABC$. We are given that point $F$ divides side $AC$ in the ratio $1:2$ and that $G$ is the midpoint of $BF$. 
+
+##  Reasoning and Information:
+
+To solve this problem, we need to utilize the concept of similar triangles. Since $G$ is the midpoint of $BF$, we know that $BG = GF$. We can also see that $\triangle ABG$ and $\triangle ACG$ share an angle at $A$ and have a right angle at $B$ and $C$ respectively. Therefore, by AA Similarity, we know that $\triangle ABG \sim \triangle ACG$. 
+
+Furthermore, since $F$ divides $AC$ in the ratio $1:2$, we know that $AF:FC = 1:2$. This implies that $AC = 3AF$. 
+
+##  Drafting an Answer:
+
+Using the similarity of triangles, we can write the following proportion:
+
+$$\frac{BG}{AG} = \frac{AB}{AC}$$
+
+Substituting $BG = GF$ and $AC = 3AF$, we get:
+
+$$\frac{GF}{AG} = \frac{AB}{3AF}$$
+
+Simplifying, we get:
+
+$$\frac{1}{3} = \frac{AB}{AF}$$
+
+Cross-multiplying, we get:
+
+$$AF = 3AB$$
+
+Now, consider $\triangle AEB$ and $\triangle AFC$. Both triangles share an angle at $A$ and have a right angle at $E$ and $F$ respectively. Therefore, by AA Similarity, we have:
+
+$$\triangle AEB \sim \triangle AFC$$
+
+Using the similarity of triangles, we can write the following proportion:
+
+$$\frac{AE}{AF} = \frac{AB}{AC}$$
+
+Substituting $AF = 3AB$, we get:
+
+$$\frac{AE}{3AB} = \frac{AB}{3AF}$$
+
+Simplifying, we get:
+
+$$\frac{AE}{AB} = \frac{1}{3}$$
+
+Therefore, point $E$ divides side $BC$ in the ratio $\boxed{1:3}$. 

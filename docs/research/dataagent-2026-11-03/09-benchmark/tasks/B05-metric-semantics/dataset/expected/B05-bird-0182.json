@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 181,
+  "question": "I'm looking at whether a fast attacking build-up actually converts into big results. Which clubs, playing at home, have won a match by at least 3 goals while their build-up play speed was rated fast at the time? For each such club, give me the club name, short name, and how many of those home wins it has - one row per club. Please treat clubs as separate even if two clubs share the same short name, and if several clubs tie on the number of wins, list all of them. The speed rating that counts is the club's most recent rating dated on or before the match's own date.",
+  "evidence": "A club wins by at least 3 goals when its goal count minus the opponent's goal count is 3 or more; 'fast' means the club's build-up play speed class at that time is Fast.",
+  "gold_sql": "SELECT t.team_long_name AS club_name, t.team_short_name AS short_name, COUNT(*) AS home_wins FROM `Match` m JOIN Team t ON t.team_api_id = m.home_team_api_id WHERE m.home_team_goal - m.away_team_goal >= 3 AND (SELECT ta.buildUpPlaySpeedClass FROM Team_Attributes ta WHERE ta.team_api_id = m.home_team_api_id AND ta.date <= m.date ORDER BY ta.date DESC, ta.id DESC LIMIT 1) = 'Fast' GROUP BY t.team_api_id, t.team_long_name, t.team_short_name ORDER BY home_wins DESC, club_name",
+  "db_id": "european_football_2",
+  "case_id": "B05-bird-0182",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT t.team_long_name AS club_name, t.team_short_name AS short_name, COUNT(*) AS home_wins FROM `Match` m JOIN Team t ON t.team_api_id = m.home_team_api_id WHERE m.home_team_goal - m.away_team_goal >= 3 AND (SELECT ta.buildUpPlaySpeedClass FROM Team_Attributes ta WHERE ta.team_api_id = m.home_team_api_id AND ta.date <= m.date ORDER BY ta.date DESC, ta.id DESC LIMIT 1) = 'Fast' GROUP BY t.team_api_id, t.team_long_name, t.team_short_name ORDER BY home_wins DESC, club_name",
+    "db_id": "european_football_2",
+    "evidence": "A club wins by at least 3 goals when its goal count minus the opponent's goal count is 3 or more; 'fast' means the club's build-up play speed class at that time is Fast."
+  }
+}

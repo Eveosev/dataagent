@@ -1,0 +1,29 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1200,
+  "table": "economy-table97",
+  "structure": "ColumnHeaderMerge",
+  "question_type": "Numerical Reasoning",
+  "sub_type": "Ranking",
+  "answer": "FY2011, FY2012, FY2010, FY2009",
+  "cot": [
+    {
+      "planning": "First, locate the column labeled 'Dollars Forgiven (in millions)' under the 'Federal Family Education Loan Program' section."
+    },
+    {
+      "planning": "Extract the values for all fiscal years (FY2009 to FY2012)."
+    },
+    {
+      "planning": "Rank the fiscal years by the forgiven amounts in descending order."
+    },
+    {
+      "planning": "Finally, output the ranked list of fiscal years."
+    }
+  ],
+  "case_id": "B01-rht-2836",
+  "expected": {
+    "kind": "answer",
+    "question": "Rank the fiscal years between 2009 and 2012 by the amount of dollars forgiven (in millions) under the Federal Family Education Loan Program, from highest to lowest.",
+    "answer": "FY2011, FY2012, FY2010, FY2009"
+  }
+}

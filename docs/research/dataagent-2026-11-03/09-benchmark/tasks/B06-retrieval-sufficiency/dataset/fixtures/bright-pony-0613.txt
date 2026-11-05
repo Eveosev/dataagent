@@ -1,0 +1,42 @@
+## Essential Problem:
+
+The core problem is to split an input string `s` into an array of substrings based on a specified length `n`. However, the last substring may be shorter if the length of the original string is not evenly divisible by `n`.
+
+## Relevant Information:
+
+* **Input:** String `s` and integer `n` representing the desired substring length.
+* **Output:** Array of strings, where each element is a substring of length `n` except the last one, which might be shorter.
+* **Key Logic:** 
+
+    1.  **Iteration:** Iterate over the input string with steps of `n`.
+    2.  **Substrings:** For each step, extract a substring of length `n` from the original string.
+    3.  **Last Substring:** Check if the remaining characters after iterating through the entire string are less than `n`. If so, create a final substring with the remaining characters.
+
+## Draft Answer:
+
+Here's a possible solution in Pony:
+
+```pony
+fun splitString(s: String, n: ISize): Array[String] =>
+    let substrings = Array[String]()
+    var i = 0
+
+    while i < s.length
+        substrings.append(s[i..(i + n - 1)])
+        i += n
+
+    if i < s.length
+        substrings.append(s[i..s.length])
+
+    return substrings
+```
+
+This code defines a function `splitString` that takes a string `s` and an integer `n` as input and returns an array of strings. 
+
+1. It initializes an empty array `substrings` to store the resulting substrings.
+2. It uses a `while` loop to iterate over the string `s` with steps of `n`.
+3. Inside the loop, it extracts a substring of length `n` from the original string using the range operator `[i..(i + n - 1)]` and appends it to the `substrings` array.
+4. After the loop, it checks if there are any remaining characters in the string (`i < s.length`). If so, it creates a final substring with the remaining characters using the range `[i..s.length]` and adds it to the `substrings` array.
+5. Finally, the function returns the `substrings` array.
+
+This code addresses the essential problem by ensuring that the last substring is shorter than `n` if the length of the original string is not divisible by `n`. It also provides a clear and concise implementation using Pony syntax.

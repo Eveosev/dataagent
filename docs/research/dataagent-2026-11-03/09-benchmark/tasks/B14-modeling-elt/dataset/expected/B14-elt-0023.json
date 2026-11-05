@@ -1,0 +1,67 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "databricks",
+  "pipeline": "cookbook",
+  "data_model": {
+    "models": [
+      {
+        "name": "recipes",
+        "description": "Each record represents a recipe.",
+        "columns": [
+          {
+            "name": "recipe_id",
+            "description": "Unique identifier for the recipe"
+          },
+          {
+            "name": "title",
+            "description": "Title of the recipe"
+          },
+          {
+            "name": "prep_min",
+            "description": "Preparation time in minutes for the recipe"
+          },
+          {
+            "name": "num_ingredients",
+            "description": "Number of ingredients in the recipe, replace NULL values with 0."
+          },
+          {
+            "name": "includes_baking_soda_and_serves_10_or_more_people",
+            "description": "Set to 1 if the recipe includes baking soda and serves 10 or more people, otherwise, set to 0"
+          },
+          {
+            "name": "contains_vitamin_that_helps_vision",
+            "description": "Set to 1 if the recipe contains a vitamin that helps vision in dim light, otherwise, set to 0"
+          },
+          {
+            "name": "is_good_for_wound_healing",
+            "description": "Set to 1 if the recipe is good for wound healing, otherwise, set to 0"
+          },
+          {
+            "name": "contains_cheese_and_calories_greater_than_200",
+            "description": "Set to 1 if the recipe contains cheese and the calories are greater than 200, otherwise, set to 0. Contains cheese refers to ingredients that include the word \"cheese\" in their name."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    databricks_definition_id: 072d5540-f236-4294-ba7c-ade8fd918496\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - Nutrition\nflat_files:\n- format: csv\n  path: https://drive.google.com/uc?export=download&id=1AfoABQea2jWmrzGKjuxxlzDmBuxl7dmV\n  sync_mode: full_refresh_append\n  table: Ingredient\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: cookbook\n    sync_mode: full_refresh_append\n    tables:\n    - Recipe\npostgres:\n  config:\n    database: cookbook\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - quantity\n    user: postgres\ndatabricks:\n  config:\n    database: <db_database>\n    hostname: <db_hostname>\n    client_id: <db_client_id>\n    secret: <db_secret>\n    schema: cookbook\n    http_path: <db_path>\n",
+  "case_id": "B14-elt-0023",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "recipes",
+        "columns": [
+          "recipe_id",
+          "title",
+          "prep_min",
+          "num_ingredients",
+          "includes_baking_soda_and_serves_10_or_more_people",
+          "contains_vitamin_that_helps_vision",
+          "is_good_for_wound_healing",
+          "contains_cheese_and_calories_greater_than_200"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+Are the report counts of for 'frauds and other data' in 2024 consistent for the Metropolitan area of Miami-Fort Lauderdale-West Palm Beach? Answer True or False. No explanation needed.

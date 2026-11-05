@@ -1,0 +1,1 @@
+What is the distance of the longest route where Abakan is either the departure or destination city (in kilometers)?

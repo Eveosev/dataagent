@@ -1,0 +1,1 @@
+How many unique StudyInstanceUIDs are there from the DWI, T2 Weighted Axial, Apparent Diffusion Coefficient series, and T2 Weighted Axial Segmentations in the 'qin_prostate_repeatability' collection?

@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 127,
+  "question": "I'd like to gauge the standing of our United Kingdom contributor community on the site. Can you give me the combined reputation of the users based in the United Kingdom who have posted on the site, as a single total? Please write the country by its full name, \"United Kingdom\", and don't substitute abbreviations. I just need the one number, not a per-user list.",
+  "evidence": "Reputation is the score the site assigns each user. A user who has posted owns at least one item in the site's post collection.",
+  "gold_sql": "SELECT SUM(u.Reputation) AS combined_reputation FROM users u WHERE u.Location LIKE '%United Kingdom%' AND u.Id IN (SELECT p.OwnerUserId FROM posts p WHERE p.OwnerUserId IS NOT NULL)",
+  "db_id": "codebase_community",
+  "case_id": "B05-bird-0128",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT SUM(u.Reputation) AS combined_reputation FROM users u WHERE u.Location LIKE '%United Kingdom%' AND u.Id IN (SELECT p.OwnerUserId FROM posts p WHERE p.OwnerUserId IS NOT NULL)",
+    "db_id": "codebase_community",
+    "evidence": "Reputation is the score the site assigns each user. A user who has posted owns at least one item in the site's post collection."
+  }
+}

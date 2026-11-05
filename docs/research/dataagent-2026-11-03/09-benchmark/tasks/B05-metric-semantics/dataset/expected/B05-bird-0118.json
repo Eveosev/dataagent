@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 117,
+  "question": "I'm putting together a black artifact flavor-showcase section for a trade binder. How many mono-black Artifact cards have a foreign-language printing that shows flavor text in that language? By mono-black I mean black is the card's only colour, and by Artifact cards I include artifacts combined with another card type, like an Artifact Creature. I'm counting cards, not printings – a card is the same card regardless of set, print run, or language. Just give me one number.",
+  "evidence": "In Magic colour notation, B denotes black, and a card is mono-black when black is its only colour.",
+  "gold_sql": "SELECT COUNT(DISTINCT c.name) AS card_count FROM cards AS c WHERE c.colors = 'B' AND c.type LIKE '%Artifact%' AND EXISTS (SELECT 1 FROM foreign_data AS f WHERE f.uuid = c.uuid AND LENGTH(f.flavorText) > 0)",
+  "db_id": "card_games",
+  "case_id": "B05-bird-0118",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT COUNT(DISTINCT c.name) AS card_count FROM cards AS c WHERE c.colors = 'B' AND c.type LIKE '%Artifact%' AND EXISTS (SELECT 1 FROM foreign_data AS f WHERE f.uuid = c.uuid AND LENGTH(f.flavorText) > 0)",
+    "db_id": "card_games",
+    "evidence": "In Magic colour notation, B denotes black, and a card is mono-black when black is its only colour."
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1532,
+  "table": "medical-table03",
+  "structure": "ColumnHeaderMerge",
+  "question_type": "Numerical Reasoning",
+  "sub_type": "Multi-hop Numerical Reasoning",
+  "answer": "143",
+  "cot": [
+    {
+      "planning": "First, we need to identify all the values in the 'Novel' column for the group p75FL."
+    },
+    {
+      "planning": "Then, we need to find the maximum and minimum values among these."
+    },
+    {
+      "planning": "Finally, we subtract the minimum value from the maximum value to get the difference."
+    }
+  ],
+  "case_id": "B01-rht-3168",
+  "expected": {
+    "kind": "answer",
+    "question": "What is the difference between the maximum and minimum values in the 'Novel' column for the group p75FL?",
+    "answer": "143"
+  }
+}

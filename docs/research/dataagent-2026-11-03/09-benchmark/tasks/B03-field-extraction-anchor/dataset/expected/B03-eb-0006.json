@@ -1,0 +1,823 @@
+{
+  "source": "llamaindex/ExtractBench",
+  "id": "short/07021-2016-p0014",
+  "pdf": "docs/short/07021-2016-p0014.pdf",
+  "schema": {
+    "$defs": {
+      "CodedEntry": {
+        "type": "object",
+        "title": "Coded box entry",
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Code",
+            "description": "The single-letter (or short) code printed at the left of the entry inside this Part III box, verbatim uppercase as printed (e.g. 'A', 'C', 'AC'). Identifies the row: entries in a coded box are aligned by this code at eval time, not by position. Null only if an amount prints with no code."
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Amount",
+            "description": "[no-anchor] The dollar amount printed beside the code in this box (the printed label anchor is the box header on the parent array, e.g. '15 Credits'). JSON number exactly as printed with any thousands comma removed; a loss/negative prints in parentheses or with a leading minus and is negative; null if a code prints with no amount. Some codes (e.g. box 16 foreign-transaction country lines) carry text rather than a number — null the amount when the entry value is non-numeric."
+          }
+        }
+      }
+    },
+    "type": "object",
+    "title": "Schedule K-1 (Form 1065) Partner's Share of Income, Deductions, Credits, etc.",
+    "properties": {
+      "final_k1": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Final K-1",
+        "description": "The 'Final K-1' checkbox at the top of the form. TWO-STATE: true only if a mark is printed inside the box; false otherwise, including blank. Never return null."
+      },
+      "amended_k1": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Amended K-1",
+        "description": "The 'Amended K-1' checkbox at the top of the form. TWO-STATE: true only if a mark is printed inside the box; false otherwise, including blank. Never return null."
+      },
+      "partnership_ein": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Partnership EIN",
+        "description": "Item A 'Partnership's employer identification number', verbatim including the hyphen, e.g. '26-3839121'."
+      },
+      "partnership_name": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Partnership name",
+        "description": "The partnership name printed in item B 'Partnership's name, address, city, state, and ZIP code' (the name line before the address), verbatim, e.g. 'Pine Harbour Water Utilities LLC'."
+      },
+      "partnership_address": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Partnership address",
+        "description": "The partnership mailing address in item B, below the name; join street and city/state/ZIP lines with ', ', e.g. 'P O BOX 447, Fruitland Park FL 34731'."
+      },
+      "irs_center": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "IRS Center",
+        "description": "Item C 'IRS Center where partnership filed return', verbatim as printed, e.g. 'OGDEN'."
+      },
+      "is_publicly_traded_partnership": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Publicly traded partnership (PTP)",
+        "description": "Item D 'Check if this is a publicly traded partnership (PTP)'. TWO-STATE: true only if the box is marked; false otherwise, including blank. Never return null."
+      },
+      "partner_id": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Partner identifying number",
+        "description": "Item E 'Partner's identifying number' (SSN or EIN), verbatim as printed including any hyphens, e.g. '288-56-3387'."
+      },
+      "partner_name": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Partner name",
+        "description": "The partner name in item F 'Partner's name, address, city, state, and ZIP code' (name line), verbatim, e.g. 'ROBERT STEWART'."
+      },
+      "partner_address": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Partner address",
+        "description": "The partner mailing address in item F, below the name; join lines with ', ', e.g. 'P O BOX 447, Fruitland Park FL 34731'."
+      },
+      "is_general_partner": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "General partner",
+        "description": "Item G partner-type pair: true if the 'General partner or LLC member-manager' box is marked, false if the 'Limited partner or other LLC member' box is marked (mutually exclusive — one field). Never return null."
+      },
+      "is_domestic_partner": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Domestic partner",
+        "description": "Item H partner-type pair: true if the 'Domestic partner' box is marked, false if the 'Foreign partner' box is marked (mutually exclusive — one field). Never return null."
+      },
+      "partner_entity_type": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Partner entity type",
+        "description": "Item I 'What type of entity is this partner?', verbatim as printed, e.g. 'INDIVIDUAL', 'INDIVIDUAL PASSIVE', 'CORPORATION'; null if blank."
+      },
+      "profit_share_beginning": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Profit share beginning",
+        "description": "Item J 'Partner's share of profit, loss, and capital': the Beginning percentage on the 'Profit' row. JSON number of the printed percent, e.g. 33.3333; null if blank."
+      },
+      "profit_share_ending": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Profit share ending",
+        "description": "Item J 'Partner's share of profit, loss, and capital': the Ending percentage on the 'Profit' row. JSON number of the printed percent, e.g. 33.3333; null if blank."
+      },
+      "loss_share_beginning": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Loss share beginning",
+        "description": "Item J 'Partner's share of profit, loss, and capital': the Beginning percentage on the 'Loss' row. JSON number of the printed percent, e.g. 33.3333; null if blank."
+      },
+      "loss_share_ending": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Loss share ending",
+        "description": "Item J 'Partner's share of profit, loss, and capital': the Ending percentage on the 'Loss' row. JSON number of the printed percent, e.g. 33.3333; null if blank."
+      },
+      "capital_share_beginning": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Capital share beginning",
+        "description": "Item J 'Partner's share of profit, loss, and capital': the Beginning percentage on the 'Capital' row. JSON number of the printed percent, e.g. 33.3333; null if blank."
+      },
+      "capital_share_ending": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Capital share ending",
+        "description": "Item J 'Partner's share of profit, loss, and capital': the Ending percentage on the 'Capital' row. JSON number of the printed percent, e.g. 33.3333; null if blank."
+      },
+      "liability_nonrecourse": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Nonrecourse liabilities",
+        "description": "Item K 'Partner's share of liabilities at year end': the 'Nonrecourse' amount. JSON number; null if blank."
+      },
+      "liability_qualified_nonrecourse_financing": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Qualified nonrecourse financing",
+        "description": "Item K: the 'Qualified nonrecourse financing' amount. JSON number; null if blank."
+      },
+      "liability_recourse": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Recourse liabilities",
+        "description": "Item K: the 'Recourse' amount. JSON number; null if blank."
+      },
+      "capital_beginning_account": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Beginning capital account",
+        "description": "Item L 'Partner's capital account analysis': the 'Beginning capital account' amount. JSON number, negative in parentheses/with a minus; null if blank."
+      },
+      "capital_contributed": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Capital contributed during the year",
+        "description": "Item L: 'Capital contributed during the year'. JSON number; null if blank."
+      },
+      "capital_current_year_increase_decrease": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Current year increase (decrease)",
+        "description": "Item L: 'Current year increase (decrease)'. JSON number, negative in parentheses/with a minus; null if blank."
+      },
+      "capital_withdrawals_distributions": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Withdrawals & distributions",
+        "description": "Item L: 'Withdrawals & distributions'. JSON number (usually printed in parentheses as a subtraction — negative); null if blank."
+      },
+      "capital_ending_account": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Ending capital account",
+        "description": "Item L: 'Ending capital account'. JSON number, negative in parentheses/with a minus; null if blank."
+      },
+      "capital_account_method": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Capital account method",
+        "description": "Item L method checkbox group: which basis the capital account is reported on — one of 'Tax basis', 'GAAP', 'Section 704(b) book', or 'Other' (the box that is marked). Verbatim label of the marked box; null if none is marked."
+      },
+      "contributed_built_in_gain_loss_property": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Item M built-in gain/loss property",
+        "description": "Item M 'Did the partner contribute property with a built-in gain or loss?' — true if 'Yes' is marked, false if 'No' is marked. NULLABLE EXCEPTION: item M exists only on the 2009+ revision; return null on the 2008 revision, which does not print item M at all."
+      },
+      "box_1_ordinary_business_income": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Box 1 ordinary business income",
+        "description": "Part III box '1 Ordinary business income (loss)': the dollar amount printed in the box. JSON number exactly as printed, comma removed; a loss prints in parentheses or with a leading minus and is negative; null if blank."
+      },
+      "box_2_net_rental_real_estate": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Box 2 net rental real estate",
+        "description": "Part III box '2 Net rental real estate income (loss)': the dollar amount printed in the box. JSON number exactly as printed, comma removed; a loss prints in parentheses or with a leading minus and is negative; null if blank."
+      },
+      "box_3_other_net_rental_income": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Box 3 other net rental income",
+        "description": "Part III box '3 Other net rental income (loss)': the dollar amount printed in the box. JSON number exactly as printed, comma removed; a loss prints in parentheses or with a leading minus and is negative; null if blank."
+      },
+      "box_4_guaranteed_payments": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Box 4 guaranteed payments",
+        "description": "Part III box '4 Guaranteed payments': the dollar amount printed in the box. JSON number exactly as printed, comma removed; a loss prints in parentheses or with a leading minus and is negative; null if blank."
+      },
+      "box_5_interest_income": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Box 5 interest income",
+        "description": "Part III box '5 Interest income': the dollar amount printed in the box. JSON number exactly as printed, comma removed; a loss prints in parentheses or with a leading minus and is negative; null if blank."
+      },
+      "box_6a_ordinary_dividends": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Box 6a ordinary dividends",
+        "description": "Part III box '6a Ordinary dividends': the dollar amount printed in the box. JSON number exactly as printed, comma removed; a loss prints in parentheses or with a leading minus and is negative; null if blank."
+      },
+      "box_6b_qualified_dividends": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Box 6b qualified dividends",
+        "description": "Part III box '6b Qualified dividends': the dollar amount printed in the box. JSON number exactly as printed, comma removed; a loss prints in parentheses or with a leading minus and is negative; null if blank."
+      },
+      "box_7_royalties": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Box 7 royalties",
+        "description": "Part III box '7 Royalties': the dollar amount printed in the box. JSON number exactly as printed, comma removed; a loss prints in parentheses or with a leading minus and is negative; null if blank."
+      },
+      "box_8_net_short_term_capital_gain": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Box 8 net short-term capital gain",
+        "description": "Part III box '8 Net short-term capital gain (loss)': the dollar amount printed in the box. JSON number exactly as printed, comma removed; a loss prints in parentheses or with a leading minus and is negative; null if blank."
+      },
+      "box_9a_net_long_term_capital_gain": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Box 9a net long-term capital gain",
+        "description": "Part III box '9a Net long-term capital gain (loss)': the dollar amount printed in the box. JSON number exactly as printed, comma removed; a loss prints in parentheses or with a leading minus and is negative; null if blank."
+      },
+      "box_9b_collectibles_gain": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Box 9b collectibles (28%) gain",
+        "description": "Part III box '9b Collectibles (28%) gain (loss)': the dollar amount printed in the box. JSON number exactly as printed, comma removed; a loss prints in parentheses or with a leading minus and is negative; null if blank."
+      },
+      "box_9c_unrecaptured_1250_gain": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Box 9c unrecaptured section 1250 gain",
+        "description": "Part III box '9c Unrecaptured section 1250 gain': the dollar amount printed in the box. JSON number exactly as printed, comma removed; a loss prints in parentheses or with a leading minus and is negative; null if blank."
+      },
+      "box_10_net_section_1231_gain": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Box 10 net section 1231 gain",
+        "description": "Part III box '10 Net section 1231 gain (loss)': the dollar amount printed in the box. JSON number exactly as printed, comma removed; a loss prints in parentheses or with a leading minus and is negative; null if blank."
+      },
+      "box_12_section_179_deduction": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Box 12 section 179 deduction",
+        "description": "Part III box '12 Section 179 deduction': the dollar amount printed in the box. JSON number exactly as printed, comma removed; a loss prints in parentheses or with a leading minus and is negative; null if blank."
+      },
+      "box_14_self_employment_earnings": {
+        "anyOf": [
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/CodedEntry"
+            }
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Box 14 self-employment earnings",
+        "description": "Part III box '14 Self-employment earnings (loss)': an array of the code+amount entries printed in this box. This IS a coded box — code A = net earnings (loss) from self-employment, B = gross farming or fishing income, C = gross non-farm income; a filer may print several code lines (e.g. 'A -5,307.' and 'C 34,199.'). A single printed amount with no visible code letter is one entry with code null. Empty/absent -> null."
+      },
+      "box_11_other_income": {
+        "anyOf": [
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/CodedEntry"
+            }
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Box 11 other income",
+        "description": "Part III box '11 Other income (loss)': an array of the code+amount entries printed in this box (a coded box can hold several codes). Empty/absent -> null."
+      },
+      "box_13_other_deductions": {
+        "anyOf": [
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/CodedEntry"
+            }
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Box 13 other deductions",
+        "description": "Part III box '13 Other deductions': an array of the code+amount entries printed in this box (a coded box can hold several codes). Empty/absent -> null."
+      },
+      "box_15_credits": {
+        "anyOf": [
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/CodedEntry"
+            }
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Box 15 credits",
+        "description": "Part III box '15 Credits': an array of the code+amount entries printed in this box (a coded box can hold several codes). Empty/absent -> null."
+      },
+      "box_16_foreign_transactions": {
+        "anyOf": [
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/CodedEntry"
+            }
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Box 16 foreign transactions",
+        "description": "Part III box '16 Foreign transactions': an array of the code+amount entries printed in this box (a coded box can hold several codes). Empty/absent -> null."
+      },
+      "box_17_amt_items": {
+        "anyOf": [
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/CodedEntry"
+            }
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Box 17 AMT items",
+        "description": "Part III box '17 Alternative minimum tax (AMT) items': an array of the code+amount entries printed in this box (a coded box can hold several codes). Empty/absent -> null."
+      },
+      "box_18_tax_exempt_income": {
+        "anyOf": [
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/CodedEntry"
+            }
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Box 18 tax-exempt income",
+        "description": "Part III box '18 Tax-exempt income and nondeductible expenses': an array of the code+amount entries printed in this box (a coded box can hold several codes). Empty/absent -> null."
+      },
+      "box_19_distributions": {
+        "anyOf": [
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/CodedEntry"
+            }
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Box 19 distributions",
+        "description": "Part III box '19 Distributions': an array of the code+amount entries printed in this box (a coded box can hold several codes). Empty/absent -> null."
+      },
+      "box_20_other_information": {
+        "anyOf": [
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/CodedEntry"
+            }
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Box 20 other information",
+        "description": "Part III box '20 Other information': an array of the code+amount entries printed in this box (a coded box can hold several codes). Empty/absent -> null."
+      }
+    }
+  },
+  "expected": {
+    "kind": "json",
+    "schema_ref": "fixtures/eb-short-07021-2016-p0014-schema.json",
+    "value": {
+      "final_k1": false,
+      "amended_k1": true,
+      "partnership_ein": "26-3839121",
+      "partnership_name": "Pine Harbour Water Utilities LLC",
+      "partnership_address": "P O BOX 447, Fruitland Park FL 34731",
+      "irs_center": "OGDEN",
+      "is_publicly_traded_partnership": false,
+      "partner_id": "288-56-3387",
+      "partner_name": "ROBERT STEWART",
+      "partner_address": "P O BOX 447, Fruitland Park FL 34731",
+      "is_general_partner": false,
+      "is_domestic_partner": true,
+      "partner_entity_type": "INDIVIDUAL PASSIV",
+      "profit_share_beginning": 33.3333,
+      "profit_share_ending": 33.3333,
+      "loss_share_beginning": 33.3333,
+      "loss_share_ending": 33.3333,
+      "capital_share_beginning": 33.3333,
+      "capital_share_ending": 33.3333,
+      "liability_nonrecourse": null,
+      "liability_qualified_nonrecourse_financing": null,
+      "liability_recourse": null,
+      "capital_beginning_account": null,
+      "capital_contributed": 45442,
+      "capital_current_year_increase_decrease": -3186,
+      "capital_withdrawals_distributions": null,
+      "capital_ending_account": 42256,
+      "capital_account_method": null,
+      "contributed_built_in_gain_loss_property": null,
+      "box_1_ordinary_business_income": -3186,
+      "box_2_net_rental_real_estate": null,
+      "box_3_other_net_rental_income": null,
+      "box_4_guaranteed_payments": null,
+      "box_5_interest_income": null,
+      "box_6a_ordinary_dividends": null,
+      "box_6b_qualified_dividends": null,
+      "box_7_royalties": null,
+      "box_8_net_short_term_capital_gain": null,
+      "box_9a_net_long_term_capital_gain": null,
+      "box_9b_collectibles_gain": null,
+      "box_9c_unrecaptured_1250_gain": null,
+      "box_10_net_section_1231_gain": null,
+      "box_12_section_179_deduction": null,
+      "box_14_self_employment_earnings": [
+        {
+          "code": "A",
+          "amount": -3186
+        }
+      ],
+      "box_11_other_income": null,
+      "box_13_other_deductions": null,
+      "box_15_credits": null,
+      "box_16_foreign_transactions": null,
+      "box_17_amt_items": [
+        {
+          "code": "A",
+          "amount": 1150
+        }
+      ],
+      "box_18_tax_exempt_income": null,
+      "box_19_distributions": null,
+      "box_20_other_information": null
+    },
+    "anchored_fields": 52,
+    "no_anchor_fields": 0
+  },
+  "field_rules": "{\"final_k1\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.5103, 0.0617, 0.0179, 0.018], \"quote\": null, \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"amended_k1\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.6523, 0.0608, 0.0161, 0.0197], \"quote\": null, \"value\": true, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"partnership_ein\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.06591503, 0.21688131, 0.11727124, 0.01218434], \"quote\": \"**A Partnership's employer identification number**: 26-3839121\", \"value\": \"26-3839121\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"partnership_name\": {\"comparator\": \"name\", \"evidence\": [{\"page\": 1, \"bbox\": [0.0673, 0.2618, 0.37356, 0.01459], \"quote\": \"**B Partnership's name, address, city, state, and ZIP code**:\\nPine Harbour Water Utilities LLC\\nP O BOX 447\\nFruitland Park FL 34731\", \"value\": \"Pine Harbour Water Utilities LLC\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"partnership_address\": {\"comparator\": \"address\", \"evidence\": [{\"page\": 1, \"bbox\": [0.0663, 0.2785, 0.2738, 0.0311], \"quote\": \"**F Partner's name, address, city, state, and ZIP code**:\\nROBERT STEWART\\nP O BOX 447\\nFruitland Park FL 34731\", \"value\": \"P O BOX 447, Fruitland Park FL 34731\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"irs_center\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.06596, 0.34101, 0.06141, 0.01511], \"quote\": \"**C IRS Center where partnership filed return**: OGDEN\", \"value\": \"OGDEN\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"is_publicly_traded_partnership\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.0962, 0.3688, 0.0178, 0.0191], \"quote\": null, \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"partner_id\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.0643, 0.4319, 0.1335, 0.0151], \"quote\": \"**E Partner's identifying number**: 288-56-3387\", \"value\": \"288-56-3387\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"partner_name\": {\"comparator\": \"name\", \"evidence\": [{\"page\": 1, \"bbox\": [0.0651, 0.47965, 0.16228, 0.01125], \"quote\": \"**F Partner's name, address, city, state, and ZIP code**:\\nROBERT STEWART\\nP O BOX 447\\nFruitland Park FL 34731\", \"value\": \"ROBERT STEWART\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"partner_address\": {\"comparator\": \"address\", \"evidence\": [{\"page\": 1, \"bbox\": [0.0638, 0.4937, 0.273, 0.031], \"quote\": \"**F Partner's name, address, city, state, and ZIP code**:\\nROBERT STEWART\\nP O BOX 447\\nFruitland Park FL 34731\", \"value\": \"P O BOX 447, Fruitland Park FL 34731\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"is_general_partner\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.0948, 0.5219, 0.019, 0.0191], \"quote\": null, \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"is_domestic_partner\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.0946, 0.5683, 0.0177, 0.0198], \"quote\": null, \"value\": true, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"partner_entity_type\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.299, 0.6026, 0.2008, 0.0155], \"quote\": \"**I What type of entity is this partner?**: INDIVIDUAL PASSIV\", \"value\": \"INDIVIDUAL PASSIV\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"profit_share_beginning\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.1871, 0.64921, 0.08423, 0.01359], \"quote\": \"|         | Beginning | Ending   |\\n| ------- | --------- | -------- |\\n| Profit  | 33.3333%  | 33.3333% |\\n| Loss    | 33.3333%  | 33.3333% |\\n| Capital | 33.3333%  | 33.3333% |\", \"value\": 33.3333, \"coarse\": false}, {\"page\": 1, \"bbox\": [0.1876, 0.64933, 0.1216, 0.01427], \"quote\": \"33.3333%\", \"value\": \"33.3333%\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"profit_share_ending\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.36757, 0.65029, 0.07926, 0.01139], \"quote\": \"|         | Beginning | Ending   |\\n| ------- | --------- | -------- |\\n| Profit  | 33.3333%  | 33.3333% |\\n| Loss    | 33.3333%  | 33.3333% |\\n| Capital | 33.3333%  | 33.3333% |\", \"value\": 33.3333, \"coarse\": false}, {\"page\": 1, \"bbox\": [0.3669, 0.65071, 0.1167, 0.01092], \"quote\": \"33.3333%\", \"value\": \"33.3333%\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"loss_share_beginning\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.191, 0.664, 0.0888, 0.0149], \"quote\": \"|         | Beginning | Ending   |\\n| ------- | --------- | -------- |\\n| Profit  | 33.3333%  | 33.3333% |\\n| Loss    | 33.3333%  | 33.3333% |\\n| Capital | 33.3333%  | 33.3333% |\", \"value\": 33.3333, \"coarse\": true}, {\"page\": 1, \"bbox\": [0.1871, 0.6651, 0.1214, 0.0122], \"quote\": \"33.3333%\", \"value\": \"33.3333%\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"loss_share_ending\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.3656, 0.6631, 0.0904, 0.0149], \"quote\": \"|         | Beginning | Ending   |\\n| ------- | --------- | -------- |\\n| Profit  | 33.3333%  | 33.3333% |\\n| Loss    | 33.3333%  | 33.3333% |\\n| Capital | 33.3333%  | 33.3333% |\", \"value\": 33.3333, \"coarse\": true}, {\"page\": 1, \"bbox\": [0.3653, 0.6637, 0.1218, 0.0149], \"quote\": \"33.3333%\", \"value\": \"33.3333%\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"capital_share_beginning\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.1877, 0.6789, 0.0926, 0.0149], \"quote\": \"|         | Beginning | Ending   |\\n| ------- | --------- | -------- |\\n| Profit  | 33.3333%  | 33.3333% |\\n| Loss    | 33.3333%  | 33.3333% |\\n| Capital | 33.3333%  | 33.3333% |\", \"value\": 33.3333, \"coarse\": true}, {\"page\": 1, \"bbox\": [0.1854, 0.6786, 0.1228, 0.0138], \"quote\": \"33.3333%\", \"value\": \"33.3333%\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"capital_share_ending\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.3681, 0.6802, 0.0918, 0.0149], \"quote\": \"|         | Beginning | Ending   |\\n| ------- | --------- | -------- |\\n| Profit  | 33.3333%  | 33.3333% |\\n| Loss    | 33.3333%  | 33.3333% |\\n| Capital | 33.3333%  | 33.3333% |\", \"value\": 33.3333, \"coarse\": true}, {\"page\": 1, \"bbox\": [0.3669, 0.6791, 0.1207, 0.0152], \"quote\": \"33.3333%\", \"value\": \"33.3333%\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"liability_nonrecourse\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"liability_qualified_nonrecourse_financing\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"liability_recourse\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"capital_beginning_account\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"capital_contributed\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": 1, \"bbox\": [0.40133987, 0.8197601, 0.08076797, 0.01487374], \"quote\": \"**Capital contributed during the year**: $ 45,442\", \"value\": 45442, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"capital_current_year_increase_decrease\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": 1, \"bbox\": [0.4017, 0.8356, 0.06764, 0.0128], \"quote\": \"**Current year increase (decrease)**: $ -3,186\", \"value\": -3186, \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"capital_withdrawals_distributions\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"capital_ending_account\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": 1, \"bbox\": [0.3986, 0.8646, 0.0728, 0.0162], \"quote\": \"**Ending capital account**: $ 42,256\", \"value\": 42256, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"capital_account_method\": {\"comparator\": \"enum\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"contributed_built_in_gain_loss_property\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"box_1_ordinary_business_income\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": 1, \"bbox\": [0.6458, 0.12712, 0.0718, 0.01378], \"quote\": null, \"value\": -3186, \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"box_2_net_rental_real_estate\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"box_3_other_net_rental_income\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"box_4_guaranteed_payments\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"box_5_interest_income\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"box_6a_ordinary_dividends\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"box_6b_qualified_dividends\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"box_7_royalties\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"box_8_net_short_term_capital_gain\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"box_9a_net_long_term_capital_gain\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"box_9b_collectibles_gain\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"box_9c_unrecaptured_1250_gain\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"box_10_net_section_1231_gain\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"box_12_section_179_deduction\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"box_14_self_employment_earnings[0].code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.4945, 0.7428, 0.0149, 0.0131], \"quote\": \"14 | Self-employment earnings (loss)\", \"value\": \"A\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"box_14_self_employment_earnings[0].amount\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": 1, \"bbox\": [0.6298, 0.74387, 0.07339, 0.01283], \"quote\": \"-3,186\", \"value\": -3186, \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"box_14_self_employment_earnings\": {\"comparator\": {\"code\": \"case_insensitive\", \"amount\": \"currency\"}, \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": {\"code\": \"A\", \"amount\": -3186}, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"structural\": \"match_by:code\"}, \"box_11_other_income\": {\"comparator\": {\"code\": \"case_insensitive\", \"amount\": \"currency\"}, \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\", \"structural\": \"match_by:code\"}, \"box_13_other_deductions\": {\"comparator\": {\"code\": \"case_insensitive\", \"amount\": \"currency\"}, \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\", \"structural\": \"match_by:code\"}, \"box_15_credits\": {\"comparator\": {\"code\": \"case_insensitive\", \"amount\": \"currency\"}, \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\", \"structural\": \"match_by:code\"}, \"box_16_foreign_transactions\": {\"comparator\": {\"code\": \"case_insensitive\", \"amount\": \"currency\"}, \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\", \"structural\": \"match_by:code\"}, \"box_17_amt_items[0].code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.71901, 0.4042, 0.01043, 0.01179], \"quote\": \"| 9b | Collectibles (28%) gain (loss)     |        | A  | 1,150                                        |\", \"value\": \"A\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"box_17_amt_items[0].amount\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": 1, \"bbox\": [0.8716, 0.4062, 0.05583, 0.01219], \"quote\": \"| 9b | Collectibles (28%) gain (loss)     |        | A  | 1,150                                        |\", \"value\": 1150, \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"box_17_amt_items\": {\"comparator\": {\"code\": \"case_insensitive\", \"amount\": \"currency\"}, \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": {\"code\": \"A\", \"amount\": 1150}, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"structural\": \"match_by:code\"}, \"box_18_tax_exempt_income\": {\"comparator\": {\"code\": \"case_insensitive\", \"amount\": \"currency\"}, \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\", \"structural\": \"match_by:code\"}, \"box_19_distributions\": {\"comparator\": {\"code\": \"case_insensitive\", \"amount\": \"currency\"}, \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\", \"structural\": \"match_by:code\"}, \"box_20_other_information\": {\"comparator\": {\"code\": \"case_insensitive\", \"amount\": \"currency\"}, \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\", \"structural\": \"match_by:code\"}}",
+  "repeated_structure": "{}",
+  "anchored_fields": 52,
+  "no_anchor_fields": 0,
+  "case_id": "B03-eb-0006"
+}

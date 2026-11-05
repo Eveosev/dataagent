@@ -1,0 +1,39 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_0cc823e7",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "statute_shc_1161_can_form_division",
+    "county_portion",
+    "statute_ccp_1161_5_applies",
+    "notice_required_by_section_1161",
+    "notice_states_landlord_may_elect_forfeiture",
+    "performed_within_three_days_after_service",
+    "tenant",
+    "lease",
+    "notice",
+    "notice_service_day",
+    "tenant_performance_day",
+    "landlord_waived_breach_after_service",
+    "landlord",
+    "landlord_waiver_day",
+    "statute_ccp_1161_5_forfeiture_declaration_nullified",
+    "statute_ccp_1161_5_lease_remains_in_effect",
+    "legal_landlord_must_accept_cure",
+    "state",
+    "focus_year",
+    "breach_material",
+    "already_contained_in_division",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    State: California\n    Focus year: 2021\n\n    Question: Must a landlord accept a tenant's attempt to cure for material breach?\n*/\n\n/* =========================\n   STATUTES (TRANSLATION)\n   ========================= */\n\n/* [1] CA St & Hwy Code  1161 (2021)\n   \"Any portion of a county, not already contained in a division, may be formed into a division...\"\n   (Not landlord/tenant related; encoded for completeness.)\n*/\n% statute_shc_1161_can_form_division(+CountyPortion)\n% Deterministic: succeeds iff the county portion is not already in a division.\nstatute_shc_1161_can_form_division(CountyPortion) :-\n    county_portion(CountyPortion),\n    \\+ already_contained_in_division(CountyPortion).\n\n/* [2] CA Civ Proc Code  1161.5 (2021)\n   If the notice required by Section 1161 states that the lessor/landlord may elect to declare\n   forfeiture, that declaration is nullified and the lease remains in effect if:\n     (a) tenant performs within 3 days after service of the notice, OR\n     (b) landlord waives the breach after service of the notice.\n*/\n% statute_ccp_1161_5_applies(+Notice)\nstatute_ccp_1161_5_applies(Notice) :-\n    notice_required_by_section_1161(Notice),\n    notice_states_landlord_may_elect_forfeiture(Notice).\n\n% performed_within_three_days_after_service(+Tenant,+Lease,+Notice)\nperformed_within_three_days_after_service(Tenant, Lease, Notice) :-\n    tenant(Tenant),\n    lease(Lease),\n    notice(Notice),\n    notice_service_day(Notice, ServiceDay),\n    tenant_performance_day(Tenant, Lease, PerformanceDay),\n    Delta is PerformanceDay - ServiceDay,\n    Delta >= 0,\n    Delta =< 3.\n\n% landlord_waived_breach_after_service(+Landlord,+Notice)\nlandlord_waived_breach_after_service(Landlord, Notice) :-\n    landlord(Landlord),\n    notice(Notice),\n    landlord_waiver_day(Landlord, Notice, WaiverDay),\n    notice_service_day(Notice, ServiceDay),\n    WaiverDay >= ServiceDay.\n\n% statute_ccp_1161_5_forfeiture_declaration_nullified(+Landlord,+Tenant,+Lease,+Notice)\nstatute_ccp_1161_5_forfeiture_declaration_nullified(Landlord, Tenant, Lease, Notice) :-\n    statute_ccp_1161_5_applies(Notice),\n    (\n        performed_within_three_days_after_service(Tenant, Lease, Notice)\n    ;\n        landlord_waived_breach_after_service(Landlord, Notice)\n    ).\n\n% statute_ccp_1161_5_lease_remains_in_effect(+Lease,+Landlord,+Tenant,+Notice)\nstatute_ccp_1161_5_lease_remains_in_effect(Lease, Landlord, Tenant, Notice) :-\n    statute_ccp_1161_5_forfeiture_declaration_nullified(Landlord, Tenant, Lease, Notice).\n\n/* =========================\n   LEGAL CONCLUSION (DERIVED)\n   ========================= */\n\n% legal_landlord_must_accept_cure(+Landlord,+Tenant,+Lease,+Notice)\n% Interpreting \"must accept an attempt to cure\" as: landlord cannot treat lease as forfeited\n% when CCP 1161.5 nullifies forfeiture upon timely performance (or waiver).\nlegal_landlord_must_accept_cure(Landlord, Tenant, Lease, Notice) :-\n    statute_ccp_1161_5_lease_remains_in_effect(Lease, Landlord, Tenant, Notice).\n\n/* =========================\n   SCENARIO (FACTS)\n   ========================= */\n\n% Metadata\nstate(california).\nfocus_year(2021).\n\n% Parties and instruments\nlandlord(landlord1).\ntenant(tenant1).\nlease(lease1).\nnotice(notice1).\n\n% Scenario breach characterization (material breach mentioned by question)\nbreach_material(lease1).\n\n% Notice facts relevant to CCP 1161.5\nnotice_required_by_section_1161(notice1).\nnotice_states_landlord_may_elect_forfeiture(notice1).\n\n% Timing facts (use integer \"days\" for simple comparisons)\n% Service on day 0\nnotice_service_day(notice1, 0).\n% Tenant performed cure on day 2 (within three days after service)\ntenant_performance_day(tenant1, lease1, 2).\n\n% No waiver facts in this scenario (predicate exists but no facts asserted)\n% landlord_waiver_day(Landlord, Notice, Day).  % intentionally absent\n\n% Unrelated-to-question facts for CA St & Hwy Code  1161 encoding\ncounty_portion(portion1).\nalready_contained_in_division(_Portion) :- fail.\n\n% scenario_statement/0: succeeds when the encoded factual statement holds.\nscenario_statement :-\n    state(california),\n    focus_year(2021),\n    landlord(landlord1),\n    tenant(tenant1),\n    lease(lease1),\n    notice(notice1),\n    breach_material(lease1),\n    notice_required_by_section_1161(notice1),\n    notice_states_landlord_may_elect_forfeiture(notice1),\n    notice_service_day(notice1, _),\n    tenant_performance_day(tenant1, lease1, _).\n\n/* =========================\n   ANSWER\n   ========================= */\n\nhousing_answer(Result) :-\n    (   scenario_statement,\n        legal_landlord_must_accept_cure(landlord1, tenant1, lease1, notice1)\n    ->  Result = yes\n    ;   Result = no\n    ),\n    !.\n\n/* =========================\n   MAIN\n   ========================= */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-2310",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Must a landlord accept a tenant's attempt to cure for material breach?"
+  }
+}

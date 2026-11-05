@@ -1,0 +1,30 @@
+{
+  "source": "xlangai/BRIGHT",
+  "query_id": "TheoremQA_tonyxia/semiconductor5.json",
+  "query": "## Essential Problem:\n\nThe essential problem is to determine the percentage of the sun's energy that horizontally placed solar panels in Miami can capture on the shortest day of the year, with the sun directly overhead at noon.\n\n## Relevant Information:\n\nTo solve this problem, we need to consider the following information:\n\n* **Sun's typical energy output:** 1000 watts per square meter.\n* **Location:** Miami, latitude 26 degrees N.\n* **Date:** Shortest day of the year (winter solstice).\n* **Time:** Noon.\n* **Solar panel position:** Horizontally placed.\n\n## Reasoning and Calculations:\n\n1. **Sun's position:** On the shortest day of the year, the sun reaches its highest point in the sky at noon. This means the angle of incidence (the angle between the sun's rays and the solar panel) will be 90 degrees.\n2. **Air mass:** Since the sun is directly overhead, the air mass (the amount of atmosphere the sunlight has to pass through) is 1.\n3. **Solar constant:** The solar constant is the amount of solar radiation received at the top of the Earth's atmosphere. At a 90-degree angle of incidence and air mass of 1, the solar constant is approximately 1367 watts per square meter.\n4. **Solar panel efficiency:** We need to consider the efficiency of the solar panels, which is typically around 15-20%. This means that the panels can convert 15-20% of the incident sunlight into electricity.\n\n## Draft Answer:\n\nOn the shortest day of the year in Miami, with the sun directly overhead at noon, horizontally placed solar panels with an efficiency of 15% can capture approximately **15%** of the sun's typical energy output. This translates to:\n\n* **Solar constant:** 1367 watts per square meter\n* **Captured energy:** 1367 * 0.15 = 205 watts per square meter\n\nTherefore, the solar panels will capture around 205 watts per square meter, which is 20.5% of the typical 1000 watts per square meter.\n\n**Additional factors to consider:**\n\n* **Cloud cover:** Cloud cover can significantly reduce the amount of sunlight reaching the solar panels.\n* **Shading:** If the solar panels are shaded by buildings or trees, their energy output will be reduced.\n* **Panel temperature:** The efficiency of solar panels decreases as their temperature increases.\n\n## Conclusion:\n\nOn the shortest day of the year, with the sun directly overhead at noon, horizontally placed solar panels in Miami with an efficiency of 15% can capture approximately 20.5% of the sun's typical energy output. However, factors like cloud cover, shading, and panel temperature can affect the actual energy captured.",
+  "gold_ids": [
+    "TheoremQA_tonyxia/semiconductor3.json",
+    "TheoremQA_tonyxia/semiconductor1.json",
+    "TheoremQA_tonyxia/semiconductor2.json",
+    "TheoremQA_tonyxia/semiconductor3.json"
+  ],
+  "gold_answer": "N/A",
+  "corpus": "documents/theoremqa_questions-00000-of-00001.parquet",
+  "case_id": "B06-bright-1175",
+  "expected": {
+    "kind": "retrieval",
+    "gold_ids": [
+      "TheoremQA_tonyxia/semiconductor3.json",
+      "TheoremQA_tonyxia/semiconductor1.json",
+      "TheoremQA_tonyxia/semiconductor2.json",
+      "TheoremQA_tonyxia/semiconductor3.json"
+    ],
+    "gold_ids_long": [
+      "N/A"
+    ],
+    "gold_answer": "N/A",
+    "excluded_ids": [
+      "TheoremQA_tonyxia/semiconductor5.json"
+    ]
+  }
+}

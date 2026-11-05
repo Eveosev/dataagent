@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 321,
+  "question": "I want to review what the money actually went on for the well-funded events, by venue. For events that had a budget line of more than forty dollars, how many different things were bought for them at each location? Please give me, for each location, the location of the event and the number of different things bought for such events at that location, and nothing else. Note that a budget line of more than forty dollars means a single budgeted amount strictly over 40 dollars, and all qualifying events held at a location should be pooled together.",
+  "evidence": "",
+  "gold_sql": "WITH RECURSIVE split(item, rest, loc) AS (SELECT '', x.expense_description || ',', e.location FROM expense x JOIN budget b ON b.budget_id = x.link_to_budget JOIN event e ON e.event_id = b.link_to_event WHERE b.amount > 40 UNION ALL SELECT trim(substr(rest, 1, instr(rest, ',') - 1)), substr(rest, instr(rest, ',') + 1), loc FROM split WHERE rest <> '') SELECT loc AS location, COUNT(DISTINCT item) AS things_bought FROM split WHERE item <> '' GROUP BY loc ORDER BY loc",
+  "db_id": "student_club",
+  "case_id": "B05-bird-0322",
+  "expected": {
+    "kind": "sql",
+    "sql": "WITH RECURSIVE split(item, rest, loc) AS (SELECT '', x.expense_description || ',', e.location FROM expense x JOIN budget b ON b.budget_id = x.link_to_budget JOIN event e ON e.event_id = b.link_to_event WHERE b.amount > 40 UNION ALL SELECT trim(substr(rest, 1, instr(rest, ',') - 1)), substr(rest, instr(rest, ',') + 1), loc FROM split WHERE rest <> '') SELECT loc AS location, COUNT(DISTINCT item) AS things_bought FROM split WHERE item <> '' GROUP BY loc ORDER BY loc",
+    "db_id": "student_club",
+    "evidence": ""
+  }
+}

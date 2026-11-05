@@ -1,0 +1,52 @@
+{
+  "case_id": "B03-eb-0241",
+  "task_id": "B03",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://extractbench/docs/short/stephenville-axon-invoice.pdf",
+      "digest": null
+    },
+    {
+      "kind": "schema",
+      "ref": "fixtures/eb-short-stephenville-axon-invoice-schema.json",
+      "digest": null
+    },
+    {
+      "kind": "rules",
+      "ref": "fixtures/eb-short-stephenville-axon-invoice-rules.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-eb-0241.json"
+  },
+  "evidence": [
+    "bench://extractbench/docs/short/stephenville-axon-invoice.pdf",
+    "fixtures/eb-short-stephenville-axon-invoice-schema.json",
+    "fixtures/eb-short-stephenville-axon-invoice-rules.md"
+  ],
+  "tags": [
+    "extractbench",
+    "short",
+    "tag:source:real",
+    "tag:challenge:T3.b",
+    "tag:challenge:T1.b",
+    "tag:structure:S3",
+    "tag:length:short",
+    "tag:domain:D1",
+    "fields:68"
+  ],
+  "source": "eb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

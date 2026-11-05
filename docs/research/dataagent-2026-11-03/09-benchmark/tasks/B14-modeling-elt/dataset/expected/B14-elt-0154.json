@@ -1,0 +1,118 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "redshift",
+  "pipeline": "movie_3",
+  "data_model": {
+    "models": [
+      {
+        "name": "films",
+        "description": "Each record represents a film.",
+        "columns": [
+          {
+            "name": "film_id",
+            "description": "The unique identifier of the film."
+          },
+          {
+            "name": "title",
+            "description": "The title of the film."
+          },
+          {
+            "name": "length",
+            "description": "Duration time of the film screening."
+          },
+          {
+            "name": "num_rented_times",
+            "description": "The number of times the film has been rented, replace NULL values with 0."
+          },
+          {
+            "name": "rental_revenue",
+            "description": "The total rental revenue of the film, replace NULL values with 0. Calculate the revenue using the amount received in the payment table."
+          },
+          {
+            "name": "has_a_rental_rate_greater_than_the_60per_of_average_rental_rate_of_all_listed_films",
+            "description": "Set to 1 if the rental rate of the film is greater than 60% of the average rental rate of all listed films, 0 otherwise."
+          },
+          {
+            "name": "num_actors",
+            "description": "The number of actors in the film, replace NULL values with 0."
+          },
+          {
+            "name": "customers_can_rent_for_more_than_5_days",
+            "description": "Set to 1 if customers can rent the film for more than 5 days, 0 otherwise."
+          }
+        ]
+      },
+      {
+        "name": "customers",
+        "description": "Each record represents a customer.",
+        "columns": [
+          {
+            "name": "customer_id",
+            "description": "The unique identifier of the customer."
+          },
+          {
+            "name": "full_name",
+            "description": "The full name of the customer, concatenate the first name and last name with a space separating them."
+          },
+          {
+            "name": "email",
+            "description": "The email of the customer"
+          },
+          {
+            "name": "has_rented_the_film_with_the_highest_replacement_cost",
+            "description": "Set to 1 if the customer has rented the film with the highest replacement cost, 0 otherwise."
+          },
+          {
+            "name": "num_rented_films",
+            "description": "The number of films the customer has rented, replace NULL values with 0. If the customer rents the same film multiple times, count each rental."
+          },
+          {
+            "name": "per_music_film_among_all_rented_films",
+            "description": "The percentage of music films among all the films the customer has rented. If the customer rents the same film multiple times, count each rental."
+          },
+          {
+            "name": "avg_amount_of_money_spent_on_rental",
+            "description": "The average amount of money on a single film rental the customer has spent, replace NULL values with 0."
+          },
+          {
+            "name": "total_payments_greater_than_70per_of_the_average_total_payments",
+            "description": "Set to 1 if the total payments of the customer is greater than 70% of the average total payments of all customers, 0 otherwise."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    redshift_definition_id: f7a7d195-377f-cf5b-70a5-be6b819019dc\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://movie-3-bucket/language.jsonl\n    sync_mode: full_refresh_append\n    table: language\n  - path: s3://movie-3-bucket/category.csv\n    sync_mode: full_refresh_append\n    table: category\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - movie_city\n    - film\n    - film_text\nflat_files:\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=1jPsUHxb8RnAx5-r06k4cQOUVkcl2Su6h\n  sync_mode: full_refresh_append\n  table: address\n- format: csv\n  path: https://drive.google.com/uc?export=download&id=1Wy2wru384jkWsVBZIzqU6U08j3vvpovk\n  sync_mode: full_refresh_append\n  table: country\n- format: csv\n  path: https://drive.google.com/uc?export=download&id=1Dur65o4aWLRkjKcAB5c0ucSu4Wean9XJ\n  sync_mode: full_refresh_append\n  table: store\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: movie_3\n    sync_mode: full_refresh_append\n    tables:\n    - actor\n    - customer\n    - staff\npostgres:\n  config:\n    database: movie_3\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - film_actor\n    - film_category\n    - inventory\n    - payment\n    - rental\n    user: postgres\nredshift:\n  config:\n    host: <redshift_hostname>\n    port: <redshift_port>\n    database: <redshift_db>\n    username: <redshift_username>\n    password: <redshift_pwd>\n    schema: movie_3\n    s3_bucket_name: <redshift_s3_bucket>\n    s3_bucket_region: <redshift_s3_region>\n    access_key_id: <redshift_s3_access_key>\n    secret_access_key: <redshift_s3_secret_key>\n",
+  "case_id": "B14-elt-0154",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "films",
+        "columns": [
+          "film_id",
+          "title",
+          "length",
+          "num_rented_times",
+          "rental_revenue",
+          "has_a_rental_rate_greater_than_the_60per_of_average_rental_rate_of_all_listed_films",
+          "num_actors",
+          "customers_can_rent_for_more_than_5_days"
+        ]
+      },
+      {
+        "name": "customers",
+        "columns": [
+          "customer_id",
+          "full_name",
+          "email",
+          "has_rented_the_film_with_the_highest_replacement_cost",
+          "num_rented_films",
+          "per_music_film_among_all_rented_films",
+          "avg_amount_of_money_spent_on_rental",
+          "total_payments_greater_than_70per_of_the_average_total_payments"
+        ]
+      }
+    ]
+  }
+}

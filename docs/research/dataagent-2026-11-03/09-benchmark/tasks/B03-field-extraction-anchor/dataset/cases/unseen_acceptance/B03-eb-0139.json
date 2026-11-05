@@ -1,0 +1,54 @@
+{
+  "case_id": "B03-eb-0139",
+  "task_id": "B03",
+  "split_role": "unseen_acceptance",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://extractbench/docs/short/ca_rad_crossover_inpatient_p5.pdf",
+      "digest": null
+    },
+    {
+      "kind": "schema",
+      "ref": "fixtures/eb-short-ca_rad_crossover_inpatient_p5-schema.json",
+      "digest": null
+    },
+    {
+      "kind": "rules",
+      "ref": "fixtures/eb-short-ca_rad_crossover_inpatient_p5-rules.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-eb-0139.json"
+  },
+  "evidence": [
+    "bench://extractbench/docs/short/ca_rad_crossover_inpatient_p5.pdf",
+    "fixtures/eb-short-ca_rad_crossover_inpatient_p5-schema.json",
+    "fixtures/eb-short-ca_rad_crossover_inpatient_p5-rules.md"
+  ],
+  "tags": [
+    "extractbench",
+    "short",
+    "tag:source:real",
+    "tag:challenge:T1.c",
+    "tag:challenge:T2.d",
+    "tag:structure:S1",
+    "tag:delivery:G2",
+    "tag:delivery:G3",
+    "tag:length:short",
+    "tag:domain:D6",
+    "fields:3"
+  ],
+  "source": "eb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

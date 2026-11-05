@@ -1,0 +1,55 @@
+## Essential Problem:
+
+The core problem is to design an algorithm that efficiently determines whether a given non-negative integer is prime. A prime number is a natural number greater than 1 that is not a product of two smaller natural numbers.
+
+## Information and Reasoning:
+
+1. **Properties of Prime Numbers**: 
+    - A prime number has exactly two distinct positive divisors: 1 and itself.
+    - Any integer greater than 1 can be factored into a unique product of prime numbers (Fundamental Theorem of Arithmetic).
+    - Every prime number greater than 3 can be written in the form 6k ± 1, where k is an integer.
+
+2. **Possible Approaches**:
+    - **Trial Division**: Divide the input number by all integers from 2 to its square root. If none of these divisions result in a whole number, the number is prime. This approach is simple but can be computationally expensive for large numbers.
+    - **Sieve of Eratosthenes**: Build a sieve of all numbers from 2 to the input number. Starting from 2, mark all multiples of 2 as composite. Then, move to the next unmarked number, mark all its multiples as composite, and repeat the process. The remaining unmarked numbers are prime. This approach is faster than trial division for large numbers.
+    - **Probabilistic Primality Tests**: These tests use probabilistic algorithms to determine the primality of a number with a high degree of accuracy but cannot guarantee a definitive answer.
+
+3. **Implementation Considerations**:
+    - **Handling Non-negative Integers**: The function should only accept non-negative integers as input. Negative numbers and zero are not considered prime.
+    - **Efficiency**: The chosen approach should be efficient for the expected range of input numbers.
+    - **Clarity**: The code should be well-commented and easy to understand.
+
+## Draft Answer:
+
+Here is a draft of the program using the Sieve of Eratosthenes approach:
+
+```pony
+fun isPrime(num: USize): bool =>
+  if num <= 1 then
+    # 0 and 1 are not prime
+    return false
+  else if num <= 3 then
+    # 2 and 3 are prime
+    return true
+  else if num % 2 == 0 or num % 3 == 0 then
+    # Even numbers and multiples of 3 are not prime
+    return false
+  else
+    # Check for divisibility by numbers in the form 6k ± 1 up to the square root of num
+    i = 5
+    while i * i <= num do
+      if num % i == 0 or num % (i + 2) == 0 then
+        return false
+      end
+      i += 6
+    end
+    # If no divisors are found, the number is prime
+    return true
+  end
+```
+
+## Additional Notes:
+
+- This code could be further optimized by precomputing a list of prime numbers up to a certain limit and using it for faster checking.
+- For very large numbers, probabilistic primality tests may be more suitable.
+- The code includes comments to explain the logic behind each step.

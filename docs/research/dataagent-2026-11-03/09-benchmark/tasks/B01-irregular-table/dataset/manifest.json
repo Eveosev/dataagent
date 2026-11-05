@@ -1,0 +1,89 @@
+{
+  "dataset_id": "B01.dataset",
+  "task_id": "B01",
+  "revision": "v0.2",
+  "status": "collecting",
+  "unit": "table",
+  "sources": [
+    {
+      "name": "mimotable",
+      "locator": "jyz111/mimotable",
+      "license": "未声明",
+      "digest": "sha256:690039da55de07d91e7c285d9fe78e3cf9a98857fe393611103d5ee98438293a",
+      "revision": "a0e6e4623c8c670e3821e2d5e018526f646dda54",
+      "files": 9,
+      "mb": 13.6,
+      "fetched_at": "2026-11-04T17:33:37+08:00"
+    },
+    {
+      "name": "realthitbench-data",
+      "locator": "spzy/RealHiTBench",
+      "license": "CC-BY-NC-4.0",
+      "digest": null,
+      "revision": null,
+      "files": null,
+      "mb": null,
+      "fetched_at": null
+    }
+  ],
+  "splits": {
+    "development": {
+      "count": 120,
+      "frozen": false
+    },
+    "regression": {
+      "count": 60,
+      "frozen": false
+    },
+    "unseen_acceptance": {
+      "count": 60,
+      "frozen": false
+    }
+  },
+  "exposure": {
+    "ledger_ref": "exposure.jsonl",
+    "entries": 0
+  },
+  "fixtures": {
+    "storage": "local",
+    "path": "fixtures/",
+    "limits": "单文件 <= 2 MB；超出走对象存储并在 digest 记录"
+  },
+  "updated": "2026-11-04",
+  "notes": "由 build_cases.py 从 workspace/benchmark-data 构建；原始数据不入库",
+  "build": {
+    "version": 2,
+    "script": "tools/build_cases.py",
+    "built_at": "2026-11-04",
+    "policy": "MiMoTable 全量；RealHiTBench 在数据就位后按 QA 对入库。split 按题目 id 哈希 60/20/20。",
+    "available": {
+      "development": 2816,
+      "regression": 930,
+      "unseen_acceptance": 961
+    },
+    "selected": {
+      "development": 120,
+      "regression": 60,
+      "unseen_acceptance": 60
+    },
+    "caps": {
+      "development": 120,
+      "regression": 60,
+      "unseen_acceptance": 60
+    },
+    "coverage": {
+      "covered_metrics": [
+        "downstream_qa_accuracy"
+      ],
+      "partial_metrics": [
+        "header_cell_accuracy",
+        "row_retention"
+      ],
+      "note": "外部集只给问答答案；表头正确率与行保留率需用自建金标（结构标注）判定"
+    },
+    "counts": {
+      "mimotable": 1636,
+      "realthitbench": 3071
+    }
+  }
+}

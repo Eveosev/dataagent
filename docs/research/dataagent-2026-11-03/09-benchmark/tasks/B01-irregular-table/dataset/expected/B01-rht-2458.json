@@ -1,0 +1,32 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 822,
+  "table": "economy-table47",
+  "structure": "MultiColumnClassified",
+  "question_type": "Fact Checking",
+  "sub_type": "Inference-based Fact Checking",
+  "answer": "COLWYN",
+  "cot": [
+    {
+      "step": "First, forward-fill missing values in the STREET column to ensure all rows are associated with their respective streets."
+    },
+    {
+      "step": "Identify rows where the STREET column equals “COLWYN” and “STAPLEHURST” respectively."
+    },
+    {
+      "step": "Sum the values in the OWE column for rows associated with each street."
+    },
+    {
+      "step": "Compare the totals to determine which street has a higher total."
+    },
+    {
+      "step": "Output the result as the final answer."
+    }
+  ],
+  "case_id": "B01-rht-2458",
+  "expected": {
+    "kind": "answer",
+    "question": "Compare the total “OWE” values for streets “COLWYN” and “STAPLEHURST” Which street has a higher total?",
+    "answer": "COLWYN"
+  }
+}

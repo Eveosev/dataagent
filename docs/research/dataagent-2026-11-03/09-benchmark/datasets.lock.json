@@ -1,0 +1,511 @@
+{
+  "version": "v0.1",
+  "date": "2026-11-04",
+  "raw_root": "workspace/benchmark-data",
+  "ref_scheme": "bench://<source-id>/<path-within-source>",
+  "summary": {
+    "available": 39,
+    "gated": 0,
+    "note": "gated 源需人工接受条款并配置 HF token；fetch.py 会跳过并打印 remedy",
+    "deferred": 1
+  },
+  "sources": [
+    {
+      "id": "realthitbench",
+      "task": "B01",
+      "kind": "git",
+      "locator": "https://github.com/cspzyy/RealHiTBench",
+      "revision": "main",
+      "license": "未声明",
+      "est_mb": 2.9,
+      "status": "available",
+      "notes": "仓库为代码与评测脚本；数据文件位置需下载后核对"
+    },
+    {
+      "id": "mimotable",
+      "task": "B01",
+      "kind": "hf_dataset",
+      "locator": "jyz111/mimotable",
+      "revision": "main",
+      "license": "未声明",
+      "est_mb": 13.6,
+      "status": "available",
+      "notes": "MiMoTable 官方 HF 镜像；中文复杂表头"
+    },
+    {
+      "id": "omnidocbench",
+      "task": "B02",
+      "kind": "hf_dataset",
+      "locator": "opendatalab/OmniDocBench",
+      "revision": "main",
+      "license": "未声明",
+      "est_mb": 68.6,
+      "status": "available",
+      "notes": "v1.5 标注；PDF 本体可能需另取"
+    },
+    {
+      "id": "olmocr-bench",
+      "task": "B02",
+      "kind": "hf_dataset",
+      "locator": "allenai/olmOCR-bench",
+      "revision": "main",
+      "license": "未声明",
+      "est_mb": 7.4,
+      "status": "available",
+      "notes": "逐条事实断言；单页 PDF 为主"
+    },
+    {
+      "id": "extractbench",
+      "task": "B03",
+      "kind": "hf_dataset",
+      "locator": "llamaindex/ExtractBench",
+      "revision": "main",
+      "license": "Apache-2.0",
+      "est_mb": 2600.0,
+      "status": "available",
+      "notes": "4,473 个文件，含 PDF 与金标；体量最大的一批",
+      "include": [
+        "*.jsonl",
+        "docs/**/*.pdf",
+        "eval.yaml",
+        "README.md"
+      ]
+    },
+    {
+      "id": "vrdu",
+      "task": "B03",
+      "kind": "git",
+      "locator": "https://github.com/google-research-datasets/VRDU",
+      "revision": "main",
+      "license": "未声明",
+      "est_mb": 50.0,
+      "status": "skipped",
+      "notes": "VRDU 表单抽取；未取数（B03 已由 ExtractBench + CORD-v2 + FUNSD 覆盖）",
+      "remedy": "仓库只含下载/转换脚本；需要时按 README 运行脚本取数据，再登记为 url_zip"
+    },
+    {
+      "id": "docile",
+      "task": "B03",
+      "kind": "registration",
+      "locator": "https://docile.rossum.ai/",
+      "revision": null,
+      "license": "需签署使用协议",
+      "est_mb": null,
+      "status": "replaced",
+      "remedy": "如后续获得授权，按 url_zip 补登；当前不再作为必需来源",
+      "notes": "gated 无法直接下载；B03 已改用 CORD-v2（票据）+ FUNSD（表单）覆盖同类能力"
+    },
+    {
+      "id": "rulearena",
+      "task": "B04",
+      "kind": "git",
+      "locator": "https://github.com/skyriver-2000/RuleArena",
+      "revision": "main",
+      "license": "MIT",
+      "est_mb": 1.3,
+      "status": "available",
+      "notes": "95 条规则 / 816 题"
+    },
+    {
+      "id": "deonticbench",
+      "task": "B04",
+      "kind": "hf_dataset",
+      "locator": "gydou/DeonticBench",
+      "revision": "main",
+      "license": "未声明",
+      "est_mb": 31.0,
+      "status": "available",
+      "notes": "条件方向性反例的主要来源"
+    },
+    {
+      "id": "spider2-lite",
+      "task": "B05",
+      "kind": "hf_dataset",
+      "locator": "xlangai/spider2-lite",
+      "revision": "main",
+      "license": "MIT",
+      "est_mb": 5.0,
+      "status": "available",
+      "notes": "仅查询与 SQL；数据库需本地实例，见 remedy"
+    },
+    {
+      "id": "bird-mini-dev",
+      "task": "B05",
+      "kind": "hf_dataset",
+      "locator": "birdsql/bird_mini_dev",
+      "revision": "main",
+      "license": "未声明",
+      "est_mb": 17.5,
+      "status": "available",
+      "notes": "BIRD mini dev；完整集需注册"
+    },
+    {
+      "id": "cwd",
+      "task": "B05",
+      "kind": "git",
+      "locator": "https://github.com/datadotworld/cwd-benchmark-data",
+      "revision": "main",
+      "license": "Apache-2.0",
+      "est_mb": 1.0,
+      "status": "available",
+      "notes": "保险领域 43 问；含 CSV 与业务问题"
+    },
+    {
+      "id": "dbt-llm-sl-bench",
+      "task": "B05",
+      "kind": "git",
+      "locator": "https://github.com/dbt-labs/dbt-llm-sl-bench",
+      "revision": "main",
+      "license": "NOASSERTION",
+      "est_mb": 48.0,
+      "status": "available",
+      "notes": "11 题；含不可表达问题，正好覆盖拒答率"
+    },
+    {
+      "id": "beaver",
+      "task": "B05",
+      "kind": "hf_dataset",
+      "locator": "beaverbench/beaver-query",
+      "revision": "main",
+      "license": "MIT",
+      "est_mb": 40.0,
+      "status": "available",
+      "notes": "私有数仓 812 表；查询 7,978 条（dw/nova/neutron/dw_real），2026-11-04 已获授权",
+      "include": [
+        "data/*",
+        "README.md"
+      ]
+    },
+    {
+      "id": "bright",
+      "task": "B06",
+      "kind": "hf_dataset",
+      "locator": "xlangai/BRIGHT",
+      "revision": "main",
+      "license": "未声明",
+      "est_mb": 479.0,
+      "status": "available",
+      "notes": "1,398 条推理型检索查询"
+    },
+    {
+      "id": "target",
+      "task": "B06",
+      "kind": "git",
+      "locator": "https://github.com/target-benchmark/TARGET",
+      "revision": "main",
+      "license": "Apache-2.0",
+      "est_mb": 1.6,
+      "status": "available",
+      "notes": "表检索；仓库含取自 FeTaQA/TabFACT/OTT-QA/Spider/BIRD 的子集"
+    },
+    {
+      "id": "dabstep",
+      "task": "B07",
+      "kind": "hf_dataset",
+      "locator": "adyen/DABstep",
+      "revision": "main",
+      "license": "CC-BY-4.0",
+      "est_mb": 133.0,
+      "status": "available",
+      "notes": "含 payments 数据文件与业务手册",
+      "include": [
+        "data/tasks/*",
+        "data/context/*",
+        "README.md"
+      ]
+    },
+    {
+      "id": "kramabench",
+      "task": "B07",
+      "kind": "git",
+      "locator": "https://github.com/mitdbg/KramaBench",
+      "revision": "main",
+      "license": "未声明",
+      "est_mb": 517.0,
+      "status": "available",
+      "notes": "104 任务 / 1,700 文件；HF 有 cc-by-nc 镜像，以官方仓库为准"
+    },
+    {
+      "id": "context-is-key",
+      "task": "B08",
+      "kind": "hf_dataset",
+      "locator": "ServiceNow/context-is-key",
+      "revision": "main",
+      "license": "未声明",
+      "est_mb": 0.5,
+      "status": "available",
+      "notes": "71 个预测任务，必须用文本上下文"
+    },
+    {
+      "id": "nl4opt",
+      "task": "B08",
+      "kind": "hf_dataset",
+      "locator": "CardinalOperations/NL4OPT",
+      "revision": "main",
+      "license": "未声明",
+      "est_mb": 0.1,
+      "status": "available",
+      "notes": "NL4Opt 清洗版"
+    },
+    {
+      "id": "industryor",
+      "task": "B08",
+      "kind": "hf_dataset",
+      "locator": "CardinalOperations/IndustryOR",
+      "revision": "main",
+      "license": "未声明",
+      "est_mb": 0.1,
+      "status": "available",
+      "notes": "IndustryOR 清洗版"
+    },
+    {
+      "id": "optmath",
+      "task": "B08",
+      "kind": "hf_dataset",
+      "locator": "shushulei/OptMATH-Train",
+      "revision": "main",
+      "license": "unknown",
+      "est_mb": 1.0,
+      "status": "available",
+      "notes": "OptiMATH 训练集；测试集需另找"
+    },
+    {
+      "id": "optibench",
+      "task": "B08",
+      "kind": "hf_dataset",
+      "locator": "chenyitian-shanshu/ORLMBenchmark",
+      "revision": "main",
+      "license": "Apache-2.0",
+      "est_mb": 5.0,
+      "status": "available",
+      "notes": "含 NL4OPT / IndustryOR 清洗版；OptiBench 子集需下载后确认文件名"
+    },
+    {
+      "id": "spreadsheetbench",
+      "task": "B09",
+      "kind": "hf_dataset",
+      "locator": "KAKA22/SpreadsheetBench",
+      "revision": "main",
+      "license": "CC-BY-SA-4.0",
+      "est_mb": 315.0,
+      "status": "available",
+      "notes": "912 题与 verified 400 两个 tarball"
+    },
+    {
+      "id": "viseval",
+      "task": "B09",
+      "kind": "hf_dataset",
+      "locator": "peiranli0930/VisEval",
+      "revision": "main",
+      "license": "未声明",
+      "est_mb": 50.0,
+      "status": "available",
+      "notes": "2,524 查询；含 sqlite 数据库"
+    },
+    {
+      "id": "nvbench2",
+      "task": "B09",
+      "kind": "hf_dataset",
+      "locator": "TianqiLuo/nvBench2.0",
+      "revision": "main",
+      "license": "未声明",
+      "est_mb": 107.0,
+      "status": "available",
+      "notes": "parquet 三个 split；一对多图表"
+    },
+    {
+      "id": "tsb-ad",
+      "task": "B10",
+      "kind": "git",
+      "locator": "https://github.com/TheDatumOrg/TSB-AD",
+      "revision": "main",
+      "license": "Apache-2.0",
+      "est_mb": 16.0,
+      "status": "available",
+      "notes": "时间序列本体由脚本另行下载（见仓库 README）"
+    },
+    {
+      "id": "tau2-bench",
+      "task": "B11",
+      "kind": "git",
+      "locator": "https://github.com/sierra-research/tau2-bench",
+      "revision": "main",
+      "license": "MIT",
+      "est_mb": 453.0,
+      "status": "available",
+      "notes": "零售/航空/电信域；任务 JSON + mock 环境"
+    },
+    {
+      "id": "crmarena-pro",
+      "task": "B11",
+      "kind": "hf_dataset",
+      "locator": "Salesforce/CRMArenaPro",
+      "revision": "main",
+      "license": "未声明",
+      "est_mb": 16.0,
+      "status": "available",
+      "notes": "19 类 CRM 任务 / 4,280 实例；含保密子集"
+    },
+    {
+      "id": "agentdojo",
+      "task": "B12",
+      "kind": "git",
+      "locator": "https://github.com/ethz-spylab/agentdojo",
+      "revision": "main",
+      "license": "MIT",
+      "est_mb": 38.0,
+      "status": "available",
+      "notes": "97 任务 / 629 安全用例；注入模板在仓库内"
+    },
+    {
+      "id": "longmemeval",
+      "task": "B13",
+      "kind": "hf_dataset",
+      "locator": "xiaowu0162/longmemeval",
+      "revision": "main",
+      "license": "MIT",
+      "est_mb": 500.0,
+      "status": "available",
+      "notes": "s/m/oracle 三个规模；先取 s"
+    },
+    {
+      "id": "memoryagentbench",
+      "task": "B13",
+      "kind": "hf_dataset",
+      "locator": "ai-hyz/MemoryAgentBench",
+      "revision": "main",
+      "license": "未声明",
+      "est_mb": 77.0,
+      "status": "available",
+      "notes": "2,071 题；含知识更新与选择性遗忘"
+    },
+    {
+      "id": "elt-bench",
+      "task": "B14",
+      "kind": "git",
+      "locator": "https://github.com/uiuc-kang-lab/ELT-Bench",
+      "revision": "elt_bench++",
+      "license": "未声明",
+      "est_mb": 72.0,
+      "status": "available",
+      "notes": "100 条流水线；默认分支为 elt_bench++"
+    },
+    {
+      "id": "spider2-dbt",
+      "task": "B14",
+      "kind": "registration",
+      "locator": "https://spider2-sql.github.io/",
+      "revision": null,
+      "license": "需接受协议",
+      "est_mb": null,
+      "status": "deferred",
+      "remedy": "按 Spider 2.0 官网流程申请；暂缓，B14 先用 ELT-Bench 覆盖",
+      "notes": "Spider 2.0 全量 / dbt 任务与数据库；2026-11-04 决定延后"
+    },
+    {
+      "id": "realthitbench-data",
+      "task": "B01",
+      "kind": "hf_dataset",
+      "locator": "spzy/RealHiTBench",
+      "revision": "main",
+      "license": "CC-BY-NC-4.0",
+      "est_mb": 600.0,
+      "status": "available",
+      "notes": "5,009 文件：QA_final.json + csv/html/latex/png 四种表表示"
+    },
+    {
+      "id": "tsb-ad-u",
+      "task": "B10",
+      "kind": "url_zip",
+      "locator": "https://www.thedatum.org/datasets/TSB-AD-U.zip",
+      "revision": null,
+      "license": "见各数据集原始许可",
+      "est_mb": 73.0,
+      "status": "available",
+      "notes": "单变量 350 条序列；官方直链"
+    },
+    {
+      "id": "tsb-ad-m",
+      "task": "B10",
+      "kind": "url_zip",
+      "locator": "https://www.thedatum.org/datasets/TSB-AD-M.zip",
+      "revision": null,
+      "license": "见各数据集原始许可",
+      "est_mb": 540.0,
+      "status": "available",
+      "notes": "多变量 180 条序列；官方直链"
+    },
+    {
+      "id": "orlm-bench",
+      "task": "B08",
+      "kind": "hf_dataset",
+      "locator": "chenyitian-shanshu/ORLMBenchmark",
+      "revision": "main",
+      "license": "未知（随数据附 README）",
+      "est_mb": 3.0,
+      "status": "available",
+      "notes": "OptiBench/NL4OPT/IndustryOR/OptMATH_166/MAMO 五个子集，合计约 1,300 题"
+    },
+    {
+      "id": "longmemeval-cleaned",
+      "task": "B13",
+      "kind": "hf_dataset",
+      "locator": "xiaowu0162/longmemeval-cleaned",
+      "revision": "main",
+      "license": "MIT",
+      "est_mb": 300.0,
+      "status": "available",
+      "notes": "含 oracle/s/m 三档；m 档 2.7GB 暂不取，用例用 oracle + s_cleaned",
+      "include": [
+        "longmemeval_oracle.json",
+        "longmemeval_s_cleaned.json",
+        "README.md"
+      ]
+    },
+    {
+      "id": "cord-v2",
+      "task": "B03",
+      "kind": "hf_dataset",
+      "locator": "naver-clova-ix/cord-v2",
+      "revision": "main",
+      "license": "CC BY 4.0",
+      "est_mb": 120.0,
+      "status": "available",
+      "include": [
+        "data/*",
+        "README.md"
+      ],
+      "notes": "1,000 张印尼收据，字段级 key-value + bbox；替代 gated 的 DocILE（票据类）"
+    },
+    {
+      "id": "funsd",
+      "task": "B03",
+      "kind": "hf_dataset",
+      "locator": "nielsr/funsd",
+      "revision": "main",
+      "license": "CC BY 4.0",
+      "est_mb": 30.0,
+      "status": "available",
+      "include": [
+        "data/*",
+        "README.md"
+      ],
+      "notes": "199 份扫描表单，word + bbox + 实体标签；替代 gated 的 DocILE（表单类，锚点定位）"
+    },
+    {
+      "id": "beaver-table",
+      "task": "B05",
+      "kind": "hf_dataset",
+      "locator": "beaverbench/beaver-table",
+      "revision": "main",
+      "license": "MIT",
+      "est_mb": 1.0,
+      "status": "available",
+      "include": [
+        "data/*",
+        "README.md"
+      ],
+      "notes": "812 张表的列名/类型/示例行（不含全量数据）；用于补全 SQL 任务的 schema，2026-11-04 已授权"
+    }
+  ]
+}

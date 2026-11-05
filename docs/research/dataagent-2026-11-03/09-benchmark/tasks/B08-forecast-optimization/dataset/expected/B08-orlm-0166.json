@@ -1,0 +1,11 @@
+{
+  "source": "chenyitian-shanshu/ORLMBenchmark",
+  "subset": "OptMATH_Bench_166.jsonl",
+  "question": "The problem involves scheduling operations for five jobs (Job 0 through Job 4) in a manufacturing facility. Each job consists of two operations that must be performed in sequence, with the second operation starting only after the first operation is completed. All operations have a processing time of 1 unit. Operations from different jobs may share the same machine, and each machine can handle only one operation at a time. The goal is to minimize the total time required to complete all jobs, known as the makespan.\n\nThe start time of each operation must be determined, ensuring that the sequence of operations within each job is respected and that no two operations on the same machine overlap. Binary variables are used to determine the order of operations on shared machines. For example, if Operation 0 of Job 0 and Operation 0 of Job 2 are on the same machine, a binary variable indicates whether Operation 0 of Job 0 precedes Operation 0 of Job 2 or vice versa. A large constant (100,000) is used in the constraints to enforce the correct ordering of operations on shared machines.\n\nThe makespan must be at least as large as the completion time of every operation. For example, if Operation 0 of Job 0 finishes at time 2, the makespan must be at least 2. The constraints include precedence constraints within jobs, ensuring that the start time of the second operation is at least 1 unit after the completion of the first operation. Machine capacity constraints ensure that two operations assigned to the same machine do not overlap in time. The solution will provide a schedule that ensures all jobs are completed as quickly as possible, respecting the constraints of machine availability and operation precedence.",
+  "answer": 4.0,
+  "case_id": "B08-orlm-0166",
+  "expected": {
+    "kind": "model_answer",
+    "answer": 4.0
+  }
+}

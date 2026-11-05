@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 4,
+  "question": "What are the mailing street address and name of the school with the seventh-highest recorded average mathematics score?",
+  "evidence": "",
+  "gold_sql": "SELECT sc.MailStreet, sc.School FROM satscores AS sat JOIN schools AS sc ON sc.CDSCode = sat.cds WHERE sat.rtype = 'S' AND sat.AvgScrMath IS NOT NULL ORDER BY sat.AvgScrMath DESC, sat.cds LIMIT 1 OFFSET 6",
+  "db_id": "california_schools",
+  "case_id": "B05-bird-0005",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT sc.MailStreet, sc.School FROM satscores AS sat JOIN schools AS sc ON sc.CDSCode = sat.cds WHERE sat.rtype = 'S' AND sat.AvgScrMath IS NOT NULL ORDER BY sat.AvgScrMath DESC, sat.cds LIMIT 1 OFFSET 6",
+    "db_id": "california_schools",
+    "evidence": ""
+  }
+}

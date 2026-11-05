@@ -1,0 +1,171 @@
+{
+  "source": "naver-clova-ix/cord-v2",
+  "split": "train",
+  "index": 53,
+  "gt_parse": {
+    "menu": [
+      {
+        "unitprice": "12.000",
+        "cnt": "3",
+        "price": "36.000"
+      },
+      {
+        "nm": "SHOPPING BAG ROTI'O' 370/M",
+        "unitprice": "0",
+        "cnt": "1",
+        "price": "0"
+      }
+    ],
+    "sub_total": {
+      "subtotal_price": "36.000",
+      "discount_price": "0",
+      "etc": "0"
+    },
+    "total": {
+      "total_price": "36.000",
+      "changeprice": "0",
+      "creditcardprice": "36.000",
+      "menuqty_cnt": "4 PCS"
+    }
+  },
+  "case_id": "B03-cord-0402",
+  "expected": {
+    "kind": "json",
+    "value": {
+      "menu": [
+        {
+          "unitprice": "12.000",
+          "cnt": "3",
+          "price": "36.000"
+        },
+        {
+          "nm": "SHOPPING BAG ROTI'O' 370/M",
+          "unitprice": "0",
+          "cnt": "1",
+          "price": "0"
+        }
+      ],
+      "sub_total": {
+        "subtotal_price": "36.000",
+        "discount_price": "0",
+        "etc": "0"
+      },
+      "total": {
+        "total_price": "36.000",
+        "changeprice": "0",
+        "creditcardprice": "36.000",
+        "menuqty_cnt": "4 PCS"
+      }
+    },
+    "fields": {
+      "menu[0].unitprice": "12.000",
+      "menu[0].cnt": "3",
+      "menu[0].price": "36.000",
+      "menu[1].nm": "SHOPPING BAG ROTI'O' 370/M",
+      "menu[1].unitprice": "0",
+      "menu[1].cnt": "1",
+      "menu[1].price": "0",
+      "sub_total.subtotal_price": "36.000",
+      "sub_total.discount_price": "0",
+      "sub_total.etc": "0",
+      "total.total_price": "36.000",
+      "total.changeprice": "0",
+      "total.creditcardprice": "36.000",
+      "total.menuqty_cnt": "4 PCS"
+    },
+    "anchored_fields": 0,
+    "no_anchor_fields": 14,
+    "spans": [
+      {
+        "field": "menu[0].unitprice",
+        "text": "12.000",
+        "page": 1
+      },
+      {
+        "field": "menu[0].cnt",
+        "text": "3",
+        "page": 1
+      },
+      {
+        "field": "menu[0].price",
+        "text": "36.000",
+        "page": 1
+      },
+      {
+        "field": "menu[1].nm",
+        "text": "SHOPPING BAG ROTI'O' 370/M",
+        "page": 1
+      },
+      {
+        "field": "menu[1].unitprice",
+        "text": "0",
+        "page": 1
+      },
+      {
+        "field": "menu[1].cnt",
+        "text": "1",
+        "page": 1
+      },
+      {
+        "field": "menu[1].price",
+        "text": "0",
+        "page": 1
+      },
+      {
+        "field": "sub_total.subtotal_price",
+        "text": "36.000",
+        "page": 1
+      },
+      {
+        "field": "sub_total.discount_price",
+        "text": "0",
+        "page": 1
+      },
+      {
+        "field": "sub_total.etc",
+        "text": "0",
+        "page": 1
+      },
+      {
+        "field": "total.total_price",
+        "text": "36.000",
+        "page": 1
+      },
+      {
+        "field": "total.changeprice",
+        "text": "0",
+        "page": 1
+      },
+      {
+        "field": "total.creditcardprice",
+        "text": "36.000",
+        "page": 1
+      },
+      {
+        "field": "total.menuqty_cnt",
+        "text": "4 PCS",
+        "page": 1
+      }
+    ],
+    "pages": {
+      "menu[0].unitprice": 1,
+      "menu[0].cnt": 1,
+      "menu[0].price": 1,
+      "menu[1].nm": 1,
+      "menu[1].unitprice": 1,
+      "menu[1].cnt": 1,
+      "menu[1].price": 1,
+      "sub_total.subtotal_price": 1,
+      "sub_total.discount_price": 1,
+      "sub_total.etc": 1,
+      "total.total_price": 1,
+      "total.changeprice": 1,
+      "total.creditcardprice": 1,
+      "total.menuqty_cnt": 1
+    },
+    "evidence_gold": {
+      "source": "cord-valid-line",
+      "version": 1
+    }
+  }
+}

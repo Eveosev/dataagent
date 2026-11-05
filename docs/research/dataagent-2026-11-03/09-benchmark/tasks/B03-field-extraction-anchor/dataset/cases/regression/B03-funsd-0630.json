@@ -1,0 +1,41 @@
+{
+  "case_id": "B03-funsd-0630",
+  "task_id": "B03",
+  "split_role": "regression",
+  "inputs": [
+    {
+      "kind": "image",
+      "ref": "bench://funsd/images/test-26.png",
+      "digest": null
+    },
+    {
+      "kind": "instruction",
+      "ref": "fixtures/funsd-test-26-task.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-funsd-0630.json"
+  },
+  "evidence": [
+    "bench://funsd/images/test-26.png",
+    "fixtures/funsd-test-26-task.md"
+  ],
+  "tags": [
+    "funsd",
+    "test",
+    "doc:form",
+    "answers:0"
+  ],
+  "source": "funsd",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

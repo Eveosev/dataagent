@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 157,
+  "question": "I'm putting together currency-specific pricing proposals and need a sense of typical quarterly fuel consumption. Among customers who have fuel consumption recorded in the second quarter of 2013 (April, May and June 2013), what is the average amount of fuel consumed over the whole quarter by an EUR-paying customer, and the same average for a CZK-paying customer? Please round both averages to two decimal places. By EUR-paying / CZK-paying I mean a customer whose account currency is EUR / CZK.",
+  "evidence": "EUR-paying / CZK-paying: a customer whose account currency is EUR / CZK",
+  "gold_sql": "WITH q2 AS (SELECT CustomerID, SUM(Consumption) AS total FROM yearmonth WHERE Date BETWEEN '201304' AND '201306' GROUP BY CustomerID) SELECT ROUND(AVG(CASE WHEN c.Currency = 'EUR' THEN q2.total END), 2) AS eur_avg_quarter, ROUND(AVG(CASE WHEN c.Currency = 'CZK' THEN q2.total END), 2) AS czk_avg_quarter FROM customers c JOIN q2 ON q2.CustomerID = c.CustomerID",
+  "db_id": "debit_card_specializing",
+  "case_id": "B05-bird-0158",
+  "expected": {
+    "kind": "sql",
+    "sql": "WITH q2 AS (SELECT CustomerID, SUM(Consumption) AS total FROM yearmonth WHERE Date BETWEEN '201304' AND '201306' GROUP BY CustomerID) SELECT ROUND(AVG(CASE WHEN c.Currency = 'EUR' THEN q2.total END), 2) AS eur_avg_quarter, ROUND(AVG(CASE WHEN c.Currency = 'CZK' THEN q2.total END), 2) AS czk_avg_quarter FROM customers c JOIN q2 ON q2.CustomerID = c.CustomerID",
+    "db_id": "debit_card_specializing",
+    "evidence": "EUR-paying / CZK-paying: a customer whose account currency is EUR / CZK"
+  }
+}

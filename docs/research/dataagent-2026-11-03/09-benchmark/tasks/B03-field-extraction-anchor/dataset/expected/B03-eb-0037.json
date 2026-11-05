@@ -1,0 +1,1285 @@
+{
+  "source": "llamaindex/ExtractBench",
+  "id": "short/2A-9-160282_109921",
+  "pdf": "docs/short/2A-9-160282_109921.pdf",
+  "schema": {
+    "$defs": {
+      "CasingTubingRecord": {
+        "properties": {
+          "size_pipe": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The 'SIZE PIPE' (leftmost) column of the casing/tubing record grid on page 2 (the table just below 'Was well shot?', with column headers SIZE PIPE | PUT IN WELL (Ft./In.) | PULLED OUT (Ft./In.) | LEFT IN WELL (Ft./In.) | PACKERS AND SHOES). Gives the diameter of the pipe/casing string this row describes (e.g. '7\"'). This cell is the row identity. Extract the typed/handwritten value verbatim as printed, preserving fractions and any inch mark; null if blank. Do NOT confuse with the PUT IN WELL / PULLED OUT / LEFT IN WELL footage columns of the same row, nor with the PACKERS AND SHOES column.",
+            "title": "Size Pipe"
+          },
+          "put_in_well_ft": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The 'PUT IN WELL' > 'Ft.' sub-column for this row of the page-2 casing/tubing record grid: the whole-feet portion of the depth this size of pipe was put in the well. Printed unit is ft.; include the unit only if it is written in the cell. Extract verbatim as printed; null if blank. Do NOT confuse with the adjacent 'PUT IN WELL > In.' inches sub-column in the same row, nor with the 'PULLED OUT > Ft.' or 'LEFT IN WELL > Ft.' columns to the right.",
+            "title": "Put In Well Ft"
+          },
+          "put_in_well_in": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The 'PUT IN WELL' > 'In.' sub-column for this row of the page-2 casing/tubing record grid: the inches portion of the depth this size of pipe was put in the well. Printed unit is in.; include the unit only if it is written in the cell. Extract verbatim as printed; null if blank. Do NOT confuse with the adjacent 'PUT IN WELL > Ft.' feet sub-column in the same row, nor with the 'PULLED OUT > In.' or 'LEFT IN WELL > In.' columns to the right.",
+            "title": "Put In Well In"
+          },
+          "pulled_out_ft": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The 'PULLED OUT' > 'Ft.' sub-column for this row of the page-2 casing/tubing record grid: the whole-feet portion of the length of this pipe that was pulled out of the well. Printed unit is ft.; include the unit only if it is written in the cell. Extract verbatim as printed; null if blank. Do NOT confuse with the adjacent 'PULLED OUT > In.' inches sub-column in the same row, nor with the 'PUT IN WELL > Ft.' (to the left) or 'LEFT IN WELL > Ft.' (to the right) columns.",
+            "title": "Pulled Out Ft"
+          },
+          "pulled_out_in": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The 'PULLED OUT' > 'In.' sub-column for this row of the page-2 casing/tubing record grid: the inches portion of the length of this pipe that was pulled out of the well. Printed unit is in.; include the unit only if it is written in the cell. Extract verbatim as printed; null if blank. Do NOT confuse with the adjacent 'PULLED OUT > Ft.' feet sub-column in the same row, nor with the 'PUT IN WELL > In.' (to the left) or 'LEFT IN WELL > In.' (to the right) columns.",
+            "title": "Pulled Out In"
+          },
+          "left_in_well_ft": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The 'LEFT IN WELL' > 'Ft.' sub-column for this row of the page-2 casing/tubing record grid: the whole-feet portion of the length of this pipe left in the well. Printed unit is ft.; include the unit only if it is written in the cell. Extract verbatim as printed; null if blank. Do NOT confuse with the adjacent 'LEFT IN WELL > In.' inches sub-column in the same row, nor with the 'PUT IN WELL > Ft.' or 'PULLED OUT > Ft.' columns to the left.",
+            "title": "Left In Well Ft"
+          },
+          "left_in_well_in": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The 'LEFT IN WELL' > 'In.' sub-column for this row of the page-2 casing/tubing record grid: the inches portion of the length of this pipe left in the well. Printed unit is in.; include the unit only if it is written in the cell. Extract verbatim as printed; null if blank. Do NOT confuse with the adjacent 'LEFT IN WELL > Ft.' feet sub-column in the same row, nor with the 'PUT IN WELL > In.' or 'PULLED OUT > In.' columns to the left.",
+            "title": "Left In Well In"
+          },
+          "packers_and_shoes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The 'PACKERS AND SHOES' (rightmost) column for this row of the page-2 casing/tubing record grid: notes on any packers and casing shoes associated with this pipe string. Extract the typed/handwritten value verbatim as printed; null if blank. Do NOT confuse with the 'SIZE PIPE' identity column or with the PUT IN WELL / PULLED OUT / LEFT IN WELL footage columns of the same row.",
+            "title": "Packers And Shoes"
+          }
+        },
+        "title": "CasingTubingRecord",
+        "type": "object"
+      }
+    },
+    "properties": {
+      "p1_file_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Please Refer to File No.' value in the top-left header of page 1 (the plugging-application page). The RRC file number assigned to this well, used as a reference. Extract verbatim as printed, preserving any leading zeros and casing; null if blank. Do NOT confuse with 'FILE IN DUPLICATE WITH DEPUTY SUPERVISOR OF DISTRICT No.' (the district number on the same page) or with the identically-labeled 'Please Refer to File No.' on page 2 (p2_file_no).",
+        "title": "Please Refer To File No"
+      },
+      "p1_district_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The district number following the printed instruction 'FILE IN DUPLICATE WITH DEPUTY SUPERVISOR OF DISTRICT No.' near the top of page 1: the RRC Oil and Gas Division district in which the well is located. Extract verbatim as printed, preserving any leading zeros or letter suffix; null if blank. Do NOT confuse with 'Please Refer to File No.' (the file number on the same page) or with the identical district field on page 2 (p2_district_no).",
+        "title": "FILE IN DUPLICATE WITH DEPUTY SUPERVISOR OF DISTRICT No"
+      },
+      "p1_company": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Company' field in the identification block on page 1: the name of the operator/company filing this plug application. Extract verbatim as printed (preserve casing, initials and punctuation); null if blank. Do NOT confuse with 'Name of Party Plugging Well' (the plugging contractor) or the 'Correspondence ... Name' field on the same page, nor with the identical 'Company' field on page 2 (p2_company).",
+        "title": "Company"
+      },
+      "p1_address": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Address' field on the same line as 'Company' in the page-1 identification block: the mailing address of the company. Extract the full address verbatim as one string (preserve street, P.O. box, city, state as printed); null if blank. Do NOT confuse with 'Name of Party Plugging Well > Address' or 'Correspondence ... Address' on the same page, nor with the page-2 'Address' (p2_address).",
+        "title": "Address"
+      },
+      "p1_sec_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Sec. No.' field in the page-1 land-description line: the survey section number where the well is located. Extract verbatim as printed, preserving leading zeros; null if blank. Do NOT confuse with 'Block No.', 'Survey', 'Well No.' or 'No. of Acres' on the same line, nor with the identical 'Sec. No.' on page 2 (p2_sec_no).",
+        "title": "Sec No"
+      },
+      "p1_block_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Block No.' field in the page-1 land-description line: the survey block identifier where the well is located. Extract verbatim as printed, preserving leading zeros; null if blank. Do NOT confuse with 'Sec. No.' or 'Survey' on the same line, nor with the identical 'Block No.' on page 2 (p2_block_no).",
+        "title": "Block No"
+      },
+      "p1_survey": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Survey' field in the page-1 land-description line: the name or number of the abstract/grantee survey. Extract verbatim as printed; null if blank. Do NOT confuse with 'Sec. No.' or 'Block No.' on the same line, nor with the identical 'Survey' on page 2 (p2_survey).",
+        "title": "Survey"
+      },
+      "p1_county": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'County' field in the page-1 land-description line: the Texas county in which the well is located. Extract verbatim as printed; null if blank. Do NOT confuse with 'Name of field in which well is located' (the RRC field name) on the same page, nor with the page-2 'County' (p2_county) or the notary's 'County, Texas' on page 2.",
+        "title": "County"
+      },
+      "p1_well_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Well No.' field in the page-1 identification block: the well number/designation on the lease. Extract verbatim as printed, preserving leading zeros and any letter suffix; null if blank. Do NOT confuse with 'No. of Acres', 'Sec. No.', or 'Please Refer to File No.' on the same page, nor with the identical 'Well No.' on page 2 (p2_well_no).",
+        "title": "Well No"
+      },
+      "p1_name_of_lease": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Name of Lease' field in the page-1 identification block: the lease name (may be prefixed by a lease/file number). Extract verbatim as printed; null if blank. Do NOT confuse with 'Name of field in which well is located' (the RRC field name), 'Company', or 'Well No.' on the same page, nor with the identical 'Name of Lease' on page 2 (p2_name_of_lease).",
+        "title": "Name Of Lease"
+      },
+      "p1_no_of_acres": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'No. of Acres' field in the page-1 land-description line: the number of acres in the lease/tract. Extract verbatim as printed (preserve any decimal); null if blank. Do NOT confuse with 'Elev.' to its right, 'Sec. No.'/'Block No.', or 'Well No.' on the same line, nor with the identical 'No. of Acres' on page 2 (p2_no_of_acres).",
+        "title": "No Of Acres"
+      },
+      "p1_elev": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Elev.' field in the page-1 land-description line (to the right of 'No. of Acres'): the ground/derrick-floor elevation of the well. Extract verbatim as printed (include any unit if written); null if blank. Do NOT confuse with 'No. of Acres' to its left or 'Total Depth' on the same page, nor with the identical 'Elev.' on page 2 (p2_elev).",
+        "title": "Elev"
+      },
+      "p1_name_of_field": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Name of field in which well is located' field on page 1: the RRC field/reservoir name (may include 'Regular'/'Wildcat'). Extract verbatim as printed; null if blank. Do NOT confuse with 'County' (the geographic county), 'Name of Lease', or 'Character of Well' on the same page, nor with the identical field-name on page 2 (p2_name_of_field).",
+        "title": "Name Of Field In Which Well Is Located"
+      },
+      "p1_located_miles": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The mileage blank in the page-1 location sentence 'Located ____ Miles ____ Direction from ____ (Nearest P.O. or Town)': the distance value (printed unit miles). Include the unit only if written in the cell. Extract verbatim as printed; null if blank. Do NOT confuse with the 'Direction' blank (compass direction) or the 'from (Nearest P.O. or Town)' blank in the same sentence (p1_located_direction, p1_located_from).",
+        "title": "Located Miles"
+      },
+      "p1_located_direction": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The direction blank in the page-1 location sentence 'Located ____ Miles ____ Direction from ____ (Nearest P.O. or Town)': the compass direction text (e.g. 'South'). Extract verbatim as printed; null if blank. Do NOT confuse with the 'Miles' distance blank or the 'from (Nearest P.O. or Town)' town blank in the same sentence (p1_located_miles, p1_located_from).",
+        "title": "Located Direction"
+      },
+      "p1_located_from": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The town blank in the page-1 location sentence 'Located ____ Miles ____ Direction from ____ (Nearest P.O. or Town)': the nearest post office or town the distance/direction are measured from. Extract verbatim as printed; null if blank. Do NOT confuse with 'County' or 'Name of field' on the same page, nor with the 'Miles'/'Direction' blanks of the same sentence.",
+        "title": "Located From Nearest P O Or Town"
+      },
+      "p1_form1_filed_in_name_of": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The page-1 field 'Form 1, \"Notice of Intention to Drill,\" was filed in name of': the name under which the original drilling-intent Form 1 was filed. Extract verbatim as printed; null if blank. Do NOT confuse with 'Company', 'Name of Party Plugging Well', or 'Name of Lease' on the same page, nor with the identical Form-1 field on page 2 (p2_form1_filed_in_name_of).",
+        "title": "Form 1 Notice Of Intention To Drill Was Filed In Name Of"
+      },
+      "p1_drilling_commenced": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Drilling Commenced' date on page 1 (the printed line reads 'Drilling Commenced ____, 19__'): the date drilling of the well began. Extract verbatim as printed (preserve the month/day/year tokens and the pre-printed '19' century prefix as written); null if blank. Do NOT confuse with 'Drilling Completed' (the completion date on the same line) or 'Date you wish to Plug' on the same page.",
+        "title": "Drilling Commenced"
+      },
+      "p1_drilling_completed": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Drilling Completed' date on page 1 (the printed line reads 'Drilling Completed ____, 19__'): the date drilling of the well finished. Extract verbatim as printed (preserve the month/day/year tokens and the pre-printed '19' century prefix as written); null if blank. Do NOT confuse with 'Drilling Commenced' (the start date to its left) or 'Date you wish to Plug' on the same page.",
+        "title": "Drilling Completed"
+      },
+      "p1_ever_produced_oil": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'oil' answer to the page-1 question 'Has this well ever produced oil? or Gas?': the answer written for oil (typically 'Yes'/'No'). Extract verbatim as printed; null if blank. Do NOT confuse with the paired 'or Gas?' answer in the same question (p1_ever_produced_gas) or with 'Character of Well (Oil, Gas or Dry)' on the same page.",
+        "title": "Ever Produced Oil"
+      },
+      "p1_ever_produced_gas": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'or Gas?' answer to the page-1 question 'Has this well ever produced oil? or Gas?': the answer written for gas (typically 'Yes'/'No'). Extract verbatim as printed; null if blank. Do NOT confuse with the paired oil answer in the same question (p1_ever_produced_oil) or with the page-2 'Has this well ever produced oil or gas?' (p2_ever_produced_oil_or_gas).",
+        "title": "Ever Produced Gas"
+      },
+      "p1_character_of_well": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Character of Well (Oil, Gas or Dry)' field on page 1: the classification of the well written by the operator (e.g. 'Oil', 'Gas', 'Dry'). Extract verbatim as printed; null if blank. Do NOT confuse with the page-2 'Character of Well at the time of completion' (which is split into separate Oil/Gas/Dry value fields, p2_completion_*), nor with 'Has this well ever produced oil? or Gas?' on the same page.",
+        "title": "Character Of Well Oil Gas Or Dry"
+      },
+      "p1_total_depth": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Total Depth' field on page 1: the total measured depth of the well (printed unit feet). Include the unit only if written in the cell. Extract verbatim as printed; null if blank. Do NOT confuse with 'Elev.' on the same page, nor with the page-2 'Total Depth' (p2_total_depth) or 'Top of each producing sand' depth.",
+        "title": "Total Depth"
+      },
+      "p1_date_wish_to_plug": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Date you wish to Plug' field on page 1 (the printed line reads 'Date you wish to Plug ____, 19__'): the requested/intended plugging date. Extract verbatim as printed (preserve the date tokens and pre-printed '19' prefix as written); null if blank. Do NOT confuse with 'Drilling Commenced'/'Drilling Completed' on the same page, nor with the page-2 'Date well was plugged' (p2_date_well_plugged), which is the actual plugging date.",
+        "title": "Date You Wish To Plug"
+      },
+      "p1_party_plugging_well": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Name of Party Plugging Well' field on page 1: the name of the party/contractor who will plug the well. Extract verbatim as printed; null if blank. Do NOT confuse with 'Company' (the operator) or the 'Correspondence ... Name' field on the same page, and do NOT confuse with this field's own 'Address' sub-field (p1_party_plugging_address).",
+        "title": "Name Of Party Plugging Well"
+      },
+      "p1_party_plugging_address": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Address' sub-field of 'Name of Party Plugging Well' on page 1: the mailing address of the plugging party. Extract the full address verbatim as one string; null if blank. Do NOT confuse with the page-1 'Company > Address' (p1_address) or the 'Correspondence ... Address' field (p1_correspondence_address) on the same page.",
+        "title": "Name Of Party Plugging Well Address"
+      },
+      "p1_correspondence_name": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Name' sub-field under 'Correspondence regarding this well should be sent to:' on page 1: the contact name for correspondence. Extract verbatim as printed; null if blank. Do NOT confuse with 'Company' or 'Name of Party Plugging Well' on the same page, with this block's own 'Address' (p1_correspondence_address), nor with the page-2 correspondence 'Name' (p2_correspondence_name).",
+        "title": "Correspondence Name"
+      },
+      "p1_correspondence_address": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Address' sub-field under 'Correspondence regarding this well should be sent to:' on page 1: the mailing address for correspondence. Extract the full address verbatim as one string; null if blank. Do NOT confuse with 'Company > Address' or 'Name of Party Plugging Well > Address' on the same page, with this block's own 'Name' (p1_correspondence_name), nor with the page-2 correspondence 'Address' (p2_correspondence_address).",
+        "title": "Correspondence Address"
+      },
+      "p1_init_prod_gas_volume": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Volume (MCF)' sub-field under 'Initial Production of Gas:' on page 1: the initial gas production volume (printed unit MCF). Include the unit only if written in the cell. Extract verbatim as printed (a value such as 'nil' may be written); null if blank. Do NOT confuse with the '24 hrs. Pressure' sub-field of the same 'Initial Production of Gas' block (p1_init_prod_gas_pressure) or with 'Initial Production of Oil > Barrels' (p1_init_prod_oil_barrels).",
+        "title": "Initial Production Of Gas Volume MCF"
+      },
+      "p1_init_prod_gas_pressure": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The '24 hrs. Pressure' sub-field under 'Initial Production of Gas:' on page 1: the 24-hour shut-in/flowing pressure (printed unit lbs. per square inch). Include the unit only if written in the cell. Extract verbatim as printed; null if blank. Do NOT confuse with the 'Volume (MCF)' sub-field of the same gas block (p1_init_prod_gas_volume) or with 'Initial Production of Oil > Barrels' (p1_init_prod_oil_barrels).",
+        "title": "Initial Production Of Gas 24 Hrs Pressure"
+      },
+      "p1_init_prod_oil_barrels": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Barrels' sub-field under 'Initial Production of Oil:' on page 1: the initial oil production in barrels (printed unit barrels). Include the unit only if written in the cell. Extract verbatim as printed; null if blank. Do NOT confuse with the 'Initial Production of Gas' sub-fields (Volume (MCF) / 24 hrs. Pressure) above it on the same page.",
+        "title": "Initial Production Of Oil Barrels"
+      },
+      "p1_general_remarks": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'General Remarks:' free-text block at the bottom of page 1 (above the note 'FILL OUT FORMATION AND AFFIDAVIT ON REVERSE SIDE'): any free-form remarks the operator adds. Extract the entire text verbatim as one string; null if blank. Do NOT confuse with the page-2 narrative fields such as 'Manner of confining all oil, gas or water to strata' or 'show all shoulders left for casing...' (p2_plugs_detail).",
+        "title": "General Remarks"
+      },
+      "p2_file_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Please Refer to File No.' value in the header of page 2 (the Well Record / plugging-record reverse side). The RRC file number for this well as written on page 2. Extract verbatim as printed, preserving leading zeros; null if blank. Do NOT confuse with 'FILE IN DUPLICATE WITH DEPUTY SUPERVISOR OF DISTRICT No.' on page 2 (p2_district_no) or with the identically-labeled file number on page 1 (p1_file_no).",
+        "title": "Please Refer To File No"
+      },
+      "p2_district_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The district number following 'FILE IN DUPLICATE WITH DEPUTY SUPERVISOR OF DISTRICT No.' in the header of page 2: the RRC Oil and Gas Division district. Extract verbatim as printed, preserving leading zeros or letter suffix; null if blank. Do NOT confuse with 'Please Refer to File No.' on page 2 (p2_file_no) or with the identical district field on page 1 (p1_district_no).",
+        "title": "FILE IN DUPLICATE WITH DEPUTY SUPERVISOR OF DISTRICT No"
+      },
+      "p2_company": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Company' field in the identification block at the top of page 2: the operator/company name repeated on the well-record page. Extract verbatim as printed; null if blank. Do NOT confuse with the page-2 affidavit/correspondence names, nor with the identical 'Company' field on page 1 (p1_company).",
+        "title": "Company"
+      },
+      "p2_address": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Address' field on the same line as 'Company' in the page-2 identification block: the company mailing address. Extract the full address verbatim as one string; null if blank. Do NOT confuse with the page-2 correspondence 'Address' (p2_correspondence_address), nor with the identical 'Address' field on page 1 (p1_address).",
+        "title": "Address"
+      },
+      "p2_sec_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Sec. No.' field in the page-2 land-description line: the survey section number. Extract verbatim as printed, preserving leading zeros; null if blank. Do NOT confuse with 'Block No.' or 'Survey' on the same page-2 line, nor with the identical 'Sec. No.' on page 1 (p1_sec_no).",
+        "title": "Sec No"
+      },
+      "p2_block_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Block No.' field in the page-2 land-description line: the survey block identifier. Extract verbatim as printed, preserving leading zeros; null if blank. Do NOT confuse with 'Sec. No.' or 'Survey' on the same page-2 line, nor with the identical 'Block No.' on page 1 (p1_block_no).",
+        "title": "Block No"
+      },
+      "p2_survey": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Survey' field in the page-2 land-description line: the abstract/grantee survey name or number. Extract verbatim as printed; null if blank. Do NOT confuse with 'Sec. No.' or 'Block No.' on the same page-2 line, nor with the identical 'Survey' on page 1 (p1_survey).",
+        "title": "Survey"
+      },
+      "p2_county": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'County' field in the page-2 land-description line: the Texas county in which the well is located. Extract verbatim as printed; null if blank. Do NOT confuse with the notary's 'County, Texas' near the affidavit (p2_notary_county), with 'Name of field in which well is located' on the same page, nor with the identical 'County' on page 1 (p1_county).",
+        "title": "County"
+      },
+      "p2_well_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Well No.' field in the page-2 identification block: the well number/designation on the lease. Extract verbatim as printed, preserving leading zeros and any letter suffix; null if blank. Do NOT confuse with 'No. of Acres' or 'Sec. No.' on the same page, nor with the identical 'Well No.' on page 1 (p1_well_no).",
+        "title": "Well No"
+      },
+      "p2_name_of_lease": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Name of Lease' field in the page-2 identification block: the lease name. Extract verbatim as printed; null if blank. Do NOT confuse with 'Name of field in which well is located' (the RRC field name) on the same page, nor with the identical 'Name of Lease' on page 1 (p1_name_of_lease).",
+        "title": "Name Of Lease"
+      },
+      "p2_no_of_acres": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'No. of Acres' field in the page-2 identification block: the number of acres in the lease/tract. Extract verbatim as printed (preserve any decimal); null if blank. Do NOT confuse with the page-2 'Elev.' field (p2_elev) that follows it, with depth or footage values on the page, nor with the identical 'No. of Acres' on page 1 (p1_no_of_acres).",
+        "title": "No Of Acres"
+      },
+      "p2_elev": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Elev.' (elevation) field in the page-2 identification block: the ground/derrick-floor elevation of the well as recorded on the well-record page. Extract verbatim as printed (include any unit if written); null if blank. Do NOT confuse with 'No. of Acres' to its left, with 'Total Depth' or 'Top of each producing sand' on page 2, nor with the identical 'Elev.' on page 1 (p1_elev).",
+        "title": "Elev"
+      },
+      "p2_name_of_field": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Name of field in which well is located' field on page 2: the RRC field/reservoir name (may include 'Regular'/'Wildcat'). Extract verbatim as printed; null if blank. Do NOT confuse with 'County' or 'Name of Lease' on the same page, nor with the identical field-name on page 1 (p1_name_of_field).",
+        "title": "Name Of Field In Which Well Is Located"
+      },
+      "p2_form1_filed_in_name_of": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The page-2 field 'Form 1 (Notice of Intention to Drill) Was Filed in Name of': the name under which the original drilling-intent Form 1 was filed, repeated on the well-record page. Extract verbatim as printed; null if blank. Do NOT confuse with 'Company' or the affidavit/correspondence names on the same page, nor with the identical Form-1 field on page 1 (p1_form1_filed_in_name_of).",
+        "title": "Form 1 Notice Of Intention To Drill Was Filed In Name Of"
+      },
+      "p2_date_well_plugged": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Date well was plugged' field on page 2 (the printed line reads 'Date well was plugged ____, 19__'): the actual date the well was plugged. Extract verbatim as printed (preserve the date tokens and the pre-printed '19' prefix as written); null if blank. Do NOT confuse with the page-1 'Date you wish to Plug' (the intended date, p1_date_wish_to_plug) or with the affidavit 'Subscribed and sworn to before me this' date on page 2 (p2_sworn_*).",
+        "title": "Date Well Was Plugged"
+      },
+      "p2_completion_oil": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Oil' value in the page-2 line 'Character of Well at the time of completion: Oil ____ bbls; Gas ____ Cu. Ft.; Dry ____ (Initial Production)': the oil rate at completion (printed unit bbls). Include the unit only if written in the cell. Extract verbatim as printed; null if blank. Do NOT confuse with the sibling 'Gas' and 'Dry' completion values (p2_completion_gas, p2_completion_dry), nor with the 'Amount well producing when plugged > Oil' value (p2_amount_plugged_oil) on the next line.",
+        "title": "Character Of Well At Time Of Completion Oil"
+      },
+      "p2_completion_gas": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Gas' value in the page-2 line 'Character of Well at the time of completion: Oil ____ bbls; Gas ____ Cu. Ft.; Dry ____ (Initial Production)': the gas rate at completion (printed unit Cu. Ft.). Include the unit only if written in the cell. Extract verbatim as printed; null if blank. Do NOT confuse with the sibling 'Oil' and 'Dry' completion values (p2_completion_oil, p2_completion_dry), nor with the 'Amount well producing when plugged > Gas' value (p2_amount_plugged_gas) on the next line.",
+        "title": "Character Of Well At Time Of Completion Gas"
+      },
+      "p2_completion_dry": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Dry' value in the page-2 line 'Character of Well at the time of completion: Oil ____ bbls; Gas ____ Cu. Ft.; Dry ____ (Initial Production)': the entry indicating a dry hole at completion (e.g. 'No' or a mark). Extract verbatim as printed; null if blank. Do NOT confuse with the sibling 'Oil' and 'Gas' completion values (p2_completion_oil, p2_completion_gas) on the same line, nor with the page-1 'Character of Well (Oil, Gas or Dry)' single field (p1_character_of_well).",
+        "title": "Character Of Well At Time Of Completion Dry"
+      },
+      "p2_amount_plugged_oil": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Oil' value in the page-2 line 'Amount well producing when plugged: Oil ____ bbls; Gas ____ Cu. Ft.; Water ____ bbls.': the oil production rate at the time of plugging (printed unit bbls). Include the unit only if written in the cell. Extract verbatim as printed; null if blank. Do NOT confuse with the sibling 'Gas' and 'Water' amounts (p2_amount_plugged_gas, p2_amount_plugged_water), nor with the 'Character of Well at the time of completion > Oil' value (p2_completion_oil) on the line above.",
+        "title": "Amount Well Producing When Plugged Oil"
+      },
+      "p2_amount_plugged_gas": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Gas' value in the page-2 line 'Amount well producing when plugged: Oil ____ bbls; Gas ____ Cu. Ft.; Water ____ bbls.': the gas production rate at the time of plugging (printed unit Cu. Ft.). Include the unit only if written in the cell. Extract verbatim as printed; null if blank. Do NOT confuse with the sibling 'Oil' and 'Water' amounts (p2_amount_plugged_oil, p2_amount_plugged_water), nor with the 'Character of Well at the time of completion > Gas' value (p2_completion_gas) on the line above.",
+        "title": "Amount Well Producing When Plugged Gas"
+      },
+      "p2_amount_plugged_water": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Water' value in the page-2 line 'Amount well producing when plugged: Oil ____ bbls; Gas ____ Cu. Ft.; Water ____ bbls.': the water production rate at the time of plugging (printed unit bbls). Include the unit only if written in the cell. Extract verbatim as printed; null if blank. Do NOT confuse with the sibling 'Oil' and 'Gas' amounts (p2_amount_plugged_oil, p2_amount_plugged_gas) on the same line.",
+        "title": "Amount Well Producing When Plugged Water"
+      },
+      "p2_ever_produced_oil_or_gas": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The answer to the page-2 question 'Has this well ever produced oil or gas?' (typically 'Yes'/'No'). Extract verbatim as printed; null if blank. Do NOT confuse with the page-1 split oil/gas production answers (p1_ever_produced_oil, p1_ever_produced_gas), nor with the completion/amount-plugged value fields on the same page.",
+        "title": "Has This Well Ever Produced Oil Or Gas"
+      },
+      "p2_total_depth": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Total Depth' field on page 2 (printed as 'Total Depth ____ feet.'): the total measured depth of the well (printed unit feet). Include the unit only if written in the cell. Extract verbatim as printed; null if blank. Do NOT confuse with 'Top of each producing sand' (p2_top_of_producing_sand) on the same line to its right, nor with the page-1 'Total Depth' (p1_total_depth).",
+        "title": "Total Depth"
+      },
+      "p2_top_of_producing_sand": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Top of each producing sand' field on page 2 (printed as 'Top of each producing sand ____ feet.'): the depth(s) to the top of each producing sand. Include the unit only if written in the cell. Extract verbatim as printed; null if blank. Do NOT confuse with 'Total Depth' to its left (p2_total_depth) or with 'Show depth found and thickness of all water, oil and gas formations' (p2_depth_thickness_formations) lower on the page.",
+        "title": "Top Of Each Producing Sand"
+      },
+      "p2_filled_with_mud_laden_fluid": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The answer to the page-2 question 'Was the well filled with mud-laden fluid, according to regulations of the Railroad Commission?' (typically 'Yes'/'No'). Extract verbatim as printed; null if blank. Do NOT confuse with 'How was mud applied?' (p2_how_mud_applied), 'Were plugs used?' (p2_were_plugs_used), or 'Was well shot?' (p2_was_well_shot) on the same page.",
+        "title": "Was The Well Filled With Mud Laden Fluid According To Regulations Of The Railroad Commission"
+      },
+      "p2_how_mud_applied": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The answer to the page-2 question 'How was mud applied?': the free-text method of applying mud (e.g. 'Mechanically pumped'). Extract verbatim as printed; null if blank. Do NOT confuse with 'Was the well filled with mud-laden fluid...?' (p2_filled_with_mud_laden_fluid), which is the preceding yes/no question, or with 'Were plugs used?' (p2_were_plugs_used).",
+        "title": "How Was Mud Applied"
+      },
+      "p2_were_plugs_used": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The answer to the page-2 question 'Were plugs used?' (typically 'Yes'/'No'), printed just before the instruction 'If so, show all shoulders left for casing...'. Extract verbatim as printed; null if blank. Do NOT confuse with 'Was well shot?' (p2_was_well_shot), 'How was mud applied?' (p2_how_mud_applied), or the narrative plug detail (p2_plugs_detail).",
+        "title": "Were Plugs Used"
+      },
+      "p2_was_well_shot": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The answer to the page-2 question 'Was well shot?' (typically 'Yes'/'No'). Extract verbatim as printed; null if blank. Do NOT confuse with 'Were plugs used?' (p2_were_plugs_used) just above it, or with 'Was the well filled with mud-laden fluid...?' (p2_filled_with_mud_laden_fluid).",
+        "title": "Was Well Shot"
+      },
+      "p2_plugs_detail": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The narrative answer to the page-2 instruction (following 'Were plugs used? If so,') 'show all shoulders left for casing, depth of each, and size of casing, size and kind of plugs used, and depth placed. Also amount of cement and rock.': the free-text plugging detail (e.g. 'Set bridging plug at 1150 ft'). Extract the entire text verbatim as one string; null if blank. Do NOT confuse with the casing/tubing record grid below it (casing_tubing_records), 'Manner of confining all oil, gas or water to strata' (p2_manner_of_confining), or 'Show depth found and thickness of all water, oil and gas formations' (p2_depth_thickness_formations).",
+        "title": "Plugs Detail Shoulders Casing Plugs Cement And Rock"
+      },
+      "p2_depth_thickness_formations": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The narrative answer to 'Show depth found and thickness of all water, oil and gas formations' on page 2 (the line below the casing/tubing grid): the free-text formation depths/thicknesses (e.g. an interval like '1285-1302'). Extract the entire text verbatim as one string; null if blank. Do NOT confuse with 'Top of each producing sand' (p2_top_of_producing_sand), the casing/tubing grid (casing_tubing_records), or 'Manner of confining all oil, gas or water to strata' (p2_manner_of_confining).",
+        "title": "Show Depth Found And Thickness Of All Water Oil And Gas Formations"
+      },
+      "p2_abandoned_wells_plugged": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The answer to the page-2 question 'Have all abandoned wells on this lease been plugged according to Commissions rules?' (typically 'Yes'/'No'). Extract verbatim as printed; null if blank. Do NOT confuse with 'Was notice given before plugging to all available adjacent lease owners as required by Rule 10?' (p2_notice_given_adjacent_owners), which is a separate yes/no question lower on the page.",
+        "title": "Have All Abandoned Wells On This Lease Been Plugged According To Commissions Rules"
+      },
+      "p2_manner_of_confining": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The narrative answer to 'Manner of confining all oil, gas or water to strata:' on page 2: the free-text description of how fluids are confined to their strata (e.g. 'Bridging Plug'). Extract the entire text verbatim as one string; null if blank. Do NOT confuse with the plugging detail narrative (p2_plugs_detail) or 'Show depth found and thickness of all water, oil and gas formations' (p2_depth_thickness_formations) above it.",
+        "title": "Manner Of Confining All Oil Gas Or Water To Strata"
+      },
+      "p2_adjacent_owners": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The narrative answer to 'The names of adjacent lease, royalty and landowners with their addresses in each instance as follows:' on page 2: the free-text list of adjacent owners and their addresses. Extract the entire multi-name/address text verbatim as one string; null if blank. Do NOT confuse with 'Was notice given before plugging to all available adjacent lease owners as required by Rule 10?' (p2_notice_given_adjacent_owners) just below it, nor with the correspondence/affidavit name fields.",
+        "title": "Names Of Adjacent Lease Royalty And Landowners With Addresses"
+      },
+      "p2_notice_given_adjacent_owners": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The answer to the page-2 question 'Was notice given before plugging to all available adjacent lease owners as required by Rule 10?' (typically 'Yes'/'No'). Extract verbatim as printed; null if blank. Do NOT confuse with 'The names of adjacent lease, royalty and landowners...' (p2_adjacent_owners) just above it, or with 'Have all abandoned wells on this lease been plugged according to Commissions rules?' (p2_abandoned_wells_plugged).",
+        "title": "Was Notice Given Before Plugging To All Available Adjacent Lease Owners As Required By Rule 10"
+      },
+      "p2_affiant_name": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The name written into the blank of the page-2 affidavit sentence 'I, ____, being first duly sworn on oath, state that I have knowledge of the facts...': the name of the affiant making the sworn statement. Extract verbatim as printed; null if blank. Do NOT confuse with the affidavit signature 'Name' line below it (p2_affiant_signature_name), the affiant's 'Title' (p2_affiant_title), or the notary's name.",
+        "title": "Affiant Name In Oath Sentence"
+      },
+      "p2_affiant_signature_name": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Name' line of the affidavit signature block on page 2 (printed below the sworn-statement sentence, to the left of 'Title'): the signed/printed name of the affiant. Extract verbatim as printed; null if blank. Do NOT confuse with the name written into the 'I, ____, being first duly sworn' sentence above (p2_affiant_name), the affiant's 'Title' to its right (p2_affiant_title), or the notary name.",
+        "title": "Affidavit Name"
+      },
+      "p2_affiant_title": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Title' line of the affidavit signature block on page 2 (printed to the right of the affidavit 'Name'): the affiant's title/capacity (e.g. 'Operator'). Extract verbatim as printed; null if blank. Do NOT confuse with the affidavit 'Name' to its left (p2_affiant_signature_name), the affiant name in the oath sentence (p2_affiant_name), or the notary fields.",
+        "title": "Affidavit Title"
+      },
+      "p2_sworn_day": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'day of' blank in the page-2 jurat line 'Subscribed and sworn to before me this ____ day of ____, 19__': the day-of-month the affidavit was sworn (e.g. '6th'). Extract verbatim as printed; null if blank. Do NOT confuse with the 'month' blank (p2_sworn_month) or the year blank '19__' (p2_sworn_year) in the same jurat line, nor with 'Date well was plugged' (p2_date_well_plugged).",
+        "title": "Subscribed And Sworn Day Of"
+      },
+      "p2_sworn_month": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The month blank in the page-2 jurat line 'Subscribed and sworn to before me this ____ day of ____, 19__': the month name the affidavit was sworn (e.g. 'March'). Extract verbatim as printed; null if blank. Do NOT confuse with the 'day of' blank (p2_sworn_day) or the year blank '19__' (p2_sworn_year) in the same jurat line.",
+        "title": "Subscribed And Sworn Month"
+      },
+      "p2_sworn_year": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The year blank in the page-2 jurat line 'Subscribed and sworn to before me this ____ day of ____, 19__': the two digits written after the pre-printed '19' century prefix (capture exactly what the operator wrote; do not add the '19' unless it is hand-written). Extract verbatim as printed; null if blank. Do NOT confuse with the 'day of' blank (p2_sworn_day) or the 'month' blank (p2_sworn_month) in the same jurat line.",
+        "title": "Subscribed And Sworn Year 19"
+      },
+      "p2_notary_signature": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Notary Public' signature line in the page-2 jurat block: whether a notary signature/mark is present. True if a signature or handwritten mark appears on the line, false if the line is blank. This is presence-only (a boolean), NOT the printed name or county. Do NOT confuse with the notary 'County, Texas' field to its right (p2_notary_county) or with the affidavit signature name (p2_affiant_signature_name).",
+        "title": "Notary Public"
+      },
+      "p2_notary_county": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The county written before 'County, Texas' on the page-2 notary line (printed as '____ County, Texas' beneath/beside 'Notary Public'): the county in which the notary is commissioned. Extract verbatim as printed; null if blank. Do NOT confuse with the page-2 land-description 'County' (p2_county) or the page-1 'County' (p1_county), nor with the 'Notary Public' signature presence (p2_notary_signature).",
+        "title": "Notary Public County Texas"
+      },
+      "p2_correspondence_name": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Name' sub-field under 'Correspondence regarding this well should be addressed to:' at the bottom of page 2: the contact name for correspondence. Extract verbatim as printed; null if blank. Do NOT confuse with this block's own 'Address' (p2_correspondence_address), the affidavit/notary names on the same page, nor with the page-1 correspondence 'Name' (p1_correspondence_name).",
+        "title": "Correspondence Name"
+      },
+      "p2_correspondence_address": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Address' sub-field under 'Correspondence regarding this well should be addressed to:' at the bottom of page 2: the mailing address for correspondence. Extract the full address verbatim as one string; null if blank. Do NOT confuse with this block's own 'Name' (p2_correspondence_name), the page-2 'Company > Address' (p2_address), nor with the page-1 correspondence 'Address' (p1_correspondence_address).",
+        "title": "Correspondence Address"
+      },
+      "casing_tubing_records": {
+        "anyOf": [
+          {
+            "items": {
+              "$ref": "#/$defs/CasingTubingRecord"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The casing/tubing record grid (the bordered table below 'Was well shot?'). Columns are: SIZE PIPE | PUT IN WELL (Ft. / In.) | PULLED OUT (Ft. / In.) | LEFT IN WELL (Ft. / In.) | PACKERS AND SHOES. Usually printed on page 2, but on the older 1943-era revision of this form the grid is printed on page 1 instead — check both pages. The blank form pre-prints four empty rows; return one CasingTubingRecord object per FILLED row (top-to-bottom), each carrying the eight cell values, with size_pipe holding the row's pipe size as its identity. Emit an object only for rows that have at least one filled cell; null (or an empty list) when the whole grid is blank. Preserve all cell values verbatim. Do NOT pull in the narrative plugging detail above the grid (p2_plugs_detail) or the formation-depth line below it (p2_depth_thickness_formations).",
+        "title": "Casing Tubing Records"
+      }
+    },
+    "title": "RRC2AExtraction",
+    "type": "object"
+  },
+  "expected": {
+    "kind": "json",
+    "schema_ref": "fixtures/eb-short-2A-9-160282_109921-schema.json",
+    "value": {
+      "p1_file_no": null,
+      "p1_district_no": null,
+      "p1_company": "R. L. Underwood",
+      "p1_address": "420 Oil & Gas Bldg Wichita Falls, Tex",
+      "p1_sec_no": null,
+      "p1_block_no": "1374",
+      "p1_survey": "TE&L Co",
+      "p1_county": "Archer",
+      "p1_well_no": "Z-15",
+      "p1_name_of_lease": "Campbell Estate \"Z\"",
+      "p1_no_of_acres": "400",
+      "p1_elev": null,
+      "p1_name_of_field": "Archer County Regular",
+      "p1_located_miles": "6",
+      "p1_located_direction": "NE",
+      "p1_located_from": "Olney, Texas",
+      "p1_form1_filed_in_name_of": "R. L. Underwood",
+      "p1_drilling_commenced": "June 11, 1955",
+      "p1_drilling_completed": "June 12, 1955",
+      "p1_ever_produced_oil": "No",
+      "p1_ever_produced_gas": "No",
+      "p1_character_of_well": "Dry",
+      "p1_total_depth": "1073",
+      "p1_date_wish_to_plug": "June 12, 1955",
+      "p1_party_plugging_well": "R.W.Darden Drlg Co",
+      "p1_party_plugging_address": "420 Oil & Gas Bldg Wichita Falls, Tex",
+      "p1_correspondence_name": "R. L. Underwood",
+      "p1_correspondence_address": "420 Oil & Gas Bldg Wichita Falls, Texas",
+      "p1_init_prod_gas_volume": null,
+      "p1_init_prod_gas_pressure": null,
+      "p1_init_prod_oil_barrels": "nil",
+      "p1_general_remarks": null,
+      "p2_file_no": null,
+      "p2_district_no": null,
+      "p2_company": "R. L. Underwood",
+      "p2_address": "420 Oil & Gas Bldg Wichita Falls, Texas",
+      "p2_sec_no": null,
+      "p2_block_no": "1374",
+      "p2_survey": "TE&L Co",
+      "p2_county": "Archer",
+      "p2_well_no": "Z-15",
+      "p2_name_of_lease": "Campbell Estate \"Z\"",
+      "p2_no_of_acres": "400",
+      "p2_elev": null,
+      "p2_name_of_field": "Archer County Reg.",
+      "p2_form1_filed_in_name_of": "R. L. Underwood",
+      "p2_date_well_plugged": "June 12, 1955",
+      "p2_completion_oil": null,
+      "p2_completion_gas": null,
+      "p2_completion_dry": "Dry",
+      "p2_amount_plugged_oil": "nil",
+      "p2_amount_plugged_gas": null,
+      "p2_amount_plugged_water": null,
+      "p2_ever_produced_oil_or_gas": "No",
+      "p2_total_depth": "1073",
+      "p2_top_of_producing_sand": "See log",
+      "p2_filled_with_mud_laden_fluid": "Yes",
+      "p2_how_mud_applied": "Pumped in with rotary mud pump",
+      "p2_were_plugs_used": "no",
+      "p2_was_well_shot": null,
+      "p2_plugs_detail": null,
+      "p2_depth_thickness_formations": "See log",
+      "p2_abandoned_wells_plugged": "Yes",
+      "p2_manner_of_confining": null,
+      "p2_adjacent_owners": "North, East, South, West - R. Campbell Estate",
+      "p2_notice_given_adjacent_owners": "Yes",
+      "p2_affiant_name": "R. L. Underwood",
+      "p2_affiant_signature_name": "R. L. Underwood",
+      "p2_affiant_title": "Operator",
+      "p2_sworn_day": "13th",
+      "p2_sworn_month": "June",
+      "p2_sworn_year": "55",
+      "p2_notary_signature": true,
+      "p2_notary_county": "Wichita",
+      "p2_correspondence_name": "R.L. Underwood",
+      "p2_correspondence_address": "420 Oil & Gas Bldg Wichita Falls, Tex",
+      "casing_tubing_records": [
+        {
+          "size_pipe": null,
+          "put_in_well_ft": null,
+          "put_in_well_in": null,
+          "pulled_out_ft": null,
+          "pulled_out_in": null,
+          "left_in_well_ft": null,
+          "left_in_well_in": null,
+          "packers_and_shoes": null
+        }
+      ]
+    },
+    "anchored_fields": 77,
+    "no_anchor_fields": 0,
+    "pages": {
+      "p1_file_no": 1,
+      "p1_district_no": 1,
+      "p1_company": 1,
+      "p1_sec_no": 2,
+      "p1_block_no": 2,
+      "p1_survey": 2,
+      "p1_county": 2,
+      "p1_well_no": 2,
+      "p1_name_of_lease": 2,
+      "p1_no_of_acres": 2,
+      "p1_elev": 2,
+      "p1_name_of_field": 1,
+      "p1_form1_filed_in_name_of": 2,
+      "p1_drilling_commenced": 1,
+      "p1_drilling_completed": 1,
+      "p1_character_of_well": 1,
+      "p1_total_depth": 1,
+      "p1_date_wish_to_plug": 1,
+      "p1_party_plugging_well": 1,
+      "p1_party_plugging_address": 1,
+      "p1_correspondence_name": 1,
+      "p1_correspondence_address": 1,
+      "p1_init_prod_gas_volume": 1,
+      "p1_init_prod_gas_pressure": 1,
+      "p1_init_prod_oil_barrels": 1,
+      "p1_general_remarks": 1,
+      "p2_file_no": 2,
+      "p2_district_no": 2,
+      "p2_company": 2,
+      "p2_address": 1,
+      "p2_sec_no": 1,
+      "p2_block_no": 1,
+      "p2_survey": 1,
+      "p2_county": 1,
+      "p2_well_no": 1,
+      "p2_name_of_lease": 1,
+      "p2_no_of_acres": 1,
+      "p2_elev": 2,
+      "p2_name_of_field": 2,
+      "p2_form1_filed_in_name_of": 1,
+      "p2_date_well_plugged": 2,
+      "p2_total_depth": 2,
+      "p2_top_of_producing_sand": 2,
+      "p2_depth_thickness_formations": 2,
+      "p2_manner_of_confining": 2,
+      "p2_adjacent_owners": 2,
+      "p2_affiant_signature_name": 2,
+      "p2_affiant_title": 2,
+      "p2_correspondence_name": 2,
+      "p2_correspondence_address": 2,
+      "casing_tubing_records": 2
+    },
+    "evidence_gold": {
+      "source": "schema-description",
+      "version": 1
+    }
+  },
+  "field_rules": "{\"p1_file_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p1_district_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"p1_company\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.17137, 0.1972, 0.15459, 0.01381], \"quote\": \"R. L. Underwood\", \"value\": \"R. L. Underwood\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p1_address\": {\"comparator\": \"address\", \"evidence\": [{\"page\": 1, \"bbox\": [0.6036248373160746, 0.18968377495336478, 0.3763707783725609, 0.01592215741450058], \"quote\": \"420 Oil & Gas Bldg Wichita Falls, Tex\", \"value\": \"420 Oil & Gas Bldg Wichita Falls, Tex\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p1_sec_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p1_block_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.33272, 0.22633, 0.04656, 0.01263], \"quote\": \"1374\", \"value\": \"1374\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p1_survey\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.53019, 0.22697, 0.07144, 0.0119], \"quote\": \"TE&L Co\", \"value\": \"TE&L Co\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p1_county\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.7653831870847901, 0.22240952686041773, 0.06421670117531855, 0.014712349578219326], \"quote\": \"Archer\", \"value\": \"Archer\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p1_well_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.15693, 0.25945, 0.04415, 0.0127], \"quote\": \"Z-15\", \"value\": \"Z-15\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p1_name_of_lease\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.34316, 0.25527, 0.19345, 0.01679], \"quote\": \"Campbell Estate \\\"Z\\\"\", \"value\": \"Campbell Estate \\\"Z\\\"\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p1_no_of_acres\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.6872, 0.25357, 0.03714, 0.01316], \"quote\": \"400\", \"value\": \"400\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p1_elev\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p1_name_of_field\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.39051798824590356, 0.28187196486133476, 0.2127178568047128, 0.016551416465294195], \"quote\": \"Archer County Regular\", \"value\": \"Archer County Regular\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p1_located_miles\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.1609, 0.3198, 0.0221, 0.01181], \"quote\": \"6\", \"value\": \"6\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"p1_located_direction\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.2934, 0.31819, 0.0262, 0.01192], \"quote\": \"NE\", \"value\": \"NE\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"p1_located_from\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.53597, 0.31459, 0.13793, 0.01522], \"quote\": \"Olney, Texas\", \"value\": \"Olney, Texas\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"p1_form1_filed_in_name_of\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.57203, 0.3431, 0.14904, 0.01346], \"quote\": \"R. L. Underwood\", \"value\": \"R. L. Underwood\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p1_drilling_commenced\": {\"comparator\": \"date\", \"evidence\": [{\"page\": 1, \"bbox\": [0.27653, 0.3762, 0.13164, 0.0154], \"quote\": \"June 11, 1955\", \"value\": \"June 11, 1955\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"lenient_date\"]}, \"p1_drilling_completed\": {\"comparator\": \"date\", \"evidence\": [{\"page\": 1, \"bbox\": [0.7099962390498824, 0.3738242308894966, 0.13164427688487962, 0.01655139327549674], \"quote\": \"June 12, 1955\", \"value\": \"June 12, 1955\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"lenient_date\"]}, \"p1_ever_produced_oil\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.3362, 0.41034, 0.02454, 0.01123], \"quote\": \"No\", \"value\": \"No\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"p1_ever_produced_gas\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.69463, 0.40504, 0.02931, 0.01405], \"quote\": \"No\", \"value\": \"No\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"p1_character_of_well\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.40588, 0.44051, 0.03705, 0.01405], \"quote\": \"Dry\", \"value\": \"Dry\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p1_total_depth\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.74162, 0.43432, 0.04464, 0.01307], \"quote\": \"1073\", \"value\": \"1073\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"p1_date_wish_to_plug\": {\"comparator\": \"date\", \"evidence\": [{\"page\": 1, \"bbox\": [0.31104978486168916, 0.4694545727173146, 0.12843346308213954, 0.01471237276801678], \"quote\": \"June 12, 1955\", \"value\": \"June 12, 1955\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"lenient_date\"]}, \"p1_party_plugging_well\": {\"comparator\": \"address\", \"evidence\": [{\"page\": 1, \"bbox\": [0.27942, 0.49771, 0.17988, 0.01497], \"quote\": \"R.W.Darden Drlg Co\", \"value\": \"R.W.Darden Drlg Co\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p1_party_plugging_address\": {\"comparator\": \"address\", \"evidence\": [{\"page\": 1, \"bbox\": [0.6139, 0.49191, 0.36772, 0.01896], \"quote\": \"420 Oil & Gas Bldg Wichita Falls, Tex\", \"value\": \"420 Oil & Gas Bldg Wichita Falls, Tex\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"p1_correspondence_name\": {\"comparator\": \"address\", \"evidence\": [{\"page\": 1, \"bbox\": [0.5632, 0.52187, 0.15215, 0.01594], \"quote\": \"R. L. Underwood\", \"value\": \"R. L. Underwood\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"p1_correspondence_address\": {\"comparator\": \"address\", \"evidence\": [{\"page\": 1, \"bbox\": [0.19959, 0.56033, 0.4178, 0.01667], \"quote\": \"420 Oil & Gas Bldg Wichita Falls, Texas\", \"value\": \"420 Oil & Gas Bldg Wichita Falls, Texas\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p1_init_prod_gas_volume\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"p1_init_prod_gas_pressure\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p1_init_prod_oil_barrels\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.3651, 0.61904, 0.0414, 0.01454], \"quote\": \"nil\", \"value\": \"nil\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"p1_general_remarks\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p2_file_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p2_district_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"p2_company\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.16816756856996565, 0.1319954128015834, 0.15893640676842877, 0.014067258857997632], \"quote\": \"R. L. Underwood\", \"value\": \"R. L. Underwood\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p2_address\": {\"comparator\": \"address\", \"evidence\": [{\"page\": 2, \"bbox\": [0.5565784900195045, 0.12906244170950712, 0.3887108325904217, 0.019389696205732342], \"quote\": \"420 Oil & Gas Bldg Wichita Falls, Texas\", \"value\": \"420 Oil & Gas Bldg Wichita Falls, Texas\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"p2_sec_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p2_block_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.36002, 0.15347, 0.0408, 0.01252], \"quote\": \"1374\", \"value\": \"1374\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p2_survey\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.56551, 0.15339, 0.07064, 0.01173], \"quote\": \"TE&L Co\", \"value\": \"TE&L Co\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p2_county\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.77276, 0.15167, 0.06086, 0.01281], \"quote\": \"Archer\", \"value\": \"Archer\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p2_well_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.16255, 0.17373, 0.04094, 0.01211], \"quote\": \"Z-15\", \"value\": \"Z-15\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p2_name_of_lease\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.36913, 0.1738, 0.18819, 0.01415], \"quote\": \"Campbell Estate \\\"Z\\\"\", \"value\": \"Campbell Estate \\\"Z\\\"\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p2_no_of_acres\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.78339, 0.17227, 0.0306, 0.01267], \"quote\": \"400\", \"value\": \"400\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p2_elev\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"p2_name_of_field\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.39051798824590356, 0.1913226113607188, 0.17659603451225528, 0.016513747713017987], \"quote\": \"Archer County Reg.\", \"value\": \"Archer County Reg.\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p2_form1_filed_in_name_of\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.5332, 0.21514, 0.153, 0.01335], \"quote\": \"R. L. Underwood\", \"value\": \"R. L. Underwood\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p2_date_well_plugged\": {\"comparator\": \"date\", \"evidence\": [{\"page\": 2, \"bbox\": [0.8007, 0.19064, 0.15011, 0.0185], \"quote\": \"June 12, 1955\", \"value\": \"June 12, 1955\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"lenient_date\"]}, \"p2_completion_oil\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": false, \"verified\": true, \"verified_by\": \"agent\"}, \"p2_completion_gas\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p2_completion_dry\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.83592, 0.22625, 0.0406, 0.02], \"quote\": \"Dry\", \"value\": \"Dry\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"p2_amount_plugged_oil\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.37904, 0.25467, 0.03776, 0.01433], \"quote\": \"nil\", \"value\": \"nil\", \"coarse\": false}, {\"page\": 2, \"bbox\": [0.3777, 0.253, 0.1358, 0.0187], \"quote\": \"nil bbls\", \"value\": \"nil bbls\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"p2_amount_plugged_gas\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p2_amount_plugged_water\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p2_ever_produced_oil_or_gas\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.40649, 0.27617, 0.02667, 0.01351], \"quote\": \"No\", \"value\": \"No\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p2_total_depth\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.1826, 0.29629, 0.0464, 0.01491], \"quote\": \"1073\", \"value\": \"1073\", \"coarse\": false}, {\"page\": 2, \"bbox\": [0.1781, 0.2904, 0.1415, 0.0199], \"quote\": \"1073 feet\", \"value\": \"1073 feet\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\", \"normalizers\": [\"optional_terminal_punctuation\"]}, \"p2_top_of_producing_sand\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.5628, 0.2884, 0.0779, 0.0206], \"quote\": \"See log\", \"value\": \"See log\", \"coarse\": true}, {\"page\": 2, \"bbox\": [0.5626, 0.29264, 0.37307, 0.01706], \"quote\": \"See log feet.\", \"value\": \"See log feet.\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"optional_terminal_punctuation\"]}, \"p2_filled_with_mud_laden_fluid\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.80347, 0.31041, 0.03081, 0.01209], \"quote\": \"Yes\", \"value\": \"Yes\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p2_how_mud_applied\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.27072, 0.35074, 0.2986, 0.01395], \"quote\": \"Pumped in with rotary mud pump\", \"value\": \"Pumped in with rotary mud pump\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p2_were_plugs_used\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.23238, 0.37416, 0.02431, 0.01166], \"quote\": \"no\", \"value\": \"no\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"case_insensitive\"]}, \"p2_was_well_shot\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p2_plugs_detail\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"p2_depth_thickness_formations\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.65481, 0.53313, 0.07693, 0.01562], \"quote\": \"See log\", \"value\": \"See log\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p2_abandoned_wells_plugged\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.74772, 0.5735, 0.03131, 0.01354], \"quote\": \"Yes\", \"value\": \"Yes\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p2_manner_of_confining\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p2_adjacent_owners\": {\"comparator\": \"address\", \"evidence\": [{\"page\": 2, \"bbox\": [0.35359338658838296, 0.6537079117338084, 0.44791168352036714, 0.016513747713017987], \"quote\": \"North, East, South, West - R. Campbell Estate\", \"value\": \"North, East, South, West - R. Campbell Estate\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p2_notice_given_adjacent_owners\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.80415, 0.73116, 0.03856, 0.01342], \"quote\": \"Yes\", \"value\": \"Yes\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"p2_affiant_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.21753, 0.77405, 0.15032, 0.01314], \"quote\": \"R. L. Underwood\", \"value\": \"R. L. Underwood\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"p2_affiant_signature_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.4427, 0.8008, 0.3031, 0.0384], \"quote\": \"R. L. Underwood\", \"value\": \"R. L. Underwood\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"p2_affiant_title\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.7990969445738194, 0.8151758291093558, 0.08027095238352625, 0.01590211971499963], \"quote\": \"Operator\", \"value\": \"Operator\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p2_sworn_day\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.39677, 0.85003, 0.03993, 0.0128], \"quote\": \"13th\", \"value\": \"13th\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"p2_sworn_month\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.5729, 0.84955, 0.047, 0.01445], \"quote\": \"June\", \"value\": \"June\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"p2_sworn_year\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.9186, 0.8462, 0.0251, 0.0181], \"quote\": \"55\", \"value\": \"55\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"p2_notary_signature\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 2, \"bbox\": [0.5585, 0.8523, 0.2423, 0.0482], \"quote\": \"True\", \"value\": true, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"p2_notary_county\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.67093, 0.89608, 0.0718, 0.01218], \"quote\": \"Wichita\", \"value\": \"Wichita\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"p2_correspondence_name\": {\"comparator\": \"address\", \"evidence\": [{\"page\": 2, \"bbox\": [0.15062, 0.93992, 0.13058, 0.01383], \"quote\": \"R.L. Underwood\", \"value\": \"R.L. Underwood\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"p2_correspondence_address\": {\"comparator\": \"address\", \"evidence\": [{\"page\": 2, \"bbox\": [0.62371, 0.93589, 0.32772, 0.01542], \"quote\": \"420 Oil & Gas Bldg Wichita Falls, Tex\", \"value\": \"420 Oil & Gas Bldg Wichita Falls, Tex\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"casing_tubing_records[0].size_pipe\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"casing_tubing_records[0].put_in_well_ft\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"casing_tubing_records[0].put_in_well_in\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"casing_tubing_records[0].pulled_out_ft\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"casing_tubing_records[0].pulled_out_in\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"casing_tubing_records[0].left_in_well_ft\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"casing_tubing_records[0].left_in_well_in\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"casing_tubing_records[0].packers_and_shoes\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"casing_tubing_records\": {\"comparator\": {\"size_pipe\": \"case_insensitive\", \"put_in_well_ft\": \"case_insensitive\", \"put_in_well_in\": \"case_insensitive\", \"pulled_out_ft\": \"case_insensitive\", \"pulled_out_in\": \"case_insensitive\", \"left_in_well_ft\": \"case_insensitive\", \"left_in_well_in\": \"case_insensitive\", \"packers_and_shoes\": \"case_insensitive\"}, \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": {\"size_pipe\": null, \"put_in_well_ft\": null, \"put_in_well_in\": null, \"pulled_out_ft\": null, \"pulled_out_in\": null, \"left_in_well_ft\": null, \"left_in_well_in\": null, \"packers_and_shoes\": null}, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"structural\": \"match_by:size_pipe\", \"verified_by\": \"human\"}}",
+  "repeated_structure": "{}",
+  "anchored_fields": 77,
+  "no_anchor_fields": 0,
+  "case_id": "B03-eb-0037"
+}

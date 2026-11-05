@@ -1,0 +1,34 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_564d159b",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_writ_type",
+    "scenario_issue",
+    "statute_sc_27_37_160_applies",
+    "statute_sc_27_37_160_executor",
+    "statute_sc_27_37_160_must_proceed_to_premises",
+    "statute_sc_27_37_160_must_present_copy_of_writ_to_occupants",
+    "statute_sc_27_37_160_must_give_hours_to_vacate_voluntarily",
+    "statute_sc_27_37_160_must_announce_identity_and_purpose",
+    "statute_sc_27_37_160_may_enter_by_force",
+    "statute_sc_27_37_160_force_entry_least_destructive_means_required",
+    "statute_sc_27_37_160_must_post_copy_when_no_response",
+    "statute_sc_27_37_160_may_delay_dispossession_for_ill_or_elderly",
+    "legal_executor",
+    "legal_entity_specified_for_execution",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: South Carolina\n    Focus year: 2021\n\n    Question: \"Is it specified which entity is responsible for executing the writ?\"\n*/\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Scenario facts (encode the question's factual statement)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nscenario_state(south_carolina).\nscenario_focus_year(2021).\nscenario_writ_type(writ_of_ejectment).\nscenario_issue(executing_entity_specified).\n\n/* scenario_statement/0 succeeds when the encoded scenario is in effect. */\nscenario_statement :-\n    scenario_state(south_carolina),\n    scenario_focus_year(2021),\n    scenario_writ_type(writ_of_ejectment),\n    scenario_issue(executing_entity_specified).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Statute translation: SC Code  27-37-160 (2021)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n/* Applicability of the statute */\nstatute_sc_27_37_160_applies(State, Year, WritType) :-\n    State = south_carolina,\n    Year = 2021,\n    WritType = writ_of_ejectment.\n\n/* Entity responsible for executing the writ:\n   \"the constable or deputy sheriff shall proceed...\" */\nstatute_sc_27_37_160_executor(constable).\nstatute_sc_27_37_160_executor(deputy_sheriff).\n\n/* Core duties while executing the writ (encoded as rule facts) */\nstatute_sc_27_37_160_must_proceed_to_premises(Entity) :-\n    statute_sc_27_37_160_executor(Entity).\n\nstatute_sc_27_37_160_must_present_copy_of_writ_to_occupants(Entity) :-\n    statute_sc_27_37_160_executor(Entity).\n\nstatute_sc_27_37_160_must_give_hours_to_vacate_voluntarily(Entity, 24) :-\n    statute_sc_27_37_160_executor(Entity).\n\n/* If refuse to vacate within 24 hours or premises appear unoccupied:\n   \"the constable or deputy sheriff shall announce his identity and purpose.\" */\nstatute_sc_27_37_160_must_announce_identity_and_purpose(Entity, Condition) :-\n    statute_sc_27_37_160_executor(Entity),\n    ( Condition = occupants_refuse_within_24_hours\n    ; Condition = premises_appear_unoccupied\n    ).\n\n/* Force entry authority:\n   \"If necessary, the deputy sheriff, but not a constable, may then enter ... by force...\" */\nstatute_sc_27_37_160_may_enter_by_force(Entity, Condition) :-\n    Entity = deputy_sheriff,\n    ( Condition = necessary_after_refusal_or_unoccupied\n    ; Condition = necessary_24_hours_after_posting\n    ).\n\n/* Least destructive means requirement for force entry */\nstatute_sc_27_37_160_force_entry_least_destructive_means_required(deputy_sheriff).\n\n/* If premises appear occupied and occupant does not respond:\n   \"the constable or deputy sheriff shall leave a copy of the writ [posted].\" */\nstatute_sc_27_37_160_must_post_copy_when_no_response(Entity) :-\n    statute_sc_27_37_160_executor(Entity).\n\n/* Discretionary delay for ill or elderly tenants */\nstatute_sc_27_37_160_may_delay_dispossession_for_ill_or_elderly(Entity) :-\n    statute_sc_27_37_160_executor(Entity).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Legal reasoning helpers (apply statute to scenario)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n/* legal_executor/4: identifies who the statute specifies as executor. */\nlegal_executor(State, Year, WritType, Entity) :-\n    statute_sc_27_37_160_applies(State, Year, WritType),\n    statute_sc_27_37_160_executor(Entity).\n\n/* legal_entity_specified_for_execution/3: true if at least one executor is specified. */\nlegal_entity_specified_for_execution(State, Year, WritType) :-\n    legal_executor(State, Year, WritType, _Entity),\n    !.\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Answer\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n/* housing_answer(Result) where Result is yes/no, derived from statute + scenario. */\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_state(State),\n    scenario_focus_year(Year),\n    scenario_writ_type(WritType),\n    legal_entity_specified_for_execution(State, Year, WritType),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Main entrypoint\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-1057",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Is it specified which entity is responsible for executing the writ?"
+  }
+}

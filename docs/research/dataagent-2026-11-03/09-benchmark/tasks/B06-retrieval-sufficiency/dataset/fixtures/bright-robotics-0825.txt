@@ -1,0 +1,73 @@
+## Sending and Receiving CAN Messages on Ubuntu 18.04 with ROS Melodic and a PCAN-USB Device
+
+## Essential Problem:
+
+You need to understand how to set up your PCAN-USB device with the PEAK-System API and drivers to send and receive CAN messages in Python within ROS Melodic on Ubuntu 18.04.
+
+## Step-by-Step Guide:
+
+### 1. Verify Installation and Functionality:
+
+* **Check Drivers:**
+    * Open a terminal and run `ls -l /dev/pcan*`. This should list your connected PCAN device(s). 
+    * If the device is listed, the drivers are likely installed correctly.
+* **Test with `pcan-view`:**
+    * Install `pcan-view` using `sudo apt install pcan-view`.
+    * Run `pcan-view` and select your PCAN device. You should see CAN traffic if other nodes are transmitting on the bus.
+
+### 2. Set Up ROS and Python Libraries:
+
+* **Install ROS:** Follow the official ROS installation guide for Ubuntu 18.04: http://wiki.ros.org/melodic/Installation/Ubuntu
+* **Install Python libraries:**
+    * `sudo apt install python-can`
+    * `sudo apt install python-pcan`
+
+### 3. Write a Simple Python Script:
+
+Here's a basic script to send and receive CAN messages:
+
+```python
+import can
+import pcan
+
+# Initialize the CAN bus
+bus = can.interface.Bus(channel='pcan', bustype='pcan')
+
+# Send a CAN message
+msg = can.Message(arbitration_id=0x123, data=[0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88])
+try:
+    bus.send(msg)
+    print("Message sent successfully!")
+except can.CanError as e:
+    print(f"Error sending message: {e}")
+
+# Receive a CAN message
+try:
+    message = bus.recv()
+    print(f"Received message: {message}")
+except can.CanError as e:
+    print(f"Error receiving message: {e}")
+```
+
+**Explanation:**
+
+* The script imports the necessary libraries (`can` and `pcan`).
+* It initializes the CAN bus using the `pcan` channel and bustype.
+* It defines a CAN message with an ID and data.
+* It sends the message using `bus.send()`.
+* It receives a message using `bus.recv()` and prints it.
+
+### 4. Integrate with ROS:
+
+* Create a ROS node and use the `rospy` library to subscribe to and publish CAN messages.
+* Refer to the ROS documentation for details on ROS nodes and communication: http://wiki.ros.org/ROS/Tutorials
+
+## Additional Notes:
+
+* Refer to the PEAK-System documentation for detailed information on their API and drivers: https://www.peak-system.com/
+* This guide provides a starting point. You might need to adapt it based on your specific needs and hardware configuration.
+* Consider using tools like `candump` and `cansniffer` for further debugging and analysis of CAN traffic.
+
+## Conclusion:
+
+By following these steps and referring to the provided resources, you should be able to set up your PCAN-USB device and start sending and receiving CAN messages in Python within ROS Melodic on Ubuntu 18.04. Remember to adapt the code and approach to your specific project requirements.

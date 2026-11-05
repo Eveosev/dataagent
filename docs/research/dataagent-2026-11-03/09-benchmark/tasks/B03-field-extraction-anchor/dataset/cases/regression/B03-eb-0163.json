@@ -1,0 +1,50 @@
+{
+  "case_id": "B03-eb-0163",
+  "task_id": "B03",
+  "split_role": "regression",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://extractbench/docs/short/cfpb_closing-disclosure_H25F.pdf",
+      "digest": null
+    },
+    {
+      "kind": "schema",
+      "ref": "fixtures/eb-short-cfpb_closing-disclosure_H25F-schema.json",
+      "digest": null
+    },
+    {
+      "kind": "rules",
+      "ref": "fixtures/eb-short-cfpb_closing-disclosure_H25F-rules.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-eb-0163.json"
+  },
+  "evidence": [
+    "bench://extractbench/docs/short/cfpb_closing-disclosure_H25F.pdf",
+    "fixtures/eb-short-cfpb_closing-disclosure_H25F-schema.json",
+    "fixtures/eb-short-cfpb_closing-disclosure_H25F-rules.md"
+  ],
+  "tags": [
+    "extractbench",
+    "short",
+    "tag:source:real",
+    "tag:challenge:T3.a",
+    "tag:length:short",
+    "tag:domain:D8",
+    "fields:90"
+  ],
+  "source": "eb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

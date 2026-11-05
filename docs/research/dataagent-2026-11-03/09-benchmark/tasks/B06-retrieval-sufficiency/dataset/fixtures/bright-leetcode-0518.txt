@@ -1,0 +1,65 @@
+## Problem Identification
+
+The problem asks us to find the **earliest year with the maximum population** based on a list of birth and death years of individuals. We need to consider that a person is counted in a year's population only if they are alive during that year, meaning they were born but not yet deceased.
+
+## Essential Information
+
+1. **Birth and death years:** The input is a 2D array `logs`, where each element `logs[i]` is a list containing two integers `[birthi, deathi]`, representing the birth and death year of the `ith` person. 
+2. **Population definition:** The population of a year is the number of people alive during that year. A person is considered alive in a year if their birth year is less than or equal to the year and their death year is greater than the year.
+3. **Goal:** Find the earliest year with the maximum population.
+
+## Reasoning and Helpful Information
+
+To find the year with the maximum population, we can analyze the population for each year individually and keep track of the maximum population encountered so far. Here's how we can approach this:
+
+1. **Iterate through each year** from 1950 to 2050 (inclusive).
+2. For each year, initialize a population count to 0.
+3. **Iterate through each individual** in the `logs` array.
+4. **For each individual:**
+    - If their birth year is less than or equal to the current year and their death year is greater than the current year, increment the population count by 1.
+5. **After iterating through all individuals for the current year:**
+    - Compare the current population count with the maximum population encountered so far.
+    - If the current population count is greater, update the maximum population and store the current year as the year with the maximum population.
+6. **After iterating through all years:**
+    - Return the year with the maximum population. 
+
+## Draft Answer
+
+Here's a draft answer incorporating the reasoning and information above:
+
+```python
+def maximum_population_year(logs):
+  """
+  Finds the earliest year with the maximum population.
+
+  Args:
+      logs: A 2D array where each element `logs[i]` is a list `[birthi, deathi]` 
+          representing the birth and death year of the ith person.
+
+  Returns:
+      The earliest year with the maximum population.
+  """
+  max_population = 0
+  max_population_year = None
+
+  for year in range(1950, 2051):
+    population_count = 0
+    for birth, death in logs:
+      if birth <= year < death:
+        population_count += 1
+
+    if population_count > max_population:
+      max_population = population_count
+      max_population_year = year
+
+  return max_population_year
+
+```
+
+This draft answer outlines the logic for finding the earliest year with the maximum population. It iterates through each year and calculates the population for that year. It then compares the current population with the maximum population encountered so far and updates the maximum population and year if necessary. Finally, it returns the year with the maximum population.
+
+## Additional Thoughts
+
+- The provided solution has a time complexity of O(Y * N) where Y is the number of years (100 years) and N is the number of individuals in the logs. 
+- Optimizations could be explored to improve the time complexity, such as using a binary search or a data structure to efficiently track the population changes.
+- It's important to consider edge cases, such as handling empty logs or logs with invalid birth and death years.

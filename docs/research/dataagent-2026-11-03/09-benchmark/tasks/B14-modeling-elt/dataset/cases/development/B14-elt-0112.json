@@ -1,0 +1,35 @@
+{
+  "case_id": "B14-elt-0112",
+  "task_id": "B14",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "config",
+      "ref": "fixtures/elt-redshift-california_schools-config.yaml",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B14-elt-0112.json"
+  },
+  "evidence": [
+    "bench://elt-bench/elt-bench/redshift/california_schools/data_model.yaml"
+  ],
+  "tags": [
+    "elt-bench",
+    "redshift",
+    "california_schools",
+    "models:1"
+  ],
+  "source": "elt",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

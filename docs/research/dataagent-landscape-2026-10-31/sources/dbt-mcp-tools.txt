@@ -1,0 +1,192 @@
+Available tools | dbt Developer Hub Skip to main content Relive the best of dbt Summit! Get access to the keynotes and breakout sessions from dbt Summit 2026. See the latest product innovations from dbt, and hear how data teams are leveling up for the agentic era. dbt version ▾
+v2
+v1
+1.13 ( beta )
+1.12
+1.11
+On dbt platform?
+v2 = dbt v2 release tracks
+v1 = dbt v1 release tracks Docs
+Product docs
+References
+Best practices
+Developer blog Guides APIs Help
+Release notes
+FAQs
+Support and billing
+Licensing
+Courses Community
+Join the dbt Community
+Become a contributor
+Community forum
+Webinars
+Events Account
+Log in to dbt
+Create a free account Get started with dbt Search
+About
+About dbt
+Get started
+Feature availability
+Supported features
+dbt releases
+About the dbt platform
+Supported data platforms
+Get started
+dbt Quickstarts
+Get started with dbt
+AI and dbt
+About AI and dbt
+dbt Wizard
+Skills from packages
+dbt Copilot
+dbt MCP server
+dbt MCP server
+Available tools
+Get started
+Setup and configuration
+Integrations
+FAQs and troubleshooting
+dbt AI FAQs
+Build and develop
+Develop with dbt
+Build dbt projects
+Build dbt Mesh
+Deploy and explore
+Deploy dbt
+Optimize builds with dbt State
+Explore your data
+Use the dbt Semantic Layer
+Compute
+About Lake Compute
+Onboarding to Lake Compute
+Lake Compute FAQs
+Business intelligence
+dbt Charts
+Additional tools
+dbt integrations
+Release information
+Available dbt versions
+dbt release notes
+dbt MCP server
+Available tools Copy page Copy page Copy page as Markdown for LLMs View as Markdown View this page as plain Markdown Open in ChatGPT Ask questions about this page Open in Claude Ask questions about this page Open in Perplexity Ask questions about this page On this page
+Available tools
+The dbt MCP server has access to many parts of the dbt experience related to development, deployment, and discovery. This page lists the tools available in the dbt MCP server and how to configure them.
+Supported tools by MCP server type ​
+The following sections list every tool by category, along with which server type (local or remote) supports it.
+Tools Local Remote
+dbt commands ✅ ❌
+Semantic Layer (Semantic Layer API) ✅ ✅
+SQL ✅ ✅
+Metadata Discovery (Discovery API) ✅ ✅
+Administrative API (Admin API) ✅ ✅
+Codegen Tools ✅ ❌
+dbt v2 Tools ✅ ✅
+Product Docs Tools ✅ ✅
+MCP Server Metadata Tools ✅ ✅
+Note that access to the Discovery API and the Semantic Layer API is limited depending on your plan type .
+Tools that require AI features ​
+text_to_sql is the only tool that depends on AI features being enabled for your account.
+If an admin turns AI features off, text_to_sql doesn't appear in the tool list for the remote MCP server. Every other tool keeps working. Turning off AI features doesn't disable remote MCP.
+dbt MCP server tool list ​
+The following tool list is available for your MCP server and is auto-fetched from the dbt MCP server README on GitHub when the docs are built, so it stays in sync with each release.
+SQL ​
+Tools for executing and generating SQL on dbt Platform infrastructure.
+execute_sql : Executes SQL on dbt Platform infrastructure with Semantic Layer support.
+text_to_sql : Generates SQL from natural language using project context.
+Semantic Layer ​
+To learn more about the dbt Semantic Layer, click here .
+get_dimension_values : Gets distinct values for a dimension; option to scope to specific metrics.
+get_dimensions : Gets dimensions for specified metrics.
+get_entities : Gets entities for specified metrics.
+get_metrics_compiled_sql : Returns compiled SQL for metrics without executing the query.
+list_metrics : Retrieves all defined metrics.
+list_saved_queries : Retrieves all saved queries.
+query_metrics : Executes metric queries with filtering and grouping options.
+Discovery ​
+To learn more about the dbt Discovery API, click here .
+get_all_macros : Retrieves macros; option to filter by package or return package names only.
+get_all_models : Retrieves name and description of all models.
+get_all_sources : Gets all sources with freshness status; option to filter by source name.
+get_exposure_details : (deprecated — use get_node_details instead)
+get_exposures : Gets all exposures (downstream dashboards, apps, or analyses).
+get_lineage : Gets a bounded lineage graph with type, depth, and direction filtering.
+get_macro_details : (deprecated — use get_node_details instead)
+get_mart_models : Retrieves all mart models.
+get_model_children : (deprecated — use get_lineage instead)
+get_model_details : (deprecated — use get_node_details instead)
+get_model_health : Gets health signals: run status, test results, and upstream source freshness.
+get_model_parents : (deprecated — use get_lineage instead)
+get_model_performance : Gets execution history for a model; option to include test results.
+get_node_details : Gets full details for any dbt resource type (model, source, exposure, test, seed, snapshot, macro, semantic_model).
+get_related_models : Finds similar models using semantic search.
+get_seed_details : (deprecated — use get_node_details instead)
+get_semantic_model_details : (deprecated — use get_node_details instead)
+get_snapshot_details : (deprecated — use get_node_details instead)
+get_source_details : (deprecated — use get_node_details instead)
+get_test_details : (deprecated — use get_node_details instead)
+search : [Alpha] Searches for resources across the dbt project (not generally available).
+search_public_mesh_models : Finds public dbt Mesh models across projects and confirms producer identity so you can build a verified cross-project ref (multi-project configurations only).
+dbt CLI ​
+Allowing your client to utilize dbt commands through the MCP tooling could modify your data models, sources, and warehouse objects. Proceed only if you trust the client and understand the potential impact.
+build : Executes models, tests, snapshots, and seeds in DAG order.
+clone : Clones selected nodes from the specified state to the target schema(s).
+compile : Generates executable SQL from models/tests/analyses; useful for validating Jinja logic.
+docs : Generates documentation for the dbt project.
+get_lineage_dev : Retrieves lineage from local manifest.json with type and depth filtering.
+get_node_details_dev : Retrieves node details from local manifest.json (models, seeds, snapshots, sources).
+list : Lists resources in the dbt project by type with selector support.
+parse : Parses and validates project files for syntax correctness.
+run : Executes models to materialize them in the database.
+show : Executes SQL against the database and returns results.
+test : Runs tests to validate data and model integrity.
+Admin API ​
+To learn more about the dbt Administrative API, click here .
+cancel_job_run : Cancels a running job.
+get_job_details : Gets job configuration including triggers, schedule, and dbt commands.
+get_job_run_artifacts : Downloads a specific artifact from a job run; large artifacts return a guidance message to retry with a jq_filter; supports jq filtering for targeted extraction.
+get_job_run_details : Gets run details including status, timing, steps, and artifacts.
+get_job_run_error : Gets error and/or warning details for a job run; option to include or show warnings only.
+list_job_run_artifacts : Lists available artifacts from a job run.
+list_jobs : Lists jobs in a dbt Platform account; option to filter by project or environment.
+list_jobs_runs : Lists job runs; option to filter by job, status, or order by field.
+list_projects : Lists all projects in the dbt Platform account.
+retry_job_run : Retries a failed job run.
+trigger_job_run : Triggers a job run; option to override git branch, schema, or other settings.
+dbt Codegen ​
+These tools help automate boilerplate code generation for dbt project files.
+generate_model_yaml : Generates model YAML with columns; option to inherit upstream descriptions.
+generate_source : Generates source YAML by introspecting database schemas; option to include columns.
+generate_staging_model : Generates staging model SQL from a source table.
+dbt LSP ​
+A set of tools that leverage the Fusion engine for advanced SQL compilation and column-level lineage analysis.
+fusion.compile_sql : Compiles SQL in project context via dbt Platform.
+fusion.get_column_lineage : Traces column-level lineage via dbt Platform.
+get_column_lineage : Traces column-level lineage locally (requires dbt-lsp via dbt Labs VSCE).
+Product Docs ​
+Tools for searching and fetching content from the official dbt documentation at docs.getdbt.com.
+get_product_doc_pages : Fetches the full Markdown content of one or more docs.getdbt.com pages by path or URL.
+search_product_docs : Searches docs.getdbt.com for pages matching a query; returns titles, URLs, and descriptions ranked by relevance. Use get_product_doc_pages to fetch full content.
+MCP Server Metadata ​
+These tools provide information about the MCP server itself.
+get_mcp_server_branch : Returns the current git branch of the running dbt MCP server.
+get_mcp_server_version : Returns the current version of the dbt MCP server.
+Find jobs across project environments ​
+Use the list_jobs tool with a project_id to list jobs across every environment in a dbt project. This is useful when you need to inspect jobs outside the configured production environment. Without project_id , list_jobs continues to use the configured production environment, or lists jobs across the account when no production environment is configured.
+FAQs ​ What does execute_sql do?
+execute_sql lets your AI assistant run a SQL query against your data warehouse and read the results. It's part of the SQL toolset and runs on dbt platform , so you don't need dbt installed locally.
+Here's what happens when your assistant calls it:
+The assistant writes a SQL query and calls execute_sql .
+The dbt MCP server forwards the request to dbt platform , along with your token, development environment ID, and user ID.
+dbt platform compiles the SQL (including any Jinja, such as ref() ) and runs it in your warehouse using your development credentials.
+The results come back to your assistant as a table. The AI assistant calls execute_sql. The dbt MCP server forwards the request to dbt platform, which compiles the SQL, runs it in the warehouse with your development credentials, and returns the results to the assistant. Is execute_sql read-only?
+No. execute_sql doesn't block write statements. What a query can do depends on the permissions of the warehouse credentials it runs with. Use least-privilege warehouse roles for each user's development credentials. Whose warehouse credentials does execute_sql use?
+Your personal development credentials for the project's development environment, not your production deployment credentials.
+For more answers about execute_sql or troubleshooting help, refer to dbt MCP FAQs and troubleshooting .
+Was this page helpful? Yes No Privacy policy Create a GitHub issue
+This site is protected by reCAPTCHA and the Google Privacy Policy and Terms of Service apply. 0 Edit this page Last updated on Oct 20, 2026 Previous dbt MCP server Next Connect to dbt platform Get started
+Start building with dbt.
+The free dbt VS Code extension is the best way to develop locally with dbt. Install free extension Request your demo
+Resources VS Code Extension Resource Hub dbt Learn Certification Developer Blog
+Community Join the Community Become a Contributor Open Source dbt Packages Community Forum
+Support Contact Support Professional Services Find a Partner System Status
+Connect with Us © 2026 dbt Labs, LLC. All Rights Reserved. Terms of Service Privacy Policy Security Cookie Settings

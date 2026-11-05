@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 660,
+  "table": "economy-table129",
+  "structure": "MultiColumnClassified",
+  "question_type": "Fact Checking",
+  "sub_type": "Inference-based Fact Checking",
+  "answer": "Nude Pink",
+  "cot": [
+    {
+      "step": "First, we need to count how many times each color appears in the \"Colour\" column, linked with non-empty names in the \"Name\" column."
+    },
+    {
+      "step": "We then determine which color has the highest count of linked names."
+    },
+    {
+      "step": "Finally, we return the color name with the highest count."
+    }
+  ],
+  "case_id": "B01-rht-2296",
+  "expected": {
+    "kind": "answer",
+    "question": "Which color is linked to the most names overall in the table? Provide the color name.",
+    "answer": "Nude Pink"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1420,
+  "table": "society-table36",
+  "structure": "ContentCompound",
+  "question_type": "Fact Checking",
+  "sub_type": "Value-Matching",
+  "answer": "1,562,943",
+  "cot": [
+    {
+      "planning": "First, we need to locate the row for the year 2020 in the 'Pregnancies' section."
+    },
+    {
+      "planning": "Then, we read the value in the column under 'Model with mitigation' for 2020."
+    },
+    {
+      "planning": "Finally, we confirm that this is the total number of pregnancies for 2020."
+    }
+  ],
+  "case_id": "B01-rht-3056",
+  "expected": {
+    "kind": "answer",
+    "question": "Which intervention under 'Pregnancy' had the most significant Negative correlation on maternal lives saved in 2020?",
+    "answer": "1,562,943"
+  }
+}

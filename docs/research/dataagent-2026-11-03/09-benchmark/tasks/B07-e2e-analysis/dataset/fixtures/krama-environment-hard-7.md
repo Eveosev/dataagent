@@ -1,0 +1,1 @@
+What was the difference in bacterial exceedance rates (to 2 decimal places) for marine beach samples collected in 2023 between communities with more than 50% environmental justice (EJ) populations and those with less than 25% EJ populations?

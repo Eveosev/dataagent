@@ -1,0 +1,95 @@
+{
+  "dataset_id": "B08.dataset",
+  "task_id": "B08",
+  "revision": "v0.4",
+  "status": "collecting",
+  "unit": "task",
+  "sources": [
+    {
+      "name": "orlm-bench",
+      "locator": "chenyitian-shanshu/ORLMBenchmark",
+      "license": "未知（随数据附 README）",
+      "digest": "sha256:50592da02798e31b5bb95d63b06ddce8c554eb2f30b4ef98a051564356685f1b",
+      "revision": "54ca621042b4619b90ce23ba3edd710611822e02",
+      "files": 30,
+      "mb": 2.3,
+      "fetched_at": "2026-11-04T17:40:58+08:00"
+    },
+    {
+      "name": "context-is-key",
+      "locator": "ServiceNow/context-is-key",
+      "license": "未声明",
+      "digest": "sha256:408a0be03b8b4c3413f29a21f9aa3f180b7c12908af2496c51c9e1ab0724e93f",
+      "revision": "32da467ade142a16d099675e78b1129745c5ef7d",
+      "files": 18,
+      "mb": 0.5,
+      "fetched_at": "2026-11-04T17:57:13+08:00"
+    }
+  ],
+  "splits": {
+    "development": {
+      "count": 120,
+      "frozen": false
+    },
+    "regression": {
+      "count": 60,
+      "frozen": false
+    },
+    "unseen_acceptance": {
+      "count": 60,
+      "frozen": false
+    }
+  },
+  "exposure": {
+    "ledger_ref": "exposure.jsonl",
+    "entries": 0
+  },
+  "fixtures": {
+    "storage": "local",
+    "path": "fixtures/",
+    "limits": "单文件 <= 2 MB；超出走对象存储并在 digest 记录"
+  },
+  "updated": "2026-11-04",
+  "notes": "由 build_cases.py 从 workspace/benchmark-data 构建；原始数据不入库",
+  "build": {
+    "version": 4,
+    "script": "tools/build_cases.py",
+    "built_at": "2026-11-04",
+    "policy": "ORLM 五子集按 20% 确定性抽样 + context-is-key 时序预测全量；split 按子集 + 序号哈希。抽样保留在 manifest.build.available。",
+    "available": {
+      "development": 307,
+      "regression": 127,
+      "unseen_acceptance": 103
+    },
+    "selected": {
+      "development": 120,
+      "regression": 60,
+      "unseen_acceptance": 60
+    },
+    "caps": {
+      "development": 120,
+      "regression": 60,
+      "unseen_acceptance": 60
+    },
+    "coverage": {
+      "covered_metrics": [
+        "formulation_exact_match",
+        "constraint_coverage"
+      ],
+      "missing_metrics": [
+        "optimality_gap",
+        "constraint_satisfaction_rate"
+      ],
+      "note": "最优值需运行求解器；本机无 LP/MIP 求解器，先按结构匹配判分；约束满足率需在 grader 里按 constraint_min/max 复核"
+    },
+    "counts": {
+      "optibench": 605,
+      "nl4opt": 245,
+      "optmath": 166,
+      "mamo_easy": 642,
+      "mamo_complex": 203,
+      "industryor": 100,
+      "industryor_v2": 100
+    }
+  }
+}

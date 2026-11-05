@@ -1,0 +1,32 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1030,
+  "table": "health-table12",
+  "structure": "MultiColumnClassified",
+  "question_type": "Fact Checking",
+  "sub_type": "Value-Matching",
+  "answer": "Roast Beef",
+  "cot": [
+    {
+      "step": "First, locate all rows in the table where the “TIME” column indicates “Afternoon.”"
+    },
+    {
+      "step": "From these rows, filter those where the “ACTION” column indicates “Food.”"
+    },
+    {
+      "step": "Identify the “PROT (g)” column for the protein content of these rows."
+    },
+    {
+      "step": "Determine the food item with the highest value in the “PROT (g)” column."
+    },
+    {
+      "step": "Output the food item's name in the specified format."
+    }
+  ],
+  "case_id": "B01-rht-2666",
+  "expected": {
+    "kind": "answer",
+    "question": "Identify the food item with the highest protein content served during the “Afternoon” time period across all days.",
+    "answer": "Roast Beef"
+  }
+}

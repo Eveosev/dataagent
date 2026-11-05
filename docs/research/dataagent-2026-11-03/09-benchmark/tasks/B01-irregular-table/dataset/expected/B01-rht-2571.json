@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 935,
+  "table": "labor-table25",
+  "structure": "SingleRowClassified",
+  "question_type": "Fact Checking",
+  "sub_type": "Inference-based Fact Checking",
+  "answer": "No",
+  "cot": [
+    {
+      "step": "Filter the table to include only rows where “Total Hours” is greater than 8 to identify overtime days."
+    },
+    {
+      "step": "Extract the dates corresponding to these rows."
+    },
+    {
+      "step": "Return the list of dates where the employee worked overtime."
+    }
+  ],
+  "case_id": "B01-rht-2571",
+  "expected": {
+    "kind": "answer",
+    "question": "Verify if the employee worked overtime (greater than 8 hours) on any day. If so, list the dates.",
+    "answer": "No"
+  }
+}

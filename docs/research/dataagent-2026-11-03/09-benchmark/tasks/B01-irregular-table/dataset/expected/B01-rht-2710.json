@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1074,
+  "table": "education-table16",
+  "structure": "ExternalSupply",
+  "question_type": "Fact Checking",
+  "sub_type": "Inference-based Fact Checking",
+  "answer": "COMPUTER SCIENCE",
+  "cot": [
+    {
+      "step": "Examine the table headers for explicit mentions of the subject or category."
+    },
+    {
+      "step": "Identify the keyword “Subject” in the header and note the value associated with it, which is “COMPUTER SCIENCE.”"
+    },
+    {
+      "step": "Confirm that the table pertains to assessments for this subject in the specified term and class."
+    }
+  ],
+  "case_id": "B01-rht-2710",
+  "expected": {
+    "kind": "answer",
+    "question": "Identify the subject or educational category reflected in the headers of the table.",
+    "answer": "COMPUTER SCIENCE"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "source": "xlangai/BRIGHT",
+  "query_id": "3",
+  "query": "## The Mystery of Earth's Solid Inner Core:\n\n### 1. The essential problem:\n\nThe apparent contradiction lies in the seemingly impossible coexistence of two facts:\n\n* **The inner core is composed of iron-nickel alloy, which has a melting point of around 1350°C to 1600°C.**\n* **The temperature of the inner core is estimated to be around 5430°C, significantly exceeding the melting point of the iron-nickel alloy.**\n\nThis discrepancy begs the question: how can the inner core remain solid under such extreme temperatures? \n\n### 2. Delving deeper:\n\nTo understand this phenomenon, we need to consider factors beyond just temperature:\n\n* **Pressure:** The immense pressure within the Earth's core, estimated to be around 3.6 million times the pressure at the surface, plays a crucial role. This extreme pressure counteracts the tendency of the iron atoms to vibrate and break free from their fixed positions, effectively raising the melting point of the iron-nickel alloy considerably. \n* **Solidification process:** Recent research suggests that as the Earth cooled and solidified billions of years ago, the inner core likely started solidifying first due to its higher melting point compared to the outer core. This implies that the inner core might have solidified at a slightly lower temperature than its current temperature, further contributing to its solid state. \n* **Possible presence of lighter elements:** While the dominant composition is iron-nickel, the presence of lighter elements like oxygen, silicon, and sulfur within the inner core could also influence its melting point. Further research is needed to determine the exact composition and its impact on the melting point.\n\n### 3. Drafting an answer:\n\nThe seemingly paradoxical state of the Earth's inner core can be explained by the interplay of several factors:\n\n* **Immense pressure:** The immense pressure within the Earth's core significantly raises the melting point of the iron-nickel alloy, preventing it from melting despite the high temperature.\n* **Solidification process:** The inner core likely solidified first due to its higher melting point, potentially contributing to its solid state despite the current high temperature.\n* **Possible presence of lighter elements:** The presence of other elements within the inner core could further influence its melting point and contribute to its solid state.\n\nTherefore, the seemingly impossible coexistence of high temperature and a solid state in the Earth's inner core is the result of a complex interplay of factors beyond just temperature, highlighting the intricate dynamics at play within our planet. \n",
+  "gold_ids": [
+    "solid_inner_core/Earth%27s_inner_core1.txt",
+    "solid_inner_core/Phase_diagram3.txt"
+  ],
+  "gold_answer": "$\\begingroup$\n\nEarth's inner core is solid even though the temperature is so high because the\npressure is also very high. According to [ the Wikipedia article\n](http://en.wikipedia.org/wiki/Inner_core) on the Earth's inner core, the\ntemperature at the center is $5,700\\ \\text{K}$ and the pressure is estimated\nto be $330$ to $360\\ \\text{GPa}$ ($\\sim3\\cdot10^{6}\\ \\text{atm}$).\n\nThe phase diagram shown below (taken from [ this paper\n](http://www.agu.org/books/gd/v031/GD031p0083/GD031p0083.pdf) ) shows the\nliquid/solid transition, where fcc and hcp are two different crystalline forms\nof solid iron. You can see clearly from the slope of the line going off toward\nthe upper right that iron should be solid at this temperature and pressure.\n\n![enter image description here](https://i.sstatic.net/w82eb.png)",
+  "corpus": "documents/earth_science-00000-of-00001.parquet",
+  "case_id": "B06-bright-0218",
+  "expected": {
+    "kind": "retrieval",
+    "gold_ids": [
+      "solid_inner_core/Earth%27s_inner_core1.txt",
+      "solid_inner_core/Phase_diagram3.txt"
+    ],
+    "gold_ids_long": [
+      "solid_inner_core/Phase_diagram.txt",
+      "solid_inner_core/Earth%27s_inner_core.txt"
+    ],
+    "gold_answer": "$\\begingroup$\n\nEarth's inner core is solid even though the temperature is so high because the\npressure is also very high. According to [ the Wikipedia article\n](http://en.wikipedia.org/wiki/Inner_core) on the Earth's inner core, the\ntemperature at the center is $5,700\\ \\text{K}$ and the pressure is estimated\nto be $330$ to $360\\ \\text{GPa}$ ($\\sim3\\cdot10^{6}\\ \\text{atm}$).\n\nThe phase diagram shown below (taken from [ this paper\n](http://www.agu.org/books/gd/v031/GD031p0083/GD031p0083.pdf) ) shows the\nliquid/solid transition, where fcc and hcp are two different crystalline forms\nof solid iron. You can see clearly from the slope of the line going off toward\nthe upper right that iron should be solid at this temperature and pressure.\n\n![enter image description here](https://i.sstatic.net/w82eb.png)",
+    "excluded_ids": [
+      "N/A"
+    ]
+  }
+}

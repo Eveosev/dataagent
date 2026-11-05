@@ -1,0 +1,1 @@
+In which years were Fraud reports at least 50% of the total reports?

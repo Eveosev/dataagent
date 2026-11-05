@@ -1,0 +1,31 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_1e78b285",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_term",
+    "scenario_proposed_meaning",
+    "statute_32_30_3_7_order_directed_to_executing_officer",
+    "statute_32_30_3_7_executing_authority",
+    "statute_32_30_3_7_order_can_require_removal_of_defendant",
+    "statute_32_30_8_12_court_requires_sheriff_execute_order",
+    "statute_32_30_8_12_execution_deadline_days",
+    "statute_34_55_1_3_execution_kind_delivery_of_possession",
+    "legal_authority",
+    "legal_term_order_of_possession_means_court_order_to_authorities_to_remove_defendant",
+    "legal_supports_proposed_meaning",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Topic: Indiana (2021) - meaning/use of the term \"order of possession\"\n*/\n\n/* =========================\n   Scenario (question facts)\n   ========================= */\n\n% The question is about Indiana law in 2021.\nscenario_state(indiana).\nscenario_focus_year(2021).\n\n% The term at issue and the proposed meaning from the question.\nscenario_term(order_of_possession).\nscenario_proposed_meaning(court_order_to_authorities_to_remove_tenant).\n\n% Helper predicate that succeeds when the encoded scenario is present.\nscenario_statement :-\n    scenario_state(indiana),\n    scenario_focus_year(2021),\n    scenario_term(order_of_possession),\n    scenario_proposed_meaning(court_order_to_authorities_to_remove_tenant).\n\n\n/* =========================\n   Statute translations\n   ========================= */\n\n% --- IN Code  32-30-3-7 (2021) ---\n% \"The court shall direct the order of possession to the sheriff or other officer\n%  charged with executing the order ...\"\n\nstatute_32_30_3_7_order_directed_to_executing_officer(indiana, 2021).\n\n% The statute identifies who the \"authorities\" are (sheriff or other executing officer).\nstatute_32_30_3_7_executing_authority(indiana, 2021, sheriff).\nstatute_32_30_3_7_executing_authority(indiana, 2021, other_officer_charged_with_executing_order).\n\n% \"The order of possession must ... direct the executing officer to ...\n%  ... put the plaintiff in possession of the property by removing the defendant\n%  and the defendant's personal property ...\"\n% (This is conditional in the statute on lack of a written undertaking, but it still\n%  establishes that an order of possession is an order to an officer that can require removal.)\nstatute_32_30_3_7_order_can_require_removal_of_defendant(indiana, 2021).\n\n% --- IN Code  32-30-8-12 (2021) ---\n% \"(b) ... the court shall require the sheriff to execute the order of possession\n%  not later than five (5) days after the order is issued.\"\nstatute_32_30_8_12_court_requires_sheriff_execute_order(indiana, 2021).\nstatute_32_30_8_12_execution_deadline_days(indiana, 2021, 5).\n\n% --- IN Code  34-55-1-3 (2021) ---\n% \"There are three (3) kinds of executions: ... (3) Execution for the delivery of the\n%  possession of real or personal property ...\"\nstatute_34_55_1_3_execution_kind_delivery_of_possession(indiana, 2021).\n\n\n/* =========================\n   Legal reasoning helpers\n   ========================= */\n\n% \"Authorities\" for this context = sheriff or other officer charged with executing the order.\nlegal_authority(indiana, 2021, Authority) :-\n    statute_32_30_3_7_executing_authority(indiana, 2021, Authority).\n\n% An \"order of possession\" (as used in these statutes) is a court order directed to authorities\n% (sheriff/other executing officer) that may require removing the defendant/tenant to put the\n% plaintiff/owner in possession.\nlegal_term_order_of_possession_means_court_order_to_authorities_to_remove_defendant(indiana, 2021) :-\n    statute_32_30_3_7_order_directed_to_executing_officer(indiana, 2021),\n    legal_authority(indiana, 2021, _SomeAuthority),\n    statute_32_30_3_7_order_can_require_removal_of_defendant(indiana, 2021),\n    statute_32_30_8_12_court_requires_sheriff_execute_order(indiana, 2021),\n    statute_34_55_1_3_execution_kind_delivery_of_possession(indiana, 2021).\n\n% Map the scenario's proposed meaning to the statute-derived meaning.\nlegal_supports_proposed_meaning(indiana, 2021, court_order_to_authorities_to_remove_tenant) :-\n    % The statutes speak in terms of removing the \"defendant\"; in eviction/possession context,\n    % that corresponds to removing the tenant/occupant.\n    legal_term_order_of_possession_means_court_order_to_authorities_to_remove_defendant(indiana, 2021).\n\n\n/* =========================\n   Answer\n   ========================= */\n\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_state(State),\n    scenario_focus_year(Year),\n    scenario_proposed_meaning(Meaning),\n    legal_supports_proposed_meaning(State, Year, Meaning),\n    !.\nhousing_answer(no) :-\n    !.\n\n\n/* =========================\n   Main entrypoint\n   ========================= */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-0930",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Is the term 'Order of possession' used to refer to the order from the court to the authorities to remove a tenant?"
+  }
+}

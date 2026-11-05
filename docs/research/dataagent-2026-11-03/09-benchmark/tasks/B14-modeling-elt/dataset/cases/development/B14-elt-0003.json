@@ -1,0 +1,35 @@
+{
+  "case_id": "B14-elt-0003",
+  "task_id": "B14",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "config",
+      "ref": "fixtures/elt-databricks-amplitude-config.yaml",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B14-elt-0003.json"
+  },
+  "evidence": [
+    "bench://elt-bench/elt-bench/databricks/amplitude/data_model.yaml"
+  ],
+  "tags": [
+    "elt-bench",
+    "databricks",
+    "amplitude",
+    "models:3"
+  ],
+  "source": "elt",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

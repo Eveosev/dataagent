@@ -1,0 +1,366 @@
+#!/usr/bin/env python3
+"""
+Rule-based tip selection for APEX-SQL.
+
+This script uses deterministic rules to select relevant tips based on:
+- Keywords in question
+- Patterns in evidence
+- Logical plan structure
+"""
+
+import os
+import json
+import re
+import argparse
+from typing import List, Dict, Set
+
+def select_tips_rule_based(question: str, evidence: str, logical_plan: str, db_schema: str) -> List[str]:
+    """
+    Select tips using deterministic rules.
+    
+    Args:
+        question: User question
+        evidence: Evidence/external knowledge
+        logical_plan: Logical plan (may contain Keywords field)
+        db_schema: Database schema
+    
+    Returns:
+        List of selected tip IDs
+    """
+    # Universal tips (always included, added at the end)
+    UNIVERSAL_TIPS = [
+        'TIP009',  # Return columns in exact order (CRITICAL - missing in 78.9% of errors)
+        'TIP019',  # Always verify column existence
+        'TIP035'   # BIRD dataset has many column names with spaces
+    ]
+
+
+    
+    selected = set()
+    
+    q_lower = question.lower()
+    e_lower = evidence.lower()
+    p_lower = logical_plan.lower()
+    
+    # Extract keywords from logical plan if present
+    plan_keywords = set()
+    keyword_matches = re.findall(r'keywords?:\s*([^\n]+)', p_lower, re.IGNORECASE)
+    for match in keyword_matches:
+        # Split by comma and clean
+        keywords = [k.strip() for k in match.split(',')]
+        plan_keywords.update(keywords)
+    
+    # Combine all text for keyword matching
+    all_text = f"{q_lower} {e_lower} {p_lower} {' '.join(plan_keywords)}"
+
+
+    
+    # ========== Evidence-Based Selection ==========
+    
+    # TIP001: Evidence specifies column with = or "can be represented as"
+    if evidence and (
+        re.search(r'can be represented as \w+\s*=', e_lower) or
+        re.search(r'\w+\s*=\s*[\'"]?\w+[\'"]?', evidence) and 'refers to' not in e_lower
+    ):
+        selected.add('TIP001')
+    
+    # TIP002: Evidence contains formula with operators
+    if evidence and re.search(r'=.*[+\-*/]|sum.*count|average.*=', e_lower):
+        selected.add('TIP002')
+        selected.add('TIP027')  # Division protection
+        selected.add('TIP040')  # Avoid integer division
+    
+    # TIP003: Evidence shows value mapping with "stands for", "means", or direct value assignment
+    if evidence and (
+        'stands for' in e_lower or
+        ('means' in e_lower and "'" in evidence) or
+        re.search(r"'[^']+'\s+(stands for|means)", e_lower) or
+        re.search(r"'[^']+' (is|are) ", e_lower) or  # e.g., "'CA' is California"
+        re.search(r"=\s*'[^']+'", evidence)  # e.g., "state = 'CA'"
+    ):
+        selected.add('TIP003')
+
+    
+    # TIP004: Evidence clarifies ambiguous terms with "refers to"
+    if evidence and 'refers to' in e_lower:
+        selected.add('TIP004')
+    
+    # ========== Question-Based Selection (enhanced with plan keywords) ==========
+    
+    # TIP005: Exact match when specific value is mentioned
+    if re.search(r"with|where|whose.*'[^']+'", q_lower):
+        selected.add('TIP005')
+        selected.add('TIP023')  # Use exact value filters
+    
+    # TIP008: Exclude ORDER BY columns (highest/lowest/top/bottom)
+    if any(word in all_text for word in ['highest', 'lowest', 'top', 'bottom', 'maximum', 'minimum', 'best', 'worst', 'most', 'least', 'order by', 'sort']):
+        selected.add('TIP008')
+        selected.add('TIP030')  # ORDER BY implementation
+        selected.add('TIP031')  # LIMIT for top N
+        selected.add('TIP032')  # Filter NULLs for extreme values
+    
+    # TIP009: Multiple output columns with specific order
+    if re.search(r'\w+\s+and\s+\w+|,\s*\w+\s+and', q_lower) and not q_lower.startswith('how many'):
+        selected.add('TIP009')
+    
+    # TIP010: Exclude filter columns (where/with pattern)
+    if re.search(r'(what|list|name|show).*\b(where|with|whose|that have)\b', q_lower):
+        selected.add('TIP010')
+    
+    # TIP011: Pure counting questions (including "list" questions that should return count)
+    if (q_lower.startswith('how many') and 'what' not in q_lower and 'which' not in q_lower) or \
+       (q_lower.startswith('list') and 'lowest' in q_lower and 'amount' in q_lower):
+        # "list accounts with lowest amount" should return account_id only, not amount
+        selected.add('TIP011')
+
+    
+    # TIP012/TIP013: Table selection (when JOIN might be involved)
+    # Only trigger when there's EXPLICIT evidence of multi-table query
+    # Be very conservative - most queries can be answered with single table
+    if ('join' in p_lower or  # Logical plan explicitly mentions JOIN
+        len(re.findall(r'\btable\b', p_lower)) > 3 or  # Plan mentions 4+ tables
+        re.search(r'(\w+)\s+and\s+(their|its)\s+(\w+)', q_lower)):  # Clear possessive pattern
+        selected.add('TIP012')  # Check single table first
+        selected.add('TIP013')  # JOIN only when necessary
+        selected.add('TIP020')  # Identify join keys
+        selected.add('TIP021')  # Verify join keys
+        selected.add('TIP022')  # Choose join type
+        selected.add('TIP042')  # Prefix columns with table alias
+
+
+    
+    # TIP014: Avoid over-engineering (when query seems complex)
+    # Only trigger for truly complex queries
+    if ('subquery' in p_lower and 'nested' in p_lower) or len(re.findall(r'join', p_lower)) > 3:
+        selected.add('TIP014')
+
+    
+    # TIP015/TIP016: Column names with parentheses
+    # Only trigger if question or evidence mentions columns with parentheses
+    if ('(' in question or ')' in question or '(' in evidence or ')' in evidence):
+        selected.add('TIP015')
+        selected.add('TIP016')
+
+    
+    # TIP017/TIP018: Schema grounding (column identification)
+    # Only include when there's genuine ambiguity
+    if any(word in all_text for word in ['which column', 'what column', 'identify column', 'find column', 'ambiguous']):
+        selected.add('TIP017')  # Direct name matching
+    if any(word in all_text for word in ['semantic', 'meaning', 'interpret', 'ambiguous column']):
+        selected.add('TIP018')  # Semantic matching
+
+
+
+
+    
+    # TIP024: Numeric comparisons (including BETWEEN)
+    # Only trigger on explicit comparison operators, not just any number
+    if re.search(r'more than|less than|greater than|between|at least|at most|above|below|over|under|exceed', all_text):
+        selected.add('TIP024')
+
+
+    
+    # TIP026: Aggregation functions (enhanced with keywords)
+    if any(word in all_text for word in ['total', 'sum', 'average', 'avg', 'count', 'maximum', 'minimum', 'aggregate', 'group by']):
+        selected.add('TIP026')
+        selected.add('TIP028')  # GROUP BY
+
+    # TIP029: HAVING for post-aggregation filtering
+    if re.search(r'(average|total|sum|count).*(more than|less than|greater|between)', all_text):
+        selected.add('TIP029')
+    
+    # TIP033/TIP034: Subqueries and CTEs (multi-step logic)
+    # Only trigger for truly complex multi-step queries (4+ steps)
+    step_numbers = re.findall(r'step\s*(\d+)', p_lower)
+    max_step = int(step_numbers[-1]) if step_numbers else 0
+    if max_step > 4 or ('subquery' in p_lower and 'nested' in p_lower) or ('with' in p_lower and 'as' in p_lower and 'select' in p_lower):
+        selected.add('TIP033')  # Subquery
+        selected.add('TIP034')  # CTE
+
+
+
+    
+    # TIP036: Use aliases for calculated columns
+    if any(word in all_text for word in ['calculate', 'ratio', 'percentage', 'sum', 'avg', 'count']):
+        selected.add('TIP036')
+    
+    # TIP037: Cannot use column alias in WHERE clause
+    if any(word in all_text for word in ['calculate', 'ratio']) and any(word in all_text for word in ['where', 'filter']):
+        selected.add('TIP037')
+    
+    # TIP038: Never hard-code values (CRITICAL - always include)
+    selected.add('TIP038')
+    
+    # TIP039: NULL handling (when filtering or aggregating)
+    if any(word in all_text for word in ['null', 'missing', 'empty']):
+        selected.add('TIP039')
+    
+    # TIP041: Entity isolation for mixed-data tables
+    # Only trigger when there's explicit mention of filtering by entity type
+    schema_lower = db_schema.lower()
+    if (any(word in schema_lower for word in ['metricid', 'metric_id', 'event_type', 'entity_type', 'data_type']) and
+        any(word in all_text for word in ['specific', 'certain', 'particular', 'only', 'filter by type', 'where type'])):
+        selected.add('TIP041')
+
+
+
+    
+    # TIP046: Precision preservation (no arbitrary rounding)
+    # Always include for calculations
+    if any(word in all_text for word in ['average', 'avg', 'ratio', 'percentage', 'rate', 'calculate']):
+        selected.add('TIP046')
+    
+    # TIP047: Ratio calculation - count all occurrences
+    if any(word in all_text for word in ['ratio', 'percentage', 'percent', 'proportion', 'rate']):
+        selected.add('TIP047')
+        selected.add('TIP048')  # Percentage calculation
+    
+    # TIP049: DISTINCT usage - list vs count (CRITICAL for counting questions)
+    # Trigger on: "how many", "what is/are", "which", "list all"
+    if any(pattern in q_lower for pattern in ['how many', 'what is', 'what are', 'which', 'list all', 'list the']):
+        selected.add('TIP049')
+    
+    # TIP043: Conditional aggregation with CASE
+    if 'case when' in p_lower or ('different' in all_text and 'aggregate' in all_text):
+        selected.add('TIP043')
+    
+    # TIP044/TIP045: Window functions and ranking
+    if any(word in all_text for word in ['rank', 'ranking', 'row number', 'top n per', 'per group', 'partition']):
+        selected.add('TIP044')
+        selected.add('TIP045')
+    
+    # ========== Always Include Universal Tips ==========
+    for tip_id in UNIVERSAL_TIPS:
+        selected.add(tip_id)
+
+
+
+
+    
+    # ========== String Matching Tips ==========
+    
+    # TIP006/TIP007: LIKE vs exact match
+    if any(word in q_lower for word in ['contain', 'include', 'start with', 'end with', 'like']):
+        selected.add('TIP006')  # Use LIKE for partial
+    else:
+        selected.add('TIP005')  # Use exact match
+    
+    # TIP025: String matching strategy
+    if any(word in q_lower for word in ['name', 'title', 'description']):
+        selected.add('TIP025')
+    
+    # ========== Add Universal Tips ==========
+    # These tips are always relevant and added to every query
+    for tip_id in UNIVERSAL_TIPS:
+        selected.add(tip_id)
+    
+    return sorted(list(selected))
+
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--data_file_path', type=str, default='./data/dev.json')
+    parser.add_argument('--logical_plans_path', type=str, default='./data/logical_plans.json')
+    parser.add_argument('--prompts_file_path', type=str, default='./data/prompts_linked.json')
+    parser.add_argument('--tips_file_path', type=str, default='./data/micro_tips_structured.json')
+    parser.add_argument('--output_path', type=str, default='./data/selected_tips.json')
+    args = parser.parse_args()
+    
+    # Load data
+    print("Loading data...")
+    with open(args.data_file_path) as f:
+        data = json.load(f)
+    
+    with open(args.logical_plans_path) as f:
+        logical_plans = json.load(f)
+    
+    with open(args.prompts_file_path) as f:
+        prompts_dict = json.load(f)
+    
+    with open(args.tips_file_path) as f:
+        tips_data = json.load(f)
+        all_tips = tips_data['tips']
+    
+    # Load existing results (cache)
+    existing_results = {}
+    if os.path.exists(args.output_path):
+        print(f"Loading existing results from {args.output_path}...")
+        try:
+            with open(args.output_path) as f:
+                existing_results = json.load(f)
+            print(f"Loaded {len(existing_results)} existing results")
+        except:
+            pass
+    
+    results = existing_results.copy()
+    
+    # Process error cases only
+    subset = []
+    # if os.path.exists('./case_study/error_case_ids.json'):
+    #     with open('./case_study/error_case_ids.json') as f:
+    #         subset = json.load(f)
+    
+    skipped = 0
+    processed = 0
+    
+    for example in data:
+        question_id = example.get('question_id')
+        
+        if subset and question_id not in subset:
+            continue
+        
+        # Check cache
+        if str(question_id) in existing_results:
+            skipped += 1
+            continue
+        
+        if str(question_id) not in logical_plans:
+            skipped += 1
+            continue
+        
+        question = example['question']
+        evidence = example.get('evidence', '')
+        logical_plan = logical_plans.get(str(question_id), {}).get('final_plan', '')
+        db_schema = prompts_dict.get(str(question_id), '')
+        
+        # Select tips using rules
+        selected_ids = select_tips_rule_based(question, evidence, logical_plan, db_schema)
+        
+        print(f"Question {question_id}: Selected {len(selected_ids)} tips: {selected_ids}")
+        
+        # Format tips
+        formatted_tips = []
+        for tip_id in selected_ids:
+            tip = next((t for t in all_tips if t['id'] == tip_id), None)
+            if tip:
+                formatted_tips.append(f"[{tip['id']}] {tip['title']}\n{tip['description']}\n")
+        
+        results[str(question_id)] = {
+            'question_id': question_id,
+            'selected_tip_ids': selected_ids,
+            'formatted_tips': '\n'.join(formatted_tips)
+        }
+        
+        processed += 1
+        
+        # Save every 10
+        if processed % 10 == 0:
+            with open(args.output_path, 'w') as f:
+                json.dump(results, f, indent=2, ensure_ascii=False)
+    
+    # Final save
+    with open(args.output_path, 'w') as f:
+        json.dump(results, f, indent=2, ensure_ascii=False)
+    
+    print(f"\n{'='*80}")
+    print(f"Done!")
+    print(f"  - Total: {len(results)}")
+    print(f"  - Skipped (cached): {skipped}")
+    print(f"  - Newly processed: {processed}")
+    print(f"  - Saved to: {args.output_path}")
+    print(f"{'='*80}")
+
+
+if __name__ == '__main__':
+    main()

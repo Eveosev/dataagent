@@ -1,0 +1,90 @@
+{
+  "id": "B10",
+  "slug": "drift-alerting",
+  "title": "持续监控与告警",
+  "plan_row": 10,
+  "plan_ref": "../../../09-benchmark-plan.md",
+  "catalog_atoms": [
+    "DA14.2.1",
+    "DA14.2.2",
+    "DA14.2.3",
+    "DA14.2.4",
+    "DA14.3.1",
+    "DA14.3.2",
+    "DA14.8.1",
+    "DA14.8.2",
+    "DA14.8.3"
+  ],
+  "slice": "S2",
+  "unit": "series",
+  "why_not_unit_tested": "误报与漏报只在真实时间序列上出现；合成异常会把检测延迟测低",
+  "reference_benchmarks": [
+    {
+      "name": "TSB-AD",
+      "url": "https://proceedings.neurips.cc/paper_files/paper/2024/file/c3f3c690b7a99fba16d0efd35cb83b2c-Paper-Datasets_and_Benchmarks_Track.pdf",
+      "scale_note": "单变量 350 条 / 多变量 180 条；主指标 VUS-PR"
+    }
+  ],
+  "dataset": {
+    "sources": [
+      "TSB-AD",
+      "自建业务指标时间序列"
+    ],
+    "composition": "时间序列按业务域分层；回放同一序列窗口，保证跨轮次可比",
+    "manifest_ref": "dataset/manifest.json",
+    "refresh": {
+      "unseen_acceptance_every_rounds": 6,
+      "replace_ratio": 0.25,
+      "rule": "样本一经暴露即降级为 regression；unseen_acceptance 不得参与调参"
+    }
+  },
+  "graders": [
+    "alert_precision",
+    "detection_delay",
+    "vus_pr"
+  ],
+  "metrics": [
+    {
+      "id": "vus_pr",
+      "label": "VUS-PR",
+      "direction": "higher",
+      "primary": true,
+      "unit": "ratio",
+      "aggregation": "mean_over_cases",
+      "grader": "vus_pr",
+      "threshold_status": "pending_baseline"
+    },
+    {
+      "id": "alert_precision",
+      "label": "告警精度",
+      "direction": "higher",
+      "primary": false,
+      "unit": "ratio",
+      "aggregation": "mean_over_cases",
+      "grader": "alert_precision",
+      "threshold_status": "pending_baseline"
+    },
+    {
+      "id": "detection_latency",
+      "label": "检测延迟（步）",
+      "direction": "lower",
+      "primary": false,
+      "unit": "step",
+      "aggregation": "median_over_series",
+      "grader": "detection_delay",
+      "threshold_status": "pending_baseline"
+    }
+  ],
+  "gate": {
+    "tier": "warn",
+    "in_ci": true,
+    "blocking_metrics": [
+      "vus_pr"
+    ],
+    "ref": "../../monitor/thresholds.json"
+  },
+  "status": "collecting",
+  "owner": "TBD",
+  "notes_ref": "NOTES.md",
+  "created": "2026-11-04"
+}

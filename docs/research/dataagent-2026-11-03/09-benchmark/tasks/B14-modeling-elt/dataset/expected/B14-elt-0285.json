@@ -1,0 +1,62 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "snowflake",
+  "pipeline": "talkingdata",
+  "data_model": {
+    "models": [
+      {
+        "name": "labels",
+        "description": "Each record represents a label category of the app.",
+        "columns": [
+          {
+            "name": "label_id",
+            "description": "Unique id of label."
+          },
+          {
+            "name": "category",
+            "description": "Category of the label"
+          },
+          {
+            "name": "number_of_users",
+            "description": "The number of users belong to the label category, replace NULL values with 0."
+          },
+          {
+            "name": "oldest_event_id",
+            "description": "The id of the oldest event belongs to the label category, with ties broken by the ascending order of the event id."
+          },
+          {
+            "name": "percentage_of_the_app_under_the_label",
+            "description": "The percentage of distinct app users that belong to the label category."
+          },
+          {
+            "name": "number_of_users_not_active_when_2_happened",
+            "description": "The number of users belong to the label category who were not active when event no.2 happened, replace NULL values with 0."
+          },
+          {
+            "name": "start_with_the_word_game",
+            "description": "Set to 1 if the label category name starts with the word \"game\", 0 otherwise."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    snowflake_definition_id: 424892c4-daac-4491-b35d-c6688ba547ba\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://talkingdata-bucket/label_categories.jsonl\n    sync_mode: full_refresh_append\n    table: label_categories\n  - path: s3://talkingdata-bucket/gender_age_test.csv\n    sync_mode: full_refresh_append\n    table: gender_age_test\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - app_labels\n    - phone_brand_device_model2\nflat_files:\n- format: csv\n  path: https://drive.google.com/uc?export=download&id=1WqYeZ2T08bfJOY8HP2qcdpWnihqL8jlW\n  sync_mode: full_refresh_append\n  table: gender_age_train\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: talkingdata\n    sync_mode: full_refresh_append\n    tables:\n    - gender_age\npostgres:\n  config:\n    database: talkingdata\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - app_all\n    - app_events\n    - app_events_relevant\n    - events\n    - events_relevant\n    - sample_submission\n    user: postgres\nsnowflake:\n  config:\n    database: talkingdata\n    password: Snowflake@123\n    role: AIRBYTE_ROLE\n    schema: AIRBYTE_SCHEMA\n    username: AIRBYTE_USER\n    warehouse: AIRBYTE_WAREHOUSE\n",
+  "case_id": "B14-elt-0285",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "labels",
+        "columns": [
+          "label_id",
+          "category",
+          "number_of_users",
+          "oldest_event_id",
+          "percentage_of_the_app_under_the_label",
+          "number_of_users_not_active_when_2_happened",
+          "start_with_the_word_game"
+        ]
+      }
+    ]
+  }
+}

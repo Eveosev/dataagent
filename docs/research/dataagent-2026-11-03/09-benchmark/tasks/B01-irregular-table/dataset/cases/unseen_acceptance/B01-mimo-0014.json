@@ -1,0 +1,36 @@
+{
+  "case_id": "B01-mimo-0014",
+  "task_id": "B01",
+  "split_role": "unseen_acceptance",
+  "inputs": [
+    {
+      "kind": "table",
+      "ref": "bench://mimotable/unzipped/data/english/spreadsheet/LoanDetailsRegistrationForm1.xlsx",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B01-mimo-0014.json"
+  },
+  "evidence": [
+    "bench://mimotable/unzipped/data/english/spreadsheet/LoanDetailsRegistrationForm1.xlsx#workbook"
+  ],
+  "tags": [
+    "english",
+    "single file, single sheet, complicate header",
+    "medium table",
+    "op:Lookup",
+    "op:Calculate"
+  ],
+  "source": "mimo",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

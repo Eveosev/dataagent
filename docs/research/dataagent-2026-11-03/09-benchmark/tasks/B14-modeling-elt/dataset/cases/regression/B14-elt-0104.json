@@ -1,0 +1,35 @@
+{
+  "case_id": "B14-elt-0104",
+  "task_id": "B14",
+  "split_role": "regression",
+  "inputs": [
+    {
+      "kind": "config",
+      "ref": "fixtures/elt-redshift-app_store-config.yaml",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B14-elt-0104.json"
+  },
+  "evidence": [
+    "bench://elt-bench/elt-bench/redshift/app_store/data_model.yaml"
+  ],
+  "tags": [
+    "elt-bench",
+    "redshift",
+    "app_store",
+    "models:1"
+  ],
+  "source": "elt",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

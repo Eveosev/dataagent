@@ -1,0 +1,47 @@
+{
+  "case_id": "B01-mimo-1611",
+  "task_id": "B01",
+  "split_role": "unseen_acceptance",
+  "inputs": [
+    {
+      "kind": "table",
+      "ref": "bench://mimotable/unzipped/data/chinese/spreadsheet/价格分析表1.xlsx",
+      "digest": null
+    },
+    {
+      "kind": "table",
+      "ref": "bench://mimotable/unzipped/data/chinese/spreadsheet/电商商品库存明细分析表1.xlsx",
+      "digest": null
+    },
+    {
+      "kind": "table",
+      "ref": "bench://mimotable/unzipped/data/chinese/spreadsheet/销售业绩分析表（带公式）1.xlsx",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B01-mimo-1611.json"
+  },
+  "evidence": [
+    "bench://mimotable/unzipped/data/chinese/spreadsheet/价格分析表1.xlsx#workbook"
+  ],
+  "tags": [
+    "chinese",
+    "multiple files, simple header",
+    "medium table",
+    "op:Lookup",
+    "op:Calculate",
+    "op:Compare"
+  ],
+  "source": "mimo",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

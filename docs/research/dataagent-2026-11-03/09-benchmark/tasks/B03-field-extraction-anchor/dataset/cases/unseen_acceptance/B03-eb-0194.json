@@ -1,0 +1,51 @@
+{
+  "case_id": "B03-eb-0194",
+  "task_id": "B03",
+  "split_role": "unseen_acceptance",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://extractbench/docs/short/mcdonalds_receipt_chicago_documentcloud.pdf",
+      "digest": null
+    },
+    {
+      "kind": "schema",
+      "ref": "fixtures/eb-short-mcdonalds_receipt_chicago_documentcloud-schema.json",
+      "digest": null
+    },
+    {
+      "kind": "rules",
+      "ref": "fixtures/eb-short-mcdonalds_receipt_chicago_documentcloud-rules.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-eb-0194.json"
+  },
+  "evidence": [
+    "bench://extractbench/docs/short/mcdonalds_receipt_chicago_documentcloud.pdf",
+    "fixtures/eb-short-mcdonalds_receipt_chicago_documentcloud-schema.json",
+    "fixtures/eb-short-mcdonalds_receipt_chicago_documentcloud-rules.md"
+  ],
+  "tags": [
+    "extractbench",
+    "short",
+    "tag:source:real",
+    "tag:challenge:T3.b",
+    "tag:perception:P2",
+    "tag:length:short",
+    "tag:domain:D1",
+    "fields:32"
+  ],
+  "source": "eb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

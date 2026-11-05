@@ -1,0 +1,118 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "redshift",
+  "pipeline": "superstore",
+  "data_model": {
+    "models": [
+      {
+        "name": "customers",
+        "description": "Each record represents a customer.",
+        "columns": [
+          {
+            "name": "customer_id",
+            "description": "Unique identifier for the customer."
+          },
+          {
+            "name": "customer_name",
+            "description": "The name of the customer."
+          },
+          {
+            "name": "segment",
+            "description": "The segment the customer belongs to."
+          },
+          {
+            "name": "the_largest_total_cost_of_products_in_a_single_order",
+            "description": "The largest total cost of products in a single order the customer has made."
+          },
+          {
+            "name": "name_of_the_product_that_was_ordered_recently",
+            "description": "The name of the product that was ordered most recently by the customer, with ties broken by the ascending order of the product name."
+          },
+          {
+            "name": "item_ordered_with_the_highest_quantity_in_the_East_region",
+            "description": "The item ordered with the highest quantity in the East region by the customer, with ties broken by the descending order of the product name."
+          },
+          {
+            "name": "number_of_orders_in_2016_from_the_east_superstore",
+            "description": "The number of orders in 2016 from the East region superstore by the customer, replace NULL values with 0."
+          },
+          {
+            "name": "number_of_orders_with_more_than_3_kinds_of_products_ordered",
+            "description": "The number of orders with more than 3 kinds of products ordered by the customer, replace NULL values with 0."
+          }
+        ]
+      },
+      {
+        "name": "products",
+        "description": "Each record represents a product in a specific region.",
+        "columns": [
+          {
+            "name": "product_id",
+            "description": "Identifier for the product."
+          },
+          {
+            "name": "region",
+            "description": "The region of the product."
+          },
+          {
+            "name": "product_name",
+            "description": "The name of the product in its region."
+          },
+          {
+            "name": "total_profits",
+            "description": "The total profits of the product in its region, replace NULL values with 0."
+          },
+          {
+            "name": "has_a_profit_greater_than_98_per_of_the_average_profit_of_all_products_in_the_East_region",
+            "description": "Set to 1 if the profit of the product is greater than 98% of the average profit of all products in the East region, 0 otherwise. Only applicable when region is 'East'; always Null for other regions."
+          },
+          {
+            "name": "percetange_of_consumers_among_the_customers",
+            "description": "The percentage of consumers among the customers who have ordered the product in its region."
+          },
+          {
+            "name": "is_ordered_by_Becky_Martin_around_the_Central_region",
+            "description": "Set to 1 if the product is ordered by Becky Martin in the Central region, 0 otherwise. Only applicable when region is 'Central'; always 0 for other regions."
+          },
+          {
+            "name": "total_quantity_sold",
+            "description": "The total quantity sold of the product in its region, replace NULL values with 0."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    redshift_definition_id: f7a7d195-377f-cf5b-70a5-be6b819019dc\nflat_files:\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=1kIykZEfE7BEVh5mAmkdN1-jl7UZwcuYm\n  sync_mode: full_refresh_append\n  table: product\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: superstore\n    sync_mode: full_refresh_append\n    tables:\n    - people\npostgres:\n  config:\n    database: superstore\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - central_superstore\n    - east_superstore\n    - south_superstore\n    - west_superstore\n    user: postgres\nredshift:\n  config:\n    host: <redshift_hostname>\n    port: <redshift_port>\n    database: <redshift_db>\n    username: <redshift_username>\n    password: <redshift_pwd>\n    schema: superstore\n    s3_bucket_name: <redshift_s3_bucket>\n    s3_bucket_region: <redshift_s3_region>\n    access_key_id: <redshift_s3_access_key>\n    secret_access_key: <redshift_s3_secret_key>\n",
+  "case_id": "B14-elt-0183",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "customers",
+        "columns": [
+          "customer_id",
+          "customer_name",
+          "segment",
+          "the_largest_total_cost_of_products_in_a_single_order",
+          "name_of_the_product_that_was_ordered_recently",
+          "item_ordered_with_the_highest_quantity_in_the_East_region",
+          "number_of_orders_in_2016_from_the_east_superstore",
+          "number_of_orders_with_more_than_3_kinds_of_products_ordered"
+        ]
+      },
+      {
+        "name": "products",
+        "columns": [
+          "product_id",
+          "region",
+          "product_name",
+          "total_profits",
+          "has_a_profit_greater_than_98_per_of_the_average_profit_of_all_products_in_the_East_region",
+          "percetange_of_consumers_among_the_customers",
+          "is_ordered_by_Becky_Martin_around_the_Central_region",
+          "total_quantity_sold"
+        ]
+      }
+    ]
+  }
+}

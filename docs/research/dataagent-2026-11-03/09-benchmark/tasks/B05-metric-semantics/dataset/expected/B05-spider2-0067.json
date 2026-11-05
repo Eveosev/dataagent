@@ -1,0 +1,16 @@
+{
+  "source": "xlangai/spider2-lite",
+  "raw": {
+    "instance_id": "sf_bq012",
+    "db": "ETHEREUM_BLOCKCHAIN",
+    "question": "What is the average balance of the top 10 addresses with the most balance on the Ethereum blockchain, considering both incoming and outgoing transactions with valid addresses, but only those recorded as used on receipt, as well as transaction fees? Only keep successful transactions with no call type or where the call type is 'call'. The average balance, expressed in quadrillions (10^15), is rounded to two decimal places.",
+    "external_knowledge": null
+  },
+  "case_id": "B05-spider2-0067",
+  "expected": {
+    "kind": "sql",
+    "instance_id": "sf_bq012",
+    "sql": null,
+    "db": "ETHEREUM_BLOCKCHAIN"
+  }
+}

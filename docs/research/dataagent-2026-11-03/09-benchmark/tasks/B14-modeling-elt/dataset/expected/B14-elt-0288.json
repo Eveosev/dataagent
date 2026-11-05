@@ -1,0 +1,62 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "snowflake",
+  "pipeline": "toxicology",
+  "data_model": {
+    "models": [
+      {
+        "name": "molecules",
+        "description": "Each record represents a molecule.",
+        "columns": [
+          {
+            "name": "molecule_id",
+            "description": "Unique identifier for the molecule."
+          },
+          {
+            "name": "carcinogenic_label",
+            "description": "whether this molecule is carcinogenic or not"
+          },
+          {
+            "name": "num_single_bonds",
+            "description": "number of single bonds in the molecule, replace NULL values with 0."
+          },
+          {
+            "name": "per_triple_bonds",
+            "description": "percentage of triple bonds in the molecule"
+          },
+          {
+            "name": "num_atom_types",
+            "description": "number of different atom types in the molecule, replace NULL values with 0."
+          },
+          {
+            "name": "ratio_of_Hydrogen_elements",
+            "description": "ratio of Hydrogen elements in the molecule, calculated as the number of Hydrogen atoms divided by the total number of atoms."
+          },
+          {
+            "name": "has_double_bonded_Carbon_atom",
+            "description": "set to 1 if the molecule has a double bonded Carbon atom, otherwise, set to 0"
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    snowflake_definition_id: 424892c4-daac-4491-b35d-c6688ba547ba\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - bond\nflat_files:\n- format: csv\n  path: https://drive.google.com/uc?export=download&id=1xbdYAJ2BFSdjfRKwAEjqguRMK9EcNSH4\n  sync_mode: full_refresh_append\n  table: molecule\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: toxicology\n    sync_mode: full_refresh_append\n    tables:\n    - atom\npostgres:\n  config:\n    database: toxicology\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - connected\n    user: postgres\nsnowflake:\n  config:\n    database: toxicology\n    password: Snowflake@123\n    role: AIRBYTE_ROLE\n    schema: AIRBYTE_SCHEMA\n    username: AIRBYTE_USER\n    warehouse: AIRBYTE_WAREHOUSE\n",
+  "case_id": "B14-elt-0288",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "molecules",
+        "columns": [
+          "molecule_id",
+          "carcinogenic_label",
+          "num_single_bonds",
+          "per_triple_bonds",
+          "num_atom_types",
+          "ratio_of_Hydrogen_elements",
+          "has_double_bonded_Carbon_atom"
+        ]
+      }
+    ]
+  }
+}

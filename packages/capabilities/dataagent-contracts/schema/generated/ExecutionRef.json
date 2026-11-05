@@ -1,0 +1,94 @@
+{
+  "$comment": "generated from dataagent_contracts.core:ExecutionRef; do not edit",
+  "$defs": {
+    "VersionedRef": {
+      "description": "Versioned reference serialized as '<id>@<revision>'.",
+      "pattern": "^[^@\\s]+@[^@\\s]+$",
+      "type": "string"
+    }
+  },
+  "$id": "dataagent-contracts/0.1/core/ExecutionRef",
+  "additionalProperties": false,
+  "properties": {
+    "capability_id": {
+      "minLength": 1,
+      "title": "Capability Id",
+      "type": "string"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "finished_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Finished At"
+    },
+    "implementation_ref": {
+      "minLength": 1,
+      "title": "Implementation Ref",
+      "type": "string"
+    },
+    "input_versions": {
+      "items": {
+        "$ref": "#/$defs/VersionedRef"
+      },
+      "title": "Input Versions",
+      "type": "array"
+    },
+    "invocation_id": {
+      "minLength": 1,
+      "title": "Invocation Id",
+      "type": "string"
+    },
+    "operation": {
+      "minLength": 1,
+      "title": "Operation",
+      "type": "string"
+    },
+    "receipt_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Receipt Ref"
+    },
+    "started_at": {
+      "format": "date-time",
+      "title": "Started At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "invocation_id",
+    "operation",
+    "capability_id",
+    "implementation_ref",
+    "started_at"
+  ],
+  "title": "ExecutionRef",
+  "type": "object"
+}

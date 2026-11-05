@@ -1,0 +1,1 @@
+Find the 3-month period with the highest total acres burned since Jan 2000, according to NOAA. What was the total acres burned in that period?

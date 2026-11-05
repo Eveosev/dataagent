@@ -1,0 +1,784 @@
+from utils import get_api_name, compare_bird_table, get_sqlite_path, split_sql
+from sql import SqlEnv
+import pandas as pd
+import os
+import shutil
+import csv
+from prompt import Prompts
+from typing import Type
+import sys, re, json, random, time
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from chat import GPTChat
+from concurrent.futures import ThreadPoolExecutor, as_completed
+csv.field_size_limit(sys.maxsize)
+
+class APEXSQL:
+    def __init__(self, db_path, sql_data, search_directory, prompt_class: Type[Prompts], sql_env: Type[SqlEnv]=None, chat_session=None, log_save_path=None, db_id=None, task=None):
+        self.csv_save_name = "result.csv"
+        self.sql_save_name = "result.sql"
+        self.log_save_name = "log.log"
+        self.messages_log_save_path = "messages.log"
+        self.empty_result = "No data found for the specified query.\n"
+
+        self.api = get_api_name(sql_data)
+        self.db_id = db_id
+        self.sqlite_path = get_sqlite_path(db_path, sql_data, db_id, task)
+
+        self.sql_id = log_save_path
+
+        self.complete_csv_save_path = os.path.join(search_directory, self.csv_save_name)
+        self.complete_sql_save_path = os.path.join(search_directory, self.sql_save_name)
+        self.complete_log_save_path = os.path.join(search_directory, self.log_save_name)
+
+        self.prompt_class = prompt_class
+        self.max_try = 3
+        self.max_replan = 2
+        self.csv_max_len = 500
+
+        self.sql_env = sql_env
+        self.chat_session = chat_session
+
+
+    def _save_messages_to_log(self, messages_log_path):
+        """Save chat messages to messages.log file."""
+        try:
+            with open(messages_log_path, 'w', encoding='utf-8') as f:
+                json.dump(self.chat_session.messages, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"{self.sql_id}: Failed to save messages to log: {str(e)}")
+
+    def save_selected_result(self, selected_sql_name, search_directory, sql_paths):
+        """Save the final selected result files (SQL, CSV, Log) to the result paths."""
+        src_sql_path = os.path.join(search_directory, selected_sql_name)
+        if selected_sql_name in sql_paths:
+            src_csv_path = os.path.join(search_directory, sql_paths[selected_sql_name])
+        else:
+            src_csv_path = src_sql_path.replace(".sql", ".csv")
+
+        src_log_path = src_sql_path.replace(".sql", ".log")
+        if not os.path.exists(src_log_path):
+            src_log_path = os.path.join(search_directory, selected_sql_name.replace(self.sql_save_name, self.log_save_name))
+
+        if os.path.exists(src_sql_path):
+            shutil.copy2(src_sql_path, self.complete_sql_save_path)
+        
+        if os.path.exists(src_csv_path):
+            shutil.copy2(src_csv_path, self.complete_csv_save_path)
+        
+        if os.path.exists(src_log_path):
+            shutil.copy2(src_log_path, self.complete_log_save_path)
+
+    def model_vote(self, candidates, vote_logger, sql_paths, search_directory, args, table_info, task, evidence=""):
+        """
+        Use the model to select the best candidate SQL from a tie.
+        Returns True if a valid candidate is selected and saved, False otherwise (triggers random fallback).
+        """
+        model_name = args.generation_model
+        chat_session = GPTChat(model_name, temperature=args.temperature)
+        chat_session.init_messages()
+        
+        prompt = self.prompt_class.get_model_vote_prompt(task, table_info, candidates, search_directory, sql_paths, evidence)
+        if prompt is None:
+            vote_logger.info(f"[Model Vote] No valid SQL files found.")
+            return False
+
+
+        max_try = 3
+        response = None
+        try:
+            vote_logger.info(f"[Model Vote] Prompt: {prompt}")
+            response = chat_session.get_model_response(prompt, code_format="plaintext", tag="model_vote")
+        except Exception as e:
+            vote_logger.error(f"[Model Vote] API call failed: {str(e)[:500]}")
+            return False
+        
+        selected_sql_name = None
+        retry_tag = False
+        while max_try > 0:
+            if retry_tag:
+                chat_session.messages = chat_session.messages[:-3]
+                chat_session.messages.append({"role": "assistant", "content": response[0]})
+                retry_tag = False
+
+            if not response or not isinstance(response, list):
+                try:
+                    response = chat_session.get_model_response("Please output the name of sql in ```plaintext\nxxx.sql``` format. You should not ignore 'plaintext'.", code_format="plaintext", tag="model_vote_format_retry")
+                    vote_logger.info(f"[Model Vote Format Retry] Response: {response}")
+                except Exception as e:
+                    vote_logger.error(f"[Model Vote Format Retry] API call failed: {str(e)[:500]}")
+                    break
+            elif not response[0].endswith(".sql"):
+                # Try to fix the suffix
+                candidate_name = response[0].strip() + ".sql"
+                # Check if the fixed name exists in the directory
+                if os.path.exists(os.path.join(search_directory, candidate_name)):
+                    selected_sql_name = candidate_name
+                    break
+                else:
+                    vote_logger.info(f"Invalid response: {response}, response[0]: {response[0]}")
+                    try:
+                        response = chat_session.get_model_response("The sql file does not exist. Please output the name of sql in ```plaintext\nxxx.sql``` format. You should not ignore 'plaintext'.", code_format="plaintext", tag="model_vote_file_not_found_retry")
+                    except Exception as e:
+                        vote_logger.error(f"[Model Vote File Not Found Retry] API call failed: {str(e)[:500]}")
+                        break
+            else:
+                # Format is correct, use directly
+                selected_sql_name = response[0].strip()
+                break
+            max_try -= 1
+            retry_tag = True
+        
+        # If no valid filename obtained after multiple retries
+        if not selected_sql_name or not os.path.exists(os.path.join(search_directory, selected_sql_name)):
+            vote_logger.error(f"[Model Vote] No valid SQL file selected.")
+            return False
+
+        selected_csv_name = selected_sql_name.replace(".sql", ".csv")
+        shutil.copy2(os.path.join(search_directory, selected_csv_name), self.complete_csv_save_path)
+        shutil.copy2(os.path.join(search_directory, selected_sql_name), self.complete_sql_save_path)
+            
+        vote_logger.info(f"Model Vote Success: {selected_sql_name}")
+        return True
+
+    def vote_result(self, search_directory, vote_logger, args, sql_paths, table_info, task, evidence=""):
+        if os.path.exists(self.complete_sql_save_path) and not args.revote:
+            return
+
+        # Phase 1: Read all valid results and cache them
+        valid_dfs = {}       # key: sql_filename, value: dataframe
+        valid_sql_names = [] # maintain insertion order
+
+        for sql_name, csv_name in sql_paths.items():
+            full_csv_path = os.path.join(search_directory, csv_name)
+            if os.path.exists(full_csv_path):
+                try:
+                    df = pd.read_csv(full_csv_path, low_memory=False)
+                    valid_dfs[sql_name] = df
+                    valid_sql_names.append(sql_name)
+                except Exception:
+                    continue
+
+        if not valid_dfs:
+            vote_logger.error("[Vote] No valid CSV results found to vote on.")
+            return
+
+        # Phase 2: Cluster results by content equality
+        clusters = []
+
+        for sql_file in valid_sql_names:
+            current_df = valid_dfs[sql_file]
+            found_group = False
+            for group in clusters:
+                representative_df = group['df']
+                if current_df.shape != representative_df.shape:
+                    continue
+                if compare_bird_table(current_df, representative_df):
+                    group['files'].append(sql_file)
+                    found_group = True
+                    break
+            if not found_group:
+                clusters.append({'files': [sql_file], 'df': current_df})
+
+        # Phase 3: Determine winner by vote count
+        clusters.sort(key=lambda x: len(x['files']), reverse=True)
+        vote_distribution = [len(c['files']) for c in clusters]
+        vote_logger.info(f"[Majority Vote] Cluster distribution: {vote_distribution} (Total Valid: {len(valid_sql_names)})")
+
+        final_winner = None
+        candidates_for_model = []
+
+        if len(clusters) == 1:
+            # All results are identical
+            final_winner = clusters[0]['files'][0]
+            vote_logger.info(f"[Majority Vote] Unanimous result. Winner: {final_winner}")
+        else:
+            top_cluster = clusters[0]
+            second_cluster = clusters[1]
+            if len(top_cluster['files']) > len(second_cluster['files']):
+                # Clear majority
+                final_winner = top_cluster['files'][0]
+                vote_logger.info(f"[Majority Vote] Clear majority. Winner: {final_winner} with {len(top_cluster['files'])} votes.")
+            else:
+                # Tie: collect one representative per tied group for model vote
+                max_votes = len(top_cluster['files'])
+                tied_groups = [g for g in clusters if len(g['files']) == max_votes]
+                candidates_for_model = [g['files'][0] for g in tied_groups]
+                vote_logger.info(f"[Majority Vote] Tie among {len(tied_groups)} groups with {max_votes} votes each. Candidates: {candidates_for_model}")
+
+        # Phase 4: Save result
+        if final_winner:
+            self.save_selected_result(final_winner, search_directory, sql_paths)
+            return
+        else:
+            # Tie: let model decide
+            success = self.model_vote(candidates_for_model, vote_logger, sql_paths, search_directory, args, table_info, task, evidence)
+            if success:
+                return
+            else:
+                # Random fallback if model vote fails
+                final_winner = random.choice(candidates_for_model)
+                vote_logger.warning(f"[Random Fallback] Model vote failed. Randomly selected: {final_winner}")
+                self.save_selected_result(final_winner, search_directory, sql_paths)
+
+    def planning_centric_workflow(self, args, logger, question, table_info, csv_save_path, sql_save_path, messages_log_path, task=None, evidence="", icl_examples="", logical_plan="", output_columns="", selected_tips=""):
+        """
+        Planning-Centric Workflow:
+        - Phase 1: Load preprocessed logical plan.
+        - Phase 2: Micro loop (Explore / Refine / SQL / Confirm) with token-aware context management.
+
+        Args:
+            args: Parsed command-line arguments.
+            logger: Logger instance.
+            question: Natural language question.
+            table_info: Full database schema string.
+            csv_save_path: Path to save the result CSV.
+            sql_save_path: Path to save the final SQL.
+            messages_log_path: Path to save the chat message log.
+            task: Task name (e.g. 'BIRD').
+            evidence: External hint/evidence string.
+            icl_examples: In-context learning examples.
+            logical_plan: Preprocessed logical plan string.
+            output_columns: Expected output columns from the logical plan.
+            selected_tips: Formatted tips string for the system prompt.
+        """
+
+        # Setup paths
+        strategy_save_path = sql_save_path.replace(".sql", ".strategy.txt")
+        planning_log_path = sql_save_path.replace(".sql", ".planning.log")
+        table_info_path = os.path.join(os.path.dirname(sql_save_path), "table_info.txt")
+
+        if os.path.exists(planning_log_path):
+            os.remove(planning_log_path)
+
+        prefix = os.path.basename(sql_save_path)[0]
+        if not prefix.isdigit() or prefix == '0':
+            with open(table_info_path, "w", encoding="utf-8") as f:
+                f.write(table_info)
+
+        def log_step(phase, step_name, content):
+            log_str = f"\n{'='*10} [{phase}] {step_name} {'='*10}\n{content}\n"
+            with open(planning_log_path, "a", encoding="utf-8") as f:
+                f.write(log_str)
+
+        # Phase 1: Load preprocessed logical plan
+        logger.info(f"User Question: {question}")
+        if not logical_plan or not logical_plan.strip():
+            error_msg = "No preprocessed logical plan found. Please run preprocess_macro_plans.py first."
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+
+        final_macro_plan = logical_plan
+        log_step("Background", "User Question", question)
+        log_step("Phase 1", "Preprocessed Logical Plan", final_macro_plan)
+
+        # Phase 2: Micro Planning & Execution Loop
+        logger.info(">>> Start Phase 2: Micro Planning & Execution")
+        self.chat_session.init_messages()
+
+        if not selected_tips or not selected_tips.strip():
+            logger.error("[Micro] No selected tips provided. Cannot proceed with planning-centric workflow.")
+            return
+
+        system_prompt = self.prompt_class.get_system_prompt_with_tips(selected_tips)
+
+        if not output_columns or not output_columns.strip():
+            logger.info("[Micro] No output_columns provided, model will determine output columns from question.")
+        else:
+            logger.info(f"[Micro] Using output_columns from preprocessed plan: {output_columns}")
+
+        user_prompt = self.prompt_class.get_simplified_user_prompt(question, evidence, table_info, output_columns)
+
+        final_blueprint = ""
+        final_generated_sql = None
+        max_micro_steps = 40
+        sql_step_count = 0
+        max_sql_num = 3
+        explore_count = 0
+        max_explore_num = 30
+        prev_sql_position = -1
+
+        
+        MAX_CONTEXT_TOKENS = 56 * 1024
+        WARN_THRESHOLD     = 45 * 1024
+        CRITICAL_THRESHOLD = 52 * 1024
+
+        current_token_usage = 0
+        exploration_results = []
+        drop_invalid_response = False
+
+        # Initialize chat session with system prompt + user prompt
+        self.chat_session.init_system_prompt(system_prompt)
+        initial_msg_obj = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ]
+        next_user_prompt = user_prompt
+
+        action_space = ['`[EXPLORE]`', '`[REFINE]`', '`[SQL]`', '`[CONFIRM]`']
+        for i in range(max_micro_steps):
+            # Build prompt with token warning if approaching context limit
+            token_warning = ""
+            if current_token_usage > CRITICAL_THRESHOLD:
+                token_warning = f"\n[CRITICAL]: Context full ({current_token_usage}/{MAX_CONTEXT_TOKENS}). Generate [SQL] NOW."
+                logger.warning(f"[Micro] Critical Token Usage: {current_token_usage}/{MAX_CONTEXT_TOKENS}")
+            elif current_token_usage > WARN_THRESHOLD:
+                token_warning = f"\n[WARNING]: Context high ({current_token_usage}/{MAX_CONTEXT_TOKENS}). Wrap up soon."
+                logger.info(f"[Micro] High Token Usage: {current_token_usage}/{MAX_CONTEXT_TOKENS}")
+
+            action_list_str = ", ".join(action_space[:-1]) + f', or {action_space[-1]}'
+            actual_prompt = f"[Tokens: {current_token_usage}/{MAX_CONTEXT_TOKENS}] {next_user_prompt} {token_warning}"
+            actual_prompt += f"\n\nOutput {action_list_str}. Be concise."
+
+            if i > 0:
+                log_step("Phase 2", f"Feedback Step {i-1}", actual_prompt)
+
+            # Call model
+            max_attemps = 3
+            while max_attemps > 0:
+                try:
+                    response, current_token_usage = self.chat_session.get_model_response_txt(actual_prompt, tag=f"{self.sql_id}_micro_step_{i}", return_token_usage=True)
+                    # Calculate incremental tokens for Micro phase (only if response is valid)
+                    if response is not None:
+                        break
+                except Exception as e:
+                    response = None
+                    # Fallback if return_token_usage is not supported or API fails
+                    logger.error(f"[Micro] API Error at step {i}-{max_attemps}: {e}")
+                max_attemps -= 1
+
+            log_step("Phase 2", f"Action Step {i} (Tokens: {current_token_usage}/{MAX_CONTEXT_TOKENS})", response)
+            if response is None:
+                logger.error(f"[Micro] API Error at step {i}. Exiting loop.")
+                break
+
+            if drop_invalid_response:
+                self.chat_session.messages = self.chat_session.messages[:-3]
+                self.chat_session.messages.append({"role": "assistant", "content": response})
+                drop_invalid_response = False
+
+            if current_token_usage > MAX_CONTEXT_TOKENS:
+                logger.error("[Micro] Max context window exceeded. Breaking loop.")
+                break
+
+            # Parse the first action tag in the response
+            def extract_sql_content(full_response):
+                # 1. First match [SQL] followed by ```sql ... ```
+                sql_tag_code_block = re.search(r'\[SQL\].*?```(?:sql)?\s*(.*?)\s*```', full_response, re.DOTALL | re.IGNORECASE)
+                if sql_tag_code_block: 
+                    return sql_tag_code_block.group(1).strip()
+                
+                # 2. If not found, match standalone ```sql ... ```
+                standalone_code_block = re.search(r'```(?:sql)?\s*(.*?)\s*```', full_response, re.DOTALL | re.IGNORECASE)
+                if standalone_code_block:
+                    return standalone_code_block.group(1).strip()
+                
+                # 3. If neither found, return None (do not extract text)
+                return None
+
+            clean_response = response.replace("```sql", "```").replace("```", "")
+
+            first_tag = None
+            first_tag_pos = float('inf')
+            
+            confirm_match = re.search(r'\[CONFIRM\]', clean_response, re.IGNORECASE)
+            explore_match = re.search(r'\[EXPLORE\]', clean_response, re.IGNORECASE)
+            refine_match = re.search(r'\[REFINE\]', clean_response, re.IGNORECASE)
+            sql_match = re.search(r'\[SQL\]', response, re.IGNORECASE)
+            
+            if confirm_match and confirm_match.start() < first_tag_pos:
+                first_tag = 'CONFIRM'
+                first_tag_pos = confirm_match.start()
+            if explore_match and explore_match.start() < first_tag_pos:
+                first_tag = 'EXPLORE'
+                first_tag_pos = explore_match.start()
+            if refine_match and refine_match.start() < first_tag_pos:
+                first_tag = 'REFINE'
+                first_tag_pos = refine_match.start()
+            if sql_match and sql_match.start() < first_tag_pos:
+                first_tag = 'SQL'
+                first_tag_pos = sql_match.start()
+            
+            # Keep only the match for the first tag
+            tag_pattern = r'(?:\[[A-Z]+\]|$)'
+            if first_tag != 'CONFIRM':
+                confirm_match = None
+            else:
+                confirm_match = re.search(r'\[CONFIRM\]\s*(.*?)' + tag_pattern, clean_response, re.DOTALL | re.IGNORECASE)
+
+            if first_tag != 'EXPLORE':
+                explore_match = None
+            else:
+                explore_match = re.search(r'\[EXPLORE\]\s*(.*?)(?=' + tag_pattern + ')', clean_response, re.DOTALL | re.IGNORECASE)
+
+            if first_tag != 'REFINE':
+                refine_match = None
+            else:
+                refine_match = re.search(r'\[REFINE\]\s*(.*?)' + tag_pattern, clean_response, re.DOTALL | re.IGNORECASE)
+
+            has_sql_tag = (first_tag == 'SQL')
+
+            if confirm_match:
+                sql_step_count = 0
+                explore_count = 0
+                if final_generated_sql is None:
+                    next_user_prompt = "[System Feedback]: Generate [SQL] first before [CONFIRM]."
+                    logger.warning(f"[Micro] [token usage: {current_token_usage}/{MAX_CONTEXT_TOKENS}] Attempted to CONFIRM without SQL.")
+                else:
+                    final_blueprint = confirm_match.group(1).strip()
+                    logger.info(f"[Micro] [token usage: {current_token_usage}/{MAX_CONTEXT_TOKENS}] Blueprint Confirmed.")
+                    log_step("Phase 2", "Process Completed", "Final SQL and Plan Confirmed.")
+                    break
+            
+            elif has_sql_tag:
+                sql_step_count += 1
+                explore_count = 0
+                current_sql = extract_sql_content(response)
+                
+                if not current_sql:
+                    next_user_prompt = "[System Feedback]: No SQL found in [SQL] tag. Please wrap your code in ```sql ... ```."
+                    logger.warning(f"[Micro] [token usage: {current_token_usage}/{MAX_CONTEXT_TOKENS}] No SQL found in [SQL] tag.")
+                else:
+                    # Clean up
+                    try:
+                        candidates = split_sql(current_sql)
+                        if candidates: current_sql = candidates[0]
+                    except: pass
+                    current_sql = current_sql.replace("```", "").strip()
+
+                    logger.info(f"[Micro] [token usage: {current_token_usage}/{MAX_CONTEXT_TOKENS}] Testing Generated SQL:\n{current_sql}")
+
+                    exec_result = "Unknown Error"
+                    row_count = -1
+
+                    try:
+                        exec_result, row_count = self.sql_env.execute_sql_api(
+                            current_sql, self.sqlite_path, csv_save_path, 
+                            return_row_num=True
+                        )
+                    except Exception as e:
+                        exec_result = f"System Exception: {str(e)}"
+
+                    if exec_result == '0':
+                        final_generated_sql = current_sql
+
+                        # Read result preview
+                        try:
+                            with open(csv_save_path, 'r', encoding='utf-8') as f:
+                                lines = f.readlines()
+                                if lines:
+                                    header = lines[0].strip()
+                                    preview_rows = ''.join(lines[:6])  # Header + 5 rows
+                                else:
+                                    header = ""
+                                    preview_rows = "Empty result"
+                        except:
+                            header = ""
+                            preview_rows = "Data saved."
+
+                        next_user_prompt = (
+                            f"[System Feedback]: SQL executed successfully.\n\n"
+                            f"**Your Query**:\n```sql\n{current_sql}\n```\n\n"
+                            f"**Execution Result**:\n"
+                            f"- Rows: {row_count}\n"
+                            f"- Output Columns: {header}\n"
+                            f"- Preview:\n{preview_rows}\n\n"
+                            f"**Task**: Verify if this result correctly answers the question:\n"
+                            f"1. Are the output columns exactly as requested (no extra, no missing)?\n"
+                            f"2. Are the column names/order correct?\n"
+                            f"3. Does the data look reasonable?\n\n"
+                            f"**Next Action**:\n"
+                            f"- If correct → [CONFIRM]\n"
+                            f"- If you need to think about corrections → [REFINE] your analysis\n"
+                            f"- If you know the fix → [SQL] with corrected query"
+                        )
+
+                        logger.info(f"[Micro] [token usage: {current_token_usage}/{MAX_CONTEXT_TOKENS}] SQL Success. Rows: {row_count}")
+
+                    else:
+                        action = "[EXPLORE] simpler queries or check syntax." if sql_step_count >= max_sql_num else "Fix the error."
+                        next_user_prompt = (
+                            f"[System Feedback]: SQL failed.\n"
+                            f"Error: {str(exec_result)[:200]}\n"
+                            f"Action: {action}"
+                        )
+                        logger.warning(f"[Micro] [token usage: {current_token_usage}/{MAX_CONTEXT_TOKENS}] SQL Failed: {str(exec_result)}")
+
+                    # Drop previous SQL turn from history to save context
+                    if prev_sql_position != -1:
+                        self.chat_session.messages = self.chat_session.messages[:prev_sql_position] + self.chat_session.messages[prev_sql_position + 2:]
+                        prev_sql_position = len(self.chat_session.messages) - 1 # mark assistant message
+
+            elif explore_match:
+                sql_step_count = 0
+                if current_token_usage > CRITICAL_THRESHOLD:
+                    next_user_prompt = "[System Feedback]: Context limit. No more [EXPLORE]."
+                else:
+                    raw_sql_content = explore_match.group(1).strip()
+
+                    # Normalize inline comments after semicolons (e.g. "LIMIT 3; -- comment")
+                    raw_sql_content = re.sub(r';[ \t]*(?=--)', ';\n', raw_sql_content)
+
+                    try:
+                        initial_sqls = split_sql(raw_sql_content)
+                    except:
+                        initial_sqls = [raw_sql_content]
+
+                    # Secondary split: handle cases where sqlparse merges statements
+                    sqls_to_run = []
+                    for stmt in initial_sqls:
+                        stmt = stmt.strip()
+                        if not stmt:
+                            continue
+                        if re.search(r';\s*(?:--|SELECT|WITH)', stmt, re.IGNORECASE):
+                            parts = [p.strip() for p in re.split(r';\s*(?=(?:--|SELECT|WITH))', stmt, flags=re.IGNORECASE) if p.strip()]
+                            sqls_to_run.extend(parts)
+                        else:
+                            sqls_to_run.append(stmt)
+
+                    logger.info(f"[Micro] [token usage: {current_token_usage}/{MAX_CONTEXT_TOKENS}] Batch Exploring: {len(sqls_to_run)} queries.")
+                    
+                    if len(sqls_to_run) == 0:
+                        next_user_prompt = "[System Feedback]: No SQL in [EXPLORE]. Format: [EXPLORE]\n-- Purpose\nSELECT...;"
+                        logger.warning(f"[Micro] [token usage: {current_token_usage}/{MAX_CONTEXT_TOKENS}] No valid SQL found in [EXPLORE] tag.")
+                        continue
+
+                    def parse_desc_and_sql(stmt):
+                        """Separate leading comment lines (description) from SQL lines."""
+                        lines = stmt.strip().split('\n')
+                        desc_lines = []
+                        sql_lines = []
+                        for line in lines:
+                            stripped = line.strip()
+                            if stripped.startswith('--'):
+                                desc_lines.append(stripped.lstrip('-').strip())
+                            else:
+                                sql_lines.append(line)
+                        return " ".join(desc_lines).strip(), "\n".join(sql_lines).strip()
+
+                    batch_results_str = ""
+                    st_time = time.time()
+
+                    def execute_single_sql(idx, single_sql, display_row_num=30):
+                        """Execute one exploration SQL and return a formatted result string."""
+                        single_sql = single_sql.strip()
+                        if not single_sql:
+                            return idx, None
+
+                        description, executable_sql = parse_desc_and_sql(single_sql)
+                        if not description:
+                            description = "No description provided."
+                        if not executable_sql:
+                            return idx, None
+
+                        try:
+                            df, error_msg = self.sql_env.execute_sql_api_df(
+                                executable_sql, self.sqlite_path
+                            )
+                            
+                            if error_msg:
+                                result_str = (
+                                    f"Query {idx+1}:\n"
+                                    f"Purpose: {description}\n"
+                                    f"SQL: {executable_sql}\n"
+                                    f"Error: {error_msg}\n\n"
+                                )
+                                return idx, result_str
+                            
+                            r_num = len(df)
+
+                            # For large results, provide column statistics instead of full data
+                            stats_info = ""
+                            if r_num > display_row_num:
+                                try:
+                                    stats_parts = []
+                                    for col in df.columns:
+                                        total_values = len(df[col])
+                                        null_count = df[col].isna().sum()
+                                        col_data = df[col].dropna()
+
+                                        if len(col_data) == 0:
+                                            stats_parts.append(f"  {col}: {null_count} NULL among {total_values} rows")
+                                            continue
+
+                                        try:
+                                            max_val = col_data.max()
+                                            min_val = col_data.min()
+                                            distinct_count = col_data.nunique()
+                                            max_str = str(max_val)[:50]
+                                            min_str = str(min_val)[:50]
+                                            distinct_values = col_data.unique()[:10].tolist()
+                                            distinct_values_str = ", ".join([str(v)[:30] for v in distinct_values])
+                                            if distinct_count > 10:
+                                                distinct_values_str += ", ..."
+                                            null_info = f", {null_count} NULL among {total_values} rows" if null_count > 0 else ""
+                                            col_stats = f"  {col}: min={min_str}, max={max_str}, distinct={distinct_count} ({distinct_values_str}){null_info}"
+
+                                            # Advanced string analysis
+                                            advanced_stats = []
+                                            if col_data.dtype == 'object' or col_data.dtype.name == 'string':
+                                                str_col_data = col_data.astype(str)
+                                                lengths = str_col_data.str.len()
+                                                min_len = lengths.min()
+                                                max_len = lengths.max()
+                                                len_diff = max_len - min_len
+                                                if len_diff == 0:
+                                                    advanced_stats.append(f"length: fixed at {min_len} chars")
+                                                elif len_diff <= 20:
+                                                    advanced_stats.append(f"length: {min_len} to {max_len} chars (diff={len_diff})")
+
+                                                sample_size = min(100, len(str_col_data))
+                                                sample_data = str_col_data.sample(n=sample_size, random_state=42) if len(str_col_data) > sample_size else str_col_data
+                                                has_digit = sample_data.str.contains(r'\d', regex=True).any()
+                                                has_alpha = sample_data.str.contains(r'[a-zA-Z]', regex=True).any()
+                                                has_upper = sample_data.str.contains(r'[A-Z]', regex=True).any()
+                                                has_lower = sample_data.str.contains(r'[a-z]', regex=True).any()
+                                                has_punct = sample_data.str.contains(r'[^\w\s]', regex=True).any()
+                                                char_types = []
+                                                if has_digit: char_types.append("digits")
+                                                if has_alpha:
+                                                    if has_upper and has_lower: char_types.append("mixed-case letters")
+                                                    elif has_upper: char_types.append("uppercase letters")
+                                                    elif has_lower: char_types.append("lowercase letters")
+                                                if has_punct: char_types.append("punctuation")
+                                                if char_types:
+                                                    advanced_stats.append(f"contains: {', '.join(char_types)}")
+
+                                                # Common prefix (only for reasonable distinct counts)
+                                                if 3 <= distinct_count <= 1000:
+                                                    str_values = str_col_data.unique()[:100]
+                                                    if len(str_values) >= 3:
+                                                        common_prefix = str_values[0]
+                                                        for s in str_values[1:]:
+                                                            while not s.startswith(common_prefix) and common_prefix:
+                                                                common_prefix = common_prefix[:-1]
+                                                            if not common_prefix:
+                                                                break
+                                                        if common_prefix and len(common_prefix) >= 3:
+                                                            advanced_stats.append(f"common prefix: '{common_prefix}'")
+
+                                            if advanced_stats:
+                                                for stat in advanced_stats:
+                                                    col_stats += f"\n    {stat}"
+                                            stats_parts.append(col_stats)
+                                        except:
+                                            distinct_count = col_data.nunique()
+                                            null_info = f", {null_count} NULL among {total_values} rows" if null_count > 0 else ""
+                                            stats_parts.append(f"  {col}: distinct={distinct_count}{null_info}")
+
+                                    if stats_parts:
+                                        stats_info = "\nStatistics:\n" + "\n".join(stats_parts)
+                                except Exception as e:
+                                    stats_info = f"\n(Statistics calculation failed: {str(e)[:100]})"
+
+                                preview_df = df.head(10)
+                                res_str = preview_df.to_string(index=False, max_colwidth=50)
+                                res_str = res_str[:400] + f"\n...(showing first 10 of {r_num} rows)" + stats_info
+                            else:
+                                res_str = df.to_string(index=False, max_colwidth=50)
+                                if len(res_str) > 400:
+                                    res_str = res_str[:400] + f"...(truncated, {r_num} rows in total)"
+
+                            result_str = (
+                                f"Query {idx+1}:\n"
+                                f"Purpose: {description}\n"
+                                f"SQL: {executable_sql}\n"
+                                f"Result: {res_str}\n\n"
+                            )
+                            return idx, result_str
+                        except Exception as e:
+                            result_str = (
+                                f"Query {idx+1}:\n"
+                                f"Purpose: {description}\n"
+                                f"SQL: {executable_sql}\n"
+                                f"Error: {str(e)}\n\n"
+                            )
+                            return idx, result_str
+
+
+                    # Execute exploration SQLs in parallel
+                    results_dict = {}
+                    with ThreadPoolExecutor(max_workers=min(len(sqls_to_run), 4)) as executor:
+                        future_to_idx = {
+                            executor.submit(execute_single_sql, idx, single_sql): idx
+                            for idx, single_sql in enumerate(sqls_to_run)
+                        }
+                        for future in as_completed(future_to_idx):
+                            idx, result_str = future.result()
+                            if result_str:
+                                results_dict[idx] = result_str
+
+                    for idx in sorted(results_dict.keys()):
+                        batch_results_str += results_dict[idx]
+
+                    end_time = time.time()
+                    exploration_results.append(f"--- Exploration Round {i} ---\n{batch_results_str}")
+                    logger.info(f"[Micro] Execution Time: {end_time - st_time} seconds")
+                    logger.info(f"[Micro] Exploration Results:\n{batch_results_str}")
+                    explore_count += len(sqls_to_run)
+
+                    next_user_prompt = (
+                        f"[System Feedback]: Exploration completed. Results:\n{batch_results_str}\n\n"
+                        f"**Next Step**: Use [REFINE] to:\n"
+                        f"1. Analyze what you learned from these results and the remaining problems\n"
+                        f"2. Identify which columns/tables are most suitable\n"
+                        f"3. Update your logical plan\n"
+                        f"4. Decide if you need more exploration or are ready to generate SQL\n"
+                    )
+                    if explore_count >= max_explore_num:
+                        next_user_prompt += "\n**Note**: You've done extensive exploration. Focus on [REFINE] and [SQL] now."
+
+            elif refine_match:
+                sql_step_count = 0
+                explore_count = 0
+                refined_content = refine_match.group(1).strip()
+                logger.info(f"[Micro] [token usage: {current_token_usage}/{MAX_CONTEXT_TOKENS}] Refined Logic Recorded & Context Compressed:\n{refined_content}")
+                log_step("Phase 2", "Refinement (Context Compressed)", refined_content)
+
+                # Context compression: collapse history into a single synthetic assistant message
+                aggregated_evidence = "".join(exploration_results) if exploration_results else "No SQL exploration performed yet."
+                synthetic_response = (
+                    f"*** AGGREGATED EXPLORATION HISTORY (Evidence) ***\n"
+                    f"{aggregated_evidence}\n\n"
+                    f"*** LATEST REFINED PLAN ***\n"
+                    f"{refined_content}"
+                )
+                summary_msg = {"role": "assistant", "content": synthetic_response}
+                self.chat_session.messages = initial_msg_obj + [summary_msg]
+                prev_sql_position = -1
+
+                next_user_prompt = (
+                    "[System Feedback]: Refinement recorded.\n\n"
+                    "Based on your analysis, what's your next step?\n"
+                    "- If you need more information: Use [EXPLORE]\n"
+                    "- If you're ready to generate the query: Use [SQL]"
+                )
+
+            else:
+                drop_invalid_response = True
+                next_user_prompt = "[System Feedback]: Invalid format. Use [EXPLORE], [REFINE], [SQL], or [CONFIRM]."
+                logger.warning(f"[Micro] [token usage: {current_token_usage}/{MAX_CONTEXT_TOKENS}] Invalid tag:\n{response}")
+
+            if i >= max_micro_steps - 5 and not final_generated_sql:
+                next_user_prompt += "\nURGENT: Generate [SQL] now."
+
+
+        # Final Save
+        if final_generated_sql:
+            with open(sql_save_path, "w") as f:
+                f.write(final_generated_sql)
+            logger.info(f"Final SQL saved to {sql_save_path}")
+
+            with open(strategy_save_path, "w", encoding="utf-8") as f:
+                final_plan = final_blueprint if final_blueprint else 'Context limit reached, using best SQL.'
+                f.write(f"TASK: {question}\n\nMACRO PLAN: {final_macro_plan}\n\nFINAL PLAN: {final_plan}")
+
+            # Re-execute to ensure CSV is consistent with the final SQL
+            try:
+                self.sql_env.execute_sql_api(final_generated_sql, self.sqlite_path, csv_save_path)
+            except:
+                pass
+        else:
+            logger.error("[Workflow] Failed to generate a valid SQL after all steps.")
+
+
+        self._save_messages_to_log(messages_log_path)

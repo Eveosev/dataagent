@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 406,
+  "table": "economy-table07",
+  "structure": "MultiColumnClassified",
+  "question_type": "Numerical Reasoning",
+  "sub_type": "Counting",
+  "answer": "3",
+  "cot": [
+    {
+      "planning": "First, we need to filter the rows corresponding to the year 2012 from the dataset."
+    },
+    {
+      "planning": "We need to extract the “Bankruptcies” column and convert its values to numeric."
+    },
+    {
+      "planning": "Then, we identify how many quarters have bankruptcy rates greater than 7.5 and count them."
+    }
+  ],
+  "case_id": "B01-rht-2042",
+  "expected": {
+    "kind": "answer",
+    "question": "How many quarters in 2012 recorded a bankruptcy rate greater than 7.5?",
+    "answer": "3"
+  }
+}

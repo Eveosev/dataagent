@@ -1,0 +1,344 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "redshift",
+  "pipeline": "asana",
+  "data_model": {
+    "models": [
+      {
+        "name": "asana__task",
+        "description": "An enriched task table consisting of base task info + aggregated metrics and lists",
+        "columns": [
+          {
+            "name": "task_id",
+            "description": "System generated unique ID of the task."
+          },
+          {
+            "name": "assignee_user_id",
+            "description": "Foreign key referencing the ASANA_USER that is currently assigned the task."
+          },
+          {
+            "name": "is_completed",
+            "description": "Boolean that is true if the task is currently marked complete."
+          },
+          {
+            "name": "completed_at",
+            "description": "Timestamp of when the task was marked complete.",
+            "format": "YYYY-MM-DD HH:MM:SS.fff"
+          },
+          {
+            "name": "created_at",
+            "description": "Timestamp of when the task was created",
+            "format": "YYYY-MM-DD HH:MM:SS.fff"
+          },
+          {
+            "name": "due_date",
+            "description": "Date the task is due, if provided.",
+            "format": "YYYY-MM-DD"
+          },
+          {
+            "name": "task_modified_at",
+            "description": "Timestamp of when the task was last modified",
+            "format": "YYYY-MM-DD HH:MM:SS.fff"
+          },
+          {
+            "name": "task_description",
+            "description": "Free-form text describing the task, as seen in the UI."
+          },
+          {
+            "name": "workspace_id",
+            "description": "Foreign key reference to the workspace"
+          },
+          {
+            "name": "days_open",
+            "description": "The number of days the task has been/was open (creation -> completion)"
+          },
+          {
+            "name": "is_currently_assigned",
+            "description": "Boolean, true if the task is *currently* assigned"
+          },
+          {
+            "name": "has_been_assigned",
+            "description": "Boolean, true if the task has at one point been assigned, even if currently not."
+          },
+          {
+            "name": "number_of_comments",
+            "description": "Count of comments made on the task"
+          },
+          {
+            "name": "number_of_followers",
+            "description": "Count of the users following the task"
+          },
+          {
+            "name": "tags",
+            "description": "A list of the tags associated with the task."
+          },
+          {
+            "name": "number_of_tags",
+            "description": "Count of the tags associated with the task."
+          },
+          {
+            "name": "is_subtask",
+            "description": "Boolean that's true if the task is a subtask of another."
+          }
+        ]
+      },
+      {
+        "name": "asana__user",
+        "description": "Enriched user table consisting of base user info + metrics around tasks and completions",
+        "columns": [
+          {
+            "name": "user_id",
+            "description": "System generated unique ID of the user"
+          },
+          {
+            "name": "email",
+            "description": "The user's email"
+          },
+          {
+            "name": "user_name",
+            "description": "Name of the user as it appears in the UI"
+          },
+          {
+            "name": "number_of_open_tasks",
+            "description": "Count of the currently open tasks assigned to this user"
+          },
+          {
+            "name": "number_of_tasks_completed",
+            "description": "Count of the tasks that this user has completed"
+          },
+          {
+            "name": "number_of_projects_owned",
+            "description": "Count of the projects that this user is the owner of (excludes archived projects)"
+          },
+          {
+            "name": "number_of_projects_currently_assigned_to",
+            "description": "Count of the projects that the user is currently assigned open tasks to."
+          }
+        ]
+      },
+      {
+        "name": "asana__project",
+        "description": "Table of projects' basic info enriched with metrics regarding tasks and completions",
+        "columns": [
+          {
+            "name": "project_id",
+            "description": "System-generated unique ID of the project."
+          },
+          {
+            "name": "project_name",
+            "description": "UI-facing name of the project"
+          },
+          {
+            "name": "number_of_open_tasks",
+            "description": "Count of the currently open tasks in this project"
+          },
+          {
+            "name": "number_of_assigned_open_tasks",
+            "description": "Count of the open and assigned tasks in this project."
+          },
+          {
+            "name": "number_of_tasks_completed",
+            "description": "Count of tasks that have been completed in this project"
+          },
+          {
+            "name": "team_id",
+            "description": "Foreign key referencing the ASANA_TEAM that the project is associated with"
+          },
+          {
+            "name": "team_name",
+            "description": "User-facing name of the project's team"
+          },
+          {
+            "name": "is_archived",
+            "description": "Boolean representing if the project has been archived in the UI"
+          },
+          {
+            "name": "created_at",
+            "description": "Timestamp of when the project was created",
+            "format": "YYYY-MM-DD H[H]:MM:SS"
+          },
+          {
+            "name": "current_status",
+            "description": "The most recent progress status update for the project (free-form string)"
+          },
+          {
+            "name": "due_date",
+            "description": "The date the project is due on, if given",
+            "format": "YYYY-MM-DD H[H]:MM:SS"
+          },
+          {
+            "name": "last_modified_at",
+            "description": "Timestamp of when the project was last modified (doesn't include comments or tasks)",
+            "format": "YYYY-MM-DD H[H]:MM:SS"
+          },
+          {
+            "name": "owner_user_id",
+            "description": "Foreign key referencing the USER who owns the project."
+          },
+          {
+            "name": "number_of_users_involved",
+            "description": "Count of the unique users associated with the project"
+          },
+          {
+            "name": "notes",
+            "description": "Free-form textual description associated with project"
+          }
+        ]
+      },
+      {
+        "name": "asana__team",
+        "description": "Enriched team table consisting of basic team info + task/completion metrics (note that teams can only act on tasks in projects)",
+        "columns": [
+          {
+            "name": "team_id",
+            "description": "System generate unique ID for the team"
+          },
+          {
+            "name": "team_name",
+            "description": "UI-facing name of the team."
+          },
+          {
+            "name": "number_of_open_tasks",
+            "description": "Count of the currently open tasks for this team."
+          },
+          {
+            "name": "number_of_assigned_open_tasks",
+            "description": "Count of the open and assigned tasks for the team."
+          },
+          {
+            "name": "number_of_tasks_completed",
+            "description": "Count of tasks that this team has completed."
+          },
+          {
+            "name": "number_of_active_projects",
+            "description": "Count of non-archived projects"
+          },
+          {
+            "name": "active_projects",
+            "description": "Comma-separated string of non-archived project IDs associated with the team, sorted alphabetically by project ID. NULL if the team has no active projects."
+          },
+          {
+            "name": "number_of_archived_projects",
+            "description": "Count of archived projects"
+          }
+        ]
+      },
+      {
+        "name": "asana__tag",
+        "description": "Table of tag basic info enriched with some task metrics.",
+        "columns": [
+          {
+            "name": "tag_id",
+            "description": "System-generated unique ID for the tag"
+          },
+          {
+            "name": "tag_name",
+            "description": "UI-facing name of the tag"
+          },
+          {
+            "name": "created_at",
+            "description": "Timestamp of when the tag was created",
+            "format": "YYYY-MM-DD H[H]:MM:SS"
+          },
+          {
+            "name": "number_of_open_tasks",
+            "description": "Count of the currently open tasks with this tag."
+          },
+          {
+            "name": "number_of_assigned_open_tasks",
+            "description": "Count of the open and assigned tasks with this tag. Set to 0 if NULL."
+          },
+          {
+            "name": "number_of_tasks_completed",
+            "description": "Count of tasks with this tag that have been completed. Set to 0 if NULL."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    redshift_definition_id: f7a7d195-377f-cf5b-70a5-be6b819019dc\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://asana-bucket/task_section.csv\n    sync_mode: full_refresh_append\n    table: task_section\n  - path: s3://asana-bucket/task_tag.jsonl\n    sync_mode: full_refresh_append\n    table: task_tag\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - project\n    - story\nflat_files:\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=1K2BG3X5m_o_nyzE9yGjfKVr66Pe7GQRq\n  sync_mode: full_refresh_append\n  table: task_follower\n- format: csv\n  path: https://drive.google.com/uc?export=download&id=1a4CFOkwotBJRtom6rkZ0gPIC_JAVBpNK\n  sync_mode: full_refresh_append\n  table: project_task\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: asana\n    sync_mode: full_refresh_append\n    tables:\n    - section\n    - team\n    - user\npostgres:\n  config:\n    database: asana\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - tag\n    - task\n    user: postgres\nredshift:\n  config:\n    host: <redshift_hostname>\n    port: <redshift_port>\n    database: <redshift_db>\n    username: <redshift_username>\n    password: <redshift_pwd>\n    schema: asana\n    s3_bucket_name: <redshift_s3_bucket>\n    s3_bucket_region: <redshift_s3_region>\n    access_key_id: <redshift_s3_access_key>\n    secret_access_key: <redshift_s3_secret_key>\n",
+  "case_id": "B14-elt-0106",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "asana__task",
+        "columns": [
+          "task_id",
+          "assignee_user_id",
+          "is_completed",
+          "completed_at",
+          "created_at",
+          "due_date",
+          "task_modified_at",
+          "task_description",
+          "workspace_id",
+          "days_open",
+          "is_currently_assigned",
+          "has_been_assigned",
+          "number_of_comments",
+          "number_of_followers",
+          "tags",
+          "number_of_tags",
+          "is_subtask"
+        ]
+      },
+      {
+        "name": "asana__user",
+        "columns": [
+          "user_id",
+          "email",
+          "user_name",
+          "number_of_open_tasks",
+          "number_of_tasks_completed",
+          "number_of_projects_owned",
+          "number_of_projects_currently_assigned_to"
+        ]
+      },
+      {
+        "name": "asana__project",
+        "columns": [
+          "project_id",
+          "project_name",
+          "number_of_open_tasks",
+          "number_of_assigned_open_tasks",
+          "number_of_tasks_completed",
+          "team_id",
+          "team_name",
+          "is_archived",
+          "created_at",
+          "current_status",
+          "due_date",
+          "last_modified_at",
+          "owner_user_id",
+          "number_of_users_involved",
+          "notes"
+        ]
+      },
+      {
+        "name": "asana__team",
+        "columns": [
+          "team_id",
+          "team_name",
+          "number_of_open_tasks",
+          "number_of_assigned_open_tasks",
+          "number_of_tasks_completed",
+          "number_of_active_projects",
+          "active_projects",
+          "number_of_archived_projects"
+        ]
+      },
+      {
+        "name": "asana__tag",
+        "columns": [
+          "tag_id",
+          "tag_name",
+          "created_at",
+          "number_of_open_tasks",
+          "number_of_assigned_open_tasks",
+          "number_of_tasks_completed"
+        ]
+      }
+    ]
+  }
+}

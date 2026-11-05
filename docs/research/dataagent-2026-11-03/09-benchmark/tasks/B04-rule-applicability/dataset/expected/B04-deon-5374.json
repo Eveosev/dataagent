@@ -1,0 +1,24 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "s1_a_1_ii_pos",
+  "expect_label": "yes",
+  "raw_label": "1",
+  "rule_predicates": [
+    "tax_married_joint",
+    "rounded_dollar",
+    "taxpayer_tax",
+    "filing_status",
+    "taxable_income",
+    "person",
+    "married",
+    "joint_return_filed"
+  ],
+  "reference_prolog": "/* ---------- Statutory rules (only those needed for this query) ---------- */\n\n% Section 1(a) - tax table for married individuals filing jointly (and surviving spouses)\n\ntax_married_joint(TI, Tax) :-                 % (i) 15% up to $36,900\n    TI =< 36900,\n    Tax is TI * 0.15.\n\ntax_married_joint(TI, Tax) :-                 % (ii) $5,535 + 28% of excess over $36,900\n    TI =< 89150,\n    Tax is 5535 + 0.28 * (TI - 36900).\n\ntax_married_joint(TI, Tax) :-                 % (iii) $20,165 + 31% of excess over $89,150\n    TI =< 140000,\n    Tax is 20165 + 0.31 * (TI - 89150).\n\ntax_married_joint(TI, Tax) :-                 % (iv) $35,928.50 + 36% of excess over $140,000\n    TI =< 250000,\n    Tax is 35928.5 + 0.36 * (TI - 140000).\n\ntax_married_joint(TI, Tax) :-                 % (v) $75,528.50 + 39.6% of excess over $250,000\n    TI  > 250000,\n    Tax is 75528.5 + 0.396 * (TI - 250000).\n\n/* ---------- Auxiliary rules ---------- */\n\nrounded_dollar(Amount, Rounded) :-            % IRS amounts are rounded to whole dollars\n    Rounded is round(Amount).\n\n% Total tax for a taxpayer who files a joint return with a spouse\ntaxpayer_tax(Person, RoundedTax) :-\n    filing_status(Person, married_filing_jointly),\n    taxable_income(Person, TI),\n    tax_married_joint(TI, RawTax),\n    rounded_dollar(RawTax, RoundedTax).\n\n/* ---------- Facts drawn from the case ---------- */\n\nperson(alice).\nmarried(alice).\njoint_return_filed(alice).\ntaxable_income(alice, 42876).\n\nfiling_status(alice, married_filing_jointly) :-\n    married(alice),\n    joint_return_filed(alice).\n\n/* ---------- Verification of the claim ---------- */\n\n:- (  taxpayer_tax(alice, 7208)\n   -> format('Result: Entailment~n')\n   ;  format('Result: Contradiction~n')\n   ).\n:- halt.",
+  "case_id": "B04-deon-5374",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "1",
+    "question": "Alice and her spouse have to pay $7208 in taxes for the year 2017 under section 1(a)(ii)."
+  }
+}

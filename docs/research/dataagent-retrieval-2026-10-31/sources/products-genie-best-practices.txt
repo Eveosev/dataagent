@@ -1,0 +1,116 @@
+Curate an effective Genie Agent | Databricks on AWS
+Skip to main content
+Get startedGuidesDevelopReferenceResourcesRelease notes
+Help
+Support
+Knowledge Base
+Community
+Training
+English
+English
+日本語
+Português
+Français
+AWS
+Azure
+GCP
+SAPTry Databricks
+Genie
+Genie Agents
+For agent authors
+Best practices
+On this page
+Last updated on Sep 11, 2026
+Curate an effective Genie Agent
+Curate a Genie Agent so business users get accurate, consistent answers when they ask natural-language questions of their data. The curator's job is to bridge the gap between Genie's general world knowledge and the specialized language used in a specific domain or company. Provide well-documented datasets, SQL expressions for business semantics, example SQL queries, and clear text instructions so Genie can interpret questions and generate correct results.
+note
+Genie Agents were formerly known as Genie Spaces.
+note
+If you link an existing Genie Agent to a dashboard, dashboard filters do not carry over into the chat context. Dashboard filters work as expected with the Genie Agents that Databricks creates automatically when you publish a dashboard. See Genie Agents with dashboards.
+Best practices for defining a new agent​
+Think of Genie as a new data analyst joining your company. Like any new team member, Genie needs clear context to be effective. It relies on quality table and column descriptions to understand what the data represents, example SQL queries to learn how to solve common problems, SQL expressions to define business terminology, and text instructions only when other methods don't apply. The more structured context you provide through metadata and examples, the more accurately Genie can interpret questions and generate correct results.
+Keep these guiding principles in mind as you build your Genie Agent:
+Provide concise, well-documented datasets: Quality table and column descriptions in Unity Catalog are critical for Genie accuracy. Resolve column ambiguities and pre-join or de-normalize tables using views or metric views. Well-documented, simplified datasets improve Genie's ability to answer data questions accurately.
+Prioritize SQL expressions and example SQL over text instructions: Use SQL expressions to define business semantics like metrics and filters. Use example SQL to teach Genie how to handle common ambiguous prompts. Use text instructions only as a last resort when SQL expressions and examples cannot address the need. Structured definitions through SQL are more reliable and maintainable than plain text guidance.
+Write clear, specific text instructions: Avoid vague instructions. For example, instead of "Ask clarification questions when asked about sales," write "When users ask about sales metrics without specifying product name or sales channel, ask: To proceed with sales analysis, specify your product name and sales channel."
+Avoid conflicting instructions: Ensure consistency across all instruction types. For example, if text instructions specify rounding decimals to two digits, then example SQL queries must also round to two digits.
+The following sections provide detailed recommendations for building agents and resolving accuracy challenges.
+Start small​
+Curating a Genie Agent is an iterative process. When creating a new agent, start as small as possible, with minimal instructions and a limited set of questions to answer. Then, you can add as you iterate based on feedback and monitoring. This approach helps streamline creating and maintaining your agent and allows you to curate it effectively in response to real user needs.
+Use the following guidelines to help create a small Genie Agent:
+Stay focused: Include only the tables necessary to answer the questions you want the agent to handle. Aim for five or fewer tables. The more focused your selection, the better. Keeping your agent narrowly focused on a small amount of data is ideal, so limit the number of columns in your included tables.
+Work within the 50 table limit: Genie Agents support up to 50 tables, views, or metric views. If your data topic requires more than 50 tables, prejoin related tables into views or metric views before adding them to your agent. Metric views are particularly effective for Genie Agents because they pre-define metrics, dimensions, and aggregations. This approach helps you stay within the limit, simplifies your data model, and can improve Genie's response accuracy. See Manage data objects for details on adding data objects to your agent.
+Plan to iterate: Start with a minimal setup for your agent, focusing on essential tables and basic instructions. Add more detailed guidance and examples as you refine the agent over time, rather than aiming for perfection initially.
+Build on well-annotated tables: Genie uses Unity Catalog column names and descriptions to generate responses. Clear column names and descriptions help produce high-quality responses. Column descriptions should offer precise contextual information. Avoid ambiguous or unnecessary details. Inspect any AI-generated descriptions for accuracy and clarity, and use them only if they align with what you would manually provide.
+Have a domain expert define the agent​
+An effective agent creator needs to understand the data and the insights that can be gleaned from it. Data analysts who are proficient in SQL typically have the knowledge and skills to curate the agent.
+Define the purpose of your agent​
+Identifying your agent's specific audience and purpose helps you decide which data, instructions, and test questions to use. An agent should answer questions for a particular topic and audience, not general questions across various domains. You can simplify your datasets by prejoining tables and removing unnecessary columns before adding data to an agent. As you add data to your agent, keep it tightly focused on the agent's defined purpose. Hide any columns that might be confusing or unimportant. See Hide or show relevant columns.
+Add metadata and synonyms​
+You can add column synonyms and custom descriptions to data in a Genie Agent. This metadata is scoped to your Genie Agent and does not overwrite metadata stored in Unity Catalog. Quality column descriptions and synonyms help Genie understand the column better, choose it for relevant questions, and write more accurate SQL. See Edit column metadata.
+Use Genie prompt matching​
+Prompt matching allows Genie to match values that are most relevant to the user's question and correct spelling issues in user prompts. This improves Genie's accuracy by helping it better match user prompts to the correct columns and values. Genie automatically provides prompt matching as you add tables to the agent. You can manage which columns have prompt matching enabled. See Manage data objects and Tune Genie Agent quality.
+Provide focused examples and instructions​
+Genie Agents perform best with a limited, focused set of instructions. Databricks recommends leveraging example SQL queries to provide instructions in your agent. Example SQL queries allow Genie to match user prompts to verified SQL queries and learn from examples to answer related questions. See Add example SQL queries and functions.
+For context that should be applied globally in the Genie Agent, a small, well-organized set of plain text instructions can also help maintain relevance and improve response quality. Too many instructions can reduce effectiveness, especially in longer conversations, because Genie might struggle to prioritize the most important guidance. For details, see Provide instructions.
+Choose the right instruction type​
+Use the following guidelines to decide between SQL expressions, example SQL queries, and text instructions:
+Use SQL expressions for common business terms: When defining frequently used metrics, filters, or dimensions that represent standard business concepts, use SQL expressions in the knowledge store. SQL expressions are efficient, reusable definitions that help Genie understand your business logic. For example, use SQL expressions to define revenue, active_customers, gross_margin, or recent_sales. See Define SQL expressions.
+Use example SQL queries for complex questions: When addressing hard-to-interpret, multi-part, or complex questions, provide complete example SQL queries. These examples show Genie how to handle intricate query patterns and multi-step logic. For example, you might create SQL queries for prompts like "breakdown my team's performance" or "For customers who've only joined recently, what products are doing the best?". See Add example SQL queries and functions.
+Use text instructions only as a last resort: Text instructions should be used sparingly, only when SQL expressions and examples cannot address the need. Use text instructions for guidance that requires natural language explanation, such as "When users ask about customer performance without specifying a time range, ask them to clarify the time period" or "Always round percentages to two decimal places in summaries." Avoid using text instructions to define metrics, filters, or query patterns that can be expressed through SQL.
+Prompt Genie to ask clarification questions​
+To prompt Genie to ask clarification questions in certain scenarios, be explicit about when to ask for clarifications and how to follow up. Use clear, specific instructions that define both the triggering conditions and the expected clarification behavior.
+For example, add the following type of instruction to your agent:
+When users ask about sales performance breakdown but don't include time range, sales channel, or which KPIs in their prompt, you must ask a clarification question first to gather necessary information. For example: "Please specify the time range and sales channel you are looking for."
+Structure your clarification instructions with these components:
+Trigger condition: Define what topics or scenarios require clarification (for example, "When users ask about X topic...")
+Missing details: Specify what information must be present (for example, "...but don't include Y details...")
+Required action: State that Genie must ask for clarification (for example, "...you must ask a clarification question first...")
+Example clarification: Provide the specific question Genie should ask (for example, "Please specify...")
+Add clarification question instructions at the end of your general instructions to help Genie prioritize this behavior when responding to ambiguous questions.
+Customize summaries​
+Genie provides natural language summaries alongside query results to help users understand the data. You can customize how Genie generates these summaries by adding specific instructions to your agent's text instructions. Summary customization instructions apply to all responses in the agent.
+To customize summary behavior, add a dedicated section at the end of your text instructions with the heading "Instructions you must follow when providing summaries".
+Example summary customization instructions:
+Instructions you must follow when providing summaries
+Always respond in French when providing summaries
+Cite the table and column names used in your analysis
+Use bullet points to structure multi-part summaries
+Include the date range covered in the results
+note
+Only text instructions affect summary generation. SQL examples and SQL expressions don't influence how Genie creates summaries.
+Some customizations aren't available, such as controlling summary length and detail level.
+Test and adjust​
+You should be your agent's first user. After you create a new agent, start asking questions. Carefully examine the SQL generated in response to your questions. If Genie misinterprets the data, questions, or business jargon, you can intervene by editing the generated SQL or providing other specific instructions. Keep testing and editing until you're getting reliable responses.
+After you've reviewed a question, you can add it as a benchmark question that you can use to test and score your agent for overall accuracy systematically. You can use variations and different question phrasings to test Genie's responses. See Benchmarks.
+For ideas on fixing erroneous responses, see Troubleshoot Genie Agents.
+Deploy and version your agent with Declarative Automation Bundles​
+Use Declarative Automation Bundles to define, deploy, and version-control your Genie Agents as code. Storing your agent configuration in a bundle repository gives you reproducible deployments, change history, and the ability to promote agents across environments (development, staging, production). See Declarative Automation Bundles resources.
+Conduct user testing​
+After verifying response quality through testing, recruit a business user to try the Genie Agent. Use the following guidelines to provide a smooth user journey and collect feedback for ongoing improvement:
+Set expectations that their job is to help refine the agent.
+Ask them to focus their testing on the specific topic and questions the agent is designed to answer.
+If they receive an incorrect response, encourage users to add additional instructions and clarifications in the chat to refine the answer. When a correct response is provided, they should upvote the final query to minimize similar errors in future interactions.
+Tell users to upvote or downvote responses using the built-in feedback mechanism.
+Invite users to share additional feedback and unresolved questions directly with the agent authors. Authors and editors can use feedback to refine instructions, examples, and trusted assets.
+Consider providing training materials or a written document with guidelines for testing the agent and providing feedback. Direct business users to Use a Genie Agent to explore business data to help them start working with a new Genie Agent.
+As business users test the agent, users with at least CAN MANAGE permissions can see the questions they've asked on the Monitoring tab. Continue adding context to help Genie correctly interpret the questions and data to provide accurate answers. See Monitor the agent to learn more about monitoring Genie Agents. You can also use audit logs to monitor Genie Agent feedback and review requests. See Monitor Genie Agents usage with audit logs and alerts.
+note
+Business users must be members of the originating workspace to access your agent. See Required permissions to learn how to provide the appropriate permissions to interact with the agent.
+For troubleshooting common issues with Genie Agents, see Troubleshoot Genie Agents.
+On this page
+Best practices for defining a new agent
+Start small
+Have a domain expert define the agent
+Define the purpose of your agent
+Add metadata and synonyms
+Use Genie prompt matching
+Provide focused examples and instructions
+Choose the right instruction type
+Prompt Genie to ask clarification questions
+Customize summaries
+Test and adjust
+Deploy and version your agent with Declarative Automation Bundles
+Conduct user testing
+Privacy Notice·Terms of Use·Modern Slavery Statement·California Privacy·Your Privacy Choices 
+© Databricks 2026. All rights reserved. Apache, Apache Spark, Spark and the Spark logo are trademarks of the Apache Software Foundation.

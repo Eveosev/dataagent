@@ -1,0 +1,28 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_05ad2b62",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_action_type",
+    "scenario_service_method",
+    "statute_subject_matter",
+    "legal_no_transcript_required",
+    "legal_decision_not_precedent",
+    "legal_primary_method_of_service",
+    "statute_defines_primary_service_method",
+    "is_primary_service_method_for_eviction",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: New York\n    Focus year: 2021\n\n    Question: \"Primary methods of service are defined as those methods that must be attempted\n    before a secondary method is permitted. Is posting a primary method of service for eviction actions?\"\n*/\n\n% -----------------------\n% Scenario (question) facts\n% -----------------------\n\nscenario_state(new_york).\nscenario_focus_year(2021).\n\n% The question concerns eviction actions and the service method \"posting\".\nscenario_action_type(eviction).\nscenario_service_method(posting).\n\n% Helper that succeeds when the encoded factual statement is satisfied.\nscenario_statement :-\n    scenario_state(new_york),\n    scenario_focus_year(2021),\n    scenario_action_type(eviction),\n    scenario_service_method(posting).\n\n% -----------------------\n% Statute translation\n% -----------------------\n\n/*\n  [1] NY Real Prop Tax L  735 (2021)\n   735. Determination not precedent.\n  - No transcript of testimony shall be made of a small claims assessment review hearing.\n  - The hearing officer's decision shall not constitute precedent (with a cross-reference exception).\n*/\n\n% Subject matter tagging for the statute (used to reason about relevance/scope).\n% Citation: NY Real Prop Tax L  735 (2021)\nstatute_subject_matter(ny_rptl_735, new_york, 2021, small_claims_assessment_review_hearing).\n\n% No transcript rule.\n% Citation: NY Real Prop Tax L  735 (2021)\nlegal_no_transcript_required(new_york, 2021, small_claims_assessment_review_hearing) :- !.\n\n% Not-precedent rule (modeled generally; the exception is not expanded because it is not provided).\n% Citation: NY Real Prop Tax L  735 (2021)\nlegal_decision_not_precedent(new_york, 2021, small_claims_assessment_review_hearing) :- !.\n\n% -----------------------\n% Service-method framework (needs statute support)\n% -----------------------\n\n% A \"primary method of service\" must be supported/defined by applicable statutes in this program.\n% This predicate succeeds only if some statute encoded here defines the method as primary for that action.\nlegal_primary_method_of_service(State, Year, ActionType, Method) :-\n    statute_defines_primary_service_method(State, Year, ActionType, Method),\n    !.\n\n% Statutory definition hook.\n% Because the ONLY provided statute (NY RPTL  735) concerns small claims assessment review hearings,\n% it does not define any primary method of service for eviction actions.\nstatute_defines_primary_service_method(State, Year, ActionType, Method) :-\n    statute_subject_matter(ny_rptl_735, State, Year, Subject),\n    % If the statute subject were eviction service, we might define methods here.\n    % But NY RPTL  735 is not about eviction service, so this cannot be satisfied.\n    Subject = eviction_service,\n    ActionType = eviction,\n    Method = posting,\n    !.\n\n% Derived query: is a given method a primary method for eviction actions (under encoded statutes)?\nis_primary_service_method_for_eviction(State, Year, Method) :-\n    legal_primary_method_of_service(State, Year, eviction, Method),\n    !.\n\n% -----------------------\n% Answer logic\n% -----------------------\n\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_state(State),\n    scenario_focus_year(Year),\n    scenario_service_method(Method),\n    is_primary_service_method_for_eviction(State, Year, Method),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n% -----------------------\n% Main entrypoint (required)\n% -----------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-2745",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Primary methods of service are defined as those methods that must be attempted before a secondary method is permitted. Is posting a primary method of service for eviction actions?"
+  }
+}

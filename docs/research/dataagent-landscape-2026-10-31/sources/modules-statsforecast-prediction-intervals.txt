@@ -1,0 +1,422 @@
+Conformal Prediction - Nixtla
+Documentation Index
+Fetch the complete documentation index at: /llms.txt
+Use this file to discover all available pages before exploring further.
+Skip to main content
+Assistant
+Responses are generated using AI and may contain mistakes.
+Missed What's New in the Nixtla Engine? Watch the recording
+Nixtla home page
+Search...⌘KAsk Assistant⌘I
+Search...
+Navigation
+Tutorials
+Conformal Prediction
+TimeGPT
+StatsForecast
+MLForecast
+NeuralForecast
+HierarchicalForecast
+UtilsForecast
+DatasetsForecast
+SynForecast
+ConformalForecast
+CoreForecast
+Statistical ⚡️ Forecast
+Getting Started
+Install | StatsForecast
+Quick Start | StatsForecast
+End to End Walkthrough | StatsForecast
+End to End Walkthrough with Polars
+Tutorials
+Anomaly Detection
+Conformal Prediction
+Cross validation | StatsForecast
+Electricity Load Forecast | StatsForecast
+Detect Demand Peaks | StatsForecast
+Volatility forecasting (GARCH & ARCH)
+Intermittent or Sparse Data
+MLFlow | StatsForecast
+Multiple seasonalities
+Statistical, Machine Learning and Neural Forecasting methods | StatsForecast
+Probabilistic Forecasting | StatsForecast
+Trajectory Simulation
+How to Guides
+Automatic Time Series Forecasting
+Exogenous Regressors
+Generating features
+Sklearn models
+Distributed
+Dask
+Ray
+Spark
+Experiments
+Amazon Forecast vs StatsForecast
+AutoARIMA Comparison (Prophet and pmdarima)
+AutoARIMAProphet Adapter
+Forecasting at Scale using ETS and ray (M5)
+StatsForecast ETS and Facebook Prophet on Spark (M5)
+Model References
+ADIDA Model
+ARCH Model
+ARIMA Model
+AutoARIMA Model
+AutoCES Model
+AutoETS Model
+AutoRegressive Model
+AutoTheta Model
+Conformal Seasonal Pool (CSP)
+CrostonClassic Model
+CrostonOptimized Model
+CrostonSBA Model
+Dynamic Optimized Theta Model
+Dynamic Standard Theta Model
+GARCH Model
+Holt Model
+Holt Winters Model
+IMAPA Model
+MFLES
+Multiple Seasonal Trend (MSTL)
+Optimized Theta Model
+Seasonal Exponential Smoothing Model
+Seasonal Exponential Smoothing Optimized Model
+Simple Exponential Smoothing Optimized Model
+Simple Exponential Smoothing Model
+Standard Theta Model
+TSB Model
+API Reference
+Core Methods
+Fugue Backend
+Models
+StatsForecast's Models
+Feature engineering | StatsForecast
+Contributing
+How to Contribute
+Writing Documentation
+Interpreting Issue Labels
+Submit an Issue
+Step-by-step Contribution Guide
+Contributing Code to Nixtla Development
+On this pageBack to top
+What You’ll Learn
+Prerequisites
+What is Conformal Prediction?
+Why Use Conformal Prediction for Time Series?
+Conformal Prediction vs. Traditional Methods
+Models with Native Prediction Intervals
+How Conformal Prediction Works
+Real-World Applications
+Install libraries
+Load and explore the data
+Implementing Conformal Prediction in Python
+Setting Up Conformal Intervals
+Parameter Requirements
+Generating Forecasts with Prediction Intervals
+Visualizing Calibrated Prediction Intervals
+SeasonalExponentialSmoothing: Well-Calibrated Intervals
+ADIDA: Wider Intervals for Weaker Models
+ARIMA: Distribution-Free Alternative
+Alternative: Setting Conformal Intervals on StatsForecast Object
+Future work
+Key Takeaways
+Summary: Conformal Prediction for Time Series
+Acknowledgements
+References
+Tutorials
+Conformal Prediction
+Learn how to generate calibrated prediction intervals for any
+forecasting model using conformal prediction, a distribution-free
+method for uncertainty quantification in Python.
+​
+What You’ll Learn
+In this tutorial, you’ll discover how to:
+Generate calibrated prediction intervals without distributional
+assumptions
+Apply conformal prediction to any forecasting model in Python
+Implement uncertainty quantification with StatsForecast’s
+ConformalIntervals
+Compare conformal prediction with traditional uncertainty methods
+Evaluate prediction interval coverage and calibration
+​
+Prerequisites
+This tutorial assumes basic familiarity with StatsForecast. For a
+minimal example visit the Quick
+Start
+​
+What is Conformal Prediction?
+Conformal prediction is a distribution-free framework for generating
+prediction intervals with guaranteed coverage properties. Unlike
+traditional methods that assume normally distributed errors, conformal
+prediction works with any forecasting model and provides
+well-calibrated uncertainty estimates without making distributional
+assumptions.
+​
+Why Use Conformal Prediction for Time Series?
+When generating forecasts, a point forecast alone doesn’t convey
+uncertainty. Prediction intervals quantify this uncertainty by
+providing a range of values where future observations are likely to
+fall. A properly calibrated 95% prediction interval should contain the
+actual value 95% of the time.
+The challenge: many forecasting models either don’t provide prediction
+intervals, or generate intervals that are poorly calibrated. Traditional
+statistical methods also assume normality, which often doesn’t hold in
+practice.
+Conformal prediction solves this by:
+Working with any forecasting model (model-agnostic)
+Requiring no distributional assumptions
+Using cross-validation to generate calibrated intervals
+Providing theoretical coverage guarantees
+Treating the forecasting model as a black box
+​
+Conformal Prediction vs. Traditional Methods
+MethodDistributional AssumptionModel-AgnosticCalibration Guarantee
+Conformal PredictionNone✓✓
+BootstrapParametric assumptions✓~
+Quantile RegressionNone✓~
+Statistical Models (ARIMA, ETS)Normal errors✗~
+For a video introduction, see the PyData Seattle
+presentation. More
+resources available in Valery Manokhin’s curated
+list.
+​
+Models with Native Prediction Intervals
+For models that already provide forecast distributions (like AutoARIMA,
+AutoETS), check Prediction Intervals.
+Conformal prediction is particularly useful for models that only produce
+point forecasts, or when you want distribution-free intervals.
+Tip
+StatsForecast also includes
+ConformalSeasonalPool, a
+training-free seasonal model whose prediction intervals are natively
+conformal.
+​
+How Conformal Prediction Works
+Conformal prediction uses cross-validation to generate prediction
+intervals:
+Split the training data into multiple windows
+Train the model on each window and forecast the next period
+Calculate residuals (prediction errors) on the held-out data
+Construct intervals using the distribution of these residuals
+The key insight: by studying how the model performs on historical data
+through cross-validation, we can quantify uncertainty for future
+predictions without assuming any particular error distribution.
+​
+Real-World Applications
+Conformal prediction is particularly valuable for:
+Demand forecasting: Inventory planning with quantified
+uncertainty
+Energy prediction: Load forecasting with reliable confidence
+bounds
+Financial forecasting: Risk management with calibrated intervals
+Production models: Any black-box forecasting model requiring
+uncertainty quantification
+StatsForecast implements conformal prediction for
+all available models, making it easy to add calibrated prediction
+intervals to any forecasting pipeline.
+​
+Install libraries
+We assume that you have StatsForecast already installed. If not, check
+this guide for instructions on how to install
+StatsForecast
+Install the necessary packages using pip install statsforecast
+%%capture
+pip install statsforecast -U
+​
+Load and explore the data
+For this example, we’ll use the hourly dataset from the M4
+Competition.
+We first need to download the data from a URL and then load it as a
+pandas dataframe. Notice that we’ll load the train and the test data
+separately. We’ll also rename the y column of the test data as
+y_test.
+import pandas as pd
+train = pd.read_csv('https://auto-arima-results.s3.amazonaws.com/M4-Hourly.csv')
+test = pd.read_csv('https://auto-arima-results.s3.amazonaws.com/M4-Hourly-test.csv').rename(columns={'y': 'y_test'})
+train.head()
+unique_iddsy
+0H11605.0
+1H12586.0
+2H13586.0
+3H14559.0
+4H15511.0
+Since the goal of this notebook is to generate prediction intervals,
+we’ll only use the first 8 series of the dataset to reduce the total
+computational time.
+n_series = 8
+uids = train['unique_id'].unique()[:n_series] # select first n_series of the dataset
+train = train.query('unique_id in @uids')
+test = test.query('unique_id in @uids')
+We can plot these series using the plot_series function from the
+utilsforecast library. This function method has multiple parameters, and
+the required ones to generate the plots in this notebook are explained
+below.
+df: A pandas dataframe with columns [unique_id, ds, y].
+forecasts_df: A pandas dataframe with columns [unique_id,
+ds] and models.
+plot_random: bool = True. Plots the time series randomly.
+models: List[str]. A list with the models we want to plot.
+level: List[float]. A list with the prediction intervals we want
+to plot.
+engine: str = matplotlib. It can also be plotly. plotly
+generates interactive plots, while matplotlib generates static
+plots.
+from utilsforecast.plotting import plot_series
+plot_series(train, test, plot_random=False)
+​
+Implementing Conformal Prediction in Python
+StatsForecast makes it simple to add conformal prediction to any
+forecasting model. We’ll demonstrate with models that don’t natively
+provide prediction intervals:
+SeasonalExponentialSmoothing:
+A simple smoothing model
+ADIDA: Aggregation method
+for intermittent demand
+ARIMA: Traditional
+statistical model (to show distribution-free intervals)
+​
+Setting Up Conformal Intervals
+The key is the ConformalIntervals class, which requires two
+parameters:
+h: Forecast horizon (how many steps ahead to predict)
+n_windows: Number of cross-validation windows for calibration
+​
+Parameter Requirements
+n_windows * h must be less than your time series length
+n_windows should be at least 2 for reliable calibration
+Larger n_windows improves calibration but increases computation
+time
+from statsforecast.models import SeasonalExponentialSmoothing, ADIDA, ARIMA
+from statsforecast.utils import ConformalIntervals
+# Create a list of models and instantiation parameters
+intervals = ConformalIntervals(h=24, n_windows=2)
+# P.S. n_windows*h should be less than the count of data elements in your time series sequence.
+# P.S. Also value of n_windows should be atleast 2 or more.
+models = [
+SeasonalExponentialSmoothing(season_length=24, alpha=0.1, prediction_intervals=intervals),
+ADIDA(prediction_intervals=intervals),
+ARIMA(order=(24,0,12), prediction_intervals=intervals),
+]
+To instantiate a new StatsForecast object, we need the following
+parameters:
+df: The dataframe with the training data.
+models: The list of models defined in the previous step.
+freq: A string indicating the frequency of the data. See pandas’
+available
+frequencies.
+n_jobs: An integer that indicates the number of jobs used in
+parallel processing. Use -1 to select all cores.
+sf = StatsForecast(models=models, freq=1, n_jobs=-1)
+​
+Generating Forecasts with Prediction Intervals
+The forecast method generates both point forecasts and conformal
+prediction intervals:
+h: Forecast horizon (number of steps ahead)
+level: List of confidence levels (e.g., [80, 90] for 80% and 90%
+intervals)
+The output includes columns for each model’s forecast and corresponding
+prediction interval bounds (model-lo-{level}, model-hi-{level}).
+levels = [80, 90] # confidence levels of the prediction intervals
+forecasts = sf.forecast(df=train, h=24, level=levels)
+forecasts.head()
+unique_iddsSeasonalESSeasonalES-lo-90SeasonalES-lo-80SeasonalES-hi-80SeasonalES-hi-90ADIDAADIDA-lo-90ADIDA-lo-80ADIDA-hi-80ADIDA-hi-90ARIMAARIMA-lo-90ARIMA-lo-80ARIMA-hi-80ARIMA-hi-90
+0H1701624.132703553.097423556.359139691.906266695.167983747.292568599.519220600.030467894.554670895.065916618.078274609.440076610.583304625.573243626.716472
+1H1702555.698193496.653559506.833156604.563231614.742827747.292568491.669220498.330467996.2546701002.915916549.789291510.464070515.232352584.346231589.114513
+2H1703514.403029462.673117464.939840563.866218566.132941747.292568475.105038475.7937911018.7913461019.480099508.099925496.574844496.990264519.209587519.625007
+3H1704482.057899433.030711436.161413527.954385531.085087747.292568440.069220440.1304671054.4546701054.515916486.376622471.141813471.516997501.236246501.611431
+4H1705460.222522414.270186416.959492503.485552506.174858747.292568415.805038416.1937911078.3913461078.780099470.159478445.162316446.808608493.510348495.156640
+​
+Visualizing Calibrated Prediction Intervals
+Let’s examine the prediction intervals for each model to understand
+their characteristics and calibration quality.
+​
+SeasonalExponentialSmoothing: Well-Calibrated Intervals
+The conformal prediction intervals show proper nesting: the 80% interval
+is contained within the 90% interval, indicating well-calibrated
+uncertainty quantification. Even though this model only produces point
+forecasts, conformal prediction successfully generates meaningful
+prediction intervals.
+plot_series(train, forecasts, level=levels, ids=['H105'], models=['SeasonalES'])
+​
+ADIDA: Wider Intervals for Weaker Models
+Models with higher prediction errors produce wider conformal intervals.
+This is a feature, not a bug: the interval width honestly reflects the
+model’s uncertainty. A better-fitting model will produce narrower, more
+informative intervals.
+plot_series(train, forecasts, level=levels, ids=['H105'], models=['ADIDA'])
+​
+ARIMA: Distribution-Free Alternative
+ARIMA models typically provide prediction intervals assuming normally
+distributed errors. By using conformal prediction, we get
+distribution-free intervals that don’t rely on this assumption, which is
+valuable when the normality assumption is questionable.
+plot_series(train, forecasts, level=levels, ids=['H105'], models=['ARIMA'])
+​
+Alternative: Setting Conformal Intervals on StatsForecast Object
+You can apply conformal prediction to all models at once by specifying
+prediction_intervals in the StatsForecast object. This is convenient
+when you want the same conformal setup for multiple models.
+from statsforecast.models import SimpleExponentialSmoothing, ADIDA
+from statsforecast.utils import ConformalIntervals
+from statsforecast import StatsForecast
+models = [
+SimpleExponentialSmoothing(alpha=0.1),
+ADIDA()
+]
+res = StatsForecast(
+models=models,
+freq=1,
+).forecast(df=train, h=24, prediction_intervals=ConformalIntervals(h=24, n_windows=2), level=[80])
+res.head()
+unique_iddsSESSES-lo-80SES-hi-80ADIDAADIDA-lo-80ADIDA-hi-80
+0H1701742.669064649.221405836.116722747.292568600.030467894.554670
+1H1702742.669064550.551324934.786804747.292568498.330467996.254670
+2H1703742.669064523.621405961.716722747.292568475.7937911018.791346
+3H1704742.669064488.121405997.216722747.292568440.1304671054.454670
+4H1705742.669064464.0214051021.316722747.292568416.1937911078.391346
+​
+Future work
+Conformal prediction has become a powerful framework for uncertainty
+quantification, providing well-calibrated prediction intervals without
+making any distributional assumptions. Its use has surged in both
+academia and industry over the past few years. We’ll continue working on
+it, and future tutorials may include:
+Exploring larger datasets
+Incorporating industry-specific examples
+Investigating specialized methods like the jackknife+ that are
+closely related to conformal prediction (for details on the
+jackknife+ see
+here)
+If you’re interested in any of these, or in any other related topic,
+please let us know by opening an issue on
+GitHub
+​
+Key Takeaways
+​
+Summary: Conformal Prediction for Time Series
+Model-agnostic: Works with any forecasting model in Python
+Distribution-free: No normality assumptions required
+Well-calibrated: Theoretical coverage guarantees
+Easy to implement: Just add ConformalIntervals to your
+StatsForecast models
+Flexible: Apply to individual models or all models at once
+Next steps:
+Try conformal prediction on your own forecasting problems
+Experiment with different n_windows values for optimal calibration
+Compare with native prediction intervals from statistical models
+Explore advanced uncertainty quantification
+methods
+​
+Acknowledgements
+We would like to thank Kevin Kho for
+writing this tutorial, and Valeriy
+Manokhin for his expertise on conformal
+prediction, as well as for promoting this work.
+​
+References
+Manokhin, Valery. (2022). Machine Learning for Probabilistic
+Prediction. 10.5281/zenodo.6727505.
+Was this page helpful?
+YesNo
+Anomaly Detection
+Cross validation | StatsForecast
+githubslacktwitter

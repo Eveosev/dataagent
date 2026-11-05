@@ -1,0 +1,194 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "snowflake",
+  "pipeline": "twitter_organic",
+  "data_model": {
+    "models": [
+      {
+        "name": "twitter_organic__tweets",
+        "description": "Each record represents the daily performance of a tweet.",
+        "columns": [
+          {
+            "name": "date_day",
+            "description": "Date of the report",
+            "format": "YYYY-MM-DDTHH:MM:SS"
+          },
+          {
+            "name": "organic_tweet_id",
+            "description": "The unique ID of the tweet"
+          },
+          {
+            "name": "created_timestamp",
+            "description": "Date and time when the tweet was created",
+            "format": "YYYY-MM-DD HH:MM:SS"
+          },
+          {
+            "name": "tweet_text",
+            "description": "The full text of the tweet"
+          },
+          {
+            "name": "account_id",
+            "description": "ID of the associated account in Twitter"
+          },
+          {
+            "name": "post_url",
+            "description": "URL of the tweet. Concatenation of 'https://twitter.com/p/status/' and the tweet ID"
+          },
+          {
+            "name": "account_name",
+            "description": "Name of the account in Twitter. Use the most recent name if the account has multiple names"
+          },
+          {
+            "name": "user_id",
+            "description": "The ID of the user in Twitter"
+          },
+          {
+            "name": "user_name",
+            "description": "The name of the user"
+          },
+          {
+            "name": "app_clicks",
+            "description": "Number of clicks on app install campaigns"
+          },
+          {
+            "name": "card_engagements",
+            "description": "Number of engagements on cards"
+          },
+          {
+            "name": "carousel_swipes",
+            "description": "Number of swipes on carousels"
+          },
+          {
+            "name": "clicks",
+            "description": "Number of clicks on tweet"
+          },
+          {
+            "name": "engagements",
+            "description": "Number of engagements on tweet"
+          },
+          {
+            "name": "follows",
+            "description": "Number of follows as a result of the tweet"
+          },
+          {
+            "name": "impressions",
+            "description": "Number of impressions on tweet"
+          },
+          {
+            "name": "likes",
+            "description": "Number of likes on tweet"
+          },
+          {
+            "name": "poll_card_vote",
+            "description": "Number of votes on poll cards"
+          },
+          {
+            "name": "qualified_impressions",
+            "description": "Number of qualified impressions on tweet"
+          },
+          {
+            "name": "replies",
+            "description": "Number of replies on tweet"
+          },
+          {
+            "name": "retweets",
+            "description": "Number of retweets on tweet"
+          },
+          {
+            "name": "unfollows",
+            "description": "Number of unfollows as a result of the tweet"
+          },
+          {
+            "name": "url_clicks",
+            "description": "Number of clicks on URLs in tweet"
+          },
+          {
+            "name": "video_15_s_views",
+            "description": "Number of 15-second views on video"
+          },
+          {
+            "name": "video_3_s_100_pct_views",
+            "description": "Total number of views where at least 3 seconds were played while 100% in view."
+          },
+          {
+            "name": "video_6_s_views",
+            "description": "Number of 6-second views on video"
+          },
+          {
+            "name": "video_content_starts",
+            "description": "Number of times the video content started"
+          },
+          {
+            "name": "video_cta_clicks",
+            "description": "Number of clicks on tweet call-to-actions"
+          },
+          {
+            "name": "video_total_views",
+            "description": "Total number of views on video"
+          },
+          {
+            "name": "video_views_100",
+            "description": "Total number of views where at least 100% of the video was viewed."
+          },
+          {
+            "name": "video_views_25",
+            "description": "Total number of views where at least 25% of the video was viewed."
+          },
+          {
+            "name": "video_views_50",
+            "description": "Total number of views where at least 50% of the video was viewed."
+          },
+          {
+            "name": "video_views_75",
+            "description": "Total number of views where at least 75% of the video was viewed."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    snowflake_definition_id: 424892c4-daac-4491-b35d-c6688ba547ba\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - twitter_user_history\nflat_files:\n- format: csv\n  path: https://drive.google.com/uc?export=download&id=1ZmdgarDCpfG3XWIOwD1lRjGX1nqyuG-p\n  sync_mode: full_refresh_append\n  table: account_history\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: twitter_organic\n    sync_mode: full_refresh_append\n    tables:\n    - organic_tweet_report\npostgres:\n  config:\n    database: twitter_organic\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - tweet\n    user: postgres\nsnowflake:\n  config:\n    database: twitter_organic\n    password: Snowflake@123\n    role: AIRBYTE_ROLE\n    schema: AIRBYTE_SCHEMA\n    username: AIRBYTE_USER\n    warehouse: AIRBYTE_WAREHOUSE\n",
+  "case_id": "B14-elt-0291",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "twitter_organic__tweets",
+        "columns": [
+          "date_day",
+          "organic_tweet_id",
+          "created_timestamp",
+          "tweet_text",
+          "account_id",
+          "post_url",
+          "account_name",
+          "user_id",
+          "user_name",
+          "app_clicks",
+          "card_engagements",
+          "carousel_swipes",
+          "clicks",
+          "engagements",
+          "follows",
+          "impressions",
+          "likes",
+          "poll_card_vote",
+          "qualified_impressions",
+          "replies",
+          "retweets",
+          "unfollows",
+          "url_clicks",
+          "video_15_s_views",
+          "video_3_s_100_pct_views",
+          "video_6_s_views",
+          "video_content_starts",
+          "video_cta_clicks",
+          "video_total_views",
+          "video_views_100",
+          "video_views_25",
+          "video_views_50",
+          "video_views_75"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 803,
+  "table": "labor-table12",
+  "structure": "MultiColumnClassified",
+  "question_type": "Fact Checking",
+  "sub_type": "Value-Matching",
+  "answer": "273",
+  "cot": [
+    {
+      "step": "First, we need to locate the row where the “ID” is “C051_42541 Total”."
+    },
+    {
+      "step": "We need to directly extract the “DurationMinutes” value from this row."
+    }
+  ],
+  "case_id": "B01-rht-2439",
+  "expected": {
+    "kind": "answer",
+    "question": "What is the total “DurationMinutes” for all visits under the territory “C051_42537”? Provide the final answer.",
+    "answer": "273"
+  }
+}

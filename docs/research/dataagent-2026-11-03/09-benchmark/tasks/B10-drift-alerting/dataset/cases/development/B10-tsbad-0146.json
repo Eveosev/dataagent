@@ -1,0 +1,34 @@
+{
+  "case_id": "B10-tsbad-0146",
+  "task_id": "B10",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "series",
+      "ref": "bench://tsb-ad-u/TSB-AD-U/269_IOPS_id_10_WebService_tr_1216_1st_1728.csv",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B10-tsbad-0146.json"
+  },
+  "evidence": [
+    "bench://tsb-ad-u/TSB-AD-U/269_IOPS_id_10_WebService_tr_1216_1st_1728.csv"
+  ],
+  "tags": [
+    "tsb-ad",
+    "u",
+    "Web Service"
+  ],
+  "source": "tsbad",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

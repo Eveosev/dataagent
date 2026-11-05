@@ -1,0 +1,50 @@
+{
+  "$comment": "generated from dataagent_contracts.core:EngineBinding; do not edit",
+  "$id": "dataagent-contracts/0.1/core/EngineBinding",
+  "additionalProperties": false,
+  "description": "Coordinates of the engine that produced or will execute a spec.\n\n07 §5.4: package name, engine version and, when available, the locked\nwheel digest. Consumers compare against the actually installed version\nand fail closed on mismatch (``da07.engine_version_mismatch``).",
+  "properties": {
+    "engine_id": {
+      "minLength": 1,
+      "title": "Engine Id",
+      "type": "string"
+    },
+    "engine_version": {
+      "minLength": 1,
+      "title": "Engine Version",
+      "type": "string"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "wheel_digest": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Wheel Digest"
+    }
+  },
+  "required": [
+    "engine_id",
+    "engine_version"
+  ],
+  "title": "EngineBinding",
+  "type": "object"
+}

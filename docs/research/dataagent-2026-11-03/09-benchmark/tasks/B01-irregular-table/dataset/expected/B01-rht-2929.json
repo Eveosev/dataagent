@@ -1,0 +1,29 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1293,
+  "table": "science-table13",
+  "structure": "SingleRowClassified",
+  "question_type": "Numerical Reasoning",
+  "sub_type": "Counting",
+  "answer": "3",
+  "cot": [
+    {
+      "planning": "First, filter the dataset to include only rows where 'Chromosome' is '10'."
+    },
+    {
+      "planning": "Then, extract the 'Position' column from these rows."
+    },
+    {
+      "planning": "Next, remove any duplicate entries to identify unique positions."
+    },
+    {
+      "planning": "Finally, count the number of unique positions."
+    }
+  ],
+  "case_id": "B01-rht-2929",
+  "expected": {
+    "kind": "answer",
+    "question": "How many different positions are mentioned in the dataset for chromosome 10?",
+    "answer": "3"
+  }
+}

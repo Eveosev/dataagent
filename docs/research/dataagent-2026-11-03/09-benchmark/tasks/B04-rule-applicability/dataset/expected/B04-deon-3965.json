@@ -1,0 +1,29 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_ffff625f",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_term_in_question",
+    "scenario_described_concept",
+    "statute_nv_40_253_term_used",
+    "statute_nv_40_253_concept",
+    "statute_nv_40_280_term_used",
+    "statute_nv_40_280_concept",
+    "statute_term_used_in_provided_text",
+    "statute_term_matches_concept",
+    "term_used_to_refer_to_concept_in_statutes",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: Nevada\n    Focus year: 2021\n\n    Question:\n    \"Is the term 'Warrant for removal' used to refer to the order from the court\n     to the authorities to remove a tenant?\"\n*/\n\n% -----------------------\n% Scenario (facts)\n% -----------------------\n\nscenario_state(nevada).\nscenario_focus_year(2021).\n\n% The term the user is asking about.\nscenario_term_in_question(warrant_for_removal).\n\n% The concept the user describes: \"the order from the court to the authorities to remove a tenant\".\nscenario_described_concept(court_order_directing_authority_to_remove_tenant).\n\n% The scenario statement succeeds when the question context is fully present.\nscenario_statement :-\n    scenario_state(nevada),\n    scenario_focus_year(2021),\n    scenario_term_in_question(warrant_for_removal),\n    scenario_described_concept(court_order_directing_authority_to_remove_tenant).\n\n% -----------------------\n% Statute translations (deterministic predicates)\n% -----------------------\n\n/*\n  NV Rev Stat  40.253 (2021)\n  - Court may issue a \"summary order for removal of the tenant\" and it directs\n    the sheriff/constable to post the order and remove the tenant within certain times.\n*/\nstatute_nv_40_253_term_used(summary_order_for_removal_of_tenant).  % phrase used in statute\n\nstatute_nv_40_253_concept(summary_order_for_removal_of_tenant,\n                          court_order_directing_authority_to_remove_tenant).\n\n/*\n  NV Rev Stat  40.280 (2021)\n  - Refers to \"an order for removal of a tenant\" (issued pursuant to NRS 40.253 or 40.254),\n    \"a writ of restitution\", and other orders.\n*/\nstatute_nv_40_280_term_used(order_for_removal_of_tenant).          % phrase used in statute\nstatute_nv_40_280_term_used(writ_of_restitution).                 % phrase used in statute\n\nstatute_nv_40_280_concept(order_for_removal_of_tenant,\n                          court_order_directing_authority_to_remove_tenant).\nstatute_nv_40_280_concept(writ_of_restitution,\n                          court_order_directing_authority_to_restore_possession).\n\n% Aggregate: terms expressly used by the relevant 2021 Nevada statutes provided.\nstatute_term_used_in_provided_text(Term) :-\n    (   statute_nv_40_253_term_used(Term)\n    ->  !\n    ;   statute_nv_40_280_term_used(Term)\n    ).\n\n% Aggregate: whether a given statute-used term corresponds to the described concept.\nstatute_term_matches_concept(Term, Concept) :-\n    (   statute_nv_40_253_concept(Term, Concept)\n    ->  !\n    ;   statute_nv_40_280_concept(Term, Concept)\n    ).\n\n% -----------------------\n% Reasoning helpers\n% -----------------------\n\n% The question asks whether the specific term is used (in the provided statutes)\n% to refer to the described concept.\nterm_used_to_refer_to_concept_in_statutes(Term, Concept) :-\n    statute_term_used_in_provided_text(Term),\n    statute_term_matches_concept(Term, Concept).\n\n% -----------------------\n% Final answer (deterministic)\n% -----------------------\n\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_term_in_question(Term),\n    scenario_described_concept(Concept),\n    term_used_to_refer_to_concept_in_statutes(Term, Concept),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n% -----------------------\n% Main entrypoint\n% -----------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-3965",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is the term 'Warrant for removal' used to refer to the order from the court to the authorities to remove a tenant?"
+  }
+}

@@ -1,0 +1,63 @@
+## Accessing URDF information inside a custom ROS 2 transmission interface
+
+### 1. Problem identification: 
+
+You're building a custom transmission interface for the Robotiq 3F gripper in ROS 2 control. This interface requires access to the joint limits defined in the URDF file, which the `Joint` handle doesn't seem to provide. You need a way to access this URDF data within your custom interface.
+
+### 2. Relevant information and reasoning:
+
+* **URDF structure**: The URDF file contains information about the robot's links, joints, and their properties, including joint limits.
+* **`Joint` handle**: This handle provides access to information and control of individual joints within the robot model. 
+* **Accessing URDF data**: There are several ways to access data from the URDF file in ROS 2:
+    * **`urdf_parser`**: This package allows parsing the URDF file and extracting specific information, such as joint limits.
+    * **Robot Model**: The robot model loaded by the `robot_state_publisher` node contains the parsed URDF data and provides access to joint information.
+
+### 3. Solution approaches and considerations:
+
+**A. Using `urdf_parser`:**
+
+1. Include the `urdf_parser` library in your custom interface code.
+2. Parse the URDF file using `urdf_parser` functions.
+3. Extract the desired joint limit information from the parsed data.
+4. Use this information within your custom interface logic.
+
+**Pros:**
+
+* Direct access to specific URDF data.
+* More control over data parsing and extraction.
+
+**Cons:**
+
+* Requires additional code and dependencies.
+* Parsing the entire URDF file might be computationally expensive.
+
+**B. Accessing information through the Robot Model:**
+
+1. Obtain a reference to the robot model loaded by the `robot_state_publisher` node.
+2. Use the robot model API to access the specific joint you're interested in.
+3. Extract the joint limit information from the joint object.
+4. Utilize this information within your custom interface logic.
+
+**Pros:**
+
+* Leverages existing robot model infrastructure.
+* Potentially more efficient than parsing the entire URDF file.
+
+**Cons:**
+
+* Requires access to the robot model, which might not always be readily available.
+* Might involve more complex API calls compared to direct parsing.
+
+**Additional considerations:**
+
+* **Joint name matching:** Ensure the joint names used in your custom interface match the names defined in the URDF file.
+* **Error handling:** Implement proper error handling in case the URDF data or joint information is unavailable.
+* **Caching:** Consider caching the extracted URDF data for efficiency if your interface needs to access it frequently.
+
+### 4. Choosing the best approach:
+
+The best approach for your specific scenario depends on your project's requirements and preferences. If you need finer control over data parsing or require access to additional URDF information beyond joint limits, using `urdf_parser` might be preferable. If efficiency is a major concern and you primarily need joint limit data, accessing it through the robot model could be more suitable. 
+
+Remember to carefully evaluate the trade-offs of each approach and choose the one that best aligns with your project's needs. 
+
+I hope this information helps you access the URDF data you need for your custom transmission interface. 

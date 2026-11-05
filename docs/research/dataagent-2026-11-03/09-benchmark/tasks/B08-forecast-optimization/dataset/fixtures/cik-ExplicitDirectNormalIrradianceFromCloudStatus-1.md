@@ -1,0 +1,32 @@
+# ExplicitDirectNormalIrradianceFromCloudStatus（seed 1）
+
+## 背景
+
+This series contains Direct Normal Irradiance for a location in Sinaloa, Mexico.
+The Direct Normal Irradiance is the total amount of sun energy (in Watts per squared meter) arriving directly from the sun on a surface perpendicular to the sunlight direction. When there are no clouds to block the sun, the Direct Normal Irradiance is mostly a function of the position of the sun in the sky, with only small variations from factors such as water vapour and dust particles levels. Since it only measures the sun light coming straight from the sun, any light which gets scattered by clouds will not be measured. Therefore, cloudy weather conditions will reduce the Direct Normal Irradiance measurements, and clear weather conditions will see them at their highest possible values.
+
+## 情景
+
+At the beginning of the series, the weather was cloudy.
+At 2022-07-13 11:00:00, the weather became clear.
+At 2022-07-13 19:00:00, the weather became cloudy.
+At 2022-07-14 12:00:00, the weather became clear.
+At 2022-07-14 13:00:00, the weather became cloudy.
+At 2022-07-15 06:00:00, we expect that the weather will become clear.
+At 2022-07-15 07:00:00, we expect that the weather will become cloudy.
+At 2022-07-15 10:00:00, we expect that the weather will become clear.
+At 2022-07-15 18:00:00, we expect that the weather will become cloudy.
+
+## 约束
+
+无
+
+## 季节周期
+
+24
+
+## 历史序列（past_time）
+
+```json
+"{\"DNI\":{\"2022-07-13T00:00:00.000\":0,\"2022-07-13T01:00:00.000\":0,\"2022-07-13T02:00:00.000\":0,\"2022-07-13T03:00:00.000\":0,\"2022-07-13T04:00:00.000\":0,\"2022-07-13T05:00:00.000\":0,\"2022-07-13T06:00:00.000\":0,\"2022-07-13T07:00:00.000\":32,\"2022-07-13T08:00:00.000\":48,\"2022-07-13T09:00:00.000\":321,\"2022-07-13T10:00:00.000\":534,\"2022-07-13T11:00:00.000\":829,\"2022-07-13T12:00:00.000\":840,\"2022-07-13T13:00:00.000\":835,\"2022-07-13T14:00:00.000\":821,\"2022-07-13T15:00:00.000\":782,\"2022-07-13T16:00:00.000\":715,\"2022-07-13T17:00:00.000\":597,\"2022-07-13T18:00:00.000\":363,\"2022-07-13T19:00:00.000\":0,\"2022-07-13T20:00:00.000\":0,\"2022-07-13T21:00:00.000\":0,\"2022-07-13T22:00:00.000\":0,\"2022-07-13T23:00:00.000\":0,\"2022-07-14T00:00:00.000\":0,\"2022-07-14T01:00:00.000\":0,\"2022-07-14T02:00:00.000\":0,\"2022-07-14T03:00:00.000\":0,\"2022-07-14T04:00:00.000\":0,\"2022-07-14T05:00:00.000\":0,\"2022-07-14T06:00:00.000\":0,\"2022-07-14T07:00:00.000\":0,\"2022-07-14T08:00:00.000\":1,\"2022-07-14T09:00:00.000\":439,\"2022-07-14T10:00:00.000\":395,\"2022-07-14T11:00:00.000\":560,\"2022-07-14T12:00:00.000\":800,\"2022-07-14T13:00:00.000\":317,\"2022-07-14T14:00:00.000\":266,\"2022-07-14T15:00:00.000\":216,\"2022-07-14T16:00:00.000\":307,\"2022-07-14T17:00:00.000\":135,\"2022-07-14T18:00:00.000\":0,\"2022-07-14T19:00:00.000\":0,\"2022-07-14T20:00:00.000\":0,\"2022-07-14T21:00:00.000\":0,\"2022-07-14T22:00:00.000\":0,\"2022-07-14T23:00:00.000\":0}}"
+```

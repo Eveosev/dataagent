@@ -1,0 +1,28 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_7ae5e2dd",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_year",
+    "scenario_action",
+    "scenario_primary_service_unsuccessful_after_due_diligence",
+    "scenario_method_in_question",
+    "statute_rcw_59_12_085_applies_to_action",
+    "statute_rcw_59_12_085_secondary_method",
+    "statute_rcw_59_12_085_allows_alternative_service",
+    "secondary_methods_of_service_defined",
+    "permitted_secondary_method_for_eviction",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    HousingQA: Washington, focus_year 2021\n    Question: Is publication a permitted secondary (alternative) method of service for an eviction action?\n*/\n\n/* -------------------------\n   Scenario facts (question)\n   ------------------------- */\n\nscenario_state(washington).\nscenario_year(2021).\nscenario_action(unlawful_detainer_eviction).\nscenario_primary_service_unsuccessful_after_due_diligence(yes).\nscenario_method_in_question(publication).\n\n/* scenario_statement/0 succeeds when the encoded factual statement holds. */\nscenario_statement :-\n    scenario_state(washington),\n    scenario_year(2021),\n    scenario_action(unlawful_detainer_eviction),\n    scenario_primary_service_unsuccessful_after_due_diligence(yes),\n    scenario_method_in_question(publication).\n\n/* -------------------------\n   Statute encoding\n   ------------------------- */\n\n/* RCW 59.12.085 (2021) Alternative service of summons-Limitation on jurisdiction.\n   (1) If plaintiff, after due diligence, is unable to personally serve, court may authorize\n       the alternative means described in this section.\n   (2) Court may enter an order authorizing service \"as follows\":\n       (a) posting summons+complaint in conspicuous place on premises (>= 9 days before return date)\n       (b) mailing copies by regular mail AND certified mail to last known address (>= 9 days before return date)\n   Note: No mention of service by publication in this section.\n*/\n\n/* statute_rcw_59_12_085_applies_to_action/1\n   We model that this section governs alternative service in unlawful detainer (eviction) actions. */\nstatute_rcw_59_12_085_applies_to_action(unlawful_detainer_eviction).\n\n/* statute_rcw_59_12_085_secondary_method/1\n   Enumerates the only alternative service components expressly authorized by RCW 59.12.085(2)(a)-(b). */\nstatute_rcw_59_12_085_secondary_method(posting_on_premises).   % RCW 59.12.085(2)(a)\nstatute_rcw_59_12_085_secondary_method(regular_mail).          % RCW 59.12.085(2)(b)\nstatute_rcw_59_12_085_secondary_method(certified_mail).        % RCW 59.12.085(2)(b)\n\n/* statute_rcw_59_12_085_allows_alternative_service/2\n   True when the action is covered and the method is one of the statute's alternative methods. */\nstatute_rcw_59_12_085_allows_alternative_service(Action, Method) :-\n    statute_rcw_59_12_085_applies_to_action(Action),\n    statute_rcw_59_12_085_secondary_method(Method).\n\n/* -------------------------\n   Reasoning helpers\n   ------------------------- */\n\n/* secondary_methods_of_service_defined/1\n   For this question, we treat \"secondary methods of service\" as the statute's alternative means. */\nsecondary_methods_of_service_defined(rcw_59_12_085).\n\n/* permitted_secondary_method_for_eviction/1\n   Derives whether a method is permitted as an alternative/secondary method in an eviction action. */\npermitted_secondary_method_for_eviction(Method) :-\n    secondary_methods_of_service_defined(rcw_59_12_085),\n    statute_rcw_59_12_085_allows_alternative_service(unlawful_detainer_eviction, Method).\n\n/* -------------------------\n   Final answer\n   ------------------------- */\n\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_method_in_question(Method),\n    permitted_secondary_method_for_eviction(Method),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n/* -------------------------\n   Main entrypoint\n   ------------------------- */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-4750",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Secondary methods of service are defined as those methods that may be used if the primary method is unsuccessful. Is publication a permitted secondary method of service for an eviction action?"
+  }
+}

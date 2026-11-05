@@ -1,0 +1,539 @@
+JSON Overview – DuckDB
+⌘K
+ctrl+k
+2.0 LTS
+2.0LTS
+1.5
+1.4LTS
+1.3
+1.2
+1.1
+1.0
+0.10
+Search Shortcut cmd + k | ctrl + k
+Search docs
+⌘Kctrl+k
+Start
+Overview
+Installation
+Quickstart
+How-to Guides
+Reference
+Import & Export
+Import & Export
+Overview
+Data Sources
+CSV Files
+Overview
+Auto Detection
+Reading Faulty CSV Files
+Tips
+JSON Files
+Overview
+Creating JSON
+Loading JSON
+Writing JSON
+JSON Type
+JSON Functions
+Format Settings
+Installing and Loading
+SQL to / from JSON
+Caveats
+Parquet Files
+Overview
+Metadata
+Encryption
+Tips
+Multiple Files
+Overview
+Combining Schemas
+Partitioning
+Hive Partitioning
+Partitioned Writes
+Lakehouse
+Overview
+IO
+Appender
+INSERT Statements
+SQL
+SQL
+Introduction
+Friendly SQL
+Statements
+Overview
+ANALYZE
+ALTER DATABASE
+ALTER TABLE
+ALTER VIEW
+ATTACH and DETACH
+CALL
+CHECKPOINT
+COMMENT ON
+CONNECT and DISCONNECT
+COPY
+CREATE INDEX
+CREATE MACRO
+CREATE SCHEMA
+CREATE SECRET
+CREATE SEQUENCE
+CREATE TABLE
+CREATE VIEW
+CREATE TRIGGER
+CREATE TYPE
+DELETE
+DESCRIBE
+DROP
+EXPORT and IMPORT DATABASE
+INSERT
+LOAD / INSTALL
+MERGE INTO
+PIVOT
+Profiling
+PREPARE, EXECUTE, and DEALLOCATE
+SELECT
+SET / RESET
+SET VARIABLE
+SHOW and SHOW DATABASES
+SUMMARIZE
+Transaction Management
+UNPIVOT
+UPDATE
+UPDATE EXTENSIONS
+USE
+VACUUM
+Query Syntax
+SELECT
+FROM and JOIN
+WHERE
+GROUP BY
+GROUPING SETS
+HAVING
+ORDER BY
+LIMIT and OFFSET
+SAMPLE
+Samples
+Unnesting
+WITH
+WINDOW
+QUALIFY
+VALUES
+FILTER
+Set Operations
+Prepared Statements
+Data Types
+Overview
+Array
+Bitstring
+Blob
+Boolean
+Date
+Enum
+Geometry
+Interval
+List
+Literal Types
+Map
+NULL Values
+Numeric
+Struct
+Text
+Time
+Timestamp
+Time Zones
+Union
+Typecasting
+Variant
+Functions
+Overview
+Aggregate Functions
+Array Functions
+Bitstring Functions
+Blob Functions
+Date Format Functions
+Date Functions
+Date Part Functions
+Enum Functions
+Geometry Functions
+Interval Functions
+Lambda Functions
+List Functions
+Map Functions
+Nested Functions
+Numeric Functions
+Pattern Matching
+Regular Expressions
+Struct Functions
+Text Functions
+Time Functions
+Timestamp Functions
+Timestamp with Time Zone Functions
+Union Functions
+Utility Functions
+Variant Functions
+Window Functions
+Expressions
+Overview
+CASE Expression
+Casting
+Collations
+Comparisons
+IN Operator
+Logical Operators
+Star Expression
+Subqueries
+TRY
+Meta Queries
+Information Schema
+Metadata Functions
+Constraints
+Indexes
+DuckDB's SQL Dialect
+Overview
+Indexing
+Keywords and Identifiers
+Order Preservation
+PostgreSQL Compatibility
+SQL Quirks
+PEG Parser
+Client APIs
+Client APIs
+Overview
+Connecting to DuckDB
+Python
+Overview
+Data Ingestion
+Appender
+Conversion between DuckDB and Python
+DB API
+Relational API
+Function API
+Types API
+Expression API
+Spark API
+API Reference
+Known Python Issues
+Migrating to 2.0
+Installation
+Executing SQL
+Jupyter Notebooks
+marimo Notebooks
+SQL on Pandas
+Import from Pandas
+Export to Pandas
+Import from Numpy
+Export to Numpy
+SQL on Arrow
+Import from Arrow
+Export to Arrow
+Relational API on Pandas
+Multiple Python Threads
+Integration with Ibis
+Integration with Polars
+Integration with PyTorch
+Using fsspec Filesystems
+CLI
+Overview
+Arguments
+Dot Commands
+Output Formats
+Agent Mode
+Editing
+Friendly CLI
+Safe Mode
+Autocomplete
+Syntax Highlighting
+Known Issues
+Node.js (Neo)
+Overview
+Java (JDBC)
+Overview
+Connect
+Import Data
+Run Queries
+Handle Results
+Write User Defined Functions
+Profile and Monitor
+Deploy as Native Image
+Troubleshoot
+R
+Go
+Overview
+Connect
+Import Data
+Run Queries
+Handle Results
+Write User Defined Functions
+Profile and Monitor
+Troubleshoot
+Rust
+Overview
+Connect
+Import Data
+Run Queries
+Handle Results
+Write User Defined Functions
+Profile and Monitor
+Troubleshoot
+C/C++
+Overview
+Startup
+Configuration
+Query
+Data Chunks
+Vectors
+Values
+Types
+Prepared Statements
+Appender
+Table Functions
+Replacement Scans
+API Reference
+C++
+Wasm
+Overview
+Instantiate
+Import Data
+Run Queries
+Load Extensions
+Deploy
+Troubleshoot
+ODBC/ADBC
+Overview
+Linux Setup
+Windows Setup
+macOS Setup
+Configuration
+ADBC
+Other Clients
+Overview
+Julia
+PHP
+PHP (PDO)
+Swift
+Extensions
+Extensions
+Using Extensions
+Overview
+Installing Extensions
+Advanced Installation Methods
+Versioning of Extensions
+Troubleshooting of Extensions
+Core Extensions
+Overview
+AutoComplete
+Avro
+AWS
+Azure
+Delta
+DuckLake
+Encodings
+Excel
+Full Text Search
+httpfs (HTTP and S3)
+Overview
+HTTP(S) Support
+S3 API Support
+S3 and AWS Authentication
+Hugging Face
+Legacy Authentication Scheme for S3 API
+Iceberg
+ICU
+inet
+Lance
+Legacy Parser
+MotherDuck
+MySQL
+ODBC
+Quack
+PostgreSQL
+Sirius
+Spatial
+SQLite
+SQLSmith
+TPC-DS
+TPC-H
+UI
+Unity Catalog
+Vortex
+VSS
+Community Extensions
+Building Extensions
+Distributing Extensions
+Extension Repositories
+Server & Remote
+Server & Remote
+Overview
+Setup
+Overview
+Reverse Proxy
+Deployment
+Using from Wasm
+Security
+Reference
+Troubleshooting
+Performance & Operations
+Performance & Operations
+Overview
+Performance
+Overview
+Environment
+Import
+Schema
+Indexing
+Join Operations
+File Formats
+How to Tune Workloads
+My Workload Is Slow
+Out-of-Memory Issues
+Benchmarks
+Working with Huge Databases
+Configuration
+Overview
+Secrets
+Pragmas
+Concurrency
+Non-Deterministic Behavior
+Security
+Overview
+Embedding DuckDB
+Securing Extensions
+Deployment
+Installing DuckDB
+Install Script
+Requirements
+Docker
+User Agents
+Limits
+Migrating to DuckDB 2.0
+Backup Extension Repositories
+Storage Footprint
+Files Created by DuckDB
+Gitignore for DuckDB
+Reclaiming Space
+Logging
+Development & Internals
+Development & Internals
+Overview
+Building DuckDB
+Overview
+Build Configuration
+Building Extensions
+Statically Linking Extensions
+Platforms
+Android
+OpenHarmony
+Linux
+macOS
+Raspberry Pi
+Windows
+Python
+R
+Unofficial and Unsupported Platforms
+Troubleshooting
+Testing
+Overview
+sqllogictest Introduction
+Writing Tests
+Unit Tester Configuration
+Debugging
+Result Verification
+Persistent Testing
+Loops
+Multiple Connections
+Catch
+Internals
+Overview
+Storage Versions and Format
+Execution Format
+Jemalloc
+Pivot
+Internal Errors
+Profiling & Benchmarking
+Profiling
+Metrics
+Benchmark Suite
+Project
+Release Cycle
+DuckDB Repositories
+Troubleshooting
+Docs / Import & Export / JSON Files
+Copy Markdown
+JSON Overview
+DuckDB supports SQL functions that are useful for reading values from existing JSON and creating new JSON data.
+JSON is supported with the json extension which is shipped with most DuckDB distributions and is auto-loaded on first use.
+If you would like to install or load it manually, please consult the “Installing and Loading” page.
+About JSON
+JSON is an open standard file format and data interchange format that uses human-readable text to store and transmit data objects consisting of attribute–value pairs and arrays (or other serializable values).
+While it is not a very efficient format for tabular data, it is very commonly used, especially as a data interchange format.
+JSONPath and JSON Pointer Syntax
+DuckDB implements multiple interfaces for JSON extraction: JSONPath and JSON Pointer. Both of them work with the arrow operator (->) and the json_extract function call.
+Note that DuckDB only supports lookups in JSONPath, i.e., extracting fields with .<key> or array elements with [<index>].
+Arrays can be indexed from the back and both approaches support the wildcard *.
+DuckDB does not support the full JSONPath syntax because SQL is readily available for any further transformations.
+It's best to pick either the JSONPath or the JSON Pointer syntax and use it in your entire application.
+Indexing
+Warning Following PostgreSQL's conventions, DuckDB uses 1-based indexing for its ARRAY and LIST data types but 0-based indexing for the JSON data type.
+Examples
+Loading JSON
+Read a JSON file from disk, auto-infer options:
+SELECT * FROM 'todos.json';
+Use the read_json function with custom options:
+SELECT *
+FROM read_json('todos.json',
+format = 'array',
+columns = {userId: 'UBIGINT',
+id: 'UBIGINT',
+title: 'VARCHAR',
+completed: 'BOOLEAN'});
+Read a JSON file from stdin, auto-infer options:
+cat data/json/todos.json | duckdb -c "SELECT * FROM read_json('/dev/stdin')"
+Read a JSON file into a table:
+CREATE TABLE todos (userId UBIGINT, id UBIGINT, title VARCHAR, completed BOOLEAN);
+COPY todos FROM 'todos.json' (AUTO_DETECT true);
+Alternatively, create a table without specifying the schema manually with a CREATE TABLE ... AS SELECT clause:
+CREATE TABLE todos AS
+SELECT * FROM 'todos.json';
+Since DuckDB 1.3.0, the JSON reader returns the filename virtual column:
+SELECT filename, *
+FROM 'todos-*.json';
+Writing JSON
+Write the result of a query to a JSON file:
+COPY (SELECT * FROM todos) TO 'todos.json';
+JSON Data Type
+Create a table with a column for storing JSON data and insert data into it:
+CREATE TABLE example (j JSON);
+INSERT INTO example VALUES
+('{ "family": "anatidae", "species": [ "duck", "goose", "swan", null ] }');
+Retrieving JSON Data
+Retrieve the family key's value:
+SELECT j.family FROM example;
+"anatidae"
+Extract the family key's value with a JSONPath expression as JSON:
+SELECT j->'$.family' FROM example;
+"anatidae"
+Extract the family key's value with a JSONPath expression as a VARCHAR:
+SELECT j->>'$.family' FROM example;
+anatidae
+Using Quotes for Special Characters
+JSON object keys that contain the special [ and . characters can be used by surrounding them with double quotes ("):
+SELECT '{"d[u]._\"ck":42}'->'$."d[u]._\"ck"' AS v;
+42
+Pages in This Section
+View Markdown
+Edit on GitHub
+Report an issue
+© 2026 DuckDB Foundation, Amsterdam NL
+DuckDB Home
+Code of Conduct
+Trademark Use
+Blog
+In this article
+About JSON
+JSONPath and JSON Pointer Syntax
+Indexing
+Examples
+Loading JSON
+Writing JSON
+JSON Data Type
+Retrieving JSON Data
+Using Quotes for Special Characters

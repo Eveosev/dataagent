@@ -1,0 +1,38 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_dd4cf437",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_year",
+    "landlord",
+    "tenant",
+    "property",
+    "occupied_by",
+    "landlord_owns",
+    "landlord_wants_to_sell",
+    "condominium_conversion_planned",
+    "statute_70308_applies",
+    "statute_70308_duty_prior_written_notice",
+    "statute_70308_first_right_to_purchase",
+    "notice_delivered",
+    "unit_offered_for_sale",
+    "statute_70308_prohibits_require_vacate_within_120_days",
+    "landlord_requires_vacate",
+    "statute_70308_vacate_exception_applies",
+    "lease_covenant_violation",
+    "nonpayment_of_rent",
+    "legal_requires_relocation_assistance",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: Wisconsin\n    Focus year: 2021\n\n    Question: When a landlord wants to sell a property occupied by a tenant,\n    does the law require they offer tenants assistance with relocation costs?\n\n    Provided statutes to encode:\n      - WI Stat  703.08 (2021) (duplicated in prompt as [1] and [2], same text)\n*/\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Scenario facts (the question's factual statement)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n% Basic entities\nscenario_state(wisconsin).\nscenario_year(2021).\n\nlandlord(l1).\ntenant(t1).\nproperty(p1).\n\n% Occupancy / relationship\noccupied_by(p1, t1).\nlandlord_owns(l1, p1).\n\n% The scenario: landlord wants to sell an occupied property.\nlandlord_wants_to_sell(l1, p1).\n\n% Make explicit that the scenario is NOT stated to be a condominium conversion.\n% (This prevents accidental application of condo-conversion-specific statute logic.)\ncondominium_conversion_planned(p1, no).\n\n/* scenario_statement/0 succeeds when the encoded factual statement is satisfied. */\nscenario_statement :-\n    scenario_state(wisconsin),\n    scenario_year(2021),\n    landlord(L),\n    tenant(T),\n    property(P),\n    landlord_owns(L, P),\n    occupied_by(P, T),\n    landlord_wants_to_sell(L, P),\n    condominium_conversion_planned(P, no).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Statute translations: WI Stat  703.08 (2021)\n%% Notice prior to conversion of residential property to condominium.\n%%\n%% NOTE: The prompt includes  703.08 twice ([1] and [2]) with identical text.\n%% We encode it once; it represents the 2021 Wisconsin rule.\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n/* Helper: statute applicability for condo conversions. */\nstatute_70308_applies(State, Year, Property) :-\n    State = wisconsin,\n    Year = 2021,\n    condominium_conversion_planned(Property, yes).\n\n/* WI Stat  703.08(1) (2021):\n   Owner must give prior written notice of the conversion to each tenant. */\nstatute_70308_duty_prior_written_notice(State, Year, Owner, Property, Tenant) :-\n    statute_70308_applies(State, Year, Property),\n    landlord_owns(Owner, Property),\n    occupied_by(Property, Tenant).\n\n/* For completeness, model the \"first right to purchase\" window (60 days after notice).\n   The statute grants this right only if:\n     - notice was delivered, and\n     - the unit is offered for sale during the 60-day period after delivery, and\n     - the tenant has not waived the right in writing.\n*/\n% Facts that could be present in a scenario (not present in this question).\n% notice_delivered(Property, DayNumber).\n% unit_offered_for_sale(Property, DayNumber).\n% tenant_waived_in_writing(Tenant, first_right_of_purchase).  % optional fact\n\nstatute_70308_first_right_to_purchase(State, Year, Tenant, Property) :-\n    statute_70308_applies(State, Year, Property),\n    occupied_by(Property, Tenant),\n    notice_delivered(Property, NoticeDay),\n    unit_offered_for_sale(Property, OfferDay),\n    DaysAfter is OfferDay - NoticeDay,\n    DaysAfter >= 0,\n    DaysAfter =< 60,\n    \\+ tenant_waived_in_writing(Tenant, first_right_of_purchase).\n\n/* WI Stat  703.08(2) (2021):\n   Tenant may not be required to vacate during the 120-day period after notice,\n   except for (a) violation of lease covenant or (b) nonpayment of rent.\n*/\n% Facts that could be present in a scenario (not present in this question).\n% landlord_requires_vacate(Property, Tenant, DayNumber).\n% lease_covenant_violation(Tenant, Property).\n% nonpayment_of_rent(Tenant, Property).\n% tenant_waived_in_writing(Tenant, right_to_remain).\n\nstatute_70308_prohibits_require_vacate_within_120_days(State, Year, Owner, Tenant, Property) :-\n    statute_70308_applies(State, Year, Property),\n    landlord_owns(Owner, Property),\n    occupied_by(Property, Tenant),\n    notice_delivered(Property, NoticeDay),\n    landlord_requires_vacate(Property, Tenant, VacateDemandDay),\n    DaysAfter is VacateDemandDay - NoticeDay,\n    DaysAfter >= 0,\n    DaysAfter =< 120,\n    \\+ tenant_waived_in_writing(Tenant, right_to_remain),\n    \\+ statute_70308_vacate_exception_applies(Tenant, Property).\n\nstatute_70308_vacate_exception_applies(Tenant, Property) :-\n    lease_covenant_violation(Tenant, Property).\nstatute_70308_vacate_exception_applies(Tenant, Property) :-\n    nonpayment_of_rent(Tenant, Property).\n\n/* WI Stat  703.08(3) (2021):\n   Tenant may waive in writing the first right of purchase and/or right to remain.\n   (Represented via tenant_waived_in_writing/2 facts if present.)\n*/\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Legal question mapping: relocation assistance requirement?\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n/* The provided statute ( 703.08) creates notice and certain occupancy/purchase rights\n   for condominium conversions; it does NOT impose any duty to offer relocation-cost\n   assistance when a landlord sells an occupied property.\n\n   We therefore model \"requires relocation assistance\" as a predicate that would\n   succeed if some encoded statute created that duty. With only  703.08 provided,\n   there are no such success conditions.\n*/\nlegal_requires_relocation_assistance(_State, _Year, _Landlord, _Tenant, _Property) :-\n    fail.\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Answer derivation (must be derived, not hardcoded)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_state(State),\n    scenario_year(Year),\n    landlord(L),\n    tenant(T),\n    property(P),\n    landlord_owns(L, P),\n    occupied_by(P, T),\n    landlord_wants_to_sell(L, P),\n    legal_requires_relocation_assistance(State, Year, L, T, P),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Main entrypoint (required)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-0357",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "When a landlord wants to sell a property occupied by a tenant, does the law require they offer tenants assistance with relocation costs?"
+  }
+}

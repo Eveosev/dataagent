@@ -1,0 +1,421 @@
+{
+  "type": "object",
+  "title": "StateMedicaidRemittanceAdvice",
+  "$defs": {
+    "Payment": {
+      "type": "object",
+      "properties": {
+        "check_number": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Remittance/warrant identifier for this payment block. LABEL ALIASES: MS ENVISION 'REMITTANCE' (on the RA banner); CA Medi-Cal RAD 'WARRANT NO'/'WARRANT NO.'. Extract verbatim incl leading zeros. Do NOT confuse with claim_number (TCN/CCN) or provider number."
+        },
+        "check_amount": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Total dollar amount of this remittance/warrant if printed as a single check/warrant total; else null. Numeric, no $ or commas."
+        },
+        "ra_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Date printed on the remittance advice header. LABEL ALIASES: MS 'DATE'; CA 'DATE'. Format MM/DD/YY or MM/DD/YYYY as printed. Do NOT confuse with a claim's DATES OF SERVICE."
+        },
+        "payer_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Primary payer/program name in the RA header. MS: 'MISSISSIPPI ENVISION MMIS' (use this system name, not the 'DIVISION OF MEDICAID' line). CA: 'CA MEDI-CAL'. Verbatim."
+        },
+        "payee_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Name of the provider/facility receiving payment. MS: the SERVICE PROVIDER NAME / provider on the banner. CA: the 'TO:' provider name (e.g. 'ABC PROVIDER','CHILDREN'S HOSPITAL'). Do NOT put the provider NUMBER here."
+        },
+        "payee_provider_number": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Provider number of the payee. LABEL ALIASES: MS 'PROVIDER NO'; CA 'PROVIDER NUMBER'. Digits, verbatim. Do NOT confuse with payee_npi."
+        },
+        "payee_npi": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "National Provider Identifier of the payee if printed (MS 'NPI NUMBER', 10 digits); else null. Do NOT confuse with payee_provider_number."
+        },
+        "claim_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Claim/section type label printed in the header if present. CA 'CLAIM TYPE' (e.g. 'OUTPATIENT','INPATIENT','LONG TERM CARE','MCARE CROSSOVER'); MS provider-type banner (e.g. 'INPATIENT','VISION AND HEARING'). Else null."
+        }
+      },
+      "required": [
+        "check_number"
+      ]
+    },
+    "Claim": {
+      "type": "object",
+      "properties": {
+        "claim_number": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Unique payer claim control number for this adjudicated claim. LABEL ALIASES: MS ENVISION 'TCN' (Transaction Control Number, ~17 digits); CA Medi-Cal RAD 'CLAIM CONTROL NUMBER'/'CCN' (~13 digits). Extract verbatim incl leading zeros. Do NOT confuse with patient_account_number or recipient_id."
+        },
+        "patient_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Patient/recipient name as printed (typically LAST FIRST [MIDDLE]). LABEL ALIASES: MS 'BENEFICIARY NAME'; CA 'RECIPIENT NAME'. Verbatim as one string."
+        },
+        "recipient_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Member/recipient Medicaid identifier. LABEL ALIASES: MS 'MEDICAID ID'; CA 'RECIPIENT MEDI-CAL ID NO.'. Verbatim. Do NOT confuse with claim_number or patient_account_number."
+        },
+        "patient_account_number": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Provider's internal patient account/control number. LABEL ALIASES: MS 'PAT ACCT NUM'; CA 'PATIENT CONTROL NUMBER'. This is the PROVIDER's number, NOT the payer claim control number. Null if absent."
+        },
+        "medical_record_number": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Medical record number for the claim if printed (MS 'MED REC NO'; CA 'MEDICAL RECORD NUMBER'); else null."
+        },
+        "claim_from_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "First date of service for the claim. LABEL: 'DATES OF SERVICE' (from). Format MM/DD/YY[YY] or MMDDYY as printed. Null if absent. Transcribe EXACTLY as printed — do NOT add or remove slashes. The CA RAD service-date columns are headed literally 'MMDDYY' (six bare digits, no slashes); MS ENVISION prints slashed dates."
+        },
+        "claim_to_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Last date of service for the claim ('DATES OF SERVICE' to). Same format. Null if absent. Transcribe EXACTLY as printed — do NOT add or remove slashes. The CA RAD service-date columns are headed literally 'MMDDYY' (six bare digits, no slashes); MS ENVISION prints slashed dates."
+        },
+        "total_submitted": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Total billed/submitted amount for the whole claim. LABEL ALIASES: MS 'SUBMITTED AMT'; CA claim 'TOTAL CHARGES'/'BILLED AMOUNT' total. Numeric. Null if not printed."
+        },
+        "total_paid": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Total paid amount for the whole claim. LABEL ALIASES: MS 'TOT PAID AMT'; CA 'PAID AMOUNT' total. Numeric. Null if blank."
+        },
+        "total_patient_responsibility": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Total patient responsibility for the claim. LABEL ALIASES: MS 'PAT RESP AMT'; CA patient liability 'PAT LIAB'/share-of-cost. Numeric. Null if absent."
+        },
+        "claim_status": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Adjudication status of the claim. MS: explicit 'STATUS' column ('PAID'/'DENY'). CA: the SECTION the claim sits under ('APPROVES','DENIES','SUSPENDS','ADJUSTMENTS'). Verbatim/uppercase. Null if indeterminable."
+        },
+        "reason_codes": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Claim-level denial/adjustment reason code(s) if printed at the claim row (CA 'RAD CODE'; MS claim-level 'EXCEPTION CODES'). State-specific 4-digit codes, space-separated if multiple, verbatim. Null if codes are only at the service line."
+        }
+      },
+      "required": [
+        "claim_number"
+      ]
+    },
+    "ServiceLine": {
+      "type": "object",
+      "properties": {
+        "claim_number": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The parent claim's control number (TCN/CCN) that THIS service/charge line belongs to. Must equal the claim_number of its claim. Used to group lines under claims."
+        },
+        "line_number": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Line item number within the claim if printed (MS 'LINE' = 1,2,3...). CA RAD charge rows usually have no explicit line number -> null."
+        },
+        "date_of_service_from": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Service line from-date. 'DATES OF SERVICE' on the line. MM/DD/YY[YY] or MMDDYY verbatim. Null if absent. Transcribe EXACTLY as printed — do NOT add or remove slashes. The CA RAD service-date columns are headed literally 'MMDDYY' (six bare digits, no slashes); MS ENVISION prints slashed dates."
+        },
+        "date_of_service_to": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Service line to-date. Null if absent or same single date. Transcribe EXACTLY as printed — do NOT add or remove slashes. The CA RAD service-date columns are headed literally 'MMDDYY' (six bare digits, no slashes); MS ENVISION prints slashed dates."
+        },
+        "procedure_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Procedure/service code on the line. LABEL ALIASES: MS 'PROC'; CA 'PROC CODE'/'PROCED CODE'; institutional CA 'ACCOM CODE' (accommodation/revenue). Core code only, verbatim. Null if absent."
+        },
+        "modifiers": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Procedure modifier(s) if present (MS 'M1 M2 M3 M4'; CA 'PROCED CODE MODIFIER'). Join multiple with a space. Null if none."
+        },
+        "revenue_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Revenue code if printed (MS 'REVCD'). Null if absent."
+        },
+        "units": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Units/quantity for the line. LABEL ALIASES: MS 'LINE UNITS'; CA 'QTY'/'DAYS OR VISIT'. Numeric. Null if absent."
+        },
+        "charge_amount": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Billed/charge amount for the line. LABEL ALIASES: MS 'LN SUBM AMOUNT'; CA 'TOTAL CHARGES'/'BILLED AMOUNT' (row). Numeric. Null if absent."
+        },
+        "allowed_amount": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Allowed/payable amount for the line. LABEL ALIASES: CA 'PAYABLE CHARGES'/'ALLOWED AMOUNT'/'MEDI-CAL ALLOWED'. MS RA may not print a separate allowed -> null."
+        },
+        "paid_amount": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Paid amount for the line. LABEL ALIASES: MS 'LN PAID AMOUNT'; CA 'PAID AMOUNT' (row). Numeric. Null if blank."
+        },
+        "line_status": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Line adjudication status if printed (MS 'LN STATUS' = 'PAID'/'DENY'). Null if absent."
+        },
+        "reason_codes": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Service-line denial/adjustment/exception reason code(s). LABEL ALIASES: MS 'EXCEPTION CODES' (4-digit, e.g. '0132 0439'); CA 'RAD CODE' (4-digit, e.g. '0401'). State-specific reason codes, NOT national CARC/RARC. Space-separated if multiple, verbatim. Null if none."
+        }
+      },
+      "required": [
+        "claim_number"
+      ]
+    }
+  },
+  "properties": {
+    "payments": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Payment"
+      },
+      "description": "All remittance/warrant payment header blocks in the document (one per REMITTANCE/WARRANT NO)."
+    },
+    "claims": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Claim"
+      },
+      "description": "Every adjudicated claim shown in the document, keyed by TCN(MS)/CCN(CA). Do not drop or merge claim rows."
+    },
+    "service_lines": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ServiceLine"
+      },
+      "description": "Every service/charge line across all claims, each carrying its parent claim_number. Do not drop lines."
+    }
+  },
+  "required": [
+    "payments",
+    "claims",
+    "service_lines"
+  ]
+}

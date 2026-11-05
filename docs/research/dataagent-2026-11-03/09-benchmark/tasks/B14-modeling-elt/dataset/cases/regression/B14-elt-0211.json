@@ -1,0 +1,35 @@
+{
+  "case_id": "B14-elt-0211",
+  "task_id": "B14",
+  "split_role": "regression",
+  "inputs": [
+    {
+      "kind": "config",
+      "ref": "fixtures/elt-snowflake-books-config.yaml",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B14-elt-0211.json"
+  },
+  "evidence": [
+    "bench://elt-bench/elt-bench/snowflake/books/data_model.yaml"
+  ],
+  "tags": [
+    "elt-bench",
+    "snowflake",
+    "books",
+    "models:3"
+  ],
+  "source": "elt",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

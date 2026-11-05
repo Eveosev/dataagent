@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 193,
+  "question": "I'm profiling how exceptional Landon Donovan was in the mid-2013 player ratings. By what percentage was his overall rating on 12 July 2013 higher than the average overall rating across all players on that same calendar date, considering every player with the overall rating they carried on that date (not only those updated that day), among players rated low, medium or high for defensive work rate? Return one value only: that percentage, rounded to two decimals (e.g. 12.34 meaning 12.34% higher).",
+  "evidence": "Defensive work rate: a player's intensity of work in defense, rated low, medium or high. Overall rating: the overall score given to a player in the ratings.",
+  "gold_sql": "WITH donovan AS (SELECT a.overall_rating AS r FROM Player p JOIN Player_Attributes a ON a.player_api_id = p.player_api_id WHERE p.player_name = 'Landon Donovan' AND a.date >= '2013-07-12' AND a.date < '2013-07-13'), inforce AS (SELECT a.player_api_id AS pid, a.overall_rating AS r, a.defensive_work_rate AS dwr FROM Player_Attributes a JOIN (SELECT player_api_id, MAX(date) AS md FROM Player_Attributes WHERE date < '2013-07-13' GROUP BY player_api_id) m ON a.player_api_id = m.player_api_id AND a.date = m.md) SELECT ROUND(100.0 * ((SELECT r FROM donovan) - AVG(r)) / AVG(r), 2) AS percentage FROM inforce WHERE dwr IN ('low','medium','high')",
+  "db_id": "european_football_2",
+  "case_id": "B05-bird-0194",
+  "expected": {
+    "kind": "sql",
+    "sql": "WITH donovan AS (SELECT a.overall_rating AS r FROM Player p JOIN Player_Attributes a ON a.player_api_id = p.player_api_id WHERE p.player_name = 'Landon Donovan' AND a.date >= '2013-07-12' AND a.date < '2013-07-13'), inforce AS (SELECT a.player_api_id AS pid, a.overall_rating AS r, a.defensive_work_rate AS dwr FROM Player_Attributes a JOIN (SELECT player_api_id, MAX(date) AS md FROM Player_Attributes WHERE date < '2013-07-13' GROUP BY player_api_id) m ON a.player_api_id = m.player_api_id AND a.date = m.md) SELECT ROUND(100.0 * ((SELECT r FROM donovan) - AVG(r)) / AVG(r), 2) AS percentage FROM inforce WHERE dwr IN ('low','medium','high')",
+    "db_id": "european_football_2",
+    "evidence": "Defensive work rate: a player's intensity of work in defense, rated low, medium or high. Overall rating: the overall score given to a player in the ratings."
+  }
+}

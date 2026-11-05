@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 104,
+  "question": "I'm cataloguing special-release printings illustrated by Rob Alexander. What is the total converted mana cost across all cards illustrated by Rob Alexander whose original release falls in 2013? Please give me just that total as a single number. By 'released in 2013' I mean the calendar year from 1 January through 31 December 2013, and a card's original release is the original release date recorded on the card itself—cards with no original release date recorded are out of scope. Each card printing counts separately in the total.",
+  "evidence": "Converted mana cost: the total numeric mana value of a card, e.g. a card costing {4}{W}{W} has a converted mana cost of 6.",
+  "gold_sql": "SELECT SUM(convertedManaCost) AS total_converted_mana_cost FROM cards WHERE artist = 'Rob Alexander' AND substr(originalReleaseDate, 1, 4) = '2013'",
+  "db_id": "card_games",
+  "case_id": "B05-bird-0105",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT SUM(convertedManaCost) AS total_converted_mana_cost FROM cards WHERE artist = 'Rob Alexander' AND substr(originalReleaseDate, 1, 4) = '2013'",
+    "db_id": "card_games",
+    "evidence": "Converted mana cost: the total numeric mana value of a card, e.g. a card costing {4}{W}{W} has a converted mana cost of 6."
+  }
+}

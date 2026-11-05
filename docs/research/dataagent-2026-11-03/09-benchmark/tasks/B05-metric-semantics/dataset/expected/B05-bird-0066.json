@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 65,
+  "question": "I have the count of sets with fewer than five translations of their name — now I need the gap in cards to size the translation budget. Can you give me the total number of cards contained in those sets? A few things to keep in mind: 'fewer than five' is strict, so a set with exactly five translations doesn't count. All sets count regardless of type or release (core set, expansion, promotional, online-only, etc.). If two languages have the identical translated name string for a set, that's one translation, not two. And a set's card count should be its full size, including promotional and related supplemental printings.",
+  "evidence": "A 'translation of a set's name' means the localized name of the set in another language, e.g. its French or Simplified Chinese name.",
+  "gold_sql": "SELECT SUM(totalSetSize) AS total_cards FROM sets WHERE (SELECT COUNT(DISTINCT translation) FROM set_translations WHERE setCode = sets.code) < 5",
+  "db_id": "card_games",
+  "case_id": "B05-bird-0066",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT SUM(totalSetSize) AS total_cards FROM sets WHERE (SELECT COUNT(DISTINCT translation) FROM set_translations WHERE setCode = sets.code) < 5",
+    "db_id": "card_games",
+    "evidence": "A 'translation of a set's name' means the localized name of the set in another language, e.g. its French or Simplified Chinese name."
+  }
+}

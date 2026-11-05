@@ -1,0 +1,29 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_3d3a8dbb",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "state",
+    "focus_year",
+    "eviction_action",
+    "primary_service_method",
+    "primary_service_unsuccessful",
+    "proposed_secondary_method",
+    "statute_ga_44_7_51_primary_method",
+    "statute_ga_44_7_51_permitted_secondary_method",
+    "statute_ga_44_7_51_requires_component",
+    "statute_ga_44_7_51_mailing_method_for_posting_option",
+    "permitted_secondary_method_under_ga_44_7_51",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Topic: Georgia eviction (dispossessory) service of process, secondary methods\n    Focus year: 2021\n*/\n\n/* -----------------------\n   Scenario (question) facts\n   ----------------------- */\n\nstate(georgia).\nfocus_year(2021).\n\n/* The question defines \"secondary methods\" as usable if primary is unsuccessful.\n   We encode that in the scenario by asserting the primary method (personal service)\n   is unsuccessful, and the proposed secondary methods are posting and certified mail.\n*/\neviction_action(eviction_case_1).\n\nprimary_service_method(personal_service).\nprimary_service_unsuccessful(eviction_case_1).\n\n/* Proposed secondary methods in the question */\nproposed_secondary_method(eviction_case_1, posting).\nproposed_secondary_method(eviction_case_1, certified_mail).\n\n/* Helper predicate that succeeds when the scenario statement (as encoded) holds. */\nscenario_statement :-\n    state(georgia),\n    focus_year(2021),\n    eviction_action(Case),\n    primary_service_unsuccessful(Case),\n    proposed_secondary_method(Case, posting),\n    proposed_secondary_method(Case, certified_mail).\n\n/* -----------------------------------------\n   Statute encoding: GA Code  44-7-51 (2021)\n   ----------------------------------------- */\n\n/* GA Code  44-7-51 (2021): Primary service requirement is personal service. */\nstatute_ga_44_7_51_primary_method(personal_service).\n\n/* GA Code  44-7-51(a) (2021): If sheriff unable to serve personally, service may be had by:\n   (1) delivering summons+affidavit to any person sui juris residing on the premises; OR\n   (2) if after reasonable effort no such person is found, by posting on the door AND\n       on the same day mailing by FIRST-CLASS mail to last known address (if any).\n*/\nstatute_ga_44_7_51_permitted_secondary_method(deliver_to_sui_juris_resident).\nstatute_ga_44_7_51_permitted_secondary_method(posting_and_first_class_mail).\n\n/* A more granular representation of what \"posting_and_first_class_mail\" entails */\nstatute_ga_44_7_51_requires_component(posting_and_first_class_mail, posting).\nstatute_ga_44_7_51_requires_component(posting_and_first_class_mail, first_class_mail).\n\n/* Certified mail is NOT listed in GA Code  44-7-51(a) as the mailing method for the posting option. */\nstatute_ga_44_7_51_mailing_method_for_posting_option(first_class_mail).\n\n/* --------------------------------\n   Reasoning helpers (deterministic)\n   -------------------------------- */\n\n/* Determine if a single proposed method is, by itself, a permitted \"secondary method\"\n   under the statute. We model \"secondary method\" as one of the statute-enumerated methods.\n*/\npermitted_secondary_method_under_ga_44_7_51(Method) :-\n    statute_ga_44_7_51_permitted_secondary_method(Method),\n    !.\npermitted_secondary_method_under_ga_44_7_51(_Method) :-\n    fail.\n\n/* Determine whether the scenario's set of proposed methods matches an allowed statutory\n   secondary method. Here, the proposal is \"posting\" + \"certified_mail\", which would need\n   to match \"posting_and_first_class_mail\" to be permitted, but it does not.\n*/\nscenario_proposed_combo_is_permitted_secondary_method :-\n    eviction_action(Case),\n    primary_service_unsuccessful(Case),\n    proposed_secondary_method(Case, posting),\n    proposed_secondary_method(Case, certified_mail),\n    % Check if the proposed combo matches the statute's posting option requirements:\n    statute_ga_44_7_51_requires_component(posting_and_first_class_mail, posting),\n    statute_ga_44_7_51_requires_component(posting_and_first_class_mail, first_class_mail),\n    % The scenario uses certified_mail instead of first_class_mail, so it must fail:\n    proposed_secondary_method(Case, first_class_mail),\n    !.\n\n/* -------------------------\n   Final answer computation\n   ------------------------- */\n\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_proposed_combo_is_permitted_secondary_method,\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n/* ---------------\n   Main entrypoint\n   --------------- */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-0980",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Secondary methods of service are defined as those methods that may be used if the primary method is unsuccessful. Are posting and certified mail permitted secondary methods of service for an eviction action?"
+  }
+}

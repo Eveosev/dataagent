@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 2183,
+  "table": "religion-table09",
+  "structure": "ContentCompound",
+  "question_type": "Numerical Reasoning",
+  "sub_type": "Ranking",
+  "answer": "Jewish",
+  "cot": [
+    {
+      "planning": "Identify the 'Female' column, which is column (6)."
+    },
+    {
+      "planning": "Exclude the omitted category (Christians) and list the odds ratios for all other religious affiliations in this column."
+    },
+    {
+      "planning": "Determine which religious affiliation has the highest odds ratio among these."
+    }
+  ],
+  "case_id": "B01-rht-3819",
+  "expected": {
+    "kind": "answer",
+    "question": "Which religious affiliation has the highest odds ratio for employment in the 'Female' column, excluding Christians?",
+    "answer": "Jewish"
+  }
+}

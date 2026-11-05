@@ -1,0 +1,35 @@
+{
+  "case_id": "B01-mimo-0687",
+  "task_id": "B01",
+  "split_role": "regression",
+  "inputs": [
+    {
+      "kind": "table",
+      "ref": "bench://mimotable/unzipped/data/chinese/spreadsheet/桩单方计算.xlsx",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B01-mimo-0687.json"
+  },
+  "evidence": [
+    "bench://mimotable/unzipped/data/chinese/spreadsheet/桩单方计算.xlsx#workbook"
+  ],
+  "tags": [
+    "chinese",
+    "single file, single sheet, complicate header",
+    "medium table",
+    "op:Lookup"
+  ],
+  "source": "mimo",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

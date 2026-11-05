@@ -1,0 +1,1 @@
+What are the top 3 dates in October 2009 with the highest average temperature for station number 723758, in the format YYYY-MM-DD?

@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 163,
+  "question": "Which away teams are tied for the most away wins in the Scottish Premier League 2009/2010 season?",
+  "evidence": "",
+  "gold_sql": "WITH wins AS ( SELECT m.away_team_api_id, COUNT(*) AS n FROM Match AS m JOIN League AS l ON l.id = m.league_id WHERE l.name = 'Scotland Premier League' AND m.season = '2009/2010' AND m.away_team_goal > m.home_team_goal GROUP BY m.away_team_api_id ) SELECT t.team_long_name FROM wins AS w JOIN Team AS t ON t.team_api_id = w.away_team_api_id WHERE w.n = (SELECT MAX(n) FROM wins) ORDER BY t.team_api_id",
+  "db_id": "european_football_2",
+  "case_id": "B05-bird-0164",
+  "expected": {
+    "kind": "sql",
+    "sql": "WITH wins AS ( SELECT m.away_team_api_id, COUNT(*) AS n FROM Match AS m JOIN League AS l ON l.id = m.league_id WHERE l.name = 'Scotland Premier League' AND m.season = '2009/2010' AND m.away_team_goal > m.home_team_goal GROUP BY m.away_team_api_id ) SELECT t.team_long_name FROM wins AS w JOIN Team AS t ON t.team_api_id = w.away_team_api_id WHERE w.n = (SELECT MAX(n) FROM wins) ORDER BY t.team_api_id",
+    "db_id": "european_football_2",
+    "evidence": ""
+  }
+}

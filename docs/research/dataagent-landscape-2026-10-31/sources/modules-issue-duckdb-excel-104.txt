@@ -1,0 +1,138 @@
+read_xlsx / COPY … (FORMAT xlsx) ignore the 1904 date system (dates 1462 days early) · Issue #104 · duckdb/duckdb-excel · GitHub
+Skip to content
+Navigation Menu
+Sign in
+Products
+Platform
+GitHubRepository hosting, code review, and collaboration
+CopilotAI coding agent for tasks, projects and automated work
+Build & Ship
+ActionsCI/CD and automation
+Code QualityQuality analysis, fixes, and enforcement
+CodespacesCloud development environments
+Secure
+Code SecurityVulnerability detection and remediation
+Secret ProtectionSecret scanning and leak prevention
+All Features
+Developers
+Learn
+Documentation
+Training
+Certifications
+Build
+Build with Copilot
+Customize Copilot
+Integrations
+Explore
+Trending repos
+GitHub Sponsors
+Events
+Changelog
+ChangelogYour source for the latest features, improvements, and fixes across GitHub products, all in one place.
+Businesses
+By Stage
+Enterprises
+Team
+Startups
+Nonprofits
+By Industry
+Healthcare
+Financial services
+Manufacturing
+Government
+See all industries
+Evaluate GitHub
+Why GitHub
+Customer Stories
+Business insights
+Trust Center
+Add-ons
+GitHub Advanced SecurityEnterprise-grade code security
+Copilot for businessEnterprise-grade AI features
+Premium SupportEnterprise-grade 24/7 support
+Resources
+Learn & Connect
+Documentation
+Resource center
+Blog
+Events & webinars
+Community Forum
+Customer Stories
+Integrations
+Support
+Customer support
+Training
+GitHub Status
+Company
+About
+Partners
+Changelog
+GitHub Universe
+GitHub UniverseThe event for developers, by developers — talks, workshops, and what’s next for GitHub.
+Pricing
+Search/
+Sign inSign up
+Appearance settings
+You signed in with another tab or window. Reload to refresh your session.
+You signed out in another tab or window. Reload to refresh your session.
+You switched accounts on another tab or window. Reload to refresh your session.
+Dismiss alert
+{{ message }}
+duckdb
+duckdb-excel
+Repository navigation
+Code
+Issues43 (43)
+Pull requests5 (5)
+Actions
+Projects
+Security and quality
+Insights
+More items
+read_xlsx / COPY … (FORMAT xlsx) ignore the 1904 date system (dates 1462 days early) #104
+New issueCopy link
+New issueCopy link
+Open
+Open
+read_xlsx / COPY … (FORMAT xlsx) ignore the 1904 date system (dates 1462 days early)#104
+Copy link
+Description
+seanspicer
+opened on Oct 6, 2026
+Issue body actions
+What happens
+For a workbook saved with the 1904 date system (<workbookPr date1904="1"/> in xl/workbook.xml, e.g. older Mac Excel files or "Use 1904 date system" checked), date cells are converted with the 1900 epoch. A cell showing 2024-01-01 in Excel reads as 2019-12-31, 1462 days early. Same result from read_xlsx and COPY … FROM 'f.xlsx' (FORMAT xlsx).
+Repro (DuckDB 1.5.4, excel extension f4c72b5)
+In Excel, File → Options → Advanced → "Use 1904 date system", type 2024-01-01 in A2 (header d in A1), save as t1904.xlsx.
+SELECT * FROM read_xlsx('t1904.xlsx'); returns 2019-12-31, expected 2024-01-01.
+Expected
+Honour date1904 from workbookPr when converting serial dates (offset 1462 days).
+Note
+Found in native DuckDB and in DuckDB-WASM (same extension commit).
+Activity
+Sign up for free to join this conversation on GitHub. Already have an account? Sign in to comment
+Metadata
+Metadata
+AssigneesNo one assigned
+LabelsNo labels
+No labels
+TypeNo type
+ProjectsNo projects
+MilestoneNo milestone
+RelationshipsNone yet
+DevelopmentNo branches or pull requests
+Issue actions
+Open in GitHub Copilot app
+Footer
+© 2026 GitHub, Inc.
+Footer navigation
+Terms
+Privacy
+Security
+Status
+Community
+Docs
+Contact
+Manage cookies
+Do not share my personal information
+You can’t perform that action at this time.

@@ -1,0 +1,29 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1051,
+  "table": "economy-table73",
+  "structure": "ColumnHeaderMerge",
+  "question_type": "Numerical Reasoning",
+  "sub_type": "Ranking",
+  "answer": "Cheque, 159; EFTPOS, 146; Cash, 100",
+  "cot": [
+    {
+      "step": "First, we extracted the relevant columns for “Payment Method” and “Amount Received (GST Inc)” from the table."
+    },
+    {
+      "step": "We converted the “Amount Received (GST Inc)” values to numeric to enable calculations."
+    },
+    {
+      "step": "We grouped the transactions by payment method and calculated the total amount received for each method."
+    },
+    {
+      "step": "Finally, we ranked the payment methods based on the total amount received in descending order."
+    }
+  ],
+  "case_id": "B01-rht-2687",
+  "expected": {
+    "kind": "answer",
+    "question": "Rank the payment methods (EFTPOS, Cheque, Cash) based on the total amount received through each method. Provide the rank and the total for each method.",
+    "answer": "Cheque, 159; EFTPOS, 146; Cash, 100"
+  }
+}

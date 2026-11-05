@@ -1,0 +1,302 @@
+{
+  "source": "opendatalab/OmniDocBench",
+  "page_no": 7,
+  "image": "exam_paper_en-file-putnam-archive_2008_Solutions_2008s_page_007.png",
+  "attribute": {
+    "data_source": "exam_paper",
+    "language": "english",
+    "layout": "double_column",
+    "special_issue": [
+      "None"
+    ],
+    "subset": "v1.5"
+  },
+  "reading_order": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    null
+  ],
+  "blocks": [
+    {
+      "category": "text_block",
+      "order": 1,
+      "text": "identity matrix), the bottom right block is $M_{n-2k-1,k}$,\nand the other two blocks are zero. We conclude that"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 2,
+      "latex": "$$\\det(M_{n,k}) \\equiv \\det(M_{n-2k-1,k}) \\pmod{2},$$"
+    },
+    {
+      "category": "text_block",
+      "order": 3,
+      "text": "proving the desired congruence."
+    },
+    {
+      "category": "text_block",
+      "order": 4,
+      "text": "To prove the desired result, we must now check that\n$F_{0,k}, F_{1,k}$ are odd and $F_{2,k}, \\ldots, F_{2k,k}$ are even. For $n=$\n$0, \\ldots, k+1$, the matrix $M_{n,k}$ consists of all ones, so its\ndeterminant is 1 if $n=0,1$ and 0 otherwise. (Alternatively, we have $F_{n,k}=n!$ for $n=0, \\ldots, k+1$, since\nevery permutation of $\\{1, \\ldots, n\\}$ is $k$-limited.) For $n=$\n$k+2, \\ldots, 2k$, observe that rows $k$ and $k+1$ of $M_{n,k}$ both consist of all ones, so $\\det(M_{n,k})=0$ as desired."
+    },
+    {
+      "category": "text_block",
+      "order": 5,
+      "text": "Third solution: (by Tom Belulovich) Define $M_{n,k}$ as in the second solution. We prove $\\det(M_{n,k})$ is odd for $n \\equiv 0, 1 \\pmod{2k+1}$ and even otherwise, by directly determining whether or not $M_{n,k}$ is invertible as a matrix over the field of two elements."
+    },
+    {
+      "category": "text_block",
+      "order": 6,
+      "text": "Let $r_i$ denote row $i$ of $M_{n,k}$. We first check that if $n \\equiv$\n$2, \\ldots, 2k\\pmod{2k+1}$, then $M_{n,k}$ is not invertible. In\nthis case, we can find integers $0 \\leq a < b \\leq k$ such that $n+a+b \\equiv 0\\pmod{2k+1}$. Put $j=(n+a+b)/(2k+$\n$1)$. We can then write the all-ones vector both as"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 7,
+      "latex": "$$ \\sum_{i=0}^{j-1} r_{k+1-a+(2k+1)i} $$"
+    },
+    {
+      "category": "text_block",
+      "order": 8,
+      "text": "and as"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 9,
+      "latex": "$$\\sum_{i=0}^{j-1} r_{k+1-b+(2k+1)i}.$$"
+    },
+    {
+      "category": "text_block",
+      "order": 10,
+      "text": "Hence $M_{n,k}$ is not invertible."
+    },
+    {
+      "category": "text_block",
+      "order": 11,
+      "text": "We next check that if $n \\equiv 0, 1 \\pmod{2k+1}$, then $M_{n,k}$ is invertible. Suppose that $a_1, \\ldots, a_n$ are scalars such that $a_1r_1 + \\cdots + a_nr_n$ is the zero vector. The $m$-th coordinate of this vector equals $a_{m-k} + \\cdots + a_{m+k}$, where\nwe regard $a_i$ as zero if $i \\notin \\{1, \\ldots, n\\}$. By comparing\nconsecutive coordinates, we obtain"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 12,
+      "latex": "$$\na_{m-k} = a_{m+k+1} \\qquad (1 \\leq m < n).\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 13,
+      "text": "In particular, the $a_i$ repeat with period $2k+1$. Taking $m = 1, \\ldots, k$ further yields that"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 14,
+      "latex": "$$\na _ { k + 2 } = \\cdots = a _ { 2 k + 1 } = 0\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 15,
+      "text": "while taking $m = n - k , \\ldots , n - 1$ yields"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 16,
+      "latex": "$$a_{n-2k} = \\cdots = a_{n-1-k} = 0.$$"
+    },
+    {
+      "category": "text_block",
+      "order": 17,
+      "text": "For $n \\equiv 0 \\pmod{2k+1}$, the latter can be rewritten as"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 18,
+      "latex": "$$a_{1} = \\cdots = a_{k} = 0$$"
+    },
+    {
+      "category": "text_block",
+      "order": 19,
+      "text": "whereas for $n \\equiv 1 \\pmod{2k+1}$, it can be rewritten as"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 20,
+      "latex": "$$\na_2 = \\cdots = a_{k+1} = 0.\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 21,
+      "text": "In either case, since we also have"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 22,
+      "latex": "$$\na _ { 1 } + \\cdots + a _ { 2 k + 1 } = 0\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 23,
+      "text": "from the $(k+1)$ -st coordinate, we deduce that all of the $a_i$ must be zero, and so $M_{n,k}$ must be invertible."
+    },
+    {
+      "category": "text_block",
+      "order": 24,
+      "text": "**Remark:** The matrices $M_{n,k}$ are examples of *banded matrices*, which occur frequently in numerical applications of linear algebra. They are also examples of *Toeplitz matrices*."
+    },
+    {
+      "category": "page_number",
+      "order": null,
+      "text": "7"
+    }
+  ],
+  "tables": [],
+  "case_id": "B02-od-1527",
+  "expected": {
+    "kind": "document",
+    "text": "identity matrix), the bottom right block is $M_{n-2k-1,k}$,\nand the other two blocks are zero. We conclude that\n$$\\det(M_{n,k}) \\equiv \\det(M_{n-2k-1,k}) \\pmod{2},$$\nproving the desired congruence.\nTo prove the desired result, we must now check that\n$F_{0,k}, F_{1,k}$ are odd and $F_{2,k}, \\ldots, F_{2k,k}$ are even. For $n=$\n$0, \\ldots, k+1$, the matrix $M_{n,k}$ consists of all ones, so its\ndeterminant is 1 if $n=0,1$ and 0 otherwise. (Alternatively, we have $F_{n,k}=n!$ for $n=0, \\ldots, k+1$, since\nevery permutation of $\\{1, \\ldots, n\\}$ is $k$-limited.) For $n=$\n$k+2, \\ldots, 2k$, observe that rows $k$ and $k+1$ of $M_{n,k}$ both consist of all ones, so $\\det(M_{n,k})=0$ as desired.\nThird solution: (by Tom Belulovich) Define $M_{n,k}$ as in the second solution. We prove $\\det(M_{n,k})$ is odd for $n \\equiv 0, 1 \\pmod{2k+1}$ and even otherwise, by directly determining whether or not $M_{n,k}$ is invertible as a matrix over the field of two elements.\nLet $r_i$ denote row $i$ of $M_{n,k}$. We first check that if $n \\equiv$\n$2, \\ldots, 2k\\pmod{2k+1}$, then $M_{n,k}$ is not invertible. In\nthis case, we can find integers $0 \\leq a < b \\leq k$ such that $n+a+b \\equiv 0\\pmod{2k+1}$. Put $j=(n+a+b)/(2k+$\n$1)$. We can then write the all-ones vector both as\n$$ \\sum_{i=0}^{j-1} r_{k+1-a+(2k+1)i} $$\nand as\n$$\\sum_{i=0}^{j-1} r_{k+1-b+(2k+1)i}.$$\nHence $M_{n,k}$ is not invertible.\nWe next check that if $n \\equiv 0, 1 \\pmod{2k+1}$, then $M_{n,k}$ is invertible. Suppose that $a_1, \\ldots, a_n$ are scalars such that $a_1r_1 + \\cdots + a_nr_n$ is the zero vector. The $m$-th coordinate of this vector equals $a_{m-k} + \\cdots + a_{m+k}$, where\nwe regard $a_i$ as zero if $i \\notin \\{1, \\ldots, n\\}$. By comparing\nconsecutive coordinates, we obtain\n$$\na_{m-k} = a_{m+k+1} \\qquad (1 \\leq m < n).\n$$\nIn particular, the $a_i$ repeat with period $2k+1$. Taking $m = 1, \\ldots, k$ further yields that\n$$\na _ { k + 2 } = \\cdots = a _ { 2 k + 1 } = 0\n$$\nwhile taking $m = n - k , \\ldots , n - 1$ yields\n$$a_{n-2k} = \\cdots = a_{n-1-k} = 0.$$\nFor $n \\equiv 0 \\pmod{2k+1}$, the latter can be rewritten as\n$$a_{1} = \\cdots = a_{k} = 0$$\nwhereas for $n \\equiv 1 \\pmod{2k+1}$, it can be rewritten as\n$$\na_2 = \\cdots = a_{k+1} = 0.\n$$\nIn either case, since we also have\n$$\na _ { 1 } + \\cdots + a _ { 2 k + 1 } = 0\n$$\nfrom the $(k+1)$ -st coordinate, we deduce that all of the $a_i$ must be zero, and so $M_{n,k}$ must be invertible.\n**Remark:** The matrices $M_{n,k}$ are examples of *banded matrices*, which occur frequently in numerical applications of linear algebra. They are also examples of *Toeplitz matrices*.\n7",
+    "tables": [],
+    "blocks": [
+      {
+        "category": "text_block",
+        "order": 1,
+        "text": "identity matrix), the bottom right block is $M_{n-2k-1,k}$,\nand the other two blocks are zero. We conclude that"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 2,
+        "latex": "$$\\det(M_{n,k}) \\equiv \\det(M_{n-2k-1,k}) \\pmod{2},$$"
+      },
+      {
+        "category": "text_block",
+        "order": 3,
+        "text": "proving the desired congruence."
+      },
+      {
+        "category": "text_block",
+        "order": 4,
+        "text": "To prove the desired result, we must now check that\n$F_{0,k}, F_{1,k}$ are odd and $F_{2,k}, \\ldots, F_{2k,k}$ are even. For $n=$\n$0, \\ldots, k+1$, the matrix $M_{n,k}$ consists of all ones, so its\ndeterminant is 1 if $n=0,1$ and 0 otherwise. (Alternatively, we have $F_{n,k}=n!$ for $n=0, \\ldots, k+1$, since\nevery permutation of $\\{1, \\ldots, n\\}$ is $k$-limited.) For $n=$\n$k+2, \\ldots, 2k$, observe that rows $k$ and $k+1$ of $M_{n,k}$ both consist of all ones, so $\\det(M_{n,k})=0$ as desired."
+      },
+      {
+        "category": "text_block",
+        "order": 5,
+        "text": "Third solution: (by Tom Belulovich) Define $M_{n,k}$ as in the second solution. We prove $\\det(M_{n,k})$ is odd for $n \\equiv 0, 1 \\pmod{2k+1}$ and even otherwise, by directly determining whether or not $M_{n,k}$ is invertible as a matrix over the field of two elements."
+      },
+      {
+        "category": "text_block",
+        "order": 6,
+        "text": "Let $r_i$ denote row $i$ of $M_{n,k}$. We first check that if $n \\equiv$\n$2, \\ldots, 2k\\pmod{2k+1}$, then $M_{n,k}$ is not invertible. In\nthis case, we can find integers $0 \\leq a < b \\leq k$ such that $n+a+b \\equiv 0\\pmod{2k+1}$. Put $j=(n+a+b)/(2k+$\n$1)$. We can then write the all-ones vector both as"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 7,
+        "latex": "$$ \\sum_{i=0}^{j-1} r_{k+1-a+(2k+1)i} $$"
+      },
+      {
+        "category": "text_block",
+        "order": 8,
+        "text": "and as"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 9,
+        "latex": "$$\\sum_{i=0}^{j-1} r_{k+1-b+(2k+1)i}.$$"
+      },
+      {
+        "category": "text_block",
+        "order": 10,
+        "text": "Hence $M_{n,k}$ is not invertible."
+      },
+      {
+        "category": "text_block",
+        "order": 11,
+        "text": "We next check that if $n \\equiv 0, 1 \\pmod{2k+1}$, then $M_{n,k}$ is invertible. Suppose that $a_1, \\ldots, a_n$ are scalars such that $a_1r_1 + \\cdots + a_nr_n$ is the zero vector. The $m$-th coordinate of this vector equals $a_{m-k} + \\cdots + a_{m+k}$, where\nwe regard $a_i$ as zero if $i \\notin \\{1, \\ldots, n\\}$. By comparing\nconsecutive coordinates, we obtain"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 12,
+        "latex": "$$\na_{m-k} = a_{m+k+1} \\qquad (1 \\leq m < n).\n$$"
+      },
+      {
+        "category": "text_block",
+        "order": 13,
+        "text": "In particular, the $a_i$ repeat with period $2k+1$. Taking $m = 1, \\ldots, k$ further yields that"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 14,
+        "latex": "$$\na _ { k + 2 } = \\cdots = a _ { 2 k + 1 } = 0\n$$"
+      },
+      {
+        "category": "text_block",
+        "order": 15,
+        "text": "while taking $m = n - k , \\ldots , n - 1$ yields"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 16,
+        "latex": "$$a_{n-2k} = \\cdots = a_{n-1-k} = 0.$$"
+      },
+      {
+        "category": "text_block",
+        "order": 17,
+        "text": "For $n \\equiv 0 \\pmod{2k+1}$, the latter can be rewritten as"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 18,
+        "latex": "$$a_{1} = \\cdots = a_{k} = 0$$"
+      },
+      {
+        "category": "text_block",
+        "order": 19,
+        "text": "whereas for $n \\equiv 1 \\pmod{2k+1}$, it can be rewritten as"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 20,
+        "latex": "$$\na_2 = \\cdots = a_{k+1} = 0.\n$$"
+      },
+      {
+        "category": "text_block",
+        "order": 21,
+        "text": "In either case, since we also have"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 22,
+        "latex": "$$\na _ { 1 } + \\cdots + a _ { 2 k + 1 } = 0\n$$"
+      },
+      {
+        "category": "text_block",
+        "order": 23,
+        "text": "from the $(k+1)$ -st coordinate, we deduce that all of the $a_i$ must be zero, and so $M_{n,k}$ must be invertible."
+      },
+      {
+        "category": "text_block",
+        "order": 24,
+        "text": "**Remark:** The matrices $M_{n,k}$ are examples of *banded matrices*, which occur frequently in numerical applications of linear algebra. They are also examples of *Toeplitz matrices*."
+      },
+      {
+        "category": "page_number",
+        "order": null,
+        "text": "7"
+      }
+    ]
+  }
+}

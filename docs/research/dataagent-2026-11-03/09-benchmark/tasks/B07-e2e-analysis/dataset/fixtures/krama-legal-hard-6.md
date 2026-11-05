@@ -1,0 +1,1 @@
+What is the ratio of reported credit card frauds between 2024 and 2020? (2024 reports ) / (2020 reports) and round to 4 decimal places

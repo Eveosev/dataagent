@@ -1,0 +1,39 @@
+{
+  "case_id": "B05-cwd-0042",
+  "task_id": "B05",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "schema",
+      "ref": "fixtures/cwd-acme.ddl",
+      "digest": null
+    },
+    {
+      "kind": "data",
+      "ref": "bench://cwd/ACME_Insurance/data",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B05-cwd-0042.json"
+  },
+  "evidence": [
+    "bench://cwd/ACME_Insurance/data"
+  ],
+  "tags": [
+    "cwd",
+    "insurance",
+    "bilingual-query"
+  ],
+  "source": "cwd",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

@@ -1,0 +1,1 @@
+How many commit messages are there in repositories that use the 'Shell' programming language and 'apache-2.0' license, where the length of the commit message is more than 5 characters but less than 10,000 characters, and the messages do not start with the word 'merge', 'update' or 'test'?

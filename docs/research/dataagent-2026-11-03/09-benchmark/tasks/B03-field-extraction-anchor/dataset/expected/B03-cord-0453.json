@@ -1,0 +1,282 @@
+{
+  "source": "naver-clova-ix/cord-v2",
+  "split": "train",
+  "index": 61,
+  "gt_parse": {
+    "menu": [
+      {
+        "nm": "Mie Jumbo Pst/bakso",
+        "unitprice": "34.000",
+        "cnt": "2",
+        "price": "68.000"
+      },
+      {
+        "nm": "Bakmie Pst/ Bakso",
+        "unitprice": "26.000",
+        "cnt": "1",
+        "price": "26.000"
+      },
+      {
+        "nm": "Liang Teh",
+        "unitprice": "5.000",
+        "cnt": "2",
+        "price": "10.000"
+      },
+      {
+        "nm": "Es /hagat Jeruk",
+        "unitprice": "10.000",
+        "cnt": "1",
+        "price": "10.000"
+      },
+      {
+        "nm": "Krupuk Babi Bungkus",
+        "unitprice": "20.000",
+        "cnt": "1",
+        "price": "20.000"
+      }
+    ],
+    "sub_total": {
+      "subtotal_price": "134.000",
+      "tax_price": "-"
+    },
+    "total": {
+      "total_price": "134.000",
+      "cashprice": "150.000",
+      "changeprice": "16.000"
+    }
+  },
+  "case_id": "B03-cord-0453",
+  "expected": {
+    "kind": "json",
+    "value": {
+      "menu": [
+        {
+          "nm": "Mie Jumbo Pst/bakso",
+          "unitprice": "34.000",
+          "cnt": "2",
+          "price": "68.000"
+        },
+        {
+          "nm": "Bakmie Pst/ Bakso",
+          "unitprice": "26.000",
+          "cnt": "1",
+          "price": "26.000"
+        },
+        {
+          "nm": "Liang Teh",
+          "unitprice": "5.000",
+          "cnt": "2",
+          "price": "10.000"
+        },
+        {
+          "nm": "Es /hagat Jeruk",
+          "unitprice": "10.000",
+          "cnt": "1",
+          "price": "10.000"
+        },
+        {
+          "nm": "Krupuk Babi Bungkus",
+          "unitprice": "20.000",
+          "cnt": "1",
+          "price": "20.000"
+        }
+      ],
+      "sub_total": {
+        "subtotal_price": "134.000",
+        "tax_price": "-"
+      },
+      "total": {
+        "total_price": "134.000",
+        "cashprice": "150.000",
+        "changeprice": "16.000"
+      }
+    },
+    "fields": {
+      "menu[0].nm": "Mie Jumbo Pst/bakso",
+      "menu[0].unitprice": "34.000",
+      "menu[0].cnt": "2",
+      "menu[0].price": "68.000",
+      "menu[1].nm": "Bakmie Pst/ Bakso",
+      "menu[1].unitprice": "26.000",
+      "menu[1].cnt": "1",
+      "menu[1].price": "26.000",
+      "menu[2].nm": "Liang Teh",
+      "menu[2].unitprice": "5.000",
+      "menu[2].cnt": "2",
+      "menu[2].price": "10.000",
+      "menu[3].nm": "Es /hagat Jeruk",
+      "menu[3].unitprice": "10.000",
+      "menu[3].cnt": "1",
+      "menu[3].price": "10.000",
+      "menu[4].nm": "Krupuk Babi Bungkus",
+      "menu[4].unitprice": "20.000",
+      "menu[4].cnt": "1",
+      "menu[4].price": "20.000",
+      "sub_total.subtotal_price": "134.000",
+      "sub_total.tax_price": "-",
+      "total.total_price": "134.000",
+      "total.cashprice": "150.000",
+      "total.changeprice": "16.000"
+    },
+    "anchored_fields": 0,
+    "no_anchor_fields": 25,
+    "spans": [
+      {
+        "field": "menu[0].nm",
+        "text": "Mie Jumbo Pst/bakso",
+        "page": 1
+      },
+      {
+        "field": "menu[0].unitprice",
+        "text": "34.000",
+        "page": 1
+      },
+      {
+        "field": "menu[0].cnt",
+        "text": "2",
+        "page": 1
+      },
+      {
+        "field": "menu[0].price",
+        "text": "68.000",
+        "page": 1
+      },
+      {
+        "field": "menu[1].nm",
+        "text": "Bakmie Pst/ Bakso",
+        "page": 1
+      },
+      {
+        "field": "menu[1].unitprice",
+        "text": "26.000",
+        "page": 1
+      },
+      {
+        "field": "menu[1].cnt",
+        "text": "1",
+        "page": 1
+      },
+      {
+        "field": "menu[1].price",
+        "text": "26.000",
+        "page": 1
+      },
+      {
+        "field": "menu[2].nm",
+        "text": "Liang Teh",
+        "page": 1
+      },
+      {
+        "field": "menu[2].unitprice",
+        "text": "5.000",
+        "page": 1
+      },
+      {
+        "field": "menu[2].cnt",
+        "text": "2",
+        "page": 1
+      },
+      {
+        "field": "menu[2].price",
+        "text": "10.000",
+        "page": 1
+      },
+      {
+        "field": "menu[3].nm",
+        "text": "Es /hagat Jeruk",
+        "page": 1
+      },
+      {
+        "field": "menu[3].unitprice",
+        "text": "10.000",
+        "page": 1
+      },
+      {
+        "field": "menu[3].cnt",
+        "text": "1",
+        "page": 1
+      },
+      {
+        "field": "menu[3].price",
+        "text": "10.000",
+        "page": 1
+      },
+      {
+        "field": "menu[4].nm",
+        "text": "Krupuk Babi Bungkus",
+        "page": 1
+      },
+      {
+        "field": "menu[4].unitprice",
+        "text": "20.000",
+        "page": 1
+      },
+      {
+        "field": "menu[4].cnt",
+        "text": "1",
+        "page": 1
+      },
+      {
+        "field": "menu[4].price",
+        "text": "20.000",
+        "page": 1
+      },
+      {
+        "field": "sub_total.subtotal_price",
+        "text": "134.000",
+        "page": 1
+      },
+      {
+        "field": "sub_total.tax_price",
+        "text": "-",
+        "page": 1
+      },
+      {
+        "field": "total.total_price",
+        "text": "134.000",
+        "page": 1
+      },
+      {
+        "field": "total.cashprice",
+        "text": "150.000",
+        "page": 1
+      },
+      {
+        "field": "total.changeprice",
+        "text": "16.000",
+        "page": 1
+      }
+    ],
+    "pages": {
+      "menu[0].nm": 1,
+      "menu[0].unitprice": 1,
+      "menu[0].cnt": 1,
+      "menu[0].price": 1,
+      "menu[1].nm": 1,
+      "menu[1].unitprice": 1,
+      "menu[1].cnt": 1,
+      "menu[1].price": 1,
+      "menu[2].nm": 1,
+      "menu[2].unitprice": 1,
+      "menu[2].cnt": 1,
+      "menu[2].price": 1,
+      "menu[3].nm": 1,
+      "menu[3].unitprice": 1,
+      "menu[3].cnt": 1,
+      "menu[3].price": 1,
+      "menu[4].nm": 1,
+      "menu[4].unitprice": 1,
+      "menu[4].cnt": 1,
+      "menu[4].price": 1,
+      "sub_total.subtotal_price": 1,
+      "sub_total.tax_price": 1,
+      "total.total_price": 1,
+      "total.cashprice": 1,
+      "total.changeprice": 1
+    },
+    "evidence_gold": {
+      "source": "cord-valid-line",
+      "version": 1
+    }
+  }
+}

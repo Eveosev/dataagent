@@ -1,0 +1,125 @@
+{
+  "run_id": "x001-2026-11-05",
+  "task_id": "B04",
+  "baseline_run": null,
+  "split_scores": {
+    "development": {
+      "count": 120,
+      "metrics": {
+        "rule_selection_accuracy": {
+          "value": 1.0,
+          "numerator": 120.0,
+          "denominator": 120,
+          "judgeable": 120,
+          "missing": 0,
+          "notes": null
+        },
+        "condition_direction_consistency": {
+          "value": null,
+          "numerator": null,
+          "denominator": 0,
+          "judgeable": 0,
+          "missing": 120,
+          "notes": "金标无配对信息（pair_id/direction）"
+        },
+        "decidability_accuracy": {
+          "value": null,
+          "numerator": null,
+          "denominator": 0,
+          "judgeable": 0,
+          "missing": 120,
+          "notes": "金标无 decidability 三分类标注（DeonticBench 只给 yes/no/unknown）"
+        },
+        "unknown_retention": {
+          "value": null,
+          "numerator": null,
+          "denominator": 0,
+          "judgeable": 0,
+          "missing": 120,
+          "notes": "金标非 unknown，不计入分母"
+        }
+      }
+    },
+    "regression": {
+      "count": 60,
+      "metrics": {
+        "rule_selection_accuracy": {
+          "value": 1.0,
+          "numerator": 60.0,
+          "denominator": 60,
+          "judgeable": 60,
+          "missing": 0,
+          "notes": null
+        },
+        "condition_direction_consistency": {
+          "value": null,
+          "numerator": null,
+          "denominator": 0,
+          "judgeable": 0,
+          "missing": 60,
+          "notes": "金标无配对信息（pair_id/direction）"
+        },
+        "decidability_accuracy": {
+          "value": null,
+          "numerator": null,
+          "denominator": 0,
+          "judgeable": 0,
+          "missing": 60,
+          "notes": "金标无 decidability 三分类标注（DeonticBench 只给 yes/no/unknown）"
+        },
+        "unknown_retention": {
+          "value": null,
+          "numerator": null,
+          "denominator": 0,
+          "judgeable": 0,
+          "missing": 60,
+          "notes": "金标非 unknown，不计入分母"
+        }
+      }
+    },
+    "unseen_acceptance": {
+      "count": 60,
+      "metrics": {
+        "rule_selection_accuracy": {
+          "value": 1.0,
+          "numerator": 60.0,
+          "denominator": 60,
+          "judgeable": 60,
+          "missing": 0,
+          "notes": null
+        },
+        "condition_direction_consistency": {
+          "value": null,
+          "numerator": null,
+          "denominator": 0,
+          "judgeable": 0,
+          "missing": 60,
+          "notes": "金标无配对信息（pair_id/direction）"
+        },
+        "decidability_accuracy": {
+          "value": null,
+          "numerator": null,
+          "denominator": 0,
+          "judgeable": 0,
+          "missing": 60,
+          "notes": "金标无 decidability 三分类标注（DeonticBench 只给 yes/no/unknown）"
+        },
+        "unknown_retention": {
+          "value": null,
+          "numerator": null,
+          "denominator": 0,
+          "judgeable": 0,
+          "missing": 60,
+          "notes": "金标非 unknown，不计入分母"
+        }
+      }
+    }
+  },
+  "deltas": {},
+  "verdict": "pending",
+  "gate": {
+    "tier": "block",
+    "decision": "pending",
+    "blockers": []
+  }
+}

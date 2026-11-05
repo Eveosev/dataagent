@@ -1,0 +1,29 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 2974,
+  "table": "biology-table08",
+  "structure": "MultiColumnClassified",
+  "question_type": "Structure Comprehending",
+  "sub_type": "Structure Comprehending",
+  "answer": null,
+  "cot": [
+    {
+      "Planning": "First, we need to understand that we are to find the combined total counts of Deer mouse and Brush mouse in the ‘Mixed conifer’ forest type, under ‘Burn’ condition, across all replicates, in the Spring season of 2012."
+    },
+    {
+      "Planning": "We need to locate the rows that match these criteria: Forest Type = ‘Mixed conifer’, Fire = ‘Burn’, Season = ‘Spring’, Year = 2012."
+    },
+    {
+      "Planning": "For these rows, extract the counts of Deer mouse and Brush mouse."
+    },
+    {
+      "Planning": "Sum these counts to get the combined total."
+    }
+  ],
+  "case_id": "B01-rht-4610",
+  "expected": {
+    "kind": "answer",
+    "question": "What is the combined total of Deer mouse and Brush mouse counts in Mixed conifer Burn across all replicates in Spring 2012?",
+    "answer": null
+  }
+}

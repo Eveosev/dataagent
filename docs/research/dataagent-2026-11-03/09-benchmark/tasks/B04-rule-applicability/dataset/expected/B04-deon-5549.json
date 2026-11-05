@@ -1,0 +1,24 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "s63_c_7_i_neg",
+  "expect_label": "no",
+  "raw_label": "0",
+  "rule_predicates": [
+    "taxpayer",
+    "taxable_year",
+    "paid",
+    "filing_status",
+    "section63_c_7_i_applies",
+    "between",
+    "basic_standard_deduction_amount",
+    "basic_standard_deduction"
+  ],
+  "reference_prolog": "% --------------------------------------------------------\n% Facts from the case\n% --------------------------------------------------------\n\ntaxpayer(alice).\ntaxable_year(alice, 2019).\npaid(alice, wages, 2019, 33200).\nfiling_status(alice, 2019, head_of_household).\n\n% --------------------------------------------------------\n% Section 63(c): Basic standard deduction\n% --------------------------------------------------------\n\n% Section 63(c)(7)(i): For taxable years 2018 through 2025, the\n% basic standard deduction is increased to $18,000 for a head of household.\nsection63_c_7_i_applies(Year) :-\n    between(2018, 2025, Year).\n\nbasic_standard_deduction_amount(Year, head_of_household, 18000) :-\n    section63_c_7_i_applies(Year).\n\n% Section 63(c)(2)(B): General head-of-household amount of $4,400 applies\n% only when the temporary 2018-2025 rule in section 63(c)(7)(i) does not apply.\nbasic_standard_deduction_amount(Year, head_of_household, 4400) :-\n    \\+ section63_c_7_i_applies(Year).\n\n% A taxpayer's basic standard deduction for a taxable year follows from\n% the taxpayer's filing status for that year.\nbasic_standard_deduction(Taxpayer, Year, Amount) :-\n    taxpayer(Taxpayer),\n    taxable_year(Taxpayer, Year),\n    filing_status(Taxpayer, Year, Status),\n    basic_standard_deduction_amount(Year, Status, Amount).\n\n% --------------------------------------------------------\n% Verification goal:\n% Does Alice's basic standard deduction in 2019 equal $4,400?\n% --------------------------------------------------------\n\nclaim_alice_2019_basic_standard_deduction_is_4400 :-\n    basic_standard_deduction(alice, 2019, 4400).\n\n:- ( claim_alice_2019_basic_standard_deduction_is_4400 -> format('Result: Entailment~n') ; format('Result: Contradiction~n') ).\n:- halt.",
+  "case_id": "B04-deon-5549",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "0",
+    "question": "Under section 63(c)(7)(i), Alice's basic standard deduction in 2019 is equal to $4400."
+  }
+}

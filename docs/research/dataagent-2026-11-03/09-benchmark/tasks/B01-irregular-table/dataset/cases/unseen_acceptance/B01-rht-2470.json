@@ -1,0 +1,35 @@
+{
+  "case_id": "B01-rht-2470",
+  "task_id": "B01",
+  "split_role": "unseen_acceptance",
+  "inputs": [
+    {
+      "kind": "table",
+      "ref": "bench://realthitbench-data/csv/economy-table32.csv",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B01-rht-2470.json"
+  },
+  "evidence": [
+    "bench://realthitbench-data/csv/economy-table32.csv"
+  ],
+  "tags": [
+    "realthitbench",
+    "MultiColumnClassified",
+    "Numerical Reasoning",
+    "ExcelGuru"
+  ],
+  "source": "rht",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

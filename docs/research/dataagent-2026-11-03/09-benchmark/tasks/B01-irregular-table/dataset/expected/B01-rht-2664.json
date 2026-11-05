@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1028,
+  "table": "labor-table32",
+  "structure": "MultiColumnClassified",
+  "question_type": "Data Analysis",
+  "sub_type": "Summary Analysis",
+  "answer": "The table summarizes trip durations for users like OLIVER, SAMRT, MAX, ADAM, LUCAS, and LEWIS. OLIVER had the shortest trip at 3 minutes and 21 seconds, while LEWIS had the longest trip at 30 minutes. Notable patterns include shorter trips for OLIVER and SAMRT and longer trips for LEWIS and ADAM, indicating potential differences in trip purposes or destinations among users.",
+  "cot": [
+    {
+      "step": "First, we need to calculate the trip durations for each user by finding the difference between the departure and arrival times for all trips."
+    },
+    {
+      "step": "We need to identify the longest and shortest trip durations for each user."
+    },
+    {
+      "step": "Finally, we summarize any notable patterns in trip durations for all users based on the calculations."
+    }
+  ],
+  "case_id": "B01-rht-2664",
+  "expected": {
+    "kind": "answer",
+    "question": "Can you summarize the key trends in trip durations for each user, highlighting the longest and shortest trips and any notable patterns?",
+    "answer": "The table summarizes trip durations for users like OLIVER, SAMRT, MAX, ADAM, LUCAS, and LEWIS. OLIVER had the shortest trip at 3 minutes and 21 seconds, while LEWIS had the longest trip at 30 minutes. Notable patterns include shorter trips for OLIVER and SAMRT and longer trips for LEWIS and ADAM, indicating potential differences in trip purposes or destinations among users."
+  }
+}

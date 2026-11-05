@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1962,
+  "table": "energy-table04",
+  "structure": "BackgroundColor",
+  "question_type": "Fact Checking",
+  "sub_type": "Inference-based Fact Checking",
+  "answer": "No",
+  "cot": [
+    {
+      "Planning": "First, we need to locate the rows where “Risk ID” is 310-1 and 310-4, and the “Item Description” is “Motor Drive.”"
+    },
+    {
+      "Planning": "We need to extract the “Failure Mode” values for these two rows."
+    },
+    {
+      "Planning": "Finally, we compare the two “Failure Mode” values to determine if they are the same."
+    }
+  ],
+  "case_id": "B01-rht-3598",
+  "expected": {
+    "kind": "answer",
+    "question": "For “Motor Drive” with Risk IDs 310-1 and 310-4, compare the Failure Modes. Are they the same （Yes or No）?",
+    "answer": "No"
+  }
+}

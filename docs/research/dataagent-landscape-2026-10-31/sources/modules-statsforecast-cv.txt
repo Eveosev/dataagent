@@ -1,0 +1,274 @@
+Cross validation | StatsForecast - Nixtla
+Documentation Index
+Fetch the complete documentation index at: /llms.txt
+Use this file to discover all available pages before exploring further.
+Skip to main content
+Assistant
+Responses are generated using AI and may contain mistakes.
+Missed What's New in the Nixtla Engine? Watch the recording
+Nixtla home page
+Search...⌘KAsk Assistant⌘I
+Search...
+Navigation
+Tutorials
+Cross validation | StatsForecast
+TimeGPT
+StatsForecast
+MLForecast
+NeuralForecast
+HierarchicalForecast
+UtilsForecast
+DatasetsForecast
+SynForecast
+ConformalForecast
+CoreForecast
+Statistical ⚡️ Forecast
+Getting Started
+Install | StatsForecast
+Quick Start | StatsForecast
+End to End Walkthrough | StatsForecast
+End to End Walkthrough with Polars
+Tutorials
+Anomaly Detection
+Conformal Prediction
+Cross validation | StatsForecast
+Electricity Load Forecast | StatsForecast
+Detect Demand Peaks | StatsForecast
+Volatility forecasting (GARCH & ARCH)
+Intermittent or Sparse Data
+MLFlow | StatsForecast
+Multiple seasonalities
+Statistical, Machine Learning and Neural Forecasting methods | StatsForecast
+Probabilistic Forecasting | StatsForecast
+Trajectory Simulation
+How to Guides
+Automatic Time Series Forecasting
+Exogenous Regressors
+Generating features
+Sklearn models
+Distributed
+Dask
+Ray
+Spark
+Experiments
+Amazon Forecast vs StatsForecast
+AutoARIMA Comparison (Prophet and pmdarima)
+AutoARIMAProphet Adapter
+Forecasting at Scale using ETS and ray (M5)
+StatsForecast ETS and Facebook Prophet on Spark (M5)
+Model References
+ADIDA Model
+ARCH Model
+ARIMA Model
+AutoARIMA Model
+AutoCES Model
+AutoETS Model
+AutoRegressive Model
+AutoTheta Model
+Conformal Seasonal Pool (CSP)
+CrostonClassic Model
+CrostonOptimized Model
+CrostonSBA Model
+Dynamic Optimized Theta Model
+Dynamic Standard Theta Model
+GARCH Model
+Holt Model
+Holt Winters Model
+IMAPA Model
+MFLES
+Multiple Seasonal Trend (MSTL)
+Optimized Theta Model
+Seasonal Exponential Smoothing Model
+Seasonal Exponential Smoothing Optimized Model
+Simple Exponential Smoothing Optimized Model
+Simple Exponential Smoothing Model
+Standard Theta Model
+TSB Model
+API Reference
+Core Methods
+Fugue Backend
+Models
+StatsForecast's Models
+Feature engineering | StatsForecast
+Contributing
+How to Contribute
+Writing Documentation
+Interpreting Issue Labels
+Submit an Issue
+Step-by-step Contribution Guide
+Contributing Code to Nixtla Development
+On this pageBack to top
+Introduction
+Install libraries
+Load and explore the data
+Train model
+Perform time series cross-validation
+Evaluate results
+References
+Tutorials
+Cross validation | StatsForecast
+In this example, we’ll implement time series cross-validation to
+evaluate model’s performance.
+Prerequisites
+This tutorial assumes basic familiarity with StatsForecast. For a
+minimal example visit the Quick
+Start
+​
+Introduction
+Time series cross-validation is a method for evaluating how a model
+would have performed in the past. It works by defining a sliding window
+across the historical data and predicting the period following it.
+Statsforecast has an
+implementation of time series cross-validation that is fast and easy to
+use. This implementation makes cross-validation a distributed operation,
+which makes it less time-consuming. In this notebook, we’ll use it on a
+subset of the M4
+Competition
+hourly dataset.
+Outline:
+Install libraries
+Load and explore data
+Train model
+Perform time series cross-validation
+Evaluate results
+Tip
+You can use Colab to run this Notebook interactively
+​
+Install libraries
+We assume that you have StatsForecast already installed. If not, check
+this guide for instructions on how to install
+StatsForecast
+Install the necessary packages with pip install statsforecast
+pip install statsforecast
+import os
+os.environ['NIXTLA_ID_AS_COL'] = '1'
+from statsforecast import StatsForecast # required to instantiate StatsForecast object and use cross-validation method
+/Users/nasaul/nixtla/statsforecast/.venv/lib/python3.9/site-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+from .autonotebook import tqdm as notebook_tqdm
+​
+Load and explore the data
+As stated in the introduction, we’ll use the M4 Competition hourly
+dataset. We’ll first import the data from an URL using pandas.
+import pandas as pd
+Y_df = pd.read_parquet('https://datasets-nixtla.s3.amazonaws.com/m4-hourly.parquet') # load the data
+Y_df.head()
+unique_iddsy
+0H11605.0
+1H12586.0
+2H13586.0
+3H14559.0
+4H15511.0
+The input to StatsForecast is a data frame in long
+format with
+three columns: unique_id, ds and y:
+The unique_id (string, int, or category) represents an identifier
+for the series.
+The ds (datestamp or int) column should be either an integer
+indexing time or a datestamp in format YYYY-MM-DD or YYYY-MM-DD
+HH:MM:SS.
+The y (numeric) represents the measurement we wish to forecast.
+The data in this example already has this format, so no changes are
+needed.
+To keep the time required to execute this notebook to a minimum, we’ll
+only use one time series from the data, namely the one with
+unique_id == 'H1'. However, you can use as many as you want, with no
+additional changes to the code needed.
+df = Y_df[Y_df['unique_id'] == 'H1'] # select time series
+We can plot the time series we’ll work with using StatsForecast.plot
+method.
+StatsForecast.plot(df)
+​
+Train model
+For this example, we’ll use StatsForecast
+AutoETS. We first need to import
+it from statsforecast.models and then we need to instantiate a new
+StatsForecast object.
+The StatsForecast object has the following parameters:
+models: a list of models. Select the models you want from
+models and import them.
+freq: a string indicating the frequency of the data. See panda’s
+available
+frequencies.
+n_jobs: int, number of jobs used in the parallel processing, use -1
+for all cores.
+Any settings are passed into the constructor. Then you call its fit
+method and pass in the historical data frame df.
+from statsforecast.models import AutoETS
+models = [AutoETS(season_length = 24)]
+sf = StatsForecast(
+models = models,
+freq = 1,
+n_jobs = 1
+)
+​
+Perform time series cross-validation
+Once the StatsForecastobject has been instantiated, we can use the
+cross_validation method, which takes the following arguments:
+df: training data frame with StatsForecast format
+h (int): represents the h steps into the future that will be
+forecasted
+step_size (int): step size between each window, meaning how often
+do you want to run the forecasting process.
+n_windows (int): number of windows used for cross-validation,
+meaning the number of forecasting processes in the past you want to
+evaluate.
+For this particular example, we’ll use 3 windows of 24 hours.
+cv_df = sf.cross_validation(
+df = df,
+h = 24,
+step_size = 24,
+n_windows = 3
+)
+The cv_df object is a new data frame that includes the following
+columns:
+unique_id: series identifier
+ds: datestamp or temporal index
+cutoff: the last datestamp or temporal index for the n_windows.
+y: true value
+"model": columns with the model’s name and fitted value.
+cv_df.head()
+unique_iddscutoffyAutoETS
+0H1677676691.0677.761053
+1H1678676618.0607.817879
+2H1679676563.0569.437729
+3H1680676529.0537.340007
+4H1681676504.0515.571123
+We’ll now plot the forecast for each cutoff period. To make the plots
+clearer, we’ll rename the actual values in each period.
+from IPython.display import display
+cv_df.rename(columns = {'y' : 'actual'}, inplace = True) # rename actual values
+cutoff = cv_df['cutoff'].unique()
+for k in range(len(cutoff)):
+cv = cv_df[cv_df['cutoff'] == cutoff[k]]
+display(StatsForecast.plot(df, cv.loc[:, cv.columns != 'cutoff']))
+Notice that in each cutoff period, we generated a forecast for the next
+24 hours using only the data y before said period.
+​
+Evaluate results
+We can now compute the accuracy of the forecast using an appropriate
+accuracy metric. Here we’ll use the Root Mean Squared Error
+(RMSE)..
+from utilsforecast.evaluation import evaluate
+from utilsforecast.losses import rmse
+The function to compute the RMSE takes two arguments:
+The actual values.
+The forecasts, in this case, AutoETS.
+cv_rmse = evaluate(cv_df, metrics=[rmse], models=['AutoETS'], target_col='actual', agg_fn='mean')['AutoETS']
+print(f"RMSE using cross-validation: {cv_rmse:.2f}")
+RMSE using cross-validation: 32.21
+This measure should better reflect the predictive abilities of our
+model, since it used different time periods to test its accuracy.
+Tip
+Cross validation is especially useful when comparing multiple models.
+Here’s an example
+with multiple models and time series.
+​
+References
+Rob J. Hyndman and George Athanasopoulos (2018). “Forecasting
+principles and practice, Time series
+cross-validation”.
+Was this page helpful?
+YesNo
+Conformal Prediction
+Electricity Load Forecast | StatsForecast
+githubslacktwitter

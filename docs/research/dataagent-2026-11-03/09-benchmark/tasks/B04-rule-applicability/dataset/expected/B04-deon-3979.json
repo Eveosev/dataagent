@@ -1,0 +1,30 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_494c8ea8",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_landlord_terminating_tenancy",
+    "scenario_termination_reason",
+    "scenario_tenancy_type",
+    "scenario_manufactured_home_space_only",
+    "statute_nc_42_14_notice_to_quit_required",
+    "valid_tenancy_type",
+    "if",
+    "statute_nc_42_3_forfeiture_for_nonpayment",
+    "number",
+    "nc_requires_notice_to_vacate_before_termination",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program (North Carolina, 2021)\n    Question: Does the law require the landlord to give the tenant notice to vacate\n    prior to terminating a tenancy?\n\n    Statutes encoded:\n      [1] NC Gen Stat  42-3 (2021)  - forfeiture for nonpayment after demand + 10 days\n      [2] NC Gen Stat  42-14 (2021) - notice to quit for certain periodic tenancies;\n                                      special 60-day rule for manufactured home spaces\n*/\n\n/* =========================\n   Scenario (facts)\n   ========================= */\n\nscenario_state(north_carolina).\nscenario_focus_year(2021).\n\n/* Factual statement encoded for this question:\n   - Landlord is terminating a tenancy (ordinary termination, not for nonpayment)\n   - Tenancy is month-to-month\n   - Tenancy does NOT involve only the rental of a space for a manufactured home\n*/\nscenario_landlord_terminating_tenancy(yes).\nscenario_termination_reason(ordinary_termination).\nscenario_tenancy_type(month_to_month).\nscenario_manufactured_home_space_only(no).\n\n/* Helper predicate that succeeds exactly when the scenario facts hold together. */\nscenario_statement :-\n    scenario_state(north_carolina),\n    scenario_focus_year(2021),\n    scenario_landlord_terminating_tenancy(yes),\n    scenario_termination_reason(ordinary_termination),\n    scenario_tenancy_type(month_to_month),\n    scenario_manufactured_home_space_only(no).\n\n/* =========================\n   Statute translations\n   ========================= */\n\n/* ---- [2] NC Gen Stat  42-14 (2021): Notice to quit in certain tenancies ----\n   Encodes minimum notice periods (in days) required to terminate:\n     - year-to-year: one month or more (modeled as >= 30 days)\n     - month-to-month: 7 days\n     - week-to-week: 2 days\n   Provided, however:\n     - if tenancy involves ONLY rental of a space for a manufactured home,\n       notice to quit must be given at least 60 days before end of current rental period,\n       regardless of term.\n*/\nstatute_nc_42_14_notice_to_quit_required(TenancyType, ManufacturedHomeSpaceOnly, MinDaysNotice) :-\n    ManufacturedHomeSpaceOnly == yes,\n    MinDaysNotice = 60,\n    valid_tenancy_type(TenancyType).\nstatute_nc_42_14_notice_to_quit_required(year_to_year, no, 30).\nstatute_nc_42_14_notice_to_quit_required(month_to_month, no, 7).\nstatute_nc_42_14_notice_to_quit_required(week_to_week, no, 2).\n\n/* helper: tenancy types recognized in  42-14 */\nvalid_tenancy_type(year_to_year).\nvalid_tenancy_type(month_to_month).\nvalid_tenancy_type(week_to_week).\n\n/* ---- [1] NC Gen Stat  42-3 (2021): Term forfeited for nonpayment of rent ----\n   Rule summary:\n     - In a lease with a definite time fixed for payment of rent:\n       if (a) lessor makes a demand for all past-due rent, and\n          (b) lessee fails to pay within 10 days after that demand,\n       then forfeiture of the term is implied and lessor may enter/dispossess\n       without having declared forfeiture or reserved right of reentry in the lease.\n\n   This statute centers on demand + 10-day nonpayment (not a \"notice to quit\" requirement).\n*/\nstatute_nc_42_3_forfeiture_for_nonpayment(DefiniteRentDueTimeFixed, DemandMade, DaysAfterDemand, RentPaidWithin10Days, ForfeitureImplied, LessorMayDispossessForthwith) :-\n    ( DefiniteRentDueTimeFixed == yes,\n      DemandMade == yes,\n      number(DaysAfterDemand),\n      DaysAfterDemand >= 10,\n      RentPaidWithin10Days == no\n    ->\n      ForfeitureImplied = yes,\n      LessorMayDispossessForthwith = yes\n    ;\n      ForfeitureImplied = no,\n      LessorMayDispossessForthwith = no\n    ).\n\n/* =========================\n   Legal reasoning helpers\n   ========================= */\n\n/* Determine whether NC law requires a \"notice to quit\" (notice to vacate)\n   prior to terminating a tenancy under the scenario.\n*/\nnc_requires_notice_to_vacate_before_termination(yes) :-\n    scenario_statement,\n    scenario_termination_reason(ordinary_termination),\n    scenario_tenancy_type(TenancyType),\n    scenario_manufactured_home_space_only(MHOnly),\n    statute_nc_42_14_notice_to_quit_required(TenancyType, MHOnly, MinDays),\n    number(MinDays),\n    MinDays > 0,\n    !.\nnc_requires_notice_to_vacate_before_termination(no) :-\n    scenario_statement,\n    \\+ ( scenario_termination_reason(ordinary_termination),\n         scenario_tenancy_type(TenancyType2),\n         scenario_manufactured_home_space_only(MHOnly2),\n         statute_nc_42_14_notice_to_quit_required(TenancyType2, MHOnly2, MinDays2),\n         number(MinDays2),\n         MinDays2 > 0\n       ),\n    !.\n\n/* =========================\n   Final answer\n   ========================= */\n\nhousing_answer(yes) :-\n    nc_requires_notice_to_vacate_before_termination(yes),\n    !.\nhousing_answer(no) :-\n    nc_requires_notice_to_vacate_before_termination(no),\n    !.\n\n/* =========================\n   Main entrypoint\n   ========================= */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-3979",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Does the law require the landlord to give the tenant notice to vacate the property prior to terminating a tenancy?"
+  }
+}

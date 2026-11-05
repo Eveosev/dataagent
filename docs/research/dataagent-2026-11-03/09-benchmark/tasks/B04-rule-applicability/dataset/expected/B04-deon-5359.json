@@ -1,0 +1,24 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "s152_d_2_C_neg",
+  "expect_label": "no",
+  "raw_label": "0",
+  "rule_predicates": [
+    "father_since",
+    "mother",
+    "married_on",
+    "father",
+    "spouse",
+    "parent",
+    "ancestor",
+    "relationship_152d2c"
+  ],
+  "reference_prolog": "/* ---------- Case facts ---------- */\n\nfather_since(charlie, bob, date(1995, 4, 15)).\nmother(dorothy, bob).\n\nmarried_on(alice, charlie, date(2018, 8, 8)).\n\n/* ---------- Derived factual predicates ---------- */\n\nfather(Father, Child) :-\n    father_since(Father, Child, _).\n\nspouse(Person1, Person2) :-\n    married_on(Person1, Person2, _).\nspouse(Person1, Person2) :-\n    married_on(Person2, Person1, _).\n\nparent(Parent, Child) :-\n    father(Parent, Child).\nparent(Parent, Child) :-\n    mother(Parent, Child).\n\nancestor(Ancestor, Descendant) :-\n    parent(Ancestor, Descendant).\nancestor(Ancestor, Descendant) :-\n    parent(Parent, Descendant),\n    ancestor(Ancestor, Parent).\n\n/* ---------- Section 152(d)(2)(C) ---------- */\n/*\n   A person bears the relationship described in section 152(d)(2)(C)\n   to a taxpayer if that person is:\n     - the taxpayer's father,\n     - the taxpayer's mother, or\n     - an ancestor of the taxpayer's father or mother.\n*/\n\nrelationship_152d2c(Person, Taxpayer) :-\n    father(Person, Taxpayer).\nrelationship_152d2c(Person, Taxpayer) :-\n    mother(Person, Taxpayer).\nrelationship_152d2c(Person, Taxpayer) :-\n    father(Father, Taxpayer),\n    ancestor(Person, Father).\nrelationship_152d2c(Person, Taxpayer) :-\n    mother(Mother, Taxpayer),\n    ancestor(Person, Mother).\n\n/* ---------- Query ---------- */\n\n:- ( relationship_152d2c(alice, bob) -> format('Result: Entailment~n') ; format('Result: Contradiction~n') ).\n:- halt.",
+  "case_id": "B04-deon-5359",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "0",
+    "question": "Alice bears a relationship to Bob under section 152(d)(2)(C)."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 270,
+  "question": "We're writing a piece on F1's younger generation and want a number for it: how many drivers born in 1976 or later (born from 1 January 1976 onwards) have ever set the second-fastest lap of a race at any point in the history covered by the data? I just need the single count of such drivers.",
+  "evidence": "By second-fastest lap of a race I mean the driver's own fastest lap in that race was the second quickest among all drivers in that race.",
+  "gold_sql": "SELECT COUNT(DISTINCT T1.driverId) AS driver_count FROM results AS T1 INNER JOIN drivers AS T2 ON T1.driverId = T2.driverId WHERE STRFTIME('%Y', T2.dob) >= '1976' AND T1.rank = 2",
+  "db_id": "formula_1",
+  "case_id": "B05-bird-0271",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT COUNT(DISTINCT T1.driverId) AS driver_count FROM results AS T1 INNER JOIN drivers AS T2 ON T1.driverId = T2.driverId WHERE STRFTIME('%Y', T2.dob) >= '1976' AND T1.rank = 2",
+    "db_id": "formula_1",
+    "evidence": "By second-fastest lap of a race I mean the driver's own fastest lap in that race was the second quickest among all drivers in that race."
+  }
+}

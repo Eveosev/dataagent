@@ -1,0 +1,25 @@
+## Problem:
+
+We need to find the number of ways to assign 10 students to 3 teams with specific roles:
+
+* Team 1: 3 students for research
+* Team 2: 4 students for presentation
+* Team 3: 3 students for documentation
+
+## Step-by-Step Reasoning:
+
+1. **Combinations for Team 1:** We need to choose 3 students out of 10 for Team 1. This can be done in 10C3 ways, which is 10! / (3! * 7!) = 120 ways.
+2. **Combinations for Team 2:** After assigning 3 students to Team 1, we have 7 remaining students. We need to choose 4 students out of these 7 for Team 2. This can be done in 7C4 ways, which is 7! / (4! * 3!) = 35 ways.
+3. **Combinations for Team 3:** With 6 students remaining, the 3 remaining students automatically go to Team 3. There's only 1 way to do this (6C3 = 1).
+4. **Total Combinations:** To find the total number of ways to assign all students to teams, we multiply the combinations for each team: 120 (Team 1) * 35 (Team 2) * 1 (Team 3) = 4200 ways.
+
+## Additional Considerations:
+
+* This solution assumes that the order within each team doesn't matter. If the order within each team matters (e.g., Team Leader, Researcher 1, Researcher 2), the number of combinations would be different.
+* We also assume that students can only be assigned to one team. If students can be assigned to multiple teams, the calculation would be more complex.
+
+## Draft Answer:
+
+There are 4200 different ways to assign 10 students to 3 project teams with specific roles, assuming the order within each team doesn't matter and students can only be assigned to one team. 
+
+This solution involves calculating the combinations for each team and then multiplying them together. For Team 1, there are 120 ways to choose 3 students out of 10. For Team 2, there are 35 ways to choose 4 students out of 7. Finally, for Team 3, there is only 1 way to assign the remaining 3 students. Multiplying these combinations gives us the final answer of 4200.

@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 2726,
+  "table": "agriculture-table01",
+  "structure": "SingleRowClassified",
+  "question_type": "Structure Comprehending",
+  "sub_type": "Structure Comprehending",
+  "answer": null,
+  "cot": [
+    {
+      "planning": "First, we need to locate the row corresponding to \"Agricultural export value\" to find the export values for July and August 2023."
+    },
+    {
+      "planning": "We need to extract the values from the columns labeled \"Jul. 2023\" and \"Aug. 2023\"."
+    },
+    {
+      "planning": "Then, we calculate the percentage increase using the formula: ((August value - July value) / July value) * 100."
+    }
+  ],
+  "case_id": "B01-rht-4362",
+  "expected": {
+    "kind": "answer",
+    "question": "What is the percentage increase in agricultural export value from July to August 2023?",
+    "answer": null
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "case_id": "B03-eb-0251",
+  "task_id": "B03",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://extractbench/docs/short/viega_price_list_propress_2026_corrupted.pdf",
+      "digest": null
+    },
+    {
+      "kind": "schema",
+      "ref": "fixtures/eb-short-viega_price_list_propress_2026_corrupted-schema.json",
+      "digest": null
+    },
+    {
+      "kind": "rules",
+      "ref": "fixtures/eb-short-viega_price_list_propress_2026_corrupted-rules.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-eb-0251.json"
+  },
+  "evidence": [
+    "bench://extractbench/docs/short/viega_price_list_propress_2026_corrupted.pdf",
+    "fixtures/eb-short-viega_price_list_propress_2026_corrupted-schema.json",
+    "fixtures/eb-short-viega_price_list_propress_2026_corrupted-rules.md"
+  ],
+  "tags": [
+    "extractbench",
+    "short",
+    "tag:source:real",
+    "tag:challenge:T1.a",
+    "tag:challenge:T1.b",
+    "tag:perception:P1",
+    "tag:structure:S3",
+    "tag:length:short",
+    "tag:slice:task_slice",
+    "tag:domain:D5",
+    "fields:4"
+  ],
+  "source": "eb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

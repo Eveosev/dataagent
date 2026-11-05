@@ -1,0 +1,67 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "databricks",
+  "pipeline": "donor",
+  "data_model": {
+    "models": [
+      {
+        "name": "donor__projects",
+        "description": "Each record represents a donor project.",
+        "columns": [
+          {
+            "name": "project_id",
+            "description": "Unique identifier for the project."
+          },
+          {
+            "name": "school_city",
+            "description": "The city where the school is located."
+          },
+          {
+            "name": "school_id",
+            "description": "Unique identifier for the school where the teacher who created a project works."
+          },
+          {
+            "name": "percentage_lacking_amount_total",
+            "description": "The percentage of the total amount that is lacking for the project, including the optional price of the project. Leave NULL if the project cost including optional tip is 0."
+          },
+          {
+            "name": "total_price_of_resources",
+            "description": "The total price of the resources needed for the project, replace NULL values with 0."
+          },
+          {
+            "name": "has_resources_provided_by_LLM",
+            "description": "Set to 1 if the project has resources provided by 'Lakeshore Learning Materials', otherwise, set to 0"
+          },
+          {
+            "name": "item_cost_most",
+            "description": "The item with the most cost in the project, with ties broken by the ascending order of the item name"
+          },
+          {
+            "name": "avg_amount_donation",
+            "description": "The average amount of donation for the project, excluding optional support (tip)."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    databricks_definition_id: 072d5540-f236-4294-ba7c-ade8fd918496\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://donor-bucket/essays.jsonl\n    sync_mode: full_refresh_append\n    table: essays\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: donor\n    sync_mode: full_refresh_append\n    tables:\n    - donations\n    - projects\npostgres:\n  config:\n    database: donor\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - resources\n    user: postgres\ndatabricks:\n  config:\n    database: <db_database>\n    hostname: <db_hostname>\n    client_id: <db_client_id>\n    secret: <db_secret>\n    schema: donor\n    http_path: <db_path>\n",
+  "case_id": "B14-elt-0027",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "donor__projects",
+        "columns": [
+          "project_id",
+          "school_city",
+          "school_id",
+          "percentage_lacking_amount_total",
+          "total_price_of_resources",
+          "has_resources_provided_by_LLM",
+          "item_cost_most",
+          "avg_amount_donation"
+        ]
+      }
+    ]
+  }
+}

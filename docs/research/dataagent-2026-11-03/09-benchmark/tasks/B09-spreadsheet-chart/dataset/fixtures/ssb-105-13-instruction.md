@@ -1,0 +1,1 @@
+How can I use VBA to filter data from a multi-column range on a 'Source' worksheet based on criteria in a specific cell or range of cells from a 'Calculation' worksheet, and then output the filtered results into specified corresponding cells or ranges on the 'Calculation' worksheet, for up to 16 columns, without the performance issues associated with volatile functions?

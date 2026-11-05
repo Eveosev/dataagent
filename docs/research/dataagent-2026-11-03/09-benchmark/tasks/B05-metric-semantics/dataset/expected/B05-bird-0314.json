@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 313,
+  "question": "Our officer team wants to settle a debate about whether we pull more weight than the rest of the club, so we need the attendance numbers before the next meeting. Could you tell us two things: the average number of events attended per officer, and the average number of events attended per other student, each rounded to two decimal places? To be clear on who counts where: officers are the members holding the position of President, Vice President, Secretary, or Treasurer, and everyone else in the club counts as an other student. Each average should cover every member of its group, and include every event in the club's records - there's no date cutoff.",
+  "evidence": "",
+  "gold_sql": "WITH t AS (SELECT m.member_id, m.position, COUNT(a.link_to_event) AS cnt FROM member m LEFT JOIN attendance a ON a.link_to_member = m.member_id GROUP BY m.member_id, m.position) SELECT ROUND(AVG(CASE WHEN t.position IN ('President','Vice President','Secretary','Treasurer') THEN t.cnt END), 2) AS officer_avg, ROUND(AVG(CASE WHEN t.position NOT IN ('President','Vice President','Secretary','Treasurer') THEN t.cnt END), 2) AS other_students_avg FROM t",
+  "db_id": "student_club",
+  "case_id": "B05-bird-0314",
+  "expected": {
+    "kind": "sql",
+    "sql": "WITH t AS (SELECT m.member_id, m.position, COUNT(a.link_to_event) AS cnt FROM member m LEFT JOIN attendance a ON a.link_to_member = m.member_id GROUP BY m.member_id, m.position) SELECT ROUND(AVG(CASE WHEN t.position IN ('President','Vice President','Secretary','Treasurer') THEN t.cnt END), 2) AS officer_avg, ROUND(AVG(CASE WHEN t.position NOT IN ('President','Vice President','Secretary','Treasurer') THEN t.cnt END), 2) AS other_students_avg FROM t",
+    "db_id": "student_club",
+    "evidence": ""
+  }
+}

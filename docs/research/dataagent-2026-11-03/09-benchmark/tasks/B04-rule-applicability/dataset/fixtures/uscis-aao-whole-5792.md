@@ -1,0 +1,19 @@
+# uscis-aao / whole
+
+## 制度原文
+
+To qualify for the underlying EB-2 visa classification, a petitioner must establish they are an advanced degree professional or an individual of exceptional ability in the sciences, arts, or business. Section 203(b)(2)(A) of the Act. An advanced degree is any U.S. academic or professional degree or a foreign equivalent degree above that of a bachelor's degree. A U.S. bachelor's degree or foreign equivalent degree followed by five years of progressive experience in the specialty is the equivalent of a master's degree. 8 C.F.R . § 204.5(k)(2). If a petitioner establishes eligibility for the underlying EB-2 classification, they must then demonstrate that they merit a discretionary waiver of the job offer requirement "in the national interest." Section 203(b )(2)(B)(i) of the Act. While neither the statute nor the pertinent regulations define the term "national interest," Matter of Dhanasar, 26 I&N Dec. 884, 889 (AAO 2016), provides the framework for adjudicating national interest waiver petitions. Dhanasar states that U.S. Citizenship
+
+and Immigration Services (USCIS) may, as matter of discretion, 1 grant a national interest waiver if the petitioner demonstrates that: • The proposed endeavor has both substantial merit and national importance; • The individual is well-positioned to advance their proposed endeavor; and • On balance, waiving the job offer requirement would benefit the United States. Id.
+
+## 事实
+
+The petitioner filed Form I-140 seeking EB-2 classification and a national interest waiver. In her initial filing she stated she intended to work as a general and operations manager in the United States, advising U.S. companies across a variety of industries on planning, directing, and coordinating operations, with particular emphasis on helping companies doing business or planning to do business internationally. She submitted a personal statement, letters of recommendation, industry articles about the field of general and operations managers and the role of operations and innovation in business growth, and an offer letter from a U.S. consulting company indicating its intent to employ her as director of operations.
+
+After receiving a request for evidence asking for clarification of the proposed endeavor and its national importance, the petitioner responded that she intended to operate her own consulting company (name redacted) to offer international relations, foreign trade, and business development consulting to U.S. companies. She submitted a business plan describing services and plans to create “value chains between Turkey and the United States” by providing business consultancy to Turkish companies planning to establish operations in the U.S. and to U.S. companies establishing operations in Turkey. The business plan indicated the company would be based in Florida, that the petitioner would serve as its chief executive officer and head consultant, and that she planned to organize trade events to connect U.S. and Turkish companies; the plan also included employment and revenue projections.
+
+The record also contains an expert opinion letter and additional recommendation letters addressing the petitioner’s experience and qualifications. On appeal, the petitioner did not contest the finding that her RFE business plan represented a material change to the originally stated endeavor. Instead, in her appellate brief she generally asserted that the director did not apply the correct standard of proof and “imposed novel substantive and evidentiary requirements,” though she did not identify specific examples of those errors. Her brief largely reiterated the arguments and documentation submitted in response to the RFE and asserted that her education and professional experience would benefit U.S. companies needing her specialized operations and management skills.
+
+## 问题
+
+Should this case be accepted or dismissed?

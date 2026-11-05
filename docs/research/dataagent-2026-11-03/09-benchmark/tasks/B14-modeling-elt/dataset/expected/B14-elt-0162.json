@@ -1,0 +1,356 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "redshift",
+  "pipeline": "pinterest",
+  "data_model": {
+    "models": [
+      {
+        "name": "pinterest_ads__ad_group_report",
+        "description": "Each record in this table represents the daily performance of ads at the campaign, advertiser, and ad group level.",
+        "columns": [
+          {
+            "name": "date_day",
+            "description": "The performance date of the record.",
+            "format": "YYYY-MM-DD"
+          },
+          {
+            "name": "advertiser_name",
+            "description": "Name of the advertiser."
+          },
+          {
+            "name": "advertiser_id",
+            "description": "The ID of the related Advertiser."
+          },
+          {
+            "name": "campaign_name",
+            "description": "The name of the related Campaign."
+          },
+          {
+            "name": "campaign_status",
+            "description": "Status of the campaign."
+          },
+          {
+            "name": "campaign_id",
+            "description": "The ID of the related Campaign."
+          },
+          {
+            "name": "ad_group_name",
+            "description": "The name of the related Ad group."
+          },
+          {
+            "name": "ad_group_id",
+            "description": "The ID of the related Ad group."
+          },
+          {
+            "name": "created_at",
+            "description": "Ad group creation time.",
+            "format": "YYYY-MM-DD HH:MM:SS.fff"
+          },
+          {
+            "name": "start_time",
+            "description": "Ad group start time.",
+            "format": "YYYY-MM-DD HH:MM:SS.fff"
+          },
+          {
+            "name": "end_time",
+            "description": "Ad group end time."
+          },
+          {
+            "name": "ad_group_status",
+            "description": "Status of the ad group."
+          },
+          {
+            "name": "spend",
+            "description": "The amount of spend that occurred on the day of the record. Convert the unit to dollars. Set to 0 if the value is NULL."
+          },
+          {
+            "name": "clicks",
+            "description": "The number of paid and earned clicks that occurred on the day of the record. Set to 0 if the value is NULL."
+          },
+          {
+            "name": "impressions",
+            "description": "The number of paid and earned impressions that occurred on the day of the record. Set to 0 if the value is NULL."
+          },
+          {
+            "name": "total_conversions",
+            "description": "This is the sum of all website conversions, otherwise known as the number of conversion events. For example, if you track sign-ups and checkouts on your website, it's the sum of all sign-ups and checkouts attributed from clicks, engagements, and views on Pinterest. Example, If a user clicks on a Pinterest ad and completes two different conversion actions (e.g., signs up and checks out), this would be counted as 2 total conversions. Set to 0 if the value is NULL."
+          },
+          {
+            "name": "total_conversions_quantity",
+            "description": "Refers to the total count of items or units involved in the conversions. This metric is often more granular and relates to the specific quantity of products or services purchased or actions taken. Example, If a single checkout includes three items, the total_conversions_quantity would be 3, even though it counts as one total_conversion. Set to 0 if the value is NULL."
+          },
+          {
+            "name": "total_conversions_value",
+            "description": "Total conversions order value. The total value of the conversions, calculated by summing up the revenue or order values attributed to conversions. Converted from the source total_conversions_value_in_micro_dollar field. Convert the unit to dollars. Set to 0 if the value is NULL."
+          }
+        ]
+      },
+      {
+        "name": "pinterest_ads__campaign_report",
+        "description": "Each record in this table represents the daily performance of ads at the advertiser and campaign level.",
+        "columns": [
+          {
+            "name": "date_day",
+            "description": "The performance date of the record.",
+            "format": "YYYY-MM-DD"
+          },
+          {
+            "name": "advertiser_name",
+            "description": "Name of the advertiser."
+          },
+          {
+            "name": "advertiser_id",
+            "description": "The ID of the related Advertiser."
+          },
+          {
+            "name": "campaign_name",
+            "description": "The name of the related Campaign."
+          },
+          {
+            "name": "campaign_id",
+            "description": "The ID of the related Campaign."
+          },
+          {
+            "name": "campaign_status",
+            "description": "Status of the campaign."
+          },
+          {
+            "name": "spend",
+            "description": "The amount of spend that occurred on the day of the record. Convert the unit to dollars. Set to 0 if the value is NULL."
+          },
+          {
+            "name": "clicks",
+            "description": "The number of paid and earned clicks that occurred on the day of the record. Set to 0 if the value is NULL."
+          },
+          {
+            "name": "impressions",
+            "description": "The number of paid and earned impressions that occurred on the day of the record. Set to 0 if the value is NULL."
+          },
+          {
+            "name": "total_conversions",
+            "description": "This is the sum of all website conversions, otherwise known as the number of conversion events. For example, if you track sign-ups and checkouts on your website, it's the sum of all sign-ups and checkouts attributed from clicks, engagements, and views on Pinterest. Example, If a user clicks on a Pinterest ad and completes two different conversion actions (e.g., signs up and checks out), this would be counted as 2 total conversions. Set to 0 if the value is NULL."
+          },
+          {
+            "name": "total_conversions_quantity",
+            "description": "Refers to the total count of items or units involved in the conversions. This metric is often more granular and relates to the specific quantity of products or services purchased or actions taken. Example, If a single checkout includes three items, the total_conversions_quantity would be 3, even though it counts as one total_conversion. Set to 0 if the value is NULL."
+          },
+          {
+            "name": "total_conversions_value",
+            "description": "Total conversions order value. The total value of the conversions, calculated by summing up the revenue or order values attributed to conversions. Converted from the source total_conversions_value_in_micro_dollar field. Convert the unit to dollars. Set the value to 0 if it is NULL."
+          }
+        ]
+      },
+      {
+        "name": "pinterest_ads__advertiser_report",
+        "description": "Each record in this table represents the daily performance of an advertiser on the Pinterest Ads platform.",
+        "columns": [
+          {
+            "name": "date_day",
+            "description": "The performance date of the record.",
+            "format": "YYYY-MM-DD"
+          },
+          {
+            "name": "advertiser_name",
+            "description": "Name of the advertiser."
+          },
+          {
+            "name": "advertiser_id",
+            "description": "The ID of the related Advertiser."
+          },
+          {
+            "name": "currency_code",
+            "description": "The currency code which the advertiser is set up using."
+          },
+          {
+            "name": "country",
+            "description": "The country code where the advertiser is located."
+          },
+          {
+            "name": "spend",
+            "description": "The amount of spend that occurred on the day of the record. Convert the unit to dollars. Set to 0 if the value is NULL."
+          },
+          {
+            "name": "clicks",
+            "description": "The number of paid and earned clicks that occurred on the day of the record. Set the value to 0 if it is NULL."
+          },
+          {
+            "name": "impressions",
+            "description": "The number of paid and earned impressions that occurred on the day of the record. Set the value to 0 if it is NULL."
+          },
+          {
+            "name": "total_conversions",
+            "description": "This is the sum of all website conversions, otherwise known as the number of conversion events. For example, if you track sign-ups and checkouts on your website, it's the sum of all sign-ups and checkouts attributed from clicks, engagements, and views on Pinterest. Example, If a user clicks on a Pinterest ad and completes two different conversion actions (e.g., signs up and checks out), this would be counted as 2 total conversions. Set the value to 0 if it is NULL."
+          },
+          {
+            "name": "total_conversions_quantity",
+            "description": "Refers to the total count of items or units involved in the conversions. This metric is often more granular and relates to the specific quantity of products or services purchased or actions taken. Example, If a single checkout includes three items, the total_conversions_quantity would be 3, even though it counts as one total_conversion. Set the value to 0 if it is NULL."
+          },
+          {
+            "name": "total_conversions_value",
+            "description": "Total conversions order value. The total value of the conversions, calculated by summing up the revenue or order values attributed to conversions. Converted from the source total_conversions_value_in_micro_dollar field. Convert the unit to dollars. Set to 0 if the value is NULL."
+          }
+        ]
+      },
+      {
+        "name": "pinterest_ads__keyword_report",
+        "description": "Each record in this table represents the daily performance of a keyword at the advertiser, campaign, ad group, and keyword level.",
+        "columns": [
+          {
+            "name": "date_day",
+            "description": "The performance date of the record.",
+            "format": "YYYY-MM-DD"
+          },
+          {
+            "name": "advertiser_name",
+            "description": "Name of the advertiser."
+          },
+          {
+            "name": "advertiser_id",
+            "description": "The ID of the related Advertiser."
+          },
+          {
+            "name": "campaign_name",
+            "description": "Name of the campaign."
+          },
+          {
+            "name": "campaign_id",
+            "description": "The ID of the related Campaign."
+          },
+          {
+            "name": "ad_group_name",
+            "description": "Name of the ad group."
+          },
+          {
+            "name": "ad_group_id",
+            "description": "The ID of the related Ad group."
+          },
+          {
+            "name": "keyword_id",
+            "description": "Unique identifier of the keyword."
+          },
+          {
+            "name": "match_type",
+            "description": "Type of match the keyword is tied to. Either Exact or Broad."
+          },
+          {
+            "name": "parent_type",
+            "description": "Identifier of what grain the parent type is. Ad group or campaign."
+          },
+          {
+            "name": "keyword_value",
+            "description": "The text value that makes up the keyword."
+          },
+          {
+            "name": "spend",
+            "description": "The amount of spend that occurred on the day of the record. Convert the unit to dollars. Set to 0 if the value is NULL."
+          },
+          {
+            "name": "clicks",
+            "description": "The number of paid and earned clicks that occurred on the day of the record. Set the value to 0 if it is NULL."
+          },
+          {
+            "name": "impressions",
+            "description": "The number of paid and earned impressions that occurred on the day of the record. Set the value to 0 if it is NULL."
+          },
+          {
+            "name": "total_conversions",
+            "description": "This is the sum of all website conversions, otherwise known as the number of conversion events. For example, if you track sign-ups and checkouts on your website, it's the sum of all sign-ups and checkouts attributed from clicks, engagements, and views on Pinterest. Example, If a user clicks on a Pinterest ad and completes two different conversion actions (e.g., signs up and checks out), this would be counted as 2 total conversions. Set the value to 0 if it is NULL."
+          },
+          {
+            "name": "total_conversions_quantity",
+            "description": "Refers to the total count of items or units involved in the conversions. This metric is often more granular and relates to the specific quantity of products or services purchased or actions taken. Example, If a single checkout includes three items, the total_conversions_quantity would be 3, even though it counts as one total_conversion. Set the value to 0 if it is NULL."
+          },
+          {
+            "name": "total_conversions_value",
+            "description": "Total conversions order value. The total value of the conversions, calculated by summing up the revenue or order values attributed to conversions. Converted from the source total_conversions_value_in_micro_dollar field. Convert the unit to dollars. Set to 0 if the value is NULL."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    redshift_definition_id: f7a7d195-377f-cf5b-70a5-be6b819019dc\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://pinterest-bucket/keyword_history.csv\n    sync_mode: full_refresh_append\n    table: keyword_history\n  - path: s3://pinterest-bucket/pin_promotion_report.jsonl\n    sync_mode: full_refresh_append\n    table: pin_promotion_report\n  - path: s3://pinterest-bucket/ad_group_history.csv\n    sync_mode: full_refresh_append\n    table: ad_group_history\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - ad_group_report\n    - pin_promotion_history\nflat_files:\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=1HePjMTquPXHJ53E99Zd6GLQ5Ze5UaWsv\n  sync_mode: full_refresh_append\n  table: advertiser_history\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: pinterest\n    sync_mode: full_refresh_append\n    tables:\n    - keyword_report\npostgres:\n  config:\n    database: pinterest\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - advertiser_report\n    - campaign_history\n    - campaign_report\n    user: postgres\nredshift:\n  config:\n    host: <redshift_hostname>\n    port: <redshift_port>\n    database: <redshift_db>\n    username: <redshift_username>\n    password: <redshift_pwd>\n    schema: pinterest\n    s3_bucket_name: <redshift_s3_bucket>\n    s3_bucket_region: <redshift_s3_region>\n    access_key_id: <redshift_s3_access_key>\n    secret_access_key: <redshift_s3_secret_key>\n",
+  "case_id": "B14-elt-0162",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "pinterest_ads__ad_group_report",
+        "columns": [
+          "date_day",
+          "advertiser_name",
+          "advertiser_id",
+          "campaign_name",
+          "campaign_status",
+          "campaign_id",
+          "ad_group_name",
+          "ad_group_id",
+          "created_at",
+          "start_time",
+          "end_time",
+          "ad_group_status",
+          "spend",
+          "clicks",
+          "impressions",
+          "total_conversions",
+          "total_conversions_quantity",
+          "total_conversions_value"
+        ]
+      },
+      {
+        "name": "pinterest_ads__campaign_report",
+        "columns": [
+          "date_day",
+          "advertiser_name",
+          "advertiser_id",
+          "campaign_name",
+          "campaign_id",
+          "campaign_status",
+          "spend",
+          "clicks",
+          "impressions",
+          "total_conversions",
+          "total_conversions_quantity",
+          "total_conversions_value"
+        ]
+      },
+      {
+        "name": "pinterest_ads__advertiser_report",
+        "columns": [
+          "date_day",
+          "advertiser_name",
+          "advertiser_id",
+          "currency_code",
+          "country",
+          "spend",
+          "clicks",
+          "impressions",
+          "total_conversions",
+          "total_conversions_quantity",
+          "total_conversions_value"
+        ]
+      },
+      {
+        "name": "pinterest_ads__keyword_report",
+        "columns": [
+          "date_day",
+          "advertiser_name",
+          "advertiser_id",
+          "campaign_name",
+          "campaign_id",
+          "ad_group_name",
+          "ad_group_id",
+          "keyword_id",
+          "match_type",
+          "parent_type",
+          "keyword_value",
+          "spend",
+          "clicks",
+          "impressions",
+          "total_conversions",
+          "total_conversions_quantity",
+          "total_conversions_value"
+        ]
+      }
+    ]
+  }
+}

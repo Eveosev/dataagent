@@ -1,0 +1,743 @@
+{
+  "$defs": {
+    "CodedEntry": {
+      "type": "object",
+      "title": "Coded box entry",
+      "properties": {
+        "code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Code",
+          "description": "The single-letter (or short) code printed at the left of the entry inside this Part III box, verbatim uppercase as printed (e.g. 'A', 'C', 'AC'). Identifies the row: entries in a coded box are aligned by this code at eval time, not by position. Null only if an amount prints with no code."
+        },
+        "amount": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Amount",
+          "description": "[no-anchor] The dollar amount printed beside the code in this box (the printed label anchor is the box header on the parent array, e.g. '15 Credits'). JSON number exactly as printed with any thousands comma removed; a loss/negative prints in parentheses or with a leading minus and is negative; null if a code prints with no amount. Some codes (e.g. box 16 foreign-transaction country lines) carry text rather than a number — null the amount when the entry value is non-numeric."
+        }
+      }
+    }
+  },
+  "type": "object",
+  "title": "Schedule K-1 (Form 1065) Partner's Share of Income, Deductions, Credits, etc.",
+  "properties": {
+    "final_k1": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Final K-1",
+      "description": "The 'Final K-1' checkbox at the top of the form. TWO-STATE: true only if a mark is printed inside the box; false otherwise, including blank. Never return null."
+    },
+    "amended_k1": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Amended K-1",
+      "description": "The 'Amended K-1' checkbox at the top of the form. TWO-STATE: true only if a mark is printed inside the box; false otherwise, including blank. Never return null."
+    },
+    "partnership_ein": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Partnership EIN",
+      "description": "Item A 'Partnership's employer identification number', verbatim including the hyphen, e.g. '26-3839121'."
+    },
+    "partnership_name": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Partnership name",
+      "description": "The partnership name printed in item B 'Partnership's name, address, city, state, and ZIP code' (the name line before the address), verbatim, e.g. 'Pine Harbour Water Utilities LLC'."
+    },
+    "partnership_address": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Partnership address",
+      "description": "The partnership mailing address in item B, below the name; join street and city/state/ZIP lines with ', ', e.g. 'P O BOX 447, Fruitland Park FL 34731'."
+    },
+    "irs_center": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "IRS Center",
+      "description": "Item C 'IRS Center where partnership filed return', verbatim as printed, e.g. 'OGDEN'."
+    },
+    "is_publicly_traded_partnership": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Publicly traded partnership (PTP)",
+      "description": "Item D 'Check if this is a publicly traded partnership (PTP)'. TWO-STATE: true only if the box is marked; false otherwise, including blank. Never return null."
+    },
+    "partner_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Partner identifying number",
+      "description": "Item E 'Partner's identifying number' (SSN or EIN), verbatim as printed including any hyphens, e.g. '288-56-3387'."
+    },
+    "partner_name": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Partner name",
+      "description": "The partner name in item F 'Partner's name, address, city, state, and ZIP code' (name line), verbatim, e.g. 'ROBERT STEWART'."
+    },
+    "partner_address": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Partner address",
+      "description": "The partner mailing address in item F, below the name; join lines with ', ', e.g. 'P O BOX 447, Fruitland Park FL 34731'."
+    },
+    "is_general_partner": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "General partner",
+      "description": "Item G partner-type pair: true if the 'General partner or LLC member-manager' box is marked, false if the 'Limited partner or other LLC member' box is marked (mutually exclusive — one field). Never return null."
+    },
+    "is_domestic_partner": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Domestic partner",
+      "description": "Item H partner-type pair: true if the 'Domestic partner' box is marked, false if the 'Foreign partner' box is marked (mutually exclusive — one field). Never return null."
+    },
+    "partner_entity_type": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Partner entity type",
+      "description": "Item I 'What type of entity is this partner?', verbatim as printed, e.g. 'INDIVIDUAL', 'INDIVIDUAL PASSIVE', 'CORPORATION'; null if blank."
+    },
+    "profit_share_beginning": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Profit share beginning",
+      "description": "Item J 'Partner's share of profit, loss, and capital': the Beginning percentage on the 'Profit' row. JSON number of the printed percent, e.g. 33.3333; null if blank."
+    },
+    "profit_share_ending": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Profit share ending",
+      "description": "Item J 'Partner's share of profit, loss, and capital': the Ending percentage on the 'Profit' row. JSON number of the printed percent, e.g. 33.3333; null if blank."
+    },
+    "loss_share_beginning": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Loss share beginning",
+      "description": "Item J 'Partner's share of profit, loss, and capital': the Beginning percentage on the 'Loss' row. JSON number of the printed percent, e.g. 33.3333; null if blank."
+    },
+    "loss_share_ending": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Loss share ending",
+      "description": "Item J 'Partner's share of profit, loss, and capital': the Ending percentage on the 'Loss' row. JSON number of the printed percent, e.g. 33.3333; null if blank."
+    },
+    "capital_share_beginning": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Capital share beginning",
+      "description": "Item J 'Partner's share of profit, loss, and capital': the Beginning percentage on the 'Capital' row. JSON number of the printed percent, e.g. 33.3333; null if blank."
+    },
+    "capital_share_ending": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Capital share ending",
+      "description": "Item J 'Partner's share of profit, loss, and capital': the Ending percentage on the 'Capital' row. JSON number of the printed percent, e.g. 33.3333; null if blank."
+    },
+    "liability_nonrecourse": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Nonrecourse liabilities",
+      "description": "Item K 'Partner's share of liabilities at year end': the 'Nonrecourse' amount. JSON number; null if blank."
+    },
+    "liability_qualified_nonrecourse_financing": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Qualified nonrecourse financing",
+      "description": "Item K: the 'Qualified nonrecourse financing' amount. JSON number; null if blank."
+    },
+    "liability_recourse": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Recourse liabilities",
+      "description": "Item K: the 'Recourse' amount. JSON number; null if blank."
+    },
+    "capital_beginning_account": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Beginning capital account",
+      "description": "Item L 'Partner's capital account analysis': the 'Beginning capital account' amount. JSON number, negative in parentheses/with a minus; null if blank."
+    },
+    "capital_contributed": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Capital contributed during the year",
+      "description": "Item L: 'Capital contributed during the year'. JSON number; null if blank."
+    },
+    "capital_current_year_increase_decrease": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Current year increase (decrease)",
+      "description": "Item L: 'Current year increase (decrease)'. JSON number, negative in parentheses/with a minus; null if blank."
+    },
+    "capital_withdrawals_distributions": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Withdrawals & distributions",
+      "description": "Item L: 'Withdrawals & distributions'. JSON number (usually printed in parentheses as a subtraction — negative); null if blank."
+    },
+    "capital_ending_account": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Ending capital account",
+      "description": "Item L: 'Ending capital account'. JSON number, negative in parentheses/with a minus; null if blank."
+    },
+    "capital_account_method": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Capital account method",
+      "description": "Item L method checkbox group: which basis the capital account is reported on — one of 'Tax basis', 'GAAP', 'Section 704(b) book', or 'Other' (the box that is marked). Verbatim label of the marked box; null if none is marked."
+    },
+    "contributed_built_in_gain_loss_property": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Item M built-in gain/loss property",
+      "description": "Item M 'Did the partner contribute property with a built-in gain or loss?' — true if 'Yes' is marked, false if 'No' is marked. NULLABLE EXCEPTION: item M exists only on the 2009+ revision; return null on the 2008 revision, which does not print item M at all."
+    },
+    "box_1_ordinary_business_income": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Box 1 ordinary business income",
+      "description": "Part III box '1 Ordinary business income (loss)': the dollar amount printed in the box. JSON number exactly as printed, comma removed; a loss prints in parentheses or with a leading minus and is negative; null if blank."
+    },
+    "box_2_net_rental_real_estate": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Box 2 net rental real estate",
+      "description": "Part III box '2 Net rental real estate income (loss)': the dollar amount printed in the box. JSON number exactly as printed, comma removed; a loss prints in parentheses or with a leading minus and is negative; null if blank."
+    },
+    "box_3_other_net_rental_income": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Box 3 other net rental income",
+      "description": "Part III box '3 Other net rental income (loss)': the dollar amount printed in the box. JSON number exactly as printed, comma removed; a loss prints in parentheses or with a leading minus and is negative; null if blank."
+    },
+    "box_4_guaranteed_payments": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Box 4 guaranteed payments",
+      "description": "Part III box '4 Guaranteed payments': the dollar amount printed in the box. JSON number exactly as printed, comma removed; a loss prints in parentheses or with a leading minus and is negative; null if blank."
+    },
+    "box_5_interest_income": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Box 5 interest income",
+      "description": "Part III box '5 Interest income': the dollar amount printed in the box. JSON number exactly as printed, comma removed; a loss prints in parentheses or with a leading minus and is negative; null if blank."
+    },
+    "box_6a_ordinary_dividends": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Box 6a ordinary dividends",
+      "description": "Part III box '6a Ordinary dividends': the dollar amount printed in the box. JSON number exactly as printed, comma removed; a loss prints in parentheses or with a leading minus and is negative; null if blank."
+    },
+    "box_6b_qualified_dividends": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Box 6b qualified dividends",
+      "description": "Part III box '6b Qualified dividends': the dollar amount printed in the box. JSON number exactly as printed, comma removed; a loss prints in parentheses or with a leading minus and is negative; null if blank."
+    },
+    "box_7_royalties": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Box 7 royalties",
+      "description": "Part III box '7 Royalties': the dollar amount printed in the box. JSON number exactly as printed, comma removed; a loss prints in parentheses or with a leading minus and is negative; null if blank."
+    },
+    "box_8_net_short_term_capital_gain": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Box 8 net short-term capital gain",
+      "description": "Part III box '8 Net short-term capital gain (loss)': the dollar amount printed in the box. JSON number exactly as printed, comma removed; a loss prints in parentheses or with a leading minus and is negative; null if blank."
+    },
+    "box_9a_net_long_term_capital_gain": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Box 9a net long-term capital gain",
+      "description": "Part III box '9a Net long-term capital gain (loss)': the dollar amount printed in the box. JSON number exactly as printed, comma removed; a loss prints in parentheses or with a leading minus and is negative; null if blank."
+    },
+    "box_9b_collectibles_gain": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Box 9b collectibles (28%) gain",
+      "description": "Part III box '9b Collectibles (28%) gain (loss)': the dollar amount printed in the box. JSON number exactly as printed, comma removed; a loss prints in parentheses or with a leading minus and is negative; null if blank."
+    },
+    "box_9c_unrecaptured_1250_gain": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Box 9c unrecaptured section 1250 gain",
+      "description": "Part III box '9c Unrecaptured section 1250 gain': the dollar amount printed in the box. JSON number exactly as printed, comma removed; a loss prints in parentheses or with a leading minus and is negative; null if blank."
+    },
+    "box_10_net_section_1231_gain": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Box 10 net section 1231 gain",
+      "description": "Part III box '10 Net section 1231 gain (loss)': the dollar amount printed in the box. JSON number exactly as printed, comma removed; a loss prints in parentheses or with a leading minus and is negative; null if blank."
+    },
+    "box_12_section_179_deduction": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Box 12 section 179 deduction",
+      "description": "Part III box '12 Section 179 deduction': the dollar amount printed in the box. JSON number exactly as printed, comma removed; a loss prints in parentheses or with a leading minus and is negative; null if blank."
+    },
+    "box_14_self_employment_earnings": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CodedEntry"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Box 14 self-employment earnings",
+      "description": "Part III box '14 Self-employment earnings (loss)': an array of the code+amount entries printed in this box. This IS a coded box — code A = net earnings (loss) from self-employment, B = gross farming or fishing income, C = gross non-farm income; a filer may print several code lines (e.g. 'A -5,307.' and 'C 34,199.'). A single printed amount with no visible code letter is one entry with code null. Empty/absent -> null."
+    },
+    "box_11_other_income": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CodedEntry"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Box 11 other income",
+      "description": "Part III box '11 Other income (loss)': an array of the code+amount entries printed in this box (a coded box can hold several codes). Empty/absent -> null."
+    },
+    "box_13_other_deductions": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CodedEntry"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Box 13 other deductions",
+      "description": "Part III box '13 Other deductions': an array of the code+amount entries printed in this box (a coded box can hold several codes). Empty/absent -> null."
+    },
+    "box_15_credits": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CodedEntry"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Box 15 credits",
+      "description": "Part III box '15 Credits': an array of the code+amount entries printed in this box (a coded box can hold several codes). Empty/absent -> null."
+    },
+    "box_16_foreign_transactions": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CodedEntry"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Box 16 foreign transactions",
+      "description": "Part III box '16 Foreign transactions': an array of the code+amount entries printed in this box (a coded box can hold several codes). Empty/absent -> null."
+    },
+    "box_17_amt_items": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CodedEntry"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Box 17 AMT items",
+      "description": "Part III box '17 Alternative minimum tax (AMT) items': an array of the code+amount entries printed in this box (a coded box can hold several codes). Empty/absent -> null."
+    },
+    "box_18_tax_exempt_income": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CodedEntry"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Box 18 tax-exempt income",
+      "description": "Part III box '18 Tax-exempt income and nondeductible expenses': an array of the code+amount entries printed in this box (a coded box can hold several codes). Empty/absent -> null."
+    },
+    "box_19_distributions": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CodedEntry"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Box 19 distributions",
+      "description": "Part III box '19 Distributions': an array of the code+amount entries printed in this box (a coded box can hold several codes). Empty/absent -> null."
+    },
+    "box_20_other_information": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CodedEntry"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Box 20 other information",
+      "description": "Part III box '20 Other information': an array of the code+amount entries printed in this box (a coded box can hold several codes). Empty/absent -> null."
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "source": "mitdbg/KramaBench",
+  "file": "dr-input/wildfire/wildfire_random.json",
+  "raw": {
+    "id": "wildfire-hard-7",
+    "query": "Which geographic area had the most anomalous year (by Z-score) in terms of total acres burned compared to its historical annual average, and what year was it in? Answer with the geographic area and year, separated by a comma.",
+    "answer": "Northwest, 2020",
+    "answer_type": "string_approximate",
+    "data_sources": [
+      "nifc_human_caused_acres.csv",
+      "nifc_lightning_caused_acres.csv"
+    ],
+    "runtime": 1,
+    "input_files_to_dr": [
+      "nifc_human_caused_acres.csv",
+      "nifc_lightning_caused_acres.csv",
+      "noaa_wildfires_monthly_stats.csv",
+      "nifc_human_caused_wildfires.csv",
+      "nifc_geographic_areas.gpkg",
+      "NST-EST2024-POP.xlsx",
+      "cleaned_helicopter_requests_by_region.csv",
+      "ZHVI.csv",
+      "Fire_Weather_Data_2002-2014_2016.csv",
+      "Wildfire_Acres_by_State.csv"
+    ]
+  },
+  "case_id": "B07-krama-0505",
+  "expected": {
+    "kind": "answer",
+    "answer": "Northwest, 2020",
+    "answer_type": "string_approximate",
+    "runtime_s": 1,
+    "data_sources": [
+      "nifc_human_caused_acres.csv",
+      "nifc_lightning_caused_acres.csv"
+    ]
+  }
+}

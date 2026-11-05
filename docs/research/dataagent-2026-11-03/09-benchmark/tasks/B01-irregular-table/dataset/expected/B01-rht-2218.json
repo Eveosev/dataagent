@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 582,
+  "table": "society-table85",
+  "structure": "ColumnHeaderMerge",
+  "question_type": "Fact Checking",
+  "sub_type": "Value-Matching",
+  "answer": "15143",
+  "cot": [
+    {
+      "planning": "First, we need to identify the data for the “Tier 1 - General” category in the table."
+    },
+    {
+      "planning": "Then, we extract the number of visas issued out of the country for main applicants and dependants. "
+    },
+    {
+      "planning": "Finally, we sum these values to get the total number of visas issued out of the country."
+    }
+  ],
+  "case_id": "B01-rht-2218",
+  "expected": {
+    "kind": "answer",
+    "question": "What is the total number of visas issued (main applicants and dependants) for the “Tier 1 - General” category out of the country?",
+    "answer": "15143"
+  }
+}

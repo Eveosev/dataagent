@@ -1,0 +1,20 @@
+{
+  "source": "KAKA22/SpreadsheetBench",
+  "raw": {
+    "id": 50452,
+    "instruction": "I am working on creating a grid for a duty assignment schedule that places an 'x' in cells to indicate a match between names and dates. I tried using the formula =INDEX($E$1, MATCH(1, ($J3=$F$3:$F$18)*($L$2=$G$3:$G$18), 0)) and it works for the first cell. However, when a name is repeated in the schedule, I receive a #REF error, and other variations of the formula yield an #N/A error. I am looking for assistance to correct this issue. The 'x' should left aligned.",
+    "spreadsheet_path": "spreadsheet/50452",
+    "instruction_type": "Cell-Level Manipulation",
+    "answer_position": "F2:T22"
+  },
+  "case_id": "B09-ssb-0472",
+  "expected": {
+    "kind": "sheet_answer",
+    "instruction": "I am working on creating a grid for a duty assignment schedule that places an 'x' in cells to indicate a match between names and dates. I tried using the formula =INDEX($E$1, MATCH(1, ($J3=$F$3:$F$18)*($L$2=$G$3:$G$18), 0)) and it works for the first cell. However, when a name is repeated in the schedule, I receive a #REF error, and other variations of the formula yield an #N/A error. I am looking for assistance to correct this issue. The 'x' should left aligned.",
+    "answer": null,
+    "answer_sheet": null,
+    "answer_position": "F2:T22",
+    "data_position": null,
+    "instruction_type": "Cell-Level Manipulation"
+  }
+}

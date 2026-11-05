@@ -1,0 +1,34 @@
+{
+  "case_id": "B11-tau2-1502",
+  "task_id": "B11",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "scenario",
+      "ref": "fixtures/tau2-telecom-[mms_issue]break_apn_mms_setting|break_app_storage_permission|data_usage_exceeded|unseat_sim_card|user_abroad_roaming_enabled_off[PERSONA:None].md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B11-tau2-1502.json"
+  },
+  "evidence": [
+    "fixtures/tau2-telecom-[mms_issue]break_apn_mms_setting|break_app_storage_permission|data_usage_exceeded|unseat_sim_card|user_abroad_roaming_enabled_off[PERSONA:None].md#任务指令"
+  ],
+  "tags": [
+    "tau2",
+    "telecom",
+    "reward:['ENV_ASSERTION']"
+  ],
+  "source": "tau2",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

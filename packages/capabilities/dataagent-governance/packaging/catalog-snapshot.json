@@ -1,0 +1,68 @@
+{
+  "atoms": [
+    {
+      "group": "DA11.2",
+      "group_name": "计算计划与结果验证",
+      "id": "DA11.2.3",
+      "name": "结果粒度与合并检查",
+      "operation": "check_result_grain_and_merge",
+      "s0_family": "计算族",
+      "source_file": "src/dataagent_governance/evaluation/computation.py"
+    },
+    {
+      "group": "DA11.5",
+      "group_name": "评测判据与样本",
+      "id": "DA11.5.1",
+      "name": "业务验收判据定义",
+      "operation": "draft_acceptance_criteria",
+      "s0_family": "骨干",
+      "source_file": "src/dataagent_governance/evaluation/criteria_samples.py"
+    },
+    {
+      "group": "DA11.5",
+      "group_name": "评测判据与样本",
+      "id": "DA11.5.5",
+      "name": "端到端业务验收〔定〕",
+      "operation": "evaluate_business_acceptance",
+      "s0_family": "骨干",
+      "source_file": "src/dataagent_governance/evaluation/criteria_samples.py"
+    },
+    {
+      "group": "DA11.5",
+      "group_name": "评测判据与样本",
+      "id": "DA11.5.6",
+      "name": "验收样本隔离",
+      "operation": "isolate_acceptance_samples",
+      "s0_family": "骨干",
+      "source_file": "src/dataagent_governance/evaluation/criteria_samples.py"
+    },
+    {
+      "group": "DA12.1",
+      "group_name": "权限与敏感信息管理",
+      "id": "DA12.1.1",
+      "name": "访问范围检查",
+      "operation": "check_access_scope",
+      "s0_family": "骨干",
+      "source_file": "src/dataagent_governance/governance/access.py"
+    },
+    {
+      "group": "DA12.1",
+      "group_name": "权限与敏感信息管理",
+      "id": "DA12.1.4",
+      "name": "模型上下文可见性与外发控制",
+      "operation": "check_model_context_egress",
+      "s0_family": "骨干",
+      "source_file": "src/dataagent_governance/governance/access.py"
+    }
+  ],
+  "counts": {
+    "atoms": 6,
+    "by_family": {
+      "计算族": 1,
+      "骨干": 5
+    }
+  },
+  "generated_from": "docs/research/dataagent-2026-11-03/catalog/atomic-capability-catalog.json",
+  "source_sha256": "fbd48e5a54ac5277ec7f8c5a7d623299bb91c5089b1f95456d392cb1fb81c3ae",
+  "version": "0.1.0"
+}

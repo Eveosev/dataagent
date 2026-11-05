@@ -1,0 +1,36 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_d1c9e201",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "state",
+    "focus_year",
+    "eviction_action",
+    "tenant",
+    "landlord",
+    "party_in_case",
+    "defense_claimed",
+    "statute_ma_gl_ch281_s2_continuation_of_existing_statutes",
+    "legal_construe_general_laws_as_continuation",
+    "statute_ma_gl_ch279_s8a_prior_sentence_deemed_expired_on_release",
+    "statute_ma_gl_ch279_s8a_does_not_alter_ch127_131_or_149",
+    "legal_prior_sentence_deemed_expired_for_consecutive_timing",
+    "statute_ma_gl_ch278a_s18_forensic_order_final_and_appealable",
+    "statute_ma_gl_ch278a_s18_notice_of_appeal_within_days",
+    "legal_ch278a_appeal_deadline_days",
+    "statute_creates_eviction_defense",
+    "legally_recognized_defense",
+    "tenant_may_raise_defense_in_eviction",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: Massachusetts\n    Focus year: 2021\n\n    Question: In an eviction action, can a tenant rebut/raise the defense that eviction is unlawful\n    because it was motivated by a legally recognized form of discrimination?\n*/\n\n/* -----------------------------------------------------------------------------\n   Scenario facts (translate the question's factual statement)\n----------------------------------------------------------------------------- */\n\nstate(massachusetts).\nfocus_year(2021).\n\neviction_action(case1).\ntenant(tenant1).\nlandlord(landlord1).\nparty_in_case(tenant1, case1).\nparty_in_case(landlord1, case1).\n\n% The tenant seeks to raise a defense: eviction is unlawful due to discriminatory motivation.\ndefense_claimed(tenant1, case1, discriminatory_motivation).\n\n/* scenario_statement/0 succeeds when the encoded scenario is satisfied. */\nscenario_statement :-\n    state(massachusetts),\n    focus_year(2021),\n    eviction_action(case1),\n    tenant(tenant1),\n    party_in_case(tenant1, case1),\n    defense_claimed(tenant1, case1, discriminatory_motivation).\n\n/* -----------------------------------------------------------------------------\n   Statute translations (as deterministic predicates), per provided statutes\n----------------------------------------------------------------------------- */\n\n% [1] MA Gen L ch 281  2 (2021)\n% Effect: general laws provisions that are the same as existing statutes are construed as a continuation,\n% not as new enactments; references to revised/re-enacted provisions construed to apply to incorporated provisions.\nstatute_ma_gl_ch281_s2_continuation_of_existing_statutes(massachusetts, 2021).\n\n/* Deterministic helper capturing the core construction rule. */\nlegal_construe_general_laws_as_continuation(State, Year, yes) :-\n    statute_ma_gl_ch281_s2_continuation_of_existing_statutes(State, Year),\n    !.\nlegal_construe_general_laws_as_continuation(_State, _Year, no) :-\n    !.\n\n% [2] MA Gen L ch 279  8a (2021)\n% Effect: for determining effective time of a consecutive sentence, prior sentence deemed expired upon parole/release;\n% nothing alters/controls Ch 127  131 or 149.\nstatute_ma_gl_ch279_s8a_prior_sentence_deemed_expired_on_release(massachusetts, 2021).\nstatute_ma_gl_ch279_s8a_does_not_alter_ch127_131_or_149(massachusetts, 2021).\n\n/* Deterministic predicate: prior sentence deemed expired when prisoner is released (parole or otherwise),\n   but only for the purpose of determining the taking effect time of a consecutive sentence. */\nlegal_prior_sentence_deemed_expired_for_consecutive_timing(State, Year, ReleaseType, yes) :-\n    statute_ma_gl_ch279_s8a_prior_sentence_deemed_expired_on_release(State, Year),\n    ( ReleaseType = parole\n    ; ReleaseType = otherwise\n    ),\n    !.\nlegal_prior_sentence_deemed_expired_for_consecutive_timing(_State, _Year, _ReleaseType, no) :-\n    !.\n\n% [3] MA Gen L ch 278a  18 (2021)\n% Effect: order allowing/denying motion for forensic/scientific analysis under that chapter is final and appealable;\n% if moving party appeals a denial, notice of appeal within 30 days after entry of judgment.\nstatute_ma_gl_ch278a_s18_forensic_order_final_and_appealable(massachusetts, 2021).\nstatute_ma_gl_ch278a_s18_notice_of_appeal_within_days(massachusetts, 2021, 30).\n\n/* Deterministic predicate: appeal deadline in days for denial of motion under Ch 278A. */\nlegal_ch278a_appeal_deadline_days(State, Year, Days) :-\n    statute_ma_gl_ch278a_s18_notice_of_appeal_within_days(State, Year, Days),\n    !.\n\n/* -----------------------------------------------------------------------------\n   Apply reasoning to the scenario\n----------------------------------------------------------------------------- */\n\n% The provided statutes are not eviction/housing anti-discrimination statutes and do not create\n% a tenant defense in an eviction action based on discriminatory motivation.\n%\n% We encode the mapping explicitly: these statutes create no such eviction defense.\nstatute_creates_eviction_defense(State, Year, _Defense) :-\n    % If any provided statute created an eviction defense, we would capture it here.\n    % None of the provided statutes do so.\n    legal_construe_general_laws_as_continuation(State, Year, yes),\n    fail.\nstatute_creates_eviction_defense(State, Year, _Defense) :-\n    legal_prior_sentence_deemed_expired_for_consecutive_timing(State, Year, parole, yes),\n    fail.\nstatute_creates_eviction_defense(State, Year, _Defense) :-\n    legal_ch278a_appeal_deadline_days(State, Year, 30),\n    fail.\n\n% A defense is \"legally recognized\" for this QA only if some encoded statute provides it.\nlegally_recognized_defense(State, Year, Defense) :-\n    statute_creates_eviction_defense(State, Year, Defense).\n\n% Tenant may raise the defense in the eviction action only if the defense is legally recognized in the encoded law.\ntenant_may_raise_defense_in_eviction(Case, Tenant, Defense) :-\n    eviction_action(Case),\n    tenant(Tenant),\n    party_in_case(Tenant, Case),\n    defense_claimed(Tenant, Case, Defense),\n    state(State),\n    focus_year(Year),\n    legally_recognized_defense(State, Year, Defense).\n\n/* -----------------------------------------------------------------------------\n   housing_answer/1 (must be deterministic; Result is yes or no)\n----------------------------------------------------------------------------- */\n\nhousing_answer(Result) :-\n    scenario_statement,\n    ( tenant_may_raise_defense_in_eviction(case1, tenant1, discriminatory_motivation) ->\n        Result = yes\n    ;\n        Result = no\n    ),\n    !.\n\n/* -----------------------------------------------------------------------------\n   Main entrypoint (required)\n----------------------------------------------------------------------------- */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-1324",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "In an eviction action, can a tenant rebut/raise the defense that eviction is unlawful because it was motivated by a legally recognized form of discrimination?"
+  }
+}

@@ -1,0 +1,168 @@
+Evaluation bug: formulas written by openpyxl/pandas aren’t calculated, causing false negatives · Issue #31 · RUCKBReasoning/SpreadsheetBench · GitHub
+Skip to content
+Navigation Menu
+Sign in
+Products
+Platform
+GitHubRepository hosting, code review, and collaboration
+CopilotAI coding agent for tasks, projects and automated work
+Build & Ship
+ActionsCI/CD and automation
+Code QualityQuality analysis, fixes, and enforcement
+CodespacesCloud development environments
+Secure
+Code SecurityVulnerability detection and remediation
+Secret ProtectionSecret scanning and leak prevention
+All Features
+Developers
+Learn
+Documentation
+Training
+Certifications
+Build
+Build with Copilot
+Customize Copilot
+Integrations
+Explore
+Trending repos
+GitHub Sponsors
+Events
+Changelog
+ChangelogYour source for the latest features, improvements, and fixes across GitHub products, all in one place.
+Businesses
+By Stage
+Enterprises
+Team
+Startups
+Nonprofits
+By Industry
+Healthcare
+Financial services
+Manufacturing
+Government
+See all industries
+Evaluate GitHub
+Why GitHub
+Customer Stories
+Business insights
+Trust Center
+Add-ons
+GitHub Advanced SecurityEnterprise-grade code security
+Copilot for businessEnterprise-grade AI features
+Premium SupportEnterprise-grade 24/7 support
+Resources
+Learn & Connect
+Documentation
+Resource center
+Blog
+Events & webinars
+Community Forum
+Customer Stories
+Integrations
+Support
+Customer support
+Training
+GitHub Status
+Company
+About
+Partners
+Changelog
+GitHub Universe
+GitHub UniverseThe event for developers, by developers — talks, workshops, and what’s next for GitHub.
+Pricing
+Search/
+Sign inSign up
+Appearance settings
+You signed in with another tab or window. Reload to refresh your session.
+You signed out in another tab or window. Reload to refresh your session.
+You switched accounts on another tab or window. Reload to refresh your session.
+Dismiss alert
+{{ message }}
+RUCKBReasoning
+SpreadsheetBench
+Repository navigation
+Code
+Issues26 (26)
+Pull requests2 (2)
+Actions
+Projects
+Security and quality
+Insights
+More items
+Evaluation bug: formulas written by openpyxl/pandas aren’t calculated, causing false negatives #31
+New issueCopy link
+New issueCopy link
+Open
+Open
+Evaluation bug: formulas written by openpyxl/pandas aren’t calculated, causing false negatives#31
+Copy link
+Description
+MichaelYang-lyx
+opened on Dec 19, 2025
+Issue body actions
+Description
+We found a tricky issue in the evaluation pipeline related to Excel formula calculation.
+What’s happening
+In some tasks, the model outputs correct Excel formulas. However, when the generated .xlsx file is created/modified via openpyxl or pandas, these libraries only write the workbook structure and the formula strings — they do not evaluate formulas like Excel does. As a result, the produced file often has no cached formula results.
+During evaluation, our script reads cell values from the processed workbook. If the workbook hasn’t been recalculated by Excel, the evaluator may read empty/None (or stale) values even though the formula itself is correct, leading to incorrect “value mismatch” errors.
+Impact
+This causes systematic false negatives and makes the model’s final score look lower than it should be.
+How to reproduce (typical scenario)
+Generate an .xlsx with formulas using openpyxl or pandas.
+Run the evaluator that reads computed values from the output file.
+The evaluator reports mismatches because the formula results were never calculated/cached.
+If you open the file in Excel (GUI) and save it (triggering calculation), the values become available and the evaluator passes.
+Expected behavior
+If a model outputs correct formulas, evaluation should not fail just because the workbook hasn’t been recalculated by Excel.
+Suggested fixes / options
+Ensure formula evaluation before reading values (e.g., enforce recalculation via Excel automation, LibreOffice, or another calculation engine).
+Alternatively, change evaluation logic to validate formulas themselves (when appropriate) instead of relying only on cached computed values.
+At minimum, document this limitation and standardize a “recalculate then evaluate” step.
+👍React with 👍2Reacted by Heaven-zhw and Michael
+Activity
+gregkonush commented on May 23, 2026
+gregkonush
+on May 23, 2026
+More actions
+A practical evaluator split that has worked for me is:
+preserve the generated formula text as evidence
+run a deterministic recalculation pass before reading cached values
+mark unsupported formulas/external links as inconclusive instead of counting them as value mismatches
+If a Node-side recalc stage is acceptable in the pipeline, I maintain Bilig and split out the XLSX path as @bilig/xlsx-formula-recalc:
+npx --package @bilig/xlsx-formula-recalc xlsx-recalc candidate.xlsx \
+--read Sheet1!C5 \
+--out candidate.recalculated.xlsx \
+--json
+For benchmark use, I would not treat this as an Excel oracle. I would add a small verifier step that records:
+formula cells evaluated
+formula cells skipped/unsupported
+readback cells that changed from stale or empty cached values
+formulas still requiring Excel/LibreOffice validation
+That gives the evaluator a better failure mode: "formula produced but not covered by the recalc engine" instead of a silent false negative from openpyxl/pandas cached-value reads.
+Disclosure: I maintain Bilig, so this is a concrete option to test, not a neutral recommendation.
+Sign up for free to join this conversation on GitHub. Already have an account? Sign in to comment
+Metadata
+Metadata
+AssigneesNo one assigned
+LabelsNo labels
+No labels
+TypeNo type
+ProjectsNo projects
+MilestoneNo milestone
+RelationshipsNone yet
+DevelopmentNo branches or pull requests
+Issue actions
+Open in GitHub Copilot app
+Footer
+© 2026 GitHub, Inc.
+Footer navigation
+Terms
+Privacy
+Security
+Status
+Community
+Docs
+Contact
+Manage cookies
+Do not share my personal information
+You can’t perform that action at this time.

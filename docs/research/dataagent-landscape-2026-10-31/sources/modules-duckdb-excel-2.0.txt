@@ -1,0 +1,595 @@
+Excel Extension – DuckDB
+⌘K
+ctrl+k
+2.0 LTS
+2.0LTS
+1.5
+1.4LTS
+1.3
+Search Shortcut cmd + k | ctrl + k
+Search docs
+⌘Kctrl+k
+Start
+Overview
+Installation
+Quickstart
+How-to Guides
+Reference
+Import & Export
+Import & Export
+Overview
+Data Sources
+CSV Files
+Overview
+Auto Detection
+Reading Faulty CSV Files
+Tips
+JSON Files
+Overview
+Creating JSON
+Loading JSON
+Writing JSON
+JSON Type
+JSON Functions
+Format Settings
+Installing and Loading
+SQL to / from JSON
+Caveats
+Parquet Files
+Overview
+Metadata
+Encryption
+Tips
+Multiple Files
+Overview
+Combining Schemas
+Partitioning
+Hive Partitioning
+Partitioned Writes
+Lakehouse
+Overview
+IO
+Appender
+INSERT Statements
+SQL
+SQL
+Introduction
+Friendly SQL
+Statements
+Overview
+ANALYZE
+ALTER DATABASE
+ALTER TABLE
+ALTER VIEW
+ATTACH and DETACH
+CALL
+CHECKPOINT
+COMMENT ON
+CONNECT and DISCONNECT
+COPY
+CREATE INDEX
+CREATE MACRO
+CREATE SCHEMA
+CREATE SECRET
+CREATE SEQUENCE
+CREATE TABLE
+CREATE VIEW
+CREATE TRIGGER
+CREATE TYPE
+DELETE
+DESCRIBE
+DROP
+EXPORT and IMPORT DATABASE
+INSERT
+LOAD / INSTALL
+MERGE INTO
+PIVOT
+Profiling
+PREPARE, EXECUTE, and DEALLOCATE
+SELECT
+SET / RESET
+SET VARIABLE
+SHOW and SHOW DATABASES
+SUMMARIZE
+Transaction Management
+UNPIVOT
+UPDATE
+UPDATE EXTENSIONS
+USE
+VACUUM
+Query Syntax
+SELECT
+FROM and JOIN
+WHERE
+GROUP BY
+GROUPING SETS
+HAVING
+ORDER BY
+LIMIT and OFFSET
+SAMPLE
+Samples
+Unnesting
+WITH
+WINDOW
+QUALIFY
+VALUES
+FILTER
+Set Operations
+Prepared Statements
+Data Types
+Overview
+Array
+Bitstring
+Blob
+Boolean
+Date
+Enum
+Geometry
+Interval
+List
+Literal Types
+Map
+NULL Values
+Numeric
+Struct
+Text
+Time
+Timestamp
+Time Zones
+Union
+Typecasting
+Variant
+Functions
+Overview
+Aggregate Functions
+Array Functions
+Bitstring Functions
+Blob Functions
+Date Format Functions
+Date Functions
+Date Part Functions
+Enum Functions
+Geometry Functions
+Interval Functions
+Lambda Functions
+List Functions
+Map Functions
+Nested Functions
+Numeric Functions
+Pattern Matching
+Regular Expressions
+Struct Functions
+Text Functions
+Time Functions
+Timestamp Functions
+Timestamp with Time Zone Functions
+Union Functions
+Utility Functions
+Variant Functions
+Window Functions
+Expressions
+Overview
+CASE Expression
+Casting
+Collations
+Comparisons
+IN Operator
+Logical Operators
+Star Expression
+Subqueries
+TRY
+Meta Queries
+Information Schema
+Metadata Functions
+Constraints
+Indexes
+DuckDB's SQL Dialect
+Overview
+Indexing
+Keywords and Identifiers
+Order Preservation
+PostgreSQL Compatibility
+SQL Quirks
+PEG Parser
+Client APIs
+Client APIs
+Overview
+Connecting to DuckDB
+Python
+Overview
+Data Ingestion
+Appender
+Conversion between DuckDB and Python
+DB API
+Relational API
+Function API
+Types API
+Expression API
+Spark API
+API Reference
+Known Python Issues
+Migrating to 2.0
+Installation
+Executing SQL
+Jupyter Notebooks
+marimo Notebooks
+SQL on Pandas
+Import from Pandas
+Export to Pandas
+Import from Numpy
+Export to Numpy
+SQL on Arrow
+Import from Arrow
+Export to Arrow
+Relational API on Pandas
+Multiple Python Threads
+Integration with Ibis
+Integration with Polars
+Integration with PyTorch
+Using fsspec Filesystems
+CLI
+Overview
+Arguments
+Dot Commands
+Output Formats
+Agent Mode
+Editing
+Friendly CLI
+Safe Mode
+Autocomplete
+Syntax Highlighting
+Known Issues
+Node.js (Neo)
+Overview
+Java (JDBC)
+Overview
+Connect
+Import Data
+Run Queries
+Handle Results
+Write User Defined Functions
+Profile and Monitor
+Deploy as Native Image
+Troubleshoot
+R
+Go
+Overview
+Connect
+Import Data
+Run Queries
+Handle Results
+Write User Defined Functions
+Profile and Monitor
+Troubleshoot
+Rust
+Overview
+Connect
+Import Data
+Run Queries
+Handle Results
+Write User Defined Functions
+Profile and Monitor
+Troubleshoot
+C/C++
+Overview
+Startup
+Configuration
+Query
+Data Chunks
+Vectors
+Values
+Types
+Prepared Statements
+Appender
+Table Functions
+Replacement Scans
+API Reference
+C++
+Wasm
+Overview
+Instantiate
+Import Data
+Run Queries
+Load Extensions
+Deploy
+Troubleshoot
+ODBC/ADBC
+Overview
+Linux Setup
+Windows Setup
+macOS Setup
+Configuration
+ADBC
+Other Clients
+Overview
+Julia
+PHP
+PHP (PDO)
+Swift
+Extensions
+Extensions
+Using Extensions
+Overview
+Installing Extensions
+Advanced Installation Methods
+Versioning of Extensions
+Troubleshooting of Extensions
+Core Extensions
+Overview
+AutoComplete
+Avro
+AWS
+Azure
+Delta
+DuckLake
+Encodings
+Excel
+Full Text Search
+httpfs (HTTP and S3)
+Overview
+HTTP(S) Support
+S3 API Support
+S3 and AWS Authentication
+Hugging Face
+Legacy Authentication Scheme for S3 API
+Iceberg
+ICU
+inet
+Lance
+Legacy Parser
+MotherDuck
+MySQL
+ODBC
+Quack
+PostgreSQL
+Sirius
+Spatial
+SQLite
+SQLSmith
+TPC-DS
+TPC-H
+UI
+Unity Catalog
+Vortex
+VSS
+Community Extensions
+Building Extensions
+Distributing Extensions
+Extension Repositories
+Server & Remote
+Server & Remote
+Overview
+Setup
+Overview
+Reverse Proxy
+Deployment
+Using from Wasm
+Security
+Reference
+Troubleshooting
+Performance & Operations
+Performance & Operations
+Overview
+Performance
+Overview
+Environment
+Import
+Schema
+Indexing
+Join Operations
+File Formats
+How to Tune Workloads
+My Workload Is Slow
+Out-of-Memory Issues
+Benchmarks
+Working with Huge Databases
+Configuration
+Overview
+Secrets
+Pragmas
+Concurrency
+Non-Deterministic Behavior
+Security
+Overview
+Embedding DuckDB
+Securing Extensions
+Deployment
+Installing DuckDB
+Install Script
+Requirements
+Docker
+User Agents
+Limits
+Migrating to DuckDB 2.0
+Backup Extension Repositories
+Storage Footprint
+Files Created by DuckDB
+Gitignore for DuckDB
+Reclaiming Space
+Logging
+Development & Internals
+Development & Internals
+Overview
+Building DuckDB
+Overview
+Build Configuration
+Building Extensions
+Statically Linking Extensions
+Platforms
+Android
+OpenHarmony
+Linux
+macOS
+Raspberry Pi
+Windows
+Python
+R
+Unofficial and Unsupported Platforms
+Troubleshooting
+Testing
+Overview
+sqllogictest Introduction
+Writing Tests
+Unit Tester Configuration
+Debugging
+Result Verification
+Persistent Testing
+Loops
+Multiple Connections
+Catch
+Internals
+Overview
+Storage Versions and Format
+Execution Format
+Jemalloc
+Pivot
+Internal Errors
+Profiling & Benchmarking
+Profiling
+Metrics
+Benchmark Suite
+Project
+Release Cycle
+DuckDB Repositories
+Troubleshooting
+Docs / Extensions / Core Extensions
+Copy Markdown
+Excel Extension
+The excel extension provides functions to format numbers per Excel's formatting rules by wrapping the i18npool library and to read/write Excel (.xlsx) files. However, please note that .xls files are not supported.
+Installing and Loading
+The excel extension will be transparently autoloaded on first use from the official extension repository.
+If you would like to install and load it manually, run:
+INSTALL AND LOAD excel;
+Excel Scalar Functions
+Function
+Description
+excel_text(number, format_string)
+Format the given number per the rules given in the format_string
+text(number, format_string)
+Alias for excel_text
+Examples
+SELECT excel_text(1_234_567.897, 'h:mm AM/PM') AS timestamp;
+timestamp
+9:31 PM
+SELECT excel_text(1_234_567.897, 'h AM/PM') AS timestamp;
+timestamp
+9 PM
+Reading XLSX Files
+Reading a .xlsx file is as simple as just SELECTing from it immediately, e.g.:
+SELECT *
+FROM 'test.xlsx';
+a
+b
+1.0
+2.0
+3.0
+4.0
+However, if you want to set additional options to control the import process, you can use the read_xlsx function instead. The following named parameters are supported.
+Option
+Type
+Default
+Description
+header
+BOOLEAN
+automatically inferred
+Whether to treat the first row as containing the names of the resulting columns.
+sheet
+VARCHAR
+automatically inferred
+The name of the sheet in the xlsx file to read. Default is the first sheet.
+all_varchar
+BOOLEAN
+false
+Whether to read all cells as containing VARCHARs.
+ignore_errors
+BOOLEAN
+false
+Whether to ignore errors and silently replace cells that can't be cast to the corresponding inferred column type with NULL's.
+range
+VARCHAR
+automatically inferred
+The range of cells to read, in spreadsheet notation. For example, A1:B2 reads the cells from A1 to B2. If not specified the resulting range will be inferred as rectangular region of cells between the first row of consecutive non-empty cells and the first empty row spanning the same columns.
+stop_at_empty
+BOOLEAN
+automatically inferred
+Whether to stop reading the file when an empty row is encountered. If an explicit range option is provided, this is false by default, otherwise true.
+empty_as_varchar
+BOOLEAN
+false
+Whether to treat empty cells as VARCHAR instead of DOUBLE when trying to automatically infer column types.
+SELECT *
+FROM read_xlsx('test.xlsx', header = true);
+a
+b
+1.0
+2.0
+3.0
+4.0
+Alternatively, the COPY statement with the XLSX format option can be used to import an Excel file into an existing table, in which case the types of the columns in the target table will be used to coerce the types of the cells in the Excel file.
+CREATE TABLE test (a DOUBLE, b DOUBLE);
+COPY test FROM 'test.xlsx' WITH (FORMAT xlsx, HEADER);
+SELECT * FROM test;
+Type and Range Inference
+Because Excel itself only really stores numbers or strings in cells, and does not enforce that all cells in a column are of the same type, the excel extension has to do some guesswork to “infer” and decide the types of the columns when importing an Excel sheet. While almost all columns are inferred as either DOUBLE or VARCHAR, there are some caveats:
+TIMESTAMP, TIME, DATE, and BOOLEAN types are inferred when possible based on the format applied to the cell.
+Text cells containing TRUE and FALSE are inferred as BOOLEAN.
+Empty cells are considered to be DOUBLE by default, unless the empty_as_varchar option is set to true, in which case they are typed as VARCHAR.
+If the all_varchar option is set to true, none of the above applies and all cells are read as VARCHAR.
+When no types are specified explicitly, (e.g., when using the read_xlsx function instead of COPY TO ... FROM 'file.xlsx')
+the types of the resulting columns are inferred based on the first “data” row in the sheet, that is:
+If no explicit range is given
+The first row after the header if a header is found or forced by the header option
+The first non-empty row in the sheet if no header is found or forced
+If an explicit range is given
+The second row of the range if a header is found in the first row or forced by the header option
+The first row of the range if no header is found or forced
+This can sometimes lead to issues if the first “data row” is not representative of the rest of the sheet (e.g., it contains empty cells) in which case the ignore_errors or empty_as_varchar options can be used to work around this.
+However, when the COPY TO ... FROM 'file.xlsx' syntax is used, no type inference is done and the types of the resulting columns are determined by the types of the columns in the table being copied to. All cells will simply be converted by casting from DOUBLE or VARCHAR to the target column type.
+Writing XLSX Files
+Writing .xlsx files is supported using the COPY statement with XLSX given as the format. The following additional parameters are supported.
+Option
+Type
+Default
+Description
+header
+BOOLEAN
+false
+Whether to write the column names as the first row in the sheet
+sheet
+VARCHAR
+Sheet1
+The name of the sheet in the xlsx file to write.
+sheet_row_limit
+INTEGER
+1048576
+The maximum number of rows in a sheet. An error is thrown if this limit is exceeded.
+Warning Many tools only support a maximum of 1,048,576 rows in a sheet, so increasing the sheet_row_limit may render the resulting file unreadable by other software.
+These are passed as options to the COPY statement after the FORMAT, e.g.:
+CREATE TABLE test AS
+SELECT *
+FROM (VALUES (1, 2), (3, 4)) AS t(a, b);
+COPY test TO 'test.xlsx' WITH (FORMAT xlsx, HEADER true);
+Type Conversions
+Because XLSX files only really support storing numbers or strings – the equivalent of VARCHAR and DOUBLE, the following type conversions are applied when writing XLSX files.
+Numeric types are cast to DOUBLE when writing to an XLSX file.
+Temporal types (TIMESTAMP, DATE, TIME, etc.) are converted to excel “serial” numbers, that is the number of days since 1900-01-01 for dates and the fraction of a day for times. These are then styled with a “number format” so that they appear as dates or times when opened in Excel.
+TIMESTAMP_TZ and TIME_TZ are cast to UTC TIMESTAMP and TIME respectively, with the timezone information being lost.
+BOOLEANs are converted to 1 and 0, with a “number format” applied to make them appear as TRUE and FALSE in Excel.
+All other types are cast to VARCHAR and then written as text cells.
+View Markdown
+Edit on GitHub
+Report an issue
+View repository
+© 2026 DuckDB Foundation, Amsterdam NL
+DuckDB Home
+Code of Conduct
+Trademark Use
+Blog
+In this article
+Installing and Loading
+Excel Scalar Functions
+Examples
+Reading XLSX Files
+Type and Range Inference
+Writing XLSX Files
+Type Conversions

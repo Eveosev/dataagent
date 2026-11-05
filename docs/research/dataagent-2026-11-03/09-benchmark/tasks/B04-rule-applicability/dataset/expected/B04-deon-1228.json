@@ -1,0 +1,30 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_15fd86f1",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "state",
+    "focus_year",
+    "writ_type",
+    "writ_synonym",
+    "statute_42_36_2_applies_to_executor_role",
+    "statute_42_36_2_execution_deadline_days",
+    "statute_42_36_2_executor_empowered_by_law",
+    "statute_42_36_2_requires_notice_before_removal",
+    "person",
+    "person_role",
+    "scenario_writ",
+    "empowered_by_law_to_execute_writ",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "% Self-contained SWI-Prolog program\n% Jurisdiction: North Carolina\n% Focus year: 2021\n% Question: Is an officer of the court an individual empowered by law to execute a writ of eviction?\n\n% ----------------------------\n% Basic domain modeling\n% ----------------------------\n\nstate(north_carolina).\nfocus_year(2021).\n\n% We treat \"writ of eviction\" as a \"writ for possession of real property\" (summary ejectment context).\nwrit_type(writ_of_eviction).\nwrit_type(writ_for_possession_of_real_property).\n\nwrit_synonym(writ_of_eviction, writ_for_possession_of_real_property).\nwrit_synonym(writ_for_possession_of_real_property, writ_for_possession_of_real_property).\n\n% ----------------------------\n% Statute translation (NCGS  42-36.2 (2021))\n% ----------------------------\n\n% NCGS  42-36.2(a) (2021): \"Before removing ... pursuant to a writ ... the sheriff shall give the tenant notice ...\"\n% Also: \"The time within which the sheriff shall have to execute the writ shall be no more than five days\n% from the sheriff's receipt thereof.\"\nstatute_42_36_2_applies_to_executor_role(north_carolina, 2021, sheriff).\n\nstatute_42_36_2_execution_deadline_days(north_carolina, 2021, 5).\n\n% Encodes that (for covered writs) the statute assigns execution/removal actions to the sheriff.\n% This is used as the legal source for \"empowered by law to execute\" in this narrow statute-based model.\nstatute_42_36_2_executor_empowered_by_law(State, Year, WritType, Role) :-\n    statute_42_36_2_applies_to_executor_role(State, Year, Role),\n    writ_synonym(WritType, writ_for_possession_of_real_property).\n\n% Optional: encode that the sheriff has a duty to give notice before removing property (not needed to answer,\n% but included as a faithful statutory duty/threshold translation).\nstatute_42_36_2_requires_notice_before_removal(State, Year, Role) :-\n    statute_42_36_2_applies_to_executor_role(State, Year, Role).\n\n% ----------------------------\n% Scenario facts (the question's factual statement)\n% ----------------------------\n\n% The individual we are evaluating.\nperson(officer_court_1).\n\n% \"Officer of the court\" status (as stated in the question).\nperson_role(officer_court_1, officer_of_the_court).\n\n% The question is about executing a writ of eviction.\nscenario_writ(writ_of_eviction).\n\n% Helper predicate that succeeds when the scenario (as encoded) holds.\nscenario_statement :-\n    state(north_carolina),\n    focus_year(2021),\n    person(officer_court_1),\n    person_role(officer_court_1, officer_of_the_court),\n    scenario_writ(writ_of_eviction).\n\n% ----------------------------\n% Legal reasoning helpers\n% ----------------------------\n\n% A person is \"empowered by law to execute\" a writ (in this dataset) if the statute identifies their role\n% as the executor for the writ-for-possession / eviction context.\nempowered_by_law_to_execute_writ(Person, WritType) :-\n    scenario_statement,\n    focus_year(Year),\n    state(State),\n    person_role(Person, Role),\n    statute_42_36_2_executor_empowered_by_law(State, Year, WritType, Role).\n\n% ----------------------------\n% Answer predicate (must be deterministic yes/no)\n% ----------------------------\n\nhousing_answer(yes) :-\n    scenario_writ(WritType),\n    empowered_by_law_to_execute_writ(officer_court_1, WritType),\n    !.\nhousing_answer(no) :-\n    !.\n\n% ----------------------------\n% Main entrypoint + initialization (REQUIRED)\n% ----------------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-1228",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is an officer of the court an individual empowered by law to execute a writ of eviction?"
+  }
+}

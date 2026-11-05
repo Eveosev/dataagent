@@ -1,0 +1,33 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_53e96cf0",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "landlord",
+    "tenant",
+    "dwelling",
+    "eviction_event",
+    "eviction_event_landlord",
+    "eviction_event_tenant",
+    "eviction_event_dwelling",
+    "eviction_event_because_of",
+    "fl76023_protected_basis",
+    "fl76023_unlawful_make_unavailable_or_deny",
+    "fl76023_unlawful_terms_conditions_privileges",
+    "fl76023_unlawful_housing_discrimination",
+    "scenario_eviction_action",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    State: Florida\n    Focus year: 2021\n    Question: Is it unlawful to evict a tenant based on their marital status?\n*/\n\n/* ----------------------------- */\n/* Scenario (facts)              */\n/* ----------------------------- */\n\n% Jurisdiction metadata (not used for reasoning, but encoded as part of scenario context).\nscenario_state(florida).\nscenario_focus_year(2021).\n\n% Parties and dwelling.\nlandlord(l1).\ntenant(t1).\ndwelling(d1).\n\n% Eviction event asserted by the question's factual statement.\n% We model \"evict a tenant\" as an action affecting rental housing.\neviction_event(e1).\neviction_event_landlord(e1, l1).\neviction_event_tenant(e1, t1).\neviction_event_dwelling(e1, d1).\n\n% The question's key fact: eviction occurs because of marital status.\neviction_event_because_of(e1, marital_status).\n\n% Helper predicate that succeeds exactly when the scenario statement is satisfied.\nscenario_statement :-\n    scenario_state(florida),\n    scenario_focus_year(2021),\n    landlord(L),\n    tenant(T),\n    dwelling(D),\n    eviction_event(E),\n    eviction_event_landlord(E, L),\n    eviction_event_tenant(E, T),\n    eviction_event_dwelling(E, D),\n    eviction_event_because_of(E, marital_status).\n\n/* ----------------------------- */\n/* Statute encoding (Florida)    */\n/* ----------------------------- */\n\n% FL Stat  760.23 (2021) enumerated protected bases:\n% race, color, national origin, sex, disability, familial status, religion.\n% (Marital status is not listed in this statute.)\nfl76023_protected_basis(race).\nfl76023_protected_basis(color).\nfl76023_protected_basis(national_origin).\nfl76023_protected_basis(sex).\nfl76023_protected_basis(disability).\nfl76023_protected_basis(familial_status).\nfl76023_protected_basis(religion).\n\n% FL Stat  760.23(1) (2021):\n% Unlawful to \"otherwise make unavailable or deny a dwelling\" because of a protected basis.\n% We treat eviction as making the dwelling unavailable / denying continued rental.\nfl76023_unlawful_make_unavailable_or_deny(Action) :-\n    Action = eviction(E),\n    eviction_event(E),\n    eviction_event_because_of(E, Basis),\n    fl76023_protected_basis(Basis).\n\n% FL Stat  760.23(2) (2021):\n% Unlawful to discriminate in \"terms, conditions, or privileges of sale or rental\"\n% because of a protected basis. Eviction also impacts the \"privileges of rental.\"\nfl76023_unlawful_terms_conditions_privileges(Action) :-\n    Action = eviction(E),\n    eviction_event(E),\n    eviction_event_because_of(E, Basis),\n    fl76023_protected_basis(Basis).\n\n% Consolidated \"unlawful housing discrimination action\" under the portions of  760.23 relevant here.\nfl76023_unlawful_housing_discrimination(Action) :-\n    fl76023_unlawful_make_unavailable_or_deny(Action).\nfl76023_unlawful_housing_discrimination(Action) :-\n    fl76023_unlawful_terms_conditions_privileges(Action).\n\n/* ----------------------------- */\n/* Reasoning for this question   */\n/* ----------------------------- */\n\n% The question asks whether it is unlawful to evict based on marital status.\n% Under  760.23 (2021), it is unlawful only if the eviction is because of a protected basis.\nscenario_eviction_action(eviction(E)) :-\n    scenario_statement,\n    eviction_event(E).\n\nscenario_is_unlawful_under_fl76023 :-\n    scenario_eviction_action(Action),\n    fl76023_unlawful_housing_discrimination(Action).\n\n/* ----------------------------- */\n/* Answer predicate              */\n/* ----------------------------- */\n\nhousing_answer(yes) :-\n    scenario_is_unlawful_under_fl76023,\n    !.\nhousing_answer(no) :-\n    !.\n\n/* ----------------------------- */\n/* Main entrypoint               */\n/* ----------------------------- */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-0921",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is it unlawful to evict a tenant based on their marital status?"
+  }
+}

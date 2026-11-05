@@ -1,0 +1,39 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_3e344d39",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "max_number",
+    "number",
+    "nonempty_list",
+    "statute_in_force",
+    "statute_sc_27_40_660_trigger",
+    "landlord",
+    "tenant",
+    "premises",
+    "unlawful_remove_or_exclude",
+    "wilful_essential_services_interruption",
+    "statute_sc_27_40_660_monetary_award",
+    "rental_agreement",
+    "periodic_rent",
+    "actual_damages",
+    "statute_sc_27_40_660_tenant_options",
+    "statute_sc_27_40_660_remedies",
+    "options",
+    "monetary_award",
+    "attorneys_fees",
+    "security_return_if_terminated",
+    "scenario_jurisdiction",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    State: South Carolina\n    Focus year: 2021\n\n    Question: \"Is it specified what remedies are available to a tenant who is unlawfully evicted?\"\n*/\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Basic helpers (standalone; no external modules)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nmax_number(A, B, A) :-\n    number(A),\n    number(B),\n    A >= B,\n    !.\nmax_number(_A, B, B) :-\n    !.\n\nnonempty_list([_|_]) :- !.\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Encoded statute: SC Code  27-40-660 (2021)\n%%\n%% Summary (as rules):\n%% If landlord unlawfully removes/excludes tenant OR willfully diminishes services\n%% by interrupting essential services, then tenant may:\n%%  - recover possession OR terminate rental agreement; and in either case,\n%%  - recover greater of (3 months' periodic rent) OR (2x actual damages),\n%%  - plus reasonable attorney's fees,\n%%  - and if rental agreement terminated, landlord must return security recoverable\n%%    under  27-40-410.\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n% Statute in force (history indicates enacted 1986; used here for 2021).\nstatute_in_force(sc_27_40_660, south_carolina, Year) :-\n    number(Year),\n    Year >= 1986,\n    !.\n\n% Conditions for \"unlawfully removes or excludes\" OR \"wilfully diminishes services ... essential services\".\nstatute_sc_27_40_660_trigger(unlawful_remove_or_exclude(Landlord, Tenant, Premises)) :-\n    landlord(Landlord),\n    tenant(Tenant),\n    premises(Premises),\n    unlawful_remove_or_exclude(Landlord, Tenant, Premises),\n    !.\nstatute_sc_27_40_660_trigger(wilful_essential_services_interruption(Landlord, Tenant, Premises)) :-\n    landlord(Landlord),\n    tenant(Tenant),\n    premises(Premises),\n    wilful_essential_services_interruption(Landlord, Tenant, Premises),\n    !.\n\n% Compute the statutory monetary award:\n% greater of (3 months periodic rent) or (2x actual damages).\nstatute_sc_27_40_660_monetary_award(RentalAgreement, Tenant, Award) :-\n    rental_agreement(RentalAgreement, _Landlord, Tenant),\n    periodic_rent(RentalAgreement, PeriodicRent),\n    actual_damages(Tenant, ActualDamages),\n    ThreeMonths is 3 * PeriodicRent,\n    TwiceDamages is 2 * ActualDamages,\n    max_number(ThreeMonths, TwiceDamages, Award),\n    !.\n\n% Remedy options specified by the statute (possession or termination).\nstatute_sc_27_40_660_tenant_options([recover_possession, terminate_rental_agreement]) :-\n    !.\n\n% Full remedies list available under the statute when triggered.\n% Note: we include both options because the statute says the tenant \"may\" choose.\nstatute_sc_27_40_660_remedies(State, Year, RentalAgreement, Landlord, Tenant, Premises, Remedies) :-\n    statute_in_force(sc_27_40_660, State, Year),\n    State = south_carolina,\n    rental_agreement(RentalAgreement, Landlord, Tenant),\n    (   statute_sc_27_40_660_trigger(unlawful_remove_or_exclude(Landlord, Tenant, Premises))\n    ;   statute_sc_27_40_660_trigger(wilful_essential_services_interruption(Landlord, Tenant, Premises))\n    ),\n    statute_sc_27_40_660_tenant_options(Options),\n    statute_sc_27_40_660_monetary_award(RentalAgreement, Tenant, Award),\n    Remedies = [\n        options(Options),\n        monetary_award(greater_of(three_months_rent, twice_actual_damages), Award),\n        attorneys_fees(reasonable),\n        security_return_if_terminated(returns_security_recoverable_under_sc_27_40_410)\n    ],\n    !.\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Scenario facts (encoding the question's factual statement)\n%%\n%% Statement to encode: \"tenant who is unlawfully evicted\"\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n% Jurisdiction and time for the question.\nscenario_jurisdiction(south_carolina, 2021) :- !.\n\n% Parties and premises.\nlandlord(l1) :- !.\ntenant(t1) :- !.\npremises(p1) :- !.\n\n% Rental agreement and relevant money facts (to allow statute computation).\nrental_agreement(ra1, l1, t1) :- !.\nperiodic_rent(ra1, 1000) :- !.          % periodic rent amount (e.g., monthly)\nactual_damages(t1, 800) :- !.           % actual damages sustained by tenant\n\n% Core \"unlawful eviction\" fact: landlord unlawfully removes/excludes tenant.\nunlawful_remove_or_exclude(l1, t1, p1) :- !.\n\n% Alternative trigger not used in this scenario (kept defined to avoid undefined predicates).\nwilful_essential_services_interruption(_Landlord, _Tenant, _Premises) :-\n    fail.\n\n% Helper predicate that succeeds when the scenario statement is satisfied.\n% Here, \"unlawfully evicted\" is represented as \"unlawful_remove_or_exclude\".\nscenario_statement :-\n    scenario_jurisdiction(_State, _Year),\n    landlord(l1),\n    tenant(t1),\n    premises(p1),\n    rental_agreement(ra1, l1, t1),\n    unlawful_remove_or_exclude(l1, t1, p1),\n    !.\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Reasoning for the question asked\n%%\n%% \"Is it specified what remedies are available to a tenant who is unlawfully evicted?\"\n%% => yes if, under the scenario, the statute yields a non-empty remedies set.\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nremedies_specified_for_scenario :-\n    scenario_statement,\n    scenario_jurisdiction(State, Year),\n    statute_sc_27_40_660_remedies(State, Year, ra1, l1, t1, p1, Remedies),\n    nonempty_list(Remedies),\n    !.\n\nhousing_answer(yes) :-\n    remedies_specified_for_scenario,\n    !.\nhousing_answer(no) :-\n    !.\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-1762",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Is it specified what remedies are available to a tenant who is unlawfully evicted?"
+  }
+}

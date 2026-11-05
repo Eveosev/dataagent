@@ -1,0 +1,29 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1224,
+  "table": "environment-table18",
+  "structure": "SingleRowClassified",
+  "question_type": "Numerical Reasoning",
+  "sub_type": "Ranking",
+  "answer": "Mouse, Fish",
+  "cot": [
+    {
+      "planning": "First, we need to extract the 'Total Procedures' column and associate it with the respective species."
+    },
+    {
+      "planning": "We filter out rows with missing or irrelevant values."
+    },
+    {
+      "planning": "We sort the species based on the total number of procedures in descending order."
+    },
+    {
+      "planning": "Finally, we select the top two species based on this ranking."
+    }
+  ],
+  "case_id": "B01-rht-2860",
+  "expected": {
+    "kind": "answer",
+    "question": "Rank the species by the total number of procedures and identify the top two species.",
+    "answer": "Mouse, Fish"
+  }
+}

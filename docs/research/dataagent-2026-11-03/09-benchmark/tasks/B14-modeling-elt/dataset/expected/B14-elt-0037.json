@@ -1,0 +1,108 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "databricks",
+  "pipeline": "hockey",
+  "data_model": {
+    "models": [
+      {
+        "name": "hockey__goalies",
+        "description": "Each record represents a goalie.",
+        "columns": [
+          {
+            "name": "playerid",
+            "description": "Unique identifier for the goalie."
+          },
+          {
+            "name": "namegiven",
+            "description": "Given name of the goalie."
+          },
+          {
+            "name": "height",
+            "description": "Height of the goalie."
+          },
+          {
+            "name": "number_of_seasons_played",
+            "description": "The number of seasons the goalie has played, replace NULL values with 0."
+          },
+          {
+            "name": "has_more_lost_than_won_games",
+            "description": "Set to 1 if the goalie has more lost than won games, otherwise, set to 0"
+          },
+          {
+            "name": "total_goal_againsts",
+            "description": "The total number of goals against by the goalie, replace NULL values with 0."
+          },
+          {
+            "name": "played_5000_minutes_in_the_all_the_season_played",
+            "description": "Set to 1 if the goalie has played 5000 minutes in total across all the seasons played, otherwise, set to 0"
+          },
+          {
+            "name": "defensive_success_rate_in_the_postseason_of_2011",
+            "description": "The defensive success rate (in percentage) of the goalie in the postseason of 2011"
+          }
+        ]
+      },
+      {
+        "name": "hockey__teams",
+        "description": "Each record represents a team.",
+        "columns": [
+          {
+            "name": "team_id",
+            "description": "Unique identifier for the team."
+          },
+          {
+            "name": "num_victories",
+            "description": "The number of victories the team has across all the seasons played, replace NULL values with 0."
+          },
+          {
+            "name": "highest_total_points_got_in_a_year",
+            "description": "The highest total points the team got in a year."
+          },
+          {
+            "name": "power_play_percentage_in_2011",
+            "description": "The power play percentage of the team in 2011."
+          },
+          {
+            "name": "num_bench_minor_penalties",
+            "description": "The number of bench minor penalties the team has across all the seasons played, replace NULL values with 0."
+          },
+          {
+            "name": "num_ties",
+            "description": "The number of ties the team has across all the seasons played, replace NULL values with 0."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    databricks_definition_id: 072d5540-f236-4294-ba7c-ade8fd918496\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://hockey-bucket/HOF.jsonl\n    sync_mode: full_refresh_append\n    table: HOF\n  - path: s3://hockey-bucket/SeriesPost.csv\n    sync_mode: full_refresh_append\n    table: SeriesPost\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - AwardsCoaches\n    - AwardsMisc\n    - AwardsPlayers\n    - ScoringShootout\n    - ScoringSup\n    - TeamSplits\n    - TeamVsTeam\n    - TeamsPost\n    - TeamsSC\nflat_files:\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=19HlKBHt7QEjtW1unXi0wNcPt7LX9v7gS\n  sync_mode: full_refresh_append\n  table: ScoringSC\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=1WiI1jxXvedVLLAZHcMPGZhEppDJZlmo1\n  sync_mode: full_refresh_append\n  table: abbrev\n- format: csv\n  path: https://drive.google.com/uc?export=download&id=1CnO1sHyi9lvhNlxmg5oLLRhxnP00Dco9\n  sync_mode: full_refresh_append\n  table: CombinedShutouts\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: hockey\n    sync_mode: full_refresh_append\n    tables:\n    - Coaches\n    - Goalies\n    - GoaliesSC\n    - Teams\npostgres:\n  config:\n    database: hockey\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - goalies_shootout\n    - master\n    - scoring\n    - team_half\n    user: postgres\ndatabricks:\n  config:\n    database: <db_database>\n    hostname: <db_hostname>\n    client_id: <db_client_id>\n    secret: <db_secret>\n    schema: hockey\n    http_path: <db_path>\n",
+  "case_id": "B14-elt-0037",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "hockey__goalies",
+        "columns": [
+          "playerid",
+          "namegiven",
+          "height",
+          "number_of_seasons_played",
+          "has_more_lost_than_won_games",
+          "total_goal_againsts",
+          "played_5000_minutes_in_the_all_the_season_played",
+          "defensive_success_rate_in_the_postseason_of_2011"
+        ]
+      },
+      {
+        "name": "hockey__teams",
+        "columns": [
+          "team_id",
+          "num_victories",
+          "highest_total_points_got_in_a_year",
+          "power_play_percentage_in_2011",
+          "num_bench_minor_penalties",
+          "num_ties"
+        ]
+      }
+    ]
+  }
+}

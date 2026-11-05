@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 243,
+  "question": "In the 1988 Australian Grand Prix, by what percentage was the winner's elapsed time shorter than the last full-distance finisher's? Use the last finisher's time as denominator and round to two decimals.",
+  "evidence": "",
+  "gold_sql": "WITH finished AS ( SELECT x.positionOrder, x.milliseconds FROM results AS x JOIN races AS r ON r.raceId = x.raceId JOIN status AS s ON s.statusId = x.statusId WHERE r.name = 'Australian Grand Prix' AND r.year = 1988 AND s.status = 'Finished' AND x.milliseconds IS NOT NULL ), extremes AS ( SELECT MIN(CASE WHEN positionOrder = 1 THEN milliseconds END) AS winner_ms, MAX(CASE WHEN positionOrder = (SELECT MAX(positionOrder) FROM finished) THEN milliseconds END) AS last_ms FROM finished ) SELECT ROUND(100.0 * (last_ms - winner_ms) / NULLIF(last_ms, 0), 2) FROM extremes",
+  "db_id": "formula_1",
+  "case_id": "B05-bird-0244",
+  "expected": {
+    "kind": "sql",
+    "sql": "WITH finished AS ( SELECT x.positionOrder, x.milliseconds FROM results AS x JOIN races AS r ON r.raceId = x.raceId JOIN status AS s ON s.statusId = x.statusId WHERE r.name = 'Australian Grand Prix' AND r.year = 1988 AND s.status = 'Finished' AND x.milliseconds IS NOT NULL ), extremes AS ( SELECT MIN(CASE WHEN positionOrder = 1 THEN milliseconds END) AS winner_ms, MAX(CASE WHEN positionOrder = (SELECT MAX(positionOrder) FROM finished) THEN milliseconds END) AS last_ms FROM finished ) SELECT ROUND(100.0 * (last_ms - winner_ms) / NULLIF(last_ms, 0), 2) FROM extremes",
+    "db_id": "formula_1",
+    "evidence": ""
+  }
+}

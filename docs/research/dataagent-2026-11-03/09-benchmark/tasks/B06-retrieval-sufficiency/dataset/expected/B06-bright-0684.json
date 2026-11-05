@@ -1,0 +1,62 @@
+{
+  "source": "xlangai/BRIGHT",
+  "query_id": "108",
+  "query": "## Analyzing the Problem\n\nThis problem presents a scenario where a biker traverses a series of points with varying altitudes. The objective is to determine the highest altitude reached by the biker during the trip.\n\n## Identifying Relevant Information\n\nTo solve this problem, we need to consider the following information:\n\n* **Starting altitude**: The biker starts at point 0 with an altitude of 0.\n* **Altitude gains**: An array `gain` is provided, where `gain[i]` represents the net gain in altitude between points `i` and `i+1`.\n* **Total points**: The total number of points is `n+1` (including the starting point).\n\n## Reasoning and Solution\n\nTo find the highest altitude, we need to track the cumulative altitude gain as the biker progresses through the points. We can achieve this by iterating through the `gain` array and adding each element to a running total. The maximum value encountered in this process will represent the highest altitude reached.\n\n## Draft Answer\n\nHere's a draft solution in Pony:\n\n```pony\nfun largestAltitude(gain: Array[I32]): I32\n  var currentAltitude = 0\n  var highestAltitude = 0\n  for i in 0..gain.len - 1\n    currentAltitude += gain[i]\n    highestAltitude = max(highestAltitude, currentAltitude)\n  return highestAltitude\nend\n```\n\nThis code iterates through the `gain` array, adding each element to `currentAltitude`. It then compares the updated `currentAltitude` with the existing `highestAltitude` and keeps the larger value. Finally, the function returns the `highestAltitude`. \n\n## Additional Thoughts\n\n* This solution assumes that the biker can reach any point regardless of the altitude gain. If there are constraints on the biker's ability to climb, additional logic would be needed to account for those limitations.\n* The solution uses the `max` function, which is available in Pony. If using a language without a built-in `max` function, a conditional statement can be used to compare the values.\n* The code can be further optimized by using early termination. If the current altitude exceeds the highest altitude found so far, there's no need to continue iterating through the remaining elements. \n",
+  "gold_ids": [
+    "Pony/4_control-structures_1.txt",
+    "Pony/1_variables_1.txt",
+    "Pony/5_methods_1.txt",
+    "Pony/4_control-structures_3.txt",
+    "Pony/2_ops_1.txt",
+    "Pony/4_control-structures_12.txt",
+    "Pony/4_control-structures_2.txt",
+    "Pony/1_variables_2.txt",
+    "Pony/4_control-structures_14.txt",
+    "Pony/4_control-structures_13.txt",
+    "Pony/4_control-structures_18.txt",
+    "Pony/4_control-structures_17.txt",
+    "Pony/2_ops_2.txt",
+    "Pony/4_control-structures_16.txt",
+    "Pony/4_control-structures_19.txt",
+    "Pony/2_primitives_3.txt",
+    "Pony/4_control-structures_15.txt",
+    "Pony/4_control-structures_11.txt"
+  ],
+  "gold_answer": "N/A",
+  "corpus": "documents/pony-00000-of-00001.parquet",
+  "case_id": "B06-bright-0684",
+  "expected": {
+    "kind": "retrieval",
+    "gold_ids": [
+      "Pony/4_control-structures_1.txt",
+      "Pony/1_variables_1.txt",
+      "Pony/5_methods_1.txt",
+      "Pony/4_control-structures_3.txt",
+      "Pony/2_ops_1.txt",
+      "Pony/4_control-structures_12.txt",
+      "Pony/4_control-structures_2.txt",
+      "Pony/1_variables_2.txt",
+      "Pony/4_control-structures_14.txt",
+      "Pony/4_control-structures_13.txt",
+      "Pony/4_control-structures_18.txt",
+      "Pony/4_control-structures_17.txt",
+      "Pony/2_ops_2.txt",
+      "Pony/4_control-structures_16.txt",
+      "Pony/4_control-structures_19.txt",
+      "Pony/2_primitives_3.txt",
+      "Pony/4_control-structures_15.txt",
+      "Pony/4_control-structures_11.txt"
+    ],
+    "gold_ids_long": [
+      "Pony/4_control-structures.txt",
+      "Pony/5_methods.txt",
+      "Pony/1_variables.txt",
+      "Pony/2_primitives.txt",
+      "Pony/2_ops.txt"
+    ],
+    "gold_answer": "N/A",
+    "excluded_ids": [
+      "N/A"
+    ]
+  }
+}

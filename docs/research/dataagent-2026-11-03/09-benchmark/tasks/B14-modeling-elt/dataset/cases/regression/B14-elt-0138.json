@@ -1,0 +1,35 @@
+{
+  "case_id": "B14-elt-0138",
+  "task_id": "B14",
+  "split_role": "regression",
+  "inputs": [
+    {
+      "kind": "config",
+      "ref": "fixtures/elt-redshift-human_resources-config.yaml",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B14-elt-0138.json"
+  },
+  "evidence": [
+    "bench://elt-bench/elt-bench/redshift/human_resources/data_model.yaml"
+  ],
+  "tags": [
+    "elt-bench",
+    "redshift",
+    "human_resources",
+    "models:2"
+  ],
+  "source": "elt",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

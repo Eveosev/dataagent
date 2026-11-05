@@ -1,0 +1,20 @@
+{
+  "source": "KAKA22/SpreadsheetBench",
+  "raw": {
+    "id": 59185,
+    "instruction": "In my Excel spreadsheet, I have alternating rows of names and numbers. I've been using an HLOOKUP formula to search for a value in a row, sum it up for each row, and add any further instances of that name in the row. However, the issue I'm encountering is that the formula only captures the first instance of the name and ignores any subsequent occurrences. I'm seeking a method, possibly a different formula or even VBA code, that can successfully sum all instances of a name in a row. For example, in the attached 'Mill Inventory.xlsx' spreadsheet, the value for 'WBNB' in cell O2 does not sum correctly, and this problem persists throughout the spreadsheet. Could someone please provide a solution that addresses this problem?\n \nMy current formula is:\nSUM(IFNA(HLOOKUP(N2,$A$2:$L$3,2,),0),IFNA(HLOOKUP(N2,$A$4:$L$5,2,),0),IFNA(HLOOKUP(N2,$A$6:$L$7,2,),0),IFNA(HLOOKUP(N2,$A$8:$L$9,2,),0),IFNA(HLOOKUP(N2,$A$10:$L$11,2,),0),IFNA(HLOOKUP(N2,$A$12:$L$13,2,),0),IFNA(HLOOKUP(N2,$A$14:$L$15,2,),0),IFNA(HLOOKUP(N2,$A$16:$L$17,2,),0),IFNA(HLOOKUP(N2,$A$18:$L$19,2,),0),IFNA(HLOOKUP(N2,$A$20:$L$21,2,),0))",
+    "spreadsheet_path": "spreadsheet/59185",
+    "instruction_type": "Cell-Level Manipulation",
+    "answer_position": "O2:O19"
+  },
+  "case_id": "B09-ssb-0809",
+  "expected": {
+    "kind": "sheet_answer",
+    "instruction": "In my Excel spreadsheet, I have alternating rows of names and numbers. I've been using an HLOOKUP formula to search for a value in a row, sum it up for each row, and add any further instances of that name in the row. However, the issue I'm encountering is that the formula only captures the first instance of the name and ignores any subsequent occurrences. I'm seeking a method, possibly a different formula or even VBA code, that can successfully sum all instances of a name in a row. For example, in the attached 'Mill Inventory.xlsx' spreadsheet, the value for 'WBNB' in cell O2 does not sum correctly, and this problem persists throughout the spreadsheet. Could someone please provide a solution that addresses this problem?\n \nMy current formula is:\nSUM(IFNA(HLOOKUP(N2,$A$2:$L$3,2,),0),IFNA(HLOOKUP(N2,$A$4:$L$5,2,),0),IFNA(HLOOKUP(N2,$A$6:$L$7,2,),0),IFNA(HLOOKUP(N2,$A$8:$L$9,2,),0),IFNA(HLOOKUP(N2,$A$10:$L$11,2,),0),IFNA(HLOOKUP(N2,$A$12:$L$13,2,),0),IFNA(HLOOKUP(N2,$A$14:$L$15,2,),0),IFNA(HLOOKUP(N2,$A$16:$L$17,2,),0),IFNA(HLOOKUP(N2,$A$18:$L$19,2,),0),IFNA(HLOOKUP(N2,$A$20:$L$21,2,),0))",
+    "answer": null,
+    "answer_sheet": null,
+    "answer_position": "O2:O19",
+    "data_position": null,
+    "instruction_type": "Cell-Level Manipulation"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1167,
+  "table": "economy-table86",
+  "structure": "SingleRowClassified",
+  "question_type": "Visualization",
+  "sub_type": "BarChart Generation",
+  "answer": "[2.1, 2.3, 2.6]\n",
+  "cot": [
+    {
+      "planning": "First, we need to locate the data corresponding to 'All food' and specifically extract the 'Prediction Interval 2024' values (Lower, Mid, and Upper)."
+    },
+    {
+      "planning": "Next, we organize the extracted values into a format suitable for generating a bar chart, with 'Lower', 'Mid', and 'Upper' as the X-axis labels and their respective values as the Y-axis data."
+    },
+    {
+      "planning": "Finally, we generate Python code that produces a bar chart based on the extracted and organized data, ensuring the X-axis is arranged in ascending order."
+    }
+  ],
+  "case_id": "B01-rht-2803",
+  "expected": {
+    "kind": "answer",
+    "question": "Based on the table, generate a bar chart to compare the 'Prediction Interval 2024' (Lower, Mid, and Upper) values for 'All food'.",
+    "answer": "[2.1, 2.3, 2.6]\n"
+  }
+}

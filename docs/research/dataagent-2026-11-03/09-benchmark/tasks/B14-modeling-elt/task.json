@@ -1,0 +1,99 @@
+{
+  "id": "B14",
+  "slug": "modeling-elt",
+  "title": "数据建模与物化",
+  "plan_row": 14,
+  "plan_ref": "../../../09-benchmark-plan.md",
+  "catalog_atoms": [
+    "DA13.1.1",
+    "DA13.1.2",
+    "DA13.2.1",
+    "DA13.2.2",
+    "DA13.3.1",
+    "DA13.3.2",
+    "DA13.3.3"
+  ],
+  "slice": "按需",
+  "unit": "pipeline",
+  "why_not_unit_tested": "转换模型的列与真值不一致，只有跑完加载与物化才暴露",
+  "reference_benchmarks": [
+    {
+      "name": "ELT-Bench",
+      "url": "https://arxiv.org/abs/2504.04808",
+      "scale_note": "100 条流水线 / 835 源表 / 203 数据模型；最佳 SRDEL 57%、SRDT 3.9%"
+    },
+    {
+      "name": "ELT-Bench Verified",
+      "url": "https://arxiv.org/pdf/2603.29399",
+      "scale_note": "修正版，优先使用"
+    },
+    {
+      "name": "Spider 2.0",
+      "url": "https://arxiv.org/abs/2411.07763",
+      "scale_note": "企业级 dbt 任务"
+    }
+  ],
+  "dataset": {
+    "sources": [
+      "ELT-Bench（参考 Verified 版）",
+      "Spider 2.0 dbt 任务",
+      "自建源表"
+    ],
+    "composition": "每条流水线绑定源快照；失败要落到具体模型与列，不只报总数",
+    "manifest_ref": "dataset/manifest.json",
+    "refresh": {
+      "unseen_acceptance_every_rounds": 6,
+      "replace_ratio": 0.25,
+      "rule": "样本一经暴露即降级为 regression；unseen_acceptance 不得参与调参"
+    }
+  },
+  "graders": [
+    "cost_report",
+    "pipeline_load_check",
+    "pipeline_transform_check"
+  ],
+  "metrics": [
+    {
+      "id": "srdel",
+      "label": "加载成功率（SRDEL）",
+      "direction": "higher",
+      "primary": true,
+      "unit": "ratio",
+      "aggregation": "mean_over_cases",
+      "grader": "pipeline_load_check",
+      "threshold_status": "pending_baseline"
+    },
+    {
+      "id": "srdt",
+      "label": "转换成功率（SRDT）",
+      "direction": "higher",
+      "primary": false,
+      "unit": "ratio",
+      "aggregation": "mean_over_cases",
+      "grader": "pipeline_transform_check",
+      "threshold_status": "pending_baseline"
+    },
+    {
+      "id": "cost_per_pipeline",
+      "label": "每条流水线成本",
+      "direction": "lower",
+      "primary": false,
+      "unit": "usd",
+      "aggregation": "mean_over_cases",
+      "grader": "cost_report",
+      "threshold_status": "pending_baseline"
+    }
+  ],
+  "gate": {
+    "tier": "warn",
+    "in_ci": true,
+    "blocking_metrics": [
+      "srdel"
+    ],
+    "ref": "../../monitor/thresholds.json"
+  },
+  "status": "collecting",
+  "owner": "TBD",
+  "notes_ref": "NOTES.md",
+  "created": "2026-11-04"
+}

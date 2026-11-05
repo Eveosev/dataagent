@@ -1,0 +1,54 @@
+{
+  "$comment": "generated from dataagent_contracts.core:QualityMetric; do not edit",
+  "$id": "dataagent-contracts/0.1/core/QualityMetric",
+  "additionalProperties": false,
+  "properties": {
+    "denominator": {
+      "minimum": 0,
+      "title": "Denominator",
+      "type": "integer"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "name": {
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+    },
+    "numerator": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Numerator"
+    },
+    "value": {
+      "title": "Value",
+      "type": "number"
+    }
+  },
+  "required": [
+    "name",
+    "value",
+    "denominator"
+  ],
+  "title": "QualityMetric",
+  "type": "object"
+}

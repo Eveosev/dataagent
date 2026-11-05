@@ -1,0 +1,34 @@
+{
+  "case_id": "B10-tsbad-0254",
+  "task_id": "B10",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "series",
+      "ref": "bench://tsb-ad-u/TSB-AD-U/540_SMAP_id_10_Sensor_tr_2051_1st_4575.csv",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B10-tsbad-0254.json"
+  },
+  "evidence": [
+    "bench://tsb-ad-u/TSB-AD-U/540_SMAP_id_10_Sensor_tr_2051_1st_4575.csv"
+  ],
+  "tags": [
+    "tsb-ad",
+    "u",
+    "Sensor"
+  ],
+  "source": "tsbad",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

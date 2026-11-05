@@ -1,0 +1,67 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "databricks",
+  "pipeline": "authors",
+  "data_model": {
+    "models": [
+      {
+        "name": "conferences",
+        "description": "Each record represents a conference.",
+        "columns": [
+          {
+            "name": "conference_id",
+            "description": "Unique identifier for the conference."
+          },
+          {
+            "name": "full_name",
+            "description": "Full name of the conference."
+          },
+          {
+            "name": "homepage",
+            "description": "Homepage of the conference."
+          },
+          {
+            "name": "avg_num_papers_published",
+            "description": "The average number of papers published in the conference per year."
+          },
+          {
+            "name": "num_paper_presented_in_2012",
+            "description": "The number of papers presented in the conference in 2012, replace NULL values with 0."
+          },
+          {
+            "name": "year_published_most_paper",
+            "description": "The year in which the most papers were published in the conference,  with ties broken by the ascending order of the year."
+          },
+          {
+            "name": "per_papers_have_keyword_cancer",
+            "description": "The percentage of papers that have the keyword \"cancer\" (case insensitive) in the conference."
+          },
+          {
+            "name": "total_number_paper_during_1990_to_2000",
+            "description": "The total number of papers published in the conference during 1990 to 2000, replace NULL values with 0."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    databricks_definition_id: 072d5540-f236-4294-ba7c-ade8fd918496\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://authors-bucket/Journal.jsonl\n    sync_mode: full_refresh_append\n    table: Journal\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - PaperAuthor\nflat_files:\n- format: csv\n  path: https://drive.google.com/uc?export=download&id=1e4AzBosRo-wx15I6gxpQNGFjIyxFCsLC\n  sync_mode: full_refresh_append\n  table: Conference\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: authors\n    sync_mode: full_refresh_append\n    tables:\n    - Author\npostgres:\n  config:\n    database: authors\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - paper\n    user: postgres\ndatabricks:\n  config:\n    database: <db_database>\n    hostname: <db_hostname>\n    client_id: <db_client_id>\n    secret: <db_secret>\n    schema: authors\n    http_path: <db_path>\n",
+  "case_id": "B14-elt-0007",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "conferences",
+        "columns": [
+          "conference_id",
+          "full_name",
+          "homepage",
+          "avg_num_papers_published",
+          "num_paper_presented_in_2012",
+          "year_published_most_paper",
+          "per_papers_have_keyword_cancer",
+          "total_number_paper_during_1990_to_2000"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "source": "xlangai/BRIGHT",
+  "query_id": "68",
+  "query": "## Essential Problem:\n\nThe core problem is determining whether Alice has a winning strategy in a game where two players take turns removing divisors from a given number until one player cannot make a move. \n\n## Relevant Information:\n\n1. **Player Turns:** Alice starts and players alternate turns.\n2. **Move Definition:** Each player chooses a positive divisor (except 1) of the current number and subtracts it.\n3. **Winning Condition:** The player who cannot make a move loses.\n4. **Optimal Play:** Both players are assumed to play optimally, meaning they choose the best move available in each situation.\n\n## Reasoning and Solution:\n\n1. **Alice's Advantage:** Alice has a slight advantage because she starts the game. This means she can potentially force Bob into a losing position by making strategic moves.\n2. **Divisibility Chain:** The game can be viewed as a chain of divisions, where each move reduces the number on the board. Analyzing this chain can reveal patterns and winning strategies.\n3. **Key Observation:** If Alice can make a move that leaves a number on the board which is not divisible by any number other than 1, she guarantees a win. This is because Bob will be forced to choose 1 on his next turn, leaving Alice with a winning move of n-1.\n4. **Winning Strategy:** Alice should aim to leave a number on the board that only has 1 as a divisor whenever possible. This can be achieved by:\n    * Choosing divisors that are multiples of previous divisors (to \"climb\" the divisibility chain).\n    * Avoiding moves that leave a number with multiple small divisors.\n5. **Special Cases:**\n    * If n is a power of 2, Bob can always force a win by mirroring Alice's moves.\n    * If n is not a power of 2, Alice can always guarantee a win with optimal play.\n\n## Draft Answer:\n\n```pony\nfun divisorGame(n: I32): Bool {\n    // Special case: If n is a power of 2, Bob wins.\n    if (isPowerOfTwo(n)) {\n        return false;\n    }\n\n    // Alice wins if she can leave a number with only 1 as a divisor.\n    while (true) {\n        // Find the largest divisor of n that is not 1.\n        let x = findLargestDivisor(n);\n\n        // If no such divisor exists, Alice wins.\n        if (x == 1) {\n            return true;\n        }\n\n        // Make the move and continue.\n        n -= x;\n    }\n}\n\n// Helper function to check if a number is a power of 2.\nfun isPowerOfTwo(n: I32): Bool {\n    return n > 0 && (n & (n - 1)) == 0;\n}\n\n// Helper function to find the largest divisor of a number.\nfun findLargestDivisor(n: I32): I32 {\n    for (i in (n - 1).downto(2)) {\n        if (n % i == 0) {\n            return i;\n        }\n    }\n    return 1;\n}\n```\n\n## Conclusion:\n\nThis draft solution outlines the key considerations and strategy for determining the winner in the divisor game. It incorporates the concept of leaving a number with only 1 as a divisor as a winning strategy for Alice and handles special cases like powers of 2. Remember that this is a draft and may require further refinement and testing. \n",
+  "gold_ids": [
+    "Pony/2_ops_10.txt",
+    "Pony/5_methods_1.txt",
+    "Pony/2_ops_2.txt",
+    "Pony/2_ops_1.txt",
+    "Pony/2_ops_11.txt",
+    "Pony/2_primitives_3.txt",
+    "Pony/2_ops_9.txt"
+  ],
+  "gold_answer": "N/A",
+  "corpus": "documents/pony-00000-of-00001.parquet",
+  "case_id": "B06-bright-0644",
+  "expected": {
+    "kind": "retrieval",
+    "gold_ids": [
+      "Pony/2_ops_10.txt",
+      "Pony/5_methods_1.txt",
+      "Pony/2_ops_2.txt",
+      "Pony/2_ops_1.txt",
+      "Pony/2_ops_11.txt",
+      "Pony/2_primitives_3.txt",
+      "Pony/2_ops_9.txt"
+    ],
+    "gold_ids_long": [
+      "Pony/5_methods.txt",
+      "Pony/2_primitives.txt",
+      "Pony/2_ops.txt"
+    ],
+    "gold_answer": "N/A",
+    "excluded_ids": [
+      "N/A"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 2051,
+  "table": "labor-table02",
+  "structure": "SingleRowClassified",
+  "question_type": "Fact Checking",
+  "sub_type": "Value-Matching",
+  "answer": "7.4",
+  "cot": [
+    {
+      "Planning": "First, we need to locate the “Male” category in the table."
+    },
+    {
+      "Planning": "Next, we need to identify the row for the age group “15-74 years” under the “Male” category."
+    },
+    {
+      "Planning": "Now, we look at the column for March 2015."
+    },
+    {
+      "Planning": "Finally, we extract the data for the unemployment rate of males aged 15-74 years in March 2015."
+    }
+  ],
+  "case_id": "B01-rht-3687",
+  "expected": {
+    "kind": "answer",
+    "question": "What was the unemployment rate for males aged 15-74 years in March 2015?",
+    "answer": "7.4"
+  }
+}

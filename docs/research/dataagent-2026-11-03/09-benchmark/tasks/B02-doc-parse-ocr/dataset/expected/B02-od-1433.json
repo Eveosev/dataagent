@@ -1,0 +1,289 @@
+{
+  "source": "opendatalab/OmniDocBench",
+  "page_no": 100,
+  "image": "book_en_国外数学教材-数论-Melvyn B. Nathanson—Elementary Methods in Number Theory_0100.png",
+  "attribute": {
+    "data_source": "book",
+    "language": "english",
+    "layout": "single_column",
+    "special_issue": [
+      "table_fewer_line",
+      "table_horizontal",
+      "table_with_formula"
+    ],
+    "subset": "v1.5"
+  },
+  "reading_order": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    null,
+    null
+  ],
+  "blocks": [
+    {
+      "category": "text_block",
+      "order": 1,
+      "text": "**Proof.** This follows immediately from Theorem 3.3, since $|(\\mathbf{Z}/p\\mathbf{Z})^{\\times}| = p - 1$. □"
+    },
+    {
+      "category": "text_block",
+      "order": 2,
+      "text": "The following table lists the primitive roots for the first six primes."
+    },
+    {
+      "category": "table",
+      "order": 3,
+      "html": "<table><thead><tr><td>p</td><td>φ(𝑝-1)</td><td>primitive roots</td></tr></thead><tbody><tr><td>2</td><td>1</td><td>1</td></tr><tr><td>3</td><td>1</td><td>2</td></tr><tr><td>5</td><td>2</td><td>2,3</td"
+    },
+    {
+      "category": "text_block",
+      "order": 4,
+      "text": "Let $p$ be a prime, and let $g$ be a primitive root modulo $p$. If $a$ is an integer not divisible by $p$，then there exists a unique integer $ k$ such that"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 5,
+      "latex": "$$a \\equiv g^{k} \\pmod{p}$$"
+    },
+    {
+      "category": "text_block",
+      "order": 6,
+      "text": "and"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 7,
+      "latex": "$$k \\in \\{0, 1, \\ldots, p - 2\\}.$$"
+    },
+    {
+      "category": "text_block",
+      "order": 8,
+      "text": "This integer $k$ is called the index of $a$ with respect to the primitive root $g$, and is denoted by"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 9,
+      "latex": "$$k = \\operatorname{ind}_{g}(a).$$"
+    },
+    {
+      "category": "text_block",
+      "order": 10,
+      "text": "If $k_1$ and $k_2$ are any integers such that $k_1 \\leq k_2$ and"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 11,
+      "latex": "$$a \\equiv g^{k_1} \\equiv g^{k_2} \\pmod{p},$$"
+    },
+    {
+      "category": "text_block",
+      "order": 12,
+      "text": "then"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 13,
+      "latex": "$$\ng^{k_2-k_1} \\equiv 1 \\pmod{p},\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 14,
+      "text": "and so"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 15,
+      "latex": "$$\nk_1 \\equiv k_2 \\pmod{p-1}.\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 16,
+      "text": "If $a \\equiv g^k \\pmod{p}$ and $b \\equiv g^\\ell \\pmod{p}$, then $ab \\equiv g^k g^\\ell = g^{k+\\ell} \\pmod{p}$,\nand so"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 17,
+      "latex": "$$ \\operatorname{ind}_{g}(ab) \\equiv k + \\ell \\equiv \\operatorname{ind}_{g}(a) + \\operatorname{ind}_{g}(b) \\pmod{p-1}. $$"
+    },
+    {
+      "category": "text_block",
+      "order": 18,
+      "text": "The index map $\\mathrm{ind}_g$ is also called the discrete logarithm to the base $g$ modulo $p$."
+    },
+    {
+      "category": "text_block",
+      "order": 19,
+      "text": "For example, 2 is a primitive root modulo 13. Here is a table of $\\operatorname{ind}_{2}(a)$ for $a=1, \\ldots, 12$:"
+    },
+    {
+      "category": "table",
+      "order": 20,
+      "html": "<table>\n    <thead>\n        <tr>\n            <th>a</th>\n            <th>ind<sub>2</sub>(a)</th>\n            <th>a</th>\n            <th>ind<sub>2</sub>(a)</th>\n        </tr>\n    </thead>\n    <tbody>\n  "
+    },
+    {
+      "category": "page_number",
+      "order": null,
+      "text": "88"
+    },
+    {
+      "category": "header",
+      "order": null,
+      "text": "3. Primitive Roots and Quadratic Reciprocity"
+    }
+  ],
+  "tables": [
+    {
+      "html": "<table><thead><tr><td>p</td><td>φ(𝑝-1)</td><td>primitive roots</td></tr></thead><tbody><tr><td>2</td><td>1</td><td>1</td></tr><tr><td>3</td><td>1</td><td>2</td></tr><tr><td>5</td><td>2</td><td>2,3</td></tr><tr><td>7</td><td>2</td><td>3,5</td></tr><tr><td>11</td><td>4</td><td>2,6,7,8</td></tr><tr><td>13</td><td>4</td><td>2,6,7,11</td></tr></tbody></table>",
+      "order": 3
+    },
+    {
+      "html": "<table>\n    <thead>\n        <tr>\n            <th>a</th>\n            <th>ind<sub>2</sub>(a)</th>\n            <th>a</th>\n            <th>ind<sub>2</sub>(a)</th>\n        </tr>\n    </thead>\n    <tbody>\n        <tr>\n            <td>1</td>\n            <td>0</td>\n            <td>7</td>\n            <td>11</td>\n        </tr>\n        <tr>\n            <td>2</td>\n            <td>1</td>\n            <td>8</td>\n            <td>3</td>\n        </tr>\n        <tr>\n            <td>3</td>\n            <td>4</td>\n            <td>9</td>\n            <td>8</td>\n        </tr>\n        <tr>\n            <td>4</td>\n            <td>2</td>\n            <td>10</td>\n            <td>10</td>\n        </tr>\n        <tr>\n            <td>5</td>\n            <td>9</td>\n            <td>11</td>\n            <td>7</td>\n        </tr>\n        <tr>\n            <td>6</td>\n            <td>5</td>\n            <td>12</td>\n            <td>6</td>\n        </tr>\n    </tbody>\n</table>",
+      "order": 20
+    }
+  ],
+  "case_id": "B02-od-1433",
+  "expected": {
+    "kind": "document",
+    "text": "**Proof.** This follows immediately from Theorem 3.3, since $|(\\mathbf{Z}/p\\mathbf{Z})^{\\times}| = p - 1$. □\nThe following table lists the primitive roots for the first six primes.\n<table><thead><tr><td>p</td><td>φ(𝑝-1)</td><td>primitive roots</td></tr></thead><tbody><tr><td>2</td><td>1</td><td>1</td></tr><tr><td>3</td><td>1</td><td>2</td></tr><tr><td>5</td><td>2</td><td>2,3</td></tr><tr><td>7</td><td>2</td><td>3,5</td></tr><tr><td>11</td><td>4</td><td>2,6,7,8</td></tr><tr><td>13</td><td>4</td><td>2,6,7,11</td></tr></tbody></table>\nLet $p$ be a prime, and let $g$ be a primitive root modulo $p$. If $a$ is an integer not divisible by $p$，then there exists a unique integer $ k$ such that\n$$a \\equiv g^{k} \\pmod{p}$$\nand\n$$k \\in \\{0, 1, \\ldots, p - 2\\}.$$\nThis integer $k$ is called the index of $a$ with respect to the primitive root $g$, and is denoted by\n$$k = \\operatorname{ind}_{g}(a).$$\nIf $k_1$ and $k_2$ are any integers such that $k_1 \\leq k_2$ and\n$$a \\equiv g^{k_1} \\equiv g^{k_2} \\pmod{p},$$\nthen\n$$\ng^{k_2-k_1} \\equiv 1 \\pmod{p},\n$$\nand so\n$$\nk_1 \\equiv k_2 \\pmod{p-1}.\n$$\nIf $a \\equiv g^k \\pmod{p}$ and $b \\equiv g^\\ell \\pmod{p}$, then $ab \\equiv g^k g^\\ell = g^{k+\\ell} \\pmod{p}$,\nand so\n$$ \\operatorname{ind}_{g}(ab) \\equiv k + \\ell \\equiv \\operatorname{ind}_{g}(a) + \\operatorname{ind}_{g}(b) \\pmod{p-1}. $$\nThe index map $\\mathrm{ind}_g$ is also called the discrete logarithm to the base $g$ modulo $p$.\nFor example, 2 is a primitive root modulo 13. Here is a table of $\\operatorname{ind}_{2}(a)$ for $a=1, \\ldots, 12$:\n<table>\n    <thead>\n        <tr>\n            <th>a</th>\n            <th>ind<sub>2</sub>(a)</th>\n            <th>a</th>\n            <th>ind<sub>2</sub>(a)</th>\n        </tr>\n    </thead>\n    <tbody>\n        <tr>\n            <td>1</td>\n            <td>0</td>\n            <td>7</td>\n            <td>11</td>\n        </tr>\n        <tr>\n            <td>2</td>\n            <td>1</td>\n            <td>8</td>\n            <td>3</td>\n        </tr>\n        <tr>\n            <td>3</td>\n            <td>4</td>\n            <td>9</td>\n            <td>8</td>\n        </tr>\n        <tr>\n            <td>4</td>\n            <td>2</td>\n            <td>10</td>\n            <td>10</td>\n        </tr>\n        <tr>\n            <td>5</td>\n            <td>9</td>\n            <td>11</td>\n            <td>7</td>\n        </tr>\n        <tr>\n            <td>6</td>\n            <td>5</td>\n            <td>12</td>\n            <td>6</td>\n        </tr>\n    </tbody>\n</table>\n88\n3. Primitive Roots and Quadratic Reciprocity",
+    "tables": [
+      {
+        "html": "<table><thead><tr><td>p</td><td>φ(𝑝-1)</td><td>primitive roots</td></tr></thead><tbody><tr><td>2</td><td>1</td><td>1</td></tr><tr><td>3</td><td>1</td><td>2</td></tr><tr><td>5</td><td>2</td><td>2,3</td></tr><tr><td>7</td><td>2</td><td>3,5</td></tr><tr><td>11</td><td>4</td><td>2,6,7,8</td></tr><tr><td>13</td><td>4</td><td>2,6,7,11</td></tr></tbody></table>",
+        "order": 3
+      },
+      {
+        "html": "<table>\n    <thead>\n        <tr>\n            <th>a</th>\n            <th>ind<sub>2</sub>(a)</th>\n            <th>a</th>\n            <th>ind<sub>2</sub>(a)</th>\n        </tr>\n    </thead>\n    <tbody>\n        <tr>\n            <td>1</td>\n            <td>0</td>\n            <td>7</td>\n            <td>11</td>\n        </tr>\n        <tr>\n            <td>2</td>\n            <td>1</td>\n            <td>8</td>\n            <td>3</td>\n        </tr>\n        <tr>\n            <td>3</td>\n            <td>4</td>\n            <td>9</td>\n            <td>8</td>\n        </tr>\n        <tr>\n            <td>4</td>\n            <td>2</td>\n            <td>10</td>\n            <td>10</td>\n        </tr>\n        <tr>\n            <td>5</td>\n            <td>9</td>\n            <td>11</td>\n            <td>7</td>\n        </tr>\n        <tr>\n            <td>6</td>\n            <td>5</td>\n            <td>12</td>\n            <td>6</td>\n        </tr>\n    </tbody>\n</table>",
+        "order": 20
+      }
+    ],
+    "blocks": [
+      {
+        "category": "text_block",
+        "order": 1,
+        "text": "**Proof.** This follows immediately from Theorem 3.3, since $|(\\mathbf{Z}/p\\mathbf{Z})^{\\times}| = p - 1$. □"
+      },
+      {
+        "category": "text_block",
+        "order": 2,
+        "text": "The following table lists the primitive roots for the first six primes."
+      },
+      {
+        "category": "table",
+        "order": 3,
+        "html": "<table><thead><tr><td>p</td><td>φ(𝑝-1)</td><td>primitive roots</td></tr></thead><tbody><tr><td>2</td><td>1</td><td>1</td></tr><tr><td>3</td><td>1</td><td>2</td></tr><tr><td>5</td><td>2</td><td>2,3</td"
+      },
+      {
+        "category": "text_block",
+        "order": 4,
+        "text": "Let $p$ be a prime, and let $g$ be a primitive root modulo $p$. If $a$ is an integer not divisible by $p$，then there exists a unique integer $ k$ such that"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 5,
+        "latex": "$$a \\equiv g^{k} \\pmod{p}$$"
+      },
+      {
+        "category": "text_block",
+        "order": 6,
+        "text": "and"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 7,
+        "latex": "$$k \\in \\{0, 1, \\ldots, p - 2\\}.$$"
+      },
+      {
+        "category": "text_block",
+        "order": 8,
+        "text": "This integer $k$ is called the index of $a$ with respect to the primitive root $g$, and is denoted by"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 9,
+        "latex": "$$k = \\operatorname{ind}_{g}(a).$$"
+      },
+      {
+        "category": "text_block",
+        "order": 10,
+        "text": "If $k_1$ and $k_2$ are any integers such that $k_1 \\leq k_2$ and"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 11,
+        "latex": "$$a \\equiv g^{k_1} \\equiv g^{k_2} \\pmod{p},$$"
+      },
+      {
+        "category": "text_block",
+        "order": 12,
+        "text": "then"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 13,
+        "latex": "$$\ng^{k_2-k_1} \\equiv 1 \\pmod{p},\n$$"
+      },
+      {
+        "category": "text_block",
+        "order": 14,
+        "text": "and so"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 15,
+        "latex": "$$\nk_1 \\equiv k_2 \\pmod{p-1}.\n$$"
+      },
+      {
+        "category": "text_block",
+        "order": 16,
+        "text": "If $a \\equiv g^k \\pmod{p}$ and $b \\equiv g^\\ell \\pmod{p}$, then $ab \\equiv g^k g^\\ell = g^{k+\\ell} \\pmod{p}$,\nand so"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 17,
+        "latex": "$$ \\operatorname{ind}_{g}(ab) \\equiv k + \\ell \\equiv \\operatorname{ind}_{g}(a) + \\operatorname{ind}_{g}(b) \\pmod{p-1}. $$"
+      },
+      {
+        "category": "text_block",
+        "order": 18,
+        "text": "The index map $\\mathrm{ind}_g$ is also called the discrete logarithm to the base $g$ modulo $p$."
+      },
+      {
+        "category": "text_block",
+        "order": 19,
+        "text": "For example, 2 is a primitive root modulo 13. Here is a table of $\\operatorname{ind}_{2}(a)$ for $a=1, \\ldots, 12$:"
+      },
+      {
+        "category": "table",
+        "order": 20,
+        "html": "<table>\n    <thead>\n        <tr>\n            <th>a</th>\n            <th>ind<sub>2</sub>(a)</th>\n            <th>a</th>\n            <th>ind<sub>2</sub>(a)</th>\n        </tr>\n    </thead>\n    <tbody>\n  "
+      },
+      {
+        "category": "page_number",
+        "order": null,
+        "text": "88"
+      },
+      {
+        "category": "header",
+        "order": null,
+        "text": "3. Primitive Roots and Quadratic Reciprocity"
+      }
+    ]
+  }
+}

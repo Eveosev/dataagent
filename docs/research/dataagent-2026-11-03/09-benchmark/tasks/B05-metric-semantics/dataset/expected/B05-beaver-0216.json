@@ -1,0 +1,27 @@
+{
+  "source": "beaverbench/beaver-query",
+  "id": "dw_2980",
+  "db": "dw",
+  "question": "For each organization, show the organization name, the number of associated space units, and whether the organization is a 'LARGE_HOLDER' (at least 20% more space units than the average), 'SMALL_HOLDER' (at least 20% fewer space units than the average), or 'AVERAGE_HOLDER' otherwise. Do not return any rounded answers.",
+  "sql": "WITH inner_cte AS ( SELECT fo.ORGANIZATION_NAME, COUNT(su.SPACE_UNIT_KEY) AS space_unit_count FROM FCLT_ORG_DLC_KEY fok JOIN FCLT_ORGANIZATION fo ON fok.DLC_KEY = fo.DLC_KEY JOIN SPACE_UNIT su ON fo.DLC_KEY = su.DLC_KEY GROUP BY fo.ORGANIZATION_NAME ) SELECT ic.ORGANIZATION_NAME, ic.space_unit_count, avg_stats.avg_space_units, CASE WHEN ic.space_unit_count > avg_stats.avg_space_units * 1.2 THEN 'LARGE_HOLDER' WHEN ic.space_unit_count < avg_stats.avg_space_units * 0.8 THEN 'SMALL_HOLDER' ELSE 'AVERAGE_HOLDER' END AS holder_category FROM inner_cte ic CROSS JOIN ( SELECT AVG(space_unit_count) AS avg_space_units FROM inner_cte ) avg_stats;",
+  "tables": "[\"FCLT_ORG_DLC_KEY\", \"FCLT_ORGANIZATION\", \"SPACE_UNIT\"]",
+  "join_keys": "[[\"FCLT_ORGANIZATION.DLC_KEY\", \"FCLT_ORG_DLC_KEY.DLC_KEY\"], [\"FCLT_ORGANIZATION.DLC_KEY\", \"SPACE_UNIT.DLC_KEY\"]]",
+  "column_mapping": "{\"organization\": [\"FCLT_ORGANIZATION.ORGANIZATION_NAME\"], \"organization name\": [\"FCLT_ORGANIZATION.ORGANIZATION_NAME\"], \"number of associated space units\": [\"SPACE_UNIT.SPACE_UNIT_KEY\"], \"space units\": [\"SPACE_UNIT.SPACE_UNIT_KEY\"]}",
+  "domain_knowledge": "[]",
+  "sub_questions": "[\"List the top 10 organizations by the number of associated space units, showing the organization name and the count of space units for each.\"]",
+  "sub_sqls": "[\"SELECT fo.ORGANIZATION_NAME, COUNT(su.SPACE_UNIT_KEY) AS space_unit_count FROM FCLT_ORG_DLC_KEY fok JOIN FCLT_ORGANIZATION fo ON fok.DLC_KEY = fo.DLC_KEY JOIN SPACE_UNIT su ON fo.DLC_KEY = su.DLC_KEY GROUP BY fo.ORGANIZATION_NAME ORDER BY space_unit_count DESC LIMIT 10;\"]",
+  "category": "complex query",
+  "detailed_category": "nested",
+  "case_id": "B05-beaver-0216",
+  "expected": {
+    "kind": "sql",
+    "sql": "WITH inner_cte AS ( SELECT fo.ORGANIZATION_NAME, COUNT(su.SPACE_UNIT_KEY) AS space_unit_count FROM FCLT_ORG_DLC_KEY fok JOIN FCLT_ORGANIZATION fo ON fok.DLC_KEY = fo.DLC_KEY JOIN SPACE_UNIT su ON fo.DLC_KEY = su.DLC_KEY GROUP BY fo.ORGANIZATION_NAME ) SELECT ic.ORGANIZATION_NAME, ic.space_unit_count, avg_stats.avg_space_units, CASE WHEN ic.space_unit_count > avg_stats.avg_space_units * 1.2 THEN 'LARGE_HOLDER' WHEN ic.space_unit_count < avg_stats.avg_space_units * 0.8 THEN 'SMALL_HOLDER' ELSE 'AVERAGE_HOLDER' END AS holder_category FROM inner_cte ic CROSS JOIN ( SELECT AVG(space_unit_count) AS avg_space_units FROM inner_cte ) avg_stats;",
+    "sub_sqls": "[\"SELECT fo.ORGANIZATION_NAME, COUNT(su.SPACE_UNIT_KEY) AS space_unit_count FROM FCLT_ORG_DLC_KEY fok JOIN FCLT_ORGANIZATION fo ON fok.DLC_KEY = fo.DLC_KEY JOIN SPACE_UNIT su ON fo.DLC_KEY = su.DLC_KEY GROUP BY fo.ORGANIZATION_NAME ORDER BY space_unit_count DESC LIMIT 10;\"]",
+    "db": "dw",
+    "tables": "[\"FCLT_ORG_DLC_KEY\", \"FCLT_ORGANIZATION\", \"SPACE_UNIT\"]",
+    "join_keys": "[[\"FCLT_ORGANIZATION.DLC_KEY\", \"FCLT_ORG_DLC_KEY.DLC_KEY\"], [\"FCLT_ORGANIZATION.DLC_KEY\", \"SPACE_UNIT.DLC_KEY\"]]",
+    "column_mapping": "{\"organization\": [\"FCLT_ORGANIZATION.ORGANIZATION_NAME\"], \"organization name\": [\"FCLT_ORGANIZATION.ORGANIZATION_NAME\"], \"number of associated space units\": [\"SPACE_UNIT.SPACE_UNIT_KEY\"], \"space units\": [\"SPACE_UNIT.SPACE_UNIT_KEY\"]}",
+    "category": "complex query",
+    "db_archive": "bench://beaver-table/beaver_db.zip"
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "case_id": "B03-eb-0191",
+  "task_id": "B03",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://extractbench/docs/short/hingham_lowes_receipt.pdf",
+      "digest": null
+    },
+    {
+      "kind": "schema",
+      "ref": "fixtures/eb-short-hingham_lowes_receipt-schema.json",
+      "digest": null
+    },
+    {
+      "kind": "rules",
+      "ref": "fixtures/eb-short-hingham_lowes_receipt-rules.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-eb-0191.json"
+  },
+  "evidence": [
+    "bench://extractbench/docs/short/hingham_lowes_receipt.pdf",
+    "fixtures/eb-short-hingham_lowes_receipt-schema.json",
+    "fixtures/eb-short-hingham_lowes_receipt-rules.md"
+  ],
+  "tags": [
+    "extractbench",
+    "short",
+    "tag:source:real",
+    "tag:challenge:T3.b",
+    "tag:length:short",
+    "tag:domain:D1",
+    "fields:32"
+  ],
+  "source": "eb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

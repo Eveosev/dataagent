@@ -1,0 +1,13 @@
+{
+  "source": "TianqiLuo/nvBench2.0",
+  "nl_query": "Show a scatter plot with petid.",
+  "table_schema": "{\"table_columns\": [\"stuid\", \"petid\"], \"column_examples\": {\"stuid\": [1001, 1002, 1002], \"petid\": [2001, 2002, 2003]}, \"unique_value_counts\": {\"stuid\": 2, \"petid\": 3}}",
+  "gold_answer": "[{\"mark\": \"point\", \"encoding\": {\"y\": {\"field\": \"petid\"}, \"x\": {\"field\": \"stuid\"}}}, {\"mark\": \"point\", \"encoding\": {\"y\": {\"field\": \"petid\"}, \"size\": {\"aggregate\": \"count\"}, \"x\": {\"field\": \"stuid\"}}}]",
+  "steps": "{\"step_1\": {\"reasoning\": \"The NL query specifically mentions 'petid' as the column of interest. There are no other columns mentioned, and 'petid' is not ambiguous in this context. Additionally, there are no filters specified in the query.\", \"answer\": {\"column_list\": [{\"field\": \"petid\", \"ambiguous\": false}], \"filter_list\": []}}, \"step_2\": {\"reasoning\": \"The NL query does not indicate any transformations such as aggregation, binning, or sorting. Therefore, the answer is an empty list as no transformations are specified.\", \"answer\": []}, \"step_3\": {\"reasoning\": \"The NL query explicitly states that a scatter plot should be shown. Therefore, the chart type is clearly defined as 'point'.\", \"answer\": \"point\"}, \"step_4\": {\"reasoning\": \"For a scatter plot (point chart), the y channel is filled with 'petid' as specified in the previous steps. However, the x channel is not yet defined, which is necessary for a valid scatter plot. Hence, we will need to add an appropriate x channel.\", \"answer\": [{\"mark\": \"point\", \"encoding\": {\"y\": {\"field\": \"petid\"}}}]}, \"step_5\": {\"reasoning\": \"To complete the scatter plot, we need to fill the obligatory x channel. The only available column that can be used for the x channel is 'stuid'. Therefore, we add 'stuid' as the x channel to the existing answer.\", \"answer\": [{\"mark\": \"point\", \"encoding\": {\"y\": {\"field\": \"petid\"}, \"x\": {\"field\": \"stuid\"}}}]}, \"step_6\": {\"reasoning\": \"There are no implicit transformations required since we have already filled the obligatory channels. Additionally, there are no filters to apply from step 1. The existing configuration for the scatter plot remains valid.\", \"answer\": [{\"mark\": \"point\", \"encoding\": {\"y\": {\"field\": \"petid\"}, \"x\": {\"field\": \"stuid\"}}}]}}",
+  "case_id": "B09-nvb-2131",
+  "expected": {
+    "kind": "chart",
+    "spec": "[{\"mark\": \"point\", \"encoding\": {\"y\": {\"field\": \"petid\"}, \"x\": {\"field\": \"stuid\"}}}, {\"mark\": \"point\", \"encoding\": {\"y\": {\"field\": \"petid\"}, \"size\": {\"aggregate\": \"count\"}, \"x\": {\"field\": \"stuid\"}}}]",
+    "mark": null
+  }
+}

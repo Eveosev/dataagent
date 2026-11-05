@@ -1,0 +1,67 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "databricks",
+  "pipeline": "food_inspection",
+  "data_model": {
+    "models": [
+      {
+        "name": "restaurants",
+        "description": "Each record represents a restaurant.",
+        "columns": [
+          {
+            "name": "business_id",
+            "description": "Unique identifier for the restaurant."
+          },
+          {
+            "name": "name",
+            "description": "Name of the restaurant."
+          },
+          {
+            "name": "owner_name",
+            "description": "Name of the owner of the restaurant."
+          },
+          {
+            "name": "num_high_risk_violations",
+            "description": "The number of high-risk violations the restaurant has, replace NULL values with 0."
+          },
+          {
+            "name": "num_of_inspections_because_of_complaint",
+            "description": "The number of inspections the restaurant has because of a complaint, replace NULL values with 0. Because of a complaint refers to type = 'Complaint'."
+          },
+          {
+            "name": "violation_per_inspection",
+            "description": "The average number of violations per inspection the restaurant has."
+          },
+          {
+            "name": "lowest_inspection_score",
+            "description": "The lowest inspection score the restaurant has."
+          },
+          {
+            "name": "meets_all_required_standards_for_4_consecutive_years",
+            "description": "1 if there exists a run of 4 or more consecutive calendar years in which every year of the run contains at least one inspection with score = 100. Otherwise 0."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    databricks_definition_id: 072d5540-f236-4294-ba7c-ade8fd918496\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - inspections\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: food_inspection\n    sync_mode: full_refresh_append\n    tables:\n    - businesses\npostgres:\n  config:\n    database: food_inspection\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - violations\n    user: postgres\ndatabricks:\n  config:\n    database: <db_database>\n    hostname: <db_hostname>\n    client_id: <db_client_id>\n    secret: <db_secret>\n    schema: food_inspection\n    http_path: <db_path>\n",
+  "case_id": "B14-elt-0032",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "restaurants",
+        "columns": [
+          "business_id",
+          "name",
+          "owner_name",
+          "num_high_risk_violations",
+          "num_of_inspections_because_of_complaint",
+          "violation_per_inspection",
+          "lowest_inspection_score",
+          "meets_all_required_standards_for_4_consecutive_years"
+        ]
+      }
+    ]
+  }
+}

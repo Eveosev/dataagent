@@ -1,0 +1,149 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "databricks",
+  "pipeline": "professional_basketball",
+  "data_model": {
+    "models": [
+      {
+        "name": "professional_basketball__teams",
+        "description": "Each record represents a team.",
+        "columns": [
+          {
+            "name": "team_id",
+            "description": "The unique identifier of the team."
+          },
+          {
+            "name": "win_more_in_2005_than_2004",
+            "description": "Set to 1 if the team won more games in 2005 than in 2004; 0 otherwise. Set to 0 if the team did not play in both 2004 and 2005."
+          },
+          {
+            "name": "has_player_with_MVP",
+            "description": "Set the value to 1 if the team includes at least one player who won the MVP award while playing for that team in any season; otherwise, set it to 0. MVP award refers to award = 'Most Valuable Player'."
+          },
+          {
+            "name": "win_rate_change_from_1972_to_1973",
+            "description": "The change in win rate (percentage points) from 1972 to 1973."
+          },
+          {
+            "name": "has_at_least_3_all_star_players",
+            "description": "Set to 1 if at least 3 distinct players who have played for the team were named all-stars at any point in their careers; otherwise, set to 0"
+          },
+          {
+            "name": "has_more_home_won_than_lost_80_per",
+            "description": "Set to 1 if, in any season, the team's home wins exceed its home losses by more than 80%; otherwise, set to 0."
+          }
+        ]
+      },
+      {
+        "name": "professional_basketball__coaches",
+        "description": "Each record represents a coach.",
+        "columns": [
+          {
+            "name": "coachID",
+            "description": "The unique identifier of the coach."
+          },
+          {
+            "name": "served_more_than_2_NBA_teams",
+            "description": "Set to 1 if the coach has served more than 2 NBA teams, 0 otherwise."
+          },
+          {
+            "name": "received_both_NBA_and_ABA_awards_1962_to_2011",
+            "description": "Set to 1 if the coach has received both NBA and ABA awards from 1962 to 2011, 0 otherwise."
+          },
+          {
+            "name": "num_of_won_games",
+            "description": "The number of games the coach has won, replace NULL values with 0."
+          },
+          {
+            "name": "has_more_than_50_games_won_2000",
+            "description": "Set to 1 if the coach has won more than 50 games in 2000, 0 otherwise."
+          },
+          {
+            "name": "lost_more_than_won_from_2000_to_2010",
+            "description": "Set to 1 if the coach has  more game lost than won from year 2000-2010, otherwise, set to 0."
+          }
+        ]
+      },
+      {
+        "name": "professional_basketball__players",
+        "description": "Each record represents a player.",
+        "columns": [
+          {
+            "name": "player_id",
+            "description": "The unique identifier of the player."
+          },
+          {
+            "name": "name",
+            "description": "The name of the player. Concatenate the first name and last name with a space in between."
+          },
+          {
+            "name": "birthcountry",
+            "description": "The country where the player was born."
+          },
+          {
+            "name": "num_MVPs",
+            "description": "The number of MVP awards the player has won, replace NULL values with 0. MVP award refers to award = 'Most Valuable Player'."
+          },
+          {
+            "name": "num_fouls",
+            "description": "The number of fouls the player has committed in his career, replace NULL values with 0."
+          },
+          {
+            "name": "field_goal_made_rate",
+            "description": "The rate of field goals made by the player, return as a percentage."
+          },
+          {
+            "name": "is_all_star_player_and_taller_than_75_inch",
+            "description": "Set to 1 if the player is an all-star player and is taller than 75 inches, 0 otherwise."
+          },
+          {
+            "name": "attended_California_college_and_is_an_all_star_player",
+            "description": "Set to 1 if the player attended 'California' college and is an all-star player, 0 otherwise. 'California' college refers to college = 'California'."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    databricks_definition_id: 072d5540-f236-4294-ba7c-ade8fd918496\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://professional-basketball-bucket/awards_coaches.parquet\n    sync_mode: full_refresh_append\n    table: awards_coaches\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - series_post\n    - teams\nflat_files:\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=1dTFUFvaakf_GMCCqbw1aco7Chzyjow5a\n  sync_mode: full_refresh_append\n  table: awards_players\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: professional_basketball\n    sync_mode: full_refresh_append\n    tables:\n    - draft\n    - player_allstar\n    - players\npostgres:\n  config:\n    database: professional_basketball\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - coaches\n    - players_teams\n    user: postgres\ndatabricks:\n  config:\n    database: <db_database>\n    hostname: <db_hostname>\n    client_id: <db_client_id>\n    secret: <db_secret>\n    schema: professional_basketball\n    http_path: <db_path>\n",
+  "case_id": "B14-elt-0063",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "professional_basketball__teams",
+        "columns": [
+          "team_id",
+          "win_more_in_2005_than_2004",
+          "has_player_with_MVP",
+          "win_rate_change_from_1972_to_1973",
+          "has_at_least_3_all_star_players",
+          "has_more_home_won_than_lost_80_per"
+        ]
+      },
+      {
+        "name": "professional_basketball__coaches",
+        "columns": [
+          "coachID",
+          "served_more_than_2_NBA_teams",
+          "received_both_NBA_and_ABA_awards_1962_to_2011",
+          "num_of_won_games",
+          "has_more_than_50_games_won_2000",
+          "lost_more_than_won_from_2000_to_2010"
+        ]
+      },
+      {
+        "name": "professional_basketball__players",
+        "columns": [
+          "player_id",
+          "name",
+          "birthcountry",
+          "num_MVPs",
+          "num_fouls",
+          "field_goal_made_rate",
+          "is_all_star_player_and_taller_than_75_inch",
+          "attended_California_college_and_is_an_all_star_player"
+        ]
+      }
+    ]
+  }
+}

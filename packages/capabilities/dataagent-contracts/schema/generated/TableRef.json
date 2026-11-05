@@ -1,0 +1,168 @@
+{
+  "$comment": "generated from dataagent_contracts.core:TableRef; do not edit",
+  "$defs": {
+    "AssetRef": {
+      "additionalProperties": false,
+      "properties": {
+        "digest": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Digest"
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "minLength": 1,
+          "title": "Kind",
+          "type": "string"
+        },
+        "locator": {
+          "minLength": 1,
+          "title": "Locator",
+          "type": "string"
+        },
+        "media_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Media Type"
+        },
+        "resolver": {
+          "minLength": 1,
+          "title": "Resolver",
+          "type": "string"
+        },
+        "revision": {
+          "minLength": 1,
+          "title": "Revision",
+          "type": "string"
+        },
+        "scope_ref": {
+          "minLength": 1,
+          "title": "Scope Ref",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "scope_ref",
+        "revision",
+        "resolver",
+        "locator"
+      ],
+      "title": "AssetRef",
+      "type": "object"
+    },
+    "VersionedRef": {
+      "description": "Versioned reference serialized as '<id>@<revision>'.",
+      "pattern": "^[^@\\s]+@[^@\\s]+$",
+      "type": "string"
+    }
+  },
+  "$id": "dataagent-contracts/0.1/core/TableRef",
+  "additionalProperties": false,
+  "properties": {
+    "asset": {
+      "$ref": "#/$defs/AssetRef"
+    },
+    "data_ref": {
+      "minLength": 1,
+      "title": "Data Ref",
+      "type": "string"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "row_identity": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Row Identity"
+    },
+    "schema_ref": {
+      "$ref": "#/$defs/VersionedRef"
+    },
+    "source_map_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Source Map Ref"
+    },
+    "transform_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Transform Ref"
+    }
+  },
+  "required": [
+    "asset",
+    "schema_ref",
+    "data_ref"
+  ],
+  "title": "TableRef",
+  "type": "object"
+}

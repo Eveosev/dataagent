@@ -1,0 +1,1 @@
+Find the year with the highest suppression cost per acre of human-caused fire. What was the cost per acre, rounded to the nearest cent?

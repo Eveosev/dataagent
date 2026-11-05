@@ -1,0 +1,1 @@
+Which payment method (card_scheme) has the highest avg fraud rate for the year 2023?

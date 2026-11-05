@@ -1,0 +1,22 @@
+{
+  "source": "KAKA22/SpreadsheetBench",
+  "raw": {
+    "id": "398-14",
+    "instruction": "I have data across multiple sheets where I need to match and sum values from columns B, C, and D that are repeated across these sheets. Then, I need to insert a column called 'BALANCE' which calculates the difference between the 'RET' and 'SALE' columns. Whenever I add new sheets that have the same structure, the macro should be able to adapt to include them. The results, along with headers, should be compiled in a 'collection' sheet. Additionally, instead of showing a formula in column G, it should display the calculated value, and any empty cells should show a hyphen instead of a zero.",
+    "spreadsheet_path": "spreadsheet/398-14",
+    "instruction_type": "Sheet-Level Manipulation",
+    "answer_position": "'COLLECTION'!A2:G9",
+    "answer_sheet": "COLLECTION",
+    "data_position": "A1:G9"
+  },
+  "case_id": "B09-ssb-0225",
+  "expected": {
+    "kind": "sheet_answer",
+    "instruction": "I have data across multiple sheets where I need to match and sum values from columns B, C, and D that are repeated across these sheets. Then, I need to insert a column called 'BALANCE' which calculates the difference between the 'RET' and 'SALE' columns. Whenever I add new sheets that have the same structure, the macro should be able to adapt to include them. The results, along with headers, should be compiled in a 'collection' sheet. Additionally, instead of showing a formula in column G, it should display the calculated value, and any empty cells should show a hyphen instead of a zero.",
+    "answer": null,
+    "answer_sheet": "COLLECTION",
+    "answer_position": "'COLLECTION'!A2:G9",
+    "data_position": "A1:G9",
+    "instruction_type": "Sheet-Level Manipulation"
+  }
+}

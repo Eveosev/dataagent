@@ -1,0 +1,25 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_f9aec5d1",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_eviction_case_type",
+    "statute_va_8_01_126_2021_authorized_intake_official",
+    "statute_va_8_01_126_2021_hearing_court_for_unlawful_detainer",
+    "statute_specifies_initial_hearing_court",
+    "specified_court_for_first_hearing",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program encoding VA Code  8.01-126 (2021)\n    and the question scenario, then reasoning to answer:\n\n    Question: \"Is it specified in which court eviction cases are first heard?\"\n*/\n\n% -----------------------------\n% Scenario facts (question statement)\n% -----------------------------\n\n% HousingQA metadata encoded as facts.\nscenario_state(virginia).\nscenario_focus_year(2021).\n\n% The question concerns eviction cases; in Virginia, the relevant procedure here is\n% an \"unlawful detainer\" summons under VA Code  8.01-126.\nscenario_eviction_case_type(unlawful_detainer).\n\n% Helper predicate that succeeds when the factual scenario is satisfied.\nscenario_statement :-\n    scenario_state(virginia),\n    scenario_focus_year(2021),\n    scenario_eviction_case_type(unlawful_detainer).\n\n% -----------------------------\n% Statute encoding: VA Code  8.01-126 (2021)\n% -----------------------------\n\n/* VA Code  8.01-126(B) (2021):\n   In unlawful detainer, the landlord may present a statement under oath\n   \"to a magistrate or a clerk or judge of a general district court\" and\n   the magistrate/clerk/judge issues a summons.\n\n   Encoding: authorized issuer / intake officials.\n*/\nstatute_va_8_01_126_2021_authorized_intake_official(magistrate).\nstatute_va_8_01_126_2021_authorized_intake_official(clerk_of_general_district_court).\nstatute_va_8_01_126_2021_authorized_intake_official(judge_of_general_district_court).\n\n/* VA Code  8.01-126(B) (2021):\n   \"When issued by a magistrate it may be returned to and the case heard and determined\n   by the judge of a general district court.\"\n\n   Encoding: specifies the court that hears/determines the unlawful detainer case.\n*/\nstatute_va_8_01_126_2021_hearing_court_for_unlawful_detainer(general_district_court).\n\n/* Derived statutory predicate:\n   There is a specified court forum where unlawful detainer eviction cases are heard.\n*/\nstatute_specifies_initial_hearing_court(State, Year, CaseType, Court) :-\n    State = virginia,\n    Year = 2021,\n    CaseType = unlawful_detainer,\n    statute_va_8_01_126_2021_hearing_court_for_unlawful_detainer(Court).\n\n% -----------------------------\n% Reasoning to answer the question\n% -----------------------------\n\n% The question asks whether the court of first hearing is specified.\n% We treat \"specified\" as: the statute yields a concrete court for hearing the case.\nspecified_court_for_first_hearing(Court) :-\n    scenario_statement,\n    scenario_state(State),\n    scenario_focus_year(Year),\n    scenario_eviction_case_type(CaseType),\n    statute_specifies_initial_hearing_court(State, Year, CaseType, Court).\n\n% -----------------------------\n% Final answer predicate (deterministic)\n% -----------------------------\n\nhousing_answer(yes) :-\n    specified_court_for_first_hearing(_Court),\n    !.\nhousing_answer(no).\n\n% -----------------------------\n% Main entrypoint (required)\n% -----------------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-2832",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Is it specified in which court eviction cases are first heard?"
+  }
+}

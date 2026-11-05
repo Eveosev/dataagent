@@ -1,0 +1,219 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentos.local/benchmark/scorecard.schema.json",
+  "title": "Scorecard",
+  "type": "object",
+  "required": [
+    "run_id",
+    "task_id",
+    "split_scores",
+    "verdict",
+    "gate"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "run_id": {
+      "type": "string"
+    },
+    "task_id": {
+      "type": "string"
+    },
+    "baseline_run": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "split_scores": {
+      "type": "object",
+      "required": [
+        "development",
+        "regression",
+        "unseen_acceptance"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "development": {
+          "type": "object",
+          "required": [
+            "count",
+            "metrics"
+          ],
+          "properties": {
+            "count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "metrics": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "required": [
+                  "value",
+                  "numerator",
+                  "denominator"
+                ],
+                "properties": {
+                  "value": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "numerator": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "denominator": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "regression": {
+          "type": "object",
+          "required": [
+            "count",
+            "metrics"
+          ],
+          "properties": {
+            "count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "metrics": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "required": [
+                  "value",
+                  "numerator",
+                  "denominator"
+                ],
+                "properties": {
+                  "value": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "numerator": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "denominator": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "unseen_acceptance": {
+          "type": "object",
+          "required": [
+            "count",
+            "metrics"
+          ],
+          "properties": {
+            "count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "metrics": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "required": [
+                  "value",
+                  "numerator",
+                  "denominator"
+                ],
+                "properties": {
+                  "value": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "numerator": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "denominator": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "deltas": {
+      "type": "object",
+      "additionalProperties": {
+        "type": [
+          "number",
+          "null"
+        ]
+      }
+    },
+    "verdict": {
+      "enum": [
+        "pass",
+        "fail",
+        "unknown",
+        "not_applicable",
+        "pending"
+      ]
+    },
+    "gate": {
+      "type": "object",
+      "required": [
+        "tier",
+        "decision",
+        "blockers"
+      ],
+      "properties": {
+        "tier": {
+          "enum": [
+            "block",
+            "guard",
+            "warn",
+            "field"
+          ]
+        },
+        "decision": {
+          "enum": [
+            "hold",
+            "release",
+            "warn",
+            "record_only",
+            "pending"
+          ]
+        },
+        "blockers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "notes": {
+      "type": "string"
+    }
+  }
+}

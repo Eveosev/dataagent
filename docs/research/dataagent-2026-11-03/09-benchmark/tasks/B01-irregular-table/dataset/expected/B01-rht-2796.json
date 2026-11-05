@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1160,
+  "table": "economy-table85",
+  "structure": "ColumnHeaderMerge",
+  "question_type": "Numerical Reasoning",
+  "sub_type": "Multi-hop Numerical Reasoning",
+  "answer": "15.62",
+  "cot": [
+    {
+      "planning": "First, we need to locate the row corresponding to 'Fresh1' in the 'Form' column."
+    },
+    {
+      "planning": "Next, we extract the 'Size of a cup equivalent' value from the corresponding column."
+    },
+    {
+      "planning": "Finally, we calculate the number of cups by dividing 5 pounds by the size of a cup equivalent."
+    }
+  ],
+  "case_id": "B01-rht-2796",
+  "expected": {
+    "kind": "answer",
+    "question": "How many cups of avocado can be obtained from 5 pounds of fresh avocados based on the size of a cup equivalent?",
+    "answer": "15.62"
+  }
+}

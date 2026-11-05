@@ -1,0 +1,1 @@
+How can I use conditional formatting to highlight cells D8, G8, and H8 in red to identify non-working days or faulty entries where there is only a start or end time in either cell?

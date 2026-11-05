@@ -1,0 +1,118 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "redshift",
+  "pipeline": "codebase_community",
+  "data_model": {
+    "models": [
+      {
+        "name": "codebase_community__users",
+        "description": "Each record represents a user.",
+        "columns": [
+          {
+            "name": "user_id",
+            "description": "Unique identifier for the user."
+          },
+          {
+            "name": "display_name",
+            "description": "Display name of the user."
+          },
+          {
+            "name": "creation_date",
+            "description": "Date when the user was created."
+          },
+          {
+            "name": "num_badges",
+            "description": "Number of badges the user has earned, replace NULL values with 0."
+          },
+          {
+            "name": "num_comments",
+            "description": "Number of comments the user has posted, replace NULL values with 0."
+          },
+          {
+            "name": "created_post_with_score_more_than_60",
+            "description": "Set to 1 if the user has created at least one post with a score of more than 60; otherwise, set to 0."
+          },
+          {
+            "name": "sum_of_favourite_count_gained_2011",
+            "description": "Sum of the favourite count gained by the user in 2011, replace NULL values with 0."
+          },
+          {
+            "name": "num_posts_voted",
+            "description": "Number of posts the user has voted on, replace NULL values with 0."
+          }
+        ]
+      },
+      {
+        "name": "codebase_community__posts",
+        "descrption": "Each record represents a post.",
+        "columns": [
+          {
+            "name": "postid",
+            "description": "Unique identifier for the post."
+          },
+          {
+            "name": "viewcount",
+            "description": "Number of times the post has been viewed."
+          },
+          {
+            "name": "creation_date",
+            "description": "Date when the post was created."
+          },
+          {
+            "name": "num_unique_users_commented",
+            "description": "Number of unique users who have commented on the post, replace NULL values with 0."
+          },
+          {
+            "name": "has_views_above_average",
+            "description": "Set to 1 if the number of views on the post is above the average number of views on all posts; otherwise, set to 0."
+          },
+          {
+            "name": "avg_score_of_comments",
+            "description": "the average score of comments that were added to the post"
+          },
+          {
+            "name": "posted_by_most_influential_user",
+            "description": "Set to 1 if the post was posted by users with the highest reputation, otherwise, set to 0."
+          },
+          {
+            "name": "comment_with_the_highest_score",
+            "description": "the comment of the post that has the highest score, with ties broken by the ascending order of the text."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    redshift_definition_id: f7a7d195-377f-cf5b-70a5-be6b819019dc\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://codebase-community-bucket/users.jsonl\n    sync_mode: full_refresh_append\n    table: users\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - badges\n    - votes\nflat_files:\n- format: csv\n  path: https://drive.google.com/uc?export=download&id=1tAi-3rcrUrUoHoDB-dUzt1Z7LCdOvPpK\n  sync_mode: full_refresh_append\n  table: tags\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: codebase_community\n    sync_mode: full_refresh_append\n    tables:\n    - comments\n    - postHistory\n    - posts\npostgres:\n  config:\n    database: codebase_community\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - postlinks\n    user: postgres\nredshift:\n  config:\n    host: <redshift_hostname>\n    port: <redshift_port>\n    database: <redshift_db>\n    username: <redshift_username>\n    password: <redshift_pwd>\n    schema: codebase_community\n    s3_bucket_name: <redshift_s3_bucket>\n    s3_bucket_region: <redshift_s3_region>\n    access_key_id: <redshift_s3_access_key>\n    secret_access_key: <redshift_s3_secret_key>\n",
+  "case_id": "B14-elt-0119",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "codebase_community__users",
+        "columns": [
+          "user_id",
+          "display_name",
+          "creation_date",
+          "num_badges",
+          "num_comments",
+          "created_post_with_score_more_than_60",
+          "sum_of_favourite_count_gained_2011",
+          "num_posts_voted"
+        ]
+      },
+      {
+        "name": "codebase_community__posts",
+        "columns": [
+          "postid",
+          "viewcount",
+          "creation_date",
+          "num_unique_users_commented",
+          "has_views_above_average",
+          "avg_score_of_comments",
+          "posted_by_most_influential_user",
+          "comment_with_the_highest_score"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+Which geographic area had the most anomalous year (by Z-score) in terms of total acres burned compared to its historical annual average, and what year was it in? Answer with the geographic area and year, separated by a comma.

@@ -1,0 +1,1 @@
+How can I construct a formula in cell H3 that will count the number of times a range of values (K1:K9) appears in column D, but only if there is a corresponding date (in any date format) next to it in Column H? Not sure if counta or countif works best or its a question of merging the statements together?

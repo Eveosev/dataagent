@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1316,
+  "table": "society-table17",
+  "structure": "ContentCompound",
+  "question_type": "Fact Checking",
+  "sub_type": "Value-Matching",
+  "answer": "2",
+  "cot": [
+    {
+      "planning": "First, locate the row with 'FACILITY-BASED DELIVERY' in the 'Intervention' column."
+    },
+    {
+      "planning": "Then, extract the value in the 'Avg. No of Health Workers Seen per Day' column."
+    },
+    {
+      "planning": "Finally, provide the extracted value as the answer."
+    }
+  ],
+  "case_id": "B01-rht-2952",
+  "expected": {
+    "kind": "answer",
+    "question": "For the intervention of Facility-Based Delivery, what is the average number of health workers seen per day?",
+    "answer": "2"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 133,
+  "table": "economy-table132",
+  "structure": "SingleRowClassified",
+  "question_type": "Fact Checking",
+  "sub_type": "Value-Matching",
+  "answer": "14.166",
+  "cot": [
+    {
+      "planning": "First, identify the column labeled \"Relative importance 2022\" in the table."
+    },
+    {
+      "planning": "Next, locate the row corresponding to the \"Food and beverages\" category in the \"Item and group\" column."
+    },
+    {
+      "planning": "Extract the value from the \"Relative importance 2022\" column for the \"Food and beverages\" row."
+    }
+  ],
+  "case_id": "B01-rht-1769",
+  "expected": {
+    "kind": "answer",
+    "question": "What is the relative importance of the “Food and beverages” category in 2022?",
+    "answer": "14.166"
+  }
+}

@@ -1,0 +1,1010 @@
+{
+  "source": "llamaindex/ExtractBench",
+  "id": "medium/ccc_online_0011_infinity_toyota_tacoma_corrupted",
+  "pdf": "docs/medium/ccc_online_0011_infinity_toyota_tacoma_corrupted.pdf",
+  "schema": {
+    "$defs": {
+      "ComparableVehicle": {
+        "type": "object",
+        "title": "ComparableVehicle",
+        "properties": {
+          "comp_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The CCC-assigned ordinal label for this comparable, exactly as printed on the page (e.g. 'Comp 1', 'Comp 2', ... 'Comp 12'). Appears as a column header in the COMPARABLE VEHICLES top-table OR as a bold row label in the ADDITIONAL COMPARABLE VEHICLES section. Format: verbatim 'Comp N' where N is the 1-based index. Do NOT confuse with the 'Loss Vehicle' column (that is the subject vehicle, not a comparable). Do NOT renumber: use the label printed on the page.",
+            "title": "Comp Label"
+          },
+          "vin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "17-character alphanumeric Vehicle Identification Number of the comparable vehicle, verbatim, no spaces or dashes. Located in two places: (a) the right-hand information panel of the COMPARABLE VEHICLES top-table page (e.g. 'VIN 3N1CN8EV2LL870750' under each Comp header), and (b) the 'Vehicle' column block of the ADDITIONAL COMPARABLE VEHICLES rows (e.g. 'VIN: 1HGCV1F3XLA052869'). Preserve uppercase and exact characters; do NOT include the literal 'VIN' / 'VIN:' label. Do NOT confuse with the loss vehicle's VIN listed in the VEHICLE INFORMATION section.",
+            "title": "VIN"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Model year (4-digit integer, e.g. 2020) of the comparable vehicle, as the first token of the vehicle description (e.g. '2020 Nissan Versa Sv W/continuously Variable Transmission...'). Located in the right-hand info panel of the top-table page or the 'Vehicle' column of the ADDITIONAL COMPARABLE VEHICLES section. Do NOT confuse with the Updated Date year.",
+            "title": "Year"
+          },
+          "make": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Manufacturer / make of the comparable vehicle, verbatim as printed (e.g. 'Nissan', 'GMC', 'Honda'). Typically the second token of the vehicle description string. Do NOT confuse with the model name; do NOT normalize casing (preserve as printed).",
+            "title": "Make"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Model name of the comparable vehicle, verbatim (e.g. 'Versa', 'Yukon', 'Accord Sedan'). The model is the token(s) after the make and before the trim. Some descriptions concatenate model and trim (e.g. 'Yukon Sle' = model 'Yukon', trim 'Sle'). Do NOT include the trim, body, transmission, engine, or fuel-type tokens here. Preserve casing as printed.",
+            "title": "Model"
+          },
+          "trim": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Trim level of the comparable vehicle (e.g. 'SV', 'Sv', 'SLE', 'Sle', 'Sport'), verbatim as the token following the model name in the vehicle description. May be absent if the description does not include a trim. Do NOT confuse with body style ('Sedan'), body type, or transmission. Preserve casing as printed.",
+            "title": "Trim"
+          },
+          "odometer": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Odometer reading (mileage) of the comparable vehicle, integer, no commas, no units. Two locations: (a) for Comps in the top OPTIONS table the value appears in the 'Odometer' row under the Comp column (e.g. 66,908 -> 66908); (b) for Additional Comparable Vehicles the value appears in the 'Vehicle' column block as 'Odometer: 59,890' -> 59890. Do NOT confuse with the loss vehicle's odometer or with the 'Distance from <city>' miles figure.",
+            "title": "Odometer"
+          },
+          "list_price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Listed sale price of the comparable vehicle in US dollars (numeric, no '$', no commas, e.g. 12990.00). Located in the 'List Price' row of the OPTIONS table for Comps 1-3 (top page) OR in the 'Price (List)' column of the ADDITIONAL COMPARABLE VEHICLES section. Some CCC reports show the literal '(List)' suffix; capture only the dollar number. Do NOT confuse with the 'Adjusted Comparable Value' (post-adjustment) or with the loss vehicle's 'Base Vehicle Value'.",
+            "title": "List Price"
+          },
+          "adjusted_comparable_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The post-adjustment value of the comparable vehicle in US dollars (numeric, no '$', no commas, e.g. 10986.00). Labeled 'Adjusted Comparable Value' in the green/teal totals row of the OPTIONS table for Comps 1-3, or as the 'Adjusted Comparable Value' column for Additional Comparable Vehicles. This is the value CCC uses to compute the Base Vehicle Value. Do NOT confuse with List Price (pre-adjustment) or with the loss vehicle's Adjusted Vehicle Value.",
+            "title": "Adjusted Comparable Value"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Source / channel of the comparable vehicle listing, verbatim as printed after the literal label 'Source' (e.g. 'Dealer Ad', 'Autotrader', 'Truecar'). Located on the right-hand info panel of the top page (e.g. 'Source Dealer Ad') and in the leftmost column ('Source: Autotrader') of each Additional Comparable Vehicles row. Do NOT include the 'Source' / 'Source:' label itself.",
+            "title": "Source"
+          },
+          "dealer_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Name of the dealership / seller offering the comparable vehicle, verbatim as printed after the 'Dealership' label on the top-page right panel (e.g. 'Group 1 Automotive') OR the standalone dealership-name line in Additional Comparable Vehicles (e.g. 'Auto Ride Groups', 'Dch Paramus Honda'). Do NOT include 'Dealership' label, do NOT include the city/state line, telephone, or distance-from line. May be null if the source is a non-dealer aggregator with no dealership shown.",
+            "title": "Dealer Name"
+          },
+          "dealer_city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "City of the comparable-vehicle dealership, verbatim as printed before the comma in the dealer-location line (e.g. 'Houston' from 'Houston, TX', or 'New Rochelle' from the 'Distance from New York, NY / 10 Miles - New Rochelle, NY' panel line where the comp's city follows the dash). For top-page comps the city appears at the end of the right-panel block (e.g. '25 Miles - Houston, TX' -> 'Houston'). For Additional Comparable Vehicles the city is the standalone line immediately under the dealer name (e.g. 'Houston, TX' -> 'Houston'). Do NOT include the state, ZIP, or 'Miles From' distance.",
+            "title": "Dealer City"
+          },
+          "dealer_state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Two-letter US state abbreviation for the comparable-vehicle dealership location (e.g. 'TX', 'NJ', 'NY'), verbatim. Appears immediately after the dealer city (e.g. 'Houston, TX' -> 'TX'). Do NOT include the city, ZIP, or distance.",
+            "title": "Dealer State"
+          },
+          "distance_from_loss_miles": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Straight-line distance from the loss vehicle's garaging ZIP to the comparable vehicle's location, integer miles (e.g. 25 from '25 Miles - Houston, TX', or 114 from '114 Miles From Elgin, TX'). Two formats: top-page comps use 'NN Miles - City, ST'; Additional Comparable Vehicles use 'NN Miles From City, ST'. Extract only the integer. Do NOT confuse with odometer mileage.",
+            "title": "Distance From Loss Miles"
+          },
+          "stock_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Dealer's stock number for the comparable vehicle, verbatim as printed after the 'Stock #' or 'Stock #:' label (e.g. 'LL870750', '869579', 'P75135'). Preserve as a string (may be alphanumeric, may have leading zeros). Located on the top-page right panel (top comps) or in the 'Vehicle' column block (Additional Comparable Vehicles). May be null if the listing has no stock number printed.",
+            "title": "Stock Number"
+          },
+          "updated_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Date the comparable vehicle listing was last updated, in the document's printed MM/DD/YYYY format, verbatim (e.g. '03/17/2026', '04/26/2026'). Located after the 'Updated Date:' label on both the top-page right panel and in the Additional Comparable Vehicles 'Vehicle' column block. Preserve as a string in MM/DD/YYYY. Do NOT confuse with the Loss Incident Date, Claim Reported date, or Last Updated timestamp from the REPORT SUMMARY.",
+            "title": "Updated Date"
+          },
+          "adjustment_make_model_trim": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Signed dollar adjustment applied for differences in Make/Model/Trim between the comparable and the loss vehicle, as a signed numeric value (e.g. +575 -> 575.00; -650 -> -650.00). Located in the 'Make/Model/Trim' row of the 'Adjustments:' block under each Comp column on the top OPTIONS-table page. PRESERVE THE SIGN: '+ $ 575' is positive, '- $ 650' is negative. Return null if the row exists but no value is shown for that Comp (CCC leaves blanks when no adjustment applies). Return null for Additional Comparable Vehicles (Comp 4+) which do not show per-line adjustments. Do NOT confuse with Mileage, Options, Package, or Condition adjustments.",
+            "title": "Adjustment Make Model Trim"
+          },
+          "adjustment_mileage": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Signed dollar adjustment for the mileage difference between this comparable and the loss vehicle, e.g. '+ $ 1,651' -> 1651.00, '- $ 650' -> -650.00. Located in the 'Mileage' row of the 'Adjustments:' block under each Comp column on the top OPTIONS-table page. PRESERVE THE SIGN. Return null for Additional Comparable Vehicles (no per-line adjustments shown). Do NOT confuse with Make/Model/Trim, Options, Package, or Condition adjustments. Do NOT confuse with the odometer value.",
+            "title": "Adjustment Mileage"
+          },
+          "adjustment_options": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Signed dollar adjustment for the difference in optional equipment between this comparable and the loss vehicle, e.g. '+ $ 100' -> 100.00, '- $ 1,175' -> -1175.00. Located in the 'Options' row of the 'Adjustments:' block. PRESERVE THE SIGN. Return null when the Options row is absent for this PDF (some reports omit it) or when blank for a particular Comp. Return null for Additional Comparable Vehicles. Do NOT confuse with Make/Model/Trim, Mileage, Package, or Condition adjustments.",
+            "title": "Adjustment Options"
+          },
+          "adjustment_package": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Signed dollar adjustment for the difference in option packages between this comparable and the loss vehicle, e.g. '- $ 46' -> -46.00. Located in the 'Package' row of the 'Adjustments:' block when present. PRESERVE THE SIGN. Return null when the Package row is absent for this PDF or blank for this Comp. Return null for Additional Comparable Vehicles. Do NOT confuse with Options, Mileage, or Condition adjustments.",
+            "title": "Adjustment Package"
+          },
+          "adjustment_condition": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Signed dollar adjustment to bring the comparable to the loss vehicle's condition baseline, e.g. '- $ 1,354' -> -1354.00, '- $ 2,206' -> -2206.00. Located in the 'Condition' (sometimes printed 'Condition¹' or 'Condition*') row of the 'Adjustments:' block. PRESERVE THE SIGN; CCC condition adjustments are typically negative. Return null for Additional Comparable Vehicles. Do NOT confuse with Mileage, Options, Make/Model/Trim, or Package adjustments.",
+            "title": "Adjustment Condition"
+          }
+        }
+      },
+      "ComponentCondition": {
+        "type": "object",
+        "title": "ComponentCondition",
+        "properties": {
+          "component_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Name of the inspected vehicle component, verbatim as printed in the leftmost cell of a COMPONENT CONDITION row (e.g. 'Seats', 'Carpets', 'Glass', 'Dashboard', 'Headliner', 'Sheet Metal', 'Paint', 'Trim', 'Engine', 'Transmission', 'Tires', 'Front Tires', 'Rear Tires'). Do NOT include the INTERIOR/EXTERIOR/MECHANICAL/TIRES group header rows (those are section labels, not components). Do NOT include the 'Total Condition Adjustments' summary row.",
+            "title": "Component Name"
+          },
+          "condition_rating": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Condition grade for the component, verbatim from the 'Condition' column (e.g. 'AVERAGE PRIVATE', 'PRIVATE OWNER', 'GOOD', 'FAIR', 'DEALER'). Some reports stack two words on two lines ('AVERAGE\\nPRIVATE') — return them joined with a single space ('AVERAGE PRIVATE'). Preserve casing as printed. Do NOT confuse with the Inspection Notes free-text column.",
+            "title": "Condition Rating"
+          },
+          "inspection_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Free-text inspection note for the component, verbatim from the 'Inspection Notes' or 'Inspection Notes/Guidelines' column (e.g. 'Lightly soiled, faded and/or discolored.', 'Lt front 3, lt rear 2, rt rear 1, rt front 1=16%'). For 'Guidelines:'-prefixed text, preserve the 'Guideline:' prefix and the full multi-line note. Do NOT confuse with the Condition Rating or the Value Impact dollar figure.",
+            "title": "Inspection Notes"
+          },
+          "value_impact": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Dollar value impact of the component's condition on the vehicle value, signed numeric (e.g. 0 for '$ 0', -94 for '- $ 94', 85 for '$ 85'). Located in the rightmost 'Value Impact' column of the COMPONENT CONDITION table. PRESERVE THE SIGN: '- $ 94' is negative; bare '$ 85' is positive. Do NOT confuse with the Total Condition Adjustments summary at the bottom of the table.",
+            "title": "Value Impact"
+          }
+        }
+      },
+      "NhtsaRecall": {
+        "type": "object",
+        "title": "NhtsaRecall",
+        "properties": {
+          "campaign_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "NHTSA recall campaign identifier, verbatim as printed after 'NHTSA Campaign ID :' in the SUPPLEMENTAL INFORMATION > NHTSA VEHICLE RECALL section (e.g. '20V112000', '14V451000', '20V771000'). Preserve casing and digits exactly. Do NOT confuse with the Manufacturer Recall No. (separate field) or with NHTSA report-date.",
+            "title": "Campaign ID"
+          },
+          "component": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Affected vehicle component category for this recall, verbatim after 'Component :' (e.g. 'FUEL SYSTEM, GASOLINE:STORAGE:TANK ASSEMBLY', 'EXTERIOR LIGHTING:TURN SIGNAL:BULBS', 'POWER TRAIN', 'AIR BAGS:SEAT BELTS'). Preserve uppercase. May be null when the recall block omits a Component line. Do NOT confuse with the Summary text.",
+            "title": "Component"
+          },
+          "mfg_report_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Manufacturer's report date for this recall, verbatim as printed after \"Mfg's Report Date :\" (e.g. 'FEB 25, 2020', 'JUL 23, 2014', 'September 8, 2016'). CCC prints this in two casing variants; preserve as printed. Do NOT reformat to numeric date.",
+            "title": "Mfg Report Date"
+          }
+        }
+      }
+    },
+    "type": "object",
+    "title": "CCCMarketValuationReport",
+    "properties": {
+      "report_reference_number": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "CCC-assigned report reference number, verbatim from the 'Report Reference Number' row of the INSURANCE INFORMATION block on page 1 (e.g. '130934803', '130521476 -2', '130762181'). Preserve embedded spaces / dashes / suffixes exactly as printed (do not strip the ' -2' suffix). Do NOT confuse with Claim Reference (separate field), Claim Number, or Mfg Recall ID.",
+        "title": "Report Reference Number"
+      },
+      "claim_reference": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Insurer's claim reference / claim number, verbatim from the 'Claim Reference' row of the INSURANCE INFORMATION block (e.g. 'XWRZGPTX-001', '000823098685D01', '32-99H9-33W01'). Also typically echoed in the per-page header beside 'Claim:'. Preserve hyphens, embedded zeros, mixed casing. Do NOT confuse with Report Reference Number (CCC-internal) or with NHTSA Campaign ID.",
+        "title": "Claim Reference"
+      },
+      "insurance_company": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Full insurance company name on whose behalf the valuation was prepared, verbatim from the 'Prepared for' subtitle at the top of page 1 (e.g. 'ROOT INSURANCE COMPANY', 'ALLSTATE COUNTY MUTUAL INSURANCE COMPANY', 'STATE FARM INSURANCE COMPANIES'). Preserve uppercase and exact punctuation. Do NOT include the literal 'Prepared for' prefix. Do NOT use the abbreviated form that appears later in the report; use the page-1 'Prepared for' string.",
+        "title": "Insurance Company"
+      },
+      "owner_name": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Name of the loss vehicle owner, verbatim from the 'Owner' row of CLAIM INFORMATION on page 1 (e.g. 'Williams, Syria', 'Ramirez, Ivonne Olivares', 'Smith, Elizabeth'). Preserve 'Last, First [Middle]' order exactly as printed. Do NOT include the multi-line street address (separate field). Do NOT confuse with the adjuster or appraiser names from INSURANCE INFORMATION.",
+        "title": "Owner Name"
+      },
+      "owner_address": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Loss-vehicle owner's mailing address from the 'Owner' row of CLAIM INFORMATION, including street, city, state, and ZIP, joined with a single space (e.g. '4122 Soaring Elm St Humble, TX 77346-4702'). On the PDF this appears as two or three stacked lines beneath the owner's name. Concatenate the stacked lines using single spaces; preserve internal punctuation and ZIP+4 dashes. Do NOT include the owner's name. Do NOT use the 'Location' from VEHICLE DETAILS (which only has city/state/ZIP).",
+        "title": "Owner Address"
+      },
+      "loss_vehicle_vin": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "17-character VIN of the loss (subject) vehicle, verbatim from the 'VIN' row of VEHICLE INFORMATION > VEHICLE DETAILS (e.g. '3N1CN8EV1LL901762', '1GKS1AKC5FR705629', '1HGCV2F30LA023600'). Uppercase, no spaces or dashes. Do NOT confuse with the VINs of comparable vehicles (those go in comparable_vehicles[].vin).",
+        "title": "Loss Vehicle VIN"
+      },
+      "loss_vehicle_year": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Model year of the loss vehicle, integer (e.g. 2020, 2015), from the 'Year' row of VEHICLE DETAILS or the first token of the 'Loss Vehicle' string in CLAIM INFORMATION. Use the 'Year' row when both are present.",
+        "title": "Loss Vehicle Year"
+      },
+      "loss_vehicle_make": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Make of the loss vehicle, verbatim from the 'Make' row of VEHICLE DETAILS (e.g. 'Nissan', 'GMC', 'Honda'). Preserve casing as printed. Do NOT include model/trim.",
+        "title": "Loss Vehicle Make"
+      },
+      "loss_vehicle_model": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Model of the loss vehicle, verbatim from the 'Model' row of VEHICLE DETAILS (e.g. 'Versa', 'Yukon', 'Accord Sedan'). Some reports use a multi-word model ('Accord Sedan'); include all tokens of the Model row. Do NOT include the trim.",
+        "title": "Loss Vehicle Model"
+      },
+      "loss_vehicle_trim": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Trim level of the loss vehicle, verbatim from the 'Trim' row of VEHICLE DETAILS (e.g. 'SV', 'SLE', 'Sport'). Preserve casing exactly as printed. May be null if the Trim row is absent.",
+        "title": "Loss Vehicle Trim"
+      },
+      "loss_vehicle_body_type": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Body type of the loss vehicle, verbatim from the 'Body Type' row of VEHICLE DETAILS (e.g. 'Sedan', 'Sports Utility'). Do NOT confuse with 'Body Style' (which captures the powertrain descriptor like 'w/Continuously Variable Transmission' or 'Automatic').",
+        "title": "Loss Vehicle Body Type"
+      },
+      "loss_vehicle_odometer": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Odometer reading of the loss vehicle in miles, integer, no commas (e.g. 78294, 143710, 77373). Sourced from the 'Odometer' row of INSURANCE INFORMATION on page 1 OR the 'Odometer' row of VEHICLE EQUIPMENT (page 4-5). When both appear they will match; use either. Do NOT confuse with comparable vehicles' odometers or with the 'Distance from <city>' miles.",
+        "title": "Loss Vehicle Odometer"
+      },
+      "loss_incident_date": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Date the loss / accident occurred, verbatim in MM/DD/YYYY format from the 'Loss Incident Date' row of CLAIM INFORMATION (e.g. '03/19/2026', '03/27/2026', '04/16/2026'). Preserve the printed MM/DD/YYYY string. Do NOT confuse with 'Claim Reported' (when the claim was filed) or with 'Last Updated' (when the valuation was last edited).",
+        "title": "Loss Incident Date"
+      },
+      "claim_reported_date": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Date the insurer was notified of the claim, MM/DD/YYYY, verbatim from the 'Claim Reported' row of CLAIM INFORMATION (e.g. '04/29/2026'). Do NOT confuse with Loss Incident Date or with the Last Updated timestamp.",
+        "title": "Claim Reported Date"
+      },
+      "base_vehicle_value": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Base Vehicle Value computed by CCC, in US dollars, numeric, no '$' or commas (e.g. 11143.00, 11159.00, 17532.00). Located in the VALUATION SUMMARY block on page 1, labeled 'Base Vehicle Value'. This is the pre-condition-adjustment value derived from the weighted average of the Adjusted Comparable Values. Do NOT confuse with Adjusted Vehicle Value (after condition adjustments), Total, or any Comp's Adjusted Comparable Value.",
+        "title": "Base Vehicle Value"
+      },
+      "condition_adjustment": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Total condition adjustment applied to the Base Vehicle Value, signed numeric in US dollars (e.g. -94.00 for '- $ 94', 170.00 for '+ $ 170'). Located in the VALUATION SUMMARY block on page 1, labeled 'Condition Adjustment'. Sign convention: positive when CCC adds value, negative when CCC subtracts. Should equal the 'Total Condition Adjustments' row at the bottom of the COMPONENT CONDITION table. Return null when the row is absent. Do NOT confuse with per-Comp condition adjustments.",
+        "title": "Condition Adjustment"
+      },
+      "adjusted_vehicle_value": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Adjusted Vehicle Value after condition adjustments, in US dollars, numeric (e.g. 11049.00, 11162.69, 17532.00). Located in the VALUATION SUMMARY block on page 1, labeled 'Adjusted Vehicle Value'. Do NOT confuse with Base Vehicle Value (pre-adjustment) or Total (post tax/fees/deductible).",
+        "title": "Adjusted Vehicle Value"
+      },
+      "vehicular_tax": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Vehicular / sales tax dollar amount, positive numeric (e.g. 697.67 for '+ $ 697.67', 1555.97 for '+ $ 1,555.97'). Located in VALUATION SUMMARY on page 1, on the line labeled 'Vehicular Tax (X.XX%)' or 'Vehicular Tax' or 'Tax'. Return null when the report has no tax line (e.g. PDF 0004). Do NOT include the percentage. Do NOT confuse with title/registration fees.",
+        "title": "Vehicular Tax"
+      },
+      "title_registration_fees": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Title, registration, and other fees total in US dollars, signed numeric (e.g. 35.50 for '+ $ 35.50'). Located in VALUATION SUMMARY on page 1 ('Title, Registration and Other Fees') and detailed in the TITLE, REGISTRATION AND OTHER FEES section. Return null when the row is absent (PDF 0004, PDF 0009). Do NOT confuse with Vehicular Tax or Deductible.",
+        "title": "Title Registration Fees"
+      },
+      "deductible": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Insurance deductible applied to compute the final settlement Total, signed numeric (e.g. -250.00 for '- $ 250.00', -1000.00 for '- $ 1,000.00'). Located in VALUATION SUMMARY on page 1, labeled 'Deductible*'. Sign convention: negative because it is subtracted. Return null when absent (PDF 0004). Do NOT confuse with Condition Adjustment.",
+        "title": "Deductible"
+      },
+      "total_settlement": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Final 'Total' dollar amount printed in the green/teal highlighted Total row of the VALUATION SUMMARY on page 1 (e.g. 11049.00, 11645.86, 18087.97). This is the settlement total CCC computes after taxes, fees, and deductible. Do NOT confuse with Adjusted Vehicle Value, Base Vehicle Value, or Value before Deductible.",
+        "title": "Total Settlement"
+      },
+      "comparable_vehicles": {
+        "anyOf": [
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/ComparableVehicle"
+            }
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "ORDERED list of EVERY comparable vehicle CCC used to determine the Base Vehicle Value. The COMPARABLE VEHICLES section spans (a) a top OPTIONS table for Comps 1-3 (one column per Comp, full per-option checkbox match, list price, and adjustments), and (b) one or more ADDITIONAL COMPARABLE VEHICLES summary pages for Comps 4 through N. INCLUDE every numbered Comp (e.g. Comp 1, Comp 2, ..., Comp 9 in PDF 0004; Comp 1..Comp 7 in PDF 0008; Comp 1..Comp 12 in PDF 0009). Each Comp has its own VIN; deduplicate by VIN. Preserve the order in which CCC numbers them (Comp 1 first). Do NOT include the Loss Vehicle column (it is the subject vehicle, not a comparable). Do NOT include the 'Adjusted Comparable Value' summary row as a Comp.",
+        "title": "Comparable Vehicles"
+      },
+      "component_conditions": {
+        "anyOf": [
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/ComponentCondition"
+            }
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Ordered list of EVERY per-component condition row from the COMPONENT CONDITION table in the VEHICLE CONDITION section. Each row covers one component (Seats, Carpets, Glass, Dashboard, Headliner, Sheet Metal, Paint, Trim, Engine, Transmission, Tires OR Front Tires + Rear Tires) with its condition rating, inspection note, and value impact. EXCLUDE the section header rows ('INTERIOR', 'EXTERIOR', 'MECHANICAL', 'TIRES'). EXCLUDE the 'Total Condition Adjustments' summary row (use the top-level condition_adjustment field for that).",
+        "title": "Component Conditions"
+      },
+      "nhtsa_recalls": {
+        "anyOf": [
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/NhtsaRecall"
+            }
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Ordered list of EVERY NHTSA recall block printed in the SUPPLEMENTAL INFORMATION > NHTSA VEHICLE RECALL section. Each block is delimited by a horizontal rule and begins with 'NHTSA Campaign ID :'. The recall count printed in the right-hand callout (e.g. 'has issued 2 / 10 / 4 safety related recall notices') indicates the total to expect. Return an empty list if the recall section is absent.",
+        "title": "Nhtsa Recalls"
+      }
+    }
+  },
+  "expected": {
+    "kind": "json",
+    "schema_ref": "fixtures/eb-medium-ccc_online_0011_infinity_toyota_tacoma_corrupted-schema.json",
+    "value": {
+      "report_reference_number": "127788947",
+      "claim_reference": "2512366658201",
+      "insurance_company": "INFINITY INSURANCE COMPANY",
+      "owner_name": "Olmosfigueroa, Maribel",
+      "owner_address": "1430 E 89th St Los Angeles, CA 90002-1225",
+      "loss_vehicle_vin": "3TMLB5FN6RM009657",
+      "loss_vehicle_year": 2024,
+      "loss_vehicle_make": "Toyota",
+      "loss_vehicle_model": "Tacoma",
+      "loss_vehicle_trim": "TRD Sport",
+      "loss_vehicle_body_type": "Longbed Pickup",
+      "loss_vehicle_odometer": 10409,
+      "loss_incident_date": "08/24/2025",
+      "claim_reported_date": "10/15/2025",
+      "base_vehicle_value": 42353.0,
+      "condition_adjustment": 0.0,
+      "adjusted_vehicle_value": 42353.0,
+      "vehicular_tax": 4129.42,
+      "title_registration_fees": null,
+      "deductible": null,
+      "total_settlement": 46482.42,
+      "comparable_vehicles": [
+        {
+          "comp_label": "Comp 1",
+          "vin": "3TMLB5FN7RM013622",
+          "year": 2024,
+          "make": "Toyota",
+          "model": "Tacoma",
+          "trim": "Trd Sport",
+          "odometer": 1617,
+          "list_price": 37842.0,
+          "adjusted_comparable_value": 42303.0,
+          "source": "Dealer Ad",
+          "dealer_name": "Keyes Cars",
+          "dealer_city": "Van Nuys",
+          "dealer_state": "CA",
+          "distance_from_loss_miles": 19,
+          "stock_number": "RM013622PS",
+          "updated_date": "09/10/2025",
+          "adjustment_make_model_trim": null,
+          "adjustment_mileage": -936.0,
+          "adjustment_options": 2800.0,
+          "adjustment_package": 2597.0,
+          "adjustment_condition": null
+        },
+        {
+          "comp_label": "Comp 2",
+          "vin": "3TMLB5FN8RM016416",
+          "year": 2024,
+          "make": "Toyota",
+          "model": "Tacoma",
+          "trim": "Trd Sport",
+          "odometer": 9072,
+          "list_price": 38900.0,
+          "adjusted_comparable_value": 44140.0,
+          "source": "Verified Sold DMV",
+          "dealer_name": "Carmax/carmax The Auto",
+          "dealer_city": "Buena Park",
+          "dealer_state": "CA",
+          "distance_from_loss_miles": 15,
+          "stock_number": "58080B4",
+          "updated_date": "08/31/2025",
+          "adjustment_make_model_trim": null,
+          "adjustment_mileage": -157.0,
+          "adjustment_options": 2800.0,
+          "adjustment_package": 2597.0,
+          "adjustment_condition": null
+        },
+        {
+          "comp_label": "Comp 3",
+          "vin": "3TMLB5FN4RM006398",
+          "year": 2024,
+          "make": "Toyota",
+          "model": "Tacoma",
+          "trim": "Trd Sport",
+          "odometer": 11630,
+          "list_price": 38900.0,
+          "adjusted_comparable_value": 41310.0,
+          "source": "Verified Sold DMV",
+          "dealer_name": "Toyota Of North Hollywood",
+          "dealer_city": "North Hollywood",
+          "dealer_state": "CA",
+          "distance_from_loss_miles": 15,
+          "stock_number": "72822A4",
+          "updated_date": "07/19/2025",
+          "adjustment_make_model_trim": null,
+          "adjustment_mileage": 147.0,
+          "adjustment_options": 1150.0,
+          "adjustment_package": 1113.0,
+          "adjustment_condition": null
+        },
+        {
+          "comp_label": "Comp 4",
+          "vin": "3TMLB5FN0RM004907",
+          "year": 2024,
+          "make": "Toyota",
+          "model": "Tacoma",
+          "trim": "Trd Sport",
+          "odometer": 16138,
+          "list_price": 35888.0,
+          "adjusted_comparable_value": 42172.0,
+          "source": "Autotrader",
+          "dealer_name": "Toyota Of Huntington Beach",
+          "dealer_city": "Huntington Beach",
+          "dealer_state": "CA",
+          "distance_from_loss_miles": 23,
+          "stock_number": "000P3021",
+          "updated_date": "10/12/2025",
+          "adjustment_make_model_trim": null,
+          "adjustment_mileage": 737.0,
+          "adjustment_options": 2950.0,
+          "adjustment_package": 2597.0,
+          "adjustment_condition": null
+        },
+        {
+          "comp_label": "Comp 5",
+          "vin": "3TMKB5FN3RM008204",
+          "year": 2024,
+          "make": "Toyota",
+          "model": "Tacoma",
+          "trim": "Trd Sport",
+          "odometer": 19000,
+          "list_price": 36700.0,
+          "adjusted_comparable_value": 43396.0,
+          "source": "Dealer Ad",
+          "dealer_name": "Techiia Motorsports",
+          "dealer_city": "Inglewood",
+          "dealer_state": "CA",
+          "distance_from_loss_miles": 6,
+          "stock_number": "008204",
+          "updated_date": "10/06/2025",
+          "adjustment_make_model_trim": null,
+          "adjustment_mileage": 1149.0,
+          "adjustment_options": 2950.0,
+          "adjustment_package": 2597.0,
+          "adjustment_condition": null
+        },
+        {
+          "comp_label": "Comp 6",
+          "vin": "3TMKB5FN0RM011139",
+          "year": 2024,
+          "make": "Toyota",
+          "model": "Tacoma",
+          "trim": "Trd Sport",
+          "odometer": 16279,
+          "list_price": 35694.0,
+          "adjusted_comparable_value": 41998.0,
+          "source": "Autotrader",
+          "dealer_name": "South Bay Hyundai",
+          "dealer_city": "Torrance",
+          "dealer_state": "CA",
+          "distance_from_loss_miles": 9,
+          "stock_number": "B011139",
+          "updated_date": "10/08/2025",
+          "adjustment_make_model_trim": null,
+          "adjustment_mileage": 757.0,
+          "adjustment_options": 2950.0,
+          "adjustment_package": 2597.0,
+          "adjustment_condition": null
+        },
+        {
+          "comp_label": "Comp 7",
+          "vin": "3TMKB5FN8RM019294",
+          "year": 2024,
+          "make": "Toyota",
+          "model": "Tacoma",
+          "trim": "Trd Sport",
+          "odometer": 6749,
+          "list_price": 37792.0,
+          "adjusted_comparable_value": 41155.0,
+          "source": "Dealer Ad",
+          "dealer_name": "Penske Motor Group",
+          "dealer_city": "El Monte",
+          "dealer_state": "CA",
+          "distance_from_loss_miles": 14,
+          "stock_number": "5T9172",
+          "updated_date": "09/03/2025",
+          "adjustment_make_model_trim": null,
+          "adjustment_mileage": -417.0,
+          "adjustment_options": 1925.0,
+          "adjustment_package": 1855.0,
+          "adjustment_condition": null
+        }
+      ],
+      "component_conditions": [
+        {
+          "component_name": "Seats",
+          "condition_rating": "AVERAGE",
+          "inspection_notes": "Notes: NO STAINS OR TEARS NORMAL WEAR Typical Vehicle Desc: Clean to very clean with no significant tears, holes or burn marks. Light to no wear. No bare spots.",
+          "value_impact": 0
+        },
+        {
+          "component_name": "Carpets",
+          "condition_rating": "AVERAGE",
+          "inspection_notes": "Notes: NO STAINS OR TEARS NORMAL WEAR Typical Vehicle Desc: Clean to very clean with no significant tears, holes or burn marks. Light to no wear. No bare spots.",
+          "value_impact": 0
+        },
+        {
+          "component_name": "Dashboard",
+          "condition_rating": "AVERAGE",
+          "inspection_notes": "Notes: NO SUN DAMAGES, NORMAL WEAR Typical Vehicle Desc: A few small and/or insignificant scratches or gouges. Minimal to no damage to firmly intact and functional components. Light wear.",
+          "value_impact": 0
+        },
+        {
+          "component_name": "Headliner",
+          "condition_rating": "AVERAGE",
+          "inspection_notes": "Notes: NO STAINS OR SOILS NORMAL WEAR Typical Vehicle Desc: Clean to very clean with no significant holes or burn marks. Light to no significant scuffing.",
+          "value_impact": 0
+        },
+        {
+          "component_name": "Body",
+          "condition_rating": "AVERAGE",
+          "inspection_notes": "Notes: NO PRIOR DAMAGES NORMAL WEAR Typical Vehicle Desc: Sheet Metal: Few to no dings. No dents. All panels intact and properly aligned. Trim: No broken and/or missing components. No dents. Few to no dings.",
+          "value_impact": 0
+        },
+        {
+          "component_name": "Glass",
+          "condition_rating": "AVERAGE",
+          "inspection_notes": "Notes: NO CRACKS ON GLASS, NORMAL WEAR Typical Vehicle Desc: Light to no surface scratches. Light to no pitting.",
+          "value_impact": 0
+        },
+        {
+          "component_name": "Paint",
+          "condition_rating": "AVERAGE",
+          "inspection_notes": "Notes: NO PRIOR DAMAGES ON PANELS NORMAL WEAR Typical Vehicle Desc: Minimal surface chipping and/or a few small scratches. No peeling and/or flaking. Minor to no swirl marks. Light to no fading.",
+          "value_impact": 0
+        },
+        {
+          "component_name": "Engine",
+          "condition_rating": "AVERAGE",
+          "inspection_notes": "Notes: NO LEAKS SEEN NORMAL WEAR Typical Vehicle Desc: Minor to no seepage. Belts and hoses firm, and may show minimal wear. Minimal to zero dirt and grease in engine compartment.",
+          "value_impact": 0
+        },
+        {
+          "component_name": "Transmission",
+          "condition_rating": "AVERAGE",
+          "inspection_notes": "Notes: NO LEAKS SEEN NORMAL WEAR Typical Vehicle Desc: Fluid slightly discolored. A few areas to no seepage.",
+          "value_impact": 0
+        },
+        {
+          "component_name": "Front Tires",
+          "condition_rating": "AVERAGE",
+          "inspection_notes": "Notes: TIRES MEASURE MORE THAN 5.32NDS Typical Vehicle Desc: 41% to 90% of new. Example: Typical new car tires are 11/32, loss measures at 5/32 = 46% (5/11)",
+          "value_impact": 0
+        },
+        {
+          "component_name": "Rear Tires",
+          "condition_rating": "AVERAGE",
+          "inspection_notes": "Notes: TIRES MEASURE MORE THAN 5.32NDS Typical Vehicle Desc: 41% to 90% of new. Example: Typical new car tires are 11/32, loss measures at 5/32 = 46% (5/11)",
+          "value_impact": 0
+        }
+      ],
+      "nhtsa_recalls": [
+        {
+          "campaign_id": "24V548000",
+          "component": "EQUIPMENT:OTHER:LABELS",
+          "mfg_report_date": "JUL 22, 2024"
+        },
+        {
+          "campaign_id": "25V058000",
+          "component": "SERVICE BRAKES, HYDRAULIC:FOUNDATION COMPONENTS:HOSES, LINES/PIPING, AND FITTINGS",
+          "mfg_report_date": "FEB 05, 2025"
+        }
+      ]
+    },
+    "anchored_fields": 24,
+    "no_anchor_fields": 0,
+    "pages": {
+      "report_reference_number": 1,
+      "insurance_company": 1,
+      "owner_name": 1,
+      "loss_vehicle_odometer": 1,
+      "base_vehicle_value": 1,
+      "condition_adjustment": 1,
+      "adjusted_vehicle_value": 1,
+      "vehicular_tax": 1,
+      "title_registration_fees": 1,
+      "deductible": 1,
+      "total_settlement": 1
+    },
+    "evidence_gold": {
+      "source": "schema-description",
+      "version": 1
+    }
+  },
+  "field_rules": "{\"report_reference_number\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": \"127788947\", \"value\": \"127788947\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"claim_reference\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": \"2512366658201\", \"value\": \"2512366658201\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"insurance_company\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": \"INFINITY INSURANCE COMPANY\", \"value\": \"INFINITY INSURANCE COMPANY\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"owner_name\": {\"comparator\": \"address\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": \"Olmosfigueroa, Maribel\", \"value\": \"Olmosfigueroa, Maribel\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"owner_address\": {\"comparator\": \"address\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": \"1430 E 89th St Los Angeles, CA 90002-1225\", \"value\": \"1430 E 89th St Los Angeles, CA 90002-1225\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"loss_vehicle_vin\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": \"3TMLB5FN6RM009657\", \"value\": \"3TMLB5FN6RM009657\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"loss_vehicle_year\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": \"2024\", \"value\": 2024, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"loss_vehicle_make\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": \"Toyota\", \"value\": \"Toyota\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"loss_vehicle_model\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": \"Tacoma\", \"value\": \"Tacoma\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"loss_vehicle_trim\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": \"TRD Sport\", \"value\": \"TRD Sport\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"loss_vehicle_body_type\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": \"Longbed Pickup\", \"value\": \"Longbed Pickup\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"loss_vehicle_odometer\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": \"10409\", \"value\": 10409, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"loss_incident_date\": {\"comparator\": \"date\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": \"08/24/2025\", \"value\": \"08/24/2025\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"claim_reported_date\": {\"comparator\": \"date\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": \"10/15/2025\", \"value\": \"10/15/2025\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"base_vehicle_value\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": \"42353.0\", \"value\": 42353.0, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"condition_adjustment\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": \"Base Vehicle Value $ 42,353.00   Adjusted Vehicle Value $ 42,353.00   Vehicular Tax (9.75%) + $ 4,129.42   Total $ 46,482.42\", \"value\": 0.0, \"coarse\": true, \"_verifier_classification\": \"model_failure\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"adjusted_vehicle_value\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": \"42353.0\", \"value\": 42353.0, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"vehicular_tax\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": \"4129.42\", \"value\": 4129.42, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"title_registration_fees\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"deductible\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"total_settlement\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": \"Total $ 46,482.42\", \"value\": 46482.42, \"coarse\": true, \"_verifier_classification\": \"model_failure\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles\": {\"comparator\": {\"comp_label\": \"case_insensitive\", \"vin\": \"case_insensitive\", \"year\": \"number\", \"make\": \"case_insensitive\", \"model\": \"case_insensitive\", \"trim\": \"case_insensitive\", \"odometer\": \"number\", \"list_price\": \"number\", \"adjusted_comparable_value\": \"number\", \"source\": \"case_insensitive\", \"dealer_name\": \"case_insensitive\", \"dealer_city\": \"case_insensitive\", \"dealer_state\": \"case_insensitive\", \"distance_from_loss_miles\": \"number\", \"stock_number\": \"case_insensitive\", \"updated_date\": \"date\", \"adjustment_make_model_trim\": \"number\", \"adjustment_mileage\": \"number\", \"adjustment_options\": \"number\", \"adjustment_package\": \"number\", \"adjustment_condition\": \"number\"}, \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": \"3TMLB5FN7RM013622\", \"value\": {\"comp_label\": \"Comp 1\", \"vin\": \"3TMLB5FN7RM013622\", \"year\": 2024, \"make\": \"Toyota\", \"model\": \"Tacoma\", \"trim\": \"Trd Sport\", \"odometer\": 1617, \"list_price\": 37842.0, \"adjusted_comparable_value\": 42303.0, \"source\": \"Dealer Ad\", \"dealer_name\": \"Keyes Cars\", \"dealer_city\": \"Van Nuys\", \"dealer_state\": \"CA\", \"distance_from_loss_miles\": 19, \"stock_number\": \"RM013622PS\", \"updated_date\": \"09/10/2025\", \"adjustment_make_model_trim\": null, \"adjustment_mileage\": -936.0, \"adjustment_options\": 2800.0, \"adjustment_package\": 2597.0, \"adjustment_condition\": null}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"3TMLB5FN8RM016416\", \"value\": {\"comp_label\": \"Comp 2\", \"vin\": \"3TMLB5FN8RM016416\", \"year\": 2024, \"make\": \"Toyota\", \"model\": \"Tacoma\", \"trim\": \"Trd Sport\", \"odometer\": 9072, \"list_price\": 38900.0, \"adjusted_comparable_value\": 44140.0, \"source\": \"Verified Sold DMV\", \"dealer_name\": \"Carmax/carmax The Auto\", \"dealer_city\": \"Buena Park\", \"dealer_state\": \"CA\", \"distance_from_loss_miles\": 15, \"stock_number\": \"58080B4\", \"updated_date\": \"08/31/2025\", \"adjustment_make_model_trim\": null, \"adjustment_mileage\": -157.0, \"adjustment_options\": 2800.0, \"adjustment_package\": 2597.0, \"adjustment_condition\": null}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"3TMLB5FN4RM006398\", \"value\": {\"comp_label\": \"Comp 3\", \"vin\": \"3TMLB5FN4RM006398\", \"year\": 2024, \"make\": \"Toyota\", \"model\": \"Tacoma\", \"trim\": \"Trd Sport\", \"odometer\": 11630, \"list_price\": 38900.0, \"adjusted_comparable_value\": 41310.0, \"source\": \"Verified Sold DMV\", \"dealer_name\": \"Toyota Of North Hollywood\", \"dealer_city\": \"North Hollywood\", \"dealer_state\": \"CA\", \"distance_from_loss_miles\": 15, \"stock_number\": \"72822A4\", \"updated_date\": \"07/19/2025\", \"adjustment_make_model_trim\": null, \"adjustment_mileage\": 147.0, \"adjustment_options\": 1150.0, \"adjustment_package\": 1113.0, \"adjustment_condition\": null}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"3TMLB5FN0RM004907\", \"value\": {\"comp_label\": \"Comp 4\", \"vin\": \"3TMLB5FN0RM004907\", \"year\": 2024, \"make\": \"Toyota\", \"model\": \"Tacoma\", \"trim\": \"Trd Sport\", \"odometer\": 16138, \"list_price\": 35888.0, \"adjusted_comparable_value\": 42172.0, \"source\": \"Autotrader\", \"dealer_name\": \"Toyota Of Huntington Beach\", \"dealer_city\": \"Huntington Beach\", \"dealer_state\": \"CA\", \"distance_from_loss_miles\": 23, \"stock_number\": \"000P3021\", \"updated_date\": \"10/12/2025\", \"adjustment_make_model_trim\": null, \"adjustment_mileage\": 737.0, \"adjustment_options\": 2950.0, \"adjustment_package\": 2597.0, \"adjustment_condition\": null}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"3TMKB5FN3RM008204\", \"value\": {\"comp_label\": \"Comp 5\", \"vin\": \"3TMKB5FN3RM008204\", \"year\": 2024, \"make\": \"Toyota\", \"model\": \"Tacoma\", \"trim\": \"Trd Sport\", \"odometer\": 19000, \"list_price\": 36700.0, \"adjusted_comparable_value\": 43396.0, \"source\": \"Dealer Ad\", \"dealer_name\": \"Techiia Motorsports\", \"dealer_city\": \"Inglewood\", \"dealer_state\": \"CA\", \"distance_from_loss_miles\": 6, \"stock_number\": \"008204\", \"updated_date\": \"10/06/2025\", \"adjustment_make_model_trim\": null, \"adjustment_mileage\": 1149.0, \"adjustment_options\": 2950.0, \"adjustment_package\": 2597.0, \"adjustment_condition\": null}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"3TMKB5FN0RM011139\", \"value\": {\"comp_label\": \"Comp 6\", \"vin\": \"3TMKB5FN0RM011139\", \"year\": 2024, \"make\": \"Toyota\", \"model\": \"Tacoma\", \"trim\": \"Trd Sport\", \"odometer\": 16279, \"list_price\": 35694.0, \"adjusted_comparable_value\": 41998.0, \"source\": \"Autotrader\", \"dealer_name\": \"South Bay Hyundai\", \"dealer_city\": \"Torrance\", \"dealer_state\": \"CA\", \"distance_from_loss_miles\": 9, \"stock_number\": \"B011139\", \"updated_date\": \"10/08/2025\", \"adjustment_make_model_trim\": null, \"adjustment_mileage\": 757.0, \"adjustment_options\": 2950.0, \"adjustment_package\": 2597.0, \"adjustment_condition\": null}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"3TMKB5FN8RM019294\", \"value\": {\"comp_label\": \"Comp 7\", \"vin\": \"3TMKB5FN8RM019294\", \"year\": 2024, \"make\": \"Toyota\", \"model\": \"Tacoma\", \"trim\": \"Trd Sport\", \"odometer\": 6749, \"list_price\": 37792.0, \"adjusted_comparable_value\": 41155.0, \"source\": \"Dealer Ad\", \"dealer_name\": \"Penske Motor Group\", \"dealer_city\": \"El Monte\", \"dealer_state\": \"CA\", \"distance_from_loss_miles\": 14, \"stock_number\": \"5T9172\", \"updated_date\": \"09/03/2025\", \"adjustment_make_model_trim\": null, \"adjustment_mileage\": -417.0, \"adjustment_options\": 1925.0, \"adjustment_package\": 1855.0, \"adjustment_condition\": null}, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"structural\": \"match_by:vin\"}, \"component_conditions\": {\"comparator\": {\"component_name\": \"case_insensitive\", \"condition_rating\": \"case_insensitive\", \"inspection_notes\": \"case_insensitive\", \"value_impact\": \"number\"}, \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": \"Seats\", \"value\": {\"component_name\": \"Seats\", \"condition_rating\": \"AVERAGE\", \"inspection_notes\": \"Notes: NO STAINS OR TEARS NORMAL WEAR Typical Vehicle Desc: Clean to very clean with no significant tears, holes or burn marks. Light to no wear. No bare spots.\", \"value_impact\": 0}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"Carpets\", \"value\": {\"component_name\": \"Carpets\", \"condition_rating\": \"AVERAGE\", \"inspection_notes\": \"Notes: NO STAINS OR TEARS NORMAL WEAR Typical Vehicle Desc: Clean to very clean with no significant tears, holes or burn marks. Light to no wear. No bare spots.\", \"value_impact\": 0}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"Dashboard\", \"value\": {\"component_name\": \"Dashboard\", \"condition_rating\": \"AVERAGE\", \"inspection_notes\": \"Notes: NO SUN DAMAGES, NORMAL WEAR Typical Vehicle Desc: A few small and/or insignificant scratches or gouges. Minimal to no damage to firmly intact and functional components. Light wear.\", \"value_impact\": 0}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"Headliner\", \"value\": {\"component_name\": \"Headliner\", \"condition_rating\": \"AVERAGE\", \"inspection_notes\": \"Notes: NO STAINS OR SOILS NORMAL WEAR Typical Vehicle Desc: Clean to very clean with no significant holes or burn marks. Light to no significant scuffing.\", \"value_impact\": 0}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"Body\", \"value\": {\"component_name\": \"Body\", \"condition_rating\": \"AVERAGE\", \"inspection_notes\": \"Notes: NO PRIOR DAMAGES NORMAL WEAR Typical Vehicle Desc: Sheet Metal: Few to no dings. No dents. All panels intact and properly aligned. Trim: No broken and/or missing components. No dents. Few to no dings.\", \"value_impact\": 0}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"Glass\", \"value\": {\"component_name\": \"Glass\", \"condition_rating\": \"AVERAGE\", \"inspection_notes\": \"Notes: NO CRACKS ON GLASS, NORMAL WEAR Typical Vehicle Desc: Light to no surface scratches. Light to no pitting.\", \"value_impact\": 0}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"Paint\", \"value\": {\"component_name\": \"Paint\", \"condition_rating\": \"AVERAGE\", \"inspection_notes\": \"Notes: NO PRIOR DAMAGES ON PANELS NORMAL WEAR Typical Vehicle Desc: Minimal surface chipping and/or a few small scratches. No peeling and/or flaking. Minor to no swirl marks. Light to no fading.\", \"value_impact\": 0}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"Engine\", \"value\": {\"component_name\": \"Engine\", \"condition_rating\": \"AVERAGE\", \"inspection_notes\": \"Notes: NO LEAKS SEEN NORMAL WEAR Typical Vehicle Desc: Minor to no seepage. Belts and hoses firm, and may show minimal wear. Minimal to zero dirt and grease in engine compartment.\", \"value_impact\": 0}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"Transmission\", \"value\": {\"component_name\": \"Transmission\", \"condition_rating\": \"AVERAGE\", \"inspection_notes\": \"Notes: NO LEAKS SEEN NORMAL WEAR Typical Vehicle Desc: Fluid slightly discolored. A few areas to no seepage.\", \"value_impact\": 0}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"Front Tires\", \"value\": {\"component_name\": \"Front Tires\", \"condition_rating\": \"AVERAGE\", \"inspection_notes\": \"Notes: TIRES MEASURE MORE THAN 5.32NDS Typical Vehicle Desc: 41% to 90% of new. Example: Typical new car tires are 11/32, loss measures at 5/32 = 46% (5/11)\", \"value_impact\": 0}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"Rear Tires\", \"value\": {\"component_name\": \"Rear Tires\", \"condition_rating\": \"AVERAGE\", \"inspection_notes\": \"Notes: TIRES MEASURE MORE THAN 5.32NDS Typical Vehicle Desc: 41% to 90% of new. Example: Typical new car tires are 11/32, loss measures at 5/32 = 46% (5/11)\", \"value_impact\": 0}, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"structural\": \"match_by:component_name\"}, \"nhtsa_recalls\": {\"comparator\": {\"campaign_id\": \"date\", \"component\": \"case_insensitive\", \"mfg_report_date\": \"date\"}, \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": \"24V548000\", \"value\": {\"campaign_id\": \"24V548000\", \"component\": \"EQUIPMENT:OTHER:LABELS\", \"mfg_report_date\": \"JUL 22, 2024\"}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"25V058000\", \"value\": {\"campaign_id\": \"25V058000\", \"component\": \"SERVICE BRAKES, HYDRAULIC:FOUNDATION COMPONENTS:HOSES, LINES/PIPING, AND FITTINGS\", \"mfg_report_date\": \"FEB 05, 2025\"}, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"structural\": \"match_by:campaign_id\"}, \"comparable_vehicles[0].comp_label\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Comp 1\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[0].vin\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"3TMLB5FN7RM013622\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[0].year\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 2024, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[0].make\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Toyota\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[0].model\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Tacoma\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[0].trim\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Trd Sport\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[0].odometer\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 1617, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[0].list_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 37842.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[0].adjusted_comparable_value\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 42303.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[0].source\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Dealer Ad\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[0].dealer_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Keyes Cars\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[0].dealer_city\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Van Nuys\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[0].dealer_state\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"CA\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[0].distance_from_loss_miles\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 19, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[0].stock_number\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"RM013622PS\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[0].updated_date\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"09/10/2025\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[0].adjustment_make_model_trim\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[0].adjustment_mileage\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": -936.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[0].adjustment_options\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 2800.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[0].adjustment_package\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 2597.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[0].adjustment_condition\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[1].comp_label\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Comp 2\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[1].vin\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"3TMLB5FN8RM016416\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[1].year\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 2024, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[1].make\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Toyota\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[1].model\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Tacoma\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[1].trim\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Trd Sport\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[1].odometer\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 9072, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[1].list_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 38900.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[1].adjusted_comparable_value\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 44140.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[1].source\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Verified Sold DMV\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[1].dealer_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Carmax/carmax The Auto\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[1].dealer_city\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Buena Park\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[1].dealer_state\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"CA\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[1].distance_from_loss_miles\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 15, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[1].stock_number\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"58080B4\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[1].updated_date\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"08/31/2025\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[1].adjustment_make_model_trim\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[1].adjustment_mileage\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": -157.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[1].adjustment_options\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 2800.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[1].adjustment_package\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 2597.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[1].adjustment_condition\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[2].comp_label\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Comp 3\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[2].vin\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"3TMLB5FN4RM006398\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[2].year\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 2024, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[2].make\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Toyota\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[2].model\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Tacoma\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[2].trim\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Trd Sport\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[2].odometer\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 11630, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[2].list_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 38900.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[2].adjusted_comparable_value\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 41310.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[2].source\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Verified Sold DMV\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[2].dealer_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Toyota Of North Hollywood\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[2].dealer_city\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"North Hollywood\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[2].dealer_state\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"CA\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[2].distance_from_loss_miles\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 15, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[2].stock_number\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"72822A4\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[2].updated_date\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"07/19/2025\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[2].adjustment_make_model_trim\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[2].adjustment_mileage\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 147.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[2].adjustment_options\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 1150.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[2].adjustment_package\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 1113.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[2].adjustment_condition\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[3].comp_label\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Comp 4\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[3].vin\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"3TMLB5FN0RM004907\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[3].year\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 2024, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[3].make\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Toyota\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[3].model\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Tacoma\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[3].trim\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Trd Sport\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[3].odometer\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 16138, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[3].list_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 35888.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[3].adjusted_comparable_value\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 42172.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[3].source\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Autotrader\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[3].dealer_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Toyota Of Huntington Beach\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[3].dealer_city\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Huntington Beach\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[3].dealer_state\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"CA\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[3].distance_from_loss_miles\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 23, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[3].stock_number\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"000P3021\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[3].updated_date\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"10/12/2025\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[3].adjustment_make_model_trim\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[3].adjustment_mileage\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 737.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[3].adjustment_options\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 2950.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[3].adjustment_package\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 2597.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[3].adjustment_condition\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[4].comp_label\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Comp 5\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[4].vin\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"3TMKB5FN3RM008204\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[4].year\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 2024, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[4].make\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Toyota\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[4].model\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Tacoma\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[4].trim\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Trd Sport\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[4].odometer\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 19000, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[4].list_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 36700.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[4].adjusted_comparable_value\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 43396.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[4].source\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Dealer Ad\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[4].dealer_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Techiia Motorsports\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[4].dealer_city\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Inglewood\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[4].dealer_state\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"CA\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[4].distance_from_loss_miles\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 6, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[4].stock_number\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"008204\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[4].updated_date\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"10/06/2025\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[4].adjustment_make_model_trim\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[4].adjustment_mileage\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 1149.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[4].adjustment_options\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 2950.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[4].adjustment_package\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 2597.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[4].adjustment_condition\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[5].comp_label\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Comp 6\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[5].vin\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"3TMKB5FN0RM011139\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[5].year\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 2024, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[5].make\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Toyota\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[5].model\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Tacoma\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[5].trim\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Trd Sport\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[5].odometer\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 16279, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[5].list_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 35694.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[5].adjusted_comparable_value\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 41998.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[5].source\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Autotrader\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[5].dealer_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"South Bay Hyundai\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[5].dealer_city\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Torrance\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[5].dealer_state\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"CA\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[5].distance_from_loss_miles\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 9, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[5].stock_number\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"B011139\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[5].updated_date\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"10/08/2025\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[5].adjustment_make_model_trim\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[5].adjustment_mileage\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 757.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[5].adjustment_options\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 2950.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[5].adjustment_package\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 2597.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[5].adjustment_condition\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[6].comp_label\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Comp 7\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[6].vin\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"3TMKB5FN8RM019294\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[6].year\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 2024, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[6].make\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Toyota\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[6].model\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Tacoma\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[6].trim\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Trd Sport\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[6].odometer\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 6749, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[6].list_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 37792.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[6].adjusted_comparable_value\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 41155.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[6].source\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Dealer Ad\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[6].dealer_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Penske Motor Group\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[6].dealer_city\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"El Monte\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[6].dealer_state\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"CA\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[6].distance_from_loss_miles\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 14, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[6].stock_number\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"5T9172\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[6].updated_date\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"09/03/2025\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[6].adjustment_make_model_trim\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[6].adjustment_mileage\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": -417.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[6].adjustment_options\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 1925.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[6].adjustment_package\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 1855.0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"comparable_vehicles[6].adjustment_condition\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[0].component_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Seats\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[0].condition_rating\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"AVERAGE\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[0].inspection_notes\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Notes: NO STAINS OR TEARS NORMAL WEAR Typical Vehicle Desc: Clean to very clean with no significant tears, holes or burn marks. Light to no wear. No bare spots.\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[0].value_impact\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[1].component_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Carpets\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[1].condition_rating\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"AVERAGE\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[1].inspection_notes\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Notes: NO STAINS OR TEARS NORMAL WEAR Typical Vehicle Desc: Clean to very clean with no significant tears, holes or burn marks. Light to no wear. No bare spots.\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[1].value_impact\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[2].component_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Dashboard\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[2].condition_rating\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"AVERAGE\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[2].inspection_notes\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Notes: NO SUN DAMAGES, NORMAL WEAR Typical Vehicle Desc: A few small and/or insignificant scratches or gouges. Minimal to no damage to firmly intact and functional components. Light wear.\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[2].value_impact\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[3].component_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Headliner\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[3].condition_rating\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"AVERAGE\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[3].inspection_notes\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Notes: NO STAINS OR SOILS NORMAL WEAR Typical Vehicle Desc: Clean to very clean with no significant holes or burn marks. Light to no significant scuffing.\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[3].value_impact\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[4].component_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Body\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[4].condition_rating\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"AVERAGE\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[4].inspection_notes\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Notes: NO PRIOR DAMAGES NORMAL WEAR Typical Vehicle Desc: Sheet Metal: Few to no dings. No dents. All panels intact and properly aligned. Trim: No broken and/or missing components. No dents. Few to no dings.\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[4].value_impact\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[5].component_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Glass\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[5].condition_rating\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"AVERAGE\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[5].inspection_notes\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Notes: NO CRACKS ON GLASS, NORMAL WEAR Typical Vehicle Desc: Light to no surface scratches. Light to no pitting.\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[5].value_impact\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[6].component_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Paint\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[6].condition_rating\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"AVERAGE\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[6].inspection_notes\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Notes: NO PRIOR DAMAGES ON PANELS NORMAL WEAR Typical Vehicle Desc: Minimal surface chipping and/or a few small scratches. No peeling and/or flaking. Minor to no swirl marks. Light to no fading.\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[6].value_impact\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[7].component_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Engine\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[7].condition_rating\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"AVERAGE\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[7].inspection_notes\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Notes: NO LEAKS SEEN NORMAL WEAR Typical Vehicle Desc: Minor to no seepage. Belts and hoses firm, and may show minimal wear. Minimal to zero dirt and grease in engine compartment.\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[7].value_impact\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[8].component_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Transmission\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[8].condition_rating\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"AVERAGE\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[8].inspection_notes\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Notes: NO LEAKS SEEN NORMAL WEAR Typical Vehicle Desc: Fluid slightly discolored. A few areas to no seepage.\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[8].value_impact\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[9].component_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Front Tires\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[9].condition_rating\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"AVERAGE\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[9].inspection_notes\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Notes: TIRES MEASURE MORE THAN 5.32NDS Typical Vehicle Desc: 41% to 90% of new. Example: Typical new car tires are 11/32, loss measures at 5/32 = 46% (5/11)\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[9].value_impact\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[10].component_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Rear Tires\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[10].condition_rating\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"AVERAGE\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[10].inspection_notes\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"Notes: TIRES MEASURE MORE THAN 5.32NDS Typical Vehicle Desc: 41% to 90% of new. Example: Typical new car tires are 11/32, loss measures at 5/32 = 46% (5/11)\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"component_conditions[10].value_impact\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": 0, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"nhtsa_recalls[0].campaign_id\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"24V548000\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"nhtsa_recalls[0].component\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"EQUIPMENT:OTHER:LABELS\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"nhtsa_recalls[0].mfg_report_date\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"JUL 22, 2024\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"nhtsa_recalls[1].campaign_id\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"25V058000\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"nhtsa_recalls[1].component\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"SERVICE BRAKES, HYDRAULIC:FOUNDATION COMPONENTS:HOSES, LINES/PIPING, AND FITTINGS\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"nhtsa_recalls[1].mfg_report_date\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"FEB 05, 2025\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}}",
+  "repeated_structure": "{\"comparable_vehicles\": {\"anyOf\": [{\"type\": \"array\", \"items\": {\"$ref\": \"#/$defs/ComparableVehicle\"}}, {\"type\": \"null\"}], \"description\": \"Each entry is one comparable vehicle CCC used (or summarized) for the Base Vehicle Value computation. Uniquely identified by VIN within a single report.\", \"title\": \"Comparable Vehicles\", \"identity_key\": \"vin\"}, \"component_conditions\": {\"anyOf\": [{\"type\": \"array\", \"items\": {\"$ref\": \"#/$defs/ComponentCondition\"}}, {\"type\": \"null\"}], \"description\": \"Each entry is one inspected vehicle component row from the COMPONENT CONDITION table.\", \"title\": \"Component Conditions\", \"identity_key\": \"component_name\"}, \"nhtsa_recalls\": {\"anyOf\": [{\"type\": \"array\", \"items\": {\"$ref\": \"#/$defs/NhtsaRecall\"}}, {\"type\": \"null\"}], \"description\": \"Each entry is one NHTSA recall block in the SUPPLEMENTAL INFORMATION section.\", \"title\": \"Nhtsa Recalls\", \"identity_key\": \"campaign_id\"}}",
+  "anchored_fields": 24,
+  "no_anchor_fields": 0,
+  "case_id": "B03-eb-0284"
+}

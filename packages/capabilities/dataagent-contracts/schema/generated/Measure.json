@@ -1,0 +1,50 @@
+{
+  "$comment": "generated from dataagent_contracts.core:Measure; do not edit",
+  "$defs": {
+    "Aggregation": {
+      "enum": [
+        "sum",
+        "count",
+        "count_distinct",
+        "avg",
+        "min",
+        "max",
+        "custom"
+      ],
+      "title": "Aggregation",
+      "type": "string"
+    }
+  },
+  "$id": "dataagent-contracts/0.1/core/Measure",
+  "additionalProperties": false,
+  "properties": {
+    "aggregation": {
+      "$ref": "#/$defs/Aggregation"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "field_ref": {
+      "minLength": 1,
+      "title": "Field Ref",
+      "type": "string"
+    }
+  },
+  "required": [
+    "field_ref",
+    "aggregation"
+  ],
+  "title": "Measure",
+  "type": "object"
+}

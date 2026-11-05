@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 484,
+  "question": "I want to know how widely chlorine atoms bond to other atoms across the toxicology database. Please give me a single number: the count of atoms that bond with chlorine atoms. Nothing else.",
+  "evidence": "Chlorine means the element recorded under the code cl.",
+  "gold_sql": "SELECT COUNT(DISTINCT CASE WHEN a1.element = 'cl' THEN c.atom_id2 ELSE c.atom_id END) AS bonded_atoms FROM connected AS c JOIN atom AS a1 ON c.atom_id = a1.atom_id JOIN atom AS a2 ON c.atom_id2 = a2.atom_id WHERE a1.element = 'cl' OR a2.element = 'cl'",
+  "db_id": "toxicology",
+  "case_id": "B05-bird-0485",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT COUNT(DISTINCT CASE WHEN a1.element = 'cl' THEN c.atom_id2 ELSE c.atom_id END) AS bonded_atoms FROM connected AS c JOIN atom AS a1 ON c.atom_id = a1.atom_id JOIN atom AS a2 ON c.atom_id2 = a2.atom_id WHERE a1.element = 'cl' OR a2.element = 'cl'",
+    "db_id": "toxicology",
+    "evidence": "Chlorine means the element recorded under the code cl."
+  }
+}

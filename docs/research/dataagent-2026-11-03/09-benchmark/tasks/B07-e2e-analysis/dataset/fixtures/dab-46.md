@@ -1,0 +1,1 @@
+What percentage of transactions have missing IP addresses and also have a fraudulent dispute?

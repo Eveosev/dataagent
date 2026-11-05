@@ -1,0 +1,27 @@
+{
+  "source": "beaverbench/beaver-query",
+  "id": "nova_297",
+  "db": "nova",
+  "question": "For each instance power state, list the power state, total number of instances, and the average, variance, and standard deviation (using STDDEV only and never STDDEV_POP) of instance memory (in MB) for instances that have a non-empty network_info entry in the instance info cache. Do not repeat the power state if it is the same as the previous row. Include a grand total row. Do not return any rounded answers.",
+  "sql": "WITH inner_cte AS ( SELECT i.power_state, AVG(i.memory_mb) AS avg_memory_mb, VARIANCE(i.memory_mb) AS memory_mb_variance, STDDEV(i.memory_mb) AS memory_mb_stddev FROM INSTANCE_EXTRA ie JOIN INSTANCES i ON ie.instance_uuid = i.uuid JOIN INSTANCE_INFO_CACHES iic ON i.uuid = iic.instance_uuid WHERE iic.network_info IS NOT NULL GROUP BY i.power_state ORDER BY memory_mb_variance DESC ) SELECT CASE WHEN LAG(power_state_name) OVER (ORDER BY power_state_sort, power_state_name) = power_state_name THEN NULL ELSE power_state_name END AS power_state, total_power_states, avg_memory_mb, memory_mb_variance, memory_mb_stddev FROM ( SELECT CASE WHEN GROUPING(inner_cte.power_state) = 1 THEN 999999 ELSE inner_cte.power_state END AS power_state_sort, CASE WHEN GROUPING(inner_cte.power_state) = 1 THEN 'TOTAL' ELSE CAST(inner_cte.power_state AS CHAR) END AS power_state_name, COUNT(*) AS total_power_states, AVG(inner_cte.avg_memory_mb) AS avg_memory_mb, AVG(inner_cte.memory_mb_variance) AS memory_mb_variance, AVG(inner_cte.memory_mb_stddev) AS memory_mb_stddev FROM inner_cte GROUP BY inner_cte.power_state WITH ROLLUP ) AS tbltmp ORDER BY power_state_sort, power_state_name;",
+  "tables": "[\"INSTANCE_EXTRA\", \"INSTANCES\", \"INSTANCE_INFO_CACHES\"]",
+  "join_keys": "[[\"INSTANCES.UUID\", \"INSTANCE_EXTRA.INSTANCE_UUID\"], [\"INSTANCES.UUID\", \"INSTANCE_INFO_CACHES.INSTANCE_UUID\"]]",
+  "column_mapping": "{\"instance power state\": [\"INSTANCES.POWER_STATE\"], \"instance memory (in MB)\": [\"INSTANCES.MEMORY_MB\"], \"non-empty network_info entry\": [\"INSTANCE_INFO_CACHES.NETWORK_INFO\"], \"instance info cache\": [\"INSTANCE_INFO_CACHES.INSTANCE_UUID\"], \"instances\": [\"INSTANCES.UUID\"], \"instance uuid\": [\"INSTANCE_EXTRA.INSTANCE_UUID\", \"INSTANCES.UUID\", \"INSTANCE_INFO_CACHES.INSTANCE_UUID\"]}",
+  "domain_knowledge": "[]",
+  "sub_questions": "[\"For each instance power state, show the average, variance, and standard deviation of the instance memory (in MB) for instances that have a non-empty network_info entry in the instance info cache.\"]",
+  "sub_sqls": "[\"SELECT i.power_state, AVG(i.memory_mb) AS avg_memory_mb, VARIANCE(i.memory_mb) AS memory_mb_variance, STDDEV(i.memory_mb) AS memory_mb_stddev FROM INSTANCE_EXTRA ie JOIN INSTANCES i ON ie.instance_uuid = i.uuid JOIN INSTANCE_INFO_CACHES iic ON i.uuid = iic.instance_uuid WHERE iic.network_info IS NOT NULL GROUP BY i.power_state ORDER BY memory_mb_variance DESC;\"]",
+  "category": "complex query",
+  "detailed_category": "nested",
+  "case_id": "B05-beaver-0524",
+  "expected": {
+    "kind": "sql",
+    "sql": "WITH inner_cte AS ( SELECT i.power_state, AVG(i.memory_mb) AS avg_memory_mb, VARIANCE(i.memory_mb) AS memory_mb_variance, STDDEV(i.memory_mb) AS memory_mb_stddev FROM INSTANCE_EXTRA ie JOIN INSTANCES i ON ie.instance_uuid = i.uuid JOIN INSTANCE_INFO_CACHES iic ON i.uuid = iic.instance_uuid WHERE iic.network_info IS NOT NULL GROUP BY i.power_state ORDER BY memory_mb_variance DESC ) SELECT CASE WHEN LAG(power_state_name) OVER (ORDER BY power_state_sort, power_state_name) = power_state_name THEN NULL ELSE power_state_name END AS power_state, total_power_states, avg_memory_mb, memory_mb_variance, memory_mb_stddev FROM ( SELECT CASE WHEN GROUPING(inner_cte.power_state) = 1 THEN 999999 ELSE inner_cte.power_state END AS power_state_sort, CASE WHEN GROUPING(inner_cte.power_state) = 1 THEN 'TOTAL' ELSE CAST(inner_cte.power_state AS CHAR) END AS power_state_name, COUNT(*) AS total_power_states, AVG(inner_cte.avg_memory_mb) AS avg_memory_mb, AVG(inner_cte.memory_mb_variance) AS memory_mb_variance, AVG(inner_cte.memory_mb_stddev) AS memory_mb_stddev FROM inner_cte GROUP BY inner_cte.power_state WITH ROLLUP ) AS tbltmp ORDER BY power_state_sort, power_state_name;",
+    "sub_sqls": "[\"SELECT i.power_state, AVG(i.memory_mb) AS avg_memory_mb, VARIANCE(i.memory_mb) AS memory_mb_variance, STDDEV(i.memory_mb) AS memory_mb_stddev FROM INSTANCE_EXTRA ie JOIN INSTANCES i ON ie.instance_uuid = i.uuid JOIN INSTANCE_INFO_CACHES iic ON i.uuid = iic.instance_uuid WHERE iic.network_info IS NOT NULL GROUP BY i.power_state ORDER BY memory_mb_variance DESC;\"]",
+    "db": "nova",
+    "tables": "[\"INSTANCE_EXTRA\", \"INSTANCES\", \"INSTANCE_INFO_CACHES\"]",
+    "join_keys": "[[\"INSTANCES.UUID\", \"INSTANCE_EXTRA.INSTANCE_UUID\"], [\"INSTANCES.UUID\", \"INSTANCE_INFO_CACHES.INSTANCE_UUID\"]]",
+    "column_mapping": "{\"instance power state\": [\"INSTANCES.POWER_STATE\"], \"instance memory (in MB)\": [\"INSTANCES.MEMORY_MB\"], \"non-empty network_info entry\": [\"INSTANCE_INFO_CACHES.NETWORK_INFO\"], \"instance info cache\": [\"INSTANCE_INFO_CACHES.INSTANCE_UUID\"], \"instances\": [\"INSTANCES.UUID\"], \"instance uuid\": [\"INSTANCE_EXTRA.INSTANCE_UUID\", \"INSTANCES.UUID\", \"INSTANCE_INFO_CACHES.INSTANCE_UUID\"]}",
+    "category": "complex query",
+    "db_archive": "bench://beaver-table/beaver_db.zip"
+  }
+}

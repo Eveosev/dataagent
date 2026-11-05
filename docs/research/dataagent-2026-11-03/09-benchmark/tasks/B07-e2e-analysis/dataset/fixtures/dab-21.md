@@ -1,0 +1,1 @@
+Which merchant has the highest average transaction amount?

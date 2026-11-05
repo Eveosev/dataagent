@@ -1,0 +1,30 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_4ec7fe16",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "state",
+    "focus_year",
+    "landlord",
+    "tenant",
+    "rental_agreement",
+    "parties_to_agreement",
+    "lease_includes_provision",
+    "provision_type",
+    "statute_mi_554_633_1_f_provision",
+    "statute_mi_554_633_prohibited_provision",
+    "statute_mi_554_633_void",
+    "law_allows_landlord_to_include_provision",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    State: Michigan\n    Focus year: 2021\n\n    Question: Does the law allow a landlord to include a lease provision whereby\n    a tenant waives their right to notice?\n*/\n\n% -----------------------------\n% Scenario facts (question statement)\n% -----------------------------\n\nstate(michigan).\nfocus_year(2021).\n\nlandlord(landlord1).\ntenant(tenant1).\nrental_agreement(lease1).\nparties_to_agreement(lease1, landlord1, tenant1).\n\n% The lease includes a provision where the tenant waives their right to notice.\n% We model this as a lease provision that waives \"a right of notice ... required by law\n% in a judicial proceeding arising under the rental agreement.\"\nlease_includes_provision(lease1, provision1).\nprovision_type(provision1, waiver_of_notice_in_judicial_proceeding).\n\n% Helper predicate that succeeds when the encoded scenario matches the question.\nscenario_statement :-\n    state(michigan),\n    focus_year(2021),\n    rental_agreement(lease1),\n    parties_to_agreement(lease1, landlord1, tenant1),\n    lease_includes_provision(lease1, provision1),\n    provision_type(provision1, waiver_of_notice_in_judicial_proceeding).\n\n% -----------------------------\n% Statute encoding: MI Comp L  554.633 (2021)\n% -----------------------------\n\n/*\n  MI Comp L  554.633(1): A rental agreement shall not include a provision that does 1 or more\n  prohibited things, including:\n  (f) \"Waives or alters a party's right to demand a trial by jury or any other right of notice\n      or procedure required by law in a judicial proceeding arising under the rental agreement.\"\n*/\n\n% Classify provisions that fall under  554.633(1)(f).\nstatute_mi_554_633_1_f_provision(Provisions) :-\n    provision_type(Provisions, waiver_of_notice_in_judicial_proceeding).\n\n% A provision is prohibited under  554.633 if it matches any prohibited category.\n% (For this question, we only need (1)(f), but we keep the structure extensible.)\nstatute_mi_554_633_prohibited_provision(Agreement, Provision) :-\n    rental_agreement(Agreement),\n    lease_includes_provision(Agreement, Provision),\n    statute_mi_554_633_1_f_provision(Provision).\n\n/*\n  MI Comp L  554.633(3): \"A provision or clause of a rental agreement that violates this section is void.\"\n*/\nstatute_mi_554_633_void(Agreement, Provision) :-\n    statute_mi_554_633_prohibited_provision(Agreement, Provision).\n\n% -----------------------------\n% Reasoning: \"allowed to include\" vs prohibited/void\n% -----------------------------\n\n% If a provision is prohibited/void under  554.633, the landlord is not allowed to include it.\nlaw_allows_landlord_to_include_provision(Agreement, Provision, no) :-\n    statute_mi_554_633_prohibited_provision(Agreement, Provision),\n    statute_mi_554_633_void(Agreement, Provision),\n    !.\n\n% Otherwise, (under the given statute set) it is allowed.\nlaw_allows_landlord_to_include_provision(Agreement, Provision, yes) :-\n    rental_agreement(Agreement),\n    lease_includes_provision(Agreement, Provision),\n    \\+ statute_mi_554_633_prohibited_provision(Agreement, Provision),\n    !.\n\n% -----------------------------\n% Answer predicate required by the prompt\n% -----------------------------\n\nhousing_answer(Result) :-\n    scenario_statement,\n    law_allows_landlord_to_include_provision(lease1, provision1, Result),\n    !.\n\n% -----------------------------\n% Main entrypoint (required)\n% -----------------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-0548",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Does the law allow a landlord to include a lease provision whereby a tenant waives their right to notice?"
+  }
+}

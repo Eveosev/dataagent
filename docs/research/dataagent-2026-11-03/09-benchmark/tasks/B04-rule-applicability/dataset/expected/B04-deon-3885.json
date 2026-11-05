@@ -1,0 +1,25 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_99d9f257",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_issue",
+    "statute_eviction_regulating_law",
+    "statute_nm_47_10_2_landlord_category",
+    "statute_specifies_landlord_types",
+    "jurisdiction_has_eviction_law_specifying_landlord_types",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: New Mexico\n    Focus year: 2021\n\n    Question: Does the law regulating residential evictions specify the type(s) of landlord(s) regulated?\n\n    Statute provided (translated): NM Stat  47-10-2 (2021) (Mobile Home Park Act definitions),\n    which defines \"landlord\" or \"management\" to include specific types of persons/entities.\n*/\n\n% -----------------------------\n% Scenario (facts from question)\n% -----------------------------\n\nscenario_state(new_mexico).\nscenario_focus_year(2021).\n\n% The question is about whether the eviction-regulating law specifies landlord types.\nscenario_issue(specifies_landlord_types_in_eviction_law).\n\n/* Helper that succeeds when the factual scenario is set (for reuse). */\nscenario_statement :-\n    scenario_state(new_mexico),\n    scenario_focus_year(2021),\n    scenario_issue(specifies_landlord_types_in_eviction_law).\n\n% ---------------------------------------------------------\n% Statute translation: NM Stat  47-10-2 (2021) definitions\n% ---------------------------------------------------------\n\n/* We treat the Mobile Home Park Act as a residential-eviction-related body of law because it governs\n   mobile home park tenancies and related landlord/resident relations (including eviction contexts). */\nstatute_eviction_regulating_law(new_mexico, 2021, mobile_home_park_act).\n\n/* NM Stat  47-10-2(A) (2021):\n   \"landlord\" or \"management\" means:\n     - the owner; OR\n     - any person responsible for operating and managing a mobile home park; OR\n     - an agent, employee, or representative authorized to act on management's behalf\n       in connection with matters relating to tenancy in the park.\n*/\nstatute_nm_47_10_2_landlord_category(owner).\nstatute_nm_47_10_2_landlord_category(person_responsible_for_operating_and_managing_mobile_home_park).\nstatute_nm_47_10_2_landlord_category(agent_authorized_to_act_for_management_in_tenancy_matters).\nstatute_nm_47_10_2_landlord_category(employee_authorized_to_act_for_management_in_tenancy_matters).\nstatute_nm_47_10_2_landlord_category(representative_authorized_to_act_for_management_in_tenancy_matters).\n\n/* Derived: statute specifies landlord types if it enumerates one or more categories. */\nstatute_specifies_landlord_types(mobile_home_park_act) :-\n    statute_nm_47_10_2_landlord_category(_),\n    !.\n\n% ---------------------------------------------------\n% Reasoning: answer the question from statute + facts\n% ---------------------------------------------------\n\n/* For the scenario jurisdiction/year, check if any eviction-regulating law specifies landlord types. */\njurisdiction_has_eviction_law_specifying_landlord_types(State, Year) :-\n    statute_eviction_regulating_law(State, Year, Act),\n    statute_specifies_landlord_types(Act),\n    !.\n\n% -------------------------\n% Final answer (yes / no)\n% -------------------------\n\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_state(State),\n    scenario_focus_year(Year),\n    jurisdiction_has_eviction_law_specifying_landlord_types(State, Year),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n% -------------------------\n% Main entrypoint required\n% -------------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-3885",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Does the law regulating residential evictions specify the type(s) of landlord(s) regulated?"
+  }
+}

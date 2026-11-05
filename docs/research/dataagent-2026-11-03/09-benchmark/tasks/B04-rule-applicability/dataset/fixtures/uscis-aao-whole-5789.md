@@ -1,0 +1,19 @@
+# uscis-aao / whole
+
+## 制度原文
+
+To establish eligibility for a national interest waiver, a petitioner must first demonstrate qualification for the underlying EB-2 visa classification, as either a member of the professions holding an advanced degree or an individual of exceptional ability in the sciences, arts, or business. Because this classification requires that the individual's services be sought by a U.S. employer, a separate showing is required to establish that a waiver of the job offer requirement is in the national interest. While neither the statute nor the pertinent regulations define the term "national interest," we set forth a framework for adjudicating national interest waiver petitions in the precedent decision Matter of Dhanasar , 26 l&N Dec. 884 (AAO 2016). Dhanasar states that, after a petitioner has established eligibility for EB-2 classification, USCIS may, as a matter of discretion, grant a national interest waiver if the petitioner demonstrates: (1) that the noncitizen's proposed endeavor has both substantial merit and national importance; (2) that the noncitizen is well positioned to advance the proposed
+
+endeavor; and (3) that, on balance, it would be beneficial to the United States to waive the requirements of a job offer and thus of a labor certification. See Flores v. Garland, 72 F.4th 85, 88 (5th Cir. 2023) (joining the Ninth, Eleventh, and D.C. Circuit Courts (and Third in an unpublished decision) in concluding that USCIS' decision to grant or deny a national interest waiver is discretionary in nature). The first prong, substantial merit and national importance, focuses on the specific endeavor that the noncitizen proposes to undertake. The endeavor's merit may be demonstrated in a range of areas such as business, entrepreneurialism, science, technology, culture, health, or education. In determining whether the proposed endeavor has national importance, we consider its potential prospective impact. See Matter ofDhanasar, 26 I&N Dec. at 888-91, for elaboration on these three prongs.
+
+## 事实
+
+The petitioner filed Form I-140 seeking classification as a member of the professions holding an advanced degree and requested a national interest waiver of the job‑offer requirement. He described his proposed endeavor as serving as the senior technical manager of engineering and processes at a newly created consulting company that will provide consulting services to companies operating in the U.S. mining industry and assist American companies in expanding to the Latin American mining market.
+
+In his business plan the petitioner identified target clients in Arizona, Nevada, Colorado, South Carolina, and Alaska, and set forth a hiring timeline: one metallurgical engineer in the first year, one mechanical engineer in the second year, and one hydraulic engineer in the third year, with no additional hires in the fourth or fifth years — a total of four employees including himself. Corporate filings and a commercial contract in the record show the company operates at an address matching the private residence the petitioner listed in Florida. In response to a request for evidence, the petitioner stated he will actively recruit professionals from New Mexico and establish a branch there.
+
+The record submitted by the petitioner included a business plan, a statement in response to the RFE, letters of recommendation and support, and documentary evidence of company contracts. On appeal the petitioner summarized his academic and work history, reiterated information about the mining industry and his proposed business, and asserted that his RFE statement, the business plan, three opinion letters, the contracts, and letters of support together demonstrate that his proposed endeavor has national importance — which is the basis for his appeal of the service center’s decision.
+
+## 问题
+
+Should this case be accepted or dismissed?

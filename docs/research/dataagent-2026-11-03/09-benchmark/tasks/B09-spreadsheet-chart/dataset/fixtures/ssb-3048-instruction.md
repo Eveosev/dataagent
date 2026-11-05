@@ -1,0 +1,3 @@
+I need assistance with a simple formula to perform a VLOOKUP on data in another table, which is highlighted in yellow. Currently, I am using individual VLOOKUPs for each lookup. How can I do this process more efficiently?
+How to lookup/fill in data form another table, just simple way not vlookup one by one as per column ? Because I do one by one formula as per column C in DATA 1 sheet. Kindly help to fill in simple formula in yellow column. 
+Please help me correct the formula in the table : VLOOKUP(B4,'DATA 1'!$A$4:$C$9,3,0). And get the correct answer.

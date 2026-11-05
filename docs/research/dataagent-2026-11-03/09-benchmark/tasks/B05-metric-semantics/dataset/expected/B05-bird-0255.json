@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 254,
+  "question": "For qualifying at the 1995 Japanese Grand Prix, I need the nationality of the driver who set the slowest time in Q1. If two drivers tie for the slowest Q1 time, give me each of their nationalities. I only want the nationality value(s), nothing else.",
+  "evidence": "",
+  "gold_sql": "WITH t AS (SELECT d.nationality, RANK() OVER (ORDER BY CAST(replace(substr(q.q1, 1, instr(q.q1, ':')), ':', '') AS INTEGER) DESC, CAST(substr(q.q1, instr(q.q1, ':') + 1) AS INTEGER) DESC) AS rnk FROM qualifying q JOIN drivers d ON d.driverId = q.driverId JOIN races r ON r.raceId = q.raceId WHERE r.year = 1995 AND r.name = 'Japanese Grand Prix' AND q.q1 IS NOT NULL AND q.q1 <> '') SELECT nationality FROM t WHERE rnk = 1;",
+  "db_id": "formula_1",
+  "case_id": "B05-bird-0255",
+  "expected": {
+    "kind": "sql",
+    "sql": "WITH t AS (SELECT d.nationality, RANK() OVER (ORDER BY CAST(replace(substr(q.q1, 1, instr(q.q1, ':')), ':', '') AS INTEGER) DESC, CAST(substr(q.q1, instr(q.q1, ':') + 1) AS INTEGER) DESC) AS rnk FROM qualifying q JOIN drivers d ON d.driverId = q.driverId JOIN races r ON r.raceId = q.raceId WHERE r.year = 1995 AND r.name = 'Japanese Grand Prix' AND q.q1 IS NOT NULL AND q.q1 <> '') SELECT nationality FROM t WHERE rnk = 1;",
+    "db_id": "formula_1",
+    "evidence": ""
+  }
+}

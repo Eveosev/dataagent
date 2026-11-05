@@ -1,0 +1,23 @@
+## Essential Problem:
+
+The essential problem lies in the discrepancy between the formula presented in the paper and the actual number of combinatorial bits needed to construct a preference map for a given number of goods. While the formula suggests a quadratic relationship, the reality seems to indicate a linear relationship, at least for a small number of goods.
+
+## Step-by-Step Reasoning:
+
+1. **Understanding the Formula:** The formula (n-1)^2 likely stems from considering the pairwise comparisons needed to define a complete preference order over n goods. Each good needs to be compared to every other good, resulting in n*(n-1) comparisons. Since each comparison requires one bit (e.g., 0 for good A preferred over good B, 1 for the opposite), the formula suggests (n-1)^2 bits are needed.
+
+2. **Considering Transitivity:** However, the formula overlooks the inherent transitivity of preferences. If good A is preferred to good B and B is preferred to C, transitivity implies that A is also preferred to C. This redundancy reduces the actual number of bits needed.
+
+3. **Analyzing Specific Cases:** As demonstrated in the examples provided, only 1 bit is needed for 2 goods and 2 bits for 3 goods. In these cases, the formula overestimates the required bits by a factor of 2 and 4, respectively.
+
+4. **Alternative Approach:** A more accurate approach might involve focusing directly on the relations between goods, taking transitivity into account. For instance, one could consider chains of preferences, starting from the most preferred good and linking it to the next preferred, and so on, until the least preferred good is reached. This approach would likely lead to a linear relationship between the number of goods and the necessary bits.
+
+## Draft Answer:
+
+The formula presented in the paper, while seemingly logical at first glance, appears to overestimate the number of combinatorial bits required to construct a preference map for a given number of goods. This overestimation likely stems from an oversight of the property of transitivity inherent in preferences. When transitivity is taken into account, fewer bits are needed, as demonstrated by the provided examples. Further analysis and alternative approaches are needed to determine the precise relationship between the number of goods and the required bits, likely resulting in a linear rather than quadratic relationship.
+
+## Additional Thoughts:
+
+* The problem might be specific to the paper's particular approach to constructing preference maps. Other methods might require a different number of bits even when considering transitivity.
+* The issue raises questions about the computational complexity of representing and manipulating preferences, especially in settings with a large number of goods.
+* Exploring alternative methods for encoding preferences while accounting for transitivity could be a valuable area for further research.

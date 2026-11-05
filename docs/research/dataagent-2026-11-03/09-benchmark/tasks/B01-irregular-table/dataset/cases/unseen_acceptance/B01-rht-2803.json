@@ -1,0 +1,35 @@
+{
+  "case_id": "B01-rht-2803",
+  "task_id": "B01",
+  "split_role": "unseen_acceptance",
+  "inputs": [
+    {
+      "kind": "table",
+      "ref": "bench://realthitbench-data/csv/economy-table86.csv",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B01-rht-2803.json"
+  },
+  "evidence": [
+    "bench://realthitbench-data/csv/economy-table86.csv"
+  ],
+  "tags": [
+    "realthitbench",
+    "SingleRowClassified",
+    "Visualization",
+    "data.gov"
+  ],
+  "source": "rht",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

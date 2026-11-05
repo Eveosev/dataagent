@@ -1,0 +1,44 @@
+{
+  "source": "mitdbg/KramaBench",
+  "file": "dr-input/wildfire/wildfire_random.json",
+  "raw": {
+    "id": "wildfire-easy-3",
+    "query": "Which US states (using full names) fall into the most number of NIFC Geographic Areas?",
+    "answer": [
+      "California",
+      "Nevada"
+    ],
+    "answer_type": "list_exact",
+    "data_sources": [
+      "usa.gpkg",
+      "nifc_geographic_areas.gpkg"
+    ],
+    "runtime": 10,
+    "input_files_to_dr": [
+      "nifc_lightning_caused_wildfires.csv",
+      "nifc_lightning_caused_acres.csv",
+      "nifc_human_caused_wildfires.csv",
+      "nifc_geographic_areas.gpkg",
+      "nifc_wildfires.csv",
+      "usa.gpkg",
+      "wildfire_total_fires_p45_54.csv",
+      "ZHVI.csv",
+      "noaa_wildfires.csv",
+      "Wildfire_Acres_by_State.csv"
+    ]
+  },
+  "case_id": "B07-krama-0501",
+  "expected": {
+    "kind": "answer",
+    "answer": [
+      "California",
+      "Nevada"
+    ],
+    "answer_type": "list_exact",
+    "runtime_s": 10,
+    "data_sources": [
+      "usa.gpkg",
+      "nifc_geographic_areas.gpkg"
+    ]
+  }
+}

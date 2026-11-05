@@ -1,0 +1,36 @@
+{
+  "source": "mitdbg/KramaBench",
+  "file": "dr-input/wildfire/wildfire_random.json",
+  "raw": {
+    "id": "wildfire-easy-1",
+    "query": "Find the 3-month period with the highest total acres burned since Jan 2000, according to NOAA. What was the total acres burned in that period?",
+    "answer": 8200000,
+    "answer_type": "numeric_exact",
+    "data_sources": [
+      "noaa_wildfires_monthly_stats.csv"
+    ],
+    "runtime": 30,
+    "input_files_to_dr": [
+      "nifc_lightning_caused_wildfires.csv",
+      "noaa_wildfires_monthly_stats.csv",
+      "nifc_human_caused_wildfires.csv",
+      "nifc_geographic_areas.gpkg",
+      "usa.gpkg",
+      "wildfire_total_fires_p45_54.csv",
+      "annual_aqi_by_county_2024.csv",
+      "noaa_wildfires_variabledescrip.csv",
+      "WeatherEvents_Jan2016-Dec2022_part_1.csv",
+      "WeatherEvents_Jan2016-Dec2022_part_3.csv"
+    ]
+  },
+  "case_id": "B07-krama-0499",
+  "expected": {
+    "kind": "answer",
+    "answer": 8200000,
+    "answer_type": "numeric_exact",
+    "runtime_s": 30,
+    "data_sources": [
+      "noaa_wildfires_monthly_stats.csv"
+    ]
+  }
+}

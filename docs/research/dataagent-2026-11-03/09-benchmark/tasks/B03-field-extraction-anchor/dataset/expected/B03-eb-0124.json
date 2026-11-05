@@ -1,0 +1,2355 @@
+{
+  "source": "llamaindex/ExtractBench",
+  "id": "short/W2-27-217314_213200",
+  "pdf": "docs/short/W2-27-217314_213200.pdf",
+  "schema": {
+    "$defs": {
+      "CasingRecordRow": {
+        "properties": {
+          "type_of_casing": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 36 Casing Record > 'Type of Casing' column — one of conductor, surface, intermediate, conventional production, tapered production, or other, as written for this casing string. This is the row identity_key. Transcribe the typed/handwritten cell value verbatim as printed (preserve leading zeros, casing, fractions and any printed unit); null if the cell is blank. Do NOT confuse with the item-37 Liner Record (a separate table) or with the item-38 Tubing size.",
+            "title": "Type Of Casing Conductor Surface Intermediate Conventional Production Tapered Production Or Other"
+          },
+          "casing_size": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 36 Casing Record > 'Casing Size (in.)' column — the outer diameter of this casing string in inches. Transcribe the typed/handwritten cell value verbatim as printed (preserve leading zeros, casing, fractions and any printed unit); null if the cell is blank. Do NOT confuse with 'Hole Size (in.)' (the drilled-hole diameter) in the adjacent column, or with the item-37 Liner Size or item-38 Tubing Size.",
+            "title": "Casing Size In"
+          },
+          "weight_per_ft": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 36 Casing Record > 'WT #/FT' column — the casing weight per foot for this string, printed between 'CASING SIZE' and 'DEPTH SET' on the old-rev layout. Transcribe the typed/handwritten cell value verbatim as printed (preserve any '#' unit marker); null if the cell is blank. Do NOT confuse with 'Casing Size' (the pipe outer diameter) in the preceding column.",
+            "title": "WT Per FT"
+          },
+          "hole_size": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 36 Casing Record > 'Hole Size (in.)' column — the drilled-hole diameter for this casing string, in inches. Transcribe the typed/handwritten cell value verbatim as printed (preserve leading zeros, casing, fractions and any printed unit); null if the cell is blank. Do NOT confuse with 'Casing Size (in.)' (the pipe OD) in the adjacent column.",
+            "title": "Hole Size In"
+          },
+          "setting_depth": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 36 Casing Record > 'Setting Depth (ft.)' column — the depth to which this casing string was set, in feet. Transcribe the typed/handwritten cell value verbatim as printed (preserve leading zeros, casing, fractions and any printed unit); null if the cell is blank. Do NOT confuse with 'Multi-Stage Tool Depth' or 'Multi-Stage Shoe Depth' in the same row, or with 'Top of Cement'.",
+            "title": "Setting Depth Ft"
+          },
+          "multistage_tool_depth": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 36 Casing Record > 'Multi-Stage Tool Depth (ft.)' column. Transcribe the typed/handwritten cell value verbatim as printed (preserve leading zeros, casing, fractions and any printed unit); null if the cell is blank. Do NOT confuse with 'Multi-Stage Shoe Depth (ft.)' (the very next column) or with 'Setting Depth (ft.)'.",
+            "title": "Multi Stage Tool Depth Ft"
+          },
+          "multistage_shoe_depth": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 36 Casing Record > 'Multi-Stage Shoe Depth (ft.)' column. Transcribe the typed/handwritten cell value verbatim as printed (preserve leading zeros, casing, fractions and any printed unit); null if the cell is blank. Do NOT confuse with 'Multi-Stage Tool Depth (ft.)' (the immediately preceding column) or with 'Setting Depth (ft.)'.",
+            "title": "Multi Stage Shoe Depth Ft"
+          },
+          "cement_class": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 36 Casing Record > 'Cement Class' column — the API cement class used (e.g. 'A', 'H', 'C'). Transcribe the typed/handwritten cell value verbatim as printed (preserve leading zeros, casing, fractions and any printed unit); null if the cell is blank. Do NOT confuse with 'Cement Amount (sacks)' or 'Slurry Volume (cu. ft.)' in the same row, nor with the item-37 Liner cement columns.",
+            "title": "Cement Class"
+          },
+          "cement_amount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 36 Casing Record > 'Cement Amount (sacks)' column — the number of sacks of cement pumped. Transcribe the typed/handwritten cell value verbatim as printed (preserve leading zeros, casing, fractions and any printed unit); null if the cell is blank. Do NOT confuse with 'Slurry Volume (cu. ft.)' (a volume, not a sack count) or 'Cement Class'.",
+            "title": "Cement Amount Sacks"
+          },
+          "slurry_volume": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 36 Casing Record > 'Slurry Volume (cu. ft.)' column — the cement slurry volume in cubic feet. Transcribe the typed/handwritten cell value verbatim as printed (preserve leading zeros, casing, fractions and any printed unit); null if the cell is blank. Do NOT confuse with 'Cement Amount (sacks)' (a sack count) in the adjacent column.",
+            "title": "Slurry Volume Cu Ft"
+          },
+          "top_of_cement": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 36 Casing Record > 'Top of Cement' column — the depth/position of the top of the cement column behind this casing. Transcribe the typed/handwritten cell value verbatim as printed (preserve leading zeros, casing, fractions and any printed unit); null if the cell is blank. Do NOT confuse with 'Top of Cement Determined By' (the method column immediately after) or with 'Setting Depth'.",
+            "title": "Top Of Cement"
+          },
+          "top_of_cement_determined_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 36 Casing Record > 'Top of Cement Determined By' column — the method used to determine the top of cement (e.g. calculation, temperature/CBL log). Transcribe the typed/handwritten cell value verbatim as printed (preserve leading zeros, casing, fractions and any printed unit); null if the cell is blank. Do NOT confuse with the 'Top of Cement' depth value in the preceding column.",
+            "title": "Top Of Cement Determined By"
+          }
+        },
+        "title": "CasingRecordRow",
+        "type": "object"
+      },
+      "LinerRecordRow": {
+        "properties": {
+          "liner_size": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 37 Liner Record > 'Liner Size (in.)' column — the liner outer diameter in inches. This is the row identity_key. Transcribe the typed/handwritten cell value verbatim as printed (preserve leading zeros, casing, fractions and any printed unit); null if the cell is blank. Do NOT confuse with the item-36 Casing Size (a separate table) or with 'Hole Size (in.)' in this same row.",
+            "title": "Liner Size In"
+          },
+          "hole_size": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 37 Liner Record > 'Hole Size (in.)' column — the drilled-hole diameter for the liner, in inches. Transcribe the typed/handwritten cell value verbatim as printed (preserve leading zeros, casing, fractions and any printed unit); null if the cell is blank. Do NOT confuse with 'Liner Size (in.)' (the pipe OD) in the adjacent column.",
+            "title": "Hole Size In"
+          },
+          "liner_top": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 37 Liner Record > 'Liner Top (ft.)' column — the depth of the top of the liner, in feet. Transcribe the typed/handwritten cell value verbatim as printed (preserve leading zeros, casing, fractions and any printed unit); null if the cell is blank. Do NOT confuse with 'Liner Bottom (ft.)' (the very next column) or with 'Top of Cement'.",
+            "title": "Liner Top Ft"
+          },
+          "liner_bottom": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 37 Liner Record > 'Liner Bottom (ft.)' column — the depth of the bottom of the liner, in feet. Transcribe the typed/handwritten cell value verbatim as printed (preserve leading zeros, casing, fractions and any printed unit); null if the cell is blank. Do NOT confuse with 'Liner Top (ft.)' (the immediately preceding column).",
+            "title": "Liner Bottom Ft"
+          },
+          "cement_class": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 37 Liner Record > 'Cement Class' column. Transcribe the typed/handwritten cell value verbatim as printed (preserve leading zeros, casing, fractions and any printed unit); null if the cell is blank. Do NOT confuse with the item-36 Casing Record cement columns (a separate table) or with 'Cement Amount (sacks)' / 'Slurry Volume (cu. ft.)' in this row.",
+            "title": "Cement Class"
+          },
+          "cement_amount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 37 Liner Record > 'Cement Amount (sacks)' column. Transcribe the typed/handwritten cell value verbatim as printed (preserve leading zeros, casing, fractions and any printed unit); null if the cell is blank. Do NOT confuse with 'Slurry Volume (cu. ft.)' (a volume) or 'Cement Class'.",
+            "title": "Cement Amount Sacks"
+          },
+          "slurry_volume": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 37 Liner Record > 'Slurry Volume (cu. ft.)' column. Transcribe the typed/handwritten cell value verbatim as printed (preserve leading zeros, casing, fractions and any printed unit); null if the cell is blank. Do NOT confuse with 'Cement Amount (sacks)' (a sack count).",
+            "title": "Slurry Volume Cu Ft"
+          },
+          "top_of_cement": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 37 Liner Record > 'Top of Cement' column. Transcribe the typed/handwritten cell value verbatim as printed (preserve leading zeros, casing, fractions and any printed unit); null if the cell is blank. Do NOT confuse with 'Top of Cement Determined By' (the method column after it) or with 'Liner Top (ft.)'.",
+            "title": "Top Of Cement"
+          },
+          "top_of_cement_determined_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 37 Liner Record > 'Top of Cement Determined By' column — the method used to determine the top of cement. Transcribe the typed/handwritten cell value verbatim as printed (preserve leading zeros, casing, fractions and any printed unit); null if the cell is blank. Do NOT confuse with the 'Top of Cement' depth value in the preceding column.",
+            "title": "Top Of Cement Determined By"
+          }
+        },
+        "title": "LinerRecordRow",
+        "type": "object"
+      },
+      "TubingRecordRow": {
+        "properties": {
+          "size": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 38 Tubing Record > 'Size (in.)' column — the tubing outer diameter in inches for this tubing string. This is the row identity_key. Transcribe the typed/handwritten cell value verbatim as printed (preserve leading zeros, casing, fractions and any printed unit); null if the cell is blank. Do NOT confuse with the item-36 Casing Size or item-37 Liner Size (separate tables), nor with 'Depth Set (ft.)' in this row. The tubing YES/NO and SWR-13 boxes above the grid are separate scalar fields (tubing_set_yes/tubing_set_no/tubing_swr13_exception).",
+            "title": "Size In"
+          },
+          "depth_set": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 38 Tubing Record > 'Depth Set (ft.)' column — the depth to which this tubing string was set, in feet. Transcribe the typed/handwritten cell value verbatim as printed (preserve leading zeros, casing, fractions and any printed unit); null if the cell is blank. Do NOT confuse with 'Packer Depth/Type' (the next column) or with the casing/liner setting depths in items 36-37.",
+            "title": "Depth Set Ft"
+          },
+          "packer_depth_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 38 Tubing Record > 'Packer Depth/Type' column — the packer depth and/or packer type for this tubing string. Transcribe the typed/handwritten cell value verbatim as printed (preserve leading zeros, casing, fractions and any printed unit); null if the cell is blank. Do NOT confuse with 'Depth Set (ft.)' (the tubing setting depth) in the preceding column.",
+            "title": "Packer Depth Type"
+          }
+        },
+        "title": "TubingRecordRow",
+        "type": "object"
+      },
+      "ProducingInjectionDisposalInterval": {
+        "properties": {
+          "from_depth": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 39 'Producing/Injection/Disposal Interval' table ('Indicate top and bottom measured depths of completion interval(s) or open hole') > the 'From' (top) measured depth of this interval. This is the row identity_key. Transcribe the typed/handwritten cell value verbatim as printed (preserve leading zeros, casing, fractions and any printed unit); null if the cell is blank. Do NOT confuse with the paired 'To' (bottom) depth (to_depth) of the same interval, nor with the separate operations 'Depth Interval' table near item 45 (operation_depth_intervals).",
+            "title": "From"
+          },
+          "to_depth": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 39 'Producing/Injection/Disposal Interval' table > the 'To' (bottom) measured depth of this interval. Transcribe the typed/handwritten cell value verbatim as printed (preserve leading zeros, casing, fractions and any printed unit); null if the cell is blank. Do NOT confuse with the paired 'From' (top) depth (from_depth) or with the operations 'Depth Interval' table (operation_depth_intervals).",
+            "title": "To"
+          }
+        },
+        "title": "ProducingInjectionDisposalInterval",
+        "type": "object"
+      },
+      "OperationDepthInterval": {
+        "properties": {
+          "from_depth": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The operations table (between items 44 and 45) > 'Depth Interval (ft.)' > the 'From' (top) depth of the interval treated by the corresponding operation (acid/fracture/cement squeeze/etc.). This is the row identity_key. Transcribe the typed/handwritten cell value verbatim as printed (preserve leading zeros, casing, fractions and any printed unit); null if the cell is blank. Do NOT confuse with the item-39 'Producing/Injection/Disposal Interval' From/To table (producing_injection_disposal_intervals) — this Depth Interval belongs to the Type-of-Operation table — nor with the paired 'To' depth (to_depth).",
+            "title": "From"
+          },
+          "to_depth": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The operations table (between items 44 and 45) > 'Depth Interval (ft.)' > the 'To' (bottom) depth of the treated interval. Transcribe the typed/handwritten cell value verbatim as printed (preserve leading zeros, casing, fractions and any printed unit); null if the cell is blank. Do NOT confuse with the paired 'From' depth (from_depth) or with the item-39 interval table (producing_injection_disposal_intervals).",
+            "title": "To"
+          }
+        },
+        "title": "OperationDepthInterval",
+        "type": "object"
+      },
+      "FormationRecordRow": {
+        "properties": {
+          "markers_formation_tops": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 45 Formation Record > 'Principal Geological Markers and Formation Tops' column — the name of the geological marker / formation top for this row (the table lists 'depths of principal geological markers and formation tops, including ... all permitted disposal/injection formations within 1/4-mile of the wellbore, productive zones, potential flow zones, and corrosive formation fluid zones'). This is the row identity_key. Transcribe the typed/handwritten cell value verbatim as printed (preserve leading zeros, casing, fractions and any printed unit); null if the cell is blank. Do NOT confuse with the depth columns (depth_tvd/depth_md) or the 'Indicate if formation is...' classification column (formation_type).",
+            "title": "Principal Geological Markers And Formation Tops"
+          },
+          "depth_tvd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 45 Formation Record > 'Depth (ft.)' > TVD sub-column — the true vertical depth of this formation top. Transcribe the typed/handwritten cell value verbatim as printed (preserve leading zeros, casing, fractions and any printed unit); null if the cell is blank. Do NOT confuse with the paired MD depth (depth_md) or with the item-31 Total Depth TVD.",
+            "title": "Depth Ft TVD"
+          },
+          "depth_md": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 45 Formation Record > 'Depth (ft.)' > MD sub-column — the measured depth of this formation top. Transcribe the typed/handwritten cell value verbatim as printed (preserve leading zeros, casing, fractions and any printed unit); null if the cell is blank. Do NOT confuse with the paired TVD depth (depth_tvd) or with the item-31 Total Depth MD.",
+            "title": "Depth Ft MD"
+          },
+          "formation_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 45 Formation Record > 'Indicate if formation is a permitted disposal/injection formation, productive zone, potential flow zone, and/or a zone with corrosive formation fluids' column — the free-text classification of this formation. Transcribe the typed/handwritten cell value verbatim as printed (preserve leading zeros, casing, fractions and any printed unit); null if the cell is blank. Do NOT confuse with the 'Is formation isolated in this well?' YES/NO column (formation_isolated) or the marker name (markers_formation_tops).",
+            "title": "Indicate If Formation Is A Permitted Disposal Injection Formation Productive Zone Potential Flow Zone And Or A Zone With Corrosive Formation Fluids"
+          },
+          "formation_isolated": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 45 Formation Record > 'Is formation isolated in this well? (YES/NO) (if NO, explain in remarks)' column — the YES/NO answer for this formation, captured as the printed text (e.g. 'YES'/'NO'). Transcribe the typed/handwritten cell value verbatim as printed (preserve leading zeros, casing, fractions and any printed unit); null if the cell is blank. Do NOT confuse with the 'Indicate if formation is...' classification column (formation_type).",
+            "title": "Is Formation Isolated In This Well YES NO If NO Explain In Remarks"
+          }
+        },
+        "title": "FormationRecordRow",
+        "type": "object"
+      },
+      "MultipleCompletionReservoir": {
+        "properties": {
+          "field_reservoir": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 39 'If multiple completion, list all reservoir names...' table (old-rev layout; page 2) — the 'FIELD & RESERVOIR' column for this row: one of the reservoirs this multiple-completion well produces from. This is the row identity_key. Transcribe verbatim; null if blank. Only present when item 38 'Is well multiple completion?' = Yes and the form prints a genuine multi-row table (distinct from the single-value `item13_field_reservoir` used by the modern form's former-reservoir citation).",
+            "title": "Field Reservoir"
+          },
+          "gas_id_or_oil_lease_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 39 table 'GAS ID or OIL LEASE #' column for this reservoir row. Transcribe verbatim; null if blank or not legible.",
+            "title": "Gas ID Or Oil Lease No"
+          },
+          "oil_or_gas": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 39 table 'Oil-O Gas-G' column for this reservoir row. Transcribe verbatim; null if blank or not legible.",
+            "title": "Oil O Gas G"
+          },
+          "well_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Item 39 table 'WELL #' column for this reservoir row. Transcribe verbatim; null if blank or not legible.",
+            "title": "Well No"
+          }
+        },
+        "title": "MultipleCompletionReservoir",
+        "type": "object"
+      }
+    },
+    "properties": {
+      "api_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Page 1 header (top-right): the well's API number, printed after the fixed 'API No.: 42-' prefix (Texas state code 42). Capture the digits the operator enters after '42-' (county + unique-well portion); include the '42-' prefix if it is written into the value. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with 'api_no_page2' (the same number repeated in the page-2 header), with RRC District No. (item 7), RRC Lease No. (item 8) or RRC Operator No.",
+        "title": "API No 42"
+      },
+      "rrc_district_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 7 (upper-right block): RRC District No. — the Railroad Commission administrative district for the well (a 1-2 character district code, e.g. '7B', '08', '01'). Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with RRC Lease No. (item 8), RRC Operator No., or County (item 10).",
+        "title": "RRC District No"
+      },
+      "rrc_lease_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 8 (upper-right block): RRC Lease No. — the Commission-assigned lease identification number for this lease/reservoir. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with RRC District No. (item 7), Well No. (item 9), RRC Operator No., or the item-13 'Gas ID or Oil Lease No.' of the former reservoir.",
+        "title": "RRC Lease No"
+      },
+      "field_name": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 1: Field Name (as per RRC Records or Wildcat) — the RRC field name the well produces from, or the word 'Wildcat'. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with Lease Name (item 2) or with the former Field & Reservoir of item 13.",
+        "title": "Field Name As Per RRC Records Or Wildcat"
+      },
+      "lease_name": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 2: Lease Name — the operator's name for the lease on which the well sits. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with Field Name (item 1), Operator's Name (item 3), or Well No. (item 9).",
+        "title": "Lease Name"
+      },
+      "well_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 9 (upper-right block): Well No. — the operator's well number/designation on this lease (e.g. '1', '3H', '2-A'). Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with the former-completion Well No. in item 13 (item13_well_no), RRC Lease No. (item 8), or RRC District No. (item 7).",
+        "title": "Well No"
+      },
+      "operator_name": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 3: Operator's Name, printed 'exactly as shown on Form P-5, Organization Report'. The legal name of the operating company filing the report. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with RRC Operator No. (the adjacent numeric operator code), Lease Name (item 2), or the broker/certifier Printed Name in the certification block.",
+        "title": "Operator S Name Exactly As Shown On Form P 5 Organization Report"
+      },
+      "rrc_operator_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "RRC Operator No. (small box adjacent to item 3 Operator's Name): the Commission-assigned P-5 operator number (6-digit numeric code). Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with RRC Lease No. (item 8), RRC District No. (item 7), or the operator's name itself (item 3).",
+        "title": "RRC Operator No"
+      },
+      "county": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 10: County — the Texas county in which the well is located. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with RRC District No. (item 7) or with the 'nearest town in the county' free-text in item 5b (well_located_nearest_town).",
+        "title": "County"
+      },
+      "operator_address": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 4: Operator's Address (include street, city, state, zip code) — the full mailing address of the operator as one block. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with Operator's Name (item 3) or with the certifier's contact info in the certification block.",
+        "title": "Operator S Address Include Street City State Zip Code"
+      },
+      "purpose_of_filing": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 11: Purpose of filing — a free-text purpose statement (note that the structured A/B option boxes for Producers and Injection/Disposal sit beneath this label). Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with the boolean option boxes under 'A. Producers' (producers_*) or 'B. Injection/Disposal/Storage/Brine Mining' (injdisp_*).",
+        "title": "Purpose Of Filing"
+      },
+      "producers_initial_potential": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 11 > 'A. Producers' option group: the 'Initial potential' checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with the other Producers boxes (Retest, Reclass, Well record only) or with the Injection/Disposal 'Initial completion' box (injdisp_*).",
+        "title": "Initial Potential"
+      },
+      "producers_retest": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 11 > 'A. Producers' option group: the 'Retest' checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with 'Initial potential', 'Reclass', or 'Well record only' in the same Producers group, nor with the swab-test YES/NO in item 21.",
+        "title": "Retest"
+      },
+      "producers_reclass": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 11 > 'A. Producers' option group: the 'Reclass' checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with the Injection/Disposal 'Reclass' box (injdisp_reclass) — this one belongs to the Producers (A) group — nor with 'Recompletion or reclass' in item 13.",
+        "title": "Reclass"
+      },
+      "producers_well_record_only": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 11 > 'A. Producers' option group: the 'Well record only (explain in remarks)' checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with the Injection/Disposal 'Well record only' box (injdisp_well_record_only) in group B.",
+        "title": "Well Record Only Explain In Remarks"
+      },
+      "location_section_block_survey": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 5a: Location (section, block and survey) — the abstract/survey description of the surface location. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with item 5b's distance/direction/nearest-town narrative or with the Latitude/Longitude in item 6.",
+        "title": "5a Location Section Block And Survey"
+      },
+      "well_located_miles": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 5b narrative ('This well is located ____ miles in a ____ direction from ____, which is the nearest town in the county'): the MILES value in the first blank. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with well_located_direction (the compass direction blank) or well_located_nearest_town (the town blank) in the same sentence.",
+        "title": "Miles"
+      },
+      "well_located_direction": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 5b narrative: the DIRECTION value in the second blank ('in a ____ direction from'), e.g. a compass bearing like 'NW' or 'South'. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with well_located_miles (the distance blank) or well_located_nearest_town (the town blank).",
+        "title": "Direction From"
+      },
+      "well_located_nearest_town": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 5b narrative: the NEAREST TOWN value in the third blank ('from ____, which is the nearest town in the county'). Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with County (item 10), well_located_miles, or well_located_direction.",
+        "title": "Nearest Town In The County"
+      },
+      "well_latitude_longitude": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 6: Well Latitude/Longitude (minimum five decimal places required) — the surface-location coordinates as printed. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with the adjacent 'Latitude/Longitude type' field (latitude_longitude_type) or with the Location section/block/survey (item 5a).",
+        "title": "Well Latitude Longitude Minimum Five Decimal Places Required"
+      },
+      "latitude_longitude_type": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Latitude/Longitude type:' field directly beneath item 6 — the datum/method descriptor for the coordinates (e.g. surface, bottom-hole, NAD27/NAD83). Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with the coordinate values themselves (well_latitude_longitude).",
+        "title": "Latitude Longitude Type"
+      },
+      "injdisp_initial_completion": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 11 > 'B. Injection/Disposal/Storage/Brine Mining' option group: the 'Initial completion' checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with the Producers (A) 'Initial potential' box (producers_initial_potential) or with item 23 'New well'.",
+        "title": "Initial Completion"
+      },
+      "injdisp_reclass": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 11 > 'B. Injection/Disposal/Storage/Brine Mining' option group: the 'Reclass' checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with the Producers (A) 'Reclass' box (producers_reclass) — this one belongs to group B.",
+        "title": "Reclass"
+      },
+      "injdisp_well_record_only": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 11 > 'B. Injection/Disposal/Storage/Brine Mining' option group: the 'Well record only (explain in remarks)' checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with the Producers (A) 'Well record only' box (producers_well_record_only).",
+        "title": "Well Record Only Explain In Remarks"
+      },
+      "spud_date": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 12a: Spud date — the date drilling began. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with item 12b 'Date of first production after rig released' (date_first_production_after_rig_released) or with the item-27 commenced/ended dates.",
+        "title": "12a Spud Date"
+      },
+      "date_first_production_after_rig_released": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 12b: Date of first production after rig released. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with Spud date (item 12a) or with the item-27 plug-back/deepening/recompletion/drilling Commenced/Ended dates.",
+        "title": "12b Date Of First Production After Rig Released"
+      },
+      "item13_recompletion_or_reclass": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 13 option box: 'Recompletion or reclass' checkbox (top-left of the item-13 former-reservoir block). Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with item 13 'Multiple completions' (item13_multiple_completions) or with item 23 'Recompletion'/'Reclass'-style boxes.",
+        "title": "Recompletion Or Reclass"
+      },
+      "item13_multiple_completions": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 13 option box: 'Multiple completion(s)' checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with item 13 'Recompletion or reclass' (item13_recompletion_or_reclass).",
+        "title": "Multiple Completions"
+      },
+      "item13_field_reservoir": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 13 former-reservoir detail: 'Field & Reservoir' — the former field name (with reservoir) for a recompletion/reclass, or one of the listed reservoirs for a multiple completion. Item 13's instruction: 'If recompletion or reclass, give former field (with reservoir) ... If multiple completion, list all reservoir names'. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with the current Field Name (item 1) or with item13_gas_id_or_oil_lease_no.",
+        "title": "Field Reservoir"
+      },
+      "item13_gas_id_or_oil_lease_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 13 former-reservoir detail: 'Gas ID or Oil Lease No.' of the former field/reservoir. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with the current RRC Lease No. (item 8) or item13_well_no.",
+        "title": "Gas ID Or Oil Lease No"
+      },
+      "item13_well_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 13 former-reservoir detail: 'Well No.' of the former completion. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with the current Well No. (item 9, well_no) or with item13_gas_id_or_oil_lease_no.",
+        "title": "Well No"
+      },
+      "item13_prior_service_type": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 13 former-reservoir detail: 'Prior Service Type (oil, gas, injection/disposal, other)' — what the well/reservoir previously produced or did. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with item 23 'Type of completion' boxes or with item 11 purpose-of-filing options.",
+        "title": "Prior Service Type Oil Gas Injection Disposal Other"
+      },
+      "notice_filed_in_name_of": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 26 'Notice of Intention to Drill this well was filed in Name of' (page 2, old-rev layout, in the DATA ON WELL COMPLETION AND LOG section). Names whoever originally filed the drilling permit/notice — this can differ from the current operator (`operator_name`) if the lease has changed hands since drilling. Transcribe verbatim, including any handwritten correction/addition; null if blank.",
+        "title": "Notice Filed In Name Of"
+      },
+      "item39_multiple_completion_reservoirs": {
+        "anyOf": [
+          {
+            "items": {
+              "$ref": "#/$defs/MultipleCompletionReservoir"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 39 'If multiple completion, list all reservoir names (completions in this well) and Oil Lease or Gas ID No.' table (old-rev layout; page 2), present only when item 38 'Is well multiple completion?' = Yes. Emit ONE object per printed row. Do NOT confuse with the single-value `item13_*` fields, which the modern form revision uses for a single former-reservoir citation — this array is for the old-rev genuine multi-row table; null/[] if the well is not a multiple completion or the table is blank.",
+        "title": "Item 39 Multiple Completion Reservoirs"
+      },
+      "logs_run": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 14: Type(s) of electric or other log(s) run — free-text list of logging suites recorded in the well. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with item 17 Production method or with the item-45 Formation Record markers.",
+        "title": "Type S Of Electric Or Other Log S Run"
+      },
+      "test_date": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 15: Date of test (the potential-test date in the 'Initial Potential Test Data' band). Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with Spud date (12a), Date of first production (12b), or the certification Date at the bottom of page 2.",
+        "title": "Date Of Test"
+      },
+      "test_no_hours_tested": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 16: No. of hours tested (note printed at top of band: 'Test should be for 24 hours unless otherwise specified in field rules'). Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with item 34 'Rotation time within surface casing (hours)' (rotation_time_surface_casing_hours).",
+        "title": "No Of Hours Tested"
+      },
+      "test_production_method": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 17: Production method (flowing, gas lift, jetting, pumping - size & type of pump). Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with item 18 Choke size or with the item-13 Prior Service Type.",
+        "title": "Production Method Flowing Gas Lift Jetting Pumping Size Type Of Pump"
+      },
+      "test_choke_size": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 18: Choke size used during the test. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with item 17 Production method or with the casing/tubing sizes in items 36-38.",
+        "title": "Choke Size"
+      },
+      "prod_oil_bbls": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 19 'Production during test period' > Oil (BBLS) — oil volume measured during the test period. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with item 20 'Calculated 24-Hour Rate' Oil (BBLS) (rate_oil_bbls) — item 19 is the as-tested production, item 20 is the extrapolated 24-hour rate.",
+        "title": "Oil BBLS"
+      },
+      "prod_gas_mcf": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 19 'Production during test period' > Gas (MCF). Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with item 20 'Calculated 24-Hour Rate' Gas (MCF) (rate_gas_mcf).",
+        "title": "Gas MCF"
+      },
+      "prod_water_bbls": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 19 'Production during test period' > Water (BBLS). Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with item 20 'Calculated 24-Hour Rate' Water (BBLS) (rate_water_bbls).",
+        "title": "Water BBLS"
+      },
+      "prod_gas_oil_ratio": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 19 'Production during test period' > Gas - Oil Ratio. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with the individual Oil/Gas/Water cells in item 19 or with any item-20 rate cell.",
+        "title": "Gas Oil Ratio"
+      },
+      "prod_flowing_tubing_pressure": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 19 'Production during test period' > Flowing Tubing Pressure (PSIG); include the PSIG unit if printed. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with item 20 'Casing Pressure (PSIG)' (rate_casing_pressure) or the hydraulic-fracturing pressures in items 41-43 on page 2.",
+        "title": "Flowing Tubing Pressure PSIG"
+      },
+      "rate_oil_bbls": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 20 'Calculated 24-Hour Rate' > Oil (BBLS) — the extrapolated 24-hour oil rate. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with item 19 'Production during test period' Oil (BBLS) (prod_oil_bbls).",
+        "title": "Oil BBLS"
+      },
+      "rate_gas_mcf": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 20 'Calculated 24-Hour Rate' > Gas (MCF). Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with item 19 Gas (MCF) (prod_gas_mcf).",
+        "title": "Gas MCF"
+      },
+      "rate_water_bbls": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 20 'Calculated 24-Hour Rate' > Water (BBLS). Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with item 19 Water (BBLS) (prod_water_bbls).",
+        "title": "Water BBLS"
+      },
+      "rate_oil_gravity": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 20 'Calculated 24-Hour Rate' > Oil Gravity - API - 60 degrees. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with the API well number in the header (api_no) or with the GOR in item 19 (prod_gas_oil_ratio).",
+        "title": "Oil Gravity API 60"
+      },
+      "rate_casing_pressure": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 20 'Calculated 24-Hour Rate' > Casing Pressure (PSIG); include the PSIG unit if printed. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with item 19 'Flowing Tubing Pressure (PSIG)' (prod_flowing_tubing_pressure) or the page-2 frac pressures (items 41-43).",
+        "title": "Casing Pressure PSIG"
+      },
+      "swab_used_yes": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 21 'Was swab used during this test?' > the YES checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. This is a YES/NO pair; do NOT confuse with swab_used_no (the NO box) or with the directional-survey / cementing-affidavit YES/NO pairs (items 30, 35).",
+        "title": "YES"
+      },
+      "swab_used_no": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 21 'Was swab used during this test?' > the NO checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with swab_used_yes (the YES box of the same question).",
+        "title": "NO"
+      },
+      "oil_produced_prior_to_test": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 22: Oil produced prior to test (new & recompleted wells). Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with item 19 Oil (BBLS) (prod_oil_bbls) or item 20 Oil (BBLS) (rate_oil_bbls).",
+        "title": "Oil Produced Prior To Test New Recompleted Wells"
+      },
+      "completion_new_well": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 23 'Type of completion' option group: the 'New well' checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with the other item-23 boxes (Deepening, Side track, Re-entry, Plug back, Recompletion, Other) or with item 11 group-A/B options.",
+        "title": "New Well"
+      },
+      "completion_deepening": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 23 'Type of completion' option group: the 'Deepening' checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with the other item-23 boxes or with item 24 'Permit to Drill, Plug Back, or Deepen'.",
+        "title": "Deepening"
+      },
+      "completion_side_track": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 23 'Type of completion' option group: the 'Side track' checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with the other item-23 boxes (esp. 'Re-entry').",
+        "title": "Side Track"
+      },
+      "completion_other": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 23 'Type of completion' option group: the 'Other (explain in remarks)' checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with the 'Other (explain)' permit row in item 24 (permit_other_explain_*) or with the other item-23 boxes.",
+        "title": "Other Explain In Remarks"
+      },
+      "completion_re_entry": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 23 'Type of completion' option group: the 'Re-entry' checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with 'Side track' or 'New well' in the same group.",
+        "title": "Re Entry"
+      },
+      "completion_plug_back": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 23 'Type of completion' option group: the 'Plug back' checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with item 32 'Plug Back Depth' or with item 24's permit, nor with 'Deepening'/'Recompletion' in the same group.",
+        "title": "Plug Back"
+      },
+      "completion_recompletion": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 23 'Type of completion' option group: the 'Recompletion' checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with item 13 'Recompletion or reclass' (item13_recompletion_or_reclass) or the other item-23 boxes.",
+        "title": "Recompletion"
+      },
+      "permit_drill_plugback_deepen_date": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 24 'Permit to Drill, Plug Back, or Deepen' row > DATE. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with the DATE of the Rule 37 Exception, Fluid Injection, O&G Waste Disposal, or 'Other (explain)' permit rows that share the same DATE/PERMIT NO. column layout.",
+        "title": "DATE"
+      },
+      "permit_drill_plugback_deepen_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 24 'Permit to Drill, Plug Back, or Deepen' row > PERMIT NO. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with the PERMIT NO./CASE NO. of the Rule 37, Fluid Injection, O&G Waste Disposal, or 'Other' permit rows.",
+        "title": "PERMIT NO"
+      },
+      "rule37_exception_date": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "'Rule 37 Exception' permit row (in the item-24 permit stack) > DATE. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with the item-24 'Permit to Drill...' DATE or the Fluid Injection / O&G Waste Disposal / Other DATE.",
+        "title": "DATE"
+      },
+      "rule37_exception_case_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "'Rule 37 Exception' permit row > CASE NO. (this row uses CASE NO., not PERMIT NO.). Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with the PERMIT NO. fields of the other permit rows.",
+        "title": "CASE NO"
+      },
+      "fluid_injection_permit_date": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "'Fluid Injection Permit' row (item-24 permit stack) > DATE. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with the Rule 37, item-24 drill, O&G Waste Disposal, or Other DATE fields.",
+        "title": "DATE"
+      },
+      "fluid_injection_permit_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "'Fluid Injection Permit' row > PERMIT NO., printed with a fixed 'F -' prefix. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Include the 'F-' prefix if written. Do NOT confuse with the O&G Waste Disposal PERMIT NO. or the item-24 drill PERMIT NO.",
+        "title": "PERMIT NO F"
+      },
+      "og_waste_disposal_permit_date": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "'O&G Waste Disposal Permit' row (item-24 permit stack) > DATE. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with the Fluid Injection, Rule 37, item-24 drill, or Other DATE.",
+        "title": "DATE"
+      },
+      "og_waste_disposal_permit_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "'O&G Waste Disposal Permit' row > PERMIT NO. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with the Fluid Injection PERMIT NO. (which carries an 'F-' prefix) or the item-24 drill PERMIT NO.",
+        "title": "PERMIT NO"
+      },
+      "permit_other_explain_date": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "'Other (explain)' permit row (bottom of the item-24 permit stack) > DATE. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with the named permit rows above it (drill, Rule 37, Fluid Injection, O&G Waste Disposal).",
+        "title": "DATE"
+      },
+      "permit_other_explain_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "'Other (explain)' permit row > PERMIT NO. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with the PERMIT NO./CASE NO. of the named permit rows, nor with item 23 'Other (explain in remarks)' checkbox (completion_other).",
+        "title": "PERMIT NO"
+      },
+      "number_producing_wells_lease_field": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 25: Number of producing wells on this lease in this field (reservoir) including this well. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with item 26 'Total number of acres in lease' (total_acres_in_lease) or item 28 distance to nearest well.",
+        "title": "Number Of Producing Wells On This Lease In This Field Reservoir Including This Well"
+      },
+      "total_acres_in_lease": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 26: Total number of acres in lease. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with item 25 number of producing wells or item 28 distance to nearest well.",
+        "title": "Total Number Of Acres In Lease"
+      },
+      "date_plugback_recompletion_drilling_commenced": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 27 'Date of plug back, deepening, recompletion, or drilling operations' > Commenced. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with the paired 'Ended' date (date_plugback_recompletion_drilling_ended), Spud date (12a), or the item-24 permit DATEs.",
+        "title": "Commenced"
+      },
+      "date_plugback_recompletion_drilling_ended": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 27 'Date of plug back, deepening, recompletion, or drilling operations' > Ended. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with the paired 'Commenced' date (date_plugback_recompletion_drilling_commenced).",
+        "title": "Ended"
+      },
+      "distance_nearest_well_lease_reservoir": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 28: Distance to nearest well in this lease & reservoir. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with item 5b 'miles ... from nearest town' (well_located_miles) or item 25 number of producing wells.",
+        "title": "Distance To Nearest Well In This Lease Reservoir"
+      },
+      "elevation": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 29: Elevation (DF, RKB, RT, GR, etc.) — the reference elevation, including the datum abbreviation as printed. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with the depth fields (items 31-32) or the formation depths in item 45.",
+        "title": "Elevation DF RKB RT GR Etc"
+      },
+      "directional_survey_yes": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 30 'Was directional survey made other than inclination (Form W-12)?' > the YES checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with directional_survey_no (the NO box) or with the swab YES/NO (item 21) and cementing-affidavit YES/NO (item 35) pairs.",
+        "title": "YES"
+      },
+      "directional_survey_no": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 30 'Was directional survey made other than inclination (Form W-12)?' > the NO checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with directional_survey_yes (the YES box of the same question).",
+        "title": "NO"
+      },
+      "total_depth_tvd": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 31 'Total Depth (ft.)' > TVD (true vertical depth). Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with the paired MD value (total_depth_md) or with item 32 'Plug Back Depth' TVD (plug_back_depth_tvd).",
+        "title": "TVD"
+      },
+      "total_depth_md": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 31 'Total Depth (ft.)' > MD (measured depth). Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with the paired TVD value (total_depth_tvd) or with item 32 'Plug Back Depth' MD (plug_back_depth_md).",
+        "title": "MD"
+      },
+      "plug_back_depth_tvd": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 32 'Plug Back Depth (ft.)' > TVD. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with item 31 'Total Depth' TVD (total_depth_tvd) or the paired Plug Back MD (plug_back_depth_md).",
+        "title": "TVD"
+      },
+      "plug_back_depth_md": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 32 'Plug Back Depth (ft.)' > MD. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with item 31 'Total Depth' MD (total_depth_md) or the paired Plug Back TVD (plug_back_depth_tvd).",
+        "title": "MD"
+      },
+      "surface_casing_gau_groundwater": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 33 'For new drill or re-entry, surface casing depth determined by': the 'GAU Groundwater Protection Determination' checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with the 'SWR 13 Exception' checkbox in the same item (surface_casing_swr13_exception) or with its associated Depth/Date fields.",
+        "title": "GAU Groundwater Protection Determination"
+      },
+      "surface_casing_gau_depth": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 33 GAU Groundwater Protection Determination > the 'Depth:' value for the GAU determination. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with surface_casing_swr13_depth (the SWR 13 Exception depth) or with surface_casing_gau_date.",
+        "title": "GAU Groundwater Protection Determination Depth"
+      },
+      "surface_casing_gau_date": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 33 GAU Groundwater Protection Determination > the 'Date:' value for the GAU determination. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with surface_casing_gau_depth or with any other dated field on the form.",
+        "title": "GAU Groundwater Protection Determination Date"
+      },
+      "surface_casing_swr13_exception": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 33 'For new drill or re-entry, surface casing depth determined by': the 'SWR 13 Exception' checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with the item-33 'GAU Groundwater Protection Determination' checkbox (surface_casing_gau_groundwater) or with the item-38 Tubing-Record 'SWR 13 Exception' box (tubing_swr13_exception).",
+        "title": "SWR 13 Exception"
+      },
+      "surface_casing_swr13_depth": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 33 SWR 13 Exception > the 'Depth:' value for the SWR 13 exception. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with surface_casing_gau_depth (the GAU determination depth).",
+        "title": "SWR 13 Exception Depth"
+      },
+      "rotation_time_surface_casing_hours": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 34: Rotation time within surface casing (hours); printed unit is 'hours' — include the unit in the value if written. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with item 16 'No. of hours tested' (test_no_hours_tested).",
+        "title": "Rotation Time Within Surface Casing Hours"
+      },
+      "cementing_affidavit_yes": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 35 'Is Cementing Affidavit (Form W-15) attached?' > the YES checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with cementing_affidavit_no (the NO box) or the directional-survey YES/NO pair (item 30).",
+        "title": "YES"
+      },
+      "cementing_affidavit_no": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 35 'Is Cementing Affidavit (Form W-15) attached?' > the NO checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with cementing_affidavit_yes (the YES box of the same question).",
+        "title": "NO"
+      },
+      "api_no_page2": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Page 2 header (top-right): the well's API number repeated on page 2, printed after the fixed 'API No.: 42-' prefix. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. This duplicates the page-1 'api_no'; keep it as its own field. Do NOT confuse with RRC Lease No. or RRC Operator No.",
+        "title": "API No 42"
+      },
+      "tubing_set_yes": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 38 Tubing Record header question 'Does this well currently have tubing set?' > the YES checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with tubing_set_no (the NO box) or with the item-38 'SWR 13 Exception (attach approval)' box (tubing_swr13_exception).",
+        "title": "YES"
+      },
+      "tubing_set_no": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 38 Tubing Record header question 'Does this well currently have tubing set?' > the NO checkbox (printed with the note 'if NO & no SWR 13 Exception obtained, explain in remarks'). Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with tubing_set_yes or with tubing_swr13_exception.",
+        "title": "NO"
+      },
+      "tubing_swr13_exception": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 38 Tubing Record header: the 'SWR 13 Exception (attach approval)' checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with the item-33 surface-casing 'SWR 13 Exception' box (surface_casing_swr13_exception) or with the tubing YES/NO question (tubing_set_yes/tubing_set_no).",
+        "title": "SWR 13 Exception Attach Approval"
+      },
+      "hydraulic_fracturing_performed_yes": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 40 'Was hydraulic fracturing treatment performed?' > the YES checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with hydraulic_fracturing_performed_no, with item 41's downhole actuation-sleeve YES/NO, or item 44's FracFocus YES/NO.",
+        "title": "YES"
+      },
+      "hydraulic_fracturing_performed_no": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 40 'Was hydraulic fracturing treatment performed?' > the NO checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with hydraulic_fracturing_performed_yes or the YES/NO pairs of items 41, 44, 46, 47.",
+        "title": "NO"
+      },
+      "downhole_actuation_sleeve_yes": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 41 'Is well equipped with a downhole actuation sleeve?' > the YES checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with downhole_actuation_sleeve_no or with the item-40 hydraulic-fracturing YES/NO. The associated actuation-pressure value is downhole_actuation_pressure.",
+        "title": "YES"
+      },
+      "downhole_actuation_sleeve_no": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 41 'Is well equipped with a downhole actuation sleeve?' > the NO checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with downhole_actuation_sleeve_yes.",
+        "title": "NO"
+      },
+      "downhole_actuation_pressure": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 41 'If yes, provide actuation pressure (PSIG)' — the actuation-sleeve pressure; printed unit PSIG, include the unit if written. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with item 42 'Production casing test pressure (PSIG)' (production_casing_test_pressure) or item 43 'Actual maximum pressure (PSIG)' (actual_maximum_pressure_fracturing).",
+        "title": "If Yes Provide Actuation Pressure PSIG"
+      },
+      "production_casing_test_pressure": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 42: Production casing test pressure (PSIG) prior to hydraulic fracturing treatment; printed unit PSIG, include the unit if written. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with item 41 actuation pressure (downhole_actuation_pressure) or item 43 actual maximum pressure (actual_maximum_pressure_fracturing).",
+        "title": "Production Casing Test Pressure PSIG Prior To Hydraulic Fracturing Treatment"
+      },
+      "actual_maximum_pressure_fracturing": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 43: Actual maximum pressure (PSIG) during hydraulic fracturing; printed unit PSIG, include the unit if written. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with item 42 production-casing test pressure (production_casing_test_pressure) or item 41 actuation pressure (downhole_actuation_pressure).",
+        "title": "Actual Maximum Pressure PSIG During Hydraulic Fracturing"
+      },
+      "fracfocus_disclosure_yes": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 44 'Has the hydraulic fracturing fluid disclosure been reported to FracFocus disclosure registry (SWR 29)?' > the YES checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with fracfocus_disclosure_no or with the item-40 hydraulic-fracturing-performed YES/NO.",
+        "title": "YES"
+      },
+      "fracfocus_disclosure_no": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 44 'Has the hydraulic fracturing fluid disclosure been reported to FracFocus disclosure registry (SWR 29)?' > the NO checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with fracfocus_disclosure_yes.",
+        "title": "NO"
+      },
+      "type_of_operation": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The operations table (between items 44 and 45) > 'Type of Operation (indicate acid, fracture, cement squeeze, cast iron bridge plug, retainer, etc.)' — the single free-text operation-type cell (table sub-title: 'ACID, FRACTURE, CEMENT SQUEEZE, CAST IRON BRIDGE PLUG, RETAINER, ETC.'). Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with 'Amount and Kind of Material used' (amount_and_kind_of_material_used) in the same table or with the item-23 completion-type checkboxes.",
+        "title": "Type Of Operation Indicate Acid Fracture Cement Squeeze Cast Iron Bridge Plug Retainer Etc"
+      },
+      "amount_and_kind_of_material_used": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The operations table (between items 44 and 45) > 'Amount and Kind of Material used' — the single free-text material cell paired with Type of Operation. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with type_of_operation or with the casing/liner cement amounts in items 36-37.",
+        "title": "Amount And Kind Of Material Used"
+      },
+      "h2s_over_100ppm_yes": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 46 'Do the producing intervals of this well produce H2S with a concentration in excess of 100 ppm (SWR 36)?' > the YES checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with h2s_over_100ppm_no or with the item-47 down-hole-commingled YES/NO.",
+        "title": "YES"
+      },
+      "h2s_over_100ppm_no": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 46 'Do the producing intervals of this well produce H2S with a concentration in excess of 100 ppm (SWR 36)?' > the NO checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with h2s_over_100ppm_yes.",
+        "title": "NO"
+      },
+      "downhole_commingled_yes": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 47 'Is the completion being down-hole commingled (SWR 10)?' > the YES checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with downhole_commingled_no or with the item-46 H2S YES/NO.",
+        "title": "YES"
+      },
+      "downhole_commingled_no": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 47 'Is the completion being down-hole commingled (SWR 10)?' > the NO checkbox. Boolean: true only if this specific box is marked/checked on the scan, false if left blank. Do NOT confuse with downhole_commingled_yes.",
+        "title": "NO"
+      },
+      "remarks": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'REMARKS:' free-text block near the bottom of page 2 (used for explanations referenced by 'explain in remarks' boxes elsewhere). Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with item-45 Formation Record cells or with the operations table above it.",
+        "title": "REMARKS"
+      },
+      "signature_present": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Operator's Certification block (bottom of page 2): the 'Signature: Operator's representative' line. Boolean — true if a signature/mark is present on the line, false if blank. Do NOT transcribe the signature text. Do NOT confuse with 'Printed Name' (certification_printed_name) or 'Title' (certification_title).",
+        "title": "Signature Operator S Representative"
+      },
+      "certification_title": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Operator's Certification block: the 'Title' of the operator's representative who signed. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with the Printed Name (certification_printed_name) or with the operator company name (item 3).",
+        "title": "Title"
+      },
+      "certification_area_code": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Operator's Certification block > 'Tel:' > Area Code — the area-code portion of the representative's telephone number. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with certification_number (the remaining phone digits).",
+        "title": "Area Code"
+      },
+      "certification_number": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Operator's Certification block > 'Tel:' > Number — the local-number portion of the representative's telephone number (paired with Area Code). Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with certification_area_code or with any permit/case number.",
+        "title": "Number"
+      },
+      "certification_printed_name": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Operator's Certification block: the 'Printed Name' of the operator's representative. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with the signature line (signature_present), the Title (certification_title), or the operator company name (item 3).",
+        "title": "Printed Name"
+      },
+      "certification_date": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Operator's Certification block: the 'Date' the certification was signed. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with the test Date (item 15), Spud date (12a), or the item-27 commenced/ended dates.",
+        "title": "Date"
+      },
+      "certification_email": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Operator's Certification block: 'Email (include email address only if you affirmatively consent to its public release)'. Transcribe the typed/handwritten value verbatim as printed (preserve leading zeros, casing, punctuation and any printed unit); null if the box is blank. Do NOT confuse with the operator's mailing address (item 4) or the Printed Name.",
+        "title": "Email Include Email Address Only If You Affirmatively Consent To Its Public Release"
+      },
+      "casing_record": {
+        "anyOf": [
+          {
+            "items": {
+              "$ref": "#/$defs/CasingRecordRow"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 36 CASING RECORD table (page 2): the form pre-prints 4 numbered rows (Row 1-4). Emit ONE object per FILLED casing string, top-to-bottom; use null or [] if the entire casing grid is blank. Each row carries type, sizes, depths, and cement details. Do NOT merge with the item-37 LINER RECORD (liner_record) or item-38 TUBING RECORD (tubing_record) — they are separate tables.",
+        "title": "Casing Record"
+      },
+      "liner_record": {
+        "anyOf": [
+          {
+            "items": {
+              "$ref": "#/$defs/LinerRecordRow"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 37 LINER RECORD table (page 2): the form pre-prints 2 numbered rows. Emit ONE object per FILLED liner string, top-to-bottom; null/[] if blank. Do NOT merge with the item-36 CASING RECORD (casing_record) — liner rows have 'Liner Size', 'Liner Top', and 'Liner Bottom' columns instead of the casing-specific columns.",
+        "title": "Liner Record"
+      },
+      "tubing_record": {
+        "anyOf": [
+          {
+            "items": {
+              "$ref": "#/$defs/TubingRecordRow"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 38 TUBING RECORD table (page 2): the form pre-prints 4 rows of Size/Depth Set/Packer Depth-Type. Emit ONE object per FILLED tubing string, top-to-bottom; null/[] if blank. The YES/NO 'tubing set?' question and the 'SWR 13 Exception' box above the grid are separate scalar fields (tubing_set_yes / tubing_set_no / tubing_swr13_exception), NOT rows of this table.",
+        "title": "Tubing Record"
+      },
+      "producing_injection_disposal_intervals": {
+        "anyOf": [
+          {
+            "items": {
+              "$ref": "#/$defs/ProducingInjectionDisposalInterval"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 39 PRODUCING/INJECTION/DISPOSAL INTERVAL table (page 2): the form pre-prints 5 From/To rows for the top and bottom measured depths of completion interval(s) or open hole. Emit ONE object per FILLED interval, top-to-bottom; null/[] if blank. Do NOT merge with the operations 'Depth Interval' table near item 45 (operation_depth_intervals) — that one belongs to the Type-of-Operation table.",
+        "title": "Producing Injection Disposal Intervals"
+      },
+      "operation_depth_intervals": {
+        "anyOf": [
+          {
+            "items": {
+              "$ref": "#/$defs/OperationDepthInterval"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The operations table 'Depth Interval (ft.)' (between items 44 and 45, paired with 'Type of Operation' and 'Amount and Kind of Material used'): the form pre-prints 3 From/To rows. Emit ONE object per FILLED depth interval, top-to-bottom; null/[] if blank. Do NOT merge with the item-39 PRODUCING/INJECTION/DISPOSAL INTERVAL table (producing_injection_disposal_intervals).",
+        "title": "Operation Depth Intervals"
+      },
+      "formation_record": {
+        "anyOf": [
+          {
+            "items": {
+              "$ref": "#/$defs/FormationRecordRow"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Item 45 FORMATION RECORD table (page 2): the form pre-prints 7 rows listing principal geological markers / formation tops with TVD & MD depths, a classification, and a YES/NO 'isolated?' answer. Emit ONE object per FILLED formation row, top-to-bottom; null/[] if blank. Do NOT merge with the casing/liner/tubing record tables.",
+        "title": "Formation Record"
+      }
+    },
+    "title": "RRCW2Extraction",
+    "type": "object"
+  },
+  "expected": {
+    "kind": "json",
+    "schema_ref": "fixtures/eb-short-W2-27-217314_213200-schema.json",
+    "value": {
+      "api_no": "269-31618",
+      "rrc_district_no": "8A",
+      "rrc_lease_no": "66571",
+      "field_name": "Anne Tandy (Strawn 5400')",
+      "lease_name": "S.B. Burnett Estate",
+      "well_no": "*Y-63AL*",
+      "operator_name": "Pacific Enterprises Oil Co.",
+      "rrc_operator_no": "632801",
+      "county": "King",
+      "operator_address": "4245 Kemp, Suite 600, Wichita Falls, Texas 76308",
+      "purpose_of_filing": null,
+      "producers_initial_potential": false,
+      "producers_retest": false,
+      "producers_reclass": false,
+      "producers_well_record_only": true,
+      "location_section_block_survey": "Sec. 44, Blk. T, J.L. Parsons",
+      "well_located_miles": "17",
+      "well_located_direction": "SE",
+      "well_located_nearest_town": "Guthrie, TX",
+      "well_latitude_longitude": null,
+      "latitude_longitude_type": null,
+      "injdisp_initial_completion": false,
+      "injdisp_reclass": false,
+      "injdisp_well_record_only": false,
+      "spud_date": null,
+      "date_first_production_after_rig_released": null,
+      "item13_recompletion_or_reclass": false,
+      "item13_multiple_completions": true,
+      "item13_field_reservoir": null,
+      "item13_gas_id_or_oil_lease_no": null,
+      "item13_well_no": null,
+      "item13_prior_service_type": null,
+      "notice_filed_in_name_of": "Gunn Management Co.",
+      "item39_multiple_completion_reservoirs": [
+        {
+          "field_reservoir": "Anne Tandy (Strawn 5400')",
+          "gas_id_or_oil_lease_no": "66571",
+          "oil_or_gas": "oil",
+          "well_no": "Y-63AL"
+        },
+        {
+          "field_reservoir": "Anne Tandy (Strawn, Lo.)",
+          "gas_id_or_oil_lease_no": "60998",
+          "oil_or_gas": "oil",
+          "well_no": "Y-63AU"
+        }
+      ],
+      "logs_run": "DIL/LD",
+      "test_date": null,
+      "test_no_hours_tested": null,
+      "test_production_method": null,
+      "test_choke_size": null,
+      "prod_oil_bbls": null,
+      "prod_gas_mcf": null,
+      "prod_water_bbls": null,
+      "prod_gas_oil_ratio": null,
+      "prod_flowing_tubing_pressure": null,
+      "rate_oil_bbls": null,
+      "rate_gas_mcf": null,
+      "rate_water_bbls": null,
+      "rate_oil_gravity": null,
+      "rate_casing_pressure": null,
+      "swab_used_yes": false,
+      "swab_used_no": false,
+      "oil_produced_prior_to_test": null,
+      "completion_new_well": false,
+      "completion_deepening": false,
+      "completion_side_track": false,
+      "completion_other": true,
+      "completion_re_entry": false,
+      "completion_plug_back": false,
+      "completion_recompletion": false,
+      "permit_drill_plugback_deepen_date": "9/22/86",
+      "permit_drill_plugback_deepen_no": "303183",
+      "rule37_exception_date": null,
+      "rule37_exception_case_no": null,
+      "fluid_injection_permit_date": "5/17/89",
+      "fluid_injection_permit_no": "F12146",
+      "og_waste_disposal_permit_date": null,
+      "og_waste_disposal_permit_no": null,
+      "permit_other_explain_date": null,
+      "permit_other_explain_no": null,
+      "number_producing_wells_lease_field": "N/A",
+      "total_acres_in_lease": "5640",
+      "date_plugback_recompletion_drilling_commenced": "4/16/91",
+      "date_plugback_recompletion_drilling_ended": "4/26/91",
+      "distance_nearest_well_lease_reservoir": "N/A",
+      "elevation": null,
+      "directional_survey_yes": false,
+      "directional_survey_no": true,
+      "total_depth_tvd": null,
+      "total_depth_md": "6050'",
+      "plug_back_depth_tvd": null,
+      "plug_back_depth_md": null,
+      "surface_casing_gau_groundwater": true,
+      "surface_casing_gau_depth": null,
+      "surface_casing_gau_date": "3-5-86",
+      "surface_casing_swr13_exception": false,
+      "surface_casing_swr13_depth": null,
+      "rotation_time_surface_casing_hours": null,
+      "cementing_affidavit_yes": false,
+      "cementing_affidavit_no": true,
+      "api_no_page2": null,
+      "tubing_set_yes": false,
+      "tubing_set_no": false,
+      "tubing_swr13_exception": false,
+      "hydraulic_fracturing_performed_yes": false,
+      "hydraulic_fracturing_performed_no": false,
+      "downhole_actuation_sleeve_yes": false,
+      "downhole_actuation_sleeve_no": false,
+      "downhole_actuation_pressure": null,
+      "production_casing_test_pressure": null,
+      "actual_maximum_pressure_fracturing": null,
+      "fracfocus_disclosure_yes": false,
+      "fracfocus_disclosure_no": false,
+      "type_of_operation": null,
+      "amount_and_kind_of_material_used": "2000. G 15% Spearhead HCL",
+      "h2s_over_100ppm_yes": false,
+      "h2s_over_100ppm_no": false,
+      "downhole_commingled_yes": false,
+      "downhole_commingled_no": false,
+      "remarks": "W-2 is filed to show well as a dual WIW in the Anne Tandy (Strawn, Lo.)- Project #F10946 and Anne Tandy (Strawn 5400')- Project #F12146 fields. W-2 for Ann Tandy (Strawn Lo.) was filed 9/5/86. Dual WI began 4/17/91.",
+      "signature_present": true,
+      "certification_title": "Production Engineering Manager",
+      "certification_area_code": "817",
+      "certification_number": "692-3003",
+      "certification_printed_name": "Stan M. Smith",
+      "certification_date": null,
+      "certification_email": null,
+      "casing_record": [
+        {
+          "type_of_casing": null,
+          "casing_size": "8 5/8\"",
+          "weight_per_ft": "24#",
+          "hole_size": "12 1/4\"",
+          "setting_depth": "256'",
+          "multistage_tool_depth": null,
+          "multistage_shoe_depth": null,
+          "cement_class": null,
+          "cement_amount": "225 sx circ.",
+          "slurry_volume": "297",
+          "top_of_cement": "Surf.",
+          "top_of_cement_determined_by": null
+        },
+        {
+          "type_of_casing": null,
+          "casing_size": "5 1/2\"",
+          "weight_per_ft": "15.5#",
+          "hole_size": "7 7/8\"",
+          "setting_depth": "6050'",
+          "multistage_tool_depth": null,
+          "multistage_shoe_depth": null,
+          "cement_class": null,
+          "cement_amount": "530 HLC & 300",
+          "slurry_volume": "1371",
+          "top_of_cement": "4090'",
+          "top_of_cement_determined_by": null
+        }
+      ],
+      "liner_record": null,
+      "tubing_record": [
+        {
+          "size": "2 7/8\"",
+          "depth_set": "5349'",
+          "packer_depth_type": "5349'"
+        }
+      ],
+      "producing_injection_disposal_intervals": [
+        {
+          "from_depth": "5541'",
+          "to_depth": "5558'"
+        }
+      ],
+      "operation_depth_intervals": [
+        {
+          "from_depth": "5541'",
+          "to_depth": "58'"
+        }
+      ],
+      "formation_record": null
+    },
+    "anchored_fields": 122,
+    "no_anchor_fields": 0,
+    "pages": {
+      "api_no": 1,
+      "notice_filed_in_name_of": 2,
+      "item39_multiple_completion_reservoirs": 2,
+      "test_date": 2,
+      "prod_flowing_tubing_pressure": 2,
+      "api_no_page2": 2,
+      "remarks": 2,
+      "signature_present": 2,
+      "casing_record": 2,
+      "liner_record": 2,
+      "tubing_record": 2,
+      "producing_injection_disposal_intervals": 2,
+      "formation_record": 2
+    },
+    "evidence_gold": {
+      "source": "schema-description",
+      "version": 1
+    }
+  },
+  "field_rules": "{\"api_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.64278, 0.11727, 0.1218, 0.01124], \"quote\": \"269-31618\", \"value\": \"269-31618\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"rrc_district_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.81988, 0.1247, 0.02087, 0.01179], \"quote\": \"8A\", \"value\": \"8A\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"rrc_lease_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.82072, 0.15784, 0.04765, 0.01196], \"quote\": \"66571\", \"value\": \"66571\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"field_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.0365, 0.1893, 0.2575, 0.0167], \"quote\": \"Anne Tandy (Strawn 5400')\", \"value\": \"Anne Tandy (Strawn 5400')\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"lease_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.42743, 0.18762, 0.1875, 0.01318], \"quote\": \"S.B. Burnett Estate\", \"value\": \"S.B. Burnett Estate\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"well_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.80159, 0.18313, 0.07852, 0.01339], \"quote\": \"*Y-63AL*\", \"value\": \"*Y-63AL*\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"operator_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.04597, 0.22315, 0.26993, 0.01355], \"quote\": \"Pacific Enterprises Oil Co.\", \"value\": \"Pacific Enterprises Oil Co.\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"rrc_operator_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.56563, 0.21958, 0.06487, 0.01442], \"quote\": \"632801\", \"value\": \"632801\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"county\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.8146, 0.21858, 0.0541, 0.01462], \"quote\": \"King\", \"value\": \"King\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"operator_address\": {\"comparator\": \"address\", \"evidence\": [{\"page\": 1, \"bbox\": [0.0367, 0.2466, 0.3922, 0.0193], \"quote\": \"4245 Kemp, Suite 600, Wichita Falls, Texas 76308\", \"value\": \"4245 Kemp, Suite 600, Wichita Falls, Texas 76308\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"purpose_of_filing\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"producers_initial_potential\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.9155229455338028, 0.24174148243044571, 0.03062552339065251, 0.022141011902829043], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"producers_retest\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.9147759429537108, 0.2712627886817031, 0.030625636418732415, 0.02214105485534366], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"producers_reclass\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.916530877790011, 0.2999827544350277, 0.030090061447459578, 0.02286897350137353], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"producers_well_record_only\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.9175684782971341, 0.33152613375792644, 0.02957120231737976, 0.02326330060842449], \"quote\": \"True\", \"value\": true, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"location_section_block_survey\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.0325, 0.3081, 0.3009, 0.016], \"quote\": \"Sec. 44, Blk. T, J.L. Parsons\", \"value\": \"Sec. 44, Blk. T, J.L. Parsons\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"well_located_miles\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.43069, 0.30958, 0.01853, 0.01175], \"quote\": \"17\", \"value\": \"17\", \"coarse\": false}, {\"page\": 1, \"bbox\": [0.43055, 0.30909, 0.07692, 0.01202], \"quote\": \"17 miles\", \"value\": \"17 miles\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"well_located_direction\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.51804, 0.30904, 0.01972, 0.01204], \"quote\": \"SE\", \"value\": \"SE\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"well_located_nearest_town\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.5737, 0.3079, 0.1166, 0.0158], \"quote\": \"Guthrie, TX\", \"value\": \"Guthrie, TX\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"well_latitude_longitude\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"latitude_longitude_type\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"injdisp_initial_completion\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"injdisp_reclass\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"injdisp_well_record_only\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"spud_date\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"date_first_production_after_rig_released\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"item13_recompletion_or_reclass\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"item13_multiple_completions\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 2, \"bbox\": [0.07507633606325571, 0.33840103590395143, 0.04971763551751765, 0.015115812365212753], \"quote\": \"True\", \"value\": true, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"item13_field_reservoir\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"item13_gas_id_or_oil_lease_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"item13_well_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"item13_prior_service_type\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"notice_filed_in_name_of\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.0608, 0.1002, 0.1896, 0.0173], \"quote\": \"Gunn Management Co.\", \"value\": \"Gunn Management Co.\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"item39_multiple_completion_reservoirs[0].field_reservoir\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.2287, 0.3581, 0.2378, 0.0153], \"quote\": \"Anne Tandy (Strawn 5400')\", \"value\": \"Anne Tandy (Strawn 5400')\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"item39_multiple_completion_reservoirs[0].gas_id_or_oil_lease_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.5633, 0.3607, 0.0514, 0.0122], \"quote\": \"66571\", \"value\": \"66571\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"item39_multiple_completion_reservoirs[0].oil_or_gas\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.6413, 0.362, 0.0318, 0.0116], \"quote\": \"oil\", \"value\": \"oil\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"item39_multiple_completion_reservoirs[0].well_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.7046, 0.36516, 0.0603, 0.00961], \"quote\": \"Y-63AL\", \"value\": \"Y-63AL\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"item39_multiple_completion_reservoirs[1].field_reservoir\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.231, 0.3732, 0.2364, 0.016], \"quote\": \"Anne Tandy (Strawn, Lo.)\", \"value\": \"Anne Tandy (Strawn, Lo.)\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"item39_multiple_completion_reservoirs[1].gas_id_or_oil_lease_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.5643, 0.3754, 0.0509, 0.0127], \"quote\": \"60998\", \"value\": \"60998\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"item39_multiple_completion_reservoirs[1].oil_or_gas\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.6437, 0.3766, 0.0316, 0.0125], \"quote\": \"oil\", \"value\": \"oil\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"item39_multiple_completion_reservoirs[1].well_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.7039, 0.376, 0.0514, 0.0137], \"quote\": \"Y-63AU\", \"value\": \"Y-63AU\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"item39_multiple_completion_reservoirs\": {\"comparator\": {\"field_reservoir\": \"case_insensitive\", \"gas_id_or_oil_lease_no\": \"case_insensitive\", \"oil_or_gas\": \"case_insensitive\", \"well_no\": \"case_insensitive\"}, \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": {\"field_reservoir\": \"Anne Tandy (Strawn 5400')\", \"gas_id_or_oil_lease_no\": \"66571\", \"oil_or_gas\": \"oil\", \"well_no\": \"Y-63AL\"}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": null, \"value\": {\"field_reservoir\": \"Anne Tandy (Strawn, Lo.)\", \"gas_id_or_oil_lease_no\": \"60998\", \"oil_or_gas\": \"oil\", \"well_no\": \"Y-63AU\"}, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"structural\": \"match_by:field_reservoir\"}, \"logs_run\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.05854, 0.38865, 0.05885, 0.01285], \"quote\": \"DIL/LD\", \"value\": \"DIL/LD\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"test_date\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"test_no_hours_tested\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"test_production_method\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"test_choke_size\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"prod_oil_bbls\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"prod_gas_mcf\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"prod_water_bbls\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"prod_gas_oil_ratio\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"prod_flowing_tubing_pressure\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"rate_oil_bbls\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"rate_gas_mcf\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"rate_water_bbls\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"rate_oil_gravity\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"rate_casing_pressure\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"swab_used_yes\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.27938, 0.53872, 0.03235, 0.02418], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"swab_used_no\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.34847, 0.5386, 0.03236, 0.02419], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"oil_produced_prior_to_test\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"completion_new_well\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 2, \"bbox\": [0.2394374481307087, 0.0476996713758719, 0.026143794697306568, 0.020345529655821714], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"completion_deepening\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 2, \"bbox\": [0.36455416139477026, 0.05006542501874912, 0.024276382472321542, 0.01987239861605569], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"completion_side_track\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"completion_other\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 2, \"bbox\": null, \"quote\": \"True\", \"value\": true, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"completion_re_entry\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"completion_plug_back\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 2, \"bbox\": [0.48406866153139294, 0.051484880784258974, 0.023031401743137853, 0.017979776012944496], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"completion_recompletion\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"permit_drill_plugback_deepen_date\": {\"comparator\": \"date\", \"evidence\": [{\"page\": 2, \"bbox\": [0.791442628486699, 0.05645835711761195, 0.0734956223136434, 0.018401859072033247], \"quote\": \"9/22/86\", \"value\": \"9/22/86\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"permit_drill_plugback_deepen_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.8874192731503975, 0.05678695930213247, 0.06874004785078061, 0.015773010518849977], \"quote\": \"303183\", \"value\": \"303183\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"rule37_exception_date\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"rule37_exception_case_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"fluid_injection_permit_date\": {\"comparator\": \"date\", \"evidence\": [{\"page\": 2, \"bbox\": [0.7793374198324758, 0.11067810913393868, 0.0795482429952995, 0.019716267810115335], \"quote\": \"5/17/89\", \"value\": \"5/17/89\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"fluid_injection_permit_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.88223, 0.11594, 0.06269, 0.00854], \"quote\": \"F12146\", \"value\": \"F12146\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"og_waste_disposal_permit_date\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"og_waste_disposal_permit_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"permit_other_explain_date\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"permit_other_explain_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"number_producing_wells_lease_field\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.12695560590774557, 0.15503969616818863, 0.04280040730666099, 0.016758854364834458], \"quote\": \"N/A\", \"value\": \"N/A\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"total_acres_in_lease\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.4230997867301973, 0.15766855093677573, 0.048420638362357965, 0.01643022110329484], \"quote\": \"5640\", \"value\": \"5640\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"date_plugback_recompletion_drilling_commenced\": {\"comparator\": \"date\", \"evidence\": [{\"page\": 2, \"bbox\": [0.23892837709569587, 0.20203013486332377, 0.07738658107003336, 0.014787241257711328], \"quote\": \"4/16/91\", \"value\": \"4/16/91\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"date_plugback_recompletion_drilling_ended\": {\"comparator\": \"date\", \"evidence\": [{\"page\": 2, \"bbox\": [0.3426869229176298, 0.20235875569405576, 0.07954821028621041, 0.015444433195944733], \"quote\": \"4/26/91\", \"value\": \"4/26/91\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"distance_nearest_well_lease_reservoir\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.44039287770051966, 0.20301594763228914, 0.048420671071447055, 0.016430245964910117], \"quote\": \"N/A\", \"value\": \"N/A\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"elevation\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"directional_survey_yes\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 2, \"bbox\": [0.6820638270772512, 0.25657851081808436, 0.023345654411072524, 0.018073250672108906], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"directional_survey_no\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 2, \"bbox\": [0.7862547052842384, 0.2569071067872011, 0.024210319181178983, 0.019716280240922975], \"quote\": \"True\", \"value\": true, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"total_depth_tvd\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"total_depth_md\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.16413575762689278, 0.2963396579459413, 0.0661460698950058, 0.017416009010644946], \"quote\": \"6050'\", \"value\": \"6050'\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"plug_back_depth_tvd\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"plug_back_depth_md\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"surface_casing_gau_groundwater\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": \"True\", \"value\": true, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"surface_casing_gau_depth\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"surface_casing_gau_date\": {\"comparator\": \"date\", \"evidence\": [{\"page\": 2, \"bbox\": [0.8698, 0.2925, 0.0631, 0.0133], \"quote\": \"3-5-86\", \"value\": \"3-5-86\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"surface_casing_swr13_exception\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"surface_casing_swr13_depth\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"rotation_time_surface_casing_hours\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"cementing_affidavit_yes\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 2, \"bbox\": [0.8074387141245893, 0.3830912251227219, 0.024642667920776753, 0.019716305102538252], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"cementing_affidavit_no\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 2, \"bbox\": [0.8908778995217342, 0.38374846678418584, 0.0216163575799487, 0.01873044261034231], \"quote\": \"True\", \"value\": true, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"api_no_page2\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"tubing_set_yes\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"tubing_set_no\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"tubing_swr13_exception\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"hydraulic_fracturing_performed_yes\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"hydraulic_fracturing_performed_no\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"downhole_actuation_sleeve_yes\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"downhole_actuation_sleeve_no\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"downhole_actuation_pressure\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"production_casing_test_pressure\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"actual_maximum_pressure_fracturing\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"fracfocus_disclosure_yes\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"fracfocus_disclosure_no\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"type_of_operation\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"amount_and_kind_of_material_used\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.5143925317628776, 0.7196218855040895, 0.24392688440076826, 0.017245885018955513], \"quote\": \"2000. G 15% Spearhead HCL\", \"value\": \"2000. G 15% Spearhead HCL\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"h2s_over_100ppm_yes\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"h2s_over_100ppm_no\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"downhole_commingled_yes\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"downhole_commingled_no\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"remarks\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.1156, 0.5683, 0.8069, 0.0483], \"quote\": \"W-2 is filed to show well as a dual WIW in the Anne Tandy (Strawn, Lo.)- Project #F10946 and Anne Tandy (Strawn 5400')- Project #F12146 fields. W-2 for Ann Tandy (Strawn Lo.) was filed 9/5/86. Dual WI began 4/17/91.\", \"value\": \"W-2 is filed to show well as a dual WIW in the Anne Tandy (Strawn, Lo.)- Project #F10946 and Anne Tandy (Strawn 5400')- Project #F12146 fields. W-2 for Ann Tandy (Strawn Lo.) was filed 9/5/86. Dual WI began 4/17/91.\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"signature_present\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.5432, 0.9214, 0.1694, 0.0357], \"quote\": \"True\", \"value\": true, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"certification_title\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.5406, 0.91126, 0.243, 0.01514], \"quote\": \"Production Engineering Manager\", \"value\": \"Production Engineering Manager\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"certification_area_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.055, 0.9447, 0.0434, 0.014], \"quote\": \"817\", \"value\": \"817\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"certification_number\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.1012, 0.9445, 0.0694, 0.0135], \"quote\": \"692-3003\", \"value\": \"692-3003\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"certification_printed_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.0929, 0.9122, 0.1372, 0.0152], \"quote\": \"Stan M. Smith\", \"value\": \"Stan M. Smith\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"certification_date\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"certification_email\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"casing_record[0].type_of_casing\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"casing_record[0].casing_size\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.0617, 0.44874, 0.0621, 0.01086], \"quote\": \"8 5/8\\\"\", \"value\": \"8 5/8\\\"\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"casing_record[0].weight_per_ft\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.1895, 0.4469, 0.0346, 0.0123], \"quote\": \"24#\", \"value\": \"24#\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"casing_record[0].hole_size\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.6304359319056695, 0.464201751480688, 0.10571, 0.0136], \"quote\": \"12 1/4\\\"\", \"value\": \"12 1/4\\\"\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"casing_record[0].setting_depth\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.29048008034365436, 0.4465670591899308, 0.05291006798544688, 0.014194557655098597], \"quote\": \"256'\", \"value\": \"256'\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"casing_record[0].multistage_tool_depth\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"casing_record[0].multistage_shoe_depth\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"casing_record[0].cement_class\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"casing_record[0].cement_amount\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.5063, 0.4493, 0.03688, 0.013], \"quote\": \"225 sx circ.\", \"value\": \"225 sx circ.\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"casing_record[0].slurry_volume\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.8518, 0.4489, 0.0336, 0.0156], \"quote\": \"297\", \"value\": \"297\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"casing_record[0].top_of_cement\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.7486, 0.45, 0.0566, 0.0146], \"quote\": \"Surf.\", \"value\": \"Surf.\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"casing_record[0].top_of_cement_determined_by\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"casing_record[1].type_of_casing\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"casing_record[1].casing_size\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.061, 0.4616, 0.062, 0.0138], \"quote\": \"5 1/2\\\"\", \"value\": \"5 1/2\\\"\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"casing_record[1].weight_per_ft\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.1811, 0.4617, 0.0531, 0.0147], \"quote\": \"15.5#\", \"value\": \"15.5#\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"casing_record[1].hole_size\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.6394, 0.4634, 0.0682, 0.0163], \"quote\": \"7 7/8\\\"\", \"value\": \"7 7/8\\\"\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"casing_record[1].setting_depth\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.2832, 0.4631, 0.0575, 0.0154], \"quote\": \"6050'\", \"value\": \"6050'\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"casing_record[1].multistage_tool_depth\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"casing_record[1].multistage_shoe_depth\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"casing_record[1].cement_class\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"casing_record[1].cement_amount\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.4973, 0.46613, 0.1253, 0.01107], \"quote\": \"530 HLC & 300\", \"value\": \"530 HLC & 300\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"casing_record[1].slurry_volume\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.8478, 0.465, 0.0477, 0.0149], \"quote\": \"1371\", \"value\": \"1371\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"casing_record[1].top_of_cement\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.7492, 0.4639, 0.0555, 0.0152], \"quote\": \"4090'\", \"value\": \"4090'\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"casing_record[1].top_of_cement_determined_by\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"casing_record\": {\"comparator\": {\"type_of_casing\": \"case_insensitive\", \"casing_size\": \"case_insensitive\", \"hole_size\": \"case_insensitive\", \"setting_depth\": \"case_insensitive\", \"multistage_tool_depth\": \"case_insensitive\", \"multistage_shoe_depth\": \"case_insensitive\", \"cement_class\": \"case_insensitive\", \"cement_amount\": \"case_insensitive\", \"slurry_volume\": \"case_insensitive\", \"top_of_cement\": \"case_insensitive\", \"top_of_cement_determined_by\": \"case_insensitive\", \"weight_per_ft\": \"case_insensitive\"}, \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": {\"type_of_casing\": null, \"casing_size\": \"8 5/8\\\"\", \"weight_per_ft\": \"24#\", \"hole_size\": \"12 1/4\\\"\", \"setting_depth\": \"256'\", \"multistage_tool_depth\": null, \"multistage_shoe_depth\": null, \"cement_class\": null, \"cement_amount\": \"225 sx circ.\", \"slurry_volume\": \"297\", \"top_of_cement\": \"Surf.\", \"top_of_cement_determined_by\": null}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": null, \"value\": {\"type_of_casing\": null, \"casing_size\": \"5 1/2\\\"\", \"weight_per_ft\": \"15.5#\", \"hole_size\": \"7 7/8\\\"\", \"setting_depth\": \"6050'\", \"multistage_tool_depth\": null, \"multistage_shoe_depth\": null, \"cement_class\": null, \"cement_amount\": \"530 HLC & 300\", \"slurry_volume\": \"1371\", \"top_of_cement\": \"4090'\", \"top_of_cement_determined_by\": null}, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"structural\": \"match_by:type_of_casing\", \"verified_by\": \"human\"}, \"liner_record\": {\"comparator\": {\"liner_size\": \"case_insensitive\", \"hole_size\": \"case_insensitive\", \"liner_top\": \"case_insensitive\", \"liner_bottom\": \"case_insensitive\", \"cement_class\": \"case_insensitive\", \"cement_amount\": \"case_insensitive\", \"slurry_volume\": \"case_insensitive\", \"top_of_cement\": \"case_insensitive\", \"top_of_cement_determined_by\": \"case_insensitive\"}, \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"structural\": \"match_by:liner_size\"}, \"tubing_record[0].size\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.0394, 0.62804, 0.064, 0.01366], \"quote\": \"2 7/8\\\"\", \"value\": \"2 7/8\\\"\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"tubing_record[0].depth_set\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.1878, 0.6287, 0.0573, 0.014], \"quote\": \"5349'\", \"value\": \"5349'\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"tubing_record[0].packer_depth_type\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.3427676697382675, 0.6282575224676163, 0.06909432296699458, 0.016087189207668613], \"quote\": \"5349'\", \"value\": \"5349'\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"tubing_record\": {\"comparator\": {\"size\": \"case_insensitive\", \"depth_set\": \"case_insensitive\", \"packer_depth_type\": \"case_insensitive\"}, \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": {\"size\": \"2 7/8\\\"\", \"depth_set\": \"5349'\", \"packer_depth_type\": \"5349'\"}, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"structural\": \"match_by:size\", \"verified_by\": \"human\"}, \"producing_injection_disposal_intervals[0].from_depth\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.532478588139645, 0.6147573998608943, 0.057499503966663944, 0.014787228826903689], \"quote\": \"5541'\", \"value\": \"5541'\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"producing_injection_disposal_intervals[0].to_depth\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.7797698012811627, 0.6160718458913993, 0.052743896794712065, 0.01577299187263852], \"quote\": \"5558'\", \"value\": \"5558'\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"producing_injection_disposal_intervals\": {\"comparator\": {\"from_depth\": \"case_insensitive\", \"to_depth\": \"case_insensitive\"}, \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": {\"from_depth\": \"5541'\", \"to_depth\": \"5558'\"}, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"structural\": \"match_by:from_depth\", \"verified_by\": \"human\"}, \"operation_depth_intervals[0].from_depth\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.051730662231161545, 0.29699686231498235, 0.06917236388128929, 0.01445860799617171], \"quote\": \"5541'\", \"value\": \"5541'\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"operation_depth_intervals[0].to_depth\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": \"58'\", \"value\": \"58'\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"operation_depth_intervals\": {\"comparator\": {\"from_depth\": \"case_insensitive\", \"to_depth\": \"case_insensitive\"}, \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": {\"from_depth\": \"5541'\", \"to_depth\": \"58'\"}, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"structural\": \"match_by:from_depth\", \"verified_by\": \"agent\"}, \"formation_record\": {\"comparator\": {\"markers_formation_tops\": \"case_insensitive\", \"depth_tvd\": \"case_insensitive\", \"depth_md\": \"case_insensitive\", \"formation_type\": \"case_insensitive\", \"formation_isolated\": \"case_insensitive\"}, \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"structural\": \"match_by:markers_formation_tops\"}}",
+  "repeated_structure": "{}",
+  "anchored_fields": 122,
+  "no_anchor_fields": 0,
+  "case_id": "B03-eb-0124"
+}

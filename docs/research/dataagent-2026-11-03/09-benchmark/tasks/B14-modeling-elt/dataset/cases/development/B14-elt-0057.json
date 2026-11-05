@@ -1,0 +1,35 @@
+{
+  "case_id": "B14-elt-0057",
+  "task_id": "B14",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "config",
+      "ref": "fixtures/elt-databricks-movies_4-config.yaml",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B14-elt-0057.json"
+  },
+  "evidence": [
+    "bench://elt-bench/elt-bench/databricks/movies_4/data_model.yaml"
+  ],
+  "tags": [
+    "elt-bench",
+    "databricks",
+    "movies_4",
+    "models:3"
+  ],
+  "source": "elt",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

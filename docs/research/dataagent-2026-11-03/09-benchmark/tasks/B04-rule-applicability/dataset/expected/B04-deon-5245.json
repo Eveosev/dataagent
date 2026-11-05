@@ -1,0 +1,33 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_994a31e6",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "state",
+    "qa_item",
+    "statute",
+    "statute_of_state",
+    "allows_withholding_for_utilities",
+    "defense_as_affirmative",
+    "allows_withholding_for_repairs",
+    "court_considers_defenses",
+    "allows_retaliation_defense",
+    "lawful_withholding_of_rent",
+    "defense_allowed_in_eviction",
+    "state_allows_withholding_defense",
+    "question_predicate",
+    "derived_answer",
+    "call",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": ":- format(\"Label: ~w~n\", [\"no\"]).\n% HousingQA: New Hampshire, 2021\n\nstate(new_hampshire).\n\nqa_item(\n    new_hampshire,\n    \"In an eviction action, can a tenant rebut/raise the defense that unpaid rent was lawfully withheld? This includes where the law allows a tenant to procure reasonable alternative housing due to lack of repairs or services, and was excused from paying rent, or where the law allows a tenant to abate rent either in part or in full due to lack of repairs.\"\n).\n\n% Statutes from N.H. REV. STAT.  540 series\nstatute(nh_rev_stat_540_2_vi).\nstatute(nh_rev_stat_540_2_vii_f).\nstatute(nh_rev_stat_540_13_iii).\nstatute(nh_rev_stat_540_13_a).\nstatute(nh_rev_stat_540_13_d_i).\n\nstatute_of_state(nh_rev_stat_540_2_vi, new_hampshire).\nstatute_of_state(nh_rev_stat_540_2_vii_f, new_hampshire).\nstatute_of_state(nh_rev_stat_540_13_iii, new_hampshire).\nstatute_of_state(nh_rev_stat_540_13_a, new_hampshire).\nstatute_of_state(nh_rev_stat_540_13_d_i, new_hampshire).\n\n% nh_rev_stat_540_2_vi: Tenant may withhold rent if forced to pay utilities\nallows_withholding_for_utilities(nh_rev_stat_540_2_vi) :-\n    true. % Base statute: if conditions met, tenant can withhold rent for utility payments\n\n% nh_rev_stat_540_2_vii_f: Affirmative defense in possessory actions (eviction)\ndefense_as_affirmative(nh_rev_stat_540_2_vii_f, allows_withholding_for_utilities).\n\n% nh_rev_stat_540_13_d_i: Defense to possessory action if premises in violation of health/safety standards\nallows_withholding_for_repairs(nh_rev_stat_540_13_d_i) :-\n    true. % Statute explicitly excuses rent payment when premises unhabitable due to violations\n\n% nh_rev_stat_540_13_iii: Court shall consider tenant's defenses in rent claims\ncourt_considers_defenses(nh_rev_stat_540_13_iii).\n\n% nh_rev_stat_540_13_a: Retaliation defense (supports ability to raise rent withholding as defense)\nallows_retaliation_defense(nh_rev_stat_540_13_a).\n\n% Define key predicates for rent withholding defenses\nlawful_withholding_of_rent(State, Law) :-\n    statute_of_state(Law, State),\n    ( allows_withholding_for_utilities(Law)\n    ; allows_withholding_for_repairs(Law) ).\n\ndefense_allowed_in_eviction(State) :-\n    statute_of_state(Law, State),\n    lawful_withholding_of_rent(State, Law),\n    ( defense_as_affirmative(Law, _) ; court_considers_defenses(Law) ; allows_retaliation_defense(Law) ).\n\n% Main predicate: does state law allow tenant to raise defense of lawful rent withholding in eviction?\nstate_allows_withholding_defense(State) :-\n    state(State),\n    defense_allowed_in_eviction(State).\n\nquestion_predicate(\n    \"In an eviction action, can a tenant rebut/raise the defense that unpaid rent was lawfully withheld? This includes where the law allows a tenant to procure reasonable alternative housing due to lack of repairs or services, and was excused from paying rent, or where the law allows a tenant to abate rent either in part or in full due to lack of repairs.\",\n    state_allows_withholding_defense\n).\n\nderived_answer(yes) :-\n    qa_item(State, Question),\n    question_predicate(Question, Pred),\n    Goal =.. [Pred, State],\n    call(Goal), !.\n\nderived_answer(no) :-\n    qa_item(State, Question),\n    question_predicate(Question, Pred),\n    Goal =.. [Pred, State],\n    \\+ call(Goal).\n\nhousing_answer(yes) :- derived_answer(yes).\nhousing_answer(no) :- derived_answer(no).\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-5245",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "In an eviction action, can a tenant rebut/raise the defense that unpaid rent was lawfully withheld? This includes where the law allows a tenant to procure reasonable alternative housing due to lack of repairs or services, and was excused from paying rent, or where the law allows a tenant to abate rent either in part or in full due to lack of repairs."
+  }
+}

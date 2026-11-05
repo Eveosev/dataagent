@@ -1,0 +1,1 @@
+Please find out how widespread the appeal of our top five actors is. What percentage of our customers have rented films featuring these actors?

@@ -1,0 +1,16 @@
+{
+  "result_id": "res:m-revenue-2026-10",
+  "target_ref": "metric:monthly_net_revenue@r1",
+  "form": "scalar",
+  "value": 1284500.0,
+  "unit": "CNY",
+  "grain": "全部门店 × 月",
+  "filters_applied": ["status != 'refunded'"],
+  "time_range": {"from": "2026-10-01T00:00:00+08:00", "to": "2026-11-01T00:00:00+08:00"},
+  "semantic_versions": ["metric:monthly_net_revenue@r1"],
+  "assumptions": ["“上月”按自然月解释，未使用财务日历"],
+  "certified": false,
+  "evidence_refs": ["ev:sql-run-91"],
+  "completeness": {"extent": "complete_in_declared_scope", "declared_scope": "sales.xlsx 明细表 2026-10 全部行",
+                   "observed": {"rows": 18234}}
+}

@@ -1,0 +1,1 @@
+What were the monthly add-to-cart and purchase conversion rates, calculated as a percentage of pageviews on product details, from January to March 2017?

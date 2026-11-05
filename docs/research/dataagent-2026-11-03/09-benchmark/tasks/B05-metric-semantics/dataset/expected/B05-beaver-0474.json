@@ -1,0 +1,27 @@
+{
+  "source": "beaverbench/beaver-query",
+  "id": "neutron_478",
+  "db": "neutron",
+  "question": "For each port status, report the status and the range, variance, and standard deviation (using STDDEV only and never STDDEV_POP) of the number of port security bindings per port, considering only ports that have at least one port security binding and restricting to ports belonging to tenant ID '17ea94ad74b64b9d92f4888336a598c7'. Do not return any rounded answers.",
+  "sql": "SELECT p.status, MAX(ps.binding_count) - MIN(ps.binding_count) AS binding_count_range, VARIANCE(ps.binding_count) AS binding_count_variance, STDDEV(ps.binding_count) AS binding_count_stddev FROM ports AS p JOIN ( SELECT p2.id AS port_id, COUNT(*) AS binding_count FROM ports AS p2 JOIN portsecuritybindings AS b ON p2.id = b.port_id WHERE p2.tenant_id IN ('17ea94ad74b64b9d92f4888336a598c7') GROUP BY p2.id ) AS ps ON p.id = ps.port_id GROUP BY p.status ORDER BY binding_count_range DESC;",
+  "tables": "[\"PORTS\", \"PORTS\"]",
+  "join_keys": "[[\"PORTS.ID\", \"PORTSECURITYBINDINGS.PORT_ID\"]]",
+  "column_mapping": "{\"port status\": [\"PORTS.STATUS\"], \"number of port security bindings per port\": [\"PORTSECURITYBINDINGS.PORT_ID\", \"PORTS.ID\"]}",
+  "domain_knowledge": "[\"Tenant ID \\\"17ea94ad74b64b9d92f4888336a598c7\\\" is predicated by \\\"ports.tenant_id IN ('17ea94ad74b64b9d92f4888336a598c7')\\\"\"]",
+  "sub_questions": "[]",
+  "sub_sqls": "[]",
+  "category": "domain-specific query",
+  "detailed_category": "base",
+  "case_id": "B05-beaver-0474",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT p.status, MAX(ps.binding_count) - MIN(ps.binding_count) AS binding_count_range, VARIANCE(ps.binding_count) AS binding_count_variance, STDDEV(ps.binding_count) AS binding_count_stddev FROM ports AS p JOIN ( SELECT p2.id AS port_id, COUNT(*) AS binding_count FROM ports AS p2 JOIN portsecuritybindings AS b ON p2.id = b.port_id WHERE p2.tenant_id IN ('17ea94ad74b64b9d92f4888336a598c7') GROUP BY p2.id ) AS ps ON p.id = ps.port_id GROUP BY p.status ORDER BY binding_count_range DESC;",
+    "sub_sqls": "[]",
+    "db": "neutron",
+    "tables": "[\"PORTS\", \"PORTS\"]",
+    "join_keys": "[[\"PORTS.ID\", \"PORTSECURITYBINDINGS.PORT_ID\"]]",
+    "column_mapping": "{\"port status\": [\"PORTS.STATUS\"], \"number of port security bindings per port\": [\"PORTSECURITYBINDINGS.PORT_ID\", \"PORTS.ID\"]}",
+    "category": "domain-specific query",
+    "db_archive": "bench://beaver-table/beaver_db.zip"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "case_id": "B14-elt-0142",
+  "task_id": "B14",
+  "split_role": "regression",
+  "inputs": [
+    {
+      "kind": "config",
+      "ref": "fixtures/elt-redshift-language_corpus-config.yaml",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B14-elt-0142.json"
+  },
+  "evidence": [
+    "bench://elt-bench/elt-bench/redshift/language_corpus/data_model.yaml"
+  ],
+  "tags": [
+    "elt-bench",
+    "redshift",
+    "language_corpus",
+    "models:1"
+  ],
+  "source": "elt",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

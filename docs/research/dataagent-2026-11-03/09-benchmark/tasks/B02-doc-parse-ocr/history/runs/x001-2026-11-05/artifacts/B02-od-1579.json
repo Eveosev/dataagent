@@ -1,0 +1,171 @@
+{
+  "text": "and $n$ .Thus\n$$\n\\begin{array}{cl}\n2S &=  \\sum_{m} \\sum_{n} \\left( \\frac{1}{a_m(a_m+a_n)} + \\frac{1}{a_n(a_m+a_n)} \\right) \\\\\n   &=  \\sum_{m} \\sum_{n} \\frac{1}{a_m a_n} \\\\\n   &=  \\left( \\sum_{n=1}^{\\infty} \\frac{n}{3^n} \\right)^2 .\n\\end{array}\n$$\nBut\n$$\n\\sum_{n=1}^{\\infty} \\frac{n}{3^n} = \\frac{3}{4}\n$$\nsince,e.g., it's $f ^ { \\prime } ( 1 )$ ,where\n$$f(x) = \\sum_{n=0}^{\\infty} \\frac{x^n}{3^n} = \\frac{3}{3-x},$$\nand we conclude that $S = 9/32$.\nA-5 First solution: (by Reid Barton) Let $r_1, \\ldots, r_{1999}$ be the\nroots of $P$. Draw a disc of radius $\\varepsilon$ around each $r_i$,\nwhere $\\varepsilon < 1/3998$; this disc covers a subinterval of\n$[-1/2, 1/2]$ of length at most $2\\varepsilon$, and so of the 2000 (or\nfewer) uncovered intervals in $[-1/2, 1/2]$, one, which\nwe call $I$, has length at least $\\delta = (1 - 3998\\varepsilon)/2000 > 0$.\nWe will exhibit an explicit lower bound for the integral\nof $|P(x)|/P(0)$ over this interval, which will yield such\na bound for the entire integral.\nNote that\n$$\n\\frac{|P(x)|}{|P(0)|} = \\prod_{i=1}^{1999} \\frac{|x-r_i|}{|r_i|}.\n$$\nAlso note that by construction, $|x - r_i| \\geq \\varepsilon$ for each $x \\in$\n$I$. If $|r_i| \\le 1$, then we have $\\frac{|x-r_i|}{|r_i|} \\ge \\varepsilon$. If $|r_i| > 1$, then\n$$\n\\frac{|x-r_{i}|}{|r_{i}|} = |1-x/r_{i}| \\geq 1-|x/r_{i}| \\geq = 1/2 > \\varepsilon.\n$$\nWe conclude that $ \\int_{I} |P(x)/P(0)|dx \\geq \\delta\\varepsilon $, independent of P.\nSecond solution: It will be a bit more convenient to\nassume $P(0) = 1$ (which we may achieve by rescaling unless $P(0)=0$, in which case there is nothing to\nprove) and to prove that there exists $D > 0$ such that\n$\\int_{-1}^{1} |P(x)|dx \\geq D$, or even such that $\\int_{0}^{1} |P(x)|dx \\geq D$.\nWe first reduce to the case where P has all of its roots\nin [0, 1]. If this is not the case, we can factor P(x) as\nQ(x)R(x), where Q has all roots in the interval and R has\nnone. Then R is either always positive or always neg-\native on [0, 1]; assume the former. Let k be the largest\npositive real number such that $R(x) - kx \\geq 0$ on [0,1];\nthen\n$$\n\\begin{array}{rcl}  \\int_{-1}^{1}|P(x)| d x & = &  \\int_{-1}^{1}|Q(x) R(x)| d x \\\\ & > &  \\int_{-1}^{1}|Q(x)(R(x)-k x)| d x, \\end{array}\n$$\nand Q(x)(R(x) - kx) has more roots in [0, 1] than does P\n(and has the same value at 0). Repeating this argument\nshows that $\\int_{0}^{1}|P(x)|dx$ is greater than the corresponding integral for some polynomial with all of its roots in\n[0, 1].\nUnder this assumption,we have\n$$\nP(x)=c \\prod_{i=1}^{1999}\\left(x-r_{i}\\right)\n$$\nfor some $r_i \\in (0, 1]$. Since\n$$P(0) = -c \\prod r_i = 1,$$\nwe have\n$$|c| \\geq \\prod |r_{i}^{-1}| \\geq 1.$$\nThus it suffices to prove that if $Q(x)$ is a monic polynomial of degree 1999 with all of its roots in $[0, 1]$, then\n$\\int_{0}^{1} |Q(x)|dx \\geq D$ for some constant $D > 0$. But the integral of $\\int_{0}^{1} \\prod_{i=1}^{1999} |x-r_{i}|dx$ is a continuous function for\n$r_{i} \\in [0, 1]$. The product of all of these intervals is compact, so the integral achieves a minimum value for some\n$r_{i}$. This minimum is the desired $D$.\nThird solution (by Abe Kunin): It suffices to prove the stronger inequality\n$$\n\\sup_{x \\in [-1, 1]} |P(x)| \\leq C \\int_{-1}^{1} |P(x)| dx\n$$\nholds for some $C$ .But this follows immediately from the following standard fact:any two norms on a finite- dimensional vector space (here the polynomials of degree at most 1999) are equivalent. (The proof of this statement is also a compactness argument: $C$ can be taken to be the maximum of the L1-norm divided by the sup norm over the set of polynomials withL1-norm 1.)\nNote:combining the first two approaches gives a constructive solutionwith a constant that is better than that given by the first solution,but is still far from optimal. I don't know offhand whether it is even known what the optimal constant and/or the polynomials achieving that constant are.\nA-6 Rearranging the given equation yields the much more tractable equation\n$$\n{ \\frac { a _ { n } } { a _ { n - 1 } } } = 6 { \\frac { a _ { n - 1 } } { a _ { n - 2 } } } - 8 { \\frac { a _ { n - 2 } } { a _ { n - 3 } } } .\n$$\nLet $b_n = a_n/a_{n-1}$; with the initial conditions $b_2 = 2, b_3 = 12$, one easily obtains $b_n = 2^{n-1}(2^{n-2}-1)$, and so\n$$\na_{n} = 2^{n(n-1)/2} \\prod_{i=1}^{n-1} (2^{i} - 1).\n$$\n2",
+  "blocks": [
+    {
+      "category": "text_block",
+      "order": 1,
+      "text": "and $n$ .Thus"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 2,
+      "latex": "$$\n\\begin{array}{cl}\n2S &=  \\sum_{m} \\sum_{n} \\left( \\frac{1}{a_m(a_m+a_n)} + \\frac{1}{a_n(a_m+a_n)} \\right) \\\\\n   &=  \\sum_{m} \\sum_{n} \\frac{1}{a_m a_n} \\\\\n   &=  \\left( \\sum_{n=1}^{\\infty} \\frac{n}{3^n} \\right)^2 .\n\\end{array}\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 3,
+      "text": "But"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 4,
+      "latex": "$$\n\\sum_{n=1}^{\\infty} \\frac{n}{3^n} = \\frac{3}{4}\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 5,
+      "text": "since,e.g., it's $f ^ { \\prime } ( 1 )$ ,where"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 6,
+      "latex": "$$f(x) = \\sum_{n=0}^{\\infty} \\frac{x^n}{3^n} = \\frac{3}{3-x},$$"
+    },
+    {
+      "category": "text_block",
+      "order": 7,
+      "text": "and we conclude that $S = 9/32$."
+    },
+    {
+      "category": "text_block",
+      "order": 8,
+      "text": "A-5 First solution: (by Reid Barton) Let $r_1, \\ldots, r_{1999}$ be the\nroots of $P$. Draw a disc of radius $\\varepsilon$ around each $r_i$,\nwhere $\\varepsilon < 1/3998$; this disc covers a subinterval of\n$[-1/2, 1/2]$ of length at most $2\\varepsilon$, and so of the 2000 (or\nfewer) uncovered intervals in $[-1/2, 1/2]$, one, which\nwe call $I$, has length at least $\\delta = (1 - 3998\\varepsilon)/2000 > 0$.\nWe will exhibit an explicit lower bound for the integral\nof $|P(x)|/P(0)$ over this interval, which will yield such\na bound for the entire integral."
+    },
+    {
+      "category": "text_block",
+      "order": 9,
+      "text": "Note that"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 10,
+      "latex": "$$\n\\frac{|P(x)|}{|P(0)|} = \\prod_{i=1}^{1999} \\frac{|x-r_i|}{|r_i|}.\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 11,
+      "text": "Also note that by construction, $|x - r_i| \\geq \\varepsilon$ for each $x \\in$\n$I$. If $|r_i| \\le 1$, then we have $\\frac{|x-r_i|}{|r_i|} \\ge \\varepsilon$. If $|r_i| > 1$, then"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 12,
+      "latex": "$$\n\\frac{|x-r_{i}|}{|r_{i}|} = |1-x/r_{i}| \\geq 1-|x/r_{i}| \\geq = 1/2 > \\varepsilon.\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 13,
+      "text": "We conclude that $ \\int_{I} |P(x)/P(0)|dx \\geq \\delta\\varepsilon $, independent of P."
+    },
+    {
+      "category": "text_block",
+      "order": 14,
+      "text": "Second solution: It will be a bit more convenient to\nassume $P(0) = 1$ (which we may achieve by rescaling unless $P(0)=0$, in which case there is nothing to\nprove) and to prove that there exists $D > 0$ such that\n$\\int_{-1}^{1} |P(x)|dx \\geq D$, or even such that $\\int_{0}^{1} |P(x)|dx \\geq D$."
+    },
+    {
+      "category": "text_block",
+      "order": 15,
+      "text": "We first reduce to the case where P has all of its roots\nin [0, 1]. If this is not the case, we can factor P(x) as\nQ(x)R(x), where Q has all roots in the interval and R has\nnone. Then R is either always positive or always neg-\native on [0, 1]; assume the former. Let k be the largest\npositive real number such that $R(x) - kx \\geq 0$ on [0,1];\nthen"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 16,
+      "latex": "$$\n\\begin{array}{rcl}  \\int_{-1}^{1}|P(x)| d x & = &  \\int_{-1}^{1}|Q(x) R(x)| d x \\\\ & > &  \\int_{-1}^{1}|Q(x)(R(x)-k x)| d x, \\end{array}\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 17,
+      "text": "and Q(x)(R(x) - kx) has more roots in [0, 1] than does P\n(and has the same value at 0). Repeating this argument\nshows that $\\int_{0}^{1}|P(x)|dx$ is greater than the corresponding integral for some polynomial with all of its roots in\n[0, 1]."
+    },
+    {
+      "category": "text_block",
+      "order": 18,
+      "text": "Under this assumption,we have"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 19,
+      "latex": "$$\nP(x)=c \\prod_{i=1}^{1999}\\left(x-r_{i}\\right)\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 20,
+      "text": "for some $r_i \\in (0, 1]$. Since"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 21,
+      "latex": "$$P(0) = -c \\prod r_i = 1,$$"
+    },
+    {
+      "category": "text_block",
+      "order": 22,
+      "text": "we have"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 23,
+      "latex": "$$|c| \\geq \\prod |r_{i}^{-1}| \\geq 1.$$"
+    },
+    {
+      "category": "text_block",
+      "order": 24,
+      "text": "Thus it suffices to prove that if $Q(x)$ is a monic polynomial of degree 1999 with all of its roots in $[0, 1]$, then\n$\\int_{0}^{1} |Q(x)|dx \\geq D$ for some constant $D > 0$. But the integral of $\\int_{0}^{1} \\prod_{i=1}^{1999} |x-r_{i}|dx$ is a continuous function for\n$r_{i} \\in [0, 1]$. The product of all of these intervals is compact, so the integral achieves a minimum value for some\n$r_{i}$. This minimum is the desired $D$."
+    },
+    {
+      "category": "text_block",
+      "order": 25,
+      "text": "Third solution (by Abe Kunin): It suffices to prove the stronger inequality"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 26,
+      "latex": "$$\n\\sup_{x \\in [-1, 1]} |P(x)| \\leq C \\int_{-1}^{1} |P(x)| dx\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 27,
+      "text": "holds for some $C$ .But this follows immediately from the following standard fact:any two norms on a finite- dimensional vector space (here the polynomials of degree at most 1999) are equivalent. (The proof of this statement is also a compactness argument: $C$ can be taken to be the maximum of the L1-norm divided by the sup norm over the set of polynomials withL1-norm 1.)"
+    },
+    {
+      "category": "text_block",
+      "order": 28,
+      "text": "Note:combining the first two approaches gives a constructive solutionwith a constant that is better than that given by the first solution,but is still far from optimal. I don't know offhand whether it is even known what the optimal constant and/or the polynomials achieving that constant are."
+    },
+    {
+      "category": "text_block",
+      "order": 29,
+      "text": "A-6 Rearranging the given equation yields the much more tractable equation"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 30,
+      "latex": "$$\n{ \\frac { a _ { n } } { a _ { n - 1 } } } = 6 { \\frac { a _ { n - 1 } } { a _ { n - 2 } } } - 8 { \\frac { a _ { n - 2 } } { a _ { n - 3 } } } .\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 31,
+      "text": "Let $b_n = a_n/a_{n-1}$; with the initial conditions $b_2 = 2, b_3 = 12$, one easily obtains $b_n = 2^{n-1}(2^{n-2}-1)$, and so"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 32,
+      "latex": "$$\na_{n} = 2^{n(n-1)/2} \\prod_{i=1}^{n-1} (2^{i} - 1).\n$$"
+    },
+    {
+      "category": "page_number",
+      "order": null,
+      "text": "2"
+    }
+  ],
+  "tables": []
+}

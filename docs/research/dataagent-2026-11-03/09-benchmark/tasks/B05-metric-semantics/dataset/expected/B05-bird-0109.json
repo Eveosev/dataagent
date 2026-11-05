@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 108,
+  "question": "I'm putting together a localization coverage report. Among the languages into which the card sets themselves were translated (i.e., have a set translation), which language has the fewest printings whose flavor text was translated into that language? Please give me the language name and the number of such printings. If several languages tie for the fewest, list all of them, ordered alphabetically by language name.",
+  "evidence": "Set translation: a card set's official release in another language.",
+  "gold_sql": "WITH set_langs AS (\n    SELECT DISTINCT language FROM set_translations\n),\ncounts AS (\n    SELECT fd.language, COUNT(*) AS printings\n    FROM foreign_data fd\n    WHERE fd.language IN\n        (SELECT language FROM set_langs)\n    AND fd.flavorText IS NOT NULL\n    AND fd.flavorText <> ''\n    GROUP BY fd.language\n)\nSELECT language, printings\nFROM counts\nWHERE printings = (SELECT MIN(printings) FROM counts)\nORDER BY language ASC;",
+  "db_id": "card_games",
+  "case_id": "B05-bird-0109",
+  "expected": {
+    "kind": "sql",
+    "sql": "WITH set_langs AS (\n    SELECT DISTINCT language FROM set_translations\n),\ncounts AS (\n    SELECT fd.language, COUNT(*) AS printings\n    FROM foreign_data fd\n    WHERE fd.language IN\n        (SELECT language FROM set_langs)\n    AND fd.flavorText IS NOT NULL\n    AND fd.flavorText <> ''\n    GROUP BY fd.language\n)\nSELECT language, printings\nFROM counts\nWHERE printings = (SELECT MIN(printings) FROM counts)\nORDER BY language ASC;",
+    "db_id": "card_games",
+    "evidence": "Set translation: a card set's official release in another language."
+  }
+}

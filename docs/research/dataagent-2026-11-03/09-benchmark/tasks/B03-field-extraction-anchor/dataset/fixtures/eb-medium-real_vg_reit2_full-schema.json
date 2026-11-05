@@ -1,0 +1,124 @@
+{
+  "type": "object",
+  "title": "Vanguard Schedule of Investments (real content)",
+  "additionalProperties": false,
+  "properties": {
+    "fund_name": {
+      "type": "string",
+      "description": "Fund name as printed in the page header, e.g. 'Mega Cap Growth Index Fund'."
+    },
+    "as_of_date": {
+      "type": "string",
+      "description": "Schedule as-of date as printed after 'As of', e.g. 'March 31, 2026'."
+    },
+    "total_investments_thousands": {
+      "type": "integer",
+      "description": "Printed 'Total Investments' market value in $000."
+    },
+    "net_assets_thousands": {
+      "type": "integer",
+      "description": "Printed 'Net Assets (100%)' value in $000."
+    },
+    "holdings": {
+      "type": "array",
+      "description": "Every holding row of the Schedule of Investments, in print order.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "security_name": {
+            "type": "string",
+            "description": "Security name as printed (without leading footnote markers)."
+          },
+          "marks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Leading superscript footnote markers, e.g. ['*'] or ['1'] or ['*','2']."
+          },
+          "asset_class": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Top-level class heading, e.g. 'Common Stocks'."
+          },
+          "asset_class_percent": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Percent of net assets printed on the class heading."
+          },
+          "group": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Sector/country/sub-class heading, e.g. 'Basic Materials' or 'Japan'."
+          },
+          "group_percent": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Percent of net assets printed on the group heading."
+          },
+          "shares": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Shares held (null for face-amount rows)."
+          },
+          "face_amount_thousands": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Face amount in $000 for fixed-income/repo rows (null otherwise)."
+          },
+          "inline_cost_thousands": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Cost printed inline after the name as '(Cost $N)', in $000."
+          },
+          "market_value_thousands": {
+            "type": "integer",
+            "description": "Market value in $000 (0 when printed as an em dash)."
+          },
+          "source_page": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Page number as printed on the page where this holding row is printed. This document's printed page numbering is offset from the PDF page index; report the number printed on the page, not the PDF page position."
+          }
+        },
+        "required": [
+          "security_name",
+          "marks",
+          "asset_class",
+          "asset_class_percent",
+          "group",
+          "group_percent",
+          "shares",
+          "face_amount_thousands",
+          "inline_cost_thousands",
+          "market_value_thousands",
+          "source_page"
+        ]
+      }
+    }
+  },
+  "required": [
+    "fund_name",
+    "as_of_date",
+    "total_investments_thousands",
+    "net_assets_thousands",
+    "holdings"
+  ]
+}

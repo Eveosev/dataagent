@@ -1,0 +1,711 @@
+{
+  "$defs": {
+    "ComparableVehicle": {
+      "type": "object",
+      "title": "ComparableVehicle",
+      "properties": {
+        "comp_label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The CCC-assigned ordinal label for this comparable, exactly as printed on the page (e.g. 'Comp 1', 'Comp 2', ... 'Comp 12'). Appears as a column header in the COMPARABLE VEHICLES top-table OR as a bold row label in the ADDITIONAL COMPARABLE VEHICLES section. Format: verbatim 'Comp N' where N is the 1-based index. Do NOT confuse with the 'Loss Vehicle' column (that is the subject vehicle, not a comparable). Do NOT renumber: use the label printed on the page.",
+          "title": "Comp Label"
+        },
+        "vin": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "17-character alphanumeric Vehicle Identification Number of the comparable vehicle, verbatim, no spaces or dashes. Located in two places: (a) the right-hand information panel of the COMPARABLE VEHICLES top-table page (e.g. 'VIN 3N1CN8EV2LL870750' under each Comp header), and (b) the 'Vehicle' column block of the ADDITIONAL COMPARABLE VEHICLES rows (e.g. 'VIN: 1HGCV1F3XLA052869'). Preserve uppercase and exact characters; do NOT include the literal 'VIN' / 'VIN:' label. Do NOT confuse with the loss vehicle's VIN listed in the VEHICLE INFORMATION section.",
+          "title": "VIN"
+        },
+        "year": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Model year (4-digit integer, e.g. 2020) of the comparable vehicle, as the first token of the vehicle description (e.g. '2020 Nissan Versa Sv W/continuously Variable Transmission...'). Located in the right-hand info panel of the top-table page or the 'Vehicle' column of the ADDITIONAL COMPARABLE VEHICLES section. Do NOT confuse with the Updated Date year.",
+          "title": "Year"
+        },
+        "make": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Manufacturer / make of the comparable vehicle, verbatim as printed (e.g. 'Nissan', 'GMC', 'Honda'). Typically the second token of the vehicle description string. Do NOT confuse with the model name; do NOT normalize casing (preserve as printed).",
+          "title": "Make"
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Model name of the comparable vehicle, verbatim (e.g. 'Versa', 'Yukon', 'Accord Sedan'). The model is the token(s) after the make and before the trim. Some descriptions concatenate model and trim (e.g. 'Yukon Sle' = model 'Yukon', trim 'Sle'). Do NOT include the trim, body, transmission, engine, or fuel-type tokens here. Preserve casing as printed.",
+          "title": "Model"
+        },
+        "trim": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Trim level of the comparable vehicle (e.g. 'SV', 'Sv', 'SLE', 'Sle', 'Sport'), verbatim as the token following the model name in the vehicle description. May be absent if the description does not include a trim. Do NOT confuse with body style ('Sedan'), body type, or transmission. Preserve casing as printed.",
+          "title": "Trim"
+        },
+        "odometer": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Odometer reading (mileage) of the comparable vehicle, integer, no commas, no units. Two locations: (a) for Comps in the top OPTIONS table the value appears in the 'Odometer' row under the Comp column (e.g. 66,908 -> 66908); (b) for Additional Comparable Vehicles the value appears in the 'Vehicle' column block as 'Odometer: 59,890' -> 59890. Do NOT confuse with the loss vehicle's odometer or with the 'Distance from <city>' miles figure.",
+          "title": "Odometer"
+        },
+        "list_price": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Listed sale price of the comparable vehicle in US dollars (numeric, no '$', no commas, e.g. 12990.00). Located in the 'List Price' row of the OPTIONS table for Comps 1-3 (top page) OR in the 'Price (List)' column of the ADDITIONAL COMPARABLE VEHICLES section. Some CCC reports show the literal '(List)' suffix; capture only the dollar number. Do NOT confuse with the 'Adjusted Comparable Value' (post-adjustment) or with the loss vehicle's 'Base Vehicle Value'.",
+          "title": "List Price"
+        },
+        "adjusted_comparable_value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The post-adjustment value of the comparable vehicle in US dollars (numeric, no '$', no commas, e.g. 10986.00). Labeled 'Adjusted Comparable Value' in the green/teal totals row of the OPTIONS table for Comps 1-3, or as the 'Adjusted Comparable Value' column for Additional Comparable Vehicles. This is the value CCC uses to compute the Base Vehicle Value. Do NOT confuse with List Price (pre-adjustment) or with the loss vehicle's Adjusted Vehicle Value.",
+          "title": "Adjusted Comparable Value"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Source / channel of the comparable vehicle listing, verbatim as printed after the literal label 'Source' (e.g. 'Dealer Ad', 'Autotrader', 'Truecar'). Located on the right-hand info panel of the top page (e.g. 'Source Dealer Ad') and in the leftmost column ('Source: Autotrader') of each Additional Comparable Vehicles row. Do NOT include the 'Source' / 'Source:' label itself.",
+          "title": "Source"
+        },
+        "dealer_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Name of the dealership / seller offering the comparable vehicle, verbatim as printed after the 'Dealership' label on the top-page right panel (e.g. 'Group 1 Automotive') OR the standalone dealership-name line in Additional Comparable Vehicles (e.g. 'Auto Ride Groups', 'Dch Paramus Honda'). Do NOT include 'Dealership' label, do NOT include the city/state line, telephone, or distance-from line. May be null if the source is a non-dealer aggregator with no dealership shown.",
+          "title": "Dealer Name"
+        },
+        "dealer_city": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "City of the comparable-vehicle dealership, verbatim as printed before the comma in the dealer-location line (e.g. 'Houston' from 'Houston, TX', or 'New Rochelle' from the 'Distance from New York, NY / 10 Miles - New Rochelle, NY' panel line where the comp's city follows the dash). For top-page comps the city appears at the end of the right-panel block (e.g. '25 Miles - Houston, TX' -> 'Houston'). For Additional Comparable Vehicles the city is the standalone line immediately under the dealer name (e.g. 'Houston, TX' -> 'Houston'). Do NOT include the state, ZIP, or 'Miles From' distance.",
+          "title": "Dealer City"
+        },
+        "dealer_state": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Two-letter US state abbreviation for the comparable-vehicle dealership location (e.g. 'TX', 'NJ', 'NY'), verbatim. Appears immediately after the dealer city (e.g. 'Houston, TX' -> 'TX'). Do NOT include the city, ZIP, or distance.",
+          "title": "Dealer State"
+        },
+        "distance_from_loss_miles": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Straight-line distance from the loss vehicle's garaging ZIP to the comparable vehicle's location, integer miles (e.g. 25 from '25 Miles - Houston, TX', or 114 from '114 Miles From Elgin, TX'). Two formats: top-page comps use 'NN Miles - City, ST'; Additional Comparable Vehicles use 'NN Miles From City, ST'. Extract only the integer. Do NOT confuse with odometer mileage.",
+          "title": "Distance From Loss Miles"
+        },
+        "stock_number": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Dealer's stock number for the comparable vehicle, verbatim as printed after the 'Stock #' or 'Stock #:' label (e.g. 'LL870750', '869579', 'P75135'). Preserve as a string (may be alphanumeric, may have leading zeros). Located on the top-page right panel (top comps) or in the 'Vehicle' column block (Additional Comparable Vehicles). May be null if the listing has no stock number printed.",
+          "title": "Stock Number"
+        },
+        "updated_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Date the comparable vehicle listing was last updated, in the document's printed MM/DD/YYYY format, verbatim (e.g. '03/17/2026', '04/26/2026'). Located after the 'Updated Date:' label on both the top-page right panel and in the Additional Comparable Vehicles 'Vehicle' column block. Preserve as a string in MM/DD/YYYY. Do NOT confuse with the Loss Incident Date, Claim Reported date, or Last Updated timestamp from the REPORT SUMMARY.",
+          "title": "Updated Date"
+        },
+        "adjustment_make_model_trim": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Signed dollar adjustment applied for differences in Make/Model/Trim between the comparable and the loss vehicle, as a signed numeric value (e.g. +575 -> 575.00; -650 -> -650.00). Located in the 'Make/Model/Trim' row of the 'Adjustments:' block under each Comp column on the top OPTIONS-table page. PRESERVE THE SIGN: '+ $ 575' is positive, '- $ 650' is negative. Return null if the row exists but no value is shown for that Comp (CCC leaves blanks when no adjustment applies). Return null for Additional Comparable Vehicles (Comp 4+) which do not show per-line adjustments. Do NOT confuse with Mileage, Options, Package, or Condition adjustments.",
+          "title": "Adjustment Make Model Trim"
+        },
+        "adjustment_mileage": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Signed dollar adjustment for the mileage difference between this comparable and the loss vehicle, e.g. '+ $ 1,651' -> 1651.00, '- $ 650' -> -650.00. Located in the 'Mileage' row of the 'Adjustments:' block under each Comp column on the top OPTIONS-table page. PRESERVE THE SIGN. Return null for Additional Comparable Vehicles (no per-line adjustments shown). Do NOT confuse with Make/Model/Trim, Options, Package, or Condition adjustments. Do NOT confuse with the odometer value.",
+          "title": "Adjustment Mileage"
+        },
+        "adjustment_options": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Signed dollar adjustment for the difference in optional equipment between this comparable and the loss vehicle, e.g. '+ $ 100' -> 100.00, '- $ 1,175' -> -1175.00. Located in the 'Options' row of the 'Adjustments:' block. PRESERVE THE SIGN. Return null when the Options row is absent for this PDF (some reports omit it) or when blank for a particular Comp. Return null for Additional Comparable Vehicles. Do NOT confuse with Make/Model/Trim, Mileage, Package, or Condition adjustments.",
+          "title": "Adjustment Options"
+        },
+        "adjustment_package": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Signed dollar adjustment for the difference in option packages between this comparable and the loss vehicle, e.g. '- $ 46' -> -46.00. Located in the 'Package' row of the 'Adjustments:' block when present. PRESERVE THE SIGN. Return null when the Package row is absent for this PDF or blank for this Comp. Return null for Additional Comparable Vehicles. Do NOT confuse with Options, Mileage, or Condition adjustments.",
+          "title": "Adjustment Package"
+        },
+        "adjustment_condition": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Signed dollar adjustment to bring the comparable to the loss vehicle's condition baseline, e.g. '- $ 1,354' -> -1354.00, '- $ 2,206' -> -2206.00. Located in the 'Condition' (sometimes printed 'Condition¹' or 'Condition*') row of the 'Adjustments:' block. PRESERVE THE SIGN; CCC condition adjustments are typically negative. Return null for Additional Comparable Vehicles. Do NOT confuse with Mileage, Options, Make/Model/Trim, or Package adjustments.",
+          "title": "Adjustment Condition"
+        }
+      }
+    },
+    "ComponentCondition": {
+      "type": "object",
+      "title": "ComponentCondition",
+      "properties": {
+        "component_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Name of the inspected vehicle component, verbatim as printed in the leftmost cell of a COMPONENT CONDITION row (e.g. 'Seats', 'Carpets', 'Glass', 'Dashboard', 'Headliner', 'Sheet Metal', 'Paint', 'Trim', 'Engine', 'Transmission', 'Tires', 'Front Tires', 'Rear Tires'). Do NOT include the INTERIOR/EXTERIOR/MECHANICAL/TIRES group header rows (those are section labels, not components). Do NOT include the 'Total Condition Adjustments' summary row.",
+          "title": "Component Name"
+        },
+        "condition_rating": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Condition grade for the component, verbatim from the 'Condition' column (e.g. 'AVERAGE PRIVATE', 'PRIVATE OWNER', 'GOOD', 'FAIR', 'DEALER'). Some reports stack two words on two lines ('AVERAGE\\nPRIVATE') — return them joined with a single space ('AVERAGE PRIVATE'). Preserve casing as printed. Do NOT confuse with the Inspection Notes free-text column.",
+          "title": "Condition Rating"
+        },
+        "inspection_notes": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Free-text inspection note for the component, verbatim from the 'Inspection Notes' or 'Inspection Notes/Guidelines' column (e.g. 'Lightly soiled, faded and/or discolored.', 'Lt front 3, lt rear 2, rt rear 1, rt front 1=16%'). For 'Guidelines:'-prefixed text, preserve the 'Guideline:' prefix and the full multi-line note. Do NOT confuse with the Condition Rating or the Value Impact dollar figure.",
+          "title": "Inspection Notes"
+        },
+        "value_impact": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Dollar value impact of the component's condition on the vehicle value, signed numeric (e.g. 0 for '$ 0', -94 for '- $ 94', 85 for '$ 85'). Located in the rightmost 'Value Impact' column of the COMPONENT CONDITION table. PRESERVE THE SIGN: '- $ 94' is negative; bare '$ 85' is positive. Do NOT confuse with the Total Condition Adjustments summary at the bottom of the table.",
+          "title": "Value Impact"
+        }
+      }
+    },
+    "NhtsaRecall": {
+      "type": "object",
+      "title": "NhtsaRecall",
+      "properties": {
+        "campaign_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "NHTSA recall campaign identifier, verbatim as printed after 'NHTSA Campaign ID :' in the SUPPLEMENTAL INFORMATION > NHTSA VEHICLE RECALL section (e.g. '20V112000', '14V451000', '20V771000'). Preserve casing and digits exactly. Do NOT confuse with the Manufacturer Recall No. (separate field) or with NHTSA report-date.",
+          "title": "Campaign ID"
+        },
+        "component": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Affected vehicle component category for this recall, verbatim after 'Component :' (e.g. 'FUEL SYSTEM, GASOLINE:STORAGE:TANK ASSEMBLY', 'EXTERIOR LIGHTING:TURN SIGNAL:BULBS', 'POWER TRAIN', 'AIR BAGS:SEAT BELTS'). Preserve uppercase. May be null when the recall block omits a Component line. Do NOT confuse with the Summary text.",
+          "title": "Component"
+        },
+        "mfg_report_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Manufacturer's report date for this recall, verbatim as printed after \"Mfg's Report Date :\" (e.g. 'FEB 25, 2020', 'JUL 23, 2014', 'September 8, 2016'). CCC prints this in two casing variants; preserve as printed. Do NOT reformat to numeric date.",
+          "title": "Mfg Report Date"
+        }
+      }
+    }
+  },
+  "type": "object",
+  "title": "CCCMarketValuationReport",
+  "properties": {
+    "report_reference_number": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "CCC-assigned report reference number, verbatim from the 'Report Reference Number' row of the INSURANCE INFORMATION block on page 1 (e.g. '130934803', '130521476 -2', '130762181'). Preserve embedded spaces / dashes / suffixes exactly as printed (do not strip the ' -2' suffix). Do NOT confuse with Claim Reference (separate field), Claim Number, or Mfg Recall ID.",
+      "title": "Report Reference Number"
+    },
+    "claim_reference": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Insurer's claim reference / claim number, verbatim from the 'Claim Reference' row of the INSURANCE INFORMATION block (e.g. 'XWRZGPTX-001', '000823098685D01', '32-99H9-33W01'). Also typically echoed in the per-page header beside 'Claim:'. Preserve hyphens, embedded zeros, mixed casing. Do NOT confuse with Report Reference Number (CCC-internal) or with NHTSA Campaign ID.",
+      "title": "Claim Reference"
+    },
+    "insurance_company": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Full insurance company name on whose behalf the valuation was prepared, verbatim from the 'Prepared for' subtitle at the top of page 1 (e.g. 'ROOT INSURANCE COMPANY', 'ALLSTATE COUNTY MUTUAL INSURANCE COMPANY', 'STATE FARM INSURANCE COMPANIES'). Preserve uppercase and exact punctuation. Do NOT include the literal 'Prepared for' prefix. Do NOT use the abbreviated form that appears later in the report; use the page-1 'Prepared for' string.",
+      "title": "Insurance Company"
+    },
+    "owner_name": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Name of the loss vehicle owner, verbatim from the 'Owner' row of CLAIM INFORMATION on page 1 (e.g. 'Williams, Syria', 'Ramirez, Ivonne Olivares', 'Smith, Elizabeth'). Preserve 'Last, First [Middle]' order exactly as printed. Do NOT include the multi-line street address (separate field). Do NOT confuse with the adjuster or appraiser names from INSURANCE INFORMATION.",
+      "title": "Owner Name"
+    },
+    "owner_address": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Loss-vehicle owner's mailing address from the 'Owner' row of CLAIM INFORMATION, including street, city, state, and ZIP, joined with a single space (e.g. '4122 Soaring Elm St Humble, TX 77346-4702'). On the PDF this appears as two or three stacked lines beneath the owner's name. Concatenate the stacked lines using single spaces; preserve internal punctuation and ZIP+4 dashes. Do NOT include the owner's name. Do NOT use the 'Location' from VEHICLE DETAILS (which only has city/state/ZIP).",
+      "title": "Owner Address"
+    },
+    "loss_vehicle_vin": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "17-character VIN of the loss (subject) vehicle, verbatim from the 'VIN' row of VEHICLE INFORMATION > VEHICLE DETAILS (e.g. '3N1CN8EV1LL901762', '1GKS1AKC5FR705629', '1HGCV2F30LA023600'). Uppercase, no spaces or dashes. Do NOT confuse with the VINs of comparable vehicles (those go in comparable_vehicles[].vin).",
+      "title": "Loss Vehicle VIN"
+    },
+    "loss_vehicle_year": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Model year of the loss vehicle, integer (e.g. 2020, 2015), from the 'Year' row of VEHICLE DETAILS or the first token of the 'Loss Vehicle' string in CLAIM INFORMATION. Use the 'Year' row when both are present.",
+      "title": "Loss Vehicle Year"
+    },
+    "loss_vehicle_make": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Make of the loss vehicle, verbatim from the 'Make' row of VEHICLE DETAILS (e.g. 'Nissan', 'GMC', 'Honda'). Preserve casing as printed. Do NOT include model/trim.",
+      "title": "Loss Vehicle Make"
+    },
+    "loss_vehicle_model": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Model of the loss vehicle, verbatim from the 'Model' row of VEHICLE DETAILS (e.g. 'Versa', 'Yukon', 'Accord Sedan'). Some reports use a multi-word model ('Accord Sedan'); include all tokens of the Model row. Do NOT include the trim.",
+      "title": "Loss Vehicle Model"
+    },
+    "loss_vehicle_trim": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Trim level of the loss vehicle, verbatim from the 'Trim' row of VEHICLE DETAILS (e.g. 'SV', 'SLE', 'Sport'). Preserve casing exactly as printed. May be null if the Trim row is absent.",
+      "title": "Loss Vehicle Trim"
+    },
+    "loss_vehicle_body_type": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Body type of the loss vehicle, verbatim from the 'Body Type' row of VEHICLE DETAILS (e.g. 'Sedan', 'Sports Utility'). Do NOT confuse with 'Body Style' (which captures the powertrain descriptor like 'w/Continuously Variable Transmission' or 'Automatic').",
+      "title": "Loss Vehicle Body Type"
+    },
+    "loss_vehicle_odometer": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Odometer reading of the loss vehicle in miles, integer, no commas (e.g. 78294, 143710, 77373). Sourced from the 'Odometer' row of INSURANCE INFORMATION on page 1 OR the 'Odometer' row of VEHICLE EQUIPMENT (page 4-5). When both appear they will match; use either. Do NOT confuse with comparable vehicles' odometers or with the 'Distance from <city>' miles.",
+      "title": "Loss Vehicle Odometer"
+    },
+    "loss_incident_date": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Date the loss / accident occurred, verbatim in MM/DD/YYYY format from the 'Loss Incident Date' row of CLAIM INFORMATION (e.g. '03/19/2026', '03/27/2026', '04/16/2026'). Preserve the printed MM/DD/YYYY string. Do NOT confuse with 'Claim Reported' (when the claim was filed) or with 'Last Updated' (when the valuation was last edited).",
+      "title": "Loss Incident Date"
+    },
+    "claim_reported_date": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Date the insurer was notified of the claim, MM/DD/YYYY, verbatim from the 'Claim Reported' row of CLAIM INFORMATION (e.g. '04/29/2026'). Do NOT confuse with Loss Incident Date or with the Last Updated timestamp.",
+      "title": "Claim Reported Date"
+    },
+    "base_vehicle_value": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Base Vehicle Value computed by CCC, in US dollars, numeric, no '$' or commas (e.g. 11143.00, 11159.00, 17532.00). Located in the VALUATION SUMMARY block on page 1, labeled 'Base Vehicle Value'. This is the pre-condition-adjustment value derived from the weighted average of the Adjusted Comparable Values. Do NOT confuse with Adjusted Vehicle Value (after condition adjustments), Total, or any Comp's Adjusted Comparable Value.",
+      "title": "Base Vehicle Value"
+    },
+    "condition_adjustment": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Total condition adjustment applied to the Base Vehicle Value, signed numeric in US dollars (e.g. -94.00 for '- $ 94', 170.00 for '+ $ 170'). Located in the VALUATION SUMMARY block on page 1, labeled 'Condition Adjustment'. Sign convention: positive when CCC adds value, negative when CCC subtracts. Should equal the 'Total Condition Adjustments' row at the bottom of the COMPONENT CONDITION table. Return null when the row is absent. Do NOT confuse with per-Comp condition adjustments.",
+      "title": "Condition Adjustment"
+    },
+    "adjusted_vehicle_value": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Adjusted Vehicle Value after condition adjustments, in US dollars, numeric (e.g. 11049.00, 11162.69, 17532.00). Located in the VALUATION SUMMARY block on page 1, labeled 'Adjusted Vehicle Value'. Do NOT confuse with Base Vehicle Value (pre-adjustment) or Total (post tax/fees/deductible).",
+      "title": "Adjusted Vehicle Value"
+    },
+    "vehicular_tax": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Vehicular / sales tax dollar amount, positive numeric (e.g. 697.67 for '+ $ 697.67', 1555.97 for '+ $ 1,555.97'). Located in VALUATION SUMMARY on page 1, on the line labeled 'Vehicular Tax (X.XX%)' or 'Vehicular Tax' or 'Tax'. Return null when the report has no tax line (e.g. PDF 0004). Do NOT include the percentage. Do NOT confuse with title/registration fees.",
+      "title": "Vehicular Tax"
+    },
+    "title_registration_fees": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Title, registration, and other fees total in US dollars, signed numeric (e.g. 35.50 for '+ $ 35.50'). Located in VALUATION SUMMARY on page 1 ('Title, Registration and Other Fees') and detailed in the TITLE, REGISTRATION AND OTHER FEES section. Return null when the row is absent (PDF 0004, PDF 0009). Do NOT confuse with Vehicular Tax or Deductible.",
+      "title": "Title Registration Fees"
+    },
+    "deductible": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Insurance deductible applied to compute the final settlement Total, signed numeric (e.g. -250.00 for '- $ 250.00', -1000.00 for '- $ 1,000.00'). Located in VALUATION SUMMARY on page 1, labeled 'Deductible*'. Sign convention: negative because it is subtracted. Return null when absent (PDF 0004). Do NOT confuse with Condition Adjustment.",
+      "title": "Deductible"
+    },
+    "total_settlement": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Final 'Total' dollar amount printed in the green/teal highlighted Total row of the VALUATION SUMMARY on page 1 (e.g. 11049.00, 11645.86, 18087.97). This is the settlement total CCC computes after taxes, fees, and deductible. Do NOT confuse with Adjusted Vehicle Value, Base Vehicle Value, or Value before Deductible.",
+      "title": "Total Settlement"
+    },
+    "comparable_vehicles": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ComparableVehicle"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "ORDERED list of EVERY comparable vehicle CCC used to determine the Base Vehicle Value. The COMPARABLE VEHICLES section spans (a) a top OPTIONS table for Comps 1-3 (one column per Comp, full per-option checkbox match, list price, and adjustments), and (b) one or more ADDITIONAL COMPARABLE VEHICLES summary pages for Comps 4 through N. INCLUDE every numbered Comp (e.g. Comp 1, Comp 2, ..., Comp 9 in PDF 0004; Comp 1..Comp 7 in PDF 0008; Comp 1..Comp 12 in PDF 0009). Each Comp has its own VIN; deduplicate by VIN. Preserve the order in which CCC numbers them (Comp 1 first). Do NOT include the Loss Vehicle column (it is the subject vehicle, not a comparable). Do NOT include the 'Adjusted Comparable Value' summary row as a Comp.",
+      "title": "Comparable Vehicles"
+    },
+    "component_conditions": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ComponentCondition"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Ordered list of EVERY per-component condition row from the COMPONENT CONDITION table in the VEHICLE CONDITION section. Each row covers one component (Seats, Carpets, Glass, Dashboard, Headliner, Sheet Metal, Paint, Trim, Engine, Transmission, Tires OR Front Tires + Rear Tires) with its condition rating, inspection note, and value impact. EXCLUDE the section header rows ('INTERIOR', 'EXTERIOR', 'MECHANICAL', 'TIRES'). EXCLUDE the 'Total Condition Adjustments' summary row (use the top-level condition_adjustment field for that).",
+      "title": "Component Conditions"
+    },
+    "nhtsa_recalls": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NhtsaRecall"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Ordered list of EVERY NHTSA recall block printed in the SUPPLEMENTAL INFORMATION > NHTSA VEHICLE RECALL section. Each block is delimited by a horizontal rule and begins with 'NHTSA Campaign ID :'. The recall count printed in the right-hand callout (e.g. 'has issued 2 / 10 / 4 safety related recall notices') indicates the total to expect. Return an empty list if the recall section is absent.",
+      "title": "Nhtsa Recalls"
+    }
+  }
+}

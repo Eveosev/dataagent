@@ -1,0 +1,33 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_9ce7c28b",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "state",
+    "focus_year",
+    "days_between",
+    "integer",
+    "statute_sdcl_43_32_27_special_event",
+    "statute_sdcl_43_32_27_retaliatory_act",
+    "statute_sdcl_43_32_27_not_retaliation",
+    "statute_sdcl_43_32_27_retaliation_cause_may_arise",
+    "statute_sdcl_43_32_27_defense_notice_to_vacate_after_180_days",
+    "eviction_action",
+    "tenant",
+    "landlord",
+    "tenant_victim_of_domestic_violence",
+    "tenant_asserts_defense",
+    "statute_provides_domestic_violence_defense",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: South Dakota\n    Focus year: 2021\n\n    Question: In an eviction action, can a tenant use their status as a victim of domestic violence\n    as a rebuttal/defense?\n\n    Statutes provided (only): SD Codified Laws  43-32-27 (2021) (retaliatory conduct cause of action).\n*/\n\n% ----------------------------\n% Metadata (scenario context)\n% ----------------------------\nstate(south_dakota).\nfocus_year(2021).\n\n% ----------------------------\n% Simple date arithmetic helper\n% ----------------------------\n% We model \"dates\" as integers representing days on a timeline.\ndays_between(Day1, Day2, Days) :-\n    integer(Day1),\n    integer(Day2),\n    Days is abs(Day2 - Day1).\n\n% ============================================================\n% [1] SD Codified L  43-32-27 (2021) - Retaliatory conduct\n% ============================================================\n\n/*\n  Citation: SD Codified Laws  43-32-27 (2021)\n\n  A cause of action may arise for retaliation if, subsequent to a special event,\n  the lessor:\n    - increases rents above fair market value; OR\n    - decreases electric/gas/water/sewer services; OR\n    - gives notice to vacate when such notice is not based upon a breach of lease terms.\n\n  Special events (after which retaliation is measured):\n    (1) Lessor received written notice that lessee complained to code-enforcement agency\n        about a building/housing code violation materially affecting health and safety,\n        and the complaint is determined to be in good faith; OR\n    (2) Lessee gave written notice to lessor of a condition requiring repair under  43-32-9; OR\n    (3) Lessee organized or became a member of a tenant union/organization.\n\n  Defense to the cause of action:\n    It is a defense that the notice to vacate was given more than 180 days after the\n    special event.\n\n  Not retaliation:\n    Failure of lessor to renew any written lease prior to or upon expiration is not retaliation.\n*/\n\n% --- Special events under  43-32-27 ---\nstatute_sdcl_43_32_27_special_event(code_complaint_good_faith).\nstatute_sdcl_43_32_27_special_event(repair_notice_under_43_32_9).\nstatute_sdcl_43_32_27_special_event(tenant_union_membership_or_organizing).\n\n% --- Retaliatory acts under  43-32-27 ---\nstatute_sdcl_43_32_27_retaliatory_act(increase_rent_above_fair_market_value).\nstatute_sdcl_43_32_27_retaliatory_act(decrease_utility_services).\nstatute_sdcl_43_32_27_retaliatory_act(notice_to_vacate_not_based_on_breach).\n\n% --- Express carveout: failure to renew written lease is not retaliation ( 43-32-27) ---\nstatute_sdcl_43_32_27_not_retaliation(failure_to_renew_written_lease).\n\n% Determine whether a retaliation cause of action \"may arise\" on these abstracted inputs.\n% Deterministic: succeeds once if the elements are met.\nstatute_sdcl_43_32_27_retaliation_cause_may_arise(Act, SpecialEvent, ActDay, EventDay) :-\n    statute_sdcl_43_32_27_retaliatory_act(Act),\n    statute_sdcl_43_32_27_special_event(SpecialEvent),\n    integer(ActDay),\n    integer(EventDay),\n    ActDay >= EventDay,\n    Act \\= failure_to_renew_written_lease.\n\n% Defense: notice to vacate given more than 180 days after special event ( 43-32-27).\n% Deterministic: succeeds once if days difference > 180.\nstatute_sdcl_43_32_27_defense_notice_to_vacate_after_180_days(NoticeDay, EventDay) :-\n    integer(NoticeDay),\n    integer(EventDay),\n    days_between(NoticeDay, EventDay, Days),\n    Days > 180.\n\n% ============================================================\n% Scenario encoding (facts from the question)\n% ============================================================\n\n% Parties and case\neviction_action(case1).\ntenant(case1, tenant1).\nlandlord(case1, landlord1).\n\n% Key factual statement: tenant is a victim of domestic violence and wants to use that status as a defense.\ntenant_victim_of_domestic_violence(tenant1).\ntenant_asserts_defense(case1, domestic_violence_status).\n\n% Helper predicate summarizing the scenario in logic form.\nscenario_statement :-\n    eviction_action(Case),\n    tenant(Case, Tenant),\n    tenant_victim_of_domestic_violence(Tenant),\n    tenant_asserts_defense(Case, domestic_violence_status).\n\n% ============================================================\n% Reasoning layer: is DV status a defense/rebuttal in eviction?\n% ============================================================\n\n% We only treat something as a \"DV defense available\" if an encoded statute provides it.\n% With only SDCL  43-32-27 provided, there is no DV-based eviction defense stated.\n% This predicate is defined to avoid any undefined-predicate warnings.\nstatute_provides_domestic_violence_defense(_State, _Year) :-\n    fail.\n\ndv_status_is_a_recognized_eviction_defense_in_encoded_law :-\n    state(State),\n    focus_year(Year),\n    statute_provides_domestic_violence_defense(State, Year).\n\n% ============================================================\n% Required answer predicate\n% ============================================================\nhousing_answer(Result) :-\n    (   scenario_statement,\n        dv_status_is_a_recognized_eviction_defense_in_encoded_law\n    ->  Result = yes, !\n    ;   Result = no, !\n    ).\n\n% ============================================================\n% Main entrypoint (required)\n% ============================================================\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-0864",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "In an eviction action, can a tenant use their status as a victim of domestic violence as a rebuttal/defense?"
+  }
+}

@@ -1,0 +1,118 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "databricks",
+  "pipeline": "food_inspection_2",
+  "data_model": {
+    "models": [
+      {
+        "name": "employees",
+        "description": "Each record represents an employee.",
+        "columns": [
+          {
+            "name": "employee_id",
+            "description": "Unique identifier for the employee."
+          },
+          {
+            "name": "last_name",
+            "description": "Last name of the employee."
+          },
+          {
+            "name": "first_name",
+            "description": "First name of the employee."
+          },
+          {
+            "name": "num_inspections",
+            "description": "The number of inspections the employee has conducted, replace NULL values with 0."
+          },
+          {
+            "name": "is_under_Gregory_Cardenas",
+            "description": "Set to 1 if the employee is under the supervision of Gregory Cardenas, otherwise, set to 0"
+          },
+          {
+            "name": "total_amount_of_fine",
+            "description": "The total amount of fine given by the employee, replace NULL values with 0."
+          },
+          {
+            "name": "inspection_pass_rate",
+            "description": "The inspection pass rate of the employee. Pass rate is calculated as the number of inspections with results = 'Pass' divided by the total number of inspections."
+          },
+          {
+            "name": "is_Sanitarian_and_has_inspected_the_facility_Burbank",
+            "description": "Set to 1 if the employee is a Sanitarian and has inspected the facility whose DBA name is 'Burbank', otherwise, set to 0"
+          }
+        ]
+      },
+      {
+        "name": "businesses",
+        "description": "Each record represents a facility.",
+        "columns": [
+          {
+            "name": "license_no",
+            "description": "Unique identifier for the facility."
+          },
+          {
+            "name": "dba_name",
+            "description": "The dba name of the facility."
+          },
+          {
+            "name": "facility_type",
+            "description": "The type of facility."
+          },
+          {
+            "name": "at_least_5_failed_inspection_bewteen_20100101_20151231",
+            "description": "Set to 1 if the facility has at least 5 failed inspections between 1/1/2010 and 12/31/2015, otherwise, set to 0"
+          },
+          {
+            "name": "total_fine_2014",
+            "description": "The total fine the facility received in 2014, replace NULL values with 0."
+          },
+          {
+            "name": "per_failed_inspections",
+            "description": "The percentage of failed inspections the facility has."
+          },
+          {
+            "name": "has_paid_at_least_250_fine",
+            "description": "Set to 1 if the facility has paid at least $250 in fines for any single violation, otherwise, set to 0"
+          },
+          {
+            "name": "num_violations",
+            "description": "The number of violations the facility has, replace NULL values with 0."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    databricks_definition_id: 072d5540-f236-4294-ba7c-ade8fd918496\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://food-inspection-2-bucket/inspection_point.jsonl\n    sync_mode: full_refresh_append\n    table: inspection_point\nflat_files:\n- format: csv\n  path: https://drive.google.com/uc?export=download&id=1QWSQc1sIhcQn9RdWxzRIy5ydTvpfqlBY\n  sync_mode: full_refresh_append\n  table: employee\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: food_inspection_2\n    sync_mode: full_refresh_append\n    tables:\n    - establishment\n    - violation\npostgres:\n  config:\n    database: food_inspection_2\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - inspection\n    user: postgres\ndatabricks:\n  config:\n    database: <db_database>\n    hostname: <db_hostname>\n    client_id: <db_client_id>\n    secret: <db_secret>\n    schema: food_inspection_2\n    http_path: <db_path>\n",
+  "case_id": "B14-elt-0033",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "employees",
+        "columns": [
+          "employee_id",
+          "last_name",
+          "first_name",
+          "num_inspections",
+          "is_under_Gregory_Cardenas",
+          "total_amount_of_fine",
+          "inspection_pass_rate",
+          "is_Sanitarian_and_has_inspected_the_facility_Burbank"
+        ]
+      },
+      {
+        "name": "businesses",
+        "columns": [
+          "license_no",
+          "dba_name",
+          "facility_type",
+          "at_least_5_failed_inspection_bewteen_20100101_20151231",
+          "total_fine_2014",
+          "per_failed_inspections",
+          "has_paid_at_least_250_fine",
+          "num_violations"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+Is there a strong correlation (>0.5) between transaction amount and fraudulent disputes?

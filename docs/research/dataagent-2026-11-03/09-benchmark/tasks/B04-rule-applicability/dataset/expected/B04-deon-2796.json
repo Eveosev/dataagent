@@ -1,0 +1,28 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_64be73eb",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_year",
+    "rental_agreement",
+    "service",
+    "provision",
+    "provision_allows_eviction_because_tenant_contacted_service",
+    "statute_pr_1_481_authority_sets_requirements",
+    "legal_obligation_meet_authority_requirements",
+    "statute_prohibits_including_eviction_for_contact_clause",
+    "legal_prohibits_including_eviction_for_contact_clause",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    HousingQA\n    - State: Puerto Rico\n    - Focus year: 2021\n    Question: Does the law prohibit rental agreements from including a provision allowing\n              a landlord to evict a tenant because they contacted law enforcement services,\n              health services, or safety services?\n*/\n\n/* =========================\n   Scenario (facts)\n   ========================= */\n\nscenario_state(puerto_rico).\nscenario_year(2021).\n\nrental_agreement(lease_1).\n\n% The lease contains a provision allowing eviction because the tenant contacted services.\nservice(law_enforcement_services).\nservice(health_services).\nservice(safety_services).\n\nprovision(lease_1, provision_1).\nprovision_allows_eviction_because_tenant_contacted_service(provision_1, law_enforcement_services).\nprovision_allows_eviction_because_tenant_contacted_service(provision_1, health_services).\nprovision_allows_eviction_because_tenant_contacted_service(provision_1, safety_services).\n\n/* scenario_statement/0 succeeds when the question's factual statement is fully captured. */\nscenario_statement :-\n    scenario_state(puerto_rico),\n    scenario_year(2021),\n    rental_agreement(Lease),\n    provision(Lease, Prov),\n    provision_allows_eviction_because_tenant_contacted_service(Prov, law_enforcement_services),\n    provision_allows_eviction_because_tenant_contacted_service(Prov, health_services),\n    provision_allows_eviction_because_tenant_contacted_service(Prov, safety_services).\n\n/* =========================\n   Statutes (translated to logic)\n   ========================= */\n\n% --- PR Laws tit. 1,  481 (2020)\n% Spanish: \"El arrendatario de una finca de beneficio proporcional reunirá los requisitos que fije la Autoridad.\"\n% Encoding: A tenant of a \"finca de beneficio proporcional\" must meet the requirements set by the Authority.\n\nstatute_pr_1_481_authority_sets_requirements(puerto_rico, authority, tenant_of_finca_beneficio_proporcional).\n\nlegal_obligation_meet_authority_requirements(State, TenantType) :-\n    statute_pr_1_481_authority_sets_requirements(State, authority, TenantType).\n\n/* =========================\n   Reasoning: prohibition on lease clauses re eviction for contacting services?\n   ========================= */\n\n% This predicate represents any statutory prohibition (in the provided statutes)\n% against including a lease provision allowing eviction due to contacting services.\n% Under the provided statute set, there is no such prohibition.\nstatute_prohibits_including_eviction_for_contact_clause(_State, _Year) :-\n    fail.\n\nlegal_prohibits_including_eviction_for_contact_clause(State, Year) :-\n    statute_prohibits_including_eviction_for_contact_clause(State, Year).\n\n/* =========================\n   Answer\n   ========================= */\n\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_state(State),\n    scenario_year(Year),\n    legal_prohibits_including_eviction_for_contact_clause(State, Year),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-2796",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Does the law prohibit rental agreements from including a provision allowing a landlord to evict a tenant because they contacted law enforcement services, health services, or safety services?"
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "snowflake",
+  "pipeline": "computer_student",
+  "data_model": {
+    "models": [
+      {
+        "name": "courses",
+        "description": "Each record represents a course.",
+        "columns": [
+          {
+            "name": "course_id",
+            "description": "Unique identifier for the course"
+          },
+          {
+            "name": "courselevel",
+            "description": "Course level"
+          },
+          {
+            "name": "number_of_professors",
+            "description": "Number of professors teaching the course, replace NULL values with 0. Professor refers to professor = 1 in the person table."
+          },
+          {
+            "name": "number_of_professors_not_faculty",
+            "description": "Number of professors teaching the course who are not faculty, replace NULL values with 0. Faculty refers to hasposition <> '0' in the person table."
+          },
+          {
+            "name": "number_of_professors_faculty",
+            "description": "Number of professors teaching the course who are faculty, replace NULL values with 0. Faculty refers to hasposition <> '0' in the person table."
+          },
+          {
+            "name": "taught_by_more_than_4_people",
+            "description": "Set to 1 if the course is taught by more than 4 people, otherwise, set to 0"
+          },
+          {
+            "name": "taught_by_the_advisors",
+            "description": "Set to 1 if the course is taught by the advisors who gave advice to student, otherwise, set to 0"
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    snowflake_definition_id: 424892c4-daac-4491-b35d-c6688ba547ba\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - advisedBy\nflat_files:\n- format: csv\n  path: https://drive.google.com/uc?export=download&id=190CE7OuuQv_e1emImbz3ScRR46p-xKJl\n  sync_mode: full_refresh_append\n  table: course\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: computer_student\n    sync_mode: full_refresh_append\n    tables:\n    - person\npostgres:\n  config:\n    database: computer_student\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - taught_by\n    user: postgres\nsnowflake:\n  config:\n    database: computer_student\n    password: Snowflake@123\n    role: AIRBYTE_ROLE\n    schema: AIRBYTE_SCHEMA\n    username: AIRBYTE_USER\n    warehouse: AIRBYTE_WAREHOUSE\n",
+  "case_id": "B14-elt-0222",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "courses",
+        "columns": [
+          "course_id",
+          "courselevel",
+          "number_of_professors",
+          "number_of_professors_not_faculty",
+          "number_of_professors_faculty",
+          "taught_by_more_than_4_people",
+          "taught_by_the_advisors"
+        ]
+      }
+    ]
+  }
+}

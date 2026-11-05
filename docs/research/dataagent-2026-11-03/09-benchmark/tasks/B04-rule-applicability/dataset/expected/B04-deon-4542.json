@@ -1,0 +1,36 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_0f6bea5b",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "state",
+    "focus_year",
+    "statute_id",
+    "legal_term_used_in_statute",
+    "statute_34_18_49_requires_payment_on_stay",
+    "action_for_recovery_of_real_property",
+    "stay_of_execution",
+    "tenant_of_premises",
+    "landlord_of_premises",
+    "rent_due_as_if_no_action_pending",
+    "statute_34_18_49_acceptance_not_waiver",
+    "stay_payment_accepted",
+    "statute_34_18_49_receipt_not_reinstate_tenancy",
+    "stay_payment_received_for_premises",
+    "asked_about_term",
+    "proposed_referent",
+    "statute_uses_term",
+    "term_used_to_refer_in_statutes",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: Rhode Island\n    Focus year: 2021\n\n    Question:\n    \"Is the term 'Eviction order' used to refer to the order from the court to the authorities\n     to remove a tenant?\"\n*/\n\n/* -------------------- Basic metadata -------------------- */\n\nstate(rhode_island).\nfocus_year(2021).\n\n/* -------------------- Statute translation --------------------\n   RI Gen L  34-18-49 (2021) - Payment of rent on stay of execution.\n\n   Key elements encoded:\n   - Applies \"Whenever, in any action for the recovery of real property, the issuance of an\n     execution, or the service of an execution, is stayed...\"\n   - Condition: tenant must pay sums equal to rent, due as rent would be due.\n   - Acceptance of sums is not a waiver of landlord's right to obtain possession.\n   - Receipt is not deemed to reinstate tenancy.\n*/\n\n/* We represent the statute as an identifier. */\nstatute_id(ri_gen_l_34_18_49_2021).\n\n/* Terms used in the statutory text (for this question's terminology analysis). */\nlegal_term_used_in_statute(ri_gen_l_34_18_49_2021, execution).\n\n/* ---- Operative rule: rent must be paid during a stay of execution. ---- */\n/* Citation: RI Gen L  34-18-49 (2021) */\nstatute_34_18_49_requires_payment_on_stay(Tenant, Landlord, Premises, Amount, DueTime) :-\n    action_for_recovery_of_real_property(Action, Premises),\n    stay_of_execution(Action),                      % issuance or service stayed by court or law\n    tenant_of_premises(Tenant, Premises),\n    landlord_of_premises(Landlord, Premises),\n    rent_due_as_if_no_action_pending(Tenant, Premises, Amount, DueTime).\n\n/* ---- Operative rule: acceptance is not a waiver of right to obtain possession. ---- */\n/* Citation: RI Gen L  34-18-49 (2021) */\nstatute_34_18_49_acceptance_not_waiver(Landlord, Premises) :-\n    stay_payment_accepted(Landlord, Premises).\n\n/* ---- Operative rule: receipt does not reinstate tenancy. ---- */\n/* Citation: RI Gen L  34-18-49 (2021) */\nstatute_34_18_49_receipt_not_reinstate_tenancy(Tenant, Premises) :-\n    stay_payment_received_for_premises(Tenant, Premises).\n\n/* -------------------- Scenario (question statement) -------------------- */\n/* We encode the query's factual/semantic claim as a scenario. */\n\nasked_about_term(eviction_order).\nproposed_referent(order_from_court_to_authorities_to_remove_tenant).\n\n/* Helper predicate summarizing the scenario in logic form. */\nscenario_statement :-\n    asked_about_term(eviction_order),\n    proposed_referent(order_from_court_to_authorities_to_remove_tenant).\n\n/* -------------------- Additional scenario facts (not required for the term question)\n   Included to demonstrate the statute translation is runnable/grounded.\n*/\n\naction_for_recovery_of_real_property(action1, premises1).\nstay_of_execution(action1). % stayed by court order or operation of law\ntenant_of_premises(tenant1, premises1).\nlandlord_of_premises(landlord1, premises1).\nrent_due_as_if_no_action_pending(tenant1, premises1, 1200, due_on_first_of_month).\n\n/* Example facts for acceptance/receipt consequences */\nstay_payment_accepted(landlord1, premises1).\nstay_payment_received_for_premises(tenant1, premises1).\n\n/* -------------------- Reasoning for the question -------------------- */\n\n/* The question is about whether the statute uses the *term* \"eviction order\" for that referent.\n   We treat \"used to refer to\" as requiring that the term appears in the statute's terminology. */\nstatute_uses_term(eviction_order) :-\n    statute_id(S),\n    legal_term_used_in_statute(S, eviction_order).\n\n/* If the statute uses the term, then (for this program) we'd treat it as used to refer to the\n   proposed referent; but since the provided statute does not use \"eviction order\" at all, this fails. */\nterm_used_to_refer_in_statutes(Term, Referent) :-\n    statute_uses_term(Term),\n    Referent = order_from_court_to_authorities_to_remove_tenant.\n\n/* -------------------- Final answer predicate -------------------- */\n\nhousing_answer(yes) :-\n    scenario_statement,\n    term_used_to_refer_in_statutes(eviction_order, order_from_court_to_authorities_to_remove_tenant),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n/* -------------------- Main entrypoint -------------------- */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-4542",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is the term 'Eviction order' used to refer to the order from the court to the authorities to remove a tenant?"
+  }
+}

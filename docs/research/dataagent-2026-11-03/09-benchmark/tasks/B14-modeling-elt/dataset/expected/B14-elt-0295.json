@@ -1,0 +1,67 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "snowflake",
+  "pipeline": "works_cycles",
+  "data_model": {
+    "models": [
+      {
+        "name": "products",
+        "description": "Each record represents a product.",
+        "columns": [
+          {
+            "name": "product_id",
+            "description": "The unique id number identifying the product."
+          },
+          {
+            "name": "product_name",
+            "description": "Name of the product."
+          },
+          {
+            "name": "product_number",
+            "description": "The unique product identification number."
+          },
+          {
+            "name": "has_over_1_price_changes",
+            "description": "Set to 1 if the product has more than 1 price changes, 0 otherwise."
+          },
+          {
+            "name": "does_not_have_work_order",
+            "description": "Set to 1 if the product does not have a work order, 0 otherwise."
+          },
+          {
+            "name": "num_reviews",
+            "description": "The number of reviews the product has received, replace null values with 0."
+          },
+          {
+            "name": "sold_by_over_2_vendors",
+            "description": "Set to 1 if the product is sold by more than 2 vendors, 0 otherwise."
+          },
+          {
+            "name": "num_orders",
+            "description": "The number of orders the product has, replace null values with 0."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    snowflake_definition_id: 424892c4-daac-4491-b35d-c6688ba547ba\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://works-cycles-bucket/ContactType.jsonl\n    sync_mode: full_refresh_append\n    table: ContactType\n  - path: s3://works-cycles-bucket/Culture.csv\n    sync_mode: full_refresh_append\n    table: Culture\n  - path: s3://works-cycles-bucket/Location.jsonl\n    sync_mode: full_refresh_append\n    table: Location\n  - path: s3://works-cycles-bucket/PhoneNumberType.jsonl\n    sync_mode: full_refresh_append\n    table: PhoneNumberType\n  - path: s3://works-cycles-bucket/SalesTerritory.jsonl\n    sync_mode: full_refresh_append\n    table: SalesTerritory\n  - path: s3://works-cycles-bucket/SalesTerritoryHistory.jsonl\n    sync_mode: full_refresh_append\n    table: SalesTerritoryHistory\n  - path: s3://works-cycles-bucket/Shift.csv\n    sync_mode: full_refresh_append\n    table: Shift\n  - path: s3://works-cycles-bucket/ShipMethod.jsonl\n    sync_mode: full_refresh_append\n    table: ShipMethod\n  - path: s3://works-cycles-bucket/ShoppingCartItem.csv\n    sync_mode: full_refresh_append\n    table: ShoppingCartItem\n  - path: s3://works-cycles-bucket/TransactionHistoryArchive.csv\n    sync_mode: full_refresh_append\n    table: TransactionHistoryArchive\n  - path: s3://works-cycles-bucket/UnitMeasure.csv\n    sync_mode: full_refresh_append\n    table: UnitMeasure\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - CountryRegion\n    - CountryRegionCurrency\n    - Currency\n    - CurrencyRate\n    - ProductReview\n    - SalesOrderDetail\n    - SalesOrderHeader\n    - SalesOrderHeaderSalesReason\n    - SalesTaxRate\n    - SpecialOffer\n    - SpecialOfferProduct\n    - StateProvince\n    - Store\n    - Vendor\n    - WorkOrder\n    - WorkOrderRouting\nflat_files:\n- format: csv\n  path: https://drive.google.com/uc?export=download&id=1P0wVOLyJbta_jeYq_Yy3NX_WIGc042v8\n  sync_mode: full_refresh_append\n  table: AddressType\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=1iR1yCXvgH5nnaa5H4IFiaE01grbYsL-6\n  sync_mode: full_refresh_append\n  table: Department\n- format: parquet\n  path: https://drive.google.com/uc?export=download&id=1oOPVAKDGcyfHw4jySfxR5dlgESrFkXyr\n  sync_mode: full_refresh_append\n  table: Document\n- format: csv\n  path: https://drive.google.com/uc?export=download&id=1e940xr9KPf79x6L8YBF1sUsYuNfTbwCX\n  sync_mode: full_refresh_append\n  table: ProductCategory\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=19eGUWiRIKsujuOqKV2-RSVPSKexzx-xK\n  sync_mode: full_refresh_append\n  table: SalesReason\n- format: csv\n  path: https://drive.google.com/uc?export=download&id=1hcCD89pG4xoHESebsBLjG-i319RDK1gd\n  sync_mode: full_refresh_append\n  table: ScrapReason\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: work_cycles\n    sync_mode: full_refresh_append\n    tables:\n    - Address\n    - BusinessEntity\n    - BusinessEntityAddress\n    - BusinessEntityContact\n    - Employee\n    - EmployeeDepartmentHistory\n    - EmployeePayHistory\n    - JobCandidate\n    - Person\n    - Product\n    - ProductDescription\n    - ProductDocument\n    - ProductModel\n    - ProductPhoto\n    - ProductProductPhoto\n    - ProductSubcategory\n    - SalesPerson\npostgres:\n  config:\n    database: work_cycles\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - bill_of_materials\n    - credit_card\n    - email_address\n    - password\n    - person_credit_card\n    - product_cost_history\n    - product_inventory\n    - product_list_price_history\n    - product_model_product_description_culture\n    - product_vendor\n    - purchase_order_detail\n    - purchase_order_header\n    - sales_person_quota_history\n    - transaction_history\n    user: postgres\nsnowflake:\n  config:\n    database: work_cycles\n    password: Snowflake@123\n    role: AIRBYTE_ROLE\n    schema: AIRBYTE_SCHEMA\n    username: AIRBYTE_USER\n    warehouse: AIRBYTE_WAREHOUSE",
+  "case_id": "B14-elt-0295",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "products",
+        "columns": [
+          "product_id",
+          "product_name",
+          "product_number",
+          "has_over_1_price_changes",
+          "does_not_have_work_order",
+          "num_reviews",
+          "sold_by_over_2_vendors",
+          "num_orders"
+        ]
+      }
+    ]
+  }
+}

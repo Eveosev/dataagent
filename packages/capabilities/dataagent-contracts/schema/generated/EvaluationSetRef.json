@@ -1,0 +1,75 @@
+{
+  "$comment": "generated from dataagent_contracts.core:EvaluationSetRef; do not edit",
+  "$defs": {
+    "SplitRole": {
+      "enum": [
+        "development",
+        "regression",
+        "unseen_acceptance"
+      ],
+      "title": "SplitRole",
+      "type": "string"
+    }
+  },
+  "$id": "dataagent-contracts/0.1/core/EvaluationSetRef",
+  "additionalProperties": false,
+  "properties": {
+    "counts": {
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "propertyNames": {
+        "$ref": "#/$defs/SplitRole"
+      },
+      "title": "Counts",
+      "type": "object"
+    },
+    "exposure_ledger_ref": {
+      "minLength": 1,
+      "title": "Exposure Ledger Ref",
+      "type": "string"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "frozen": {
+      "title": "Frozen",
+      "type": "boolean"
+    },
+    "id": {
+      "minLength": 1,
+      "title": "Id",
+      "type": "string"
+    },
+    "revision": {
+      "minLength": 1,
+      "title": "Revision",
+      "type": "string"
+    },
+    "split_manifest_ref": {
+      "minLength": 1,
+      "title": "Split Manifest Ref",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "revision",
+    "frozen",
+    "split_manifest_ref",
+    "exposure_ledger_ref"
+  ],
+  "title": "EvaluationSetRef",
+  "type": "object"
+}

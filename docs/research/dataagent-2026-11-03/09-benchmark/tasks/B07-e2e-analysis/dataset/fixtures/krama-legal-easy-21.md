@@ -1,0 +1,1 @@
+What is the total number of identity theft reporters in Alabama in 2024?

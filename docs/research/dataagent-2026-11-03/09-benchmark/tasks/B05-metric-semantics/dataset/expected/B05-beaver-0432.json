@@ -1,0 +1,27 @@
+{
+  "source": "beaverbench/beaver-query",
+  "id": "dw_real_40",
+  "db": "dw",
+  "question": "Retrieve the titles of subjects offered in the summer term along with their descriptions, responsible faculty names, email address, building name, room name, floor level, building street address, and the total number of types of courses per departmnet.",
+  "sql": "SELECT ccso.SUBJECT_TITLE, ccso.SUBJECT_DESCRIPTION, ccso.RESPONSIBLE_FACULTY_NAME, ed.EMAIL_ADDRESS, b.BUILDING_NAME, fr.ROOM_FULL_NAME, ff.LEVEL_ID, b.BUILDING_STREET_ADDRESS, (SELECT COUNT(DISTINCT ccso2.SUBJECT_ID) FROM COURSE_CATALOG_SUBJECT_OFFERED ccso2 WHERE ccso2.DEPARTMENT_CODE = ccso.DEPARTMENT_CODE) AS Total_Courses FROM COURSE_CATALOG_SUBJECT_OFFERED ccso JOIN EMPLOYEE_DIRECTORY ed ON ccso.RESPONSIBLE_FACULTY_MIT_ID = ed.MIT_ID JOIN ACADEMIC_TERMS at ON ccso.TERM_CODE = at.TERM_CODE JOIN FAC_ROOMS fr ON ccso.MEET_PLACE = fr.FAC_ROOM_KEY JOIN FAC_FLOOR ff ON ff.FLOOR_KEY = fr.FLOOR_KEY JOIN BUILDINGS b ON fr.BUILDING_KEY = b.BUILDING_KEY JOIN FAC_BUILDING_ADDRESS fba ON fba.BUILDING_KEY = fr.BUILDING_KEY WHERE at.TERM_CODE LIKE '%SU' AND fba.ADDRESS_PURPOSE = 'STREET';",
+  "tables": "[\"COURSE_CATALOG_SUBJECT_OFFERED\", \"EMPLOYEE_DIRECTORY\", \"ACADEMIC_TERMS\", \"FAC_ROOMS\", \"FAC_FLOOR\", \"BUILDINGS\", \"FAC_BUILDING_ADDRESS\"]",
+  "join_keys": "[[\"COURSE_CATALOG_SUBJECT_OFFERED.RESPONSIBLE_FACULTY_MIT_ID\", \"EMPLOYEE_DIRECTORY.MIT_ID\"], [\"ACADEMIC_TERMS.TERM_CODE\", \"COURSE_CATALOG_SUBJECT_OFFERED.TERM_CODE\"], [\"COURSE_CATALOG_SUBJECT_OFFERED.MEET_PLACE\", \"FAC_ROOMS.FAC_ROOM_KEY\"], [\"FAC_ROOMS.FLOOR_KEY\", \"FAC_FLOOR.FLOOR_KEY\"], [\"FAC_ROOMS.BUILDING_KEY\", \"BUILDINGS.BUILDING_KEY\"], [\"FAC_ROOMS.BUILDING_KEY\", \"FAC_BUILDING_ADDRESS.BUILDING_KEY\"]]",
+  "column_mapping": "{\"titles of subjects\": [\"COURSE_CATALOG_SUBJECT_OFFERED.SUBJECT_TITLE\"], \"summer term\": [\"ACADEMIC_TERMS.TERM_CODE\"], \"descriptions\": [\"COURSE_CATALOG_SUBJECT_OFFERED.SUBJECT_DESCRIPTION\"], \"responsible faculty names\": [\"COURSE_CATALOG_SUBJECT_OFFERED.RESPONSIBLE_FACULTY_NAME\"], \"email address\": [\"EMPLOYEE_DIRECTORY.EMAIL_ADDRESS\"], \"building name\": [\"BUILDINGS.BUILDING_NAME\"], \"room name\": [\"FAC_ROOMS.ROOM_FULL_NAME\"], \"floor level\": [\"FAC_FLOOR.LEVEL_ID\"], \"building street address\": [\"BUILDINGS.BUILDING_STREET_ADDRESS\", \"FAC_BUILDING_ADDRESS.ADDRESS_PURPOSE\"], \"courses\": [\"COURSE_CATALOG_SUBJECT_OFFERED.SUBJECT_ID\"], \"department\": [\"COURSE_CATALOG_SUBJECT_OFFERED.DEPARTMENT_CODE\"]}",
+  "domain_knowledge": "[\"\\\"TABLE.TERM_CODE\\\" is formatted as \\\"YYYYTT\\\" where \\\"YYYY\\\" is the year and \\\"TT\\\" is the term. Terms can be \\\"FA\\\", \\\"JA\\\", \\\"SP\\\", and \\\"SU\\\" for fall, IAP, spring, and summer\", \"\\\"street address\\\" is predicated by \\\"TABLE.ADDRESS_PURPOSE = 'STREET'\\\"\"]",
+  "sub_questions": "[]",
+  "sub_sqls": "[]",
+  "category": "real",
+  "detailed_category": "real",
+  "case_id": "B05-beaver-0432",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT ccso.SUBJECT_TITLE, ccso.SUBJECT_DESCRIPTION, ccso.RESPONSIBLE_FACULTY_NAME, ed.EMAIL_ADDRESS, b.BUILDING_NAME, fr.ROOM_FULL_NAME, ff.LEVEL_ID, b.BUILDING_STREET_ADDRESS, (SELECT COUNT(DISTINCT ccso2.SUBJECT_ID) FROM COURSE_CATALOG_SUBJECT_OFFERED ccso2 WHERE ccso2.DEPARTMENT_CODE = ccso.DEPARTMENT_CODE) AS Total_Courses FROM COURSE_CATALOG_SUBJECT_OFFERED ccso JOIN EMPLOYEE_DIRECTORY ed ON ccso.RESPONSIBLE_FACULTY_MIT_ID = ed.MIT_ID JOIN ACADEMIC_TERMS at ON ccso.TERM_CODE = at.TERM_CODE JOIN FAC_ROOMS fr ON ccso.MEET_PLACE = fr.FAC_ROOM_KEY JOIN FAC_FLOOR ff ON ff.FLOOR_KEY = fr.FLOOR_KEY JOIN BUILDINGS b ON fr.BUILDING_KEY = b.BUILDING_KEY JOIN FAC_BUILDING_ADDRESS fba ON fba.BUILDING_KEY = fr.BUILDING_KEY WHERE at.TERM_CODE LIKE '%SU' AND fba.ADDRESS_PURPOSE = 'STREET';",
+    "sub_sqls": "[]",
+    "db": "dw",
+    "tables": "[\"COURSE_CATALOG_SUBJECT_OFFERED\", \"EMPLOYEE_DIRECTORY\", \"ACADEMIC_TERMS\", \"FAC_ROOMS\", \"FAC_FLOOR\", \"BUILDINGS\", \"FAC_BUILDING_ADDRESS\"]",
+    "join_keys": "[[\"COURSE_CATALOG_SUBJECT_OFFERED.RESPONSIBLE_FACULTY_MIT_ID\", \"EMPLOYEE_DIRECTORY.MIT_ID\"], [\"ACADEMIC_TERMS.TERM_CODE\", \"COURSE_CATALOG_SUBJECT_OFFERED.TERM_CODE\"], [\"COURSE_CATALOG_SUBJECT_OFFERED.MEET_PLACE\", \"FAC_ROOMS.FAC_ROOM_KEY\"], [\"FAC_ROOMS.FLOOR_KEY\", \"FAC_FLOOR.FLOOR_KEY\"], [\"FAC_ROOMS.BUILDING_KEY\", \"BUILDINGS.BUILDING_KEY\"], [\"FAC_ROOMS.BUILDING_KEY\", \"FAC_BUILDING_ADDRESS.BUILDING_KEY\"]]",
+    "column_mapping": "{\"titles of subjects\": [\"COURSE_CATALOG_SUBJECT_OFFERED.SUBJECT_TITLE\"], \"summer term\": [\"ACADEMIC_TERMS.TERM_CODE\"], \"descriptions\": [\"COURSE_CATALOG_SUBJECT_OFFERED.SUBJECT_DESCRIPTION\"], \"responsible faculty names\": [\"COURSE_CATALOG_SUBJECT_OFFERED.RESPONSIBLE_FACULTY_NAME\"], \"email address\": [\"EMPLOYEE_DIRECTORY.EMAIL_ADDRESS\"], \"building name\": [\"BUILDINGS.BUILDING_NAME\"], \"room name\": [\"FAC_ROOMS.ROOM_FULL_NAME\"], \"floor level\": [\"FAC_FLOOR.LEVEL_ID\"], \"building street address\": [\"BUILDINGS.BUILDING_STREET_ADDRESS\", \"FAC_BUILDING_ADDRESS.ADDRESS_PURPOSE\"], \"courses\": [\"COURSE_CATALOG_SUBJECT_OFFERED.SUBJECT_ID\"], \"department\": [\"COURSE_CATALOG_SUBJECT_OFFERED.DEPARTMENT_CODE\"]}",
+    "category": "real",
+    "db_archive": "bench://beaver-table/beaver_db.zip"
+  }
+}

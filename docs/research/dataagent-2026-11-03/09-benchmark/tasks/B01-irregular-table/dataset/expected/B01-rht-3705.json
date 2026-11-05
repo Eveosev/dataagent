@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 2069,
+  "table": "society-table13",
+  "structure": "ColumnHeaderMerge",
+  "question_type": "Fact Checking",
+  "sub_type": "Inference-based Fact Checking",
+  "answer": "No",
+  "cot": [
+    {
+      "Planning": "First, we need to locate the total number of SSI recipients in California and New York from the “Total” column."
+    },
+    {
+      "Planning": "Next, we calculate twice the number of recipients in New York."
+    },
+    {
+      "Planning": "Finally, we compare the number of recipients in California with twice the number of recipients in New York."
+    }
+  ],
+  "case_id": "B01-rht-3705",
+  "expected": {
+    "kind": "answer",
+    "question": "Is the total number of SSI recipients in California more than twice the number of recipients in New York?",
+    "answer": "No"
+  }
+}

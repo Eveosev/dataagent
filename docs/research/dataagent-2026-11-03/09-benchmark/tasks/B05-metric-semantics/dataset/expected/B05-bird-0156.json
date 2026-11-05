@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 155,
+  "question": "I want to gauge how spread out our high-value fuelling activity in the Czech Republic was over the recorded window. How many whole minutes elapsed from the first to the last fuel transaction at gas stations in the Czech Republic with a price over 1000? Please round down to whole minutes.",
+  "evidence": "Czech Republic means the gas station is in the CZE country.",
+  "gold_sql": "SELECT (strftime('%s', MAX(Date || ' ' || Time)) - strftime('%s', MIN(Date || ' ' || Time))) / (5 * 13 - 5) AS minutes FROM transactions_1k AS T1 INNER JOIN gasstations AS T2 ON T1.GasStationID = T2.GasStationID WHERE T2.Country = 'CZE' AND T1.Price > 1000",
+  "db_id": "debit_card_specializing",
+  "case_id": "B05-bird-0156",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT (strftime('%s', MAX(Date || ' ' || Time)) - strftime('%s', MIN(Date || ' ' || Time))) / (5 * 13 - 5) AS minutes FROM transactions_1k AS T1 INNER JOIN gasstations AS T2 ON T1.GasStationID = T2.GasStationID WHERE T2.Country = 'CZE' AND T1.Price > 1000",
+    "db_id": "debit_card_specializing",
+    "evidence": "Czech Republic means the gas station is in the CZE country."
+  }
+}

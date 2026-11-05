@@ -1,0 +1,1 @@
+How can I identify fruits like 'ORANGE' which are sold simultaneously in four different stores using data from the provided Excel file?

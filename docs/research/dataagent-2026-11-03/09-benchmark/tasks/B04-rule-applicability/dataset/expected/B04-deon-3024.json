@@ -1,0 +1,33 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_cfde357d",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "state",
+    "focus_year",
+    "md_role",
+    "md_actor",
+    "md_8_401_secretary_may_adopt_regulations",
+    "md_8_401_governor_approved",
+    "md_8_401_payment_requires_payroll_authorization",
+    "payroll_authorization",
+    "md_8_401_payment_requires_principal_unit_head_certification",
+    "principal_unit_head",
+    "payroll_certification",
+    "md_8_401_officer_may_pay_wages",
+    "legal_term_used_to_refer_to",
+    "asked_term",
+    "proposed_meaning",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/* Self-contained SWI-Prolog program\n   HousingQA Sample:\n   - state: Maryland\n   - focus_year: 2021\n*/\n\n/* ------------------------------\n   Basic context facts (scenario metadata)\n-------------------------------- */\nstate(maryland).\nfocus_year(2021).\n\n/* ------------------------------\n   STATUTE TRANSLATION\n   MD. State Personnel and Pensions Code Ann.  8-401 (2021)\n\n   NOTE: The provided statute is about payroll authorization/certification\n   for State employees; it does not define or use eviction terminology such as\n   \"summary order for removal\".\n-------------------------------- */\n\n/* Roles used by the statute */\nmd_role(governor).\nmd_role(secretary).\nmd_role(state_officer).\nmd_role(principal_unit_head).\n\n/* Example statutory actors (placeholders to make the statute encoding runnable) */\nmd_actor(governor_of_maryland, governor).\nmd_actor(secretary_of_budget_and_management, secretary).\n\n/*\n  md_8_401_secretary_may_adopt_regulations(+Secretary)\n  Citation: MD SPP  8-401 (2021) (\"Subject to the approval of the Governor, the Secretary may adopt regulations ...\")\n*/\nmd_8_401_secretary_may_adopt_regulations(Secretary) :-\n    md_actor(Secretary, secretary),\n    md_8_401_governor_approved(adopt_regulations_under_8_401),\n    !.\n\n/* Governor approval is a prerequisite in  8-401; we encode it as a fact that may or may not hold. */\nmd_8_401_governor_approved(adopt_regulations_under_8_401) :-\n    % Not asserted in this scenario; left as a rule that fails by default.\n    fail.\n\n/*\n  md_8_401_payment_requires_payroll_authorization(+Officer, +Employee, +Amount, +Services)\n  Citation: MD SPP  8-401(1)(i)-(iii)\n*/\nmd_8_401_payment_requires_payroll_authorization(Officer, Employee, Amount, Services) :-\n    payroll_authorization(secretary_of_budget_and_management, Officer, Employee, Amount, Services),\n    !.\n\n/*\n  md_8_401_payment_requires_principal_unit_head_certification(+PrincipalUnit, +PayPeriod, +Employee)\n  Citation: MD SPP  8-401(2)\n*/\nmd_8_401_payment_requires_principal_unit_head_certification(PrincipalUnit, PayPeriod, Employee) :-\n    principal_unit_head(Head, PrincipalUnit),\n    payroll_certification(Head, PrincipalUnit, PayPeriod, Employee),\n    !.\n\n/*\n  md_8_401_officer_may_pay_wages(+Officer, +Employee, +Amount, +Services, +PrincipalUnit, +PayPeriod)\n  Citation: MD SPP  8-401 (overall rule: officer may not pay unless both (1) authorization and (2) certification)\n*/\nmd_8_401_officer_may_pay_wages(Officer, Employee, Amount, Services, PrincipalUnit, PayPeriod) :-\n    md_8_401_payment_requires_payroll_authorization(Officer, Employee, Amount, Services),\n    md_8_401_payment_requires_principal_unit_head_certification(PrincipalUnit, PayPeriod, Employee),\n    !.\n\n/* --- Data predicates that the statute rule could consult (none are provided by the question) --- */\nprincipal_unit_head(_Head, _PrincipalUnit) :- fail.\npayroll_authorization(_Secretary, _Officer, _Employee, _Amount, _Services) :- fail.\npayroll_certification(_Head, _PrincipalUnit, _PayPeriod, _Employee) :- fail.\n\n/* ------------------------------\n   TERM-USAGE/DEFINITION LAYER (statutory terminology)\n\n   We model whether a specific term is used/defined by the provided statutes.\n   Since MD SPP  8-401 does not mention eviction, no such mapping is asserted.\n-------------------------------- */\n\n/*\n  legal_term_used_to_refer_to(+Term, +Meaning)\n  Succeeds only if the provided statutes (as encoded above) use Term to refer to Meaning.\n*/\nlegal_term_used_to_refer_to(_Term, _Meaning) :-\n    % No term-to-meaning mappings are created from MD SPP  8-401.\n    fail.\n\n/* ------------------------------\n   SCENARIO TRANSLATION (facts from the question)\n-------------------------------- */\n\nasked_term(summary_order_for_removal).\nproposed_meaning(order_from_court_to_authorities_to_remove_tenant).\n\n/*\n  scenario_statement/0\n  Succeeds when the question's factual statement (what is being asked about) is present.\n*/\nscenario_statement :-\n    asked_term(summary_order_for_removal),\n    proposed_meaning(order_from_court_to_authorities_to_remove_tenant),\n    !.\n\n/* ------------------------------\n   REASONING: apply statutes to scenario\n-------------------------------- */\n\n/*\n  term_meaning_supported_by_statute/0\n  True if, given the encoded statutes, the term is used to refer to the proposed meaning.\n*/\nterm_meaning_supported_by_statute :-\n    scenario_statement,\n    asked_term(Term),\n    proposed_meaning(Meaning),\n    legal_term_used_to_refer_to(Term, Meaning),\n    !.\n\n/* ------------------------------\n   ANSWER\n-------------------------------- */\n\nhousing_answer(yes) :-\n    term_meaning_supported_by_statute,\n    !.\nhousing_answer(no) :-\n    !.\n\n/* ------------------------------\n   Main entrypoint (required)\n-------------------------------- */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-3024",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is the term 'Summary order for removal' used to refer to the order from the court to the authorities to remove a tenant?"
+  }
+}

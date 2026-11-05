@@ -1,0 +1,1 @@
+Could you provide the percentage of participants for standard acne, atopic dermatitis, psoriasis, and vitiligo defined by the International Classification of Diseases 10-CM(ICD-10-CM), including their subcategories? The ICD-10 codes are: Acne (L70), Atopic dermatitis (L20), Psoriasis (L40), and Vitiligo (L80). 

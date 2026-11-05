@@ -1,0 +1,516 @@
+{
+  "source": "nielsr/funsd",
+  "split": "train",
+  "id": "123",
+  "entities": [
+    {
+      "label": "QUESTION",
+      "text": "DATE",
+      "box": [
+        191,
+        270,
+        259,
+        290
+      ]
+    },
+    {
+      "label": "QUESTION",
+      "text": "TIME",
+      "box": [
+        442,
+        271,
+        495,
+        290
+      ]
+    },
+    {
+      "label": "QUESTION",
+      "text": "NAME:",
+      "box": [
+        196,
+        380,
+        264,
+        399
+      ]
+    },
+    {
+      "label": "QUESTION",
+      "text": "OFFICE:",
+      "box": [
+        194,
+        406,
+        280,
+        429
+      ]
+    },
+    {
+      "label": "QUESTION",
+      "text": "NAME:",
+      "box": [
+        191,
+        516,
+        265,
+        536
+      ]
+    },
+    {
+      "label": "QUESTION",
+      "text": "OFFICE:",
+      "box": [
+        191,
+        540,
+        275,
+        564
+      ]
+    },
+    {
+      "label": "ANSWER",
+      "text": "11/4/93",
+      "box": [
+        288,
+        273,
+        362,
+        286
+      ]
+    },
+    {
+      "label": "QUESTION",
+      "text": "COMMENTS:",
+      "box": [
+        190,
+        611,
+        326,
+        627
+      ]
+    },
+    {
+      "label": "QUESTION",
+      "text": "cc:",
+      "box": [
+        350,
+        786,
+        378,
+        799
+      ]
+    },
+    {
+      "label": "HEADER",
+      "text": "Lorillard TOBACCO COMPANY",
+      "box": [
+        147,
+        84,
+        429,
+        152
+      ]
+    },
+    {
+      "label": "HEADER",
+      "text": "FACSIMILE COVER PAGE",
+      "box": [
+        390,
+        214,
+        643,
+        235
+      ]
+    },
+    {
+      "label": "ANSWER",
+      "text": "3:28 CST",
+      "box": [
+        525,
+        273,
+        606,
+        286
+      ]
+    },
+    {
+      "label": "HEADER",
+      "text": "PLEASE TRANSMIT THIS DOCUMENT TO:",
+      "box": [
+        191,
+        337,
+        622,
+        356
+      ]
+    },
+    {
+      "label": "ANSWER",
+      "text": "Mr. A. J. Giacoio",
+      "box": [
+        305,
+        382,
+        481,
+        398
+      ]
+    },
+    {
+      "label": "ANSWER",
+      "text": "New York- Sales Planning",
+      "box": [
+        305,
+        406,
+        562,
+        425
+      ]
+    },
+    {
+      "label": "ANSWER",
+      "text": "212 545- 3299",
+      "box": [
+        448,
+        436,
+        583,
+        455
+      ]
+    },
+    {
+      "label": "QUESTION",
+      "text": "FAX PHONE NUMBER:",
+      "box": [
+        195,
+        434,
+        420,
+        454
+      ]
+    },
+    {
+      "label": "HEADER",
+      "text": "THIS DOCUMENT IS FROM:",
+      "box": [
+        196,
+        476,
+        472,
+        493
+      ]
+    },
+    {
+      "label": "ANSWER",
+      "text": "R F",
+      "box": [
+        310,
+        523,
+        357,
+        534
+      ]
+    },
+    {
+      "label": "ANSWER",
+      "text": "Oklahoma City. OK",
+      "box": [
+        277,
+        544,
+        470,
+        562
+      ]
+    },
+    {
+      "label": "QUESTION",
+      "text": "FAX PHONE NUMBER:",
+      "box": [
+        189,
+        571,
+        423,
+        590
+      ]
+    },
+    {
+      "label": "ANSWER",
+      "text": "(400) 840- 0639",
+      "box": [
+        428,
+        572,
+        579,
+        591
+      ]
+    },
+    {
+      "label": "ANSWER",
+      "text": "The attached Competitive information was secured in Oklahoma today. If you should have any questions.",
+      "box": [
+        350,
+        611,
+        722,
+        689
+      ]
+    },
+    {
+      "label": "ANSWER",
+      "text": "Mr. R. B. Spell",
+      "box": [
+        388,
+        783,
+        544,
+        798
+      ]
+    },
+    {
+      "label": "ANSWER",
+      "text": "Mr. S. L. Enloe",
+      "box": [
+        394,
+        798,
+        545,
+        812
+      ]
+    }
+  ],
+  "case_id": "B03-funsd-0777",
+  "expected": {
+    "kind": "entities",
+    "entities": [
+      {
+        "label": "QUESTION",
+        "text": "DATE",
+        "box": [
+          191,
+          270,
+          259,
+          290
+        ]
+      },
+      {
+        "label": "QUESTION",
+        "text": "TIME",
+        "box": [
+          442,
+          271,
+          495,
+          290
+        ]
+      },
+      {
+        "label": "QUESTION",
+        "text": "NAME:",
+        "box": [
+          196,
+          380,
+          264,
+          399
+        ]
+      },
+      {
+        "label": "QUESTION",
+        "text": "OFFICE:",
+        "box": [
+          194,
+          406,
+          280,
+          429
+        ]
+      },
+      {
+        "label": "QUESTION",
+        "text": "NAME:",
+        "box": [
+          191,
+          516,
+          265,
+          536
+        ]
+      },
+      {
+        "label": "QUESTION",
+        "text": "OFFICE:",
+        "box": [
+          191,
+          540,
+          275,
+          564
+        ]
+      },
+      {
+        "label": "ANSWER",
+        "text": "11/4/93",
+        "box": [
+          288,
+          273,
+          362,
+          286
+        ]
+      },
+      {
+        "label": "QUESTION",
+        "text": "COMMENTS:",
+        "box": [
+          190,
+          611,
+          326,
+          627
+        ]
+      },
+      {
+        "label": "QUESTION",
+        "text": "cc:",
+        "box": [
+          350,
+          786,
+          378,
+          799
+        ]
+      },
+      {
+        "label": "HEADER",
+        "text": "Lorillard TOBACCO COMPANY",
+        "box": [
+          147,
+          84,
+          429,
+          152
+        ]
+      },
+      {
+        "label": "HEADER",
+        "text": "FACSIMILE COVER PAGE",
+        "box": [
+          390,
+          214,
+          643,
+          235
+        ]
+      },
+      {
+        "label": "ANSWER",
+        "text": "3:28 CST",
+        "box": [
+          525,
+          273,
+          606,
+          286
+        ]
+      },
+      {
+        "label": "HEADER",
+        "text": "PLEASE TRANSMIT THIS DOCUMENT TO:",
+        "box": [
+          191,
+          337,
+          622,
+          356
+        ]
+      },
+      {
+        "label": "ANSWER",
+        "text": "Mr. A. J. Giacoio",
+        "box": [
+          305,
+          382,
+          481,
+          398
+        ]
+      },
+      {
+        "label": "ANSWER",
+        "text": "New York- Sales Planning",
+        "box": [
+          305,
+          406,
+          562,
+          425
+        ]
+      },
+      {
+        "label": "ANSWER",
+        "text": "212 545- 3299",
+        "box": [
+          448,
+          436,
+          583,
+          455
+        ]
+      },
+      {
+        "label": "QUESTION",
+        "text": "FAX PHONE NUMBER:",
+        "box": [
+          195,
+          434,
+          420,
+          454
+        ]
+      },
+      {
+        "label": "HEADER",
+        "text": "THIS DOCUMENT IS FROM:",
+        "box": [
+          196,
+          476,
+          472,
+          493
+        ]
+      },
+      {
+        "label": "ANSWER",
+        "text": "R F",
+        "box": [
+          310,
+          523,
+          357,
+          534
+        ]
+      },
+      {
+        "label": "ANSWER",
+        "text": "Oklahoma City. OK",
+        "box": [
+          277,
+          544,
+          470,
+          562
+        ]
+      },
+      {
+        "label": "QUESTION",
+        "text": "FAX PHONE NUMBER:",
+        "box": [
+          189,
+          571,
+          423,
+          590
+        ]
+      },
+      {
+        "label": "ANSWER",
+        "text": "(400) 840- 0639",
+        "box": [
+          428,
+          572,
+          579,
+          591
+        ]
+      },
+      {
+        "label": "ANSWER",
+        "text": "The attached Competitive information was secured in Oklahoma today. If you should have any questions.",
+        "box": [
+          350,
+          611,
+          722,
+          689
+        ]
+      },
+      {
+        "label": "ANSWER",
+        "text": "Mr. R. B. Spell",
+        "box": [
+          388,
+          783,
+          544,
+          798
+        ]
+      },
+      {
+        "label": "ANSWER",
+        "text": "Mr. S. L. Enloe",
+        "box": [
+          394,
+          798,
+          545,
+          812
+        ]
+      }
+    ],
+    "answer_count": 11,
+    "anchored_fields": 11,
+    "no_anchor_fields": 0
+  }
+}

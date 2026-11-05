@@ -1,0 +1,35 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_af88d87c",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "eviction_action",
+    "primary_service_unsuccessful",
+    "due_diligence_exercised",
+    "affidavit_of_service_attempts_filed",
+    "affidavit_of_belief_defendant_cannot_be_found_filed",
+    "court_order_authorizing_alternative_service",
+    "requested_secondary_method",
+    "days_before_return_date",
+    "statute_rcw_59_12_085_threshold_met",
+    "statute_rcw_59_12_085_order_entered",
+    "statute_rcw_59_12_085_allowed_method",
+    "statute_rcw_59_12_085_timing_ok",
+    "integer",
+    "statute_rcw_59_12_085_permits_secondary_method",
+    "scenario_requested_methods_both_permitted",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    State: Washington\n    Focus year: 2021\n\n    Question: Are publication and certified mail permitted secondary methods of service for an eviction action?\n*/\n\n% -------------------------------\n% Scenario facts (question statement)\n% -------------------------------\n\nscenario_state(washington).\nscenario_focus_year(2021).\n\n% The matter is an eviction (unlawful detainer) action.\neviction_action(eviction1).\n\n% Primary method (personal service) was unsuccessful, after due diligence.\nprimary_service_unsuccessful(eviction1).\ndue_diligence_exercised(eviction1).\n\n% Affidavits required by the statute were filed (attempts + belief defendant cannot be found).\naffidavit_of_service_attempts_filed(eviction1).\naffidavit_of_belief_defendant_cannot_be_found_filed(eviction1).\n\n% Court order authorizing the alternative procedure.\ncourt_order_authorizing_alternative_service(eviction1).\n\n% The question asks about these candidate secondary methods.\nrequested_secondary_method(eviction1, publication).\nrequested_secondary_method(eviction1, certified_mail).\n\n% Optional timing facts for the statute's alternative methods (>= 9 days before return date).\n% (Included to fully encode the statutory requirements for the methods the statute actually allows.)\ndays_before_return_date(eviction1, posting_on_premises, 9).\ndays_before_return_date(eviction1, regular_mail, 9).\ndays_before_return_date(eviction1, certified_mail, 9).\n\n% A helper that succeeds when the encoded scenario is satisfied.\nscenario_statement :-\n    scenario_state(washington),\n    scenario_focus_year(2021),\n    eviction_action(eviction1),\n    primary_service_unsuccessful(eviction1),\n    due_diligence_exercised(eviction1),\n    affidavit_of_service_attempts_filed(eviction1),\n    affidavit_of_belief_defendant_cannot_be_found_filed(eviction1),\n    court_order_authorizing_alternative_service(eviction1),\n    requested_secondary_method(eviction1, publication),\n    requested_secondary_method(eviction1, certified_mail).\n\n% -------------------------------\n% Statute translation (deterministic predicates)\n% -------------------------------\n\n/*\n  WA Rev Code  59.12.085 (2021) - Alternative service of summons-Limitation on jurisdiction.\n  Key points encoded:\n  - Alternative service may be authorized if plaintiff, after due diligence, cannot personally serve.\n  - Requires affidavits describing attempts and belief defendant cannot be found.\n  - Court may enter an order authorizing service by:\n      (a) posting summons+complaint on the premises (>= 9 days before return date), AND\n      (b) mailing copies by regular mail AND certified mail to last known address (>= 9 days before return date).\n  - Statute does not authorize service by publication as part of this alternative service procedure.\n*/\n\n% statute_rcw_59_12_085_threshold_met(Action)\nstatute_rcw_59_12_085_threshold_met(Action) :-\n    eviction_action(Action),\n    due_diligence_exercised(Action),\n    primary_service_unsuccessful(Action),\n    affidavit_of_service_attempts_filed(Action),\n    affidavit_of_belief_defendant_cannot_be_found_filed(Action).\n\n% statute_rcw_59_12_085_order_entered(Action)\nstatute_rcw_59_12_085_order_entered(Action) :-\n    court_order_authorizing_alternative_service(Action).\n\n% statute_rcw_59_12_085_allowed_method(Method)\n% Enumerates the only methods this statute authorizes as alternative service (no publication).\nstatute_rcw_59_12_085_allowed_method(posting_on_premises).\nstatute_rcw_59_12_085_allowed_method(regular_mail).\nstatute_rcw_59_12_085_allowed_method(certified_mail).\n\n% statute_rcw_59_12_085_timing_ok(Action, Method)\n% Must be not less than 9 days from the return date stated in the summons.\nstatute_rcw_59_12_085_timing_ok(Action, Method) :-\n    days_before_return_date(Action, Method, Days),\n    integer(Days),\n    Days >= 9.\n\n% statute_rcw_59_12_085_permits_secondary_method(Action, Method)\n% \"Secondary methods\" here are modeled as the statute's authorized alternative service methods,\n% usable when primary service is unsuccessful and the court authorizes.\nstatute_rcw_59_12_085_permits_secondary_method(Action, Method) :-\n    statute_rcw_59_12_085_threshold_met(Action),\n    statute_rcw_59_12_085_order_entered(Action),\n    statute_rcw_59_12_085_allowed_method(Method),\n    statute_rcw_59_12_085_timing_ok(Action, Method).\n\n% -------------------------------\n% Reasoning over the scenario\n% -------------------------------\n\n% scenario_requested_methods_both_permitted(Action)\n% The question asks whether BOTH publication and certified mail are permitted secondary methods.\nscenario_requested_methods_both_permitted(Action) :-\n    requested_secondary_method(Action, publication),\n    requested_secondary_method(Action, certified_mail),\n    statute_rcw_59_12_085_permits_secondary_method(Action, publication),\n    statute_rcw_59_12_085_permits_secondary_method(Action, certified_mail).\n\n% -------------------------------\n% Final answer predicate\n% -------------------------------\n\nhousing_answer(Result) :-\n    (   scenario_statement,\n        scenario_requested_methods_both_permitted(eviction1)\n    ->  Result = yes\n    ;   Result = no\n    ),\n    !.\n\n% -------------------------------\n% Main entrypoint\n% -------------------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-0005",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Secondary methods of service are defined as those methods that may be used if the primary method is unsuccessful. Are publication and certified mail permitted secondary methods of service for an eviction action?"
+  }
+}

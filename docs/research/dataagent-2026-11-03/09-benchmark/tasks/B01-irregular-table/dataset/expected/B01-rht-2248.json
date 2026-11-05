@@ -1,0 +1,29 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 612,
+  "table": "sport-table01",
+  "structure": "ColumnHeaderMerge",
+  "question_type": "Fact Checking",
+  "sub_type": "Inference-based Fact Checking",
+  "answer": "Bayern Munich, 1",
+  "cot": [
+    {
+      "step": "First, we need to extract the relevant columns: \"Team,\" \"GD\" (Goal Difference), and \"Points.\""
+    },
+    {
+      "step": "We need to clean and convert the \"GD\" and \"Points\" columns to numeric values for accurate comparisons."
+    },
+    {
+      "step": "Next, we identify the team with the highest \"Goal Difference (GD)\" by finding the maximum value in the \"GD\" column."
+    },
+    {
+      "step": "Finally, we retrieve the corresponding team name and points total for this record."
+    }
+  ],
+  "case_id": "B01-rht-2248",
+  "expected": {
+    "kind": "answer",
+    "question": "Identify the team with the highest \"Goal Difference (GD)\" and its corresponding points total.",
+    "answer": "Bayern Munich, 1"
+  }
+}

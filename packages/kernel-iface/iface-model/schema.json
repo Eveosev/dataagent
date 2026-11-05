@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "agentcpm/iface-model",
+  "version": "0.1.0",
+  "description": "AgentCPM §4.2 iface-model（M27/M30；跨模型轨迹连续 §3.2-5） 的机器可读形状：类型、trait 方法、错误码、消费方。只定义形状，不含实现。",
+  "lineage": "kernel/iface/src/model.rs（verbatim 复制到本包 src/）",
+  "spec": {
+    "KERNEL-MECHANISMS-AND-ABI": "§4.2 iface-model（M27/M30；跨模型轨迹连续 §3.2-5）",
+    "decision": [
+      "D55"
+    ]
+  },
+  "iface": {
+    "name": "model",
+    "layer": "L-A",
+    "shared_types_dep": "agentcpm/iface-types",
+    "errors": {
+      "common": {
+        "ERR_INVALID_PARAMS": -32602
+      },
+      "note": "错误统一用 agentcpm_iface::types::Error { category, code, message }；参数错误用 ERR_INVALID_PARAMS"
+    }
+  },
+  "types": [
+    "ModelRequest",
+    "ModelResponse",
+    "ModelCompletion",
+    "ModelUsage",
+    "ModelToolCall",
+    "ModelDelta",
+    "ModelDeltaKind",
+    "ModelSessionId",
+    "ResponseId",
+    "InputId",
+    "ConfigRevision",
+    "SessionMode",
+    "ModelBinding",
+    "MediaFormat",
+    "GenerationSettings",
+    "SessionLimits",
+    "SessionTimeouts",
+    "ModelSessionConfig",
+    "SessionCapabilities",
+    "CapabilityField",
+    "InputKind",
+    "InputStatus",
+    "ConsumptionStatus",
+    "InputAccepted",
+    "InputEnvelope",
+    "ToolResultEnvelope",
+    "EventKind",
+    "BackendStopStatus",
+    "SessionTerminal",
+    "EndKind",
+    "ModelSessionEvent",
+    "SessionState",
+    "OpenAck",
+    "ConfigUpdate",
+    "InterruptAck"
+  ],
+  "traits": {
+    "ModelContract": "call/capabilities/call_completion(default)",
+    "ModelStreamContract": "stream",
+    "ModelSessionFactory": "capabilities/open",
+    "ModelSession": "append_input/commit_input/append_tool_result/commit_tool_result/update_config/interrupt/close/abort/next_event/state"
+  },
+  "consumers": [
+    "kernel/runtime/src/model/*",
+    "kernel/runtime/src/gateway/*",
+    "kernel/host/src/model_probe.rs"
+  ],
+  "source": {
+    "files": [
+      "capabilities.rs",
+      "config.rs",
+      "event.rs",
+      "input.rs",
+      "model.rs",
+      "model_session.rs",
+      "model_stream.rs",
+      "operations.rs",
+      "types.rs"
+    ],
+    "lines": 934
+  }
+}

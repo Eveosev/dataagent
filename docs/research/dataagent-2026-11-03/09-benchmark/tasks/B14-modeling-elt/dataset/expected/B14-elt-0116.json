@@ -1,0 +1,118 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "redshift",
+  "pipeline": "chicago_crime",
+  "data_model": {
+    "models": [
+      {
+        "name": "community_areas",
+        "description": "Each record represents a community area.",
+        "columns": [
+          {
+            "name": "community_area_no",
+            "description": "Unique identifier for the community area."
+          },
+          {
+            "name": "community_area_name",
+            "description": "Name of the community area."
+          },
+          {
+            "name": "population",
+            "description": "Population of the community area, convert to integer."
+          },
+          {
+            "name": "num_neighborhoods",
+            "description": "Number of neighborhoods in the community area, replace NULL values with 0."
+          },
+          {
+            "name": "num_crimes",
+            "description": "Number of crimes reported in the community area, replace NULL values with 0."
+          },
+          {
+            "name": "num_pocket_picking_thefts",
+            "description": "Number of pocket-picking thefts reported in the community area, replace NULL values with 0."
+          },
+          {
+            "name": "per_under_500_thefts",
+            "description": "Percentage of thefts in the community area that are $500 and under."
+          },
+          {
+            "name": "more_than_average_solicit_for_prostitutes_reported",
+            "description": "Set to 1 if the number of solicitations for prostitutes reported in the community area is more than the average number of solicitations for prostitutes reported in all community areas; otherwise, set to 0."
+          }
+        ]
+      },
+      {
+        "name": "districts",
+        "description": "Each record represents a district.",
+        "columns": [
+          {
+            "name": "district_no",
+            "description": "Unique identifier for the district."
+          },
+          {
+            "name": "district_name",
+            "description": "Name of the district."
+          },
+          {
+            "name": "email",
+            "description": "Email address to contact district administrators."
+          },
+          {
+            "name": "num_crimes_Jan_2018",
+            "description": "Number of crimes reported in January 2018 in the district, replace NULL values with 0."
+          },
+          {
+            "name": "num_crimes",
+            "description": "Number of crimes reported in the district, replace NULL values with 0."
+          },
+          {
+            "name": "diff_bewteen_vehicular_hijackings_and_aggravated_vehicular_hijackings",
+            "description": "Difference between the number of vehicular hijackings and the number of aggravated vehicular hijackings reported in the district."
+          },
+          {
+            "name": "per_crimes_heppened_inside_the_house",
+            "description": "Percentage of crimes reported in the district that happened inside the house (location description is 'HOUSE')."
+          },
+          {
+            "name": "num_domestic_violence",
+            "description": "Number of domestic violence cases reported in the district, replace NULL values with 0."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    redshift_definition_id: f7a7d195-377f-cf5b-70a5-be6b819019dc\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://chicago-crime-bucket/District.jsonl\n    sync_mode: full_refresh_append\n    table: District\n  - path: s3://chicago-crime-bucket/FBI_Code.csv\n    sync_mode: full_refresh_append\n    table: FBI_Code\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - Neighborhood\nflat_files:\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=1NLvCIPlhFSJKoC95cqi5Un9l8DxT9uP-\n  sync_mode: full_refresh_append\n  table: Community_Area\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: chicago_crime\n    sync_mode: full_refresh_append\n    tables:\n    - Ward\npostgres:\n  config:\n    database: chicago_crime\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - crime\n    - iucr\n    user: postgres\nredshift:\n  config:\n    host: <redshift_hostname>\n    port: <redshift_port>\n    database: <redshift_db>\n    username: <redshift_username>\n    password: <redshift_pwd>\n    schema: chicago_crime\n    s3_bucket_name: <redshift_s3_bucket>\n    s3_bucket_region: <redshift_s3_region>\n    access_key_id: <redshift_s3_access_key>\n    secret_access_key: <redshift_s3_secret_key>\n",
+  "case_id": "B14-elt-0116",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "community_areas",
+        "columns": [
+          "community_area_no",
+          "community_area_name",
+          "population",
+          "num_neighborhoods",
+          "num_crimes",
+          "num_pocket_picking_thefts",
+          "per_under_500_thefts",
+          "more_than_average_solicit_for_prostitutes_reported"
+        ]
+      },
+      {
+        "name": "districts",
+        "columns": [
+          "district_no",
+          "district_name",
+          "email",
+          "num_crimes_Jan_2018",
+          "num_crimes",
+          "diff_bewteen_vehicular_hijackings_and_aggravated_vehicular_hijackings",
+          "per_crimes_heppened_inside_the_house",
+          "num_domestic_violence"
+        ]
+      }
+    ]
+  }
+}

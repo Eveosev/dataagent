@@ -1,0 +1,1 @@
+Show entertainer and customer pairs where both the first and second style preferences of customers match the first and second strengths of entertainers (or vice versa), displaying only the entertainer's stage name and the customer's last name.

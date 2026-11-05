@@ -1,0 +1,27 @@
+{
+  "source": "beaverbench/beaver-query",
+  "id": "dw_2661",
+  "db": "dw",
+  "question": "List the department code, department name, department full name, the number of subjects offered, the total number of enrolled students in those subjects, and the corresponding subject code and subject title for each department that is degree-granting and offered at least one subject in the School of Engineering in 2021. Do not return any rounded answers.",
+  "sql": "WITH inner_cte AS ( SELECT d.DEPARTMENT_CODE, d.DEPARTMENT_NAME, d.DEPARTMENT_FULL_NAME, COUNT(s.SUBJECT_OFFERED_SUMMARY_KEY) AS subject_count, SUM(s.NUM_ENROLLED_STUDENTS) AS total_enrollment FROM SIS_DEPARTMENT d JOIN SUBJECT_OFFERED_SUMMARY s ON d.DEPARTMENT_CODE = s.OFFER_DEPT_CODE WHERE d.IS_DEGREE_GRANTING = 'Y' AND s.OFFER_SCHOOL_NAME = 'Engineering' AND s.TERM_CODE LIKE '2021%' GROUP BY d.DEPARTMENT_CODE, d.DEPARTMENT_NAME, d.DEPARTMENT_FULL_NAME ) SELECT icte.DEPARTMENT_CODE, icte.DEPARTMENT_NAME, icte.DEPARTMENT_FULL_NAME, icte.subject_count, icte.total_enrollment, s.COURSE_NUMBER AS SUBJECT_CODE, s.SUBJECT_TITLE FROM inner_cte icte JOIN SUBJECT_OFFERED_SUMMARY s ON icte.DEPARTMENT_CODE = s.OFFER_DEPT_CODE WHERE s.OFFER_SCHOOL_NAME = 'Engineering' AND s.TERM_CODE LIKE '2021%' ORDER BY icte.DEPARTMENT_CODE, s.COURSE_NUMBER;",
+  "tables": "[\"SIS_DEPARTMENT\", \"SUBJECT_OFFERED_SUMMARY\"]",
+  "join_keys": "[[\"SIS_DEPARTMENT.DEPARTMENT_CODE\", \"SUBJECT_OFFERED_SUMMARY.OFFER_DEPT_CODE\"]]",
+  "column_mapping": "{\"department code\": [\"SIS_DEPARTMENT.DEPARTMENT_CODE\"], \"department name\": [\"SIS_DEPARTMENT.DEPARTMENT_NAME\"], \"department full name\": [\"SIS_DEPARTMENT.DEPARTMENT_FULL_NAME\"], \"number of subjects offered\": [\"SUBJECT_OFFERED_SUMMARY.SUBJECT_OFFERED_SUMMARY_KEY\"], \"total number of enrolled students\": [\"SUBJECT_OFFERED_SUMMARY.NUM_ENROLLED_STUDENTS\"], \"subject code\": [\"SUBJECT_OFFERED_SUMMARY.COURSE_NUMBER\"], \"subject title\": [\"SUBJECT_OFFERED_SUMMARY.SUBJECT_TITLE\"], \"degree-granting\": [\"SIS_DEPARTMENT.IS_DEGREE_GRANTING\"], \"School of Engineering\": [\"SUBJECT_OFFERED_SUMMARY.OFFER_SCHOOL_NAME\"], \"2021\": [\"SUBJECT_OFFERED_SUMMARY.TERM_CODE\"]}",
+  "domain_knowledge": "[]",
+  "sub_questions": "[\"For each department that is degree-granting and offered at least one subject in the School of Engineering in 2021, provide the department code, department name, department full name, the number of subjects offered, and the total number of enrolled students in those subjects.\"]",
+  "sub_sqls": "[\"SELECT d.DEPARTMENT_CODE, d.DEPARTMENT_NAME, d.DEPARTMENT_FULL_NAME, COUNT(s.SUBJECT_OFFERED_SUMMARY_KEY) AS subject_count, SUM(s.NUM_ENROLLED_STUDENTS) AS total_enrollment FROM SIS_DEPARTMENT d JOIN SUBJECT_OFFERED_SUMMARY s ON d.DEPARTMENT_CODE = s.OFFER_DEPT_CODE WHERE d.IS_DEGREE_GRANTING = 'Y' AND s.OFFER_SCHOOL_NAME = 'Engineering' AND s.TERM_CODE LIKE '2021%' GROUP BY d.DEPARTMENT_CODE, d.DEPARTMENT_NAME, d.DEPARTMENT_FULL_NAME;\"]",
+  "category": "complex query",
+  "detailed_category": "nested",
+  "case_id": "B05-beaver-0189",
+  "expected": {
+    "kind": "sql",
+    "sql": "WITH inner_cte AS ( SELECT d.DEPARTMENT_CODE, d.DEPARTMENT_NAME, d.DEPARTMENT_FULL_NAME, COUNT(s.SUBJECT_OFFERED_SUMMARY_KEY) AS subject_count, SUM(s.NUM_ENROLLED_STUDENTS) AS total_enrollment FROM SIS_DEPARTMENT d JOIN SUBJECT_OFFERED_SUMMARY s ON d.DEPARTMENT_CODE = s.OFFER_DEPT_CODE WHERE d.IS_DEGREE_GRANTING = 'Y' AND s.OFFER_SCHOOL_NAME = 'Engineering' AND s.TERM_CODE LIKE '2021%' GROUP BY d.DEPARTMENT_CODE, d.DEPARTMENT_NAME, d.DEPARTMENT_FULL_NAME ) SELECT icte.DEPARTMENT_CODE, icte.DEPARTMENT_NAME, icte.DEPARTMENT_FULL_NAME, icte.subject_count, icte.total_enrollment, s.COURSE_NUMBER AS SUBJECT_CODE, s.SUBJECT_TITLE FROM inner_cte icte JOIN SUBJECT_OFFERED_SUMMARY s ON icte.DEPARTMENT_CODE = s.OFFER_DEPT_CODE WHERE s.OFFER_SCHOOL_NAME = 'Engineering' AND s.TERM_CODE LIKE '2021%' ORDER BY icte.DEPARTMENT_CODE, s.COURSE_NUMBER;",
+    "sub_sqls": "[\"SELECT d.DEPARTMENT_CODE, d.DEPARTMENT_NAME, d.DEPARTMENT_FULL_NAME, COUNT(s.SUBJECT_OFFERED_SUMMARY_KEY) AS subject_count, SUM(s.NUM_ENROLLED_STUDENTS) AS total_enrollment FROM SIS_DEPARTMENT d JOIN SUBJECT_OFFERED_SUMMARY s ON d.DEPARTMENT_CODE = s.OFFER_DEPT_CODE WHERE d.IS_DEGREE_GRANTING = 'Y' AND s.OFFER_SCHOOL_NAME = 'Engineering' AND s.TERM_CODE LIKE '2021%' GROUP BY d.DEPARTMENT_CODE, d.DEPARTMENT_NAME, d.DEPARTMENT_FULL_NAME;\"]",
+    "db": "dw",
+    "tables": "[\"SIS_DEPARTMENT\", \"SUBJECT_OFFERED_SUMMARY\"]",
+    "join_keys": "[[\"SIS_DEPARTMENT.DEPARTMENT_CODE\", \"SUBJECT_OFFERED_SUMMARY.OFFER_DEPT_CODE\"]]",
+    "column_mapping": "{\"department code\": [\"SIS_DEPARTMENT.DEPARTMENT_CODE\"], \"department name\": [\"SIS_DEPARTMENT.DEPARTMENT_NAME\"], \"department full name\": [\"SIS_DEPARTMENT.DEPARTMENT_FULL_NAME\"], \"number of subjects offered\": [\"SUBJECT_OFFERED_SUMMARY.SUBJECT_OFFERED_SUMMARY_KEY\"], \"total number of enrolled students\": [\"SUBJECT_OFFERED_SUMMARY.NUM_ENROLLED_STUDENTS\"], \"subject code\": [\"SUBJECT_OFFERED_SUMMARY.COURSE_NUMBER\"], \"subject title\": [\"SUBJECT_OFFERED_SUMMARY.SUBJECT_TITLE\"], \"degree-granting\": [\"SIS_DEPARTMENT.IS_DEGREE_GRANTING\"], \"School of Engineering\": [\"SUBJECT_OFFERED_SUMMARY.OFFER_SCHOOL_NAME\"], \"2021\": [\"SUBJECT_OFFERED_SUMMARY.TERM_CODE\"]}",
+    "category": "complex query",
+    "db_archive": "bench://beaver-table/beaver_db.zip"
+  }
+}

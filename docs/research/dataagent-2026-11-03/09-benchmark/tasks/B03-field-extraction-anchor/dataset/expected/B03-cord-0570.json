@@ -1,0 +1,490 @@
+{
+  "source": "naver-clova-ix/cord-v2",
+  "split": "train",
+  "index": 148,
+  "gt_parse": {
+    "menu": [
+      {
+        "nm": "GIANT FCL TISSUE",
+        "discountprice": "3,500-",
+        "price": "9,500"
+      },
+      {
+        "nm": "MITU S/C BLUE",
+        "num": "2796731",
+        "price": "14,200"
+      },
+      {
+        "nm": "PPSODENT TP WHTNG",
+        "num": "2063314",
+        "discountprice": "5,200-",
+        "price": "16,600"
+      },
+      {
+        "nm": "FORMULA S/P P",
+        "num": "0856923",
+        "price": "11,400"
+      },
+      {
+        "nm": "NICE TRAVEL PACK",
+        "num": "2850216",
+        "price": "2,700"
+      },
+      {
+        "nm": "RICHEESE WFR KJ P",
+        "num": "3041307",
+        "discountprice": "1,200-",
+        "price": "7,500"
+      },
+      {
+        "nm": "RICHOCO WFR CH P1",
+        "num": "3041308",
+        "discountprice": "2,500-",
+        "price": "8,600"
+      },
+      {
+        "nm": "JERUK LEMON IMP",
+        "unitprice": "49,900",
+        "cnt": "0,896X",
+        "discountprice": "15,232-",
+        "price": "44,710"
+      },
+      {
+        "nm": "GOLIA ACTIV PLS 4",
+        "num": "1441671",
+        "price": "6,200"
+      },
+      {
+        "nm": "S/QUEEN MONTES 50",
+        "num": "2884986",
+        "price": "13,500"
+      },
+      {
+        "nm": "S/QUEEN MONTES 50",
+        "num": "2884986",
+        "price": "13,500"
+      },
+      {
+        "nm": "DELFI C/CHA MINIS",
+        "num": "2818707",
+        "price": "6,700"
+      }
+    ],
+    "sub_total": {
+      "subtotal_price": "127,678"
+    },
+    "total": {
+      "total_price": "127,678",
+      "creditcardprice": "127,678",
+      "menuqty_cnt": "11"
+    }
+  },
+  "case_id": "B03-cord-0570",
+  "expected": {
+    "kind": "json",
+    "value": {
+      "menu": [
+        {
+          "nm": "GIANT FCL TISSUE",
+          "discountprice": "3,500-",
+          "price": "9,500"
+        },
+        {
+          "nm": "MITU S/C BLUE",
+          "num": "2796731",
+          "price": "14,200"
+        },
+        {
+          "nm": "PPSODENT TP WHTNG",
+          "num": "2063314",
+          "discountprice": "5,200-",
+          "price": "16,600"
+        },
+        {
+          "nm": "FORMULA S/P P",
+          "num": "0856923",
+          "price": "11,400"
+        },
+        {
+          "nm": "NICE TRAVEL PACK",
+          "num": "2850216",
+          "price": "2,700"
+        },
+        {
+          "nm": "RICHEESE WFR KJ P",
+          "num": "3041307",
+          "discountprice": "1,200-",
+          "price": "7,500"
+        },
+        {
+          "nm": "RICHOCO WFR CH P1",
+          "num": "3041308",
+          "discountprice": "2,500-",
+          "price": "8,600"
+        },
+        {
+          "nm": "JERUK LEMON IMP",
+          "unitprice": "49,900",
+          "cnt": "0,896X",
+          "discountprice": "15,232-",
+          "price": "44,710"
+        },
+        {
+          "nm": "GOLIA ACTIV PLS 4",
+          "num": "1441671",
+          "price": "6,200"
+        },
+        {
+          "nm": "S/QUEEN MONTES 50",
+          "num": "2884986",
+          "price": "13,500"
+        },
+        {
+          "nm": "S/QUEEN MONTES 50",
+          "num": "2884986",
+          "price": "13,500"
+        },
+        {
+          "nm": "DELFI C/CHA MINIS",
+          "num": "2818707",
+          "price": "6,700"
+        }
+      ],
+      "sub_total": {
+        "subtotal_price": "127,678"
+      },
+      "total": {
+        "total_price": "127,678",
+        "creditcardprice": "127,678",
+        "menuqty_cnt": "11"
+      }
+    },
+    "fields": {
+      "menu[0].nm": "GIANT FCL TISSUE",
+      "menu[0].discountprice": "3,500-",
+      "menu[0].price": "9,500",
+      "menu[1].nm": "MITU S/C BLUE",
+      "menu[1].num": "2796731",
+      "menu[1].price": "14,200",
+      "menu[2].nm": "PPSODENT TP WHTNG",
+      "menu[2].num": "2063314",
+      "menu[2].discountprice": "5,200-",
+      "menu[2].price": "16,600",
+      "menu[3].nm": "FORMULA S/P P",
+      "menu[3].num": "0856923",
+      "menu[3].price": "11,400",
+      "menu[4].nm": "NICE TRAVEL PACK",
+      "menu[4].num": "2850216",
+      "menu[4].price": "2,700",
+      "menu[5].nm": "RICHEESE WFR KJ P",
+      "menu[5].num": "3041307",
+      "menu[5].discountprice": "1,200-",
+      "menu[5].price": "7,500",
+      "menu[6].nm": "RICHOCO WFR CH P1",
+      "menu[6].num": "3041308",
+      "menu[6].discountprice": "2,500-",
+      "menu[6].price": "8,600",
+      "menu[7].nm": "JERUK LEMON IMP",
+      "menu[7].unitprice": "49,900",
+      "menu[7].cnt": "0,896X",
+      "menu[7].discountprice": "15,232-",
+      "menu[7].price": "44,710",
+      "menu[8].nm": "GOLIA ACTIV PLS 4",
+      "menu[8].num": "1441671",
+      "menu[8].price": "6,200",
+      "menu[9].nm": "S/QUEEN MONTES 50",
+      "menu[9].num": "2884986",
+      "menu[9].price": "13,500",
+      "menu[10].nm": "S/QUEEN MONTES 50",
+      "menu[10].num": "2884986",
+      "menu[10].price": "13,500",
+      "menu[11].nm": "DELFI C/CHA MINIS",
+      "menu[11].num": "2818707",
+      "menu[11].price": "6,700",
+      "sub_total.subtotal_price": "127,678",
+      "total.total_price": "127,678",
+      "total.creditcardprice": "127,678",
+      "total.menuqty_cnt": "11"
+    },
+    "anchored_fields": 0,
+    "no_anchor_fields": 45,
+    "spans": [
+      {
+        "field": "menu[0].nm",
+        "text": "GIANT FCL TISSUE",
+        "page": 1
+      },
+      {
+        "field": "menu[0].discountprice",
+        "text": "3,500-",
+        "page": 1
+      },
+      {
+        "field": "menu[0].price",
+        "text": "9,500",
+        "page": 1
+      },
+      {
+        "field": "menu[1].nm",
+        "text": "MITU S/C BLUE",
+        "page": 1
+      },
+      {
+        "field": "menu[1].num",
+        "text": "2796731",
+        "page": 1
+      },
+      {
+        "field": "menu[1].price",
+        "text": "14,200",
+        "page": 1
+      },
+      {
+        "field": "menu[2].nm",
+        "text": "PPSODENT TP WHTNG",
+        "page": 1
+      },
+      {
+        "field": "menu[2].num",
+        "text": "2063314",
+        "page": 1
+      },
+      {
+        "field": "menu[2].discountprice",
+        "text": "5,200-",
+        "page": 1
+      },
+      {
+        "field": "menu[2].price",
+        "text": "16,600",
+        "page": 1
+      },
+      {
+        "field": "menu[3].nm",
+        "text": "FORMULA S/P P",
+        "page": 1
+      },
+      {
+        "field": "menu[3].num",
+        "text": "0856923",
+        "page": 1
+      },
+      {
+        "field": "menu[3].price",
+        "text": "11,400",
+        "page": 1
+      },
+      {
+        "field": "menu[4].nm",
+        "text": "NICE TRAVEL PACK",
+        "page": 1
+      },
+      {
+        "field": "menu[4].num",
+        "text": "2850216",
+        "page": 1
+      },
+      {
+        "field": "menu[4].price",
+        "text": "2,700",
+        "page": 1
+      },
+      {
+        "field": "menu[5].nm",
+        "text": "RICHEESE WFR KJ P",
+        "page": 1
+      },
+      {
+        "field": "menu[5].num",
+        "text": "3041307",
+        "page": 1
+      },
+      {
+        "field": "menu[5].discountprice",
+        "text": "1,200-",
+        "page": 1
+      },
+      {
+        "field": "menu[5].price",
+        "text": "7,500",
+        "page": 1
+      },
+      {
+        "field": "menu[6].nm",
+        "text": "RICHOCO WFR CH P1",
+        "page": 1
+      },
+      {
+        "field": "menu[6].num",
+        "text": "3041308",
+        "page": 1
+      },
+      {
+        "field": "menu[6].discountprice",
+        "text": "2,500-",
+        "page": 1
+      },
+      {
+        "field": "menu[6].price",
+        "text": "8,600",
+        "page": 1
+      },
+      {
+        "field": "menu[7].nm",
+        "text": "JERUK LEMON IMP",
+        "page": 1
+      },
+      {
+        "field": "menu[7].unitprice",
+        "text": "49,900",
+        "page": 1
+      },
+      {
+        "field": "menu[7].cnt",
+        "text": "0,896X",
+        "page": 1
+      },
+      {
+        "field": "menu[7].discountprice",
+        "text": "15,232-",
+        "page": 1
+      },
+      {
+        "field": "menu[7].price",
+        "text": "44,710",
+        "page": 1
+      },
+      {
+        "field": "menu[8].nm",
+        "text": "GOLIA ACTIV PLS 4",
+        "page": 1
+      },
+      {
+        "field": "menu[8].num",
+        "text": "1441671",
+        "page": 1
+      },
+      {
+        "field": "menu[8].price",
+        "text": "6,200",
+        "page": 1
+      },
+      {
+        "field": "menu[9].nm",
+        "text": "S/QUEEN MONTES 50",
+        "page": 1
+      },
+      {
+        "field": "menu[9].num",
+        "text": "2884986",
+        "page": 1
+      },
+      {
+        "field": "menu[9].price",
+        "text": "13,500",
+        "page": 1
+      },
+      {
+        "field": "menu[10].nm",
+        "text": "S/QUEEN MONTES 50",
+        "page": 1
+      },
+      {
+        "field": "menu[10].num",
+        "text": "2884986",
+        "page": 1
+      },
+      {
+        "field": "menu[10].price",
+        "text": "13,500",
+        "page": 1
+      },
+      {
+        "field": "menu[11].nm",
+        "text": "DELFI C/CHA MINIS",
+        "page": 1
+      },
+      {
+        "field": "menu[11].num",
+        "text": "2818707",
+        "page": 1
+      },
+      {
+        "field": "menu[11].price",
+        "text": "6,700",
+        "page": 1
+      },
+      {
+        "field": "sub_total.subtotal_price",
+        "text": "127,678",
+        "page": 1
+      },
+      {
+        "field": "total.total_price",
+        "text": "127,678",
+        "page": 1
+      },
+      {
+        "field": "total.creditcardprice",
+        "text": "127,678",
+        "page": 1
+      },
+      {
+        "field": "total.menuqty_cnt",
+        "text": "11",
+        "page": 1
+      }
+    ],
+    "pages": {
+      "menu[0].nm": 1,
+      "menu[0].discountprice": 1,
+      "menu[0].price": 1,
+      "menu[1].nm": 1,
+      "menu[1].num": 1,
+      "menu[1].price": 1,
+      "menu[2].nm": 1,
+      "menu[2].num": 1,
+      "menu[2].discountprice": 1,
+      "menu[2].price": 1,
+      "menu[3].nm": 1,
+      "menu[3].num": 1,
+      "menu[3].price": 1,
+      "menu[4].nm": 1,
+      "menu[4].num": 1,
+      "menu[4].price": 1,
+      "menu[5].nm": 1,
+      "menu[5].num": 1,
+      "menu[5].discountprice": 1,
+      "menu[5].price": 1,
+      "menu[6].nm": 1,
+      "menu[6].num": 1,
+      "menu[6].discountprice": 1,
+      "menu[6].price": 1,
+      "menu[7].nm": 1,
+      "menu[7].unitprice": 1,
+      "menu[7].cnt": 1,
+      "menu[7].discountprice": 1,
+      "menu[7].price": 1,
+      "menu[8].nm": 1,
+      "menu[8].num": 1,
+      "menu[8].price": 1,
+      "menu[9].nm": 1,
+      "menu[9].num": 1,
+      "menu[9].price": 1,
+      "menu[10].nm": 1,
+      "menu[10].num": 1,
+      "menu[10].price": 1,
+      "menu[11].nm": 1,
+      "menu[11].num": 1,
+      "menu[11].price": 1,
+      "sub_total.subtotal_price": 1,
+      "total.total_price": 1,
+      "total.creditcardprice": 1,
+      "total.menuqty_cnt": 1
+    },
+    "evidence_gold": {
+      "source": "cord-valid-line",
+      "version": 1
+    }
+  }
+}

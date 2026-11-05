@@ -1,0 +1,1 @@
+What is the percentage of fraud reporters in 2024?

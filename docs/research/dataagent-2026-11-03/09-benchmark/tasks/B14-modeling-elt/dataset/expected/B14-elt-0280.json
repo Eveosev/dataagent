@@ -1,0 +1,118 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "snowflake",
+  "pipeline": "student_club",
+  "data_model": {
+    "models": [
+      {
+        "name": "events",
+        "description": "Each record represents an event.",
+        "columns": [
+          {
+            "name": "event_id",
+            "description": "Unique identifier for the event."
+          },
+          {
+            "name": "event_name",
+            "description": "Name of the event."
+          },
+          {
+            "name": "event_type",
+            "description": "Type of the event."
+          },
+          {
+            "name": "num_attendence_of_students",
+            "description": "The number of attendance of the students from the Student_Club that the event has, replace NULL values with 0."
+          },
+          {
+            "name": "per_cost",
+            "description": "The percentage of cost for the event based on the total cost for all events."
+          },
+          {
+            "name": "amount_spent_on_advertisement",
+            "description": "The amount spent on advertisement for the event, replace NULL values with 0."
+          },
+          {
+            "name": "amount_budgeted",
+            "description": "The amount budgeted for the event, replace NULL values with 0."
+          },
+          {
+            "name": "per_budget_for_parking",
+            "description": "The percentage of the budget for parking."
+          }
+        ]
+      },
+      {
+        "name": "members",
+        "description": "Each record represents a member.",
+        "columns": [
+          {
+            "name": "member_id",
+            "description": "Unique identifier for the member."
+          },
+          {
+            "name": "name",
+            "description": "Name of the member. Concatenate the first name and last name with a space separating them."
+          },
+          {
+            "name": "position",
+            "description": "Position of the member in the club."
+          },
+          {
+            "name": "incurred_expenses_in_more_than_one_event",
+            "description": "set to 1 if the member incurred expenses in more than one event, otherwise, set to 0"
+          },
+          {
+            "name": "has_expense_more_than_avg_expense",
+            "description": "Set to 1 if the member has any single expense greater than the average expense across all expenses, otherwise, set to 0"
+          },
+          {
+            "name": "comes_from_the_Art_and_Design_Department",
+            "description": "Set to 1 if the member comes from the Art and Design Department, otherwise, set to 0"
+          },
+          {
+            "name": "num_events_attended_2019",
+            "description": "The number of events the member attended in 2019, replace NULL values with 0."
+          },
+          {
+            "name": "is_able_to_generate_income_over_40",
+            "description": "Set to 1 if the member is able to generate income more than $40, otherwise, set to 0"
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    snowflake_definition_id: 424892c4-daac-4491-b35d-c6688ba547ba\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://student-club-bucket/major.jsonl\n    sync_mode: full_refresh_append\n    table: major\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - attendance\n    - club_event\nflat_files:\n- format: csv\n  path: https://drive.google.com/uc?export=download&id=1E3GDNaMuYHgQmPCHnhFjw2rL7fNbp6UV\n  sync_mode: full_refresh_append\n  table: zip_code\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: student_club\n    sync_mode: full_refresh_append\n    tables:\n    - member\npostgres:\n  config:\n    database: student_club\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - budget\n    - expense\n    - income\n    user: postgres\nsnowflake:\n  config:\n    database: student_club\n    password: Snowflake@123\n    role: AIRBYTE_ROLE\n    schema: AIRBYTE_SCHEMA\n    username: AIRBYTE_USER\n    warehouse: AIRBYTE_WAREHOUSE\n",
+  "case_id": "B14-elt-0280",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "events",
+        "columns": [
+          "event_id",
+          "event_name",
+          "event_type",
+          "num_attendence_of_students",
+          "per_cost",
+          "amount_spent_on_advertisement",
+          "amount_budgeted",
+          "per_budget_for_parking"
+        ]
+      },
+      {
+        "name": "members",
+        "columns": [
+          "member_id",
+          "name",
+          "position",
+          "incurred_expenses_in_more_than_one_event",
+          "has_expense_more_than_avg_expense",
+          "comes_from_the_Art_and_Design_Department",
+          "num_events_attended_2019",
+          "is_able_to_generate_income_over_40"
+        ]
+      }
+    ]
+  }
+}

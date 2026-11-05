@@ -1,0 +1,27 @@
+# Application-layer package source snapshot. Release artifacts must trace back to these inputs, not to "the workspace at the time".
+schema = 1
+
+[upstream]
+repository = "AgentOS"
+kernel = "agent-kernel@f0fa521"
+research = "docs/research/dataagent-2026-11-03"
+
+[catalog]
+path = "docs/research/dataagent-2026-11-03/catalog/atomic-capability-catalog.json"
+sha256 = "fbd48e5a54ac5277ec7f8c5a7d623299bb91c5089b1f95456d392cb1fb81c3ae"
+snapshot_sha256 = "31cb6f13c4ed27e286aca4458d8d5e2fde29ed9df1b060de903a676158450051"
+atoms = 13
+families = { backbone = 6, compute = 7 }
+
+[packages]
+contracts = "dataagent-contracts@0.1.0"
+runtime = "dataagent-runtime@0.1.0"
+application = "dataagent-application@0.1.0"
+
+[runtime]
+python = ">=3.11,<3.14"
+uv = ">=0.5"
+
+[notes]
+layout = "Catalog source_file 优先（07 §3）"
+vendoring = "packaging/bundle：三包 vendoring（dataagent_application + dataagent_runtime + dataagent_contracts），uv.lock 自包含，--frozen --offline 可安装"

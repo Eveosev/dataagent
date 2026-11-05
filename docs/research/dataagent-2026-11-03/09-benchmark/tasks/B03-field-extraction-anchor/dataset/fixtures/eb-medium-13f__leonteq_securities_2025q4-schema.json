@@ -1,0 +1,155 @@
+{
+  "type": "object",
+  "properties": {
+    "filing_manager_name": {
+      "type": "string",
+      "description": "Cover-page filing-manager name (e.g., 'VANGUARD GROUP INC'). Note: the filer-agent CIK in the EDGAR submission is often the filing agent, not the manager itself."
+    },
+    "report_calendar_quarter_end": {
+      "type": "string",
+      "description": "Period of report. Filed in MM-DD-YYYY format on the cover page; normalize to ISO YYYY-MM-DD before comparison."
+    },
+    "is_amendment": {
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "description": "True for 13F-HR/A. When true, supersedes the original for the same (manager, period). Output null when the cover page does not state amendment status."
+    },
+    "amendment_type": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "When is_amendment=true, one of 'RESTATEMENT' or 'NEW HOLDINGS'."
+    },
+    "report_type": {
+      "type": "string",
+      "enum": [
+        "13F HOLDINGS REPORT",
+        "13F NOTICE",
+        "13F COMBINATION REPORT"
+      ],
+      "description": "Filing role. Combination reports include positions held on behalf of other managers; Notice means the manager is filing nothing this quarter (covered elsewhere)."
+    },
+    "is_confidential_omitted": {
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "description": "True when the manager has filed a 13F-CTR for confidential treatment of specific positions; the InfoTable then omits those rows. Output null when the cover page does not state this. Do NOT default to false."
+    },
+    "table_entry_total": {
+      "type": "integer",
+      "description": "Cover-page count of holdings rows. Should equal len(holdings) — useful as a self-consistency check."
+    },
+    "table_value_total_usd": {
+      "type": "integer",
+      "description": "Cover-page total market value across all positions. Since 2023-Q1 reported in whole dollars (was thousands earlier). Should equal sum(holdings[].value_usd)."
+    },
+    "holdings": {
+      "type": "array",
+      "description": "InfoTable: one row per Section 13(f) reportable security. Each <infoTable> in the InfoTable XML maps to one record here.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "issuer_name": {
+            "type": "string",
+            "description": "nameOfIssuer, verbatim from filing (e.g. 'BROOKFIELD CORP', 'ACCENTURE PLC IRELAND'). Often uppercase."
+          },
+          "title_of_class": {
+            "type": "string",
+            "description": "Security class title (e.g. 'COM' for common stock, 'CL A LTD VT SH', 'SHS CLASS A', 'CALL', 'PUT', 'WTS'). Usually uppercase abbreviations, ≤150 chars."
+          },
+          "cusip": {
+            "type": "string",
+            "description": "9-character CUSIP. XSD allows mixed case but most filings use uppercase. Normalize to uppercase for matching."
+          },
+          "figi": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Optional 12-character FIGI (Bloomberg). Reportable since 2023-Q1 amendments; most filers do not include it."
+          },
+          "value_usd": {
+            "type": "integer",
+            "description": "Market value in whole dollars (integer). Pre-2023 filings used thousands; post-2023 always whole dollars."
+          },
+          "shares_or_principal_amount": {
+            "type": "integer",
+            "description": "sshPrnamt: count of shares (when type=SH) or principal amount (when type=PRN)."
+          },
+          "shares_or_principal_type": {
+            "type": "string",
+            "enum": [
+              "SH",
+              "PRN"
+            ],
+            "description": "SH=shares, PRN=principal-amount. Common stock is always SH; convertible bonds use PRN."
+          },
+          "put_call": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "Put",
+              "Call",
+              null
+            ],
+            "description": "Set when the position is an option. Same CUSIP can appear three times in one filing: common stock + Call + Put."
+          },
+          "investment_discretion": {
+            "type": "string",
+            "enum": [
+              "SOLE",
+              "DFND",
+              "OTR"
+            ],
+            "description": "Manager's discretion: SOLE=sole, DFND=defined (with sub-advisors), OTR=other. Same security can appear under different discretions in the same filing."
+          },
+          "other_manager": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Optional reference to other_manager block when investment_discretion=DFND or =OTR. Free-form."
+          },
+          "voting_authority_sole": {
+            "type": "integer",
+            "description": "Shares for which manager has sole voting authority."
+          },
+          "voting_authority_shared": {
+            "type": "integer",
+            "description": "Shares with shared voting authority."
+          },
+          "voting_authority_none": {
+            "type": "integer",
+            "description": "Shares with no voting authority."
+          }
+        },
+        "required": [
+          "issuer_name",
+          "title_of_class",
+          "cusip",
+          "value_usd",
+          "shares_or_principal_amount",
+          "shares_or_principal_type",
+          "investment_discretion",
+          "voting_authority_sole",
+          "voting_authority_shared",
+          "voting_authority_none"
+        ]
+      }
+    }
+  },
+  "required": [
+    "filing_manager_name",
+    "report_calendar_quarter_end",
+    "report_type",
+    "table_entry_total",
+    "table_value_total_usd",
+    "holdings"
+  ]
+}

@@ -1,0 +1,249 @@
+{
+  "$comment": "generated from dataagent_contracts.core:MetricDefinition; do not edit",
+  "$defs": {
+    "Aggregation": {
+      "enum": [
+        "sum",
+        "count",
+        "count_distinct",
+        "avg",
+        "min",
+        "max",
+        "custom"
+      ],
+      "title": "Aggregation",
+      "type": "string"
+    },
+    "Measure": {
+      "additionalProperties": false,
+      "properties": {
+        "aggregation": {
+          "$ref": "#/$defs/Aggregation"
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "field_ref": {
+          "minLength": 1,
+          "title": "Field Ref",
+          "type": "string"
+        }
+      },
+      "required": [
+        "field_ref",
+        "aggregation"
+      ],
+      "title": "Measure",
+      "type": "object"
+    },
+    "MetricFilter": {
+      "additionalProperties": false,
+      "properties": {
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "referenced_fields": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Referenced Fields",
+          "type": "array"
+        },
+        "text": {
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "title": "MetricFilter",
+      "type": "object"
+    },
+    "MetricTime": {
+      "additionalProperties": false,
+      "properties": {
+        "calendar_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Calendar Ref"
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "grain": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Grain"
+        },
+        "time_field": {
+          "minLength": 1,
+          "title": "Time Field",
+          "type": "string"
+        }
+      },
+      "required": [
+        "time_field"
+      ],
+      "title": "MetricTime",
+      "type": "object"
+    },
+    "VersionedRef": {
+      "description": "Versioned reference serialized as '<id>@<revision>'.",
+      "pattern": "^[^@\\s]+@[^@\\s]+$",
+      "type": "string"
+    }
+  },
+  "$id": "dataagent-contracts/0.1/core/MetricDefinition",
+  "additionalProperties": false,
+  "properties": {
+    "additivity": {
+      "enum": [
+        "additive",
+        "semi_additive",
+        "non_additive"
+      ],
+      "title": "Additivity",
+      "type": "string"
+    },
+    "certified_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Certified Ref"
+    },
+    "depends_on": {
+      "items": {
+        "$ref": "#/$defs/VersionedRef"
+      },
+      "title": "Depends On",
+      "type": "array"
+    },
+    "dimensions": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Dimensions",
+      "type": "array"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "filters": {
+      "items": {
+        "$ref": "#/$defs/MetricFilter"
+      },
+      "title": "Filters",
+      "type": "array"
+    },
+    "grain": {
+      "minLength": 1,
+      "title": "Grain",
+      "type": "string"
+    },
+    "measure": {
+      "$ref": "#/$defs/Measure"
+    },
+    "statement": {
+      "minLength": 1,
+      "title": "Statement",
+      "type": "string"
+    },
+    "time": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/MetricTime"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "unit": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Unit"
+    }
+  },
+  "required": [
+    "statement",
+    "measure",
+    "grain",
+    "additivity"
+  ],
+  "title": "MetricDefinition",
+  "type": "object"
+}

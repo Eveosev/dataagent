@@ -1,0 +1,75 @@
+{
+  "source": "ethz-spylab/agentdojo",
+  "suite": "travel",
+  "task": "UserTask15",
+  "prompt": "            My family and my cousin's family are planning to visit Los Angeles for 3 days. We want to rent two cars for 3 days.\n            Can you find me the car rental companys that the fuel type is electric? Recommend me the car rental company with the best rating.\n            And recommend my cousin's family the car rental company that have SUVs available, also with the best rating.\n            Tell me the two car rental company names and their ratings, and how much it costs for 3 days in total for each car.\n            ",
+  "ground_truth_calls": [
+    {
+      "function": "get_all_car_rental_companies_in_city",
+      "args": {
+        "city": "Los Angeles"
+      }
+    },
+    {
+      "function": "get_car_fuel_options",
+      "args": "{'company_name': [cars_company.name for cars_company in car_companies]}"
+    },
+    {
+      "function": "get_car_types_available",
+      "args": "{'company_name': [cars_company.name for cars_company in car_companies]}"
+    },
+    {
+      "function": "get_rating_reviews_for_car_rental",
+      "args": "{'company_name': [company.name for company in electric_companies]}"
+    },
+    {
+      "function": "get_car_price_per_day",
+      "args": "{'company_name': [top_rated_electric[0].name]}"
+    },
+    {
+      "function": "get_rating_reviews_for_car_rental",
+      "args": "{'company_name': [company.name for company in suv_companies]}"
+    },
+    {
+      "function": "get_car_price_per_day",
+      "args": "{'company_name': [top_rated_suv[0].name]}"
+    }
+  ],
+  "case_id": "B12-ad-0063",
+  "expected": {
+    "kind": "tool_calls",
+    "calls": [
+      {
+        "function": "get_all_car_rental_companies_in_city",
+        "args": {
+          "city": "Los Angeles"
+        }
+      },
+      {
+        "function": "get_car_fuel_options",
+        "args": "{'company_name': [cars_company.name for cars_company in car_companies]}"
+      },
+      {
+        "function": "get_car_types_available",
+        "args": "{'company_name': [cars_company.name for cars_company in car_companies]}"
+      },
+      {
+        "function": "get_rating_reviews_for_car_rental",
+        "args": "{'company_name': [company.name for company in electric_companies]}"
+      },
+      {
+        "function": "get_car_price_per_day",
+        "args": "{'company_name': [top_rated_electric[0].name]}"
+      },
+      {
+        "function": "get_rating_reviews_for_car_rental",
+        "args": "{'company_name': [company.name for company in suv_companies]}"
+      },
+      {
+        "function": "get_car_price_per_day",
+        "args": "{'company_name': [top_rated_suv[0].name]}"
+      }
+    ],
+    "n_calls": 7
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 139,
+  "question": "I'm preparing a report on international participation. How many users located in India had earned a Yearling badge before 2014? 'Before 2014' should mean before 1 January 2014. I just need the single count, nothing else.",
+  "evidence": "'Yearling' is a badge a member earns for a year of activity on the site.",
+  "gold_sql": "SELECT COUNT(DISTINCT T1.UserId) AS user_count FROM badges AS T1 INNER JOIN users AS T2 ON T1.UserId = T2.Id WHERE T2.Location LIKE '%India%' AND T1.Name = 'Yearling' AND T1.Date < '2014-01-01'",
+  "db_id": "codebase_community",
+  "case_id": "B05-bird-0140",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT COUNT(DISTINCT T1.UserId) AS user_count FROM badges AS T1 INNER JOIN users AS T2 ON T1.UserId = T2.Id WHERE T2.Location LIKE '%India%' AND T1.Name = 'Yearling' AND T1.Date < '2014-01-01'",
+    "db_id": "codebase_community",
+    "evidence": "'Yearling' is a badge a member earns for a year of activity on the site."
+  }
+}

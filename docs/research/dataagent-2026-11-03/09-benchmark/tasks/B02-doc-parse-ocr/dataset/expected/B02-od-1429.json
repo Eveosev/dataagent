@@ -1,0 +1,247 @@
+{
+  "source": "opendatalab/OmniDocBench",
+  "page_no": 194,
+  "image": "book_en_A.Concise.Introduction.to.Linear.Algebra,.Geza.Schay,.Birkhauser,.2012_page_194.png",
+  "attribute": {
+    "data_source": "book",
+    "language": "english",
+    "layout": "single_column",
+    "special_issue": [
+      "None"
+    ],
+    "subset": "v1.5"
+  },
+  "reading_order": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    null,
+    null,
+    null
+  ],
+  "blocks": [
+    {
+      "category": "equation_isolated",
+      "order": 1,
+      "latex": "$$\nS ( \\mathbf { x } ) = \\left[ \\begin{array} { c } { x _ { 2 } + x _ { 3 } } \\\\ { x _ { 3 } } \\end{array} \\right]\n$$"
+    },
+    {
+      "category": "equation_caption",
+      "order": 2,
+      "text": "(4.62)"
+    },
+    {
+      "category": "text_block",
+      "order": 3,
+      "text": "and"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 4,
+      "latex": "$$\nT ( \\mathbf { x } ) = \\biggl [ \\begin{array} { l l } { x _ { 1 } - x _ { 2 } } \\\\ { x _ { 1 } + x _ { 3 } } \\end{array} \\biggr ] .\n$$"
+    },
+    {
+      "category": "equation_caption",
+      "order": 5,
+      "text": "(4.63)"
+    },
+    {
+      "category": "text_block",
+      "order": 6,
+      "text": "Then $Q = S + T$ and $R = cT$ are the linear transformations given by"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 7,
+      "latex": "$$\nQ ( \\mathbf { x } ) = \\left[ \\begin{array} { c } { x _ { 1 } + x _ { 3 } } \\\\ { x _ { 1 } + 2 x _ { 3 } } \\end{array} \\right]\n$$"
+    },
+    {
+      "category": "equation_caption",
+      "order": 8,
+      "text": "(4.64)"
+    },
+    {
+      "category": "text_block",
+      "order": 9,
+      "text": "and"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 10,
+      "latex": "$$\nR ( \\mathbf { x } ) = \\left[ \\begin{array} { l l } { c \\left( x _ { 1 } - x _ { 2 } \\right) } \\\\ { c \\left( x _ { 1 } + x _ { 3 } \\right) } \\end{array} \\right] .\n$$"
+    },
+    {
+      "category": "equation_caption",
+      "order": 11,
+      "text": "(4.65)"
+    },
+    {
+      "category": "text_block",
+      "order": 12,
+      "text": "With Definition 4.2.4 Theorems 4.2.8 and 4.2.9 lead to the following\ntheorem."
+    },
+    {
+      "category": "text_block",
+      "order": 13,
+      "text": "Theorem 4.2.10. (The Linear Transformations from $U$ to $V$ Form a Vector Space, Which Is Isomorphic to $\\mathcal{M}_{m,n}$). Let $L(U,V)$ denote\nthe set of all linear transformations from an $n$-dimensional vector space $U$ to\nan $m$-dimensional vector space $V$, and let $A = (\\mathbf{a}_1, \\mathbf{a}_2, \\ldots, \\mathbf{a}_n)$ be an ordered basis for $U$, $B = (\\mathbf{b}_1, \\mathbf{b}_2, \\ldots, \\mathbf{b}_m)$ an ordered basis for $V$, and $T_{A,B}$ the $m \\times n$\nmatrix that represents any $T \\in L(U,V)$ relative to these bases. Then"
+    },
+    {
+      "category": "text_block",
+      "order": 14,
+      "text": "1. $L(U, V)$, together with addition and scalar multiple of transformations as\nin Definition 4.2.4, is a vector space.\n2. The mapping $M$ from $L(U, V)$ to the vector space $\\mathcal{M}_{m,n}$ of all $m \\times n$ matrices $^6$ given by $M(T) = T_{A,B}$ is linear and an isomorphism. Hence $L(U, V)$\nis $mn$-dimensional."
+    },
+    {
+      "category": "text_block",
+      "order": 15,
+      "text": "Proof. 1. $L(U,V)$ is clearly nonempty: the zero mapping $O$ is in it. Theorem 4.2.9 shows that $L(U,V)$ is closed under addition and multiplication by\nscalars. The vector space axioms for $L(U,V)$ follow from the corresponding ones in $V$ for every $\\mathbf{x}$ in $\\mathbf{y} = T(\\mathbf{x})$. In particular, the zero element is the zero\nmapping $O$, and the element $-T$ is the mapping $(-1)T$.\n2. Let $S, T \\in L(U, V)$ and $a, b$ any scalars. Then, by Theorem 4.1.3, for all $\\mathbf{x} \\in U, \\mathbf{y} = T(\\mathbf{x})$ becomes in terms of coordinates $\\mathbf{y}_B = T_{A,B}\\mathbf{x}_A = M(T)\\mathbf{x}_A$.\nSimilarly $\\mathbf{y} = (aS+bT)(\\mathbf{x})$ becomes"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 16,
+      "latex": "$$\n\\mathbf { y } _ { B } = \\left( a S + b T \\right) _ { A , B } \\mathbf { x } _ { A } = M \\left( a S + b T \\right) \\mathbf { x } _ { A } .\n$$"
+    },
+    {
+      "category": "equation_caption",
+      "order": 17,
+      "text": "(4.66)"
+    },
+    {
+      "category": "page_number",
+      "order": null,
+      "text": "181"
+    },
+    {
+      "category": "page_footnote",
+      "order": null,
+      "text": "$^6$ See Example 3.1.2."
+    },
+    {
+      "category": "header",
+      "order": null,
+      "text": "4.2 Properties of Linear Transformations"
+    }
+  ],
+  "tables": [],
+  "case_id": "B02-od-1429",
+  "expected": {
+    "kind": "document",
+    "text": "$$\nS ( \\mathbf { x } ) = \\left[ \\begin{array} { c } { x _ { 2 } + x _ { 3 } } \\\\ { x _ { 3 } } \\end{array} \\right]\n$$\n(4.62)\nand\n$$\nT ( \\mathbf { x } ) = \\biggl [ \\begin{array} { l l } { x _ { 1 } - x _ { 2 } } \\\\ { x _ { 1 } + x _ { 3 } } \\end{array} \\biggr ] .\n$$\n(4.63)\nThen $Q = S + T$ and $R = cT$ are the linear transformations given by\n$$\nQ ( \\mathbf { x } ) = \\left[ \\begin{array} { c } { x _ { 1 } + x _ { 3 } } \\\\ { x _ { 1 } + 2 x _ { 3 } } \\end{array} \\right]\n$$\n(4.64)\nand\n$$\nR ( \\mathbf { x } ) = \\left[ \\begin{array} { l l } { c \\left( x _ { 1 } - x _ { 2 } \\right) } \\\\ { c \\left( x _ { 1 } + x _ { 3 } \\right) } \\end{array} \\right] .\n$$\n(4.65)\nWith Definition 4.2.4 Theorems 4.2.8 and 4.2.9 lead to the following\ntheorem.\nTheorem 4.2.10. (The Linear Transformations from $U$ to $V$ Form a Vector Space, Which Is Isomorphic to $\\mathcal{M}_{m,n}$). Let $L(U,V)$ denote\nthe set of all linear transformations from an $n$-dimensional vector space $U$ to\nan $m$-dimensional vector space $V$, and let $A = (\\mathbf{a}_1, \\mathbf{a}_2, \\ldots, \\mathbf{a}_n)$ be an ordered basis for $U$, $B = (\\mathbf{b}_1, \\mathbf{b}_2, \\ldots, \\mathbf{b}_m)$ an ordered basis for $V$, and $T_{A,B}$ the $m \\times n$\nmatrix that represents any $T \\in L(U,V)$ relative to these bases. Then\n1. $L(U, V)$, together with addition and scalar multiple of transformations as\nin Definition 4.2.4, is a vector space.\n2. The mapping $M$ from $L(U, V)$ to the vector space $\\mathcal{M}_{m,n}$ of all $m \\times n$ matrices $^6$ given by $M(T) = T_{A,B}$ is linear and an isomorphism. Hence $L(U, V)$\nis $mn$-dimensional.\nProof. 1. $L(U,V)$ is clearly nonempty: the zero mapping $O$ is in it. Theorem 4.2.9 shows that $L(U,V)$ is closed under addition and multiplication by\nscalars. The vector space axioms for $L(U,V)$ follow from the corresponding ones in $V$ for every $\\mathbf{x}$ in $\\mathbf{y} = T(\\mathbf{x})$. In particular, the zero element is the zero\nmapping $O$, and the element $-T$ is the mapping $(-1)T$.\n2. Let $S, T \\in L(U, V)$ and $a, b$ any scalars. Then, by Theorem 4.1.3, for all $\\mathbf{x} \\in U, \\mathbf{y} = T(\\mathbf{x})$ becomes in terms of coordinates $\\mathbf{y}_B = T_{A,B}\\mathbf{x}_A = M(T)\\mathbf{x}_A$.\nSimilarly $\\mathbf{y} = (aS+bT)(\\mathbf{x})$ becomes\n$$\n\\mathbf { y } _ { B } = \\left( a S + b T \\right) _ { A , B } \\mathbf { x } _ { A } = M \\left( a S + b T \\right) \\mathbf { x } _ { A } .\n$$\n(4.66)\n181\n$^6$ See Example 3.1.2.\n4.2 Properties of Linear Transformations",
+    "tables": [],
+    "blocks": [
+      {
+        "category": "equation_isolated",
+        "order": 1,
+        "latex": "$$\nS ( \\mathbf { x } ) = \\left[ \\begin{array} { c } { x _ { 2 } + x _ { 3 } } \\\\ { x _ { 3 } } \\end{array} \\right]\n$$"
+      },
+      {
+        "category": "equation_caption",
+        "order": 2,
+        "text": "(4.62)"
+      },
+      {
+        "category": "text_block",
+        "order": 3,
+        "text": "and"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 4,
+        "latex": "$$\nT ( \\mathbf { x } ) = \\biggl [ \\begin{array} { l l } { x _ { 1 } - x _ { 2 } } \\\\ { x _ { 1 } + x _ { 3 } } \\end{array} \\biggr ] .\n$$"
+      },
+      {
+        "category": "equation_caption",
+        "order": 5,
+        "text": "(4.63)"
+      },
+      {
+        "category": "text_block",
+        "order": 6,
+        "text": "Then $Q = S + T$ and $R = cT$ are the linear transformations given by"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 7,
+        "latex": "$$\nQ ( \\mathbf { x } ) = \\left[ \\begin{array} { c } { x _ { 1 } + x _ { 3 } } \\\\ { x _ { 1 } + 2 x _ { 3 } } \\end{array} \\right]\n$$"
+      },
+      {
+        "category": "equation_caption",
+        "order": 8,
+        "text": "(4.64)"
+      },
+      {
+        "category": "text_block",
+        "order": 9,
+        "text": "and"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 10,
+        "latex": "$$\nR ( \\mathbf { x } ) = \\left[ \\begin{array} { l l } { c \\left( x _ { 1 } - x _ { 2 } \\right) } \\\\ { c \\left( x _ { 1 } + x _ { 3 } \\right) } \\end{array} \\right] .\n$$"
+      },
+      {
+        "category": "equation_caption",
+        "order": 11,
+        "text": "(4.65)"
+      },
+      {
+        "category": "text_block",
+        "order": 12,
+        "text": "With Definition 4.2.4 Theorems 4.2.8 and 4.2.9 lead to the following\ntheorem."
+      },
+      {
+        "category": "text_block",
+        "order": 13,
+        "text": "Theorem 4.2.10. (The Linear Transformations from $U$ to $V$ Form a Vector Space, Which Is Isomorphic to $\\mathcal{M}_{m,n}$). Let $L(U,V)$ denote\nthe set of all linear transformations from an $n$-dimensional vector space $U$ to\nan $m$-dimensional vector space $V$, and let $A = (\\mathbf{a}_1, \\mathbf{a}_2, \\ldots, \\mathbf{a}_n)$ be an ordered basis for $U$, $B = (\\mathbf{b}_1, \\mathbf{b}_2, \\ldots, \\mathbf{b}_m)$ an ordered basis for $V$, and $T_{A,B}$ the $m \\times n$\nmatrix that represents any $T \\in L(U,V)$ relative to these bases. Then"
+      },
+      {
+        "category": "text_block",
+        "order": 14,
+        "text": "1. $L(U, V)$, together with addition and scalar multiple of transformations as\nin Definition 4.2.4, is a vector space.\n2. The mapping $M$ from $L(U, V)$ to the vector space $\\mathcal{M}_{m,n}$ of all $m \\times n$ matrices $^6$ given by $M(T) = T_{A,B}$ is linear and an isomorphism. Hence $L(U, V)$\nis $mn$-dimensional."
+      },
+      {
+        "category": "text_block",
+        "order": 15,
+        "text": "Proof. 1. $L(U,V)$ is clearly nonempty: the zero mapping $O$ is in it. Theorem 4.2.9 shows that $L(U,V)$ is closed under addition and multiplication by\nscalars. The vector space axioms for $L(U,V)$ follow from the corresponding ones in $V$ for every $\\mathbf{x}$ in $\\mathbf{y} = T(\\mathbf{x})$. In particular, the zero element is the zero\nmapping $O$, and the element $-T$ is the mapping $(-1)T$.\n2. Let $S, T \\in L(U, V)$ and $a, b$ any scalars. Then, by Theorem 4.1.3, for all $\\mathbf{x} \\in U, \\mathbf{y} = T(\\mathbf{x})$ becomes in terms of coordinates $\\mathbf{y}_B = T_{A,B}\\mathbf{x}_A = M(T)\\mathbf{x}_A$.\nSimilarly $\\mathbf{y} = (aS+bT)(\\mathbf{x})$ becomes"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 16,
+        "latex": "$$\n\\mathbf { y } _ { B } = \\left( a S + b T \\right) _ { A , B } \\mathbf { x } _ { A } = M \\left( a S + b T \\right) \\mathbf { x } _ { A } .\n$$"
+      },
+      {
+        "category": "equation_caption",
+        "order": 17,
+        "text": "(4.66)"
+      },
+      {
+        "category": "page_number",
+        "order": null,
+        "text": "181"
+      },
+      {
+        "category": "page_footnote",
+        "order": null,
+        "text": "$^6$ See Example 3.1.2."
+      },
+      {
+        "category": "header",
+        "order": null,
+        "text": "4.2 Properties of Linear Transformations"
+      }
+    ]
+  }
+}

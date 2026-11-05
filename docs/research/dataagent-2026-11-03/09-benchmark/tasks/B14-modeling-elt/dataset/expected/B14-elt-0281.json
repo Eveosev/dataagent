@@ -1,0 +1,139 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "snowflake",
+  "pipeline": "student_loan",
+  "data_model": {
+    "models": [
+      {
+        "name": "organization",
+        "description": "Each record represents an organization.",
+        "columns": [
+          {
+            "name": "organ",
+            "description": "Unique identifier for the organization."
+          },
+          {
+            "name": "num_disabled_students",
+            "description": "The number of disabled students in the organization, replace NULL values with 0."
+          },
+          {
+            "name": "per_male_students",
+            "description": "The percentage of male students in the organization."
+          },
+          {
+            "name": "longest_time_absence",
+            "description": "The longest time for a student from the department to be absent from school, replace NULL values with 0."
+          },
+          {
+            "name": "per_students_have_due_payment",
+            "description": "The percentage of students who have a due payment in the organization."
+          },
+          {
+            "name": "ratio_between_female_and_male",
+            "description": "The ratio between the number of female and male students who joined the organization, calculated as the number of female students divided by the number of male students."
+          }
+        ]
+      },
+      {
+        "name": "students",
+        "description": "Each record represents a student.",
+        "columns": [
+          {
+            "name": "name",
+            "description": "The name of the student."
+          },
+          {
+            "name": "gender",
+            "description": "The gender of the student, set to 'M' for male 'F' for female."
+          },
+          {
+            "name": "female_and_no_due_payments",
+            "description": "Set to 1 if the student is female and has no due payments, otherwise, set to 0"
+          },
+          {
+            "name": "join_more_than_one_org",
+            "description": "Set to 1 if the student has joined more than one organization, 0 otherwise."
+          },
+          {
+            "name": "not_file_for_bankruptcy",
+            "description": "Set to 1 if the student has not filed for bankruptcy, 0 otherwise."
+          },
+          {
+            "name": "has_the_longest_absence_duration",
+            "description": "Set to 1 if the student has the longest absence duration from school, otherwise, set to 0."
+          }
+        ]
+      },
+      {
+        "name": "schools",
+        "description": "Each record represents a unique school.",
+        "columns": [
+          {
+            "name": "school",
+            "description": "The name of the school."
+          },
+          {
+            "name": "num_disabled_students",
+            "description": "The number of disabled students in the school, replace NULL values with 0."
+          },
+          {
+            "name": "per_male_and_air_force",
+            "description": "The percentage of male students in the air force department among all students enrolled in the school."
+          },
+          {
+            "name": "per_disabled_female_students",
+            "description": "The percentage of disabled female students in the school."
+          },
+          {
+            "name": "per_students_file_bankruptcy",
+            "description": "The percentage of students who have filed for bankruptcy in the school."
+          },
+          {
+            "name": "per_navy_make_up_num_students",
+            "description": "The percentage of enrolled students in the school who enlisted in the navy."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    snowflake_definition_id: 424892c4-daac-4491-b35d-c6688ba547ba\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://student-loan-bucket/bool.jsonl\n    sync_mode: full_refresh_append\n    table: bool\n  - path: s3://student-loan-bucket/male.csv\n    sync_mode: full_refresh_append\n    table: male\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - no_payment_due\n    - enrolled\nflat_files:\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=1RDRdHA78-9dtOWdp2tUtmuG6ebVpRRBy\n  sync_mode: full_refresh_append\n  table: filed_for_bankruptcy\n- format: parquet\n  path: https://drive.google.com/uc?export=download&id=1yGnpw4reB2IBKTr_rMu1cONTy50SHMA-\n  sync_mode: full_refresh_append\n  table: disabled\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: student_loan\n    sync_mode: full_refresh_append\n    tables:\n    - enlist\n    - person\n    - unemployed\npostgres:\n  config:\n    database: student_loan\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - longest_absense_from_school\n    user: postgres\nsnowflake:\n  config:\n    database: student_loan\n    password: Snowflake@123\n    role: AIRBYTE_ROLE\n    schema: AIRBYTE_SCHEMA\n    username: AIRBYTE_USER\n    warehouse: AIRBYTE_WAREHOUSE\n",
+  "case_id": "B14-elt-0281",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "organization",
+        "columns": [
+          "organ",
+          "num_disabled_students",
+          "per_male_students",
+          "longest_time_absence",
+          "per_students_have_due_payment",
+          "ratio_between_female_and_male"
+        ]
+      },
+      {
+        "name": "students",
+        "columns": [
+          "name",
+          "gender",
+          "female_and_no_due_payments",
+          "join_more_than_one_org",
+          "not_file_for_bankruptcy",
+          "has_the_longest_absence_duration"
+        ]
+      },
+      {
+        "name": "schools",
+        "columns": [
+          "school",
+          "num_disabled_students",
+          "per_male_and_air_force",
+          "per_disabled_female_students",
+          "per_students_file_bankruptcy",
+          "per_navy_make_up_num_students"
+        ]
+      }
+    ]
+  }
+}

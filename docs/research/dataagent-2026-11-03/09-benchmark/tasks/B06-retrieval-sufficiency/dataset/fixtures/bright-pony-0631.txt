@@ -1,0 +1,43 @@
+## Identifying the Essential Problem
+
+The problem requires us to find the maximum number of consecutive 1's in a binary array `nums`. This means we need to identify the longest sequence of 1's within the array and return its length. 
+
+## Step-by-Step Reasoning
+
+1. **Initialization**: Start with a variable `max_count` initialized to 0. This variable will store the maximum number of consecutive 1's found so far.
+2. **Iteration**: Loop through each element in the array `nums`.
+3. **Counting Consecutive 1's**: 
+    - If the current element is 1:
+        - Increment a `current_count` variable. 
+        - If `current_count` is greater than `max_count`, update `max_count` with the value of `current_count`.
+    - If the current element is 0:
+        - Reset `current_count` to 0.
+4. **Return**: After iterating through the entire array, return the value of `max_count`.
+
+## Draft Answer
+
+```pony
+fun findMaxConsecutiveOnes(nums: Array[I32]): I32 =>
+    var max_count = 0
+    var current_count = 0
+
+    for num in nums {
+        if num == 1 {
+            current_count += 1
+            if current_count > max_count {
+                max_count = current_count
+            }
+        } else {
+            current_count = 0
+        }
+    }
+
+    return max_count
+```
+
+## Additional Thoughts
+
+- This solution assumes that the input array is not empty. If the input array is empty, the function should return 0.
+- This solution has a time complexity of O(n) and a space complexity of O(1).
+- There might be alternative solutions using different approaches, such as using recursion or more advanced data structures. However, this solution provides a straightforward and efficient way to solve the problem.
+

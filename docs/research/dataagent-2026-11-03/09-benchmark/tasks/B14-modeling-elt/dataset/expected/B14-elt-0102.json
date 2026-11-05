@@ -1,0 +1,108 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "redshift",
+  "pipeline": "airline",
+  "data_model": {
+    "models": [
+      {
+        "name": "airline__airlines",
+        "description": "Each record represents a airline.",
+        "columns": [
+          {
+            "name": "airline_code",
+            "description": "The airline code."
+          },
+          {
+            "name": "airline_name",
+            "description": "The airline name."
+          },
+          {
+            "name": "flight_number_had_the_longest_delay_in_departure",
+            "description": "the flight number of the flight operated by the airline that had the longest delay in departure, with ties broken by the ascending order of the flight number"
+          },
+          {
+            "name": "num_flights_operate_in_2018",
+            "description": "the number of flights operated by the airline in 2018, replace NULL values with 0."
+          },
+          {
+            "name": "num_planes",
+            "description": "the number of planes operated by the airline, replace NULL values with 0."
+          },
+          {
+            "name": "number_of_non_cancelled_flights",
+            "description": "the number of non-cancelled flights operated by the airline, replace NULL values with 0."
+          },
+          {
+            "name": "total_hours_delayed_due_to_a_late_aircraft_in_2018",
+            "description": "the total hours delayed of the airline due to a late aircraft in 2018, replace NULL values with 0."
+          }
+        ]
+      },
+      {
+        "name": "airline__airports",
+        "description": "Each record represents a airport.",
+        "columns": [
+          {
+            "name": "airport_code",
+            "description": "The airport code."
+          },
+          {
+            "name": "airport_name",
+            "description": "The airport name."
+          },
+          {
+            "name": "num_flights_departure",
+            "description": "the number of flights that depart from the airport, replace NULL values with 0."
+          },
+          {
+            "name": "airline_flew_most_flights",
+            "description": "the airline that flew the most flights to the airport, with ties broken by the ascending order of the airline name"
+          },
+          {
+            "name": "num_flights_landed_in_2018",
+            "description": "the number of flights that landed at the airport in 2018, replace NULL values with 0."
+          },
+          {
+            "name": "highest_delay_in_minutes_due_to_security",
+            "description": "the highest delay in minutes due to security among flights departing from the airport"
+          },
+          {
+            "name": "num_cancelled_flights",
+            "description": "the number of cancelled flights that depart from the airport, replace NULL values with 0."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    redshift_definition_id: f7a7d195-377f-cf5b-70a5-be6b819019dc\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://airline-bucket/Airports.jsonl\n    sync_mode: full_refresh_append\n    table: Airports\nflat_files:\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=1tRfQsfJe8ZEqDYoA0Cn4i3sZNsfh88m4\n  sync_mode: full_refresh_append\n  table: Air_Carriers\npostgres:\n  config:\n    database: airline\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - airlines\n    user: postgres\nredshift:\n  config:\n    host: <redshift_hostname>\n    port: <redshift_port>\n    database: <redshift_db>\n    username: <redshift_username>\n    password: <redshift_pwd>\n    schema: airline\n    s3_bucket_name: <redshift_s3_bucket>\n    s3_bucket_region: <redshift_s3_region>\n    access_key_id: <redshift_s3_access_key>\n    secret_access_key: <redshift_s3_secret_key>\n",
+  "case_id": "B14-elt-0102",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "airline__airlines",
+        "columns": [
+          "airline_code",
+          "airline_name",
+          "flight_number_had_the_longest_delay_in_departure",
+          "num_flights_operate_in_2018",
+          "num_planes",
+          "number_of_non_cancelled_flights",
+          "total_hours_delayed_due_to_a_late_aircraft_in_2018"
+        ]
+      },
+      {
+        "name": "airline__airports",
+        "columns": [
+          "airport_code",
+          "airport_name",
+          "num_flights_departure",
+          "airline_flew_most_flights",
+          "num_flights_landed_in_2018",
+          "highest_delay_in_minutes_due_to_security",
+          "num_cancelled_flights"
+        ]
+      }
+    ]
+  }
+}

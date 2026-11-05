@@ -1,0 +1,30 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_0520aaef",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_document_type",
+    "scenario_issue",
+    "statute_cpc_41220_applies",
+    "statute_cpc_41220_required_summons_inclusion",
+    "statute_cpc_41220_required_summons_attribute",
+    "county_ordinance_requires_additional_language",
+    "statute_cpc_41220_optional_additional_language_legend_required",
+    "statute_cpc_41220_deemed_compliant_if",
+    "statute_shc_1167_rule",
+    "statute_specifies_required_inclusions_on_summons",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: California\n    Focus year: 2021\n    Question: \"Is it specified what must be included on the summons?\"\n*/\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Scenario (facts) and scenario_statement/0\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nscenario_state(california).\nscenario_focus_year(2021).\nscenario_document_type(summons).\n\n% The user's question, encoded as a scenario \"issue\" we want to resolve.\nscenario_issue(specified_required_inclusions_on_summons).\n\nscenario_statement :-\n    scenario_state(california),\n    scenario_focus_year(2021),\n    scenario_document_type(summons),\n    scenario_issue(specified_required_inclusions_on_summons).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Statute translations\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n/*\n  CA Civ Pro Code  412.20 (2021)\n  Encodes that a summons must contain specified items, and be directed to\n  defendant, signed by clerk, issued under seal, plus the enumerated contents.\n*/\n\n% Applicability: this statute governs \"summons\" content in CA (focus year 2021).\nstatute_cpc_41220_applies(california, 2021, summons).\n\n% Required inclusions/attributes on a summons (enumerated content).\n%  412.20(a): \"a summons ... shall contain: (1)-(6)\"\nstatute_cpc_41220_required_summons_inclusion(title_of_court).                 % (a)(1)\nstatute_cpc_41220_required_summons_inclusion(names_of_parties).               % (a)(2)\nstatute_cpc_41220_required_summons_inclusion(direction_to_file_pleading_within_30_days). % (a)(3)\nstatute_cpc_41220_required_summons_inclusion(notice_default_and_possible_relief).        % (a)(4)\nstatute_cpc_41220_required_summons_inclusion(bold_statement_may_seek_attorney_advice).   % (a)(5)\nstatute_cpc_41220_required_summons_inclusion(bold_intro_legend_english_and_spanish_notice_you_have_been_sued). % (a)(6)\n\n% Other required attributes (not \"contain\" list but still specified in  412.20(a)).\nstatute_cpc_41220_required_summons_attribute(directed_to_defendant).\nstatute_cpc_41220_required_summons_attribute(signed_by_clerk).\nstatute_cpc_41220_required_summons_attribute(issued_under_seal_of_court).\n\n%  412.20(b): counties may require additional foreign language legend by ordinance.\n% We encode the conditional possibility as a rule driven by facts (none asserted here).\ncounty_ordinance_requires_additional_language(_County, _Language) :- fail.\n\nstatute_cpc_41220_optional_additional_language_legend_required(County, Language) :-\n    county_ordinance_requires_additional_language(County, Language).\n\n%  412.20(c): a summons in a Judicial Council-approved form is deemed compliant.\nstatute_cpc_41220_deemed_compliant_if(judicial_council_approved_form).\n\n/*\n  CA St & Hwy Code  1167 (2021) - unrelated to summons content, but included.\n  1167: boundaries established by the board remain until changed as provided.\n*/\nstatute_shc_1167_rule(boundaries_of_division_remain_until_changed_as_provided).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Reasoning helpers\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n% True when there exists some statute (in this dataset) applicable to the scenario\n% that specifies required inclusions on a summons.\nstatute_specifies_required_inclusions_on_summons(State, Year) :-\n    statute_cpc_41220_applies(State, Year, summons),\n    statute_cpc_41220_required_summons_inclusion(_SomeInclusion).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Final answer predicate (deterministic)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_state(State),\n    scenario_focus_year(Year),\n    statute_specifies_required_inclusions_on_summons(State, Year),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Main entrypoint\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-2900",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Is it specified what must be included on the summons?"
+  }
+}

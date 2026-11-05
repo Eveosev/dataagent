@@ -1,0 +1,109 @@
+{
+  "type": "object",
+  "title": "Real-content CSR expired carbon monoxide listing extraction schema",
+  "description": "Extract listing metadata and every expired-CO measurement row from a clinical study report appendix listing. Rows are grouped by subject: the subject number and study product are printed only on the first row of each group and must be carried forward to its continuation rows. '---' cells mean not measured (null); times 'ND'/'UNK' are kept as printed per the page note.",
+  "required": [
+    "cro_study_number",
+    "sponsor_protocol_number",
+    "listing_number",
+    "listing_title",
+    "study_population",
+    "note_line",
+    "measurements"
+  ],
+  "properties": {
+    "cro_study_number": {
+      "type": "string",
+      "description": "CRO study number from the page header, e.g. '7694-105'."
+    },
+    "sponsor_protocol_number": {
+      "type": "string",
+      "description": "Sponsor protocol number from the page header, e.g. 'SM 08-01'."
+    },
+    "listing_number": {
+      "type": "string",
+      "description": "Listing number from the title line, e.g. '16.2.6-1'."
+    },
+    "listing_title": {
+      "type": "string",
+      "description": "Listing title text, e.g. 'Expired Carbon Monoxide by Subject'."
+    },
+    "study_population": {
+      "type": "string",
+      "description": "Population named on the 'Study Population:' line."
+    },
+    "note_line": {
+      "type": "string",
+      "description": "The page-bottom NOTE line explaining ND/UNK codes."
+    },
+    "measurements": {
+      "type": "array",
+      "description": "Every measurement row in document order (one per timepoint).",
+      "items": {
+        "type": "object",
+        "required": [
+          "subject_number",
+          "study_product",
+          "timepoint",
+          "date",
+          "time",
+          "eco_ppm",
+          "cohb_pct",
+          "comments",
+          "source_page"
+        ],
+        "properties": {
+          "subject_number": {
+            "type": "string",
+            "description": "Subject identifier, e.g. 'R1001'; printed only on the first row of the subject's group — carry forward."
+          },
+          "study_product": {
+            "type": "string",
+            "enum": [
+              "Active",
+              "Placebo"
+            ],
+            "description": "Study product; printed only on the group's first row — carry forward."
+          },
+          "timepoint": {
+            "type": "string",
+            "description": "Visit timepoint as printed, e.g. 'Week 6'."
+          },
+          "date": {
+            "type": "string",
+            "description": "Measurement date as printed (YYYY-MM-DD)."
+          },
+          "time": {
+            "type": "string",
+            "description": "Measurement time 'HH:MM', or 'ND'/'UNK' as printed."
+          },
+          "eco_ppm": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "ECO level in ppm; '---' prints as null."
+          },
+          "cohb_pct": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "%COHb value; '---' prints as null."
+          },
+          "comments": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Comments column; null when blank."
+          },
+          "source_page": {
+            "type": "integer",
+            "description": "Page number as printed on the page of the row. This document's printed page numbering is offset from the PDF page index; report the number printed on the page, not the PDF page position."
+          }
+        }
+      }
+    }
+  }
+}

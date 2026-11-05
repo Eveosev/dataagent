@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 453,
+  "question": "I'm auditing inpatient intake during the February 1998 admission wave. Among patients first seen at the hospital in the second half of February 1998 (visit date from 15 to 28 February 1998), find the oldest inpatient at first presentation and give me that patient's diagnosis only. If two patients tie in age, use the one with the smaller patient ID.",
+  "evidence": "'Inpatient' means the patient was admitted to the hospital rather than followed at the outpatient clinic, regardless of whether the record notes extra detail about the admission.",
+  "gold_sql": "SELECT p.Diagnosis FROM Patient AS p WHERE p.`First Date` >= '1998-02-15' AND p.`First Date` <= '1998-02-28' AND p.Admission LIKE '+%' ORDER BY p.Birthday ASC, p.ID ASC LIMIT 1",
+  "db_id": "thrombosis_prediction",
+  "case_id": "B05-bird-0454",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT p.Diagnosis FROM Patient AS p WHERE p.`First Date` >= '1998-02-15' AND p.`First Date` <= '1998-02-28' AND p.Admission LIKE '+%' ORDER BY p.Birthday ASC, p.ID ASC LIMIT 1",
+    "db_id": "thrombosis_prediction",
+    "evidence": "'Inpatient' means the patient was admitted to the hospital rather than followed at the outpatient clinic, regardless of whether the record notes extra detail about the admission."
+  }
+}

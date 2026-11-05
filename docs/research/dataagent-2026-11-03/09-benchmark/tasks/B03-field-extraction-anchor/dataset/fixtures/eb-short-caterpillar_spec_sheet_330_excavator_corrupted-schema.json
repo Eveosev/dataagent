@@ -1,0 +1,109 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "Product Spec Sheet / Datasheet — rated specifications table (vendor-agnostic)",
+  "$defs": {
+    "Specification": {
+      "type": "object",
+      "properties": {
+        "section": {
+          "type": "string",
+          "description": "The spec-group heading the row is printed under — the bold/shaded band or sub-title directly above the row. Equipment spec sheets (Caterpillar): e.g. 'Engine', 'Engine rpm', 'Drive', 'Hydraulic System', 'Swing Mechanism', 'Weights', 'Track', 'Service Refill Capacities'. Electronics datasheets (TI): e.g. 'Absolute Maximum Ratings', 'ESD Ratings', 'Recommended Operating Conditions'. Record ONLY the heading words. NEVER include a leading section/clause number — strip any '5.1', '5.2', '5.3' (or '5', '6.2') prefix: a heading printed '5.1 Absolute Maximum Ratings' MUST be recorded as 'Absolute Maximum Ratings', and '5.3 Recommended Operating Conditions' as 'Recommended Operating Conditions'. Carry the current heading down to every row beneath it until a new heading appears. Do NOT confuse with: the parameter label itself (`name`), the document title, or a column header inside the table ('MIN', 'MAX', 'kg', 'lb')."
+        },
+        "symbol": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The short engineering symbol printed in the left-most symbol column of the row, when the table has one (electronics datasheets), e.g. 'VCC', 'VI', 'IO', 'TJ', 'Tstg', 'V(ESD)', 'TA'. Record the symbol text as printed with subscripts inline (no LaTeX), e.g. 'VCC', 'IO', 'TJ', 'Tstg', 'TA'. If the symbol cell is merged or blank because the row shares the symbol of the row directly above (e.g. both ESD-discharge sub-rows belong to symbol 'V(ESD)'), CARRY THE SYMBOL DOWN and record it on every shared sub-row. Use null when the table has no symbol column (Caterpillar equipment spec blocks have no symbol column — symbol is null for every Caterpillar row). Do NOT confuse with the descriptive `name` (the symbol is the abbreviation, the name is the words) or the `unit`."
+        },
+        "name": {
+          "type": "string",
+          "description": "The descriptive parameter label for the row, recorded VERBATIM from the parameter column (e.g. 'Net Power - ISO 9249', 'Gross Power - ISO 14396/SAE J1995', 'Maximum Pressure - Equipment - Normal', 'Boom Cylinder - Bore', 'Supply voltage', 'Output current', 'Operating virtual junction temperature', 'Storage temperature'). Keep qualifier text that is part of the printed label (standard name, ISO/SAE reference, 'Each', '(each side)'). STRIP trailing footnote-reference markers (superscript numbers / parenthesised footnote indices such as '(1)', '(2)') and trademark symbols (®, ™): e.g. 'Supply voltage(2)' -> 'Supply voltage'. Do NOT confuse with: the `section` heading above it, the `symbol` abbreviation, or the `conditions` qualifier that lives in a separate test-conditions column."
+        },
+        "conditions": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The test-condition / package / device-variant qualifier printed in a separate conditions column or sub-cell on the row (electronics datasheets), e.g. 'CONT, RESET, THRES, TRIG', 'FK package', 'JG package, 60 seconds', 'NA555, NE555, SA555', 'SE555'. When one parameter has several rows that differ only by this qualifier (e.g. 'Operating free-air temperature' listed once per device variant), this field is what distinguishes them. Use null when the row has no separate conditions column (Caterpillar equipment rows have no conditions column — conditions is null for them). Do NOT confuse with `name` (the parameter) or `unit`."
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The single printed measurement value for a single-value spec row, in the PRIMARY/SI unit column (Caterpillar equipment blocks list one SI value, e.g. '194', '105', '7.01', '11.50', '30 900', '50', '1,900'). Record ONLY the leading primary number exactly as printed (keep an internal space or comma in a grouped number like '30 900'); DROP the unit (it goes in `unit`), DROP any parenthetical breakdown that follows the number (e.g. '560 (280 × 2 pumps)' -> '560'; '35°/70%' -> '35°/70%' is kept since it is the whole value), and STRIP trademark symbols ® and ™ (e.g. engine model 'Cat® C7.1' -> 'Cat C7.1'). For a non-numeric spec the descriptive value goes here (e.g. engine model 'Cat C7.1', verbatim minus ®). ALSO use `value` (NOT min/max) for an electronics-datasheet table that has a single 'VALUE' column instead of MIN/MAX columns — e.g. the 'ESD Ratings' table, where the rated ESD voltage goes in `value` formatted with a leading '+/-' for the ± sign (e.g. '+/-500', '+/-1500'); leave min/typ/max null on those rows. Use null on rows that instead report a rated range via MIN/TYP/MAX columns (Absolute Maximum Ratings / Recommended Operating Conditions — leave value null and fill min/typ/max). Do NOT confuse with `value_imperial` (the second, imperial value) or with min/max."
+        },
+        "value_imperial": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The second value on a dual-unit equipment spec row — the imperial/US-customary value printed to the right of the SI value (e.g. SI '194 kW' -> imperial '260' hp; SI '105 mm' -> '4' in; SI '474 L' -> '125.2' gal; SI '30 900 kg' -> '68,200' lb; SI '5.3 km/h' -> '3.3' mph). Record only the leading number as printed without its unit (the imperial unit goes in `unit_imperial`); drop parenthetical breakdowns. Use null when the row prints only one value, when the spec is dimensionless (counts, ratios, model names), or for electronics datasheets (single-unit -> null). Do NOT confuse with `value` (the SI value) or with `max`."
+        },
+        "min": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The MIN-column value on a rated-range spec row (electronics datasheets: Absolute Maximum Ratings / Recommended Operating Conditions / ESD tables have MIN MAX UNIT columns), recorded exactly as printed e.g. '4.5', '-65', '-40', '2.75'. Use null when the MIN cell is blank or the table has no MIN column (Caterpillar single-value rows -> null). Do NOT confuse with `value` (a single SI value), `typ`, or `max`."
+        },
+        "typ": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The TYP/NOM-column value on a rated-range spec row, recorded as printed. Null when there is no TYP/NOM column or the cell is blank (the in-scope Absolute Maximum / ESD / Recommended Operating Conditions tables and all Caterpillar blocks have no TYP column, so typ is null). Do NOT confuse with `min`, `max`, or `value`."
+        },
+        "max": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The MAX-column value on a rated-range spec row (electronics datasheets), recorded exactly as printed including any sign e.g. '18', '+/-225' (render '±' as '+/-'), '150', '300', '16', '+/-200', '+/-1500'. Use null when the MAX cell is blank or the table has no MAX column (Caterpillar single-value rows -> null). Do NOT confuse with `value` (a single SI value), `min`, or `value_imperial`."
+        },
+        "unit": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The unit of measure for this row's value(s)/min/typ/max, taken from the SI/primary unit column or the datasheet UNIT column. Render in plain ASCII with exponents inline as digits: 'kW', 'mm', 'L', 'kg', 'km/h', 'kN', 'kPa', 'N·m', 'rpm', 'V', 'mA', '°C', 'in3' (NOT 'in³'), 'm3' (NOT 'm³'). For dual-unit Caterpillar rows this is the SI unit only (the imperial unit goes in `unit_imperial`). Use null when the spec is dimensionless (counts like number of rollers, ratios, model names). Do NOT confuse with `unit_imperial` (the imperial unit) or with the `symbol`."
+        },
+        "unit_imperial": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The imperial/US-customary unit paired with `value_imperial` on a dual-unit equipment row, plain ASCII with digit exponents (e.g. 'hp', 'in', 'gal', 'lb', 'mph', 'lbf', 'psi', 'lbf-ft', 'in3' NOT 'in³'). Use null when the row has no imperial value (single-value rows, dimensionless specs, or electronics datasheets). Do NOT confuse with `unit` (the SI unit)."
+        }
+      },
+      "required": [
+        "section",
+        "name"
+      ]
+    }
+  },
+  "properties": {
+    "manufacturer": {
+      "type": "string",
+      "description": "The company that makes the product, as the full company name. Normalize a stylized brand logo to the full legal/common company name: the Caterpillar 'CAT' logo -> 'Caterpillar'; 'Texas Instruments' -> 'Texas Instruments'. Always output 'Caterpillar' (never 'CAT' or 'Cat') for Caterpillar documents. Do NOT confuse with a standards body named in a spec row (ISO, SAE, ANSI, JEDEC) or with the product model."
+    },
+    "product_title": {
+      "type": "string",
+      "description": "The product's headline title as printed at the top of the spec sheet / datasheet, VERBATIM (e.g. '330 Hydraulic Excavator', '312C L Hydraulic Excavators', 'NA555, NE555, SA555, SE555'). EXCLUDE trailing running-header words that describe the document rather than the product — drop a trailing 'specifications' / 'Specifications' / 'Technical Specifications' / 'datasheet' (e.g. running header '312C L Hydraulic Excavators specifications' -> '312C L Hydraulic Excavators'). For a datasheet covering several part numbers, record the full part-number list exactly as printed in the running title. Do NOT confuse with the `manufacturer`, a `section` heading, or an individual `name` row."
+    },
+    "specifications": {
+      "type": "array",
+      "description": "Every rated-specification row in the in-scope spec tables of the document — one entry per data row. INCLUDE every parameter row under the equipment 'Technical Specifications' / 'specifications' blocks (Engine, Engine rpm, Drive, Hydraulic System, Swing Mechanism, Weights, Track, Service Refill Capacities, etc.) and, for electronics datasheets, every row of the 'Absolute Maximum Ratings', 'ESD Ratings', and 'Recommended Operating Conditions' tables. EXCLUDE: the 'Standards' section (standards-compliance reference lists like 'Cab/FOGS: SAE J1356 / ISO 10262') and the 'Sound Performance' section (sound-level prose/notes); prose bullet notes and footnotes; figure/dimension diagrams; multi-column configuration-comparison matrices (operating-weights-by-track-width, dimensions-by-stick, working-ranges); and (for datasheets) the per-condition Electrical / Switching / Thermal characteristics tables. Skip pure heading rows and blank rows.",
+      "items": {
+        "$ref": "#/$defs/Specification"
+      }
+    }
+  },
+  "required": [
+    "manufacturer",
+    "product_title",
+    "specifications"
+  ]
+}

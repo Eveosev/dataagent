@@ -1,0 +1,37 @@
+{
+  "case_id": "B02-od-0603",
+  "task_id": "B02",
+  "split_role": "regression",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://omnidocbench/images/jiaocai_jiaocai_en_518.jpg",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B02-od-0603.json"
+  },
+  "evidence": [
+    "bench://omnidocbench/images/jiaocai_jiaocai_en_518.jpg"
+  ],
+  "tags": [
+    "omnidocbench",
+    "colorful_textbook",
+    "simplified_chinese",
+    "single_column",
+    "v1.5",
+    "no_table"
+  ],
+  "source": "od",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

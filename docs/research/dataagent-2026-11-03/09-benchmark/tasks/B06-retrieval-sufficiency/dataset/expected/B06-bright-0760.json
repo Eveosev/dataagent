@@ -1,0 +1,64 @@
+{
+  "source": "xlangai/BRIGHT",
+  "query_id": "72",
+  "query": "## Essential Problem \n\nThe essential problem is to find the optimal stimulation site for rTMS in a language task with the goal of improving performance. The challenge is the novel nature of the task, making it difficult to predict the best site without relying on fMRI data.\n\n## Step-by-Step Reasoning\n\n### Information Gathering\n\n* **Review existing literature:** Analyze previous studies on similar language tasks to identify brain regions consistently activated. This could provide initial insights into potential stimulation sites.\n* **Pilot study:** Conduct a small pilot study with the specific language task in the scanner to identify the main cluster of activation. This data can be used to inform the main study's stimulation site selection.\n\n### Considerations\n\n* **Circular reasoning:** Using the task-activated region as the stimulation site in the main study might seem circular. However, it could be justified if it aligns with existing literature and serves as an initial exploration.\n* **Data-driven approach:** While relying solely on fMRI activation might seem data-driven, it can be mitigated by incorporating other factors like anatomical constraints and known functional networks.\n* **Individual variability:** Consider inter-subject variability in brain activation patterns. One approach is to use individual fMRI data to personalize stimulation sites for each participant.\n\n## Draft Answer\n\n## Feasibility of using task-fMRI to determine TMS site for online stimulation\n\nUsing task-fMRI to determine the TMS stimulation site for online stimulation during the same task has potential benefits and limitations.\n\n### Potential benefits:\n\n* **Guided target selection:** fMRI provides valuable information about brain regions involved in the specific task, offering a data-driven approach to target selection for TMS.\n* **Personalized stimulation:** Individual fMRI data allows for personalized stimulation sites based on each participant's brain activation patterns, potentially enhancing the effectiveness of rTMS.\n* **Exploration of novel tasks:** For novel tasks with uncertain optimal stimulation sites, fMRI-guided selection offers an initial exploration strategy.\n\n### Limitations:\n\n* **Circular reasoning:** Using the task-activated region as the stimulation site could be considered circular reasoning, as the stimulation itself might influence the activation pattern.\n* **Data-driven approach:** Relying solely on fMRI activation without considering other factors like anatomical constraints and functional networks might limit the effectiveness of rTMS.\n* **Individual variability:** Inter-subject variability in brain activation patterns necessitates careful analysis and consideration of individual differences when selecting stimulation sites.\n\n### Recommendations:\n\n* **Combined approach:** Integrate fMRI findings with existing literature, anatomical knowledge, and functional networks to select the optimal stimulation site.\n* **Pilot study:** Conduct a pilot study using the specific language task in the scanner to gather preliminary data on brain activation patterns.\n* **Individualized stimulation:** Consider personalizing stimulation sites based on each participant's fMRI data to account for individual variability.\n* **Validation:** Employ behavioral and neurophysiological measures in the main study to validate the chosen stimulation site and assess its effectiveness in improving task performance.\n\n## Conclusion:\n\nWhile using task-fMRI to guide TMS site selection has limitations, it can be a valuable tool, especially for novel tasks. By combining fMRI data with other relevant information and implementing appropriate validation procedures, this approach can contribute to the successful application of rTMS in improving language task performance.\n",
+  "gold_ids": [
+    "fmri_tms/pnas1522551113_22.txt",
+    "fmri_tms/pnas1522551113_23.txt",
+    "fmri_tms/pnas1522551113_17.txt",
+    "fmri_tms/pnas1522551113_2.txt",
+    "fmri_tms/pnas1522551113_25.txt",
+    "fmri_tms/pnas1522551113_15.txt",
+    "fmri_tms/pnas1522551113_10.txt",
+    "fmri_tms/pnas1522551113_20.txt",
+    "fmri_tms/pnas1522551113_18.txt",
+    "fmri_tms/pnas1522551113_8.txt",
+    "fmri_tms/pnas1522551113_5.txt",
+    "fmri_tms/pnas1522551113_19.txt",
+    "fmri_tms/pnas1522551113_14.txt",
+    "fmri_tms/pnas1522551113_24.txt",
+    "fmri_tms/pnas1522551113_3.txt",
+    "fmri_tms/pnas1522551113_6.txt",
+    "fmri_tms/pnas1522551113_9.txt",
+    "fmri_tms/pnas1522551113_16.txt",
+    "fmri_tms/pnas1522551113_7.txt",
+    "fmri_tms/pnas1522551113_4.txt",
+    "fmri_tms/pnas1522551113_21.txt"
+  ],
+  "gold_answer": "$\\begingroup$\n\nThis is not a circular question. In fact, using fMRI to create targets is\nuseful to determine TMS targets outside of the motor cortex or visual cortex.\nSee the study here that used fMRI during a task to generate TMS targets, and\nthen applied theta burst stimulation to those targets: [\nhttps://www.pnas.org/content/113/21/6059\n](https://www.pnas.org/content/113/21/6059)\n\nBOLD contrasts are very useful when using TMS to target sites outside of motor\ncortex, visual cortex and frontal eye field, where TMS can be validated\nfunctionally using motor evoked potentials (MEPs), phosphenes or saccadic eye\nmovements, respectively. Brainsight TMS Navigation enables BOLD contrasts (or\npeak MNI co-ordinates derived from BOLD contrasts) to be entered as targets\nfor TMS.",
+  "corpus": "documents/psychology-00000-of-00001.parquet",
+  "case_id": "B06-bright-0760",
+  "expected": {
+    "kind": "retrieval",
+    "gold_ids": [
+      "fmri_tms/pnas1522551113_22.txt",
+      "fmri_tms/pnas1522551113_23.txt",
+      "fmri_tms/pnas1522551113_17.txt",
+      "fmri_tms/pnas1522551113_2.txt",
+      "fmri_tms/pnas1522551113_25.txt",
+      "fmri_tms/pnas1522551113_15.txt",
+      "fmri_tms/pnas1522551113_10.txt",
+      "fmri_tms/pnas1522551113_20.txt",
+      "fmri_tms/pnas1522551113_18.txt",
+      "fmri_tms/pnas1522551113_8.txt",
+      "fmri_tms/pnas1522551113_5.txt",
+      "fmri_tms/pnas1522551113_19.txt",
+      "fmri_tms/pnas1522551113_14.txt",
+      "fmri_tms/pnas1522551113_24.txt",
+      "fmri_tms/pnas1522551113_3.txt",
+      "fmri_tms/pnas1522551113_6.txt",
+      "fmri_tms/pnas1522551113_9.txt",
+      "fmri_tms/pnas1522551113_16.txt",
+      "fmri_tms/pnas1522551113_7.txt",
+      "fmri_tms/pnas1522551113_4.txt",
+      "fmri_tms/pnas1522551113_21.txt"
+    ],
+    "gold_ids_long": [
+      "fmri_tms/pnas1522551113.txt"
+    ],
+    "gold_answer": "$\\begingroup$\n\nThis is not a circular question. In fact, using fMRI to create targets is\nuseful to determine TMS targets outside of the motor cortex or visual cortex.\nSee the study here that used fMRI during a task to generate TMS targets, and\nthen applied theta burst stimulation to those targets: [\nhttps://www.pnas.org/content/113/21/6059\n](https://www.pnas.org/content/113/21/6059)\n\nBOLD contrasts are very useful when using TMS to target sites outside of motor\ncortex, visual cortex and frontal eye field, where TMS can be validated\nfunctionally using motor evoked potentials (MEPs), phosphenes or saccadic eye\nmovements, respectively. Brainsight TMS Navigation enables BOLD contrasts (or\npeak MNI co-ordinates derived from BOLD contrasts) to be entered as targets\nfor TMS.",
+    "excluded_ids": [
+      "N/A"
+    ]
+  }
+}

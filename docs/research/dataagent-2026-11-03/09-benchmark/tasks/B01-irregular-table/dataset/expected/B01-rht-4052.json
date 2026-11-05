@@ -1,0 +1,29 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 2416,
+  "table": "labor-table46",
+  "structure": "MultiColumnClassified",
+  "question_type": "Numerical Reasoning",
+  "sub_type": "Multi-hop Numerical Reasoning",
+  "answer": "Altham St 6, Padiham, BB12 8QR",
+  "cot": [
+    {
+      "step": "First, we need to identify all the properties in the table that have the “Contractor Assigned” status."
+    },
+    {
+      "step": "Next, we need to count the number of “Contractor Assigned” tasks for each property."
+    },
+    {
+      "step": "We will then compare the counts and rank the properties based on the number of “Contractor Assigned” tasks."
+    },
+    {
+      "step": "Finally, we will identify which property had the highest number of assigned contractors."
+    }
+  ],
+  "case_id": "B01-rht-4052",
+  "expected": {
+    "kind": "answer",
+    "question": "Rank the properties by the number of “Contractor Assigned” tasks. Which property had the highest number of assigned contractors?",
+    "answer": "Altham St 6, Padiham, BB12 8QR"
+  }
+}

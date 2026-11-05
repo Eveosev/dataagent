@@ -1,0 +1,1 @@
+Show the top 10 longest Stack Overflow questions where the question has an accepted answer or an answer with a score-to-view ratio above 0.01, including the user's reputation, net votes, and badge count.

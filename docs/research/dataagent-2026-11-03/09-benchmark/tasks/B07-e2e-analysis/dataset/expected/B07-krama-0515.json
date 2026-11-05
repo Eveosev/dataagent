@@ -1,0 +1,39 @@
+{
+  "source": "mitdbg/KramaBench",
+  "file": "dr-input/wildfire/wildfire_random.json",
+  "raw": {
+    "id": "wildfire-hard-17",
+    "query": "What is the average elevation (in feet) of the weather stations used for fire site monitoring in the NOAA dataset?",
+    "answer": 3500,
+    "answer_type": "numeric_approximate",
+    "data_sources": [
+      "noaa_wildfires.csv",
+      "noaa_wildfires_variabledescrip.csv",
+      "PublicView_RAWS_-3515561676727363726.csv"
+    ],
+    "runtime": 48,
+    "input_files_to_dr": [
+      "PublicView_RAWS_-3515561676727363726.csv",
+      "nifc_wildfires.csv",
+      "wildfire_total_fires_p45_54.csv",
+      "annual_aqi_by_county_2024.csv",
+      "noaa_wildfires_variabledescrip.csv",
+      "WeatherEvents_Jan2016-Dec2022_part_2.csv",
+      "WeatherEvents_Jan2016-Dec2022_part_3.csv",
+      "noaa_wildfires.csv",
+      "state_abbreviation_to_state.json"
+    ]
+  },
+  "case_id": "B07-krama-0515",
+  "expected": {
+    "kind": "answer",
+    "answer": 3500,
+    "answer_type": "numeric_approximate",
+    "runtime_s": 48,
+    "data_sources": [
+      "noaa_wildfires.csv",
+      "noaa_wildfires_variabledescrip.csv",
+      "PublicView_RAWS_-3515561676727363726.csv"
+    ]
+  }
+}

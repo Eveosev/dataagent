@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 336,
+  "table": "biology-table02",
+  "structure": "SingleRowClassified",
+  "question_type": "Fact Checking",
+  "sub_type": "Value-Matching",
+  "answer": "England",
+  "cot": [
+    {
+      "planning": "First, we need to filter the table for data relevant to the year 2023."
+    },
+    {
+      "planning": "We need to focus on the column “Genetically Altered Animals” and identify the country with the maximum value in this column."
+    },
+    {
+      "planning": "Finally, we determine the country corresponding to the highest value and confirm the result."
+    }
+  ],
+  "case_id": "B01-rht-1972",
+  "expected": {
+    "kind": "answer",
+    "question": "Which country under Great Britain had the highest number of genetically altered animal procedures in 2023?",
+    "answer": "England"
+  }
+}

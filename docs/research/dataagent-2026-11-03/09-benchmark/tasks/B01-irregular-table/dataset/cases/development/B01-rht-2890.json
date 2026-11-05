@@ -1,0 +1,35 @@
+{
+  "case_id": "B01-rht-2890",
+  "task_id": "B01",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "table",
+      "ref": "bench://realthitbench-data/csv/economy-table115.csv",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B01-rht-2890.json"
+  },
+  "evidence": [
+    "bench://realthitbench-data/csv/economy-table115.csv"
+  ],
+  "tags": [
+    "realthitbench",
+    "SingleRowClassified",
+    "Numerical Reasoning",
+    "MrExcel"
+  ],
+  "source": "rht",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

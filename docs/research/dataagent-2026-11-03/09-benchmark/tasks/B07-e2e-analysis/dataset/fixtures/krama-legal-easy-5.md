@@ -1,0 +1,1 @@
+What is the total number of money befrauded when summed over all payment methods. Give an integer number in millions of dollars.

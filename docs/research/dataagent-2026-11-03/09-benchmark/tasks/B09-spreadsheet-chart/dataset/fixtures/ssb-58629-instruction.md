@@ -1,0 +1,4 @@
+I need to create an Excel formula that returns the quantity of character sequences separated by commas in a cell, which occur after a hyphen '-'. For instance, if a cell in Column A contains '-001, 002, 003', the formula should count and return '3' in the corresponding cell in Column B. However, if the cell in Column A is blank, then the corresponding cell in Column B should be blank as well. The formula should be able to be dragged down across the cells in Column B. Solutions I've tried are returning a value of '1' for blank cells instead of the desired blank output.Example:
+-001 is 1
+-001, 003 is 2
+-006, 015, 019 is 3

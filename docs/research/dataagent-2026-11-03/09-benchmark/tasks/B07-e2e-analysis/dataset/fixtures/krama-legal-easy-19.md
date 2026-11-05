@@ -1,0 +1,1 @@
+What is the proportion (round to 3 decimal places) of fraud reporters who lost between $1-$500 in 2024?

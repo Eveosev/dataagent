@@ -1,0 +1,27 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_2096d3d1",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_asked_term",
+    "scenario_order_concept",
+    "statute_mi_600_5744_writ_term",
+    "statute_mi_600_5744_writ_purpose",
+    "statute_mi_600_5744_writ_directed_to",
+    "legal_term_for_removal_order",
+    "scenario_matches_statutory_removal_order",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    State: Michigan\n    Focus year: 2021\n\n    Question:\n    \"Is the term 'Writ of ejectment' used to refer to the order from the court\n     to the authorities to remove a tenant?\"\n*/\n\n% -----------------------------\n% Scenario facts (question statement)\n% -----------------------------\n\nscenario_state(michigan).\nscenario_focus_year(2021).\n\n% The question asks whether this term is used for the court order that directs authorities\n% to remove a tenant/occupants.\nscenario_asked_term(writ_of_ejectment).\nscenario_order_concept(order_from_court_to_authorities_to_remove_tenant).\n\n% Succeeds when the factual scenario as encoded is present.\nscenario_statement :-\n    scenario_state(michigan),\n    scenario_focus_year(2021),\n    scenario_asked_term(writ_of_ejectment),\n    scenario_order_concept(order_from_court_to_authorities_to_remove_tenant).\n\n% -----------------------------\n% Statute translation: MI Comp L  600.5744 (2021)\n% -----------------------------\n\n/*\n  MI Comp L  600.5744(1) (2021):\n  \"the court ... shall issue a writ ... to restore the plaintiff ... possession ...\n   by removing all occupants and all personal property ...\"\n  The statute names this order a \"writ of restitution\".\n*/\n\n% The statutory writ type issued after a judgment for possession in a summary proceeding.\n% (Encodes the naming/term used by the statute.)\nstatute_mi_600_5744_writ_term(2021, writ_of_restitution).\n\n% The writ's function/purpose as defined in  600.5744(1).\nstatute_mi_600_5744_writ_purpose(2021, restore_plaintiff_to_possession_by_removing_all_occupants_and_property).\n\n% The writ is directed to specified officers as per  600.5744(1).\nstatute_mi_600_5744_writ_directed_to(2021, court_officer_or_bailiff_or_sheriff_or_deputy_or_local_law_enforcement).\n\n% A higher-level predicate: in Michigan (2021), what term is used for the court order\n% commanding authorities to remove occupants and restore possession?\nlegal_term_for_removal_order(michigan, 2021, Term) :-\n    statute_mi_600_5744_writ_term(2021, Term),\n    statute_mi_600_5744_writ_purpose(2021, restore_plaintiff_to_possession_by_removing_all_occupants_and_property),\n    statute_mi_600_5744_writ_directed_to(2021, court_officer_or_bailiff_or_sheriff_or_deputy_or_local_law_enforcement).\n\n% -----------------------------\n% Reasoning to answer the question\n% -----------------------------\n\n% The scenario's described concept corresponds to the statutory \"removal order\" concept\n% when the statute's purpose matches \"remove tenant/occupants\".\nscenario_matches_statutory_removal_order(michigan, 2021) :-\n    scenario_order_concept(order_from_court_to_authorities_to_remove_tenant),\n    statute_mi_600_5744_writ_purpose(2021, restore_plaintiff_to_possession_by_removing_all_occupants_and_property).\n\n% Deterministic yes/no answer derived from statute term usage.\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_state(State),\n    scenario_focus_year(Year),\n    scenario_matches_statutory_removal_order(State, Year),\n    scenario_asked_term(AskedTerm),\n    legal_term_for_removal_order(State, Year, AskedTerm),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n% -----------------------------\n% Main entrypoint (required)\n% -----------------------------\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-2185",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is the term 'Writ of ejectment' used to refer to the order from the court to the authorities to remove a tenant?"
+  }
+}

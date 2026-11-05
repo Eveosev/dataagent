@@ -1,0 +1,343 @@
+{
+  "source": "naver-clova-ix/cord-v2",
+  "split": "train",
+  "index": 105,
+  "gt_parse": {
+    "menu": [
+      {
+        "nm": "MACARONI",
+        "discountprice": "-3,000",
+        "price": "10,000"
+      },
+      {
+        "nm": "LUMPIA",
+        "unitprice": "@9500",
+        "cnt": "2X",
+        "discountprice": "-5,700",
+        "price": "19,000"
+      },
+      {
+        "nm": "BANANA KISMIS",
+        "discountprice": "-2,400",
+        "price": "8,000"
+      },
+      {
+        "nm": "SOSIS SOLO",
+        "discountprice": "-2,700",
+        "price": "9,000"
+      },
+      {
+        "nm": "LUMPUR",
+        "discountprice": "-2,400",
+        "price": "8,000"
+      },
+      {
+        "nm": "DADAR PISANG",
+        "discountprice": "-2,550",
+        "price": "8,500"
+      },
+      {
+        "nm": "KLEPON",
+        "discountprice": "-2,400",
+        "price": "8,000"
+      },
+      {
+        "nm": "BUGIS",
+        "discountprice": "-2,400",
+        "price": "8,000"
+      },
+      {
+        "nm": "PLASTIK TENTENG",
+        "price": "0"
+      }
+    ],
+    "sub_total": {
+      "subtotal_price": "54,950"
+    },
+    "total": {
+      "total_price": "54,950"
+    }
+  },
+  "case_id": "B03-cord-0515",
+  "expected": {
+    "kind": "json",
+    "value": {
+      "menu": [
+        {
+          "nm": "MACARONI",
+          "discountprice": "-3,000",
+          "price": "10,000"
+        },
+        {
+          "nm": "LUMPIA",
+          "unitprice": "@9500",
+          "cnt": "2X",
+          "discountprice": "-5,700",
+          "price": "19,000"
+        },
+        {
+          "nm": "BANANA KISMIS",
+          "discountprice": "-2,400",
+          "price": "8,000"
+        },
+        {
+          "nm": "SOSIS SOLO",
+          "discountprice": "-2,700",
+          "price": "9,000"
+        },
+        {
+          "nm": "LUMPUR",
+          "discountprice": "-2,400",
+          "price": "8,000"
+        },
+        {
+          "nm": "DADAR PISANG",
+          "discountprice": "-2,550",
+          "price": "8,500"
+        },
+        {
+          "nm": "KLEPON",
+          "discountprice": "-2,400",
+          "price": "8,000"
+        },
+        {
+          "nm": "BUGIS",
+          "discountprice": "-2,400",
+          "price": "8,000"
+        },
+        {
+          "nm": "PLASTIK TENTENG",
+          "price": "0"
+        }
+      ],
+      "sub_total": {
+        "subtotal_price": "54,950"
+      },
+      "total": {
+        "total_price": "54,950"
+      }
+    },
+    "fields": {
+      "menu[0].nm": "MACARONI",
+      "menu[0].discountprice": "-3,000",
+      "menu[0].price": "10,000",
+      "menu[1].nm": "LUMPIA",
+      "menu[1].unitprice": "@9500",
+      "menu[1].cnt": "2X",
+      "menu[1].discountprice": "-5,700",
+      "menu[1].price": "19,000",
+      "menu[2].nm": "BANANA KISMIS",
+      "menu[2].discountprice": "-2,400",
+      "menu[2].price": "8,000",
+      "menu[3].nm": "SOSIS SOLO",
+      "menu[3].discountprice": "-2,700",
+      "menu[3].price": "9,000",
+      "menu[4].nm": "LUMPUR",
+      "menu[4].discountprice": "-2,400",
+      "menu[4].price": "8,000",
+      "menu[5].nm": "DADAR PISANG",
+      "menu[5].discountprice": "-2,550",
+      "menu[5].price": "8,500",
+      "menu[6].nm": "KLEPON",
+      "menu[6].discountprice": "-2,400",
+      "menu[6].price": "8,000",
+      "menu[7].nm": "BUGIS",
+      "menu[7].discountprice": "-2,400",
+      "menu[7].price": "8,000",
+      "menu[8].nm": "PLASTIK TENTENG",
+      "menu[8].price": "0",
+      "sub_total.subtotal_price": "54,950",
+      "total.total_price": "54,950"
+    },
+    "anchored_fields": 0,
+    "no_anchor_fields": 30,
+    "spans": [
+      {
+        "field": "menu[0].nm",
+        "text": "MACARONI",
+        "page": 1
+      },
+      {
+        "field": "menu[0].discountprice",
+        "text": "-3,000",
+        "page": 1
+      },
+      {
+        "field": "menu[0].price",
+        "text": "10,000",
+        "page": 1
+      },
+      {
+        "field": "menu[1].nm",
+        "text": "LUMPIA",
+        "page": 1
+      },
+      {
+        "field": "menu[1].unitprice",
+        "text": "@9500",
+        "page": 1
+      },
+      {
+        "field": "menu[1].cnt",
+        "text": "2X",
+        "page": 1
+      },
+      {
+        "field": "menu[1].discountprice",
+        "text": "-5,700",
+        "page": 1
+      },
+      {
+        "field": "menu[1].price",
+        "text": "19,000",
+        "page": 1
+      },
+      {
+        "field": "menu[2].nm",
+        "text": "BANANA KISMIS",
+        "page": 1
+      },
+      {
+        "field": "menu[2].discountprice",
+        "text": "-2,400",
+        "page": 1
+      },
+      {
+        "field": "menu[2].price",
+        "text": "8,000",
+        "page": 1
+      },
+      {
+        "field": "menu[3].nm",
+        "text": "SOSIS SOLO",
+        "page": 1
+      },
+      {
+        "field": "menu[3].discountprice",
+        "text": "-2,700",
+        "page": 1
+      },
+      {
+        "field": "menu[3].price",
+        "text": "9,000",
+        "page": 1
+      },
+      {
+        "field": "menu[4].nm",
+        "text": "LUMPUR",
+        "page": 1
+      },
+      {
+        "field": "menu[4].discountprice",
+        "text": "-2,400",
+        "page": 1
+      },
+      {
+        "field": "menu[4].price",
+        "text": "8,000",
+        "page": 1
+      },
+      {
+        "field": "menu[5].nm",
+        "text": "DADAR PISANG",
+        "page": 1
+      },
+      {
+        "field": "menu[5].discountprice",
+        "text": "-2,550",
+        "page": 1
+      },
+      {
+        "field": "menu[5].price",
+        "text": "8,500",
+        "page": 1
+      },
+      {
+        "field": "menu[6].nm",
+        "text": "KLEPON",
+        "page": 1
+      },
+      {
+        "field": "menu[6].discountprice",
+        "text": "-2,400",
+        "page": 1
+      },
+      {
+        "field": "menu[6].price",
+        "text": "8,000",
+        "page": 1
+      },
+      {
+        "field": "menu[7].nm",
+        "text": "BUGIS",
+        "page": 1
+      },
+      {
+        "field": "menu[7].discountprice",
+        "text": "-2,400",
+        "page": 1
+      },
+      {
+        "field": "menu[7].price",
+        "text": "8,000",
+        "page": 1
+      },
+      {
+        "field": "menu[8].nm",
+        "text": "PLASTIK TENTENG",
+        "page": 1
+      },
+      {
+        "field": "menu[8].price",
+        "text": "0",
+        "page": 1
+      },
+      {
+        "field": "sub_total.subtotal_price",
+        "text": "54,950",
+        "page": 1
+      },
+      {
+        "field": "total.total_price",
+        "text": "54,950",
+        "page": 1
+      }
+    ],
+    "pages": {
+      "menu[0].nm": 1,
+      "menu[0].discountprice": 1,
+      "menu[0].price": 1,
+      "menu[1].nm": 1,
+      "menu[1].unitprice": 1,
+      "menu[1].cnt": 1,
+      "menu[1].discountprice": 1,
+      "menu[1].price": 1,
+      "menu[2].nm": 1,
+      "menu[2].discountprice": 1,
+      "menu[2].price": 1,
+      "menu[3].nm": 1,
+      "menu[3].discountprice": 1,
+      "menu[3].price": 1,
+      "menu[4].nm": 1,
+      "menu[4].discountprice": 1,
+      "menu[4].price": 1,
+      "menu[5].nm": 1,
+      "menu[5].discountprice": 1,
+      "menu[5].price": 1,
+      "menu[6].nm": 1,
+      "menu[6].discountprice": 1,
+      "menu[6].price": 1,
+      "menu[7].nm": 1,
+      "menu[7].discountprice": 1,
+      "menu[7].price": 1,
+      "menu[8].nm": 1,
+      "menu[8].price": 1,
+      "sub_total.subtotal_price": 1,
+      "total.total_price": 1
+    },
+    "evidence_gold": {
+      "source": "cord-valid-line",
+      "version": 1
+    }
+  }
+}

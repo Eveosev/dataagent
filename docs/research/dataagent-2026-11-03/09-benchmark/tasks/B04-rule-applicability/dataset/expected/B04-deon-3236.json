@@ -1,0 +1,31 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_284e6da4",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "jurisdiction",
+    "focus_year",
+    "statute_2a_42_10_1_instrument",
+    "statute_2a_42_10_1_issued_by_judge",
+    "statute_2a_42_10_6_instrument",
+    "statute_2a_42_10_6_issued_by_judge",
+    "statute_2a_18_59_3_enforcement_instrument",
+    "statute_2a_18_59_3_authority",
+    "legal_is_court_possession_instrument",
+    "legal_removal_authority",
+    "legal_term_refers_to_court_order_to_authorities_to_remove_tenant",
+    "scenario_term_used",
+    "scenario_claim_about_term",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: New Jersey\n    Focus year: 2021\n\n    Question: Is the term 'Writ for removal' used to refer to the order\n    from the court to the authorities to remove a tenant?\n*/\n\n% -------------------------\n% Metadata (scenario scope)\n% -------------------------\njurisdiction(new_jersey).\nfocus_year(2021).\n\n% ---------------------------------------------------------\n% Statute translations (deterministic, with brief citations)\n% ---------------------------------------------------------\n\n/* NJ Rev Stat  2A:42-10.1 (2021)\n   In landlord v. tenant actions to recover possession of a dwelling,\n   the judge \"shall use sound discretion in the issuance of a warrant or writ\n   for removal or writ of possession\" and may stay issuance (with limits).\n*/\nstatute_2a_42_10_1_instrument(warrant_for_removal).\nstatute_2a_42_10_1_instrument(writ_for_removal).\nstatute_2a_42_10_1_instrument(writ_of_possession).\n\nstatute_2a_42_10_1_issued_by_judge(Instruments) :-\n    statute_2a_42_10_1_instrument(Instruments).\n\n/* NJ Rev Stat  2A:42-10.6 (2021)\n   Substantively repeats the same concept: judge discretion issuing\n   \"warrants or writs for removal or writs of possession\", with possible stays.\n*/\nstatute_2a_42_10_6_instrument(warrant_for_removal).\nstatute_2a_42_10_6_instrument(writ_for_removal).\nstatute_2a_42_10_6_instrument(writ_of_possession).\n\nstatute_2a_42_10_6_issued_by_judge(Instruments) :-\n    statute_2a_42_10_6_instrument(Instruments).\n\n/* NJ Rev Stat  2A:18-59.3 (2021)\n   During certain executive orders, enforcement of \"judgments for possession,\n   warrants of removal, and writs of possession\" is stayed; and \"Sheriffs,\n   court officers, and their agents shall refrain from acting to remove\n   individuals from residential properties through the eviction or foreclosure\n   processes\" unless the court finds removal necessary in the interest of justice.\n\n   This statute links (a) the eviction/possession enforcement instruments and\n   (b) action by authorities (sheriffs/court officers) to remove individuals.\n*/\nstatute_2a_18_59_3_enforcement_instrument(judgment_for_possession).\nstatute_2a_18_59_3_enforcement_instrument(warrant_for_removal).\nstatute_2a_18_59_3_enforcement_instrument(writ_of_possession).\n\nstatute_2a_18_59_3_authority(sheriff).\nstatute_2a_18_59_3_authority(court_officer).\nstatute_2a_18_59_3_authority(agent_of_sheriff_or_court_officer).\n\nstatute_2a_18_59_3_authorities_remove_individuals_through_eviction_process :-\n    statute_2a_18_59_3_authority(_).\n\n% ---------------------------------------------------------\n% Bridging legal interpretation used for this question\n% (derived from the above statutes, not hardcoding the result)\n% ---------------------------------------------------------\n\n% A \"writ for removal\" is one of the court-issued instruments in NJ used in\n% landlord-tenant possession recovery actions (2A:42-10.1 / 2A:42-10.6).\nlegal_is_court_possession_instrument(writ_for_removal) :-\n    statute_2a_42_10_1_issued_by_judge(writ_for_removal),\n    !.\nlegal_is_court_possession_instrument(writ_for_removal) :-\n    statute_2a_42_10_6_issued_by_judge(writ_for_removal),\n    !.\n\n% Authorities relevant to removal (from 2A:18-59.3(c)).\nlegal_removal_authority(A) :-\n    statute_2a_18_59_3_authority(A),\n    !.\n\n% If NJ statutes treat (i) possession enforcement as court-issued instruments,\n% and (ii) sheriffs/court officers as the actors who remove individuals through\n% eviction processes, then the \"writ for removal\" fits the concept:\n% \"order from the court to authorities to remove a tenant\".\nlegal_term_refers_to_court_order_to_authorities_to_remove_tenant(writ_for_removal) :-\n    legal_is_court_possession_instrument(writ_for_removal),\n    statute_2a_18_59_3_authorities_remove_individuals_through_eviction_process,\n    legal_removal_authority(_SomeAuthority),\n    !.\n\n% -----------------------------\n% Scenario (question statement)\n% -----------------------------\n\n% Encode the question's factual statement as scenario facts.\nscenario_term_used(writ_for_removal).\nscenario_claim_about_term(order_from_court_to_authorities_to_remove_tenant).\n\n% Helper predicate summarizing the scenario in logic form.\nscenario_statement :-\n    jurisdiction(new_jersey),\n    focus_year(2021),\n    scenario_term_used(writ_for_removal),\n    scenario_claim_about_term(order_from_court_to_authorities_to_remove_tenant).\n\n% -------------------------\n% Apply reasoning / answer\n% -------------------------\n\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_term_used(Term),\n    legal_term_refers_to_court_order_to_authorities_to_remove_tenant(Term),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n% --------------\n% Main / runner\n% --------------\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-3236",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Is the term 'Writ for removal' used to refer to the order from the court to the authorities to remove a tenant?"
+  }
+}

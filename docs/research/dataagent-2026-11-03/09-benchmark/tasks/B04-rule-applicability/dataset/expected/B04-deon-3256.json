@@ -1,0 +1,38 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_fe047aa9",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "person",
+    "role",
+    "occupies_dwelling_unit",
+    "action",
+    "action_type",
+    "judgment",
+    "judgment_in_action",
+    "judgment_level",
+    "appeal_taken",
+    "statute_in_force",
+    "statute_ct_47a_35a_a_bond_required",
+    "statute_ct_47a_35a_a_substitute_deposit_allowed",
+    "motion_for_deposit_order",
+    "court_orders_deposit_in_monthly_installments",
+    "order_of_payments_in_effect_on_date_of_judgment",
+    "appeal_taken_by_any_party",
+    "statute_ct_47a_26e_order_compliance_satisfies_bond",
+    "law_specifies_bond_requirement_for_tenant_appeal",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program encoding Connecticut eviction-appeal bond rules\n    and the question scenario (CT, focus year 2021).\n\n    Question: \"Is it specified whether the law requires a tenant to pay a bond in order\n    to appeal an eviction judgment?\"\n*/\n\n% ----------------------------\n% Scenario facts (question statement)\n% ----------------------------\n\nscenario_state(connecticut).\nscenario_focus_year(2021).\n\n% Parties and roles in the scenario\nperson(tenant1).\nrole(tenant1, defendant).\noccupies_dwelling_unit(tenant1).  % tenant is \"defendant occupying a dwelling unit\"\n\n% Summary process (eviction) action and judgment\naction(summary_process_case1).\naction_type(summary_process_case1, summary_process).\n\njudgment(trial_court_judgment1).\njudgment_in_action(trial_court_judgment1, summary_process_case1).\njudgment_level(trial_court_judgment1, trial_court).\n\n% Appeal taken by the tenant/defendant from the trial court judgment\nappeal_taken(tenant1, trial_court_judgment1).\n\n% Helper predicate that succeeds when the full scenario is satisfied.\nscenario_statement :-\n    scenario_state(connecticut),\n    scenario_focus_year(2021),\n    person(tenant1),\n    role(tenant1, defendant),\n    occupies_dwelling_unit(tenant1),\n    action(summary_process_case1),\n    action_type(summary_process_case1, summary_process),\n    judgment(trial_court_judgment1),\n    judgment_in_action(trial_court_judgment1, summary_process_case1),\n    judgment_level(trial_court_judgment1, trial_court),\n    appeal_taken(tenant1, trial_court_judgment1).\n\n% ----------------------------\n% Statute applicability (treated as in force for focus year 2021)\n% ----------------------------\n\n% We treat the provided 2020 statutes as in force in 2021 for this QA dataset.\nstatute_in_force(connecticut, 2021, ct_47a_35a).\nstatute_in_force(connecticut, 2021, ct_47a_26e).\n\n% ----------------------------\n% Statute translations\n% ----------------------------\n\n/*\n  CT Gen Stat  47a-35a (2020), subsection (a) (bond requirement for defendant-occupant appealing summary process)\n  \"When any appeal is taken by the defendant occupying a dwelling unit ... in an action of summary process,\n   he shall ... give a bond with surety ... to guarantee payment for all rents that may accrue during the pendency\n   of such appeal ...; provided the court shall upon motion ... order the defendant to deposit ... payments ...\n   and compliance with such order shall be a substitute for any bond required by this section.\"\n*/\n\n% Deterministic: when its conditions hold, the statute imposes a bond requirement (unless substituted by a court-ordered deposit).\nstatute_ct_47a_35a_a_bond_required(Person, Judgment, Action) :-\n    role(Person, defendant),\n    occupies_dwelling_unit(Person),\n    judgment_in_action(Judgment, Action),\n    action_type(Action, summary_process),\n    appeal_taken(Person, Judgment).\n\n% Deterministic: the statute allows substitution by a court-ordered deposit (on motion and after hearing).\n% We encode the existence of such an order as a fact that could be present in a scenario.\n% (Not asserted in this question scenario; included to fully translate the statute.)\nstatute_ct_47a_35a_a_substitute_deposit_allowed(Person, Judgment, Action) :-\n    statute_ct_47a_35a_a_bond_required(Person, Judgment, Action),\n    motion_for_deposit_order(Person, Action),\n    court_orders_deposit_in_monthly_installments(Action).\n\n% Placeholder factual predicates (not provided by the question). If not present, they simply fail.\n% These are here so the statutory rule is fully represented without assuming extra facts.\nmotion_for_deposit_order(_Person, _Action) :- fail.\ncourt_orders_deposit_in_monthly_installments(_Action) :- fail.\n\n/*\n  CT Gen Stat  47a-26e (2020)\n  \"If an order of payments is in effect on the date of judgment in the trial court and an appeal is taken by any party,\n   the order shall remain in effect and compliance with the order shall constitute satisfactory compliance with the bond\n   requirement of section 47a-35a.\"\n*/\n\n% We encode the concept \"order of payments is in effect on the date of judgment\".\n% Not asserted in this question scenario; included for completeness.\norder_of_payments_in_effect_on_date_of_judgment(_Judgment, _Action) :- fail.\n\n% \"Appeal is taken by any party\" from the trial court judgment in the action.\nappeal_taken_by_any_party(Judgment, Action) :-\n    judgment_in_action(Judgment, Action),\n    appeal_taken(_AnyPerson, Judgment).\n\n% If those conditions hold, then compliance with that order counts as compliance with the bond requirement.\nstatute_ct_47a_26e_order_compliance_satisfies_bond(Judgment, Action) :-\n    judgment_level(Judgment, trial_court),\n    order_of_payments_in_effect_on_date_of_judgment(Judgment, Action),\n    appeal_taken_by_any_party(Judgment, Action).\n\n% ----------------------------\n% Legal reasoning helpers\n% ----------------------------\n\n% The law \"specifies whether\" there is a bond requirement for a tenant-defendant appealing a summary process judgment\n% if, under the in-force statutes, the bond requirement rule applies to the scenario.\nlaw_specifies_bond_requirement_for_tenant_appeal(State, Year, Person, Judgment, Action) :-\n    statute_in_force(State, Year, ct_47a_35a),\n    statute_ct_47a_35a_a_bond_required(Person, Judgment, Action).\n\n% ----------------------------\n% Final QA predicate\n% ----------------------------\n\n% housing_answer(Result) where Result is yes/no, derived from applying the statutes to the scenario.\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_state(State),\n    scenario_focus_year(Year),\n    law_specifies_bond_requirement_for_tenant_appeal(State, Year, tenant1, trial_court_judgment1, summary_process_case1),\n    !.\nhousing_answer(no) :-\n    !.\n\n% ----------------------------\n% Main entrypoint\n% ----------------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-3256",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Is it specified whether the law requires a tenant to pay a bond in order to appeal an eviction judgment?"
+  }
+}

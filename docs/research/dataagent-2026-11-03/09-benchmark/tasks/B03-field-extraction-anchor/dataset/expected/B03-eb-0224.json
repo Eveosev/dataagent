@@ -1,0 +1,688 @@
+{
+  "source": "llamaindex/ExtractBench",
+  "id": "short/passcoag-2020-w2-p0006-r4",
+  "pdf": "docs/short/passcoag-2020-w2-p0006-r4.pdf",
+  "schema": {
+    "$defs": {
+      "Box12Entry": {
+        "type": "object",
+        "title": "Box 12 entry",
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The letter code of a Box 12 entry (values like C, D, DD, W), verbatim uppercase as printed in the vertical 'Code' rail of the blank form or at the left edge of the register column '12 See Instrs. for Box 12'. Identifies the row — Box 12 rows are aligned by this code at eval time, not by position.",
+            "title": "Box 12 code"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Dollar amount printed beside the Box 12 code in any printed slot: '12a See instructions for box 12', '12b', '12c', or '12d' on the IRS blank, or in the register column '12 See Instrs. for Box 12'. JSON number exactly as printed; null if a code prints with no amount.",
+            "title": "Box 12 amount"
+          }
+        }
+      },
+      "Box14Entry": {
+        "type": "object",
+        "title": "Box 14 entry",
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Text label of a box '14 Other' entry, verbatim as printed, e.g. RISDI on this wave. Identifies the row — Box 14 rows are aligned by this description at eval time, not by position.",
+            "title": "Box 14 description"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Dollar amount printed beside the description in box '14 Other'. JSON number exactly as printed; null if a description prints with no amount.",
+            "title": "Box 14 amount"
+          }
+        }
+      },
+      "StateLocalRow1": {
+        "type": "object",
+        "properties": {
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Box '15 State' — the two-letter state abbreviation of the single printed state row, verbatim, e.g. RI. This copy prints one state row only; a multi-state W-2 (a second row in boxes 15-20) is out of scope for this schema version. (row 1 of the two printed 'boxes 15-20' entry rows).",
+            "title": "15 State"
+          },
+          "employer_state_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Box 15 'Employer’s state ID number' (the register variant caption reads 'state ID No.'). The state identification number verbatim as printed, keeping leading zeros, e.g. 05051707900. (row 1 of the two printed 'boxes 15-20' entry rows).",
+            "title": "15 Employer’s state ID number"
+          },
+          "state_wages": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Box '16 State wages, tips, etc.' for the single printed state row. Dollar amount as a JSON number, exactly as printed; null if the box is blank. (row 1 of the two printed 'boxes 15-20' entry rows).",
+            "title": "16 State wages, tips, etc."
+          },
+          "state_income_tax": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Box '17 State income tax' for the single printed state row. Dollar amount as a JSON number, exactly as printed; null if the box is blank. (row 1 of the two printed 'boxes 15-20' entry rows).",
+            "title": "17 State income tax"
+          },
+          "local_wages": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Amount in box '18 Local wages, tips, etc.' - the LOCAL wages column, distinct from box '16 State wages, tips, etc.' (do not copy the state amount here). Null when box 18 is blank, as it is on all RI register docs.",
+            "title": "18 Local wages, tips, etc."
+          },
+          "local_income_tax": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Amount in box '19 Local income tax' - the LOCAL tax column, distinct from box '17 State income tax' (do not copy the state amount here). Null when box 19 is blank, as it is on all RI register docs.",
+            "title": "19 Local income tax"
+          },
+          "locality_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Box '20 Locality name' for the single printed state row, verbatim as printed; null if the box is blank (blank on all wave docs). (row 1 of the two printed 'boxes 15-20' entry rows).",
+            "title": "20 Locality name"
+          }
+        }
+      },
+      "StateLocalRow2": {
+        "type": "object",
+        "properties": {
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Box '15 State' — the two-letter state abbreviation of the single printed state row, verbatim, e.g. RI. This copy prints one state row only; a multi-state W-2 (a second row in boxes 15-20) is out of scope for this schema version. (row 2 of the two printed 'boxes 15-20' entry rows). The employer-reference register variant prints only one row - null there.",
+            "title": "15 State"
+          },
+          "employer_state_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Box 15 'Employer’s state ID number' (the register variant caption reads 'state ID No.'). The state identification number verbatim as printed, keeping leading zeros, e.g. 05051707900. (row 2 of the two printed 'boxes 15-20' entry rows). The employer-reference register variant prints only one row - null there.",
+            "title": "15 Employer’s state ID number"
+          },
+          "state_wages": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Box '16 State wages, tips, etc.' for the single printed state row. Dollar amount as a JSON number, exactly as printed; null if the box is blank. (row 2 of the two printed 'boxes 15-20' entry rows). The employer-reference register variant prints only one row - null there.",
+            "title": "16 State wages, tips, etc."
+          },
+          "state_income_tax": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Box '17 State income tax' for the single printed state row. Dollar amount as a JSON number, exactly as printed; null if the box is blank. (row 2 of the two printed 'boxes 15-20' entry rows). The employer-reference register variant prints only one row - null there.",
+            "title": "17 State income tax"
+          },
+          "local_wages": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Amount in box '18 Local wages, tips, etc.' - the LOCAL wages column, distinct from box '16 State wages, tips, etc.' (do not copy the state amount here). Null when box 18 is blank, as it is on all RI register docs. (row 2 of the two printed 'boxes 15-20' entry rows).",
+            "title": "18 Local wages, tips, etc."
+          },
+          "local_income_tax": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Amount in box '19 Local income tax' - the LOCAL tax column, distinct from box '17 State income tax' (do not copy the state amount here). Null when box 19 is blank, as it is on all RI register docs. (row 2 of the two printed 'boxes 15-20' entry rows).",
+            "title": "19 Local income tax"
+          },
+          "locality_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Box '20 Locality name' for the single printed state row, verbatim as printed; null if the box is blank (blank on all wave docs). (row 2 of the two printed 'boxes 15-20' entry rows). The employer-reference register variant prints only one row - null there.",
+            "title": "20 Locality name"
+          }
+        }
+      }
+    },
+    "properties": {
+      "employee_ssn": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 'a Employee's social security number'. These copies print a masked value, often with overstruck characters. Policy: if the last four digits are legibly printed (e.g. 'XXX-XX-9186'), return 'XXX-XX-' plus those digits; if the tail is fully masked/overstruck, return exactly 'XXX-XX-XXXX' (canonical 4-X form) - do NOT try to count the struck-out X characters. Null only if box a is entirely absent.",
+        "title": "a Employee’s social security number"
+      },
+      "employer_ein": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 'b Employer identification number (EIN)'; the register variant caption under letter b reads 'identification number'. The employer federal EIN verbatim as printed, keeping the hyphen, e.g. 05-0517079.",
+        "title": "b Employer identification number (EIN)"
+      },
+      "employer_name": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "First line of box 'c Employer’s name, address, and ZIP code' — the employer name only, verbatim as printed, e.g. PASCOAG UTILITY DISTRICT.",
+        "title": "c Employer name"
+      },
+      "employer_address": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The lines of box 'c Employer’s name, address, and ZIP code' after the employer name — street or PO box, then city, state and ZIP, verbatim. Join printed lines with comma + space, e.g. PO BOX 107, PASCOAG RI 02859.",
+        "title": "c Employer address and ZIP code"
+      },
+      "void": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Void' checkbox printed beside box d. A mark (X or similar) INSIDE the box counts; the box outline alone is not a mark. Two-state policy: true ONLY if a mark is printed inside the box; false otherwise (unmarked, or this checkbox not printed on this copy). Never return null for this field.",
+        "title": "Void checkbox"
+      },
+      "employee_name": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Employee full name as printed. Blank form boxes: 'e Employee’s first name and initial', 'Last name', 'Suff.'; the register variant prints the name as the first line of the combined block 'e Employee’s name, address, and ZIP code'. Keep middle initial and any suffix verbatim, e.g. JENNA M ANTHONY.",
+        "title": "e Employee name (first name and initial, last name, suffix)"
+      },
+      "employee_address": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Employee address: box 'f Employee’s address and ZIP code' on the blank form; the register variant prints it as the lines after the name inside the combined block 'e Employee’s name, address, and ZIP code'. Join printed lines with comma + space — street, then city, state and ZIP, verbatim, e.g. 221 EMERSON RD, HARRISVILLE RI 02830.",
+        "title": "f Employee address and ZIP code"
+      },
+      "box_1_wages": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box '1 Wages, tips, other compensation'. Dollar amount as a JSON number, exactly as printed (this register prints plain decimals such as 40093.72 — no thousands separators or dollar signs); null if the box is blank.",
+        "title": "1 Wages, tips, other compensation"
+      },
+      "box_2_federal_income_tax_withheld": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box '2 Federal income tax withheld'. Dollar amount as a JSON number, exactly as printed; null if the box is blank.",
+        "title": "2 Federal income tax withheld"
+      },
+      "box_3_social_security_wages": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box '3 Social security wages'. Dollar amount as a JSON number, exactly as printed; null if the box is blank.",
+        "title": "3 Social security wages"
+      },
+      "box_4_social_security_tax_withheld": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box '4 Social security tax withheld'. Dollar amount as a JSON number, exactly as printed; null if the box is blank.",
+        "title": "4 Social security tax withheld"
+      },
+      "box_5_medicare_wages_and_tips": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box '5 Medicare wages and tips'. Dollar amount as a JSON number, exactly as printed; null if the box is blank.",
+        "title": "5 Medicare wages and tips"
+      },
+      "box_6_medicare_tax_withheld": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box '6 Medicare tax withheld'. Dollar amount as a JSON number, exactly as printed; null if the box is blank.",
+        "title": "6 Medicare tax withheld"
+      },
+      "box_7_social_security_tips": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box '7 Social security tips'. Dollar amount as a JSON number, exactly as printed; null if the box is blank (printed but typically empty on this wave).",
+        "title": "7 Social security tips"
+      },
+      "box_8_allocated_tips": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box '8 Allocated tips'. Dollar amount as a JSON number, exactly as printed; null if the box is blank (printed but typically empty on this wave).",
+        "title": "8 Allocated tips"
+      },
+      "box_10_dependent_care_benefits": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box '10 Dependent care benefits'. Dollar amount as a JSON number, exactly as printed; null if the box is blank (printed but typically empty on this wave).",
+        "title": "10 Dependent care benefits"
+      },
+      "box_11_nonqualified_plans": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box '11 Nonqualified plans'. Dollar amount as a JSON number, exactly as printed; null if the box is blank (printed but typically empty on this wave).",
+        "title": "11 Nonqualified plans"
+      },
+      "box_12": {
+        "anyOf": [
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/Box12Entry"
+            }
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 12 coded amounts. The blank form prints four slots '12a See instructions for box 12', '12b', '12c', '12d', each with a vertical 'Code' rail; the register variant prints a single column headed '12 See Instrs. for Box 12' with one code letter and amount per line. One row per printed code entry, in print order; null if this copy prints no Box 12 entries.",
+        "title": "12 Box 12 coded amounts"
+      },
+      "box_13_statutory_employee": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "'13 Statutory employee' checkbox in the box-13 grid. Two-state policy: true ONLY if a mark is printed inside the box; false otherwise (unmarked, or this checkbox not printed on this copy). Never return null for this field.",
+        "title": "13 Statutory employee"
+      },
+      "box_13_retirement_plan": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "'Retirement plan' checkbox in the box-13 grid. Two-state policy: true ONLY if a mark is printed inside the box; false otherwise (unmarked, or this checkbox not printed on this copy). Never return null for this field.",
+        "title": "13 Retirement plan"
+      },
+      "box_13_third_party_sick_pay": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "'Third-party sick pay' checkbox in the box-13 grid. Two-state policy: true ONLY if a mark is printed inside the box; false otherwise (unmarked, or this checkbox not printed on this copy). Never return null for this field.",
+        "title": "13 Third-party sick pay"
+      },
+      "box_13_subtotal": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "'Subtotal' checkbox in the box-13 grid (register variant only). Two-state policy: true ONLY if a mark is printed inside the box; false otherwise (unmarked, or this checkbox not printed on this copy). Never return null for this field.",
+        "title": "13 Subtotal (register variant only)"
+      },
+      "box_14_other": {
+        "anyOf": [
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/Box14Entry"
+            }
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box '14 Other' — employer-defined deductions and benefits, e.g. RISDI on this wave. One row per printed description and amount pair, in print order; null if box 14 is blank.",
+        "title": "14 Other"
+      },
+      "state_local_row_1": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/StateLocalRow1"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The first printed entry row of boxes '15 State' through '20 Locality name'. Null when this row is entirely blank or not printed.",
+        "title": "State/Local Row 1"
+      },
+      "state_local_row_2": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/StateLocalRow2"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The second printed entry row of boxes '15 State' through '20 Locality name'. Null when this row is entirely blank or not printed.",
+        "title": "State/Local Row 2"
+      },
+      "control_number_line1": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 'd Control number' - the FIRST printed line only (e.g. '0012-0012N426'). Verbatim.",
+        "title": "Control Number Line 1"
+      },
+      "control_number_line2": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 'd Control number' - the SECOND printed line only (e.g. '0000000165-ELECTR'), the register sequence/type line. Verbatim; null if the box prints a single line.",
+        "title": "Control Number Line 2"
+      }
+    },
+    "title": "Form W-2 Wage and Tax Statement (2020)",
+    "type": "object"
+  },
+  "expected": {
+    "kind": "json",
+    "schema_ref": "fixtures/eb-short-passcoag-2020-w2-p0006-r4-schema.json",
+    "value": {
+      "employee_ssn": "XXX-XX-XXXX",
+      "employer_ein": "05-0517079",
+      "employer_name": "PASCOAG UTILITY DISTRICT",
+      "employer_address": "PO BOX 107, PASCOAG RI 02859",
+      "void": false,
+      "employee_name": "TORIANA L RUDIS",
+      "employee_address": "PO BOX 548, HARRISVILLE RI 02830",
+      "box_1_wages": 47604.07,
+      "box_2_federal_income_tax_withheld": 5679,
+      "box_3_social_security_wages": 50161.39,
+      "box_4_social_security_tax_withheld": 3110.01,
+      "box_5_medicare_wages_and_tips": 50161.39,
+      "box_6_medicare_tax_withheld": 727.34,
+      "box_7_social_security_tips": null,
+      "box_8_allocated_tips": null,
+      "box_10_dependent_care_benefits": null,
+      "box_11_nonqualified_plans": null,
+      "box_12": [
+        {
+          "code": "C",
+          "amount": 35.88
+        },
+        {
+          "code": "D",
+          "amount": 2557.32
+        }
+      ],
+      "box_13_statutory_employee": false,
+      "box_13_retirement_plan": true,
+      "box_13_third_party_sick_pay": false,
+      "box_13_subtotal": false,
+      "box_14_other": [
+        {
+          "description": "RISDI",
+          "amount": 618.31
+        }
+      ],
+      "state_local_row_1": {
+        "state": "RI",
+        "employer_state_id": "05051707900",
+        "state_wages": 47604.07,
+        "state_income_tax": 1783.94,
+        "local_wages": null,
+        "local_income_tax": null,
+        "locality_name": null
+      },
+      "state_local_row_2": null,
+      "control_number_line1": "0012-0012N426",
+      "control_number_line2": "0000000186-ELECTR"
+    },
+    "anchored_fields": 27,
+    "no_anchor_fields": 0
+  },
+  "field_rules": "{\"employee_ssn\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.19074295, 0.25484429, 0.1087207, 0.04296424], \"quote\": \"XXX-XX-XXXX\", \"value\": \"XXX-XX-XXXX\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"employer_ein\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.04340485, 0.25622837, 0.08440604, 0.03183391], \"quote\": \"* **b Employer's identification number**: 05-0517079\", \"value\": \"05-0517079\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"employer_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.31855383, 0.19388697, 0.20409217, 0.03044983], \"quote\": \"PASCOAG UTILITY DISTRICT\", \"value\": \"PASCOAG UTILITY DISTRICT\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"employer_address\": {\"comparator\": \"address\", \"evidence\": [{\"page\": 1, \"bbox\": [0.319, 0.2382, 0.1397, 0.079], \"quote\": \"PO BOX 107\", \"value\": \"PO BOX 107, PASCOAG RI 02859\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"void\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.2832, 0.1529, 0.0265, 0.0507], \"quote\": null, \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"employee_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.31903, 0.48714, 0.12733, 0.02809], \"quote\": \"TORIANA L RUDIS\", \"value\": \"TORIANA L RUDIS\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"employee_address\": {\"comparator\": \"address\", \"evidence\": [{\"page\": 1, \"bbox\": [0.3181, 0.5263, 0.1718, 0.0848], \"quote\": \"PO BOX 548\", \"value\": \"PO BOX 548, HARRISVILLE RI 02830\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"box_1_wages\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": 1, \"bbox\": [0.72246722, 0.27283737, 0.06914978, 0.03321799], \"quote\": \"* **16 State wages, tips, etc.**: 47604.07\", \"value\": 47604.07, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"box_2_federal_income_tax_withheld\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": 1, \"bbox\": [0.89032578, 0.27283737, 0.05961462, 0.03321799], \"quote\": \"* **2 Federal income tax withheld**: 5679.00\", \"value\": 5679, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"box_3_social_security_wages\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": 1, \"bbox\": [0.72199046, 0.35317186, 0.06914978, 0.03737024], \"quote\": \"* **3 Social security wages**: 50161.39\", \"value\": 50161.39, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"box_4_social_security_tax_withheld\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": 1, \"bbox\": [0.89056, 0.35849, 0.05938, 0.03344], \"quote\": \"* **4 Social security tax withheld**: 3110.01\", \"value\": 3110.01, \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"box_5_medicare_wages_and_tips\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": 1, \"bbox\": [0.7231, 0.4393, 0.0685, 0.0354], \"quote\": \"* **3 Social security wages**: 50161.39\", \"value\": 50161.39, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"box_6_medicare_tax_withheld\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": 1, \"bbox\": [0.89843067, 0.43765859, 0.05198649, 0.03875433], \"quote\": \"* **6 Medicare tax withheld**: 727.34\", \"value\": 727.34, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"box_7_social_security_tips\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"box_8_allocated_tips\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"box_10_dependent_care_benefits\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"box_11_nonqualified_plans\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"box_12[0].code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.02, 0.4554, 0.0107, 0.0316], \"quote\": \"* C 35.88\", \"value\": \"C\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"box_12[0].amount\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": 1, \"bbox\": [0.0996623, 0.44873126, 0.04483512, 0.03875433], \"quote\": \"* C 35.88\", \"value\": 35.88, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"box_12[1].code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.0208, 0.4935, 0.0095, 0.0305], \"quote\": \"* D 2557.32\", \"value\": \"D\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"box_12[1].amount\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": 1, \"bbox\": [0.08345252, 0.48892734, 0.06009138, 0.03321799], \"quote\": \"* D 2557.32\", \"value\": 2557.32, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"box_12\": {\"comparator\": {\"code\": \"case_insensitive\", \"amount\": \"currency\"}, \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": {\"code\": \"C\", \"amount\": 35.88}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": null, \"value\": {\"code\": \"D\", \"amount\": 2557.32}, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"structural\": \"match_by:code\"}, \"box_13_statutory_employee\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.0183, 0.3522, 0.0695, 0.0423], \"quote\": null, \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"box_13_retirement_plan\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.1134, 0.3657, 0.0127, 0.0313], \"quote\": null, \"value\": true, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"box_13_third_party_sick_pay\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.1638, 0.3533, 0.0681, 0.0426], \"quote\": null, \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"box_13_subtotal\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.2354, 0.3536, 0.0756, 0.0401], \"quote\": null, \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"box_14_other[0].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.1521, 0.45266, 0.04438, 0.03344], \"quote\": \"* **14 Other**: RISDI 618.31\", \"value\": \"RISDI\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"box_14_other[0].amount\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": 1, \"bbox\": [0.25655542, 0.44734717, 0.05103298, 0.03875433], \"quote\": \"* **14 Other**: RISDI 618.31\", \"value\": 618.31, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"box_14_other\": {\"comparator\": {\"description\": \"case_insensitive\", \"amount\": \"currency\"}, \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": {\"description\": \"RISDI\", \"amount\": 618.31}, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"structural\": \"match_by:description\"}, \"state_local_row_1.state\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.0274, 0.80141, 0.0173, 0.03079], \"quote\": \"PASCOAG RI 02859\", \"value\": \"RI\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"state_local_row_1.employer_state_id\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.06677, 0.80042, 0.09346, 0.03199], \"quote\": \"* **Employer's state ID No.**: 05051707900\", \"value\": \"05051707900\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"state_local_row_1.state_wages\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": 1, \"bbox\": [0.3042, 0.7996, 0.06888, 0.03346], \"quote\": \"* **16 State wages, tips, etc.**: 47604.07\", \"value\": 47604.07, \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"state_local_row_1.state_income_tax\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": 1, \"bbox\": [0.45971395, 0.79780854, 0.06009138, 0.03321799], \"quote\": \"* **17 State income tax**: 1783.94\", \"value\": 1783.94, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"state_local_row_1.local_wages\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"state_local_row_1.local_income_tax\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"state_local_row_1.locality_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"state_local_row_2.state\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"state_local_row_2.employer_state_id\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"state_local_row_2.state_wages\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"state_local_row_2.state_income_tax\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"state_local_row_2.local_wages\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"state_local_row_2.local_income_tax\": {\"comparator\": \"currency\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"state_local_row_2.locality_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"control_number_line1\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.1144418, 0.1260669, 0.10967422, 0.03183391], \"quote\": \"* **d Control number**: 0012-0012N4260000000186-ELECTR\", \"value\": \"0012-0012N426\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"control_number_line2\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.1145, 0.1719, 0.1469, 0.0341], \"quote\": null, \"value\": \"0000000186-ELECTR\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}}",
+  "repeated_structure": "{}",
+  "anchored_fields": 27,
+  "no_anchor_fields": 0,
+  "case_id": "B03-eb-0224"
+}

@@ -1,0 +1,52 @@
+{
+  "case_id": "B03-eb-0369",
+  "task_id": "B03",
+  "split_role": "regression",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://extractbench/docs/long/sf1449_supplies_services_0042.pdf",
+      "digest": null
+    },
+    {
+      "kind": "schema",
+      "ref": "fixtures/eb-long-sf1449_supplies_services_0042-schema.json",
+      "digest": null
+    },
+    {
+      "kind": "rules",
+      "ref": "fixtures/eb-long-sf1449_supplies_services_0042-rules.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-eb-0369.json"
+  },
+  "evidence": [
+    "bench://extractbench/docs/long/sf1449_supplies_services_0042.pdf",
+    "fixtures/eb-long-sf1449_supplies_services_0042-schema.json",
+    "fixtures/eb-long-sf1449_supplies_services_0042-rules.md"
+  ],
+  "tags": [
+    "extractbench",
+    "long",
+    "tag:source:real",
+    "tag:challenge:T2.a",
+    "tag:challenge:T1.b",
+    "tag:structure:S3",
+    "tag:length:long",
+    "tag:domain:D3",
+    "fields:14"
+  ],
+  "source": "eb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

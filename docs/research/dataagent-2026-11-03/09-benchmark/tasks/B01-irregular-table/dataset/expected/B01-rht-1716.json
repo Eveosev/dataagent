@@ -1,0 +1,23 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 80,
+  "table": "employment-table16",
+  "structure": "ContentCompound",
+  "question_type": "Fact Checking",
+  "sub_type": "Value-Matching",
+  "answer": "128154, 21538",
+  "cot": [
+    {
+      "planning": "First, we need to identify the row corresponding to 'Total, 16 years and over,' as it aggregates the data for individuals aged 16 years and older."
+    },
+    {
+      "planning": "We need to locate the columns representing private industry workers ('Private industries' under column) and government workers ('Government' under column)."
+    }
+  ],
+  "case_id": "B01-rht-1716",
+  "expected": {
+    "kind": "answer",
+    "question": "What are the number of private industry workers and government workers for individuals aged 16 years and older?",
+    "answer": "128154, 21538"
+  }
+}

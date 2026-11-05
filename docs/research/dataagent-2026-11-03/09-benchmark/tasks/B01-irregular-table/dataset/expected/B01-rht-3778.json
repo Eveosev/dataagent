@@ -1,0 +1,29 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 2142,
+  "table": "religion-table03",
+  "structure": "ColumnHeaderMerge",
+  "question_type": "Fact Checking",
+  "sub_type": "Multi-hop Fact Checking",
+  "answer": "49",
+  "cot": [
+    {
+      "planning": "First, we need to identify the row in the table that corresponds to workers who usually work 35 to 39 hours per week. This is found in the row labeled '35 to 39 hours' under the 'Hours of work' column."
+    },
+    {
+      "planning": "We need to locate the columns that provide the median weekly earnings for women and men. These are column F (Women) and column I (Men), both labeled 'Median weekly earnings.'"
+    },
+    {
+      "planning": "We then find the intersection of the identified row and columns to get the median weekly earnings for women and men who work 35 to 39 hours per week."
+    },
+    {
+      "planning": "Finally, we calculate the difference between the median weekly earnings of men and women."
+    }
+  ],
+  "case_id": "B01-rht-3778",
+  "expected": {
+    "kind": "answer",
+    "question": "What is the difference in median weekly earnings between women and men who usually work 35 to 39 hours per week? (Final answer should be an integer.)",
+    "answer": "49"
+  }
+}

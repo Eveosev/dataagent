@@ -1,0 +1,32 @@
+## The Party Game: Red and Blue Strings
+
+### 1. Identifying the Problem
+
+The problem is to determine the minimum number of guests needed at a party to guarantee either a group of three guests all connected by red strings or a group of six guests all connected by blue strings. Each guest is connected to every other guest with either a red or blue string.
+
+### 2. Step-by-Step Reasoning
+
+**Information:**
+
+* Every guest is connected to every other guest.
+* Connections are made with either red or blue strings.
+* We need to find the minimum number of guests to guarantee either a group of three connected by red strings or a group of six connected by blue strings.
+
+**Reasoning:**
+
+1. **Pigeonhole Principle:** This principle states that if you have n+1 items and only n categories, then at least one category must have two or more items.
+2. **Red and Blue Strings:** We can apply the pigeonhole principle to the colors of the strings. For each guest, consider the color of their connection to the next guest. There are two possibilities: red or blue.
+3. **Minimum Groups:** We want to find the minimum number of guests (n) such that either a group of three red connections or a group of six blue connections is guaranteed.
+4. **Group of Three (Red):** With three guests, we have three connections. By the pigeonhole principle, at least two of these connections must be the same color. If two are red, we have our group of three.
+5. **Group of Six (Blue):** If we don't have a group of three with red strings in the first three guests, then all three connections must be blue. Now, consider the next three guests. Again, by the pigeonhole principle, at least two of their connections must be the same color. If two are blue, we have our group of six (the first three blue connections and the two new blue connections).
+
+### 3. Draft Answer
+
+Therefore, the minimum number of guests needed to guarantee either a group of three connected by red strings or a group of six connected by blue strings is **six**.
+
+**Explanation:**
+
+* With three guests, we can guarantee a group of three with red strings.
+* With six guests, we can either have a group of three with red strings (if the first three connections are red) or a group of six with blue strings (if the first three connections are blue and two of the next three connections are blue).
+
+In conclusion, having at least six guests at the party ensures that you will have either a group of three guests connected by red strings or a group of six guests connected by blue strings. 

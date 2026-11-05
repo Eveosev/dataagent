@@ -1,0 +1,71 @@
+{
+  "source": "xlangai/BRIGHT",
+  "query_id": "23",
+  "query": "## Identifying the problem:\n\nThe problem is to determine whether it is possible to form a square using all the given matchsticks without breaking any of them. Each matchstick can be used only once.\n\n## Analyzing the problem:\n\nTo form a square, the sum of all the matchstick lengths must be divisible by 4. This is because each side of the square will have the same length, and the sum of the lengths of the four sides must be equal.\n\nFurthermore, if we divide the matchsticks into four groups, each group must have the same sum. This is because each group will form one side of the square.\n\n## Relevant information:\n\n* The sum of all the matchstick lengths.\n* The number of matchsticks.\n* The length of each matchstick.\n\n## Detailed steps to solve the problem:\n\n1. Calculate the sum of all the matchstick lengths.\n2. Check if the sum is divisible by 4. If not, it is not possible to form a square.\n3. If the sum is divisible by 4, divide the matchsticks into four groups, each with the same sum.\n4. Check if each group contains a valid combination of matchsticks that can form a side of the square. This can be done by sorting the matchsticks in each group and checking if there are two pairs of matchsticks with the same length.\n5. If all four groups contain a valid combination of matchsticks, then it is possible to form a square. Otherwise, it is not possible.\n\n## Draft answer:\n\nHere is a step-by-step algorithm to determine whether it is possible to form a square using all the given matchsticks:\n\n1. Calculate the sum of all the matchstick lengths.\n2. If the sum is not divisible by 4, return `false`.\n3. Divide the matchsticks into four groups, each with the same sum.\n4. For each group:\n    * Sort the matchsticks in the group.\n    * If there are two pairs of matchsticks with the same length, continue to the next group.\n    * Otherwise, return `false`.\n5. If all four groups have a valid combination of matchsticks, return `true`. Otherwise, return `false`.\n\nThis algorithm iterates through the matchsticks once and performs basic arithmetic operations. Therefore, its time complexity is O(n), where n is the number of matchsticks. The space complexity is O(1) because we only use a constant amount of extra space.",
+  "gold_ids": [
+    "leetcode/leetcode_2397.txt"
+  ],
+  "gold_answer": "N/A",
+  "corpus": "documents/leetcode-00000-of-00001.parquet",
+  "case_id": "B06-bright-0457",
+  "expected": {
+    "kind": "retrieval",
+    "gold_ids": [
+      "leetcode/leetcode_2397.txt"
+    ],
+    "gold_ids_long": [
+      "N/A"
+    ],
+    "gold_answer": "N/A",
+    "excluded_ids": [
+      "leetcode/leetcode_980.txt",
+      "leetcode/leetcode_1434.txt",
+      "leetcode/leetcode_78.txt",
+      "leetcode/leetcode_1601.txt",
+      "leetcode/leetcode_473.txt",
+      "leetcode/leetcode_1125.txt",
+      "leetcode/leetcode_2597.txt",
+      "leetcode/leetcode_494.txt",
+      "leetcode/leetcode_491.txt",
+      "leetcode/leetcode_2044.txt",
+      "leetcode/leetcode_1617.txt",
+      "leetcode/leetcode_1655.txt",
+      "leetcode/leetcode_1494.txt",
+      "leetcode/leetcode_1986.txt",
+      "leetcode/leetcode_996.txt",
+      "leetcode/leetcode_638.txt",
+      "leetcode/leetcode_1774.txt",
+      "leetcode/leetcode_698.txt",
+      "leetcode/leetcode_943.txt",
+      "leetcode/leetcode_1799.txt",
+      "leetcode/leetcode_898.txt",
+      "leetcode/leetcode_1947.txt",
+      "leetcode/leetcode_2305.txt",
+      "leetcode/leetcode_1659.txt",
+      "leetcode/leetcode_691.txt",
+      "leetcode/leetcode_847.txt",
+      "leetcode/leetcode_140.txt",
+      "leetcode/leetcode_1863.txt",
+      "leetcode/leetcode_1255.txt",
+      "leetcode/leetcode_90.txt",
+      "leetcode/leetcode_2572.txt",
+      "leetcode/leetcode_1994.txt",
+      "leetcode/leetcode_1787.txt",
+      "leetcode/leetcode_526.txt",
+      "leetcode/leetcode_1467.txt",
+      "leetcode/leetcode_464.txt",
+      "leetcode/leetcode_805.txt",
+      "leetcode/leetcode_2002.txt",
+      "leetcode/leetcode_2035.txt",
+      "leetcode/leetcode_1879.txt",
+      "leetcode/leetcode_1815.txt",
+      "leetcode/leetcode_2151.txt",
+      "leetcode/leetcode_1239.txt",
+      "leetcode/leetcode_2212.txt",
+      "leetcode/leetcode_1723.txt",
+      "leetcode/leetcode_1595.txt",
+      "leetcode/leetcode_2172.txt",
+      "leetcode/leetcode_1755.txt"
+    ]
+  }
+}

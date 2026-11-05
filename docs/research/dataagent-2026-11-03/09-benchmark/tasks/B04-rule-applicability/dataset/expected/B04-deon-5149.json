@@ -1,0 +1,25 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_7551e301",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "state",
+    "focus_year",
+    "asked_term",
+    "asked_concept",
+    "legal_court_issues_writs_after_possession_granted",
+    "legal_writ_executed_by_authority",
+    "legal_term_for_concept",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program (Montana, 2021)\n    Encodes MT Code  70-24-427 (2021) and the question's factual statement.\n\n    Question:\n    \"Is the term 'Warrant for removal' used to refer to the order from the court\n     to the authorities to remove a tenant?\"\n*/\n\n% -----------------------------\n% Scenario facts (question statement)\n% -----------------------------\n\nstate(montana).\nfocus_year(2021).\n\n% The term the user asks about:\nasked_term(warrant_for_removal).\n\n% The concept described in the question:\n% \"the order from the court to the authorities to remove a tenant\"\nasked_concept(court_order_to_authorities_to_remove_tenant).\n\n% Helper predicate that succeeds when the scenario statement is satisfied.\nscenario_statement :-\n    state(montana),\n    focus_year(2021),\n    asked_term(warrant_for_removal),\n    asked_concept(court_order_to_authorities_to_remove_tenant).\n\n% -----------------------------\n% Statute translation: MT Code  70-24-427 (2021)\n% -----------------------------\n\n/*\n  MT Code  70-24-427(4) (2021):\n  \"If a landlord's claim for possession is granted, the court shall issue a writ\n   of possession and a writ of assistance immediately. The writ of assistance\n   must be executed by the sheriff ...\"\n*/\n\n% legal_court_issues_writs_after_possession_granted(State, Year, Writ1, Writ2).\n% Deterministic representation of the mandatory writs to be issued immediately.\nlegal_court_issues_writs_after_possession_granted(montana, 2021, writ_of_possession, writ_of_assistance).\n\n% legal_writ_executed_by_authority(State, Year, Writ, Authority).\n% Deterministic representation of who executes the writ.\nlegal_writ_executed_by_authority(montana, 2021, writ_of_assistance, sheriff).\n\n% legal_term_for_concept(State, Year, Concept, Term).\n% Map legal terminology used by the statute to the concept \"court order to authorities to remove a tenant\".\n% Here, the writ of assistance is the court-issued instrument executed by the sheriff (authorities).\nlegal_term_for_concept(montana, 2021, court_order_to_authorities_to_remove_tenant, writ_of_assistance) :-\n    legal_court_issues_writs_after_possession_granted(montana, 2021, _WritPossession, writ_of_assistance),\n    legal_writ_executed_by_authority(montana, 2021, writ_of_assistance, sheriff).\n\n% -----------------------------\n% Reasoning\n% -----------------------------\n\n% scenario_term_matches_statutory_term/0 succeeds if the asked term is the same term used by statute\n% for the asked concept, in the scenario's state and year.\nscenario_term_matches_statutory_term :-\n    scenario_statement,\n    state(State),\n    focus_year(Year),\n    asked_concept(Concept),\n    asked_term(Term),\n    legal_term_for_concept(State, Year, Concept, Term).\n\n% -----------------------------\n% Final answer (derived, not hardcoded)\n% -----------------------------\n\nhousing_answer(yes) :-\n    scenario_term_matches_statutory_term,\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n% -----------------------------\n% Main entrypoint\n% -----------------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-5149",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is the term 'Warrant for removal' used to refer to the order from the court to the authorities to remove a tenant?"
+  }
+}

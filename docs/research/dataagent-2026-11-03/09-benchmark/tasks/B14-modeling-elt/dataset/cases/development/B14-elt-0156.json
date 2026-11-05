@@ -1,0 +1,35 @@
+{
+  "case_id": "B14-elt-0156",
+  "task_id": "B14",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "config",
+      "ref": "fixtures/elt-redshift-movielens-config.yaml",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B14-elt-0156.json"
+  },
+  "evidence": [
+    "bench://elt-bench/elt-bench/redshift/movielens/data_model.yaml"
+  ],
+  "tags": [
+    "elt-bench",
+    "redshift",
+    "movielens",
+    "models:3"
+  ],
+  "source": "elt",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

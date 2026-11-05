@@ -1,0 +1,1 @@
+I'm having trouble getting the DATEDIF function to work in my Excel spreadsheet. The formula I'm using is =DATEDIF(C2,TODAY(),"D") and I'm trying to calculate the difference in days between the date in cell C2 and today's date.                             DATEDIF(C2,TODAY(),"D")

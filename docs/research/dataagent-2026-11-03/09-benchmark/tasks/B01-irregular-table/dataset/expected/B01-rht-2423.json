@@ -1,0 +1,29 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 787,
+  "table": "labor-table11",
+  "structure": "MultiColumnClassified",
+  "question_type": "Fact Checking",
+  "sub_type": "Inference-based Fact Checking",
+  "answer": "No",
+  "cot": [
+    {
+      "step": "First, locate all rows under the N91 campaign in the table."
+    },
+    {
+      "step": "Identify the rows where the “DISPOSITION” column is marked as “Hangup” and “Abandon.”"
+    },
+    {
+      "step": "Retrieve the values in the “CALLS” column corresponding to these dispositions."
+    },
+    {
+      "step": "Compare the number of calls for “Hangup” and “Abandon” to determine if “Hangup” is greater."
+    }
+  ],
+  "case_id": "B01-rht-2423",
+  "expected": {
+    "kind": "answer",
+    "question": "Is the number of calls marked as “Hangup” greater than the calls marked as “Abandon” for the N91 campaign?",
+    "answer": "No"
+  }
+}

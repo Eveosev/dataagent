@@ -1,0 +1,36 @@
+{
+  "case_id": "B01-mimo-1087",
+  "task_id": "B01",
+  "split_role": "unseen_acceptance",
+  "inputs": [
+    {
+      "kind": "table",
+      "ref": "bench://mimotable/unzipped/data/chinese/spreadsheet/Sheet57.xlsx",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B01-mimo-1087.json"
+  },
+  "evidence": [
+    "bench://mimotable/unzipped/data/chinese/spreadsheet/Sheet57.xlsx#workbook"
+  ],
+  "tags": [
+    "chinese",
+    "single file, single sheet, simple header",
+    "simple table",
+    "op:Lookup",
+    "op:Compare"
+  ],
+  "source": "mimo",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

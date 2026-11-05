@@ -1,0 +1,54 @@
+## Identifying the Essential Problem
+
+The essential problem is to determine, for each person in a queue, how many people they can see to their right, given their heights and the constraint that they can only see people who are shorter than both them and everyone in between.
+
+## Reasoning and Identifying Relevant Information
+
+To solve this problem, we can use the following steps:
+
+1. **Iterate through the heights array from right to left.**
+2. **Maintain a stack to keep track of the heights of people we have already processed.**
+3. **For each height in the array:**
+    * **While the stack is not empty and the top element of the stack is less than the current height:**
+        * **Pop the top element from the stack.**
+    * **If the stack is empty, the current person can see everyone to their right.**
+    * **Otherwise, the current person can see everyone to their right up to the person at the top of the stack.**
+    * **Push the current height onto the stack.**
+4. **The final stack contains the heights of the people who can see everyone to their right. The answer array is the length of the original heights array minus the size of the final stack.**
+
+## Draft Answer
+
+Here is a draft answer containing the steps and reasoning outlined above:
+
+```python
+def canSeePersonsCount(heights):
+    n = len(heights)
+    answer = [0] * n
+    stack = []
+
+    # Iterate through the heights array from right to left
+    for i in range(n - 1, -1, -1):
+        # While the stack is not empty and the top element is less than the current height
+        while stack and stack[-1] < heights[i]:
+            stack.pop()
+
+        # If the stack is empty, the current person can see everyone to their right
+        if not stack:
+            answer[i] = n - i - 1
+        # Otherwise, the current person can see everyone to their right up to the person at the top of the stack
+        else:
+            answer[i] = stack[-1] - i - 1
+
+        # Push the current height onto the stack
+        stack.append(heights[i])
+
+    return answer
+```
+
+This code iterates through the heights array from right to left, maintaining a stack of the heights of people who can see everyone to their right. It then calculates the number of people each person can see based on the stack and returns the answer array.
+
+## Additional Thoughts
+
+* This solution has a time complexity of O(n) and a space complexity of O(n), where n is the number of people in the queue.
+* This solution assumes that all heights are distinct. If there are duplicate heights, the solution will need to be modified to handle this case.
+* This solution can be adapted to solve other problems involving visibility, such as determining the number of buildings that can be seen from a given point.

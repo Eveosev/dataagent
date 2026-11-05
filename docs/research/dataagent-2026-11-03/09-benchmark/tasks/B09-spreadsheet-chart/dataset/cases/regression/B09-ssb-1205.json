@@ -1,0 +1,40 @@
+{
+  "case_id": "B09-ssb-1205",
+  "task_id": "B09",
+  "split_role": "regression",
+  "inputs": [
+    {
+      "kind": "table",
+      "ref": "bench://spreadsheetbench/spreadsheetbench_verified_400/spreadsheetbench_verified_400/spreadsheet/46121/1_46121_golden.xlsx",
+      "digest": null
+    },
+    {
+      "kind": "instruction",
+      "ref": "fixtures/ssb-46121-instruction.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B09-ssb-1205.json"
+  },
+  "evidence": [
+    "fixtures/ssb-46121-instruction.md",
+    "bench://spreadsheetbench/spreadsheetbench_verified_400/spreadsheetbench_verified_400/spreadsheet/46121/1_46121_golden.xlsx"
+  ],
+  "tags": [
+    "spreadsheetbench",
+    "spreadsheetbench_verified_400",
+    "Cell-Level Manipulation"
+  ],
+  "source": "ssb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

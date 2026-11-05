@@ -1,0 +1,35 @@
+{
+  "case_id": "B14-elt-0200",
+  "task_id": "B14",
+  "split_role": "regression",
+  "inputs": [
+    {
+      "kind": "config",
+      "ref": "fixtures/elt-redshift-zuora-config.yaml",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B14-elt-0200.json"
+  },
+  "evidence": [
+    "bench://elt-bench/elt-bench/redshift/zuora/data_model.yaml"
+  ],
+  "tags": [
+    "elt-bench",
+    "redshift",
+    "zuora",
+    "models:1"
+  ],
+  "source": "elt",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "source": "mitdbg/KramaBench",
+  "file": "dr-input/wildfire/wildfire_random.json",
+  "raw": {
+    "id": "wildfire-hard-10",
+    "query": "By count, are there more fires in Democratic states or Republican states? Answer **only** with 'Democratic' or 'Republican'.",
+    "answer": "Republican",
+    "answer_type": "string_exact",
+    "data_sources": [
+      "Wildfire_Acres_by_State.csv",
+      "democratic_vs_republican_votes_by_usa_state_2020.csv",
+      "wildfire_total_fires_p45_54.csv"
+    ],
+    "runtime": 2,
+    "input_files_to_dr": [
+      "nifc_human_caused_acres.csv",
+      "PublicView_RAWS_-3515561676727363726.csv",
+      "nifc_human_caused_wildfires.csv",
+      "wildfire_total_fires_p45_54.csv",
+      "democratic_vs_republican_votes_by_usa_state_2020.csv",
+      "cleaned_helicopter_requests_by_region.csv",
+      "Fire_Weather_Data_2002-2014_2016.csv",
+      "noaa_wildfires.csv",
+      "Wildfire_Fires_by_State.csv",
+      "Wildfire_Acres_by_State.csv"
+    ]
+  },
+  "case_id": "B07-krama-0508",
+  "expected": {
+    "kind": "answer",
+    "answer": "Republican",
+    "answer_type": "string_exact",
+    "runtime_s": 2,
+    "data_sources": [
+      "Wildfire_Acres_by_State.csv",
+      "democratic_vs_republican_votes_by_usa_state_2020.csv",
+      "wildfire_total_fires_p45_54.csv"
+    ]
+  }
+}

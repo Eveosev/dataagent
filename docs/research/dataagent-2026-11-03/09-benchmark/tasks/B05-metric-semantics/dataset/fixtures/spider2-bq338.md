@@ -1,0 +1,1 @@
+Can you find the census tracts in the 36047 area that made both the top 20 lists for biggest population and median income increases from 2011 to 2018, and had over 1000 residents each year?

@@ -1,0 +1,29 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 902,
+  "table": "economy-table60",
+  "structure": "ExternalSupply",
+  "question_type": "Fact Checking",
+  "sub_type": "Multi-hop Fact Checking",
+  "answer": "1.26",
+  "cot": [
+    {
+      "step": "First, we need to identify all transactions recorded between 2015-02-01 and 2015-02-07."
+    },
+    {
+      "step": "We filter the data for the specified date range and the “Truck Number” DRL11."
+    },
+    {
+      "step": "Next, we extract the “Time (hrs)” column from the filtered data."
+    },
+    {
+      "step": "We calculate the average of the “Time (hrs)” values for the relevant transactions."
+    }
+  ],
+  "case_id": "B01-rht-2538",
+  "expected": {
+    "kind": "answer",
+    "question": "What is the average “Time (hrs)” recorded for all transactions from 2015-02-01 to 2015-02-07 for “Truck Number DRL11”?",
+    "answer": "1.26"
+  }
+}

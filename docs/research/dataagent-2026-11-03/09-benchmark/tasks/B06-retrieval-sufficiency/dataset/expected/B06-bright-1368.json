@@ -1,0 +1,24 @@
+{
+  "source": "xlangai/BRIGHT",
+  "query_id": "TheoremQA_panlu/gravitational_force2.json",
+  "query": "## Exploring Martian Gravity: Calculating the Robot's Acceleration\n\n### 1. Identifying the Problem:\n\nThe problem asks us to determine the acceleration due to gravity experienced by a robot on Mars, given its weight on Earth and the physical properties of Mars. \n\n### 2. Step-by-Step Reasoning:\n\nTo solve this problem, we need to consider the following steps:\n\n1. **Gravitational Force on Earth:** \n    - We know the robot's weight on Earth (3430 N), which is the force of gravity acting on it.\n    - We can use the formula **Weight = mass × acceleration due to gravity (g_earth)** to find the robot's mass.\n    - Rearranging the formula, we get **mass = Weight / g_earth**.\n    - We can use the standard value of g_earth (9.81 m/s²) to find the mass.\n\n2. **Gravitational Force on Mars:**\n    - We know the mass of Mars (6.42 × 10^23 kg) and its radius (3.40 × 10^6 m).\n    - We can use the formula for gravitational force **F = G × (m₁ × m₂) / r²**, where:\n        - G is the gravitational constant (6.67 × 10^-11 N⋅m²/kg²).\n        - m₁ is the mass of Mars.\n        - m₂ is the mass of the robot.\n        - r is the distance between the robot and the center of Mars (which is the radius of Mars).\n    - We can then calculate the acceleration due to gravity on Mars (g_mars) using the formula **g_mars = F / m₂**.\n\n### 3. Draft Answer:\n\n## Calculating the Robot's Acceleration on Mars:\n\n**1. Finding the Robot's Mass on Earth:**\n\n- Robot's weight on Earth (W_earth) = 3430 N\n- Acceleration due to gravity on Earth (g_earth) = 9.81 m/s²\n- Robot's mass (m) = W_earth / g_earth = 3430 N / 9.81 m/s² = 350 kg\n\n**2. Calculating Gravitational Force on Mars:**\n\n- Mass of Mars (M_mars) = 6.42 × 10^23 kg\n- Radius of Mars (R_mars) = 3.40 × 10^6 m\n- Gravitational constant (G) = 6.67 × 10^-11 N⋅m²/kg²\n\n- Gravitational force on Mars (F_mars) = G × (M_mars × m) / R_mars²\n- F_mars = (6.67 × 10^-11 N⋅m²/kg²) × (6.42 × 10^23 kg × 350 kg) / (3.40 × 10^6 m)²\n- F_mars ≈ 1325.6 N\n\n**3. Finding Acceleration due to Gravity on Mars:**\n\n- Acceleration due to gravity on Mars (g_mars) = F_mars / m\n- g_mars = 1325.6 N / 350 kg ≈ 3.79 m/s²\n\nTherefore, the robot will experience an acceleration due to gravity of approximately **3.79 meters per second squared** on Mars. \n",
+  "gold_ids": [
+    "3830",
+    "5249"
+  ],
+  "gold_answer": "N/A",
+  "corpus": "documents/theoremqa_theorems-00000-of-00001.parquet",
+  "case_id": "B06-bright-1368",
+  "expected": {
+    "kind": "retrieval",
+    "gold_ids": [
+      "3830",
+      "5249"
+    ],
+    "gold_ids_long": [
+      "N/A"
+    ],
+    "gold_answer": "N/A",
+    "excluded_ids": []
+  }
+}

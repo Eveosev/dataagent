@@ -1,0 +1,40 @@
+{
+  "case_id": "B05-bird-0271",
+  "task_id": "B05",
+  "split_role": "unseen_acceptance",
+  "inputs": [
+    {
+      "kind": "question",
+      "ref": "fixtures/bird-270-formula_1.md",
+      "digest": null
+    },
+    {
+      "kind": "corpus",
+      "ref": "bench://bird-mini-dev/data/mini_dev_sqlite.jsonl",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B05-bird-0271.json"
+  },
+  "evidence": [
+    "fixtures/bird-270-formula_1.md#schema",
+    "bench://bird-mini-dev/data/mini_dev_sqlite.jsonl"
+  ],
+  "tags": [
+    "bird",
+    "sqlite",
+    "formula_1"
+  ],
+  "source": "bird",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

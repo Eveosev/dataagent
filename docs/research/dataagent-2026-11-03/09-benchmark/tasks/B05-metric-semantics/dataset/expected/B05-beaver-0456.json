@@ -1,0 +1,27 @@
+{
+  "source": "beaverbench/beaver-query",
+  "id": "neutron_245",
+  "db": "neutron",
+  "question": "For each network, show the network ID and the maximum geometric mean of the standard attribute IDs (considering only standard attribute IDs greater than 0) among all security groups that have ports in that network. Do not return any rounded answers.",
+  "sql": "WITH inner_cte AS ( SELECT s.SECURITY_GROUP_ID, EXP(AVG(LN(p.STANDARD_ATTR_ID))) AS geometric_mean_standard_attr_id FROM PORTS AS p JOIN SECURITYGROUPPORTBINDINGS AS s ON p.ID = s.PORT_ID WHERE p.STANDARD_ATTR_ID > 0 GROUP BY s.SECURITY_GROUP_ID ORDER BY geometric_mean_standard_attr_id DESC ), NetworkSecurityGroupGeoMean AS ( SELECT p.NETWORK_ID, s.SECURITY_GROUP_ID, i.geometric_mean_standard_attr_id FROM PORTS AS p JOIN SECURITYGROUPPORTBINDINGS AS s ON p.ID = s.PORT_ID JOIN inner_cte AS i ON i.SECURITY_GROUP_ID = s.SECURITY_GROUP_ID ) SELECT NETWORK_ID, MAX(geometric_mean_standard_attr_id) AS max_security_group_geometric_mean_standard_attr_id FROM NetworkSecurityGroupGeoMean GROUP BY NETWORK_ID;",
+  "tables": "[\"PORTS\", \"SECURITYGROUPPORTBINDINGS\"]",
+  "join_keys": "[[\"PORTS.ID\", \"SECURITYGROUPPORTBINDINGS.PORT_ID\"]]",
+  "column_mapping": "{\"security group\": [\"SECURITYGROUPPORTBINDINGS.SECURITY_GROUP_ID\"], \"security group ID\": [\"SECURITYGROUPPORTBINDINGS.SECURITY_GROUP_ID\"], \"ports bound to that security group\": [\"SECURITYGROUPPORTBINDINGS.PORT_ID\", \"PORTS.ID\"], \"standard attribute IDs\": [\"PORTS.STANDARD_ATTR_ID\"]}",
+  "domain_knowledge": "[]",
+  "sub_questions": "[\"For each security group, show the security group ID and the geometric mean of the standard attribute IDs of the ports bound to that security group, considering only ports whose standard attribute ID is greater than 0.\"]",
+  "sub_sqls": "[\"SELECT s.SECURITY_GROUP_ID, EXP(AVG(LN(p.STANDARD_ATTR_ID))) AS geometric_mean_standard_attr_id FROM PORTS AS p JOIN SECURITYGROUPPORTBINDINGS AS s ON p.ID = s.PORT_ID WHERE p.STANDARD_ATTR_ID > 0 GROUP BY s.SECURITY_GROUP_ID ORDER BY geometric_mean_standard_attr_id DESC;\"]",
+  "category": "complex query",
+  "detailed_category": "nested",
+  "case_id": "B05-beaver-0456",
+  "expected": {
+    "kind": "sql",
+    "sql": "WITH inner_cte AS ( SELECT s.SECURITY_GROUP_ID, EXP(AVG(LN(p.STANDARD_ATTR_ID))) AS geometric_mean_standard_attr_id FROM PORTS AS p JOIN SECURITYGROUPPORTBINDINGS AS s ON p.ID = s.PORT_ID WHERE p.STANDARD_ATTR_ID > 0 GROUP BY s.SECURITY_GROUP_ID ORDER BY geometric_mean_standard_attr_id DESC ), NetworkSecurityGroupGeoMean AS ( SELECT p.NETWORK_ID, s.SECURITY_GROUP_ID, i.geometric_mean_standard_attr_id FROM PORTS AS p JOIN SECURITYGROUPPORTBINDINGS AS s ON p.ID = s.PORT_ID JOIN inner_cte AS i ON i.SECURITY_GROUP_ID = s.SECURITY_GROUP_ID ) SELECT NETWORK_ID, MAX(geometric_mean_standard_attr_id) AS max_security_group_geometric_mean_standard_attr_id FROM NetworkSecurityGroupGeoMean GROUP BY NETWORK_ID;",
+    "sub_sqls": "[\"SELECT s.SECURITY_GROUP_ID, EXP(AVG(LN(p.STANDARD_ATTR_ID))) AS geometric_mean_standard_attr_id FROM PORTS AS p JOIN SECURITYGROUPPORTBINDINGS AS s ON p.ID = s.PORT_ID WHERE p.STANDARD_ATTR_ID > 0 GROUP BY s.SECURITY_GROUP_ID ORDER BY geometric_mean_standard_attr_id DESC;\"]",
+    "db": "neutron",
+    "tables": "[\"PORTS\", \"SECURITYGROUPPORTBINDINGS\"]",
+    "join_keys": "[[\"PORTS.ID\", \"SECURITYGROUPPORTBINDINGS.PORT_ID\"]]",
+    "column_mapping": "{\"security group\": [\"SECURITYGROUPPORTBINDINGS.SECURITY_GROUP_ID\"], \"security group ID\": [\"SECURITYGROUPPORTBINDINGS.SECURITY_GROUP_ID\"], \"ports bound to that security group\": [\"SECURITYGROUPPORTBINDINGS.PORT_ID\", \"PORTS.ID\"], \"standard attribute IDs\": [\"PORTS.STANDARD_ATTR_ID\"]}",
+    "category": "complex query",
+    "db_archive": "bench://beaver-table/beaver_db.zip"
+  }
+}

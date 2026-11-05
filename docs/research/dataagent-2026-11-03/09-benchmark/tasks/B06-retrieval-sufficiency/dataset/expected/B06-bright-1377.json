@@ -1,0 +1,22 @@
+{
+  "source": "xlangai/BRIGHT",
+  "query_id": "TheoremQA_jianyu_xu/Multinomial_6.json",
+  "query": "## Superhero Figurine Dilemma\n\n**1. Identifying the problem:**\n\nWe need to choose 4 figurines for the display case with at least 2 of them being superhero figurines. We have 4 unique superhero figurines, 3 unique dinosaur figurines, and 2 unique robot figurines.\n\n**2. Thinking step by step:**\n\n* **Step 1:** Choose the superhero figurines.\n\n    * We need to choose at least 2 superhero figurines. \n    * We have 4 options to choose from, and we need to select between 2 and 4. \n    * This can be done in 4C2 + 4C3 + 4C4 ways = 6 + 4 + 1 = 11 ways.\n\n* **Step 2:** Choose the remaining figurines.\n\n    * The remaining figurines can be either dinosaurs or robots. \n    * If we choose 2 superhero figurines, we need to choose 2 figurines from the remaining 5 (3 dinosaurs + 2 robots). This can be done in 5C2 ways.\n    * If we choose 3 superhero figurines, we need to choose 1 figurine from the remaining 5. This can be done in 5C1 ways.\n    * If we choose 4 superhero figurines, we don't need to choose any additional figurines.\n\n* **Step 3:** Combine the possibilities.\n\n    * We have 11 ways to choose the superhero figurines and for each choice, we have different possibilities for the remaining figurines.\n    * If we choose 2 superhero figurines, we have 5C2 = 10 possibilities for the remaining figurines.\n    * If we choose 3 superhero figurines, we have 5C1 = 5 possibilities for the remaining figurines.\n    * If we choose 4 superhero figurines, we have only 1 possibility (choosing no additional figurines).\n    * Therefore, the total number of ways to arrange the display is 11 * (10 + 5 + 1) = 11 * 16 = 176 ways.\n\n**3. Draft answer:**\n\nThere are 176 different ways to arrange the display case with at least 2 superhero figurines. This is calculated by considering the different possibilities for choosing the superhero figurines and the remaining figurines, and then combining these possibilities.",
+  "gold_ids": [
+    "10462"
+  ],
+  "gold_answer": "N/A",
+  "corpus": "documents/theoremqa_theorems-00000-of-00001.parquet",
+  "case_id": "B06-bright-1377",
+  "expected": {
+    "kind": "retrieval",
+    "gold_ids": [
+      "10462"
+    ],
+    "gold_ids_long": [
+      "N/A"
+    ],
+    "gold_answer": "N/A",
+    "excluded_ids": []
+  }
+}

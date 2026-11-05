@@ -1,0 +1,94 @@
+## Navigating Turtlebot4 with Nav2 from a C++ Node: Reaching the Goal and Beyond
+
+### 1. Understanding the Problem:
+
+The core issue is sending navigation goals to the Turtlebot4 from a C++ node and obtaining feedback on the goal's status (reached, cancelled, or in progress). You're looking for a solution that leverages the `/navigate_to_pose` action within the `bt_navigator` node, but the current interface presents a `std_msgs/Empty` response, leaving you unsure how to proceed.
+
+### 2. Navigating the Solution:
+
+Let's break down the solution into manageable steps:
+
+**a) Action Interface:**
+
+- The `bt_navigator` node indeed provides the `/navigate_to_pose` action. However, the response type being `std_msgs/Empty` signifies that it doesn't directly return the goal's status. Instead, we need to access this information through another mechanism.
+
+**b) Feedback and Result:**
+
+- The action interface likely utilizes feedback and result messages to communicate the goal's status. We need to investigate the action definition to understand the structure of these messages and how to interpret them.
+
+**c) Client Implementation:**
+
+- In your C++ node, you'll need to implement an action client for `/navigate_to_pose`. This client will send the goal (desired pose) and handle the feedback and result messages to track the goal's progress and final status.
+
+**d) Additional Considerations:**
+
+- Depending on the complexity of your navigation tasks, you might need to consider aspects like:
+    - **Goal preemption:** Handling situations where a new goal is sent before the current one is completed.
+    - **Error handling:** Addressing potential errors during navigation or communication with the action server.
+    - **Visualization:** Integrating visualization tools to display the robot's path and goal status.
+
+### 3. Drafting the Answer:
+
+**a) Action Definition:**
+
+Start by examining the `bt_navigator` node's action definition. Look for the definition of the `/navigate_to_pose` action. This will likely reside in a file like `bt_navigator.action`. Within the definition, you should find details about the feedback and result messages, including their data types and the information they convey.
+
+**b) Client Implementation:**
+
+Next, implement an action client in your C++ node. Use libraries like `actionlib` or `rclcpp_action` to achieve this. The client will:
+
+- Send the goal (desired pose) as a `geometry_msgs/PoseStamped` message.
+- Subscribe to the feedback topic to receive updates on the goal's progress (e.g., distance to goal, estimated time of arrival).
+- Upon receiving the result, interpret the message (likely a `nav2_msgs/GoalStatus` message) to determine the final status (succeeded, aborted, etc.).
+
+**c) Example Code Snippet:**
+
+```cpp
+#include <rclcpp/rclcpp.hpp>
+#include <actionlib/client/simple_action_client.h>
+#include <nav2_msgs/action/navigate_to_pose.hpp>
+
+int main(int argc, char **argv) {
+  rclcpp::init(argc, argv);
+  auto node = rclcpp::Node::make_shared("my_navigation_node");
+
+  // Create action client
+  actionlib::SimpleActionClient<nav2_msgs::action::NavigateToPose> ac(
+      node, "navigate_to_pose");
+
+  // Wait for action server to start
+  ac.waitForServer();
+
+  // Prepare goal
+  nav2_msgs::action::NavigateToPose::Goal goal;
+  // Set desired pose here
+
+  // Send goal and handle feedback and result
+  ac.sendGoal(goal);
+  while (rclcpp::ok() && ac.getState() != actionlib::SimpleClientGoalState::SUCCEEDED) {
+    // Process feedback (if available)
+    auto feedback = ac.getLastFeedback();
+    // ...
+
+    // Check result
+    if (ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED) {
+      // Goal reached!
+    } else if (ac.getState() == actionlib::SimpleClientGoalState::ABORTED) {
+      // Goal aborted!
+    }
+    // ...
+  }
+
+  rclcpp::shutdown();
+  return 0;
+}
+```
+
+**d) Additional Considerations:**
+
+- Adapt the code snippet to your specific needs, including error handling, preemption, and visualization.
+- Refer to the Nav2 documentation and tutorials for more in-depth guidance and examples.
+
+### 4. Conclusion:
+
+By following these steps and leveraging the available resources, you should be able to successfully send navigation goals to your Turtlebot4 from a C++ node and obtain the necessary feedback on the goal's status. Remember to tailor the solution to your specific requirements and integrate it seamlessly into your project.

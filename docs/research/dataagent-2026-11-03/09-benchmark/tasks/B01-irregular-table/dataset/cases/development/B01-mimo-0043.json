@@ -1,0 +1,36 @@
+{
+  "case_id": "B01-mimo-0043",
+  "task_id": "B01",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "table",
+      "ref": "bench://mimotable/unzipped/data/english/spreadsheet/ProductionandManufacturingForm(648).xlsx",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B01-mimo-0043.json"
+  },
+  "evidence": [
+    "bench://mimotable/unzipped/data/english/spreadsheet/ProductionandManufacturingForm(648).xlsx#workbook"
+  ],
+  "tags": [
+    "english",
+    "single file, single sheet, complicate header",
+    "medium table",
+    "op:Lookup",
+    "op:Reasoning"
+  ],
+  "source": "mimo",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

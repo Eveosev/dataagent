@@ -1,0 +1,73 @@
+{
+  "$comment": "generated from dataagent_contracts.core:FieldSpec; do not edit",
+  "$id": "dataagent-contracts/0.1/core/FieldSpec",
+  "additionalProperties": false,
+  "properties": {
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "field_id": {
+      "minLength": 1,
+      "title": "Field Id",
+      "type": "string"
+    },
+    "name": {
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+    },
+    "nullable": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Nullable"
+    },
+    "path": {
+      "minLength": 1,
+      "title": "Path",
+      "type": "string"
+    },
+    "unit": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Unit"
+    },
+    "value_type": {
+      "minLength": 1,
+      "title": "Value Type",
+      "type": "string"
+    }
+  },
+  "required": [
+    "field_id",
+    "name",
+    "path",
+    "value_type"
+  ],
+  "title": "FieldSpec",
+  "type": "object"
+}

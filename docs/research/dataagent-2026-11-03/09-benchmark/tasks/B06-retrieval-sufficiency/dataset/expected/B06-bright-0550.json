@@ -1,0 +1,69 @@
+{
+  "source": "xlangai/BRIGHT",
+  "query_id": "116",
+  "query": "## Identifying the problem:\n\nThe problem asks us to find the number of lattice points (points with integer coordinates) that lie inside at least one circle in a given set of circles. The circles are represented by their center coordinates and radius. \n\n## Relevant information:\n\nTo solve this problem, we need to consider the following:\n\n* **Circle properties:** We need to know the center coordinates and radius of each circle. \n* **Lattice points:** We need to check all possible integer coordinates within the relevant range to see if they fall inside any circle.\n* **Circle-point relationship:** We need to determine whether a given lattice point lies inside a circle.\n\n## Addressing the questions:\n\n**1. What information is relevant and helpful?**\n\n* **Circle information:** The center coordinates and radius of each circle are crucial.\n* **Lattice point range:** We need to know the range of x and y coordinates within which we need to check for lattice points.\n* **Circle-point relationship:** We need a method to determine whether a lattice point lies inside a given circle.\n\n**2. How can we determine if a lattice point is inside a circle?**\n\nWe can use the distance formula to calculate the distance between the lattice point and the center of the circle. If the distance is less than or equal to the radius, then the point is inside the circle.\n\n**3. How can we optimize the solution?**\n\nWe can optimize the solution by:\n\n* **Using a grid:** We can create a grid that covers the area where the circles are located. This will help us keep track of which lattice points have already been checked.\n* **Pre-calculating circle data:** We can pre-calculate the squares of the radii for each circle to avoid repeated calculations.\n* **Early termination:** We can stop checking lattice points once we have found a certain number of points inside circles.\n\n## Draft answer:\n\nHere's a draft answer that incorporates the above considerations:\n\n1. **Preprocessing:**\n    * Create a grid that covers the area where the circles are located.\n    * Pre-calculate the squares of the radii for each circle.\n2. **Iterate over lattice points:**\n    * For each lattice point within the relevant range:\n        * Check if the point has already been visited.\n        * For each circle:\n            * Calculate the square of the distance between the point and the center of the circle.\n            * If the square of the distance is less than or equal to the square of the radius, the point is inside the circle.\n            * Mark the point as visited.\n            * Increment the count of lattice points inside at least one circle.\n3. **Return the count of lattice points inside at least one circle.**\n\nThis approach ensures that each lattice point is checked only once and avoids unnecessary calculations. It also allows for early termination if a certain number of points have already been found.\n",
+  "gold_ids": [
+    "leetcode/leetcode_1828.txt"
+  ],
+  "gold_answer": "N/A",
+  "corpus": "documents/leetcode-00000-of-00001.parquet",
+  "case_id": "B06-bright-0550",
+  "expected": {
+    "kind": "retrieval",
+    "gold_ids": [
+      "leetcode/leetcode_1828.txt"
+    ],
+    "gold_ids_long": [
+      "N/A"
+    ],
+    "gold_answer": "N/A",
+    "excluded_ids": [
+      "leetcode/leetcode_892.txt",
+      "leetcode/leetcode_204.txt",
+      "leetcode/leetcode_1577.txt",
+      "leetcode/leetcode_840.txt",
+      "leetcode/leetcode_1266.txt",
+      "leetcode/leetcode_2442.txt",
+      "leetcode/leetcode_1248.txt",
+      "leetcode/leetcode_2001.txt",
+      "leetcode/leetcode_2584.txt",
+      "leetcode/leetcode_869.txt",
+      "leetcode/leetcode_335.txt",
+      "leetcode/leetcode_587.txt",
+      "leetcode/leetcode_2605.txt",
+      "leetcode/leetcode_812.txt",
+      "leetcode/leetcode_2598.txt",
+      "leetcode/leetcode_939.txt",
+      "leetcode/leetcode_973.txt",
+      "leetcode/leetcode_2094.txt",
+      "leetcode/leetcode_2440.txt",
+      "leetcode/leetcode_883.txt",
+      "leetcode/leetcode_1442.txt",
+      "leetcode/leetcode_1453.txt",
+      "leetcode/leetcode_1030.txt",
+      "leetcode/leetcode_149.txt",
+      "leetcode/leetcode_970.txt",
+      "leetcode/leetcode_2306.txt",
+      "leetcode/leetcode_963.txt",
+      "leetcode/leetcode_957.txt",
+      "leetcode/leetcode_2367.txt",
+      "leetcode/leetcode_1037.txt",
+      "leetcode/leetcode_1232.txt",
+      "leetcode/leetcode_1814.txt",
+      "leetcode/leetcode_2025.txt",
+      "leetcode/leetcode_2101.txt",
+      "leetcode/leetcode_1610.txt",
+      "leetcode/leetcode_914.txt",
+      "leetcode/leetcode_781.txt",
+      "leetcode/leetcode_952.txt",
+      "leetcode/leetcode_268.txt",
+      "leetcode/leetcode_523.txt",
+      "leetcode/leetcode_1512.txt",
+      "leetcode/leetcode_447.txt",
+      "leetcode/leetcode_2249.txt",
+      "leetcode/leetcode_2521.txt",
+      "leetcode/leetcode_2549.txt",
+      "leetcode/leetcode_2280.txt"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_9e187173",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "jurisdiction",
+    "focus_year",
+    "scenario_action_type",
+    "scenario_primary_method_unsuccessful",
+    "scenario_proposed_secondary_method",
+    "statute_34_18_10a1_officer_method",
+    "statute_primary_service_method",
+    "statute_secondary_service_method",
+    "legal_permitted_service_method",
+    "legal_permitted_secondary_method",
+    "legal_publication_permitted_as_secondary",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program (Rhode Island, focus year 2021)\n    Question: Is publication a permitted secondary method of service for an eviction action?\n*/\n\n/* ------------------------------\n   Jurisdiction / metadata facts\n   ------------------------------ */\njurisdiction(rhode_island).\nfocus_year(2021).\n\n/* -----------------------------------------\n   Scenario facts (encode the question setup)\n   ----------------------------------------- */\n\n% The question is about an eviction action and asks whether \"publication\"\n% can be used as a *secondary* method of service (used if primary fails).\nscenario_action_type(nonpayment_eviction).     % eviction for nonpayment of rent\nscenario_primary_method_unsuccessful(true).    % primary method unsuccessful\nscenario_proposed_secondary_method(publication).\n\n% Helper predicate that succeeds when the encoded factual statement holds.\nscenario_statement :-\n    scenario_action_type(nonpayment_eviction),\n    scenario_primary_method_unsuccessful(true),\n    scenario_proposed_secondary_method(publication).\n\n/* -------------------------------------------------------\n   Statute translation: RI Gen L  34-18-10 (2021)\n   Service of process for actions pursuant to chapter.\n   ------------------------------------------------------- */\n\n%  34-18-10(a)(1): In actions for nonpayment of rent, the officer shall serve by:\n% (i) handing them to the defendant; OR\n% (ii) serving at the defendant's dwelling to a person of suitable age/discretion residing therein; OR\n% (iii) if none be found, posting conspicuously on the door.\n%\n% We encode the set of *explicitly permitted* officer service methods for a\n% nonpayment eviction.\nstatute_34_18_10a1_officer_method(nonpayment_eviction, personal_delivery).          % (i)\nstatute_34_18_10a1_officer_method(nonpayment_eviction, dwelling_substitute_service). % (ii)\nstatute_34_18_10a1_officer_method(nonpayment_eviction, posting_on_door).            % (iii)\n\n% Encode which of those methods are \"secondary\" in the sense asked:\n% \"secondary methods ... may be used if the primary method is unsuccessful.\"\n%\n% Under the statute's structure, personal delivery is the primary method;\n% dwelling substitute service and posting are alternatives used when personal\n% delivery cannot be accomplished (and posting additionally when none found).\nstatute_primary_service_method(nonpayment_eviction, personal_delivery).\n\n% Secondary methods for nonpayment eviction under  34-18-10(a)(1)(ii)-(iii).\nstatute_secondary_service_method(nonpayment_eviction, dwelling_substitute_service).\nstatute_secondary_service_method(nonpayment_eviction, posting_on_door).\n\n% Important negative space:  34-18-10(a)(1) lists the officer methods and does\n% NOT include publication. We do not infer additional methods not enumerated.\n%\n% For completeness,  34-18-10(b)(2) references service pursuant to Rule 4 for\n% other actions, but the text of Rule 4 is not provided here, and the question\n% asks about \"secondary methods\" as defined (primary unsuccessful). The only\n% explicit secondary methods in the provided statute text are (ii) and (iii).\n\n/* -----------------------------\n   Legal reasoning helper rules\n   ----------------------------- */\n\n% A method is permitted for the scenario action if explicitly authorized.\nlegal_permitted_service_method(ActionType, Method) :-\n    statute_34_18_10a1_officer_method(ActionType, Method).\n\n% A method is a permitted *secondary* method if it is explicitly identified\n% as secondary for that action type.\nlegal_permitted_secondary_method(ActionType, Method) :-\n    statute_secondary_service_method(ActionType, Method).\n\n% Publication would be permitted as a secondary method only if it appears in\n% the statute's explicitly permitted secondary methods.\nlegal_publication_permitted_as_secondary(ActionType) :-\n    legal_permitted_secondary_method(ActionType, publication).\n\n/* -------------------------\n   Answer predicate (yes/no)\n   ------------------------- */\n\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_action_type(ActionType),\n    scenario_primary_method_unsuccessful(true),\n    legal_publication_permitted_as_secondary(ActionType),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n/* -------------------------\n   Main entrypoint / runner\n   ------------------------- */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-4306",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Secondary methods of service are defined as those methods that may be used if the primary method is unsuccessful. Is publication a permitted secondary method of service for an eviction action?"
+  }
+}

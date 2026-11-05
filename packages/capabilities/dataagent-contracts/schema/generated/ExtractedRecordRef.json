@@ -1,0 +1,760 @@
+{
+  "$comment": "generated from dataagent_contracts.core:ExtractedRecordRef; do not edit",
+  "$defs": {
+    "AssetRef": {
+      "additionalProperties": false,
+      "properties": {
+        "digest": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Digest"
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "minLength": 1,
+          "title": "Kind",
+          "type": "string"
+        },
+        "locator": {
+          "minLength": 1,
+          "title": "Locator",
+          "type": "string"
+        },
+        "media_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Media Type"
+        },
+        "resolver": {
+          "minLength": 1,
+          "title": "Resolver",
+          "type": "string"
+        },
+        "revision": {
+          "minLength": 1,
+          "title": "Revision",
+          "type": "string"
+        },
+        "scope_ref": {
+          "minLength": 1,
+          "title": "Scope Ref",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "scope_ref",
+        "revision",
+        "resolver",
+        "locator"
+      ],
+      "title": "AssetRef",
+      "type": "object"
+    },
+    "Confidence": {
+      "additionalProperties": false,
+      "properties": {
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "method": {
+          "minLength": 1,
+          "title": "Method",
+          "type": "string"
+        },
+        "score": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Score",
+          "type": "number"
+        }
+      },
+      "required": [
+        "score",
+        "method"
+      ],
+      "title": "Confidence",
+      "type": "object"
+    },
+    "ExcelCellSelector": {
+      "additionalProperties": false,
+      "properties": {
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "kind": {
+          "const": "excel_cell",
+          "default": "excel_cell",
+          "title": "Kind",
+          "type": "string"
+        },
+        "range": {
+          "minLength": 1,
+          "title": "Range",
+          "type": "string"
+        },
+        "sheet": {
+          "minLength": 1,
+          "title": "Sheet",
+          "type": "string"
+        }
+      },
+      "required": [
+        "sheet",
+        "range"
+      ],
+      "title": "ExcelCellSelector",
+      "type": "object"
+    },
+    "FieldValue": {
+      "additionalProperties": false,
+      "properties": {
+        "alternatives": {
+          "anyOf": [
+            {
+              "items": {},
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Alternatives"
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Confidence"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/SourceAnchor"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "field_id": {
+          "minLength": 1,
+          "title": "Field Id",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/FieldValueStatus"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        },
+        "value": {
+          "anyOf": [
+            {},
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        },
+        "value_type": {
+          "title": "Value Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "field_id",
+        "status",
+        "value_type"
+      ],
+      "title": "FieldValue",
+      "type": "object"
+    },
+    "FieldValueStatus": {
+      "enum": [
+        "extracted",
+        "missing",
+        "conflict",
+        "low_confidence"
+      ],
+      "title": "FieldValueStatus",
+      "type": "string"
+    },
+    "Issue": {
+      "additionalProperties": false,
+      "properties": {
+        "alternatives": {
+          "anyOf": [
+            {
+              "items": {},
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Alternatives"
+        },
+        "code": {
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "inference_request": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Inference Request"
+        },
+        "message": {
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "retryable": {
+          "title": "Retryable",
+          "type": "boolean"
+        },
+        "severity": {
+          "$ref": "#/$defs/Severity"
+        },
+        "source_anchor": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SourceAnchor"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "suggested_action": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Suggested Action"
+        },
+        "target": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target"
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "message",
+        "retryable"
+      ],
+      "title": "Issue",
+      "type": "object"
+    },
+    "JsonPointerSelector": {
+      "additionalProperties": false,
+      "properties": {
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "kind": {
+          "const": "json_pointer",
+          "default": "json_pointer",
+          "title": "Kind",
+          "type": "string"
+        },
+        "pointer": {
+          "pattern": "^(?:/.*)?$",
+          "title": "Pointer",
+          "type": "string"
+        }
+      },
+      "required": [
+        "pointer"
+      ],
+      "title": "JsonPointerSelector",
+      "type": "object"
+    },
+    "PdfBBoxSelector": {
+      "additionalProperties": false,
+      "properties": {
+        "bbox": {
+          "maxItems": 4,
+          "minItems": 4,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Bbox",
+          "type": "array"
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "kind": {
+          "const": "pdf_bbox",
+          "default": "pdf_bbox",
+          "title": "Kind",
+          "type": "string"
+        },
+        "page": {
+          "minimum": 1,
+          "title": "Page",
+          "type": "integer"
+        },
+        "unit": {
+          "const": "pt",
+          "default": "pt",
+          "title": "Unit",
+          "type": "string"
+        }
+      },
+      "required": [
+        "page",
+        "bbox"
+      ],
+      "title": "PdfBBoxSelector",
+      "type": "object"
+    },
+    "PdfTextSpanSelector": {
+      "additionalProperties": false,
+      "properties": {
+        "char_end": {
+          "minimum": 0,
+          "title": "Char End",
+          "type": "integer"
+        },
+        "char_start": {
+          "minimum": 0,
+          "title": "Char Start",
+          "type": "integer"
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "kind": {
+          "const": "pdf_text_span",
+          "default": "pdf_text_span",
+          "title": "Kind",
+          "type": "string"
+        },
+        "page": {
+          "minimum": 1,
+          "title": "Page",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "page",
+        "char_start",
+        "char_end"
+      ],
+      "title": "PdfTextSpanSelector",
+      "type": "object"
+    },
+    "RecordKeySelector": {
+      "additionalProperties": false,
+      "properties": {
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "field": {
+          "minLength": 1,
+          "title": "Field",
+          "type": "string"
+        },
+        "keys": {
+          "additionalProperties": true,
+          "minProperties": 1,
+          "title": "Keys",
+          "type": "object"
+        },
+        "kind": {
+          "const": "record_key",
+          "default": "record_key",
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "keys",
+        "field"
+      ],
+      "title": "RecordKeySelector",
+      "type": "object"
+    },
+    "Severity": {
+      "enum": [
+        "info",
+        "warning",
+        "error"
+      ],
+      "title": "Severity",
+      "type": "string"
+    },
+    "SourceAnchor": {
+      "additionalProperties": false,
+      "properties": {
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "extraction_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Extraction Ref"
+        },
+        "selector": {
+          "discriminator": {
+            "mapping": {
+              "excel_cell": "#/$defs/ExcelCellSelector",
+              "json_pointer": "#/$defs/JsonPointerSelector",
+              "pdf_bbox": "#/$defs/PdfBBoxSelector",
+              "pdf_text_span": "#/$defs/PdfTextSpanSelector",
+              "record_key": "#/$defs/RecordKeySelector",
+              "text_span": "#/$defs/TextSpanSelector"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/PdfBBoxSelector"
+            },
+            {
+              "$ref": "#/$defs/PdfTextSpanSelector"
+            },
+            {
+              "$ref": "#/$defs/TextSpanSelector"
+            },
+            {
+              "$ref": "#/$defs/JsonPointerSelector"
+            },
+            {
+              "$ref": "#/$defs/ExcelCellSelector"
+            },
+            {
+              "$ref": "#/$defs/RecordKeySelector"
+            }
+          ],
+          "title": "Selector"
+        },
+        "source_ref": {
+          "minLength": 1,
+          "title": "Source Ref",
+          "type": "string"
+        },
+        "source_revision": {
+          "minLength": 1,
+          "title": "Source Revision",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_ref",
+        "source_revision",
+        "selector"
+      ],
+      "title": "SourceAnchor",
+      "type": "object"
+    },
+    "TextSpanSelector": {
+      "additionalProperties": false,
+      "properties": {
+        "char_end": {
+          "minimum": 0,
+          "title": "Char End",
+          "type": "integer"
+        },
+        "char_start": {
+          "minimum": 0,
+          "title": "Char Start",
+          "type": "integer"
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "kind": {
+          "const": "text_span",
+          "default": "text_span",
+          "title": "Kind",
+          "type": "string"
+        },
+        "unit_ref": {
+          "minLength": 1,
+          "title": "Unit Ref",
+          "type": "string"
+        }
+      },
+      "required": [
+        "unit_ref",
+        "char_start",
+        "char_end"
+      ],
+      "title": "TextSpanSelector",
+      "type": "object"
+    },
+    "VersionedRef": {
+      "description": "Versioned reference serialized as '<id>@<revision>'.",
+      "pattern": "^[^@\\s]+@[^@\\s]+$",
+      "type": "string"
+    }
+  },
+  "$id": "dataagent-contracts/0.1/core/ExtractedRecordRef",
+  "additionalProperties": false,
+  "properties": {
+    "asset": {
+      "$ref": "#/$defs/AssetRef"
+    },
+    "document_ref": {
+      "$ref": "#/$defs/VersionedRef"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "fields": {
+      "items": {
+        "$ref": "#/$defs/FieldValue"
+      },
+      "title": "Fields",
+      "type": "array"
+    },
+    "issues": {
+      "items": {
+        "$ref": "#/$defs/Issue"
+      },
+      "title": "Issues",
+      "type": "array"
+    },
+    "target_schema_ref": {
+      "$ref": "#/$defs/VersionedRef"
+    },
+    "values_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Values Ref"
+    }
+  },
+  "required": [
+    "asset",
+    "document_ref",
+    "target_schema_ref"
+  ],
+  "title": "ExtractedRecordRef",
+  "type": "object"
+}

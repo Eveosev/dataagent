@@ -1,0 +1,34 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_2edb4240",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_topic",
+    "statute_effective_year",
+    "statute_in_effect",
+    "integer",
+    "statute_51_5_duty_enforce_on_debtor_property",
+    "statute_51_5_debtor_may_designate_portion_if_sufficient",
+    "number",
+    "statute_51_5_officer_must_levy_only_designated_portion",
+    "statute_51_5_applies_to_writ_type",
+    "statute_51_5_prohibited_day",
+    "statute_51_5_prohibited_hour",
+    "statute_51_5_execution_prohibited_time",
+    "statute_51_5_execution_allowed",
+    "legal_circumstances_that_postpone_execution_specified",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: Puerto Rico\n    Focus year: 2021\n    Question: Are the circumstances that postpone the execution of a writ of eviction specified?\n*/\n\n/* =========================\n   Scenario facts (question)\n   ========================= */\n\nscenario_state(puerto_rico).\nscenario_focus_year(2021).\n\n% The question is abstract: it asks whether the law specifies circumstances that postpone execution.\nscenario_topic(execution_of_writ_postponement_specified).\n\nscenario_statement :-\n    scenario_state(puerto_rico),\n    scenario_focus_year(2021),\n    scenario_topic(execution_of_writ_postponement_specified).\n\n\n/* =========================\n   Statute effective dates\n   ========================= */\n\n% PR Laws tit. 1,  51.5 (2020). Assume effective from 2020 onward for this task.\nstatute_effective_year(pr_laws_t1_51_5, 2020).\n\nstatute_in_effect(StatuteId, State, Year) :-\n    State = puerto_rico,\n    statute_effective_year(StatuteId, StartYear),\n    integer(Year),\n    Year >= StartYear.\n\n\n/* ============================================================\n   Statute translation: PR Laws tit. 1,  51.5 (2020)\n   ============================================================ */\n\n% [1] PR Laws tit. 1,  51.5 (2020)\n% If the writ of execution is directed against the property of the judgment debtor,\n% it requires the marshal/sheriff (or court-designated person) to enforce the judgment\n% with interest and costs on the debtor's property.\nstatute_51_5_duty_enforce_on_debtor_property(State, Year) :-\n    statute_in_effect(pr_laws_t1_51_5, State, Year).\n\n% [1] PR Laws tit. 1,  51.5 (2020)\n% When debtor has assets whose value is greater than judgment amount + costs,\n% the marshal/sheriff must levy only the portion indicated by debtor, provided\n% it is amply sufficient to cover judgment + accrued interest + accrued costs.\nstatute_51_5_debtor_may_designate_portion_if_sufficient(State, Year, PropertyValue, JudgmentAmount, AccruedInterest, AccruedCosts) :-\n    statute_in_effect(pr_laws_t1_51_5, State, Year),\n    number(PropertyValue),\n    number(JudgmentAmount),\n    number(AccruedInterest),\n    number(AccruedCosts),\n    Total is JudgmentAmount + AccruedInterest + AccruedCosts,\n    PropertyValue > Total.\n\nstatute_51_5_officer_must_levy_only_designated_portion(State, Year, PropertyValue, JudgmentAmount, AccruedInterest, AccruedCosts, DesignatedPortionValue) :-\n    statute_51_5_debtor_may_designate_portion_if_sufficient(State, Year, PropertyValue, JudgmentAmount, AccruedInterest, AccruedCosts),\n    number(DesignatedPortionValue),\n    Total is JudgmentAmount + AccruedInterest + AccruedCosts,\n    DesignatedPortionValue >= Total.\n\n% [1] PR Laws tit. 1,  51.5 (2020)\n% A writ of execution of a judgment obtained under summary procedure Rule 60\n% may not be executed on Saturday, Sunday, holidays, or outside working hours,\n% unless an imperative necessity is shown.\nstatute_51_5_applies_to_writ_type(summary_rule60).\n\nstatute_51_5_prohibited_day(saturday).\nstatute_51_5_prohibited_day(sunday).\nstatute_51_5_prohibited_day(holiday).\n\nstatute_51_5_prohibited_hour(outside_working_hours).\n\nstatute_51_5_execution_prohibited_time(DayKind, HourKind) :-\n    ( statute_51_5_prohibited_day(DayKind)\n    ; statute_51_5_prohibited_hour(HourKind)\n    ).\n\nstatute_51_5_execution_allowed(State, Year, WritType, DayKind, HourKind, ImperativeNecessityShown) :-\n    statute_in_effect(pr_laws_t1_51_5, State, Year),\n    statute_51_5_applies_to_writ_type(WritType),\n    ( ImperativeNecessityShown = yes ->\n        true\n    ; ImperativeNecessityShown = no,\n      \\+ statute_51_5_execution_prohibited_time(DayKind, HourKind)\n    ).\n\n% Derived concept: circumstances that postpone execution exist if the statute defines\n% any prohibited times (which would require postponement absent imperative necessity).\nlegal_circumstances_that_postpone_execution_specified(State, Year) :-\n    statute_in_effect(pr_laws_t1_51_5, State, Year),\n    statute_51_5_execution_prohibited_time(_SomeDayKind, _SomeHourKind),\n    !.\n\n\n/* =========================\n   Answer logic\n   ========================= */\n\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_state(State),\n    scenario_focus_year(Year),\n    legal_circumstances_that_postpone_execution_specified(State, Year),\n    !.\nhousing_answer(no) :-\n    !.\n\n\n/* =========================\n   Main\n   ========================= */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-0813",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Are the circumstances that postpone the execution of a writ of eviction specified?"
+  }
+}

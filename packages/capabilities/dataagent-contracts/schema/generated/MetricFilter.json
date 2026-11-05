@@ -1,0 +1,38 @@
+{
+  "$comment": "generated from dataagent_contracts.core:MetricFilter; do not edit",
+  "$id": "dataagent-contracts/0.1/core/MetricFilter",
+  "additionalProperties": false,
+  "properties": {
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "referenced_fields": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Referenced Fields",
+      "type": "array"
+    },
+    "text": {
+      "minLength": 1,
+      "title": "Text",
+      "type": "string"
+    }
+  },
+  "required": [
+    "text"
+  ],
+  "title": "MetricFilter",
+  "type": "object"
+}

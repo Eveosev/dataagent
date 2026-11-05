@@ -1,0 +1,46 @@
+## Identifying the problem
+
+The main problem is that the Gazebo simulation is running without a graphical user interface (GUI), even though the code is intended to spawn one. This is confirmed by the statement "no gui will spawn by running this" and the fact that the robot moves around when commanded, indicating the simulation is functional.
+
+## Possible causes and solutions
+
+Here are some potential reasons why the GUI might not be appearing and suggestions for troubleshooting:
+
+**1. Missing call to `gazebo::gui::run()`:**
+
+- The code currently only initializes and runs the simulation world. To spawn the GUI, you need to explicitly call `gazebo::gui::run()`.
+- Add the following line after `gazebo::setupServer(_argc, _argv);`:
+
+```cpp
+gazebo::gui::run(_argc, _argv);
+```
+
+**2. Incorrect world file:**
+
+- Ensure the world file you are loading ("simple_world.world") actually includes a GUI definition.
+- Check if the world file contains lines like `<gui>` and `<plugin name="libgazebo_gui_plugin.so" filename="libgazebo_gui_plugin.so">` within the `<world>` element.
+
+**3. Conflicting environment variables:**
+
+- Some environment variables can interfere with Gazebo's GUI. Try running your program with the `GAZEBO_NO_GUI=0` environment variable set.
+
+**4. Gazebo version compatibility issues:**
+
+- Double-check that you are using the correct Gazebo version and that the world file is compatible with it.
+
+**5. Missing Gazebo GUI plugin:**
+
+- Ensure the Gazebo GUI plugin is installed and loaded correctly. You can check this by running `gazebo list` and looking for the `libgazebo_gui_plugin.so` plugin.
+
+**6. Code errors:**
+
+- Review your code for any potential errors that might prevent the GUI from launching.
+
+## Additional troubleshooting tips:
+
+- Try running your program with increased verbosity using the `--verbose` flag to see if any additional information is logged.
+- Consult the Gazebo documentation and community forums for further assistance.
+
+## Conclusion
+
+By systematically analyzing the problem and considering various potential causes, you should be able to identify the reason why the GUI is not launching and implement the appropriate solution. Remember to carefully review your code and environment settings to ensure everything is configured correctly. If the issue persists, seeking help from the Gazebo community or official documentation can provide further guidance.

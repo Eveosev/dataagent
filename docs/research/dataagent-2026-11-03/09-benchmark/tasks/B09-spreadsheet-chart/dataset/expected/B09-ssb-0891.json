@@ -1,0 +1,20 @@
+{
+  "source": "KAKA22/SpreadsheetBench",
+  "raw": {
+    "id": 58629,
+    "instruction": "I need to create an Excel formula that returns the quantity of character sequences separated by commas in a cell, which occur after a hyphen '-'. For instance, if a cell in Column A contains '-001, 002, 003', the formula should count and return '3' in the corresponding cell in Column B. However, if the cell in Column A is blank, then the corresponding cell in Column B should be blank as well. The formula should be able to be dragged down across the cells in Column B. Solutions I've tried are returning a value of '1' for blank cells instead of the desired blank output.Example:\n-001 is 1\n-001, 003 is 2\n-006, 015, 019 is 3",
+    "spreadsheet_path": "spreadsheet/58629",
+    "instruction_type": "Cell-Level Manipulation",
+    "answer_position": "B2:B11"
+  },
+  "case_id": "B09-ssb-0891",
+  "expected": {
+    "kind": "sheet_answer",
+    "instruction": "I need to create an Excel formula that returns the quantity of character sequences separated by commas in a cell, which occur after a hyphen '-'. For instance, if a cell in Column A contains '-001, 002, 003', the formula should count and return '3' in the corresponding cell in Column B. However, if the cell in Column A is blank, then the corresponding cell in Column B should be blank as well. The formula should be able to be dragged down across the cells in Column B. Solutions I've tried are returning a value of '1' for blank cells instead of the desired blank output.Example:\n-001 is 1\n-001, 003 is 2\n-006, 015, 019 is 3",
+    "answer": null,
+    "answer_sheet": null,
+    "answer_position": "B2:B11",
+    "data_position": null,
+    "instruction_type": "Cell-Level Manipulation"
+  }
+}

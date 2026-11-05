@@ -1,0 +1,1 @@
+Find the transaction IDs, total item quantities, and purchase revenues for the item category with the highest tax rate on November 30, 2020.

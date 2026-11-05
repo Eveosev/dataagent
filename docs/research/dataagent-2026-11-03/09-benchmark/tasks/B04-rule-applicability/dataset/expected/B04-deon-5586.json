@@ -1,0 +1,24 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "s7703_b_1_pos",
+  "expect_label": "yes",
+  "raw_label": "1",
+  "rule_predicates": [
+    "section7703b1_applies",
+    "married",
+    "separate_return",
+    "maintains_home_for_child",
+    "entitled_to_dep_deduction",
+    "maintains_home",
+    "principal_abode",
+    "more_than_half_year"
+  ],
+  "reference_prolog": "/* ----------  Statutory rules (simplified to what is needed here) ---------- */\n\n% section7703b1_applies(Taxpayer,Year)  holds if all elements of 7703(b)(1) are met\nsection7703b1_applies(T,Year) :-\n        married(T,Year),                         % \"an individual who is married\"\n        separate_return(T,Year),                 % \"who files a separate return\"\n        maintains_home_for_child(T,Child,Year),  % \"maintains as his home a household ...\"\n        entitled_to_dep_deduction(T,Child,Year). % \"with respect to whom such individual is entitled to a deduction\"\n\n/* helper predicate saying the taxpayer maintains the home which is the\n   child's principal place of abode for more than half the year              */\nmaintains_home_for_child(T,Child,Year) :-\n        maintains_home(T,Year),\n        principal_abode(Child,T,Year),\n        more_than_half_year(Child,T,Year).\n\n/* ----------  Facts from the case ---------- */\n\n% marriage still in force during 2018\nmarried(alice,2018).\n\n% Alice files a separate return\nseparate_return(alice,2018).\n\n% Alice has maintained the home since 16-Sep-2017\nmaintains_home(alice,2018).\n\n% Charlie's principal abode is with Alice\nprincipal_abode(charlie,alice,2018).\n\n% Charlie lived there the whole year (therefore > 1/2 year)\nmore_than_half_year(charlie,alice,2018).\n\n% Alice is entitled to the 151 deduction for Charlie\nentitled_to_dep_deduction(alice,charlie,2018).\n\n/* ----------  Verification goal ---------- */\n:- (  section7703b1_applies(alice,2018)\n   -> format('Result: Entailment~n')\n   ;  format('Result: Contradiction~n')\n   ).\n:- halt.",
+  "case_id": "B04-deon-5586",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "1",
+    "question": "Section 7703(b)(1) applies to Alice for the year 2018."
+  }
+}

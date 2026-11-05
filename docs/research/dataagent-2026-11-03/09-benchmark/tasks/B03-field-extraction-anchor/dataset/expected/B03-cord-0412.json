@@ -1,0 +1,135 @@
+{
+  "source": "naver-clova-ix/cord-v2",
+  "split": "train",
+  "index": 83,
+  "gt_parse": {
+    "menu": [
+      {
+        "nm": "ICED White",
+        "cnt": "1",
+        "price": "43.000"
+      },
+      {
+        "nm": "Mexican Baked Rice",
+        "cnt": "1",
+        "price": "58.000"
+      }
+    ],
+    "sub_total": {
+      "subtotal_price": "101.000"
+    },
+    "total": {
+      "total_price": "101.000",
+      "changeprice": "0",
+      "creditcardprice": "101.000"
+    }
+  },
+  "case_id": "B03-cord-0412",
+  "expected": {
+    "kind": "json",
+    "value": {
+      "menu": [
+        {
+          "nm": "ICED White",
+          "cnt": "1",
+          "price": "43.000"
+        },
+        {
+          "nm": "Mexican Baked Rice",
+          "cnt": "1",
+          "price": "58.000"
+        }
+      ],
+      "sub_total": {
+        "subtotal_price": "101.000"
+      },
+      "total": {
+        "total_price": "101.000",
+        "changeprice": "0",
+        "creditcardprice": "101.000"
+      }
+    },
+    "fields": {
+      "menu[0].nm": "ICED White",
+      "menu[0].cnt": "1",
+      "menu[0].price": "43.000",
+      "menu[1].nm": "Mexican Baked Rice",
+      "menu[1].cnt": "1",
+      "menu[1].price": "58.000",
+      "sub_total.subtotal_price": "101.000",
+      "total.total_price": "101.000",
+      "total.changeprice": "0",
+      "total.creditcardprice": "101.000"
+    },
+    "anchored_fields": 0,
+    "no_anchor_fields": 10,
+    "spans": [
+      {
+        "field": "menu[0].nm",
+        "text": "ICED White",
+        "page": 1
+      },
+      {
+        "field": "menu[0].cnt",
+        "text": "1",
+        "page": 1
+      },
+      {
+        "field": "menu[0].price",
+        "text": "43.000",
+        "page": 1
+      },
+      {
+        "field": "menu[1].nm",
+        "text": "Mexican Baked Rice",
+        "page": 1
+      },
+      {
+        "field": "menu[1].cnt",
+        "text": "1",
+        "page": 1
+      },
+      {
+        "field": "menu[1].price",
+        "text": "58.000",
+        "page": 1
+      },
+      {
+        "field": "sub_total.subtotal_price",
+        "text": "101.000",
+        "page": 1
+      },
+      {
+        "field": "total.total_price",
+        "text": "101.000",
+        "page": 1
+      },
+      {
+        "field": "total.changeprice",
+        "text": "0",
+        "page": 1
+      },
+      {
+        "field": "total.creditcardprice",
+        "text": "101.000",
+        "page": 1
+      }
+    ],
+    "pages": {
+      "menu[0].nm": 1,
+      "menu[0].cnt": 1,
+      "menu[0].price": 1,
+      "menu[1].nm": 1,
+      "menu[1].cnt": 1,
+      "menu[1].price": 1,
+      "sub_total.subtotal_price": 1,
+      "total.total_price": 1,
+      "total.changeprice": 1,
+      "total.creditcardprice": 1
+    },
+    "evidence_gold": {
+      "source": "cord-valid-line",
+      "version": 1
+    }
+  }
+}

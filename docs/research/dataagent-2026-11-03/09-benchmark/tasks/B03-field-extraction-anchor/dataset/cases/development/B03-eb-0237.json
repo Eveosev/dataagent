@@ -1,0 +1,55 @@
+{
+  "case_id": "B03-eb-0237",
+  "task_id": "B03",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://extractbench/docs/short/sched_i__the_women_s_foundation_of_colorado_inc_ty2024.pdf",
+      "digest": null
+    },
+    {
+      "kind": "schema",
+      "ref": "fixtures/eb-short-sched_i__the_women_s_foundation_of_colorado_inc_ty2024-schema.json",
+      "digest": null
+    },
+    {
+      "kind": "rules",
+      "ref": "fixtures/eb-short-sched_i__the_women_s_foundation_of_colorado_inc_ty2024-rules.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-eb-0237.json"
+  },
+  "evidence": [
+    "bench://extractbench/docs/short/sched_i__the_women_s_foundation_of_colorado_inc_ty2024.pdf",
+    "fixtures/eb-short-sched_i__the_women_s_foundation_of_colorado_inc_ty2024-schema.json",
+    "fixtures/eb-short-sched_i__the_women_s_foundation_of_colorado_inc_ty2024-rules.md"
+  ],
+  "tags": [
+    "extractbench",
+    "short",
+    "tag:source:real",
+    "tag:challenge:T1.b",
+    "tag:challenge:T1.e",
+    "tag:challenge:T1.a",
+    "tag:structure:S3",
+    "tag:structure:S5",
+    "tag:delivery:G1",
+    "tag:length:short",
+    "tag:domain:D1",
+    "fields:21"
+  ],
+  "source": "eb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

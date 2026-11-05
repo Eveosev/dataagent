@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "agentcpm/iface-policy",
+  "version": "0.1.0",
+  "description": "AgentCPM §4.2 iface-policy（含 egress / delegation / review / audit，D49/D83） 的机器可读形状：类型、trait 方法、错误码、消费方。只定义形状，不含实现。",
+  "lineage": "kernel/iface/src/policy（verbatim 复制到本包 src/）",
+  "spec": {
+    "KERNEL-MECHANISMS-AND-ABI": "§4.2 iface-policy（含 egress / delegation / review / audit，D49/D83）",
+    "decision": [
+      "D49",
+      "D55",
+      "D83"
+    ]
+  },
+  "iface": {
+    "name": "policy",
+    "layer": "L-A",
+    "shared_types_dep": "agentcpm/iface-types",
+    "errors": {
+      "common": {
+        "ERR_INVALID_PARAMS": -32602
+      },
+      "note": "错误统一用 agentcpm_iface::types::Error { category, code, message }；参数错误用 ERR_INVALID_PARAMS"
+    }
+  },
+  "types": [
+    "DelegationRequest",
+    "DelegationGrant",
+    "DelegationDenyReason",
+    "DelegationDecision",
+    "EgressRequest",
+    "EgressDenyReason",
+    "EgressDecision",
+    "AuditEvent",
+    "ApprovalRequest",
+    "ReviewPosition",
+    "ReviewVerdict",
+    "ReviewRequest",
+    "EgressAuditEvent",
+    "DelegationAuditEvent",
+    "RevocationAuditEvent",
+    "ReviewAuditEvent",
+    "EffectAuditEvent"
+  ],
+  "traits": {
+    "PolicyContract": "authorize / authorize_egress / authorize_delegation / review",
+    "AuditSink": "record（append-only；实现失败按 fail-closed 处理，M18/M21/M22/M23）"
+  },
+  "consumers": [
+    "kernel/core/src/guard/*",
+    "kernel/runtime/src/policy.rs",
+    "kernel/runtime/src/net_guard.rs",
+    "kernel/runtime/src/delegate.rs",
+    "kernel/runtime/src/review.rs"
+  ],
+  "source": {
+    "files": [
+      "audit.rs",
+      "delegation.rs",
+      "egress.rs",
+      "mod.rs",
+      "review.rs"
+    ],
+    "lines": 808
+  },
+  "contract_deps": [
+    "agentcpm/iface-types",
+    "agentcpm/iface-session"
+  ]
+}

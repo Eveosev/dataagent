@@ -1,0 +1,29 @@
+{
+  "case_id": "B01-mhdr-0001",
+  "task_id": "B01",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "table",
+      "ref": "fixtures/mhdr-0001.xlsx",
+      "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/mhdr-0001.json"
+  },
+  "evidence": [
+    "fixtures/mhdr-0001.xlsx#Sheet1!B3:D3",
+    "expected/mhdr-0001.json#header_rows=2"
+  ],
+  "tags": ["multi-row-header", "merged-cells", "zh-CN"],
+  "source": "自建：脱敏客户报表",
+  "license": "internal",
+  "fingerprint": null,
+  "annotation": {
+    "status": "draft",
+    "annotators": ["tbd"],
+    "adjudicated": false
+  }
+}

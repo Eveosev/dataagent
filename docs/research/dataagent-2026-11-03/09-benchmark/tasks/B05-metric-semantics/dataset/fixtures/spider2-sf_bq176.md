@@ -1,0 +1,1 @@
+Identify the case barcodes from the TCGA-LAML study with the highest weighted average copy number in cytoband 15q11 on chromosome 15, using segment data and cytoband overlaps from TCGA's genomic and Mitelman databases.

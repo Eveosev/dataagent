@@ -1,0 +1,30 @@
+{
+  "source": "xlangai/BRIGHT",
+  "query_id": "TheoremQA_tonyxia/semiconductor2.json",
+  "query": "## Identifying the essential problem\n\nThe essential problem is to determine the minimum wavelength of light in nanometers needed to trigger a color change in the germanium glass at room temperature (300 K).\n\n## Relevant information\n\nTo solve this problem, we need to consider the following information:\n\n* **Material:** Germanium\n* **Property:** Color change upon exposure to light of specific wavelengths\n* **Room temperature:** 300 K\n* **Concept:** Energy of a photon is inversely proportional to its wavelength\n* **Formula:** E = hc/λ, where:\n    * E is the energy of a photon\n    * h is Planck's constant (6.63 × 10^-34 J s)\n    * c is the speed of light (3 × 10^8 m/s)\n    * λ is the wavelength of light\n\n## Step-by-step solution\n\n1. **Determine the minimum energy required to trigger the color change in germanium.** This information should be available from the material properties of germanium or from the specific experiment you are conducting. Let's call this minimum energy E_min.\n2. **Use the formula E = hc/λ to find the minimum wavelength λ_min.** Rearrange the formula to solve for λ_min: λ_min = hc/E_min.\n3. **Plug in the values for h, c, and E_min.** Make sure to convert E_min to Joules if it is given in another unit.\n4. **Calculate λ_min and convert the result to nanometers.**\n\n## Draft answer\n\nTo trigger a color change in the germanium glass at room temperature (300 K), we need light with a minimum energy of E_min (which needs to be obtained from the material properties or specific experiment). Using the formula E = hc/λ, where h is Planck's constant and c is the speed of light, we can calculate the minimum wavelength λ_min:\n\n```\nλ_min = hc/E_min\n```\n\nPlugging in the values for h (6.63 × 10^-34 J s), c (3 × 10^8 m/s), and E_min (in Joules), we get the minimum wavelength in meters. Finally, we convert the result to nanometers (1 nm = 10^-9 m).\n\nTherefore, the minimum wavelength of light in nanometers needed to trigger a color change in the germanium glass at room temperature (300 K) is:\n\n```\nλ_min (nm) = (6.63 × 10^-34 J s × 3 × 10^8 m/s) / E_min (J) × 10^9 nm/m\n```\n\n**Note:** Remember to replace E_min with the actual minimum energy required for the color change in germanium.\n",
+  "gold_ids": [
+    "TheoremQA_tonyxia/semiconductor3.json",
+    "TheoremQA_tonyxia/semiconductor1.json",
+    "TheoremQA_tonyxia/semiconductor3.json",
+    "TheoremQA_tonyxia/semiconductor5.json"
+  ],
+  "gold_answer": "N/A",
+  "corpus": "documents/theoremqa_questions-00000-of-00001.parquet",
+  "case_id": "B06-bright-1260",
+  "expected": {
+    "kind": "retrieval",
+    "gold_ids": [
+      "TheoremQA_tonyxia/semiconductor3.json",
+      "TheoremQA_tonyxia/semiconductor1.json",
+      "TheoremQA_tonyxia/semiconductor3.json",
+      "TheoremQA_tonyxia/semiconductor5.json"
+    ],
+    "gold_ids_long": [
+      "N/A"
+    ],
+    "gold_answer": "N/A",
+    "excluded_ids": [
+      "TheoremQA_tonyxia/semiconductor2.json"
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+Identify variants on chromosome 12, calculate their chi-squared scores using allele counts in cases and controls, and return the start, end, chi-squared score (after Yates's correction for continuity) of top variants where the chi-squared score is no less than 29.71679, ensuring that each group has expected counts of at least 5 for the chi-squared calculation.

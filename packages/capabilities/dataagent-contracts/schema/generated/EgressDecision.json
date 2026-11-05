@@ -1,0 +1,160 @@
+{
+  "$comment": "generated from dataagent_contracts.core:EgressDecision; do not edit",
+  "$defs": {
+    "EgressOutcome": {
+      "enum": [
+        "allow",
+        "allow_masked",
+        "deny"
+      ],
+      "title": "EgressOutcome",
+      "type": "string"
+    },
+    "ModelDestination": {
+      "additionalProperties": false,
+      "properties": {
+        "deployment": {
+          "enum": [
+            "local",
+            "private_cloud",
+            "vendor_api"
+          ],
+          "title": "Deployment",
+          "type": "string"
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "model_ref": {
+          "minLength": 1,
+          "title": "Model Ref",
+          "type": "string"
+        },
+        "terms_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Terms Ref"
+        }
+      },
+      "required": [
+        "model_ref",
+        "deployment"
+      ],
+      "title": "ModelDestination",
+      "type": "object"
+    },
+    "VersionedRef": {
+      "description": "Versioned reference serialized as '<id>@<revision>'.",
+      "pattern": "^[^@\\s]+@[^@\\s]+$",
+      "type": "string"
+    }
+  },
+  "$id": "dataagent-contracts/0.1/core/EgressDecision",
+  "additionalProperties": false,
+  "properties": {
+    "access_decision_ref": {
+      "minLength": 1,
+      "title": "Access Decision Ref",
+      "type": "string"
+    },
+    "content_refs": {
+      "items": {
+        "$ref": "#/$defs/VersionedRef"
+      },
+      "minItems": 1,
+      "title": "Content Refs",
+      "type": "array"
+    },
+    "decision": {
+      "$ref": "#/$defs/EgressOutcome"
+    },
+    "decision_id": {
+      "minLength": 1,
+      "title": "Decision Id",
+      "type": "string"
+    },
+    "destination": {
+      "$ref": "#/$defs/ModelDestination"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "masking_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Masking Ref"
+    },
+    "receipt_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Receipt Ref"
+    },
+    "visible_fields": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Visible Fields"
+    }
+  },
+  "required": [
+    "decision_id",
+    "content_refs",
+    "destination",
+    "decision",
+    "access_decision_ref"
+  ],
+  "title": "EgressDecision",
+  "type": "object"
+}

@@ -1,0 +1,3 @@
+Is there any way, formula to figure out, what is the latets graduation ( column "D") according to the Year ( column "C") to my employees ( column "A")? So if example one employee finish his educaton in 2016 to mark it into column "D". So what is the exact latets Year , even for duplicated serial numbers?
+   Is there any way, formula to figure out, what is the latets graduation ( column "D") according to the Year ( column "C") to my employees ( column "A")? So if example one employee finish his educaton in 2016 to mark it into column "D". So what is the exact latets Year , even for duplicated serial numbers?
+The formula data output result may be an empty string.

@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 227,
+  "question": "The loan of 98832 approved on January 3rd, 1996 has one applicant account. For that account, list every counterparty it had paid before January 3rd, 1996. A counterparty means a specific account number at a specific bank, so give me one row per bank code and account number combination. For each counterparty I need the bank code, the account number, the number of outgoing payments made to them, and the total amount paid to them. Count only outgoing payments (VYDAJ, i.e. debits) made before January 3rd, 1996, and sort the counterparties by total amount paid, largest first.",
+  "evidence": "VYDAJ denotes an outgoing payment (debit); PRIJEM denotes an incoming payment (credit).",
+  "gold_sql": "SELECT t.bank AS bank_code, t.account AS counterparty_account, COUNT(*) AS payment_count, SUM(t.amount) AS total_paid FROM trans t WHERE t.account_id = (SELECT l.account_id FROM loan l WHERE l.date = '1996-01-03' AND l.amount = 98832) AND t.type = 'VYDAJ' AND t.date < '1996-01-03' AND t.account > 0 GROUP BY t.bank, t.account ORDER BY total_paid DESC",
+  "db_id": "financial",
+  "case_id": "B05-bird-0228",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT t.bank AS bank_code, t.account AS counterparty_account, COUNT(*) AS payment_count, SUM(t.amount) AS total_paid FROM trans t WHERE t.account_id = (SELECT l.account_id FROM loan l WHERE l.date = '1996-01-03' AND l.amount = 98832) AND t.type = 'VYDAJ' AND t.date < '1996-01-03' AND t.account > 0 GROUP BY t.bank, t.account ORDER BY total_paid DESC",
+    "db_id": "financial",
+    "evidence": "VYDAJ denotes an outgoing payment (debit); PRIJEM denotes an incoming payment (credit)."
+  }
+}

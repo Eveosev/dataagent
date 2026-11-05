@@ -1,0 +1,166 @@
+{
+  "source": "naver-clova-ix/cord-v2",
+  "split": "validation",
+  "index": 52,
+  "gt_parse": {
+    "menu": [
+      {
+        "nm": "KENTHIR 2",
+        "cnt": "2",
+        "price": "42.000"
+      },
+      {
+        "nm": "KOL GORENG",
+        "cnt": "2",
+        "price": "6.000"
+      },
+      {
+        "nm": "TEH MANIS",
+        "cnt": "2",
+        "price": "8.000"
+      }
+    ],
+    "sub_total": {
+      "subtotal_price": "56.000"
+    },
+    "total": {
+      "total_price": "56.000",
+      "cashprice": "56.000",
+      "changeprice": "0"
+    }
+  },
+  "case_id": "B03-cord-0592",
+  "expected": {
+    "kind": "json",
+    "value": {
+      "menu": [
+        {
+          "nm": "KENTHIR 2",
+          "cnt": "2",
+          "price": "42.000"
+        },
+        {
+          "nm": "KOL GORENG",
+          "cnt": "2",
+          "price": "6.000"
+        },
+        {
+          "nm": "TEH MANIS",
+          "cnt": "2",
+          "price": "8.000"
+        }
+      ],
+      "sub_total": {
+        "subtotal_price": "56.000"
+      },
+      "total": {
+        "total_price": "56.000",
+        "cashprice": "56.000",
+        "changeprice": "0"
+      }
+    },
+    "fields": {
+      "menu[0].nm": "KENTHIR 2",
+      "menu[0].cnt": "2",
+      "menu[0].price": "42.000",
+      "menu[1].nm": "KOL GORENG",
+      "menu[1].cnt": "2",
+      "menu[1].price": "6.000",
+      "menu[2].nm": "TEH MANIS",
+      "menu[2].cnt": "2",
+      "menu[2].price": "8.000",
+      "sub_total.subtotal_price": "56.000",
+      "total.total_price": "56.000",
+      "total.cashprice": "56.000",
+      "total.changeprice": "0"
+    },
+    "anchored_fields": 0,
+    "no_anchor_fields": 13,
+    "spans": [
+      {
+        "field": "menu[0].nm",
+        "text": "KENTHIR 2",
+        "page": 1
+      },
+      {
+        "field": "menu[0].cnt",
+        "text": "2",
+        "page": 1
+      },
+      {
+        "field": "menu[0].price",
+        "text": "42.000",
+        "page": 1
+      },
+      {
+        "field": "menu[1].nm",
+        "text": "KOL GORENG",
+        "page": 1
+      },
+      {
+        "field": "menu[1].cnt",
+        "text": "2",
+        "page": 1
+      },
+      {
+        "field": "menu[1].price",
+        "text": "6.000",
+        "page": 1
+      },
+      {
+        "field": "menu[2].nm",
+        "text": "TEH MANIS",
+        "page": 1
+      },
+      {
+        "field": "menu[2].cnt",
+        "text": "2",
+        "page": 1
+      },
+      {
+        "field": "menu[2].price",
+        "text": "8.000",
+        "page": 1
+      },
+      {
+        "field": "sub_total.subtotal_price",
+        "text": "56.000",
+        "page": 1
+      },
+      {
+        "field": "total.total_price",
+        "text": "56.000",
+        "page": 1
+      },
+      {
+        "field": "total.cashprice",
+        "text": "56.000",
+        "page": 1
+      },
+      {
+        "field": "total.changeprice",
+        "text": "0",
+        "page": 1
+      }
+    ],
+    "pages": {
+      "menu[0].nm": 1,
+      "menu[0].cnt": 1,
+      "menu[0].price": 1,
+      "menu[1].nm": 1,
+      "menu[1].cnt": 1,
+      "menu[1].price": 1,
+      "menu[2].nm": 1,
+      "menu[2].cnt": 1,
+      "menu[2].price": 1,
+      "sub_total.subtotal_price": 1,
+      "total.total_price": 1,
+      "total.cashprice": 1,
+      "total.changeprice": 1
+    },
+    "evidence_gold": {
+      "source": "cord-valid-line",
+      "version": 1
+    }
+  }
+}

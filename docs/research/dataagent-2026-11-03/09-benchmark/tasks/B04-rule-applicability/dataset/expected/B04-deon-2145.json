@@ -1,0 +1,25 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_b72c392f",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "state",
+    "focus_year",
+    "statute_sd_20_13_20_protected_basis",
+    "statute_sd_20_13_20_eviction_prohibited_basis",
+    "statute_sd_43_32_18_1_incident_type",
+    "statute_sd_43_32_18_1_eviction_prohibited_basis",
+    "unlawful_eviction_basis",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program (South Dakota, focus year 2021)\n\n    Question: \"Is it specified on what basis it is unlawful to evict a tenant under state/territory law?\"\n    We answer this as: Does applicable state law specify at least one \"basis\" (reason) on which eviction is unlawful?\n*/\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Scenario facts (question's factual statement)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nstate(south_dakota).\nfocus_year(2021).\n\n% Helper predicate summarizing the scenario in logic form.\nscenario_statement :-\n    state(south_dakota),\n    focus_year(2021).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Statute translations\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n/*\n  SD Codified Laws  20-13-20 (2021)\n  \"Unfair or discriminatory housing practices ...\"\n  Protected bases: race, color, creed, religion, sex, ancestry, disability,\n                   familial status, national origin.\n*/\nstatute_sd_20_13_20_protected_basis(race).\nstatute_sd_20_13_20_protected_basis(color).\nstatute_sd_20_13_20_protected_basis(creed).\nstatute_sd_20_13_20_protected_basis(religion).\nstatute_sd_20_13_20_protected_basis(sex).\nstatute_sd_20_13_20_protected_basis(ancestry).\nstatute_sd_20_13_20_protected_basis(disability).\nstatute_sd_20_13_20_protected_basis(familial_status).\nstatute_sd_20_13_20_protected_basis(national_origin).\n\n/*\n  We encode that discrimination in \"terms, conditions, or privileges\" of rental/lease\n  is an unlawful housing practice. Eviction/termination is treated as a \"term/condition/privilege\"\n  affecting continued occupancy.\n*/\nstatute_sd_20_13_20_eviction_prohibited_basis(basis(discrimination, ProtectedBasis)) :-\n    statute_sd_20_13_20_protected_basis(ProtectedBasis).\n\n/*\n  SD Codified Laws  43-32-18.1 (2021)\n  \"Eviction of tenant--Limitations.\"\n  - Lease may not authorize eviction of a tenant who calls/seeks assistance from law enforcement\n    or other emergency responders because of alleged:\n      domestic abuse, unlawful sexual behavior, stalking.\n  - Nothing authorizes eviction solely because tenant/household member is the victim of alleged:\n      domestic abuse, unlawful sexual behavior, stalking.\n*/\nstatute_sd_43_32_18_1_incident_type(domestic_abuse).\nstatute_sd_43_32_18_1_incident_type(unlawful_sexual_behavior).\nstatute_sd_43_32_18_1_incident_type(stalking).\n\nstatute_sd_43_32_18_1_eviction_prohibited_basis(basis(seeks_emergency_assistance, IncidentType)) :-\n    statute_sd_43_32_18_1_incident_type(IncidentType).\n\nstatute_sd_43_32_18_1_eviction_prohibited_basis(basis(victim_status_only, IncidentType)) :-\n    statute_sd_43_32_18_1_incident_type(IncidentType).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Reasoning: aggregate whether the law specifies any unlawful eviction basis\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n% Under the provided statutes, these are the specified bases making eviction unlawful.\nunlawful_eviction_basis(Basis) :-\n    statute_sd_20_13_20_eviction_prohibited_basis(Basis).\nunlawful_eviction_basis(Basis) :-\n    statute_sd_43_32_18_1_eviction_prohibited_basis(Basis).\n\n% The question is \"is it specified on what basis it is unlawful to evict?\"\n% We say \"yes\" if at least one such basis exists in the applicable law set.\nspecified_unlawful_eviction_basis_in_applicable_law :-\n    scenario_statement,\n    unlawful_eviction_basis(_).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Answer predicate (must be deterministic)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nhousing_answer(yes) :-\n    specified_unlawful_eviction_basis_in_applicable_law,\n    !.\nhousing_answer(no) :-\n    !.\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Main entrypoint + required initialization\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-2145",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Is it specified on what basis it is unlawful to evict a tenant under state/territory law?"
+  }
+}

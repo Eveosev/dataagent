@@ -1,0 +1,84 @@
+{
+  "type": "object",
+  "title": "Synthetic election statement-of-votes pivot schema",
+  "description": "Extract the county header, the per-contest column definitions, and every precinct row from a precinct-by-precinct Statement of Votes Cast. Each contest is a pivot grid: rows are precincts, columns are the contest's candidates plus Write-In / Over Votes / Under Votes. The same precincts repeat in every contest. Do NOT extract the bold 'Total' row -- it is a column summary, not a precinct.",
+  "required": [
+    "jurisdiction",
+    "election_title",
+    "election_date",
+    "contests",
+    "precinct_results"
+  ],
+  "properties": {
+    "jurisdiction": {
+      "type": "string",
+      "description": "County named in the page header, e.g. 'Goshen County'."
+    },
+    "election_title": {
+      "type": "string",
+      "description": "Report title from the header, e.g. 'Official Precinct-by-Precinct Summary'."
+    },
+    "election_date": {
+      "type": "string",
+      "description": "Election date printed in the header, e.g. 'November 5, 2024'."
+    },
+    "contests": {
+      "type": "array",
+      "description": "One entry per contest (one per page), defining its columns in order.",
+      "items": {
+        "type": "object",
+        "required": [
+          "office",
+          "columns"
+        ],
+        "properties": {
+          "office": {
+            "type": "string",
+            "description": "Contest title printed above the grid, e.g. 'United States Senator'."
+          },
+          "columns": {
+            "type": "array",
+            "description": "Data column headers left-to-right (candidates then Write-In, Over Votes, Under Votes); aligns positionally with each row's votes.",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "precinct_results": {
+      "type": "array",
+      "description": "Every precinct row of every contest, in document order. Excludes the 'Total' summary row printed at the foot of each contest.",
+      "items": {
+        "type": "object",
+        "required": [
+          "office",
+          "precinct",
+          "votes",
+          "source_page"
+        ],
+        "properties": {
+          "office": {
+            "type": "string",
+            "description": "Contest this row belongs to (the page's title heading)."
+          },
+          "precinct": {
+            "type": "string",
+            "description": "Precinct label (row header), e.g. '07-2' or 'Absentee'."
+          },
+          "votes": {
+            "type": "array",
+            "description": "Vote counts in printed column order, aligned to this contest's 'columns' (candidates, then Write-In, Over Votes, Under Votes).",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "source_page": {
+            "type": "integer",
+            "description": "One-indexed PDF page where the row is printed."
+          }
+        }
+      }
+    }
+  }
+}

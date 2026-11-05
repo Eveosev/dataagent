@@ -1,0 +1,27 @@
+{
+  "source": "beaverbench/beaver-query",
+  "id": "nova_365",
+  "db": "nova",
+  "question": "For each VM state on host `blaze8-12`, list the VM state, the total number of non-deleted instances that have a system metadata entry with key `image_image_type` and also have a non-deleted network info cache record, and the average memory (MB) of those instances. Do not repeat the VM state if it is the same as the previous row. Include a grand total row. Do not return any rounded answers.",
+  "sql": "WITH inner_cte AS ( SELECT COUNT(*) AS instance_count FROM INSTANCES i JOIN INSTANCE_SYSTEM_METADATA ism ON ism.INSTANCE_UUID = i.UUID JOIN INSTANCE_INFO_CACHES iic ON i.UUID = iic.INSTANCE_UUID WHERE i.DELETED = 0 AND i.HOST = 'blaze8-12' AND ism.KEY = 'image_image_type' ) SELECT CASE WHEN LAG(vm_state_name) OVER (ORDER BY vm_state_sort, vm_state_name) = vm_state_name THEN NULL ELSE vm_state_name END AS vm_state, total_instances, avg_memory_mb FROM ( SELECT CASE WHEN GROUPING(i.VM_STATE) = 1 THEN 'zzz' ELSE i.VM_STATE END AS vm_state_sort, CASE WHEN GROUPING(i.VM_STATE) = 1 THEN 'TOTAL' ELSE i.VM_STATE END AS vm_state_name, COUNT(i.ID) AS total_instances, AVG(i.MEMORY_MB) AS avg_memory_mb FROM INSTANCES i JOIN INSTANCE_SYSTEM_METADATA ism ON ism.INSTANCE_UUID = i.UUID JOIN INSTANCE_INFO_CACHES iic ON i.UUID = iic.INSTANCE_UUID CROSS JOIN inner_cte WHERE i.DELETED = 0 AND i.HOST = 'blaze8-12' AND ism.KEY = 'image_image_type' AND iic.DELETED = 0 GROUP BY i.VM_STATE WITH ROLLUP ) AS tbltmp ORDER BY vm_state_sort, vm_state_name;",
+  "tables": "[\"INSTANCE_SYSTEM_METADATA\", \"INSTANCES\", \"INSTANCE_INFO_CACHES\"]",
+  "join_keys": "[[\"INSTANCES.UUID\", \"INSTANCE_SYSTEM_METADATA.INSTANCE_UUID\"], [\"INSTANCES.UUID\", \"INSTANCE_INFO_CACHES.INSTANCE_UUID\"]]",
+  "column_mapping": "{\"non-deleted instances\": [\"INSTANCES.DELETED\"], \"system metadata entry key `image_image_type`\": [\"INSTANCE_SYSTEM_METADATA.KEY\"], \"instances\": [\"INSTANCES.UUID\", \"INSTANCE_SYSTEM_METADATA.INSTANCE_UUID\", \"INSTANCE_INFO_CACHES.INSTANCE_UUID\"], \"non-deleted network info cache record\": [\"INSTANCE_INFO_CACHES.INSTANCE_UUID\"]}",
+  "domain_knowledge": "[\"Host \\\"blaze8-12\\\" is predicated by \\\"instances.host = 'blaze8-12'\\\"\"]",
+  "sub_questions": "[\"How many non-deleted instances on host `blaze8-12` have a system metadata entry with the key `image_image_type` and also have a non-deleted network info cache record?\"]",
+  "sub_sqls": "[\"SELECT COUNT(*) AS instance_count FROM INSTANCES i JOIN INSTANCE_SYSTEM_METADATA ism ON ism.INSTANCE_UUID = i.UUID JOIN INSTANCE_INFO_CACHES iic ON i.UUID = iic.INSTANCE_UUID WHERE i.DELETED = 0 AND i.HOST = 'blaze8-12' AND ism.KEY = 'image_image_type';\"]",
+  "category": "domain-specific complex query",
+  "detailed_category": "nested",
+  "case_id": "B05-beaver-0532",
+  "expected": {
+    "kind": "sql",
+    "sql": "WITH inner_cte AS ( SELECT COUNT(*) AS instance_count FROM INSTANCES i JOIN INSTANCE_SYSTEM_METADATA ism ON ism.INSTANCE_UUID = i.UUID JOIN INSTANCE_INFO_CACHES iic ON i.UUID = iic.INSTANCE_UUID WHERE i.DELETED = 0 AND i.HOST = 'blaze8-12' AND ism.KEY = 'image_image_type' ) SELECT CASE WHEN LAG(vm_state_name) OVER (ORDER BY vm_state_sort, vm_state_name) = vm_state_name THEN NULL ELSE vm_state_name END AS vm_state, total_instances, avg_memory_mb FROM ( SELECT CASE WHEN GROUPING(i.VM_STATE) = 1 THEN 'zzz' ELSE i.VM_STATE END AS vm_state_sort, CASE WHEN GROUPING(i.VM_STATE) = 1 THEN 'TOTAL' ELSE i.VM_STATE END AS vm_state_name, COUNT(i.ID) AS total_instances, AVG(i.MEMORY_MB) AS avg_memory_mb FROM INSTANCES i JOIN INSTANCE_SYSTEM_METADATA ism ON ism.INSTANCE_UUID = i.UUID JOIN INSTANCE_INFO_CACHES iic ON i.UUID = iic.INSTANCE_UUID CROSS JOIN inner_cte WHERE i.DELETED = 0 AND i.HOST = 'blaze8-12' AND ism.KEY = 'image_image_type' AND iic.DELETED = 0 GROUP BY i.VM_STATE WITH ROLLUP ) AS tbltmp ORDER BY vm_state_sort, vm_state_name;",
+    "sub_sqls": "[\"SELECT COUNT(*) AS instance_count FROM INSTANCES i JOIN INSTANCE_SYSTEM_METADATA ism ON ism.INSTANCE_UUID = i.UUID JOIN INSTANCE_INFO_CACHES iic ON i.UUID = iic.INSTANCE_UUID WHERE i.DELETED = 0 AND i.HOST = 'blaze8-12' AND ism.KEY = 'image_image_type';\"]",
+    "db": "nova",
+    "tables": "[\"INSTANCE_SYSTEM_METADATA\", \"INSTANCES\", \"INSTANCE_INFO_CACHES\"]",
+    "join_keys": "[[\"INSTANCES.UUID\", \"INSTANCE_SYSTEM_METADATA.INSTANCE_UUID\"], [\"INSTANCES.UUID\", \"INSTANCE_INFO_CACHES.INSTANCE_UUID\"]]",
+    "column_mapping": "{\"non-deleted instances\": [\"INSTANCES.DELETED\"], \"system metadata entry key `image_image_type`\": [\"INSTANCE_SYSTEM_METADATA.KEY\"], \"instances\": [\"INSTANCES.UUID\", \"INSTANCE_SYSTEM_METADATA.INSTANCE_UUID\", \"INSTANCE_INFO_CACHES.INSTANCE_UUID\"], \"non-deleted network info cache record\": [\"INSTANCE_INFO_CACHES.INSTANCE_UUID\"]}",
+    "category": "domain-specific complex query",
+    "db_archive": "bench://beaver-table/beaver_db.zip"
+  }
+}

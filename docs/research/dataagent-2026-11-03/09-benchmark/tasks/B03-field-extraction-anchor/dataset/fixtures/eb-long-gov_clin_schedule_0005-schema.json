@@ -1,0 +1,210 @@
+{
+  "$defs": {
+    "ClinLineItem": {
+      "type": "object",
+      "title": "ClinLineItem",
+      "description": "One row of the Section B 'Supplies or Services and Prices' (a.k.a. ITEM-NO) schedule. One row == one CLIN/SLIN block introduced by an 'ITEM NO' header that gives the CLIN number plus the six tabular fields ITEM NO / SUPPLIES/SERVICES / QUANTITY / UNIT / UNIT PRICE / AMOUNT. CLIN blocks include short narrative lines beneath (FFP, FOB, PURCHASE REQUEST NUMBER, PSC CD, ACRN, CIN) — those lines belong to the same CLIN, do NOT create a new line item for them.",
+      "properties": {
+        "item_no": {
+          "type": "string",
+          "description": "The CLIN or SLIN identifier from the leftmost 'ITEM NO' column of the Section B schedule, verbatim. Format: a 4-digit CLIN like '0001' or '0002', or a 6-digit SLIN like '000101', '000102'. May appear under labels 'ITEM NO', 'ITEM NO.', '19. ITEM NO.', '15A. ITEM NO.', or 'CLIN'. Always preserve leading zeros (e.g. '0001', NOT '1'). Do NOT confuse with: (a) the contract number from box 2 (W911QY20...), (b) the requisition / purchase request number, (c) ACRN codes ('AA', 'AB'), (d) DODAAC codes, (e) PSC CDs, (f) the CIN code (GFEBS...), or (g) row numbers in any other table (shipment information, delivery information, inspection list)."
+        },
+        "supplies_services": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The short product/service title from the 'SUPPLIES/SERVICES' column for this CLIN, verbatim from the first line under that column (e.g. 'Sample Collection Kits', 'Face Covering - ReadyOne', 'CDRL A001: Manufacturability Report'). For funding-only SUBCLINs added by an SF-30 modification, this line typically reads 'Funding for CLIN <parent_clin> / ACRN <code>' (e.g. 'Funding for CLIN 0001 / ACRN AB') — capture that exact title. May appear under labels 'SUPPLIES/SERVICES', 'SCHEDULE OF SUPPLIES/SERVICES', '15B. SUPPLIES/SERVICES', or '20. SCHEDULE OF SUPPLIES/SERVICES'. Use the literal title line only — do NOT concatenate the longer paragraph description, do NOT include 'FFP'/'FFP-LOE' contract-type tags that appear on the next line, do NOT include the FOB / PURCHASE REQUEST NUMBER / PSC CD lines, and do NOT include any ACRN/CIN block. Null only if the cell is genuinely empty (no title line printed). Do NOT confuse with the high-level contract title from Section C (e.g. 'COVID-19 Face Protection')."
+        },
+        "quantity": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The unit count from the 'QUANTITY' column for this CLIN, verbatim including any thousands separator the document uses. Format: numeric string ('4000', '1,482.25'), or 'N/A' if printed N/A. REDACTION POLICY: many DoD contracts overprint a FOIA exemption marker (most commonly '(b) (4)' for trade-secret pricing data; sometimes '(b)(4)', '(b) (3)', '(b)(6)') on top of a black box in this cell. When such an exemption marker is visible above/inside the black box, return the marker text VERBATIM as printed (e.g. '(b) (4)'). Use null ONLY when the cell is genuinely empty (no text, no black redaction box, no marker). A black redaction box without any visible marker is also null. NEVER emit image-markdown placeholders (e.g. '![redacted](page_4_image_1.jpg)'); those are pipeline artifacts, not values — use null or the verbatim marker text instead. Do NOT confuse a redaction marker with the digit zero. May appear under labels 'QUANTITY', '15C. QUANTITY', '21. QUANTITY'. Do NOT confuse with: (a) box/kit counts in the separate Shipment Information table, (b) per-delivery quantities in the Section F Delivery Information table, (c) the total contract amount."
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The unit-of-measure from the 'UNIT' column for this CLIN, verbatim (e.g. 'Each', 'EA', 'LO', 'Lot'). May appear under labels 'UNIT', '15D. UNIT', '22. UNIT'. Case-preserve as printed. Null if the cell is blank or 'N/A' is printed. Do NOT confuse with the UNIT PRICE column, the contract type tag ('FFP'), the AMOUNT column, or DODAAC."
+        },
+        "unit_price": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The per-unit price from the 'UNIT PRICE' column for this CLIN, verbatim from the form as printed (e.g. '$37.05625', '2.90'). Preserve the currency sign and decimal places exactly as printed; do NOT round, do NOT add a '$' that is not printed. May appear under labels 'UNIT PRICE', '15E. UNIT PRICE', '23. UNIT PRICE'. REDACTION POLICY: same as quantity — when a FOIA exemption marker ('(b) (4)', '(b)(4)', etc.) is overprinted on a black box in this cell, return the marker text VERBATIM. Use null ONLY when the cell is genuinely empty (no text, no black redaction box, no marker) or when 'N/A' is printed. NEVER emit image-markdown placeholders (e.g. '![redacted](page_X_image_Y.jpg)'); use null or the verbatim marker instead. Do NOT carry over the AMOUNT-column value into unit_price; if UNIT PRICE is redacted but AMOUNT is printed, unit_price still gets the redaction marker (or null), NOT the amount. Do NOT confuse with the AMOUNT column (= quantity x unit_price), the contract NET AMT, or the total contract value box."
+        },
+        "amount": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The extended price from the 'AMOUNT' column for this CLIN, verbatim including dollar sign and exactly the printed cents (e.g. '$148,225.00', '$11,600.00', '$0.00'). Take ONLY the value that is printed on the same horizontal row as the 'ITEM NO' line, in the rightmost 'AMOUNT' column — even when that value is '$0.00' (funding-only SUBCLINs commonly print AMOUNT=$0.00 while the dollar amount appears on a separate 'ACRN <code>' allocation line below). May appear under labels 'AMOUNT', '15F. AMOUNT', '24. AMOUNT'. Use the literal value 'NSP' if 'NSP' (Not Separately Priced) is printed instead of a dollar amount; do NOT translate NSP to 0 or null. REDACTION POLICY: same as quantity/unit_price — if a FOIA exemption marker is overprinted on the AMOUNT cell, return the marker verbatim. Null only if the cell is blank with no marker. NEVER emit image-markdown placeholders ('![redacted](page_X_image_Y.jpg)'); use null or the verbatim marker instead. Do NOT confuse with: (a) the per-CLIN 'NET AMT' subtotal printed below the horizontal rule (use `net_amount` for that), (b) the dollar value printed on the 'ACRN <code>' allocation line directly under NET AMT (that is per-ACRN funding, NOT this column), (c) the contract-level total ('TOTAL AMOUNT OF CONTRACT', '26. TOTAL AWARD AMOUNT'), (d) any modification/amendment delta amount."
+        },
+        "contract_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The contract-type tag printed on its own line directly beneath the 'SUPPLIES/SERVICES' title (e.g. 'FFP' = Firm-Fixed Price, 'FFP-LOE', 'CPFF', 'T&M'). Verbatim as printed. Null if no such tag appears on the CLIN. Do NOT confuse with the product description that follows, with section names ('Section B', 'Section C'), or with the contract number."
+        },
+        "purchase_request_number": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The 'PURCHASE REQUEST NUMBER:' value printed inside the CLIN block, verbatim digits, no spaces (e.g. '0011509217', '0011487274'). May appear as 'PURCHASE REQUEST NUMBER', 'PR NUMBER', 'PR NO'. Null if not printed inside this CLIN block. Do NOT confuse with: (a) the box 1 'REQUISITION NUMBER' on the SF1449 form face (may equal or differ), (b) the contract number, (c) the CIN code, (d) ACRN code."
+        },
+        "psc_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The 'PSC CD:' (Product Service Code) printed inside the CLIN block, verbatim 4-digit code (e.g. '6550', '8415'). May appear as 'PSC CD', 'PSC CODE', 'PRODUCT SERVICE CODE'. Null if absent on the CLIN. Do NOT confuse with: NAICS code (box 9 of SF1449 face — typically 6 digits), DODAAC codes ('W56XNH', 'W912H7'), the CLIN/SLIN itself."
+        },
+        "acrn": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The Accounting Classification Reference Number printed at the bottom of the CLIN block as 'ACRN <code>' (e.g. 'AA', 'AB'). Two letters, uppercase, verbatim. If multiple ACRN lines appear on a single CLIN (split funding), use the FIRST printed ACRN here; the schema currently captures only ONE ACRN per row; additional ACRN lines on the same CLIN are not separately represented in this schema version (future-doc risk for split-funded CLINs). Null if no ACRN line is printed for the CLIN. Do NOT confuse with: NAICS code, PSC code, CIN code (GFEBS...), or DODAAC."
+        },
+        "cin": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The CIN (Contract Identification Number) printed under the ACRN line as 'CIN: GFEBS...' or 'CIN: <digits>'. Verbatim, preserve case and digits exactly as printed. Null if absent. Do NOT confuse with the contract number, requisition number, PURCHASE REQUEST NUMBER, ACRN, PSC CD, NAICS code."
+        },
+        "net_amount": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The 'NET AMT' subtotal printed under the AMOUNT column for this CLIN (after the horizontal rule), verbatim with dollar sign and cents (e.g. '$148,225.00'). For single-funding CLINs this equals `amount`; for split-funded CLINs the NET AMT is the sum across ACRN allocations and may differ from `amount`. Null if no 'NET AMT' line is printed for this CLIN (e.g. 'NSP' / data-only line items). Do NOT confuse with: (a) the contract-level total ('TOTAL AMOUNT OF CONTRACT', '26. TOTAL AWARD AMOUNT'), (b) the AMOUNT column value, (c) an individual ACRN allocation amount."
+        }
+      },
+      "required": [
+        "item_no",
+        "supplies_services",
+        "quantity",
+        "unit",
+        "unit_price",
+        "amount",
+        "contract_type",
+        "purchase_request_number",
+        "psc_code",
+        "acrn",
+        "cin",
+        "net_amount"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "title": "DoDClinSchedule",
+  "type": "object",
+  "description": "Extraction of the DoD post-award contract or amendment ITEM-NO schedule from Part I Section B 'Supplies or Services and Prices'. Top-level fields capture the contract identifiers and totals from the SF-1449 / SF-26 / SF-30 form face; the long-doc list `clin_line_items` captures every CLIN/SLIN row in the Section B schedule. DOC-SCOPE POLICY: a single PDF in this corpus represents ONE primary award (the contract whose number is printed in box 2 of the first SF-1449 / SF-26 / SF-30 page). Even when the file is 'conformed' — i.e. the base contract page is followed by SF-30 modifications (P00001, P00002, …) that amend the same base contract — treat the whole stack as ONE contract: the primary contract's number, primary effective date, latest total, and the full conformed schedule (base CLINs + any SUBCLINs / additional CLINs added by mods). If the PDF additionally contains a DIFFERENT contract or task order (a separate SF-1449 / SF-26 / DD-1155 face with a DIFFERENT contract number in box 2, e.g. a child delivery order issued against an IDIQ), DO NOT mix its CLINs into `clin_line_items`. Extract ONLY the schedule of the primary (first / outermost) contract.",
+  "properties": {
+    "contract_number": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "The PRIMARY contract's award number from the FIRST form face in the PDF, verbatim (e.g. 'W911QY20P0195', 'W911QY20C0047', 'W911QY20C0124'). On SF-1449 it sits in box 2 'CONTRACT NO.'; on SF-26 in box 2 'CONTRACT (Proc. Inst. Ident.) NO.'; on SF-30 amendments it appears as 'CONTRACT/ORDER NO.' (10A). Format: alphanumeric, typically beginning 'W' for Army (W911..., W912...) — preserve the case as printed and do NOT add spaces or dashes. Return EXACTLY ONE value — the number from the first/outermost award page in the PDF (NOT a comma-joined or semicolon-joined list of multiple contract numbers found later in the file). If a conformed file contains modifications referencing this same number, that's still one contract — return the base number once. If the file contains a separate child task order with a different number, IGNORE that number — it is NOT this field. Do NOT confuse with: (a) the amendment/modification number on SF-30 (box 2 'AMENDMENT/MODIFICATION NO.', e.g. 'P00001'), (b) the requisition number (box 1 on SF-1449), (c) the order number (box 4 on SF-1449), (d) the solicitation number (box 5 on SF-1449), (e) the purchase request number printed inside the CLIN blocks."
+    },
+    "effective_date": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "The effective date of the PRIMARY contract award (NOT the latest amendment) from the FIRST form face in the PDF, verbatim as printed (e.g. '12-Jun-2020', '17 APR 2020', '04/17/2020', '24-Sep-2020'). On SF-1449 it sits in box 3 'AWARD/EFFECTIVE DATE'; on SF-26 in box 3 'EFFECTIVE DATE'. If the first page is itself an SF-30 amendment (no separate base SF-1449/SF-26 in the file), use the SF-30 'EFFECTIVE DATE' (box 3). Return EXACTLY ONE date — the base award's effective date, NOT a semicolon-joined list of every amendment's effective date. Preserve the printed format including case of the month abbreviation. Null if the cell is blank or redacted. Do NOT confuse with: (a) the date signed by the contractor (box 19C / 30c), (b) the date signed by the contracting officer (box 20C / 31c / 16C), (c) the solicitation issue date (box 6 on SF-1449), (d) any per-CLIN delivery date in Section F, (e) the effective date of any subsequent modification."
+    },
+    "total_amount": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "The LATEST cumulative contract-level total dollar value after all conformed modifications, verbatim including dollar sign and cents (e.g. '$148,225.00', '$23,200.00', '$6,754,911.00'). On SF-1449 it sits in box 26 'TOTAL AWARD AMOUNT (For Govt. Use Only)'; on SF-26 in '15G. TOTAL AMOUNT OF CONTRACT'. For a conformed file with subsequent SF-30 mods, use the FINAL post-modification total — typically printed in each SF-30's 'SUMMARY OF CHANGES' as 'The total cost of this contract was increased/decreased by $X from $A to $B' — use the last 'to $B' value in the document. Return EXACTLY ONE value (a single dollar amount), NOT a semicolon-joined list of intermediate totals from each amendment. If the form face is fully redacted with no cumulative total printed anywhere, return the verbatim redaction marker (e.g. '(b) (4)'). NEVER emit image-markdown placeholders. Null if no total is printed anywhere and the cell is blank. Do NOT confuse with: (a) any individual CLIN AMOUNT or NET AMT, (b) per-delivery quantities or amounts, (c) the modification delta amount (the 'increased by $X' / 'decreased by $X' number on SF-30)."
+    },
+    "clin_line_items": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ClinLineItem"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Ordered list of every CLIN/SLIN row from the PRIMARY contract's Section B 'Supplies or Services and Prices' schedule. Scope is the primary contract only — see DOC-SCOPE POLICY in the top-level schema description. One entry per CLIN block where a fresh 'ITEM NO' header introduces a new 4-digit (CLIN) or 6-digit (SLIN) identifier and the same 6-column row (ITEM NO / SUPPLIES/SERVICES / QUANTITY / UNIT / UNIT PRICE / AMOUNT). Preserve the printed order top-to-bottom. INCLUDE: every numbered CLIN/SLIN of the primary contract even when its AMOUNT column prints 'NSP' (Not Separately Priced). INCLUDE: SUBCLINs / funding-only CLINs added by an SF-30 modification (e.g. SUBCLIN 000101 'Funding for CLIN 0001 / ACRN AB') in their printed order — these are part of the conformed primary contract's schedule. DEDUPLICATE: if the same CLIN appears multiple times across the primary contract's base + modifications (e.g. CLIN 0001 originally in the base + same CLIN 0001 referenced in a SUMMARY OF CHANGES block), emit it EXACTLY ONCE — use the LATEST printed values (the conformed state after all mods); do NOT emit a separate entry for each appearance. EXCLUDE: (a) rows from other tables that share similar column headers but are NOT Section B schedule rows, specifically the Shipment Information table, the Section F Delivery Information table (CLIN / DELIVERY DATE / QUANTITY / SHIP TO ADDRESS / DODAAC), the Section E Inspection And Acceptance Terms table (CLIN / INSPECT AT / INSPECT BY / ACCEPT AT / ACCEPT BY), any clause-list table (e.g. '52.246-2 Inspection Of Supplies'), the Section G 'Accounting and Appropriation Data' ACRN-allocation table, and the SF-30 'Description of Amendment' narrative outside the SUMMARY OF CHANGES / Section B blocks; (b) the entire CLIN schedule of any child task order or separate contract embedded later in the same PDF that uses a different contract number in box 2 — those are out of scope per DOC-SCOPE POLICY. STRICT: every emitted entry MUST have a non-empty item_no taken from a real 'ITEM NO' header — do NOT emit placeholder rows where item_no is null or empty, do NOT emit a row whose item_no is actually a contract number / a date / a section title ('TOTAL AMOUNT OF CONTRACT' is NOT an item_no), and do NOT emit a separate item for the 'NET AMT' subtotal line or the 'ACRN <code>' allocation line that follows a CLIN. If the document contains ONLY a SF1449 face page with 'SEE SCHEDULE' but no Section B schedule is included in the file, return an empty array `[]`."
+    }
+  },
+  "required": [
+    "contract_number",
+    "effective_date",
+    "total_amount",
+    "clin_line_items"
+  ],
+  "additionalProperties": false
+}

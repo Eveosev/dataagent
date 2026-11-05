@@ -1,0 +1,30 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_f62447e5",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "person",
+    "person_role",
+    "county",
+    "writ",
+    "writ_type",
+    "writ_property_county",
+    "statute_799_44_writ_directed_to_sheriff",
+    "statute_799_44_may_deliver_to_sheriff_for_execution",
+    "legal_role_empowered_to_execute_writ",
+    "legal_person_empowered_to_execute_writ",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    State: Wisconsin\n    Focus year: 2021\n\n    Question: Is the bailiff an individual empowered by law to execute a writ of eviction?\n\n    We model \"writ of eviction\" in Wisconsin eviction actions as the statutory \"writ of restitution\"\n    under WI Stat  799.44 (2021).\n*/\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n% Basic domain facts (scenario + identifiers)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n% Scenario metadata\nscenario_state(wisconsin).\nscenario_focus_year(2021).\n\n% The individual asked about\nperson(bailiff_1).\nperson_role(bailiff_1, bailiff).\n\n% Minimal eviction/writ context (to ground the question in an eviction action)\ncounty(dane).\nwrit(writ_1).\nwrit_type(writ_1, writ_of_restitution).\nwrit_property_county(writ_1, dane).\n\n% This helper predicate \"summarizes the scenario\" as required.\n% It succeeds exactly when the factual statement being evaluated is present:\n% namely that the person is a bailiff and the writ at issue is an eviction writ\n% (modeled as a writ of restitution).\nscenario_statement :-\n    scenario_state(wisconsin),\n    scenario_focus_year(2021),\n    person(bailiff_1),\n    person_role(bailiff_1, bailiff),\n    writ(writ_1),\n    writ_type(writ_1, writ_of_restitution),\n    writ_property_county(writ_1, dane).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n% Statute encoding: WI Stat  799.44 (2021)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n/*\n  WI Stat  799.44(2) (2021): \"the writ may be delivered to the sheriff for execution\"\n  WI Stat  799.44(4) (2021): writ \"directed to the sheriff of the county in which the real property is located\"\n*/\n\n% statute_799_44_writ_directed_to_sheriff(+Writ, -SheriffRole)\n% Encodes that a writ of restitution is directed to the sheriff of the county\n% where the property is located. We model \"directed to\" as the *role* sheriff.\nstatute_799_44_writ_directed_to_sheriff(Writ, sheriff) :-\n    writ(Writ),\n    writ_type(Writ, writ_of_restitution),\n    writ_property_county(Writ, _County).\n\n% statute_799_44_may_deliver_to_sheriff_for_execution(+Writ)\n% Encodes that such writ may be delivered to the sheriff for execution.\nstatute_799_44_may_deliver_to_sheriff_for_execution(Writ) :-\n    statute_799_44_writ_directed_to_sheriff(Writ, sheriff).\n\n% legal_role_empowered_to_execute_writ(+Role, +Writ)\n% From  799.44, the empowered executing officer (by this statute's text) is the sheriff.\nlegal_role_empowered_to_execute_writ(Role, Writ) :-\n    statute_799_44_writ_directed_to_sheriff(Writ, Role),\n    statute_799_44_may_deliver_to_sheriff_for_execution(Writ).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n% Application to the scenario (reasoning)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n% legal_person_empowered_to_execute_writ(+Person, +Writ)\n% A person is empowered if their role is among those empowered by statute for the writ.\nlegal_person_empowered_to_execute_writ(Person, Writ) :-\n    person(Person),\n    person_role(Person, Role),\n    legal_role_empowered_to_execute_writ(Role, Writ).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n% Final answer predicate (deterministic yes/no)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nhousing_answer(yes) :-\n    scenario_statement,\n    legal_person_empowered_to_execute_writ(bailiff_1, writ_1),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    \\+ legal_person_empowered_to_execute_writ(bailiff_1, writ_1),\n    !.\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n% Main entrypoint (required)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-4577",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is the bailiff an individual empowered by law to execute a writ of eviction?"
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "dataset_id": "B02.dataset",
+  "task_id": "B02",
+  "revision": "v0.2",
+  "status": "collecting",
+  "unit": "page",
+  "sources": [
+    {
+      "name": "omnidocbench",
+      "locator": "opendatalab/OmniDocBench",
+      "license": "未声明",
+      "digest": "sha256:a481a4d1e40ce39152f7ca70fbb94db2df1c2606178476e26f4965850364913a",
+      "revision": "aa1ee96d106dbe53d0ae59474d75c6e6d9b53fec",
+      "files": 4989,
+      "mb": 1551.5,
+      "fetched_at": "2026-11-04T18:10:51+08:00"
+    }
+  ],
+  "splits": {
+    "development": {
+      "count": 120,
+      "frozen": false
+    },
+    "regression": {
+      "count": 60,
+      "frozen": false
+    },
+    "unseen_acceptance": {
+      "count": 60,
+      "frozen": false
+    }
+  },
+  "exposure": {
+    "ledger_ref": "exposure.jsonl",
+    "entries": 0
+  },
+  "fixtures": {
+    "storage": "local",
+    "path": "fixtures/",
+    "limits": "单文件 <= 2 MB；超出走对象存储并在 digest 记录"
+  },
+  "updated": "2026-11-04",
+  "notes": "由 build_cases.py 从 workspace/benchmark-data 构建；原始数据不入库",
+  "build": {
+    "version": 2,
+    "script": "tools/build_cases.py",
+    "built_at": "2026-11-04",
+    "policy": "只收有页图的页；期望按 order 排列。页图走 bench:// 引用，不复制进 docs。",
+    "available": {
+      "development": 1004,
+      "regression": 284,
+      "unseen_acceptance": 361
+    },
+    "selected": {
+      "development": 120,
+      "regression": 60,
+      "unseen_acceptance": 60
+    },
+    "caps": {
+      "development": 120,
+      "regression": 60,
+      "unseen_acceptance": 60
+    },
+    "coverage": {
+      "covered_metrics": [
+        "text_ned",
+        "table_teds",
+        "reading_order_accuracy"
+      ],
+      "note": "断言式评分（olmOCR-Bench）待其数据到位后追加"
+    },
+    "pages_with_image": 1649,
+    "pages_without_image": 0
+  }
+}

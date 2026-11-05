@@ -1,0 +1,135 @@
+{
+  "source": "naver-clova-ix/cord-v2",
+  "split": "train",
+  "index": 111,
+  "gt_parse": {
+    "menu": [
+      {
+        "nm": "OCHA",
+        "cnt": "1",
+        "price": "8,000"
+      },
+      {
+        "nm": "CHIC NAMBAN BENTO",
+        "cnt": "1",
+        "price": "58,000"
+      }
+    ],
+    "sub_total": {
+      "subtotal_price": "66,000",
+      "tax_price": "6,600"
+    },
+    "total": {
+      "total_price": "72,600",
+      "creditcardprice": "72,600"
+    }
+  },
+  "case_id": "B03-cord-0420",
+  "expected": {
+    "kind": "json",
+    "value": {
+      "menu": [
+        {
+          "nm": "OCHA",
+          "cnt": "1",
+          "price": "8,000"
+        },
+        {
+          "nm": "CHIC NAMBAN BENTO",
+          "cnt": "1",
+          "price": "58,000"
+        }
+      ],
+      "sub_total": {
+        "subtotal_price": "66,000",
+        "tax_price": "6,600"
+      },
+      "total": {
+        "total_price": "72,600",
+        "creditcardprice": "72,600"
+      }
+    },
+    "fields": {
+      "menu[0].nm": "OCHA",
+      "menu[0].cnt": "1",
+      "menu[0].price": "8,000",
+      "menu[1].nm": "CHIC NAMBAN BENTO",
+      "menu[1].cnt": "1",
+      "menu[1].price": "58,000",
+      "sub_total.subtotal_price": "66,000",
+      "sub_total.tax_price": "6,600",
+      "total.total_price": "72,600",
+      "total.creditcardprice": "72,600"
+    },
+    "anchored_fields": 0,
+    "no_anchor_fields": 10,
+    "spans": [
+      {
+        "field": "menu[0].nm",
+        "text": "OCHA",
+        "page": 1
+      },
+      {
+        "field": "menu[0].cnt",
+        "text": "1",
+        "page": 1
+      },
+      {
+        "field": "menu[0].price",
+        "text": "8,000",
+        "page": 1
+      },
+      {
+        "field": "menu[1].nm",
+        "text": "CHIC NAMBAN BENTO",
+        "page": 1
+      },
+      {
+        "field": "menu[1].cnt",
+        "text": "1",
+        "page": 1
+      },
+      {
+        "field": "menu[1].price",
+        "text": "58,000",
+        "page": 1
+      },
+      {
+        "field": "sub_total.subtotal_price",
+        "text": "66,000",
+        "page": 1
+      },
+      {
+        "field": "sub_total.tax_price",
+        "text": "6,600",
+        "page": 1
+      },
+      {
+        "field": "total.total_price",
+        "text": "72,600",
+        "page": 1
+      },
+      {
+        "field": "total.creditcardprice",
+        "text": "72,600",
+        "page": 1
+      }
+    ],
+    "pages": {
+      "menu[0].nm": 1,
+      "menu[0].cnt": 1,
+      "menu[0].price": 1,
+      "menu[1].nm": 1,
+      "menu[1].cnt": 1,
+      "menu[1].price": 1,
+      "sub_total.subtotal_price": 1,
+      "sub_total.tax_price": 1,
+      "total.total_price": 1,
+      "total.creditcardprice": 1
+    },
+    "evidence_gold": {
+      "source": "cord-valid-line",
+      "version": 1
+    }
+  }
+}

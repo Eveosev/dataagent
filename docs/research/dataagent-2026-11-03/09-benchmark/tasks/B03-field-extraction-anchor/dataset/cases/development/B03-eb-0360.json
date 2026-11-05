@@ -1,0 +1,57 @@
+{
+  "case_id": "B03-eb-0360",
+  "task_id": "B03",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://extractbench/docs/long/real_imedia_full_corrupted.pdf",
+      "digest": null
+    },
+    {
+      "kind": "schema",
+      "ref": "fixtures/eb-long-real_imedia_full_corrupted-schema.json",
+      "digest": null
+    },
+    {
+      "kind": "rules",
+      "ref": "fixtures/eb-long-real_imedia_full_corrupted-rules.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-eb-0360.json"
+  },
+  "evidence": [
+    "bench://extractbench/docs/long/real_imedia_full_corrupted.pdf",
+    "fixtures/eb-long-real_imedia_full_corrupted-schema.json",
+    "fixtures/eb-long-real_imedia_full_corrupted-rules.md"
+  ],
+  "tags": [
+    "extractbench",
+    "long",
+    "tag:source:synthetic",
+    "tag:challenge:T1.a",
+    "tag:challenge:T1.e",
+    "tag:challenge:T1.b",
+    "tag:perception:P1",
+    "tag:structure:S4",
+    "tag:structure:S5",
+    "tag:structure:S3",
+    "tag:delivery:G1",
+    "tag:length:long",
+    "tag:domain:D7",
+    "fields:12"
+  ],
+  "source": "eb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

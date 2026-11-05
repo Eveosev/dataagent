@@ -1,0 +1,35 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_58cb2075",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "owner",
+    "tenant",
+    "premises",
+    "eviction_notice_given",
+    "tenant_vacated_after_notice",
+    "notice_purports_compel_by_law",
+    "notice_uses_clearly_not_provided_by_law_cause",
+    "notice_misrepresents_tenant_subject_to_eviction",
+    "scenario_unlawful_eviction",
+    "statute_2a18_61_6_d_wrongful_eviction_notice",
+    "statute_2a18_61_6_d_remedy",
+    "statute_2a18_61_6_c_includes_civil_penalty",
+    "legal_wrongful_eviction",
+    "legal_remedy_for_wrongful_eviction",
+    "legal_criminal_charges_available_for_unlawful_eviction",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: New Jersey\n    Focus year: 2021\n\n    Question: Are criminal charges brought against landlords for unlawfully evicting a tenant?\n\n    Encoded statute: NJ Rev Stat  2A:18-61.6 (2021)\n    Key point for this question: the statute provides civil remedies (civil action; civil penalty),\n    and does not create a criminal offense or authorize criminal charges.\n*/\n\n% -------------------------\n% Basic scenario parameters\n% -------------------------\n\nscenario_state(nj).\nscenario_focus_year(2021).\n\nowner(owner1).\ntenant(tenant1).\npremises(prem1).\n\n% -----------------------------------------\n% Scenario facts (question's factual setup)\n% -----------------------------------------\n% We model \"unlawfully evicting a tenant\" using  2A:18-61.6(d):\n% tenant vacates after an eviction notice that (1) purports legal compulsion,\n% (2) uses a clearly non-legal cause / illegal lease clause, and\n% (3) misrepresents that tenant would be subject to eviction.\n\neviction_notice_given(owner1, tenant1, prem1).\ntenant_vacated_after_notice(tenant1, prem1).\n\nnotice_purports_compel_by_law(prem1).\nnotice_uses_clearly_not_provided_by_law_cause(prem1).\nnotice_misrepresents_tenant_subject_to_eviction(prem1).\n\n/* Helper predicate that succeeds when the factual statement is satisfied.\n   This ensures the encoded scenario actually constitutes an \"unlawful eviction\"\n   as captured by the statute translation below. */\nscenario_statement :-\n    scenario_state(nj),\n    scenario_focus_year(2021),\n    scenario_unlawful_eviction(owner1, tenant1, prem1).\n\nscenario_unlawful_eviction(Owner, Tenant, Premises) :-\n    owner(Owner),\n    tenant(Tenant),\n    premises(Premises),\n    statute_2a18_61_6_d_wrongful_eviction_notice(Owner, Tenant, Premises).\n\n% -------------------------\n% Statute translation\n% -------------------------\n\n/* NJ Rev Stat  2A:18-61.6(d) (2021) - wrongful eviction notice leading tenant to vacate.\n   If tenant vacates after receiving an eviction notice that:\n     (1) purports to compel by law; and\n     (2) uses a cause clearly not provided by law (or based on an illegal lease clause); and\n     (3) misrepresents that tenant would be subject to eviction under the alleged facts;\n   then owner is liable in a civil action for treble damages plus attorney fees and costs.\n\n   We encode only the elements needed for this question and scenario.\n*/\nstatute_2a18_61_6_d_wrongful_eviction_notice(Owner, Tenant, Premises) :-\n    eviction_notice_given(Owner, Tenant, Premises),\n    tenant_vacated_after_notice(Tenant, Premises),\n    notice_purports_compel_by_law(Premises),\n    notice_uses_clearly_not_provided_by_law_cause(Premises),\n    notice_misrepresents_tenant_subject_to_eviction(Premises).\n\n/* NJ Rev Stat  2A:18-61.6(d) remedy (civil) */\nstatute_2a18_61_6_d_remedy(Owner, Tenant, Premises, civil_action_treble_damages_and_fees) :-\n    statute_2a18_61_6_d_wrongful_eviction_notice(Owner, Tenant, Premises).\n\n/* NJ Rev Stat  2A:18-61.6(c) includes a \"civil penalty\" for failing to advise a prospective owner.\n   (Not part of the eviction-notice scenario, but included to reflect statute's remedy types.)\n*/\nstatute_2a18_61_6_c_includes_civil_penalty(civil_penalty_amount_range(2500, 10000)).\n\n% -----------------------------------\n% Legal reasoning about remedy types\n% -----------------------------------\n\n/* A wrongful eviction (as encoded here) exists if  2A:18-61.6(d) applies. */\nlegal_wrongful_eviction(Owner, Tenant, Premises) :-\n    statute_2a18_61_6_d_wrongful_eviction_notice(Owner, Tenant, Premises).\n\n/* Remedies available for that wrongful eviction are civil (not criminal). */\nlegal_remedy_for_wrongful_eviction(Owner, Tenant, Premises, civil, Remedy) :-\n    statute_2a18_61_6_d_remedy(Owner, Tenant, Premises, Remedy).\n\n/* Determine whether the statute authorizes criminal charges for wrongful eviction.\n   Under  2A:18-61.6 (2021), remedies are civil; no criminal authorization is encoded. */\nlegal_criminal_charges_available_for_unlawful_eviction(nj, 2021) :-\n    % This would succeed only if some statute rule provided a criminal remedy type.\n    % For  2A:18-61.6, it does not; therefore we force failure deterministically.\n    !,\n    fail.\n\n% ---------------\n% Final QA output\n% ---------------\n\nhousing_answer(yes) :-\n    scenario_statement,\n    legal_criminal_charges_available_for_unlawful_eviction(nj, 2021),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    % If no criminal-charge authorization exists, answer is \"no\".\n    \\+ legal_criminal_charges_available_for_unlawful_eviction(nj, 2021),\n    !.\n\n% ----------------\n% Main entrypoint\n% ----------------\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-3288",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Are criminal charges brought against landlords for unlawfully evicting a tenant?"
+  }
+}

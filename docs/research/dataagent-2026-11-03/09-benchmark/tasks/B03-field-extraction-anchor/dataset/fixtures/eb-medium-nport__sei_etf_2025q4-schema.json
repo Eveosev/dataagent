@@ -1,0 +1,212 @@
+{
+  "type": "object",
+  "properties": {
+    "filer_name": {
+      "type": "string",
+      "description": "Registrant name (e.g., 'VANGUARD INDEX FUNDS'). The legal entity that files; one CIK can host multiple Series."
+    },
+    "filer_lei": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Registrant LEI, 20 hex characters (Legal Entity Identifier). 'N/A' is a valid value when the registrant has no LEI."
+    },
+    "series_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "SEC-assigned Series identifier of the form Sxxxxxxxxx (10 chars). One Registrant can host many Series; this disambiguates the specific fund."
+    },
+    "series_name": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Human-readable name of the Series, e.g. 'VANGUARD TOTAL STOCK MARKET INDEX FUND'."
+    },
+    "fund_lei": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "LEI of the Series (the actual fund)."
+    },
+    "report_period_end": {
+      "type": "string",
+      "description": "Period of report, ISO date YYYY-MM-DD. Always a fiscal-quarter-end date because only the third month of each fiscal quarter is publicly disseminated."
+    },
+    "total_assets_usd": {
+      "type": "number",
+      "description": "Total fund assets in USD, as a non-negative decimal."
+    },
+    "total_liabilities_usd": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Total fund liabilities in USD. Output null when the cover page does not state this."
+    },
+    "net_assets_usd": {
+      "type": "number",
+      "description": "Total fund net assets in USD (assets minus liabilities)."
+    },
+    "holdings": {
+      "type": "array",
+      "description": "Schedule of investments: every position held by the fund as of report_period_end. Order is filer-defined and not significant for grading.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "issuer_name": {
+            "type": "string",
+            "description": "Issuer of the security. Verbatim as filed (e.g. 'Surgery Partners Inc')."
+          },
+          "issuer_lei": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Issuer LEI (20 chars) or 'N/A'. Required to be present in the XML even if 'N/A'."
+          },
+          "security_title": {
+            "type": "string",
+            "description": "Title of the issue, e.g. 'SURGERY PARTNERS' or 'TREASURY BILL 01/26 0.00000'. May differ from issuer_name (e.g. issuer 'United States Govt' / title 'Treasury Bill ...')."
+          },
+          "cusip": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "9-character CUSIP, uppercase. 'N/A' is permitted (foreign issuers without CUSIP). Compare case-insensitively."
+          },
+          "isin": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "12-character ISIN if present in the identifiers block. Optional alternative when CUSIP is 'N/A'."
+          },
+          "ticker": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Equity ticker if present in the identifiers block."
+          },
+          "balance": {
+            "type": "number",
+            "description": "Position size as a decimal. Interpreted via units: NS=number of shares, PA=principal amount, OU=other units."
+          },
+          "units": {
+            "type": "string",
+            "enum": [
+              "NS",
+              "PA",
+              "OU"
+            ],
+            "description": "NS=number of shares, PA=principal amount, OU=other units (then descOthUnits is set). Equity positions almost always NS; debt almost always PA."
+          },
+          "currency_code": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ISO 4217 currency code of the position (USD, EUR, GBP, ...). Most fund holdings are reported in USD even when the underlying is foreign-denominated; non-USD positions also carry an exchange rate. Output null when the row does not state a currency code."
+          },
+          "value_usd": {
+            "type": "number",
+            "description": "Position value in USD, decimal. PDF rendering may show with $ and commas; comparator must normalize."
+          },
+          "percent_of_net_assets": {
+            "type": "number",
+            "description": "Percent of net assets, stored as a percent value (not a fraction). E.g. 1.156308 means 1.156% (filer's $15.26M position in $1.32B net assets). Filers report to 4-6 decimals; tiny positions can read like 0.001840 = 0.0018%."
+          },
+          "payoff_profile": {
+            "type": "string",
+            "enum": [
+              "Long",
+              "Short",
+              "N/A"
+            ],
+            "description": "Direction of economic exposure."
+          },
+          "asset_category": {
+            "type": "string",
+            "enum": [
+              "EC",
+              "EP",
+              "DBT",
+              "ABS",
+              "STIV",
+              "RA",
+              "RB",
+              "DCO",
+              "DFE",
+              "DFW",
+              "DIR",
+              "DOP",
+              "DSW",
+              "DSO",
+              "DCR",
+              "OTH",
+              "LON"
+            ],
+            "description": "Asset class. EC=equity-common, EP=equity-preferred, DBT=debt, ABS=asset-backed, STIV=short-term investment vehicle, RA=repurchase agreement, etc. Most enterprise-relevant filings will see EC, DBT, STIV, ABS predominantly."
+          },
+          "issuer_category": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Issuer class (CORP, MUN, USGSE, UST, RF, PF, OTHER). May be empty for certain instrument types."
+          },
+          "investment_country": {
+            "type": "string",
+            "description": "ISO country code of the investment (US, GB, JP, ...)."
+          },
+          "is_restricted": {
+            "type": "string",
+            "enum": [
+              "Y",
+              "N"
+            ],
+            "description": "Restricted security flag (Rule 144 / private placement)."
+          },
+          "fair_value_level": {
+            "type": "string",
+            "enum": [
+              "1",
+              "2",
+              "3",
+              "N/A"
+            ],
+            "description": "US GAAP ASC 820 fair-value hierarchy. 1=quoted-active-market, 2=other-observable, 3=unobservable, N/A=not applicable."
+          }
+        },
+        "required": [
+          "issuer_name",
+          "issuer_lei",
+          "security_title",
+          "cusip",
+          "balance",
+          "units",
+          "value_usd",
+          "percent_of_net_assets",
+          "payoff_profile",
+          "asset_category",
+          "investment_country",
+          "is_restricted",
+          "fair_value_level"
+        ]
+      }
+    }
+  },
+  "required": [
+    "filer_name",
+    "report_period_end",
+    "total_assets_usd",
+    "net_assets_usd",
+    "holdings"
+  ]
+}

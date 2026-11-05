@@ -1,0 +1,1 @@
+List the top 10 countries with respect to the total amount of long-term external debt in descending order, excluding those without a specified region.

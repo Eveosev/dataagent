@@ -1,0 +1,14 @@
+# housing / whole
+
+## 制度原文
+
+[1] WY Stat § 1-21-1001 (2021)
+1-21-1001. Jurisdiction of circuit courts.| Any circuit court within the judicial district may inquire against those who make unlawful and forcible entry into lands and tenements and detain the same, or against those who, having a lawful and peaceable entry into lands or tenements, unlawfully or by force hold the same. If it is found that an unlawful and forcible entry was made and the lands or tenements are held by force, or that after a lawful entry the lands are held unlawfully, the judge shall require restitution to the complaining party.
+
+## 事实
+
+
+
+## 问题
+
+Are eviction cases first heard in county court?

@@ -1,0 +1,52 @@
+{
+  "case_id": "B03-eb-0146",
+  "task_id": "B03",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://extractbench/docs/short/caterpillar_spec_sheet_330_excavator_corrupted.pdf",
+      "digest": null
+    },
+    {
+      "kind": "schema",
+      "ref": "fixtures/eb-short-caterpillar_spec_sheet_330_excavator_corrupted-schema.json",
+      "digest": null
+    },
+    {
+      "kind": "rules",
+      "ref": "fixtures/eb-short-caterpillar_spec_sheet_330_excavator_corrupted-rules.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-eb-0146.json"
+  },
+  "evidence": [
+    "bench://extractbench/docs/short/caterpillar_spec_sheet_330_excavator_corrupted.pdf",
+    "fixtures/eb-short-caterpillar_spec_sheet_330_excavator_corrupted-schema.json",
+    "fixtures/eb-short-caterpillar_spec_sheet_330_excavator_corrupted-rules.md"
+  ],
+  "tags": [
+    "extractbench",
+    "short",
+    "tag:source:real",
+    "tag:challenge:T3.a",
+    "tag:perception:P1",
+    "tag:length:short",
+    "tag:slice:task_slice",
+    "tag:domain:D5",
+    "fields:3"
+  ],
+  "source": "eb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

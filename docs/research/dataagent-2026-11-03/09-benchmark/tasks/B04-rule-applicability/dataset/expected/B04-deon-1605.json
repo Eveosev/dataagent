@@ -1,0 +1,41 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_1556a00e",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "jurisdiction",
+    "focus_year",
+    "scenario_case",
+    "case_type",
+    "filed_as_small_claim",
+    "amount_in_controversy",
+    "case_principal_reliefs",
+    "plaintiff_requested_assignment_to_magistrate",
+    "assigned_to_magistrate",
+    "defendant_denies_plaintiff_title_in_written_answer",
+    "appealed_from_magistrate_to_district",
+    "all_items_satisfy_predicate",
+    "call",
+    "statute_7a210_allowed_principal_relief",
+    "statute_7a210_small_claim_action",
+    "statute_7a222_trial_of_small_claim_before_magistrate",
+    "statute_7a223_title_denial_transfers_to_district_judge",
+    "statute_42_68_proceeding_in_small_claims_track",
+    "statute_42_68_proceeding_in_district_court_track",
+    "statute_7a305_facilities_fee",
+    "statute_7a305_general_court_of_justice_fee",
+    "high_court_forum",
+    "first_hearing_forum",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: North Carolina\n    Focus year: 2021\n    Question: \"Are eviction cases first heard in high court?\"\n*/\n\n/* =========================\n   Scenario Facts (Question)\n   ========================= */\n\njurisdiction(north_carolina).\nfocus_year(2021).\n\n/* We model an \"eviction case\" as a North Carolina summary ejectment action.\n   The question is about where such a case is FIRST heard.\n*/\nscenario_case(case1).\n\ncase_type(case1, summary_ejectment).\n\n/* Facts chosen to reflect the typical NC eviction pathway: summary ejectment\n   brought as a small claim and assigned to a magistrate. */\nfiled_as_small_claim(case1, yes).\namount_in_controversy(case1, 5000).                 % <= $10,000\ncase_principal_reliefs(case1, [summary_ejectment]).  % principal relief is summary ejectment\nplaintiff_requested_assignment_to_magistrate(case1, yes).\nassigned_to_magistrate(case1, yes).\n\n/* Not a title-dispute transfer scenario */\ndefendant_denies_plaintiff_title_in_written_answer(case1, no).\n\n/* Not an appeal posture in the scenario */\nappealed_from_magistrate_to_district(case1, no).\n\n/* scenario_statement/0 succeeds when the encoded factual statement holds. */\nscenario_statement :-\n    jurisdiction(north_carolina),\n    focus_year(2021),\n    scenario_case(Case),\n    case_type(Case, summary_ejectment),\n    filed_as_small_claim(Case, yes),\n    amount_in_controversy(Case, Amt),\n    Amt =< 10000,\n    case_principal_reliefs(Case, Reliefs),\n    Reliefs \\= [],\n    plaintiff_requested_assignment_to_magistrate(Case, yes),\n    assigned_to_magistrate(Case, yes),\n    defendant_denies_plaintiff_title_in_written_answer(Case, no),\n    appealed_from_magistrate_to_district(Case, no).\n\n/* =========================\n   Basic List Utilities\n   ========================= */\n\nall_items_satisfy_predicate(_, []) :- !.\nall_items_satisfy_predicate(Pred, [H|T]) :-\n    call(Pred, H),\n    all_items_satisfy_predicate(Pred, T),\n    !.\n\n/* =========================\n   Statute Translations\n   ========================= */\n\n/* --- NC Gen Stat  7A-210 (2021): Small claim action defined. --- */\n\n/* Allowed principal relief types in a \"small claim action\". */\nstatute_7a210_allowed_principal_relief(monetary) :- !.\nstatute_7a210_allowed_principal_relief(recovery_specific_personal_property) :- !.\nstatute_7a210_allowed_principal_relief(summary_ejectment) :- !.\n\n/* A case qualifies as a \"small claim action\" if:\n   (1) amount in controversy <= 10,000\n   (2) only principal relief prayed is among allowed types (or combination)\n   (3) plaintiff requested assignment to a magistrate\n*/\nstatute_7a210_small_claim_action(Case) :-\n    amount_in_controversy(Case, Amt),\n    Amt =< 10000,\n    case_principal_reliefs(Case, Reliefs),\n    Reliefs \\= [],\n    all_items_satisfy_predicate(statute_7a210_allowed_principal_relief, Reliefs),\n    plaintiff_requested_assignment_to_magistrate(Case, yes),\n    !.\nstatute_7a210_small_claim_action(_) :-\n    fail.\n\n/* --- NC Gen Stat  7A-222 (2021): Trial of a small claim before a magistrate. --- */\n\n/* Encodes the general rule: trial of a small claim action is before a magistrate. */\nstatute_7a222_trial_of_small_claim_before_magistrate(Case) :-\n    statute_7a210_small_claim_action(Case),\n    assigned_to_magistrate(Case, yes),\n    !.\nstatute_7a222_trial_of_small_claim_before_magistrate(_) :-\n    fail.\n\n/* --- NC Gen Stat  7A-223(a) (2021): Summary ejectment small claim assigned to magistrate,\n       but if defendant denies title in written answer -> placed on district court civil issue docket. --- */\n\nstatute_7a223_title_denial_transfers_to_district_judge(Case) :-\n    case_type(Case, summary_ejectment),\n    statute_7a210_small_claim_action(Case),\n    assigned_to_magistrate(Case, yes),\n    defendant_denies_plaintiff_title_in_written_answer(Case, yes),\n    !.\nstatute_7a223_title_denial_transfers_to_district_judge(_) :-\n    fail.\n\n/* --- NC Gen Stat  42-68 (2021): Expedited proceedings.\n       - If filed as small claim -> expedited small-claims process applies.\n       - If filed initially in district court OR appealed from magistrate to district court -> district-court procedure applies.\n*/\n\nstatute_42_68_proceeding_in_small_claims_track(Case) :-\n    filed_as_small_claim(Case, yes),\n    !.\nstatute_42_68_proceeding_in_small_claims_track(_) :-\n    fail.\n\nstatute_42_68_proceeding_in_district_court_track(Case) :-\n    ( filed_as_small_claim(Case, no)\n    ; appealed_from_magistrate_to_district(Case, yes)\n    ),\n    !.\nstatute_42_68_proceeding_in_district_court_track(_) :-\n    fail.\n\n/* --- NC Gen Stat  7A-305 (2021): Costs in civil actions (partial, relevant encoding). --- */\n\nstatute_7a305_facilities_fee(magistrate, 12) :- !.\nstatute_7a305_facilities_fee(district_court, 16) :- !.\nstatute_7a305_facilities_fee(superior_court, 16) :- !.\n\nstatute_7a305_general_court_of_justice_fee(assigned_to_magistrate, 80) :- !.\nstatute_7a305_general_court_of_justice_fee(district_court, 130) :- !.\nstatute_7a305_general_court_of_justice_fee(superior_court, 180) :- !.\n\n/* =========================\n   Derived Legal Reasoning\n   ========================= */\n\n/* We treat \"high court\" in this question as North Carolina Superior Court. */\nhigh_court_forum(superior_court) :- !.\nhigh_court_forum(_) :- fail.\n\n/* Determine the forum of the FIRST hearing/trial based on the encoded statutes. */\nfirst_hearing_forum(Case, district_court) :-\n    /* If title is denied by written answer, small-claim summary ejectment is moved to district court */\n    statute_7a223_title_denial_transfers_to_district_judge(Case),\n    !.\nfirst_hearing_forum(Case, district_court) :-\n    /* If filed initially in district court (not small claim), or is in district court on appeal */\n    statute_42_68_proceeding_in_district_court_track(Case),\n    !.\nfirst_hearing_forum(Case, magistrate) :-\n    /* Otherwise, a qualifying small claim assigned to magistrate is tried before the magistrate */\n    statute_7a222_trial_of_small_claim_before_magistrate(Case),\n    !.\nfirst_hearing_forum(_, unknown) :-\n    /* Catch-all to keep determinism even if facts are incomplete */\n    !.\n\n/* =========================\n   Question Answering\n   ========================= */\n\nhousing_answer(Result) :-\n    scenario_statement,\n    scenario_case(Case),\n    first_hearing_forum(Case, Forum),\n    ( high_court_forum(Forum)\n    -> Result = yes\n    ;  Result = no\n    ),\n    !.\n\n/* =========================\n   Main Entrypoint\n   ========================= */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-1605",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Are eviction cases first heard in high court?"
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "redshift",
+  "pipeline": "music_tracker",
+  "data_model": {
+    "models": [
+      {
+        "name": "music_tracker__tags",
+        "description": "Each record represents a unique tag.",
+        "columns": [
+          {
+            "name": "tags",
+            "description": "The tag of the music, excluding the Null tag."
+          },
+          {
+            "name": "artist_released_most_singles",
+            "description": "The artist who has released the most singles with the tag, with ties broken by the ascending order of the artist"
+          },
+          {
+            "name": "total_album_download",
+            "description": "The total number of album downloads of the tag, replace NULL values with 0."
+          },
+          {
+            "name": "amount_of_downloads",
+            "description": "The amount of downloads of the tag, replace NULL values with 0."
+          },
+          {
+            "name": "oldest_single_release_title",
+            "description": "The title of the oldest single release of the tag, with ties broken by the ascending order of the single title."
+          },
+          {
+            "name": "most_downloaded_release_title",
+            "description": "The title of the most downloaded release of the tag, with ties broken by the ascending order of the release title."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    redshift_definition_id: f7a7d195-377f-cf5b-70a5-be6b819019dc\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: music_tracker\n    sync_mode: full_refresh_append\n    tables:\n    - torrents\npostgres:\n  config:\n    database: music_tracker\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - tags\n    user: postgres\nredshift:\n  config:\n    host: <redshift_hostname>\n    port: <redshift_port>\n    database: <redshift_db>\n    username: <redshift_username>\n    password: <redshift_pwd>\n    schema: music_tracker\n    s3_bucket_name: <redshift_s3_bucket>\n    s3_bucket_region: <redshift_s3_region>\n    access_key_id: <redshift_s3_access_key>\n    secret_access_key: <redshift_s3_secret_key>\n",
+  "case_id": "B14-elt-0159",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "music_tracker__tags",
+        "columns": [
+          "tags",
+          "artist_released_most_singles",
+          "total_album_download",
+          "amount_of_downloads",
+          "oldest_single_release_title",
+          "most_downloaded_release_title"
+        ]
+      }
+    ]
+  }
+}

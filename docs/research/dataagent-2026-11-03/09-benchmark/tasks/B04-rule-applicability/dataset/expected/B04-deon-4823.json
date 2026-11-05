@@ -1,0 +1,34 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_f39c59a6",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "date_geq",
+    "after_june_30_2021",
+    "statute_applies_small_claims_2021",
+    "filed_date",
+    "statute_small_claims_jurisdiction_possessory",
+    "possessory_action_between_landlord_tenant",
+    "rent_due_at_filing",
+    "number",
+    "statute_small_claims_jurisdiction_emergency_possessory",
+    "emergency_possessory_action_under_ic_32_31_6",
+    "small_claims_docket_has_jurisdiction",
+    "case",
+    "state",
+    "focus_year",
+    "court_type",
+    "first_heard_in",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    State: Indiana\n    Focus year: 2021\n\n    Question: Are eviction cases first heard in magistrates court?\n*/\n\n% -----------------------------\n% Basic helpers (dates, numbers)\n% -----------------------------\n\n% date_geq(Date1, Date2) succeeds if Date1 is on/after Date2.\ndate_geq(date(Y1,M1,D1), date(Y2,M2,D2)) :-\n    (  Y1 > Y2\n    ;  Y1 =:= Y2, M1 > M2\n    ;  Y1 =:= Y2, M1 =:= M2, D1 >= D2\n    ).\n\n% After June 30, 2021 means on/after July 1, 2021.\nafter_june_30_2021(Date) :-\n    date_geq(Date, date(2021,7,1)).\n\n% -----------------------------\n% Statute translations (jurisdiction rules)\n% -----------------------------\n\n/*\n  IN Code  33-28-3-4 (2021) (Circuit courts) and\n  IN Code  33-29-2-4 (2021) (Superior courts)\n\n  Both provide (after June 30, 2021) that the small claims docket\n  has jurisdiction over:\n   (2) Possessory actions between landlord and tenant where\n       rent due at filing <= $10,000.\n   (3) Emergency possessory actions under IC 32-31-6.\n*/\n\n% statute_applies_small_claims_2021(Case) captures the \"applies after June 30, 2021\" condition.\nstatute_applies_small_claims_2021(Case) :-\n    filed_date(Case, Date),\n    after_june_30_2021(Date).\n\n% statute_small_claims_jurisdiction_possessory(Case) captures jurisdiction for possessory actions with rent due <= 10,000.\n% Cites: IN Code  33-28-3-4(b)(2) (2021); IN Code  33-29-2-4(b)(2) (2021).\nstatute_small_claims_jurisdiction_possessory(Case) :-\n    statute_applies_small_claims_2021(Case),\n    possessory_action_between_landlord_tenant(Case),\n    rent_due_at_filing(Case, RentDue),\n    number(RentDue),\n    RentDue =< 10000.\n\n% statute_small_claims_jurisdiction_emergency_possessory(Case) captures jurisdiction for emergency possessory actions.\n% Cites: IN Code  33-28-3-4(b)(3) (2021); IN Code  33-29-2-4(b)(3) (2021).\nstatute_small_claims_jurisdiction_emergency_possessory(Case) :-\n    statute_applies_small_claims_2021(Case),\n    emergency_possessory_action_under_ic_32_31_6(Case).\n\n% small_claims_docket_has_jurisdiction(Case) is true if either statutory jurisdiction basis applies.\nsmall_claims_docket_has_jurisdiction(Case) :-\n    statute_small_claims_jurisdiction_possessory(Case),\n    !.\nsmall_claims_docket_has_jurisdiction(Case) :-\n    statute_small_claims_jurisdiction_emergency_possessory(Case).\n\n% -----------------------------\n% Scenario (facts from the question)\n% -----------------------------\n\n% The question is about an eviction case.\n% We model an \"eviction case\" as a landlord-tenant possessory action.\ncase(case1).\nstate(indiana).\nfocus_year(2021).\n\n% Filed after June 30, 2021 (statutes apply).\nfiled_date(case1, date(2021,7,15)).\n\n% Eviction/possessory action between landlord and tenant.\npossessory_action_between_landlord_tenant(case1).\n\n% Rent due at the time of filing (chosen within the statutory threshold to let the statutes determine forum).\nrent_due_at_filing(case1, 1500).\n\n% Not an emergency possessory action in this scenario (no fact asserted).\n% emergency_possessory_action_under_ic_32_31_6(case1).  % (intentionally absent)\n\n% scenario_statement/0 succeeds when the factual statement (an eviction case filed in 2021) is satisfied.\nscenario_statement :-\n    state(indiana),\n    focus_year(2021),\n    case(case1),\n    possessory_action_between_landlord_tenant(case1).\n\n% -----------------------------\n% Reasoning: where the case is first heard\n% -----------------------------\n\n% We treat \"magistrates court\" as a distinct forum label from \"small claims docket\".\ncourt_type(small_claims_docket).\ncourt_type(magistrates_court).\ncourt_type(other_court).\n\n% first_heard_in(Case, CourtType) derived from jurisdiction in the statutes.\nfirst_heard_in(Case, small_claims_docket) :-\n    small_claims_docket_has_jurisdiction(Case),\n    !.\nfirst_heard_in(_Case, other_court).\n\n% -----------------------------\n% Answer the question\n% -----------------------------\n\nhousing_answer(yes) :-\n    scenario_statement,\n    first_heard_in(case1, magistrates_court),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n% -----------------------------\n% Main\n% -----------------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-4823",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Are eviction cases first heard in magistrates court?"
+  }
+}

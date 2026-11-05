@@ -1,0 +1,38 @@
+{
+  "case_id": "B05-spider2-0032",
+  "task_id": "B05",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "question",
+      "ref": "fixtures/spider2-sf_bq194.md",
+      "digest": null
+    },
+    {
+      "kind": "corpus",
+      "ref": "bench://spider2-lite/spider2-lite.jsonl",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B05-spider2-0032.json"
+  },
+  "evidence": [
+    "fixtures/spider2-sf_bq194.md"
+  ],
+  "tags": [
+    "spider2",
+    "GITHUB_REPOS"
+  ],
+  "source": "spider2",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

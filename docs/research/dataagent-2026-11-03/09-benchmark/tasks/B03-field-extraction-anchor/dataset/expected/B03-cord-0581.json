@@ -1,0 +1,78 @@
+{
+  "source": "naver-clova-ix/cord-v2",
+  "split": "train",
+  "index": 192,
+  "gt_parse": {
+    "menu": {
+      "nm": "KOPI CAM",
+      "cnt": "1",
+      "price": "20,000"
+    },
+    "total": {
+      "total_price": "20,000",
+      "cashprice": "20,000"
+    }
+  },
+  "case_id": "B03-cord-0581",
+  "expected": {
+    "kind": "json",
+    "value": {
+      "menu": {
+        "nm": "KOPI CAM",
+        "cnt": "1",
+        "price": "20,000"
+      },
+      "total": {
+        "total_price": "20,000",
+        "cashprice": "20,000"
+      }
+    },
+    "fields": {
+      "menu.nm": "KOPI CAM",
+      "menu.cnt": "1",
+      "menu.price": "20,000",
+      "total.total_price": "20,000",
+      "total.cashprice": "20,000"
+    },
+    "anchored_fields": 0,
+    "no_anchor_fields": 5,
+    "spans": [
+      {
+        "field": "menu.nm",
+        "text": "KOPI CAM",
+        "page": 1
+      },
+      {
+        "field": "menu.cnt",
+        "text": "1",
+        "page": 1
+      },
+      {
+        "field": "menu.price",
+        "text": "20,000",
+        "page": 1
+      },
+      {
+        "field": "total.total_price",
+        "text": "20,000",
+        "page": 1
+      },
+      {
+        "field": "total.cashprice",
+        "text": "20,000",
+        "page": 1
+      }
+    ],
+    "pages": {
+      "menu.nm": 1,
+      "menu.cnt": 1,
+      "menu.price": 1,
+      "total.total_price": 1,
+      "total.cashprice": 1
+    },
+    "evidence_gold": {
+      "source": "cord-valid-line",
+      "version": 1
+    }
+  }
+}

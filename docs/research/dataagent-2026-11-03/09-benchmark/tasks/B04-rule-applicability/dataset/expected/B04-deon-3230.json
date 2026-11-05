@@ -1,0 +1,38 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_00ea16e6",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "state",
+    "focus_year",
+    "public_emergency_declared",
+    "eviction_case",
+    "writ_of_restitution_or_eviction",
+    "execution_of_writ_pending",
+    "dow_from_index",
+    "day_of_week",
+    "integer",
+    "is_weekend",
+    "legal_holiday",
+    "judicial_day",
+    "next_judicial_day_after",
+    "statute_ors_105_159_period_start_day",
+    "statute_ors_105_159_period_end_day",
+    "statute_ors_105_159_four_day_period",
+    "statute_ors_105_159_request_after_expiration",
+    "statute_ors_105_159_within_60_days_of_later",
+    "statute_ors_105_159_clerk_may_issue_writ",
+    "statutory_postponement_trigger",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    State: Oregon\n    Focus year: 2021\n\n    Question: Does a public emergency require postponement of the execution of a writ of eviction?\n\n    Source statute encoded:\n      [1] OR Rev Stat  105.159 (2021)\n*/\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Scenario facts (encode the question's factual statement)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nstate(oregon).\nfocus_year(2021).\n\n% Factual statement: a public emergency exists (type left generic).\npublic_emergency_declared(oregon, public_emergency).\n\n% Factual statement: there is an eviction writ whose execution is pending/scheduled.\neviction_case(case1).\nwrit_of_restitution_or_eviction(case1).\nexecution_of_writ_pending(case1).\n\n/* Helper predicate that succeeds exactly when the scenario's factual statement holds. */\nscenario_statement :-\n    state(oregon),\n    focus_year(2021),\n    public_emergency_declared(oregon, public_emergency),\n    eviction_case(case1),\n    writ_of_restitution_or_eviction(case1),\n    execution_of_writ_pending(case1).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Basic calendar helpers (self-contained, integer \"Day\" timeline)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n% Day-of-week mapping using Day mod 7, where Day=0 is Monday.\ndow_from_index(0, mon).\ndow_from_index(1, tue).\ndow_from_index(2, wed).\ndow_from_index(3, thu).\ndow_from_index(4, fri).\ndow_from_index(5, sat).\ndow_from_index(6, sun).\n\nday_of_week(Day, Dow) :-\n    integer(Day),\n    Index is Day mod 7,\n    dow_from_index(Index, Dow).\n\nis_weekend(Day) :-\n    day_of_week(Day, sat),\n    !.\nis_weekend(Day) :-\n    day_of_week(Day, sun).\n\n% Legal holidays are not specified in the question; keep an explicit predicate.\n% (No holidays asserted for the scenario.)\nlegal_holiday(_Day) :- fail.\n\njudicial_day(Day) :-\n    integer(Day),\n    \\+ is_weekend(Day),\n    \\+ legal_holiday(Day).\n\nnext_judicial_day_after(Day, NextJudicialDay) :-\n    integer(Day),\n    Day1 is Day + 1,\n    (   judicial_day(Day1)\n    ->  NextJudicialDay = Day1\n    ;   next_judicial_day_after(Day1, NextJudicialDay)\n    ).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Statute encoding: OR Rev Stat  105.159 (2021)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n/*\n  ORS 105.159(1)(a): four-day period commences at 12:01 a.m. on the day after\n  mailing/service (including weekend/holiday). We model the \"commence day\"\n  as StartDay = MailServiceDay + 1.\n*/\nstatute_ors_105_159_period_start_day(MailServiceDay, StartDay) :-\n    integer(MailServiceDay),\n    StartDay is MailServiceDay + 1.\n\n/*\n  ORS 105.159(1)(b): ends at 11:59 p.m. on the fourth calendar day after mailing/service,\n  except if the fourth day is Sat/Sun/holiday, it ends at 11:59 p.m. on the day\n  preceding the next judicial day.\n\n  We model the \"end day\" as an integer EndDay.\n*/\nstatute_ors_105_159_period_end_day(MailServiceDay, EndDay) :-\n    integer(MailServiceDay),\n    CandidateEndDay is MailServiceDay + 4,\n    (   judicial_day(CandidateEndDay)\n    ->  EndDay = CandidateEndDay\n    ;   next_judicial_day_after(CandidateEndDay, NextJudicialDay),\n        EndDay is NextJudicialDay - 1\n    ).\n\n/* Convenience: full four-day period window. */\nstatute_ors_105_159_four_day_period(MailServiceDay, StartDay, EndDay) :-\n    statute_ors_105_159_period_start_day(MailServiceDay, StartDay),\n    statute_ors_105_159_period_end_day(MailServiceDay, EndDay).\n\n/*\n  ORS 105.159(2): after expiration of the period in the notice of restitution,\n  plaintiff may request clerk issue writ.\n\n  We interpret \"after expiration\" as RequestDay > EndDay.\n*/\nstatute_ors_105_159_request_after_expiration(MailServiceDay, RequestDay) :-\n    integer(MailServiceDay),\n    integer(RequestDay),\n    statute_ors_105_159_period_end_day(MailServiceDay, EndDay),\n    RequestDay > EndDay.\n\n/*\n  ORS 105.159(3): unless judgment otherwise provides, clerk may not issue notice/writ\n  more than 60 days after judgment entered OR after any possession date specified,\n  whichever is later.\n\n  We model later-of(JudgmentDay, PossessionDay) and require RequestDay - Later =< 60.\n*/\nstatute_ors_105_159_within_60_days_of_later(JudgmentDay, PossessionDay, RequestDay) :-\n    integer(JudgmentDay),\n    integer(PossessionDay),\n    integer(RequestDay),\n    (   JudgmentDay >= PossessionDay\n    ->  Later is JudgmentDay\n    ;   Later is PossessionDay\n    ),\n    Delta is RequestDay - Later,\n    Delta =< 60.\n\n/*\n  Combined permission to issue writ under ORS 105.159(2)-(3),\n  ignoring fee payment and \"judgment otherwise provides\" exceptions (not in facts).\n*/\nstatute_ors_105_159_clerk_may_issue_writ(MailServiceDay, JudgmentDay, PossessionDay, RequestDay) :-\n    statute_ors_105_159_request_after_expiration(MailServiceDay, RequestDay),\n    statute_ors_105_159_within_60_days_of_later(JudgmentDay, PossessionDay, RequestDay).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Reasoning: Does a public emergency require postponement of writ execution?\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n/*\n  The statute provided (ORS 105.159) regulates timing for the restitution notice period\n  and the clerk's issuance window. It does not create any rule that a \"public emergency\"\n  requires postponing the execution/enforcement of a writ.\n\n  We represent \"statutory postponement triggers\" explicitly. Because ORS 105.159 contains\n  no emergency-based postponement trigger, this predicate has no successful cases.\n*/\nstatutory_postponement_trigger(_Trigger) :-\n    fail.\n\n/* Postponement due to public emergency would require an emergency-based trigger. */\npostponement_required_due_to_public_emergency :-\n    public_emergency_declared(_State, _Type),\n    statutory_postponement_trigger(public_emergency).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Final answer\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nhousing_answer(yes) :-\n    scenario_statement,\n    postponement_required_due_to_public_emergency,\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-3230",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Does a public emergency require postponement of the execution of a write of eviction?"
+  }
+}

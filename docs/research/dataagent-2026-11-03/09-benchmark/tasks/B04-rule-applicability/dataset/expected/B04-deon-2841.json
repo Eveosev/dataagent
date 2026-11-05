@@ -1,0 +1,43 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_c3df94fd",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "state",
+    "focus_year",
+    "landlord",
+    "tenant",
+    "dwelling_unit_subject_to_118a",
+    "failed_basic_or_contractual_obligations_under_118a",
+    "tenant_continues_in_possession",
+    "landlord_consents_to_possession",
+    "notice_served_days",
+    "notice_expired",
+    "tenant_is_60_or_older",
+    "tenant_has_disability",
+    "tenant_is_shutdown_worker_or_household",
+    "nrs_118a315_exception_applies",
+    "statute_40_251_notice_days_required",
+    "statute_40_251_extension_requestable",
+    "statute_40_251_shorter_notice_obligations_path_applies",
+    "statute_40_251_shutdown_extension_mandatory",
+    "statute_40_251_unlawful_detainer",
+    "statute_40_2512_wait_days",
+    "statute_40_2512_unlawful_detainer",
+    "statute_40_2514_notice_days_required",
+    "statute_40_2514_unlawful_detainer",
+    "unlawful_detainer",
+    "landlord_can_evict_for_ground",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: Nevada\n    Focus year: 2021\n\n    Question: Can a landlord evict a tenant for violating statutory tenant obligations?\n\n    This program encodes the relevant parts of:\n      - NV Rev Stat  40.251 (2021)\n      - NV Rev Stat  40.2512 (2021)\n      - NV Rev Stat  40.2514 (2021)\n\n    And encodes a factual scenario consistent with the question:\n      - Tenant violated statutory tenant obligations (modeled as failure to perform tenant's basic/contractual\n        obligations under NRS Chapter 118A)\n      - Proper 5-day notice served and expired\n      - Tenant remains in possession without landlord consent\n*/\n\n/* =========================\n   Basic domain facts\n   ========================= */\n\nstate(nevada).\nfocus_year(2021).\n\n/* Parties */\nlandlord(l1).\ntenant(t1).\n\n/* Premises / tenancy characterization */\ndwelling_unit_subject_to_118a(t1).  % dwelling unit subject to NRS chapter 118A\n\n/* Scenario facts: \"violating statutory tenant obligations\" */\nfailed_basic_or_contractual_obligations_under_118a(t1).\n\n/* Possession and consent */\ntenant_continues_in_possession(t1).\nlandlord_consents_to_possession(l1, t1) :- fail.  % explicitly no consent (closed-world style)\n\n/* Notice facts */\nnotice_served_days(l1, t1, obligations_118a, 5).\nnotice_expired(l1, t1, obligations_118a).\n\n/* Optional facts used by statute exceptions; not present in this scenario */\ntenant_is_60_or_older(_T) :- fail.\ntenant_has_disability(_T) :- fail.\ntenant_is_shutdown_worker_or_household(_T) :- fail.\nnrs_118a315_exception_applies(_T) :- fail.  % referenced by statutes as an exception gate\n\n/* =========================\n   Scenario statement (facts summary)\n   ========================= */\n\nscenario_statement :-\n    state(nevada),\n    focus_year(2021),\n    landlord(l1),\n    tenant(t1),\n    dwelling_unit_subject_to_118a(t1),\n    failed_basic_or_contractual_obligations_under_118a(t1),\n    notice_served_days(l1, t1, obligations_118a, Days),\n    Days >= 5,\n    notice_expired(l1, t1, obligations_118a),\n    tenant_continues_in_possession(t1),\n    \\+ landlord_consents_to_possession(l1, t1).\n\n/* =========================\n   Statute translations\n   ========================= */\n\n/* ---- NV Rev Stat  40.251 (2021) ----\n   Unlawful detainer for certain holdovers, including:\n   40.251(1)(b)(2): dwelling unit subject to 118A; 5+ day notice where tenant failed to perform\n                   basic/contractual obligations under chapter 118A; tenant remains without consent\n                   after expiration of notice.\n*/\n\n% 40.251(1)(b)(2): required notice days for 118A obligation breach holdover\nstatute_40_251_notice_days_required(obligations_118a, 5).\n\n% 40.251(1)(a) general periodic tenancies (encoded for completeness)\nstatute_40_251_notice_days_required(week_to_week, 7).\nstatute_40_251_notice_days_required(periodic_other_than_week_to_week, 30).\nstatute_40_251_notice_days_required(tenancy_at_will, 5).\n\n% 40.251(2): extension for 60+ or disability for periodic tenancy under (a) or (b),\n% except landlord need not allow extension if shorter notice under 40.251(1)(b)(2) applies.\nstatute_40_251_extension_requestable(Tenant) :-\n    ( tenant_is_60_or_older(Tenant)\n    ; tenant_has_disability(Tenant)\n    ),\n    % Extension applies only to periodic tenancy notices, not to the 5-day obligations notice:\n    \\+ statute_40_251_shorter_notice_obligations_path_applies(Tenant).\n\nstatute_40_251_shorter_notice_obligations_path_applies(Tenant) :-\n    dwelling_unit_subject_to_118a(Tenant),\n    failed_basic_or_contractual_obligations_under_118a(Tenant).\n\n% 40.251(3)-(4): shutdown-related extension (encoded at a high level)\nstatute_40_251_shutdown_extension_mandatory(Tenant) :-\n    tenant_is_shutdown_worker_or_household(Tenant),\n    \\+ nrs_118a315_exception_applies(Tenant).\n\n/* Core unlawful detainer rule for 40.251(1)(b)(2) */\nstatute_40_251_unlawful_detainer(Landlord, Tenant, obligations_118a) :-\n    dwelling_unit_subject_to_118a(Tenant),\n    failed_basic_or_contractual_obligations_under_118a(Tenant),\n    statute_40_251_notice_days_required(obligations_118a, RequiredDays),\n    notice_served_days(Landlord, Tenant, obligations_118a, ServedDays),\n    ServedDays >= RequiredDays,\n    notice_expired(Landlord, Tenant, obligations_118a),\n    tenant_continues_in_possession(Tenant),\n    \\+ landlord_consents_to_possession(Landlord, Tenant).\n\n/* ---- NV Rev Stat  40.2512 (2021) ----\n   Unlawful detainer for nonpayment after alternative notice and waiting period,\n   with shutdown-worker exception.\n   (Encoded generally; not used by this scenario.)\n*/\nstatute_40_2512_wait_days(commercial_premises, 5).\nstatute_40_2512_wait_days(real_property_other_than_commercial, 7).  % judicial days\nstatute_40_2512_wait_days(mobile_home_lot, 10).\n\nstatute_40_2512_unlawful_detainer(_Landlord, Tenant, nonpayment_of_rent) :-\n    % Placeholder structure; requires scenario facts that are not asserted here.\n    \\+ nrs_118a315_exception_applies(Tenant),\n    \\+ tenant_is_shutdown_worker_or_household(Tenant),\n    fail.\n\n/* ---- NV Rev Stat  40.2514 (2021) ----\n   Unlawful detainer for certain misconduct after 3-day notice to surrender.\n   (Encoded generally; not used by this scenario.)\n*/\nstatute_40_2514_notice_days_required(misconduct_40_2514, 3).\n\nstatute_40_2514_unlawful_detainer(_Landlord, _Tenant, misconduct_40_2514) :-\n    fail.\n\n/* =========================\n   Derived legal conclusions\n   ========================= */\n\n% A tenant is in \"unlawful detainer\" if any encoded statute declares it.\nunlawful_detainer(Landlord, Tenant, Ground) :-\n    statute_40_251_unlawful_detainer(Landlord, Tenant, Ground).\n\nunlawful_detainer(Landlord, Tenant, Ground) :-\n    statute_40_2512_unlawful_detainer(Landlord, Tenant, Ground).\n\nunlawful_detainer(Landlord, Tenant, Ground) :-\n    statute_40_2514_unlawful_detainer(Landlord, Tenant, Ground).\n\n% If unlawful detainer is established, landlord can pursue eviction (simplified).\nlandlord_can_evict_for_ground(Landlord, Tenant, Ground) :-\n    unlawful_detainer(Landlord, Tenant, Ground).\n\n/* =========================\n   Answer\n   ========================= */\n\nhousing_answer(Result) :-\n    (   scenario_statement,\n        landlord_can_evict_for_ground(l1, t1, _Ground)\n    ->  Result = yes\n    ;   Result = no\n    ),\n    !.\n\n/* =========================\n   Main\n   ========================= */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-2841",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Can a landlord evict a tenant for violating statutory tenant obligations?"
+  }
+}

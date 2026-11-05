@@ -1,0 +1,1 @@
+Which columns in the payments dataset contain missing data? A. ip_address, B. email_address, C. both ip_address and email_address, D. neither

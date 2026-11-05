@@ -1,0 +1,67 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "snowflake",
+  "pipeline": "simpson_episodes",
+  "data_model": {
+    "models": [
+      {
+        "name": "simpson_episodes__episode",
+        "description": "Each record represents an episode.",
+        "columns": [
+          {
+            "name": "episode_id",
+            "description": "Unique identifier for the episode."
+          },
+          {
+            "name": "episode_title",
+            "description": "The title of the episode."
+          },
+          {
+            "name": "air_date",
+            "description": "The air date of the episode."
+          },
+          {
+            "name": "num_worst_vote",
+            "description": "The number of votes in star classification of worst the episode got, replace NULL values with 0."
+          },
+          {
+            "name": "num_nominations",
+            "description": "The number of nominations the episode received (including both nominees and winners); replace NULL values with 0."
+          },
+          {
+            "name": "star_7_class",
+            "description": "Set to 3 if the episode's 7-star votes exceed 1.1x the average number of 7-star votes across all episodes. Set to 2 if the episode's 7-star votes exceed the across-episode average but are ≤ 1.1x the average. Set to 1 if the episode's 7-star votes are ≥ 0.9x the across-episode average but do not exceed the average. Otherwise, set to 0."
+          },
+          {
+            "name": "ratio_between_uncredited_and_credited_roles",
+            "description": "The percentage ratio between uncredited and credited roles on the episode"
+          },
+          {
+            "name": "average_stars",
+            "description": "The average star rating of the episode."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    snowflake_definition_id: 424892c4-daac-4491-b35d-c6688ba547ba\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://simpson-episodes-bucket/Episode.jsonl\n    sync_mode: full_refresh_append\n    table: Episode\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - Award\n    - Keyword\nflat_files:\n- format: csv\n  path: https://drive.google.com/uc?export=download&id=1MfD_rLQ0nmgMwsNbGIKqbmZzfcI_ezn0\n  sync_mode: full_refresh_append\n  table: Character_Award\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: simpson_episodes\n    sync_mode: full_refresh_append\n    tables:\n    - Person\npostgres:\n  config:\n    database: simpson_episodes\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - credit\n    - vote\n    user: postgres\nsnowflake:\n  config:\n    database: simpson_episodes\n    password: Snowflake@123\n    role: AIRBYTE_ROLE\n    schema: AIRBYTE_SCHEMA\n    username: AIRBYTE_USER\n    warehouse: AIRBYTE_WAREHOUSE\n",
+  "case_id": "B14-elt-0276",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "simpson_episodes__episode",
+        "columns": [
+          "episode_id",
+          "episode_title",
+          "air_date",
+          "num_worst_vote",
+          "num_nominations",
+          "star_7_class",
+          "ratio_between_uncredited_and_credited_roles",
+          "average_stars"
+        ]
+      }
+    ]
+  }
+}

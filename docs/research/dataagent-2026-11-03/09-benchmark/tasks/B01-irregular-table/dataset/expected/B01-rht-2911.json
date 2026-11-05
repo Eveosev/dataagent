@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1275,
+  "table": "science-table09",
+  "structure": "StructureCompound",
+  "question_type": "Fact Checking",
+  "sub_type": "Value-Matching",
+  "answer": "2",
+  "cot": [
+    {
+      "planning": "First, find the table of Time = 75 min."
+    },
+    {
+      "planning": "Then, find the ROI 3 sub-table."
+    },
+    {
+      "planning": "Finally, find and output the value of 'Number of Engulfed Cells' row and 'LPS' column."
+    }
+  ],
+  "case_id": "B01-rht-2911",
+  "expected": {
+    "kind": "answer",
+    "question": "What's the Number of Engulfed Cells for LPS in ROI 3 when Time = 75 min?",
+    "answer": "2"
+  }
+}

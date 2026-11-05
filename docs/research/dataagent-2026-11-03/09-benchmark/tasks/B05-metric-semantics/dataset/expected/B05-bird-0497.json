@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 496,
+  "question": "I'm screening for molecules to flag for follow-up. Can you give me the molecule_id of the first three molecules, in alphabetical order, that are non-carcinogenic, contain at least one metal atom, and have single bonds between their atoms? Please return only the molecule ids.",
+  "evidence": "A molecule label of '-' means the molecule is non-carcinogenic. A bond type of '-' means a single bond between two atoms. The metals are sodium (na), potassium (k), calcium (ca), copper (cu), zinc (zn), tin (sn), lead (pb), magnesium (mg) and lithium (li).",
+  "gold_sql": "SELECT DISTINCT T1.molecule_id FROM molecule AS T1 INNER JOIN bond AS T2 ON T1.molecule_id = T2.molecule_id INNER JOIN atom AS T3 ON T1.molecule_id = T3.molecule_id WHERE T2.bond_type = '-' AND T1.label = '-' AND T3.element IN ('na','k','ca','cu','zn','sn','pb','mg','li') ORDER BY T1.molecule_id LIMIT 3",
+  "db_id": "toxicology",
+  "case_id": "B05-bird-0497",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT DISTINCT T1.molecule_id FROM molecule AS T1 INNER JOIN bond AS T2 ON T1.molecule_id = T2.molecule_id INNER JOIN atom AS T3 ON T1.molecule_id = T3.molecule_id WHERE T2.bond_type = '-' AND T1.label = '-' AND T3.element IN ('na','k','ca','cu','zn','sn','pb','mg','li') ORDER BY T1.molecule_id LIMIT 3",
+    "db_id": "toxicology",
+    "evidence": "A molecule label of '-' means the molecule is non-carcinogenic. A bond type of '-' means a single bond between two atoms. The metals are sodium (na), potassium (k), calcium (ca), copper (cu), zinc (zn), tin (sn), lead (pb), magnesium (mg) and lithium (li)."
+  }
+}

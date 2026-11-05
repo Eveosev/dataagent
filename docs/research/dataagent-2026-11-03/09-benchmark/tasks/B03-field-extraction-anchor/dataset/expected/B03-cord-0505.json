@@ -1,0 +1,171 @@
+{
+  "source": "naver-clova-ix/cord-v2",
+  "split": "train",
+  "index": 72,
+  "gt_parse": {
+    "menu": [
+      {
+        "nm": "LE MINERALE 600ML",
+        "unitprice": "3100",
+        "cnt": "1",
+        "price": "3,100"
+      },
+      {
+        "nm": "PLASTIK SDG",
+        "unitprice": "1",
+        "cnt": "1",
+        "discountprice": "(1)",
+        "price": "1"
+      }
+    ],
+    "sub_total": {
+      "subtotal_price": "3,100",
+      "tax_price": "282"
+    },
+    "total": {
+      "total_price": "3,100",
+      "cashprice": "5,000",
+      "changeprice": "1,900"
+    }
+  },
+  "case_id": "B03-cord-0505",
+  "expected": {
+    "kind": "json",
+    "value": {
+      "menu": [
+        {
+          "nm": "LE MINERALE 600ML",
+          "unitprice": "3100",
+          "cnt": "1",
+          "price": "3,100"
+        },
+        {
+          "nm": "PLASTIK SDG",
+          "unitprice": "1",
+          "cnt": "1",
+          "discountprice": "(1)",
+          "price": "1"
+        }
+      ],
+      "sub_total": {
+        "subtotal_price": "3,100",
+        "tax_price": "282"
+      },
+      "total": {
+        "total_price": "3,100",
+        "cashprice": "5,000",
+        "changeprice": "1,900"
+      }
+    },
+    "fields": {
+      "menu[0].nm": "LE MINERALE 600ML",
+      "menu[0].unitprice": "3100",
+      "menu[0].cnt": "1",
+      "menu[0].price": "3,100",
+      "menu[1].nm": "PLASTIK SDG",
+      "menu[1].unitprice": "1",
+      "menu[1].cnt": "1",
+      "menu[1].discountprice": "(1)",
+      "menu[1].price": "1",
+      "sub_total.subtotal_price": "3,100",
+      "sub_total.tax_price": "282",
+      "total.total_price": "3,100",
+      "total.cashprice": "5,000",
+      "total.changeprice": "1,900"
+    },
+    "anchored_fields": 0,
+    "no_anchor_fields": 14,
+    "spans": [
+      {
+        "field": "menu[0].nm",
+        "text": "LE MINERALE 600ML",
+        "page": 1
+      },
+      {
+        "field": "menu[0].unitprice",
+        "text": "3100",
+        "page": 1
+      },
+      {
+        "field": "menu[0].cnt",
+        "text": "1",
+        "page": 1
+      },
+      {
+        "field": "menu[0].price",
+        "text": "3,100",
+        "page": 1
+      },
+      {
+        "field": "menu[1].nm",
+        "text": "PLASTIK SDG",
+        "page": 1
+      },
+      {
+        "field": "menu[1].unitprice",
+        "text": "1",
+        "page": 1
+      },
+      {
+        "field": "menu[1].cnt",
+        "text": "1",
+        "page": 1
+      },
+      {
+        "field": "menu[1].discountprice",
+        "text": "(1)",
+        "page": 1
+      },
+      {
+        "field": "menu[1].price",
+        "text": "1",
+        "page": 1
+      },
+      {
+        "field": "sub_total.subtotal_price",
+        "text": "3,100",
+        "page": 1
+      },
+      {
+        "field": "sub_total.tax_price",
+        "text": "282",
+        "page": 1
+      },
+      {
+        "field": "total.total_price",
+        "text": "3,100",
+        "page": 1
+      },
+      {
+        "field": "total.cashprice",
+        "text": "5,000",
+        "page": 1
+      },
+      {
+        "field": "total.changeprice",
+        "text": "1,900",
+        "page": 1
+      }
+    ],
+    "pages": {
+      "menu[0].nm": 1,
+      "menu[0].unitprice": 1,
+      "menu[0].cnt": 1,
+      "menu[0].price": 1,
+      "menu[1].nm": 1,
+      "menu[1].unitprice": 1,
+      "menu[1].cnt": 1,
+      "menu[1].discountprice": 1,
+      "menu[1].price": 1,
+      "sub_total.subtotal_price": 1,
+      "sub_total.tax_price": 1,
+      "total.total_price": 1,
+      "total.cashprice": 1,
+      "total.changeprice": 1
+    },
+    "evidence_gold": {
+      "source": "cord-valid-line",
+      "version": 1
+    }
+  }
+}

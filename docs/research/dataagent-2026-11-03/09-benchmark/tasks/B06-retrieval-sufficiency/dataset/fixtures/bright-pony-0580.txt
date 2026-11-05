@@ -1,0 +1,50 @@
+## Essential Problem 
+The problem is to merge two strings, `word1` and `word2`, by interleaving their characters in alternating order, starting with `word1`. If one string is longer than the other, the remaining characters of the longer string are appended to the end of the merged string.
+
+## Relevant Information
+
+- Length of both input strings (`word1` and `word2`).
+- Individual characters in each string.
+
+## Reasoning and Description
+
+1. **Initialization:** Initialize an empty string `merged_string` to store the result.
+2. **Iteration:**
+    - Define two variables, `i` and `j`, initialized to 0, to track the index of characters in `word1` and `word2`, respectively.
+    - Loop through both strings simultaneously until either `i` or `j` reaches the end of their respective string.
+        - In each iteration:
+            - Append the character at index `i` from `word1` to `merged_string`.
+            - Increment `i`.
+            - Append the character at index `j` from `word2` to `merged_string`.
+            - Increment `j`.
+3. **Append remaining characters:**
+    - If `i` is less than the length of `word1`, append the remaining characters from `word1` to `merged_string`.
+    - If `j` is less than the length of `word2`, append the remaining characters from `word2` to `merged_string`.
+4. **Return:** Return the `merged_string`.
+
+## Draft Answer
+
+```pony
+fun mergeAlternately(word1: String, word2: String): String =>
+  let merged_string = ""
+
+  var i = 0
+  var j = 0
+
+  while i < word1.length and j < word2.length
+    merged_string += word1[i]
+    i += 1
+
+    merged_string += word2[j]
+    j += 1
+
+  if i < word1.length
+    merged_string += word1.substring(i)
+
+  if j < word2.length
+    merged_string += word2.substring(j)
+
+  return merged_string
+```
+
+This code iterates through both strings simultaneously, appending characters in alternating order. If one string is longer, the remaining characters are appended to the end. The function then returns the merged string. 

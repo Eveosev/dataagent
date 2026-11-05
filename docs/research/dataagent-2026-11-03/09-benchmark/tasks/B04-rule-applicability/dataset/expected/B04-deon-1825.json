@@ -1,0 +1,40 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_5801ab18",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "jurisdiction",
+    "focus_year",
+    "scenario_term",
+    "scenario_concept",
+    "statute_521_78a_requesting_party",
+    "statute_521_78a_deposit_exception",
+    "proceeding_rent_already_paid",
+    "proceeding_signed_written_instrument_withhold_or_deduct",
+    "statute_521_78a_court_orders_deposit",
+    "proceeding_in_court",
+    "proceeding_rent_payment_or_nonpayment_in_dispute",
+    "proceeding_deposit_requested_by",
+    "statute_521_78a_deposit_amount_prior_to_increase",
+    "proceeding_rent_increase_in_issue",
+    "statute_521_78b_authority",
+    "statute_521_78b_landlord_judgment_for_possession",
+    "tenant_unable_to_comply_with_deposit_order",
+    "statute_521_78b_execution_issues",
+    "statute_521_78b_removal_order_name",
+    "statute_uses_term_for_removal_order",
+    "statute_521_78b_order_commands_removal_and_possession",
+    "legal_term_refers_to_order_from_court_to_authorities_to_remove_tenant",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    State: Hawaii\n    Focus year: 2021\n    Question: Whether the term 'Summary order for removal' is used to refer to the court order\n              directed to authorities to remove a tenant.\n\n    Statute encoded: HI Rev Stat  521-78 (2021)\n*/\n\n% ---------------------------\n% Scenario facts (question)\n% ---------------------------\n\njurisdiction(hawaii).\nfocus_year(2021).\n\n% The specific term the question asks about.\nscenario_term(summary_order_for_removal).\n\n% The concept the term is alleged to refer to.\nscenario_concept(order_from_court_to_authorities_to_remove_tenant).\n\n% Helper predicate summarizing the scenario in logic form.\nscenario_statement :-\n    jurisdiction(hawaii),\n    focus_year(2021),\n    scenario_term(summary_order_for_removal),\n    scenario_concept(order_from_court_to_authorities_to_remove_tenant).\n\n% ----------------------------------------\n% Statute translation: HI Rev Stat 521-78\n% ----------------------------------------\n\n/*\n  521-78(a): At request of either tenant or landlord in a court proceeding\n  where payment/nonpayment of rent is in dispute, court shall order tenant to\n  deposit disputed rent as it becomes due (and rent prior to increase if increase in issue),\n  with exceptions: already paid; signed written instrument allowing withholding/deduction.\n*/\n\n% Deterministic helper: valid requesting party under 521-78(a).\nstatute_521_78a_requesting_party(tenant) :- !.\nstatute_521_78a_requesting_party(landlord) :- !.\n\n% Deterministic helper: exceptions where tenant is not required to deposit rent.\n% These are modeled as conditions that can be asserted for a given proceeding.\nstatute_521_78a_deposit_exception(Proceeding) :-\n    proceeding_rent_already_paid(Proceeding),\n    !.\nstatute_521_78a_deposit_exception(Proceeding) :-\n    proceeding_signed_written_instrument_withhold_or_deduct(Proceeding),\n    !.\nstatute_521_78a_deposit_exception(_Proceeding) :-\n    fail.\n\n% Core duty: court orders deposit when requested and rent payment dispute exists, absent exceptions.\nstatute_521_78a_court_orders_deposit(Proceeding) :-\n    proceeding_in_court(Proceeding),\n    proceeding_rent_payment_or_nonpayment_in_dispute(Proceeding),\n    proceeding_deposit_requested_by(Proceeding, Requester),\n    statute_521_78a_requesting_party(Requester),\n    \\+ statute_521_78a_deposit_exception(Proceeding),\n    !.\n\n% If there is a rent increase issue, deposit amount is rent prior to increase (modeled as a marker).\nstatute_521_78a_deposit_amount_prior_to_increase(Proceeding) :-\n    statute_521_78a_court_orders_deposit(Proceeding),\n    proceeding_rent_increase_in_issue(Proceeding),\n    !.\nstatute_521_78a_deposit_amount_prior_to_increase(_Proceeding) :-\n    fail.\n\n/*\n  521-78(b): If tenant is unable to comply with the court's deposit order,\n  landlord shall have judgment for possession and execution shall issue accordingly.\n  \"The writ of possession shall issue to the sheriff or to a police officer of the circuit\n  where the premises are situated, commanding ... remove all persons ... and put landlord into possession.\"\n*/\n\n% Deterministic list of authorities identified in 521-78(b).\nstatute_521_78b_authority(sheriff) :- !.\nstatute_521_78b_authority(police_officer) :- !.\n\n% Court consequence if tenant cannot comply with deposit order.\nstatute_521_78b_landlord_judgment_for_possession(Proceeding) :-\n    statute_521_78a_court_orders_deposit(Proceeding),\n    tenant_unable_to_comply_with_deposit_order(Proceeding),\n    !.\nstatute_521_78b_landlord_judgment_for_possession(_Proceeding) :-\n    fail.\n\n% Execution issues accordingly when landlord has judgment for possession.\nstatute_521_78b_execution_issues(Proceeding) :-\n    statute_521_78b_landlord_judgment_for_possession(Proceeding),\n    !.\nstatute_521_78b_execution_issues(_Proceeding) :-\n    fail.\n\n% The name of the order that issues to authorities to remove persons is \"writ of possession\".\nstatute_521_78b_removal_order_name(writ_of_possession) :- !.\n\n% The statute uses the term \"writ of possession\" for the command to sheriff/police to remove persons.\nstatute_uses_term_for_removal_order(writ_of_possession) :- !.\nstatute_uses_term_for_removal_order(_Other) :- fail.\n\n% The statute describes the nature of that order (command to remove persons and restore possession).\nstatute_521_78b_order_commands_removal_and_possession(writ_of_possession) :- !.\nstatute_521_78b_order_commands_removal_and_possession(_Other) :- fail.\n\n% Derived legal concept: a \"term refers to the court order to authorities to remove a tenant\"\n% if and only if the statute uses that term for the removal order.\nlegal_term_refers_to_order_from_court_to_authorities_to_remove_tenant(Term) :-\n    statute_uses_term_for_removal_order(Term),\n    statute_521_78b_order_commands_removal_and_possession(Term),\n    !.\nlegal_term_refers_to_order_from_court_to_authorities_to_remove_tenant(_Term) :-\n    fail.\n\n% ------------------------------------------------\n% Minimal proceeding facts (not required by question)\n% ------------------------------------------------\n% Included for completeness of statute model; not used to answer the term-usage question.\n\n% No proceeding facts are asserted in this question scenario.\nproceeding_in_court(_Proceeding) :- fail.\nproceeding_rent_payment_or_nonpayment_in_dispute(_Proceeding) :- fail.\nproceeding_deposit_requested_by(_Proceeding, _Requester) :- fail.\nproceeding_rent_already_paid(_Proceeding) :- fail.\nproceeding_signed_written_instrument_withhold_or_deduct(_Proceeding) :- fail.\nproceeding_rent_increase_in_issue(_Proceeding) :- fail.\ntenant_unable_to_comply_with_deposit_order(_Proceeding) :- fail.\n\n% ---------------------------\n% Answer derivation\n% ---------------------------\n\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_term(Term),\n    legal_term_refers_to_order_from_court_to_authorities_to_remove_tenant(Term),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n% ---------------------------\n% Main entrypoint\n% ---------------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-1825",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is the term 'Summary order for removal' used to refer to the order from the court to the authorities to remove a tenant?"
+  }
+}

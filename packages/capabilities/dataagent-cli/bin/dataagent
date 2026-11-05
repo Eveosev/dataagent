@@ -1,0 +1,206 @@
+#!/bin/sh
+# dataagent unified CLI dispatcher (12-unified-cli-research §5.1/§5.3).
+#
+# Dispatches `dataagent <layer> ...` to the sibling layer package's in-package
+# .venv interpreter — the three layers are never loaded in one process
+# (governance pins duckdb<2 / sqlglot<27, application pins duckdb 2.0.0 /
+# sqlglot 30.29). Before exec the ambient environment is scrubbed down to a
+# whitelist (§5.4): credentials that happen to live in the host environment
+# never reach the layer process.
+#
+# Commands:
+#   dataagent <data|app|gov> ...    layer dispatch (list / run / --help / ...)
+#   dataagent link                 generate ./dataagent in the project root
+#   dataagent setup                uv sync --frozen for all three layers
+#   dataagent doctor               check packages, .venv, policy, data_root, mode
+#
+# POSIX sh only, no Python dependency.
+
+set -eu
+
+MARKER='# dataagent unified CLI dispatcher'
+LAYERS="data app gov"
+MODULE_data=dataagent_data
+MODULE_application=dataagent_application
+MODULE_governance=dataagent_governance
+
+die() { echo "dataagent: $*" >&2; exit 3; }
+
+layer_pkg() {
+    case $1 in
+        data) echo "data-layer" ;;
+        app) echo "application-layer" ;;
+        gov) echo "governance-layer" ;;
+        *) return 1 ;;
+    esac
+}
+
+module_of() {
+    case $1 in
+        data) echo "$MODULE_data" ;;
+        app) echo "$MODULE_application" ;;
+        gov) echo "$MODULE_governance" ;;
+        *) return 1 ;;
+    esac
+}
+
+# Version pinned in mint.lock wins; without a pin the highest installed
+# version is used (12 §5.1: 按 mint.lock 取版本).
+pinned_version() {
+    pkg=$1
+    [ -f ./mint.lock ] || return 1
+    sed -n "/name = \"dataagent\\/$pkg\"/,/^\\[\\[/p" ./mint.lock |
+        grep -m1 '^version' | sed 's/.*"\(.*\)".*/\1/'
+}
+
+resolve_dir() {
+    pkg=$1
+    root=./.mint/packages/dataagent
+    [ -d "$root" ] || die "no installed dataagent packages under $root (mint add dataagent/preset-s0)"
+    dir=""
+    if ver=$(pinned_version "$pkg"); then
+        [ -n "$ver" ] && [ -d "$root/$pkg@$ver" ] && dir="$root/$pkg@$ver"
+    fi
+    if [ -z "$dir" ]; then
+        dir=$(ls -d "$root/$pkg@"* 2>/dev/null | sort -V | tail -1) || dir=""
+    fi
+    [ -n "$dir" ] || die "package dataagent/$pkg is not installed"
+    printf '%s\n' "$dir"
+}
+
+python_of() {
+    dir=$1
+    py="$dir/.venv/bin/python"
+    [ -x "$py" ] || die "no .venv in $dir (run: dataagent setup)"
+    printf '%s\n' "$py"
+}
+
+# §5.4: clear every variable unrelated to DataAgent before exec'ing the
+# layer process; keep only the whitelist + DATAAGENT_*.
+scrub_env() {
+    for name in $(env | sed -n 's/^\([A-Za-z_][A-Za-z0-9_]*\)=.*/\1/p'); do
+        case $name in
+            DATAAGENT_*|PATH|HOME|LANG|LC_*|TZ|TMPDIR|TERM) ;;
+            *) unset "$name" 2>/dev/null || true ;;
+        esac
+    done
+}
+
+dispatch() {
+    layer=$1
+    shift
+    pkg=$(layer_pkg "$layer") || die "unknown layer: $layer (data | app | gov)"
+    module=$(module_of "$layer")
+    dir=$(resolve_dir "$pkg")
+    py=$(python_of "$dir")
+    scrub_env
+    exec "$py" -m "$module.interfaces.cli" "$@"
+}
+
+link_cmd() {
+    target=./dataagent
+    if [ -e "$target" ] && ! head -n 2 "$target" 2>/dev/null | grep -qF "$MARKER" 2>/dev/null; then
+        echo "dataagent: refusing to overwrite $PWD/dataagent (not a dataagent launcher)" >&2
+        exit 2
+    fi
+    cat "$0" > "$target"
+    chmod +x "$target"
+    echo "$PWD/dataagent"
+}
+
+setup_cmd() {
+    command -v uv >/dev/null 2>&1 || die "uv not found on PATH; install it or run uv sync inside each layer package"
+    for layer in $LAYERS; do
+        pkg=$(layer_pkg "$layer")
+        dir=$(resolve_dir "$pkg") || exit 3
+        echo "setup: $dir"
+        (cd "$dir" && uv sync --frozen) || die "uv sync --frozen failed in $dir"
+    done
+    echo "setup: ok"
+}
+
+doctor_cmd() {
+    status=0
+    for layer in $LAYERS; do
+        pkg=$(layer_pkg "$layer")
+        if dir=$(ls -d "./.mint/packages/dataagent/$pkg@"* 2>/dev/null | sort -V | tail -1) && [ -n "$dir" ]; then
+            echo "package  dataagent/$pkg: $dir"
+        else
+            echo "package  dataagent/$pkg: MISSING (mint add dataagent/preset-s0)" >&2
+            status=3
+            continue
+        fi
+        if [ -x "$dir/.venv/bin/python" ]; then
+            if "$dir/.venv/bin/python" -c "import $(module_of "$layer")" >/dev/null 2>&1; then
+                echo "venv     $pkg: ok"
+            else
+                echo "venv     $pkg: BROKEN import (run: dataagent setup)" >&2
+                status=3
+            fi
+        else
+            echo "venv     $pkg: MISSING (run: dataagent setup)" >&2
+            status=3
+        fi
+    done
+    root=${DATAAGENT_DATA_ROOT:-$PWD/.dataagent}
+    if [ -d "$root" ]; then
+        echo "data_root: $root"
+    else
+        echo "data_root: $root (will be created on first run)"
+    fi
+    gov_dir=$(ls -d ./.mint/packages/dataagent/governance-layer@* 2>/dev/null | sort -V | tail -1)
+    if [ -n "$gov_dir" ] && [ -x "$gov_dir/.venv/bin/python" ]; then
+        if "$gov_dir/.venv/bin/python" -c 'from dataagent_governance.runtime import default_runtime as d
+try:
+    d().policy.load(None)
+    print("policy:   configured")
+except Exception:
+    print("policy:   none (run: dataagent gov policy apply <policy.json>)")' 2>/dev/null; then
+            :
+        else
+            echo "policy:   check failed" >&2
+        fi
+    else
+        echo "policy:   governance layer unavailable" >&2
+    fi
+    echo "mode:     DATAAGENT_ENFORCEMENT_MODE=${DATAAGENT_ENFORCEMENT_MODE:-warn (default)}"
+    if [ "$status" -ne 0 ]; then
+        echo "doctor: failing checks above (exit 3)" >&2
+    fi
+    exit "$status"
+}
+
+usage() {
+    cat >&2 <<'EOF'
+usage: dataagent <layer> <command> [flags]
+       dataagent link
+       dataagent setup
+       dataagent doctor
+
+layers: data | app | gov
+
+layer commands (see `dataagent <layer> <op> --help` for the parameter table):
+  dataagent <layer> list                          one line per operation
+  dataagent <layer> run <op> --set k=v ...        call an atom
+  dataagent <layer> run <op> --file <path>         build a FileRef from bytes
+  dataagent <layer> run <op> --ref f=<id@rev>      reuse an earlier result
+  dataagent <layer> run <op> --authorize           fill authorization_ref
+  dataagent gov policy apply <file>                write an access policy
+  dataagent gov confirm <file>                     confirm acceptance criteria
+
+stdout is a summary JSON (status, issues, handles, result_path); the full
+result lands in .dataagent/results/<invocation_id>.json. exit: 0 ok/partial/
+needs_input, 1 failed, 2 usage, 3 environment missing.
+EOF
+    exit 2
+}
+
+[ $# -ge 1 ] || usage
+case $1 in
+    data|app|gov) dispatch "$@" ;;
+    link) [ $# -eq 1 ] && link_cmd || usage ;;
+    setup) [ $# -eq 1 ] && setup_cmd || usage ;;
+    doctor) [ $# -eq 1 ] && doctor_cmd || usage ;;
+    -h|--help|help) usage ;;
+    *) usage ;;
+esac

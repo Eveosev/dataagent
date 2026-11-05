@@ -1,0 +1,39 @@
+{
+  "$comment": "generated from dataagent_contracts.core:Stratum; do not edit",
+  "$id": "dataagent-contracts/0.1/core/Stratum",
+  "additionalProperties": false,
+  "properties": {
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "key": {
+      "minLength": 1,
+      "title": "Key",
+      "type": "string"
+    },
+    "metrics": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "title": "Metrics",
+      "type": "object"
+    }
+  },
+  "required": [
+    "key",
+    "metrics"
+  ],
+  "title": "Stratum",
+  "type": "object"
+}

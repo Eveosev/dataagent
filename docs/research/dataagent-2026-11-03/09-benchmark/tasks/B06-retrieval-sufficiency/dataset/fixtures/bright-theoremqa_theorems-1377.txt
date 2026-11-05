@@ -1,0 +1,32 @@
+## Superhero Figurine Dilemma
+
+**1. Identifying the problem:**
+
+We need to choose 4 figurines for the display case with at least 2 of them being superhero figurines. We have 4 unique superhero figurines, 3 unique dinosaur figurines, and 2 unique robot figurines.
+
+**2. Thinking step by step:**
+
+* **Step 1:** Choose the superhero figurines.
+
+    * We need to choose at least 2 superhero figurines. 
+    * We have 4 options to choose from, and we need to select between 2 and 4. 
+    * This can be done in 4C2 + 4C3 + 4C4 ways = 6 + 4 + 1 = 11 ways.
+
+* **Step 2:** Choose the remaining figurines.
+
+    * The remaining figurines can be either dinosaurs or robots. 
+    * If we choose 2 superhero figurines, we need to choose 2 figurines from the remaining 5 (3 dinosaurs + 2 robots). This can be done in 5C2 ways.
+    * If we choose 3 superhero figurines, we need to choose 1 figurine from the remaining 5. This can be done in 5C1 ways.
+    * If we choose 4 superhero figurines, we don't need to choose any additional figurines.
+
+* **Step 3:** Combine the possibilities.
+
+    * We have 11 ways to choose the superhero figurines and for each choice, we have different possibilities for the remaining figurines.
+    * If we choose 2 superhero figurines, we have 5C2 = 10 possibilities for the remaining figurines.
+    * If we choose 3 superhero figurines, we have 5C1 = 5 possibilities for the remaining figurines.
+    * If we choose 4 superhero figurines, we have only 1 possibility (choosing no additional figurines).
+    * Therefore, the total number of ways to arrange the display is 11 * (10 + 5 + 1) = 11 * 16 = 176 ways.
+
+**3. Draft answer:**
+
+There are 176 different ways to arrange the display case with at least 2 superhero figurines. This is calculated by considering the different possibilities for choosing the superhero figurines and the remaining figurines, and then combining these possibilities.

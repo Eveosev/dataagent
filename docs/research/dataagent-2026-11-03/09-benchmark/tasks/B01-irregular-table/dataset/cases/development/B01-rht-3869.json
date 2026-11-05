@@ -1,0 +1,35 @@
+{
+  "case_id": "B01-rht-3869",
+  "task_id": "B01",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "table",
+      "ref": "bench://realthitbench-data/csv/society-table57.csv",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B01-rht-3869.json"
+  },
+  "evidence": [
+    "bench://realthitbench-data/csv/society-table57.csv"
+  ],
+  "tags": [
+    "realthitbench",
+    "MultiColumnClassified",
+    "Data Analysis",
+    "gov.UK"
+  ],
+  "source": "rht",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

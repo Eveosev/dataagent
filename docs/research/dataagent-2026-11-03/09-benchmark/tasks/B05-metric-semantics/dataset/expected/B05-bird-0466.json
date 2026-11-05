@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 465,
+  "question": "I'd like a single number: how many female patients in the thrombosis prediction data have a laboratory record showing a normal white blood cell count, an abnormal fibrinogen level, and an anti-ribonuclear protein (RNP) reading above 15, considering all recorded laboratory dates?",
+  "evidence": "A normal white blood cell count means strictly between 3.5 and 9.0; an abnormal fibrinogen level means at most 150 or at least 450.",
+  "gold_sql": "SELECT COUNT(DISTINCT p.ID) FROM Patient AS p JOIN Laboratory AS l ON l.ID = p.ID WHERE p.SEX = 'F' AND l.WBC > 3.5 AND l.WBC < 9.0 AND (l.FG <= 150 OR l.FG >= 450) AND CAST(l.RNP AS REAL) > 15",
+  "db_id": "thrombosis_prediction",
+  "case_id": "B05-bird-0466",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT COUNT(DISTINCT p.ID) FROM Patient AS p JOIN Laboratory AS l ON l.ID = p.ID WHERE p.SEX = 'F' AND l.WBC > 3.5 AND l.WBC < 9.0 AND (l.FG <= 150 OR l.FG >= 450) AND CAST(l.RNP AS REAL) > 15",
+    "db_id": "thrombosis_prediction",
+    "evidence": "A normal white blood cell count means strictly between 3.5 and 9.0; an abnormal fibrinogen level means at most 150 or at least 450."
+  }
+}

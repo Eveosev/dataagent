@@ -1,0 +1,29 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 556,
+  "table": "business-table07",
+  "structure": "ColumnHeaderMerge",
+  "question_type": "Data Analysis",
+  "sub_type": "Anomaly Analysis",
+  "answer": "No anomalies are detected in the table.",
+  "cot": [
+    {
+      "planning": "First, we filtered the table to include only rows corresponding to the “Sports Activities” sub-sector and extracted the columns for 2009."
+    },
+    {
+      "planning": "Next, we calculated the mean and standard deviation of the 2009 data to establish a baseline for detecting anomalies."
+    },
+    {
+      "planning": "Then, we identified any regions with significantly lower values (more than three standard deviations below the mean)."
+    },
+    {
+      "planning": "Finally, we summarized the total number and description of any anomalies found."
+    }
+  ],
+  "case_id": "B01-rht-2192",
+  "expected": {
+    "kind": "answer",
+    "question": " Identify any anomalies in the number of businesses in the “Sports Activities” sub-sector for 2009, such as regions with significantly lower values than expected.",
+    "answer": "No anomalies are detected in the table."
+  }
+}

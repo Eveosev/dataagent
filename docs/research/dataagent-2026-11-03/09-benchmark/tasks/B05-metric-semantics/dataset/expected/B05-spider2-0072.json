@@ -1,0 +1,16 @@
+{
+  "source": "xlangai/spider2-lite",
+  "raw": {
+    "instance_id": "bq040",
+    "db": "new_york_plus",
+    "question": "For NYC yellow taxi trips between January 1-7, 2016, excluding pickups from 'EWR' and 'Staten Island', calculate the proportion of trips by tip category for each pickup borough. Show the borough, tip category, and proportion, ensuring trips where the dropoff occurs after the pickup, the passenger count is greater than 0, and trip distance, tip, tolls, MTA tax, fare, and total amount are non-negative.",
+    "external_knowledge": "taxi_tip_rate.md"
+  },
+  "case_id": "B05-spider2-0072",
+  "expected": {
+    "kind": "sql",
+    "instance_id": "bq040",
+    "sql": null,
+    "db": "new_york_plus"
+  }
+}

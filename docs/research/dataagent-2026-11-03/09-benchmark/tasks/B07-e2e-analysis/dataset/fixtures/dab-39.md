@@ -1,0 +1,1 @@
+What is the percentage of transactions below the 25th percentile of transaction amounts?

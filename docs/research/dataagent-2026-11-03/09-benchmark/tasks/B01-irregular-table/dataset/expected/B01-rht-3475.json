@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1839,
+  "table": "health-table15",
+  "structure": "MultiColumnClassified",
+  "question_type": "Data Analysis",
+  "sub_type": "Predictive Analysis",
+  "answer": "Decreasing, 4.197",
+  "cot": [
+    {
+      "Planning": "First, we ensured the “Test Organism” column was filled and filtered the data for “ABS Plastic” under “Escherichia coli.”"
+    },
+    {
+      "Planning": "Extracted the “Average of Log CFU/Sample” values for Day 0, Day 1, and Day 3."
+    },
+    {
+      "Planning": "Observed a decreasing trend and predicted the value for Day 4 using a linear projection."
+    }
+  ],
+  "case_id": "B01-rht-3475",
+  "expected": {
+    "kind": "answer",
+    "question": "Based on the trend of 'Average of Log CFU/Sample' from Day 0 to Day 3, predict whether the value for Day 4 under 'ABS Plastic' in 'Escherichia coli' would likely increase or decrease and predict what the value of Day 4 will be.",
+    "answer": "Decreasing, 4.197"
+  }
+}

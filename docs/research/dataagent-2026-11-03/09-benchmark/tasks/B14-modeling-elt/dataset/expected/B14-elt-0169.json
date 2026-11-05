@@ -1,0 +1,67 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "redshift",
+  "pipeline": "retail_complains",
+  "data_model": {
+    "models": [
+      {
+        "name": "clients",
+        "description": "Each record represents a client.",
+        "columns": [
+          {
+            "name": "client_id",
+            "description": "Unique identifier for the client."
+          },
+          {
+            "name": "sex",
+            "description": "Sex of the client."
+          },
+          {
+            "name": "full_name",
+            "description": "Full name of the client. Concatenates the first name, middle name, and last name, separated by a space."
+          },
+          {
+            "name": "issue_with_the_longest_server_time",
+            "description": "The issue that the client with the longest server time faced,with ties broken by the ascending order of the issue"
+          },
+          {
+            "name": "days_of_longest_delay_of_complaint",
+            "description": "The number of days of the longest delay in the client’s complaint. Delay refers to the time between when the complaint was received and when it was sent to the company."
+          },
+          {
+            "name": "has_in_progress_complaints",
+            "description": "Set to 1 if the client has in progress complaints, 0 otherwise."
+          },
+          {
+            "name": "percentage_of_complaint_calls_got_consent",
+            "description": "The percentage of complaint calls that got consent of all complaints for the client ."
+          },
+          {
+            "name": "number_of_complaint_submitted_via_fax",
+            "description": "The number of complaints submitted via fax, replace NULL values with 0."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    redshift_definition_id: f7a7d195-377f-cf5b-70a5-be6b819019dc\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://retail-complains-bucket/state.csv\n    sync_mode: full_refresh_append\n    table: state\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - events\n    - retail_complains_reviews\nflat_files:\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=1J1UzeftLQeE12J9-c4TzHpEKF1bCzDBQ\n  sync_mode: full_refresh_append\n  table: district\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: retail_complains\n    sync_mode: full_refresh_append\n    tables:\n    - client\npostgres:\n  config:\n    database: retail_complains\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - callcenterlogs\n    user: postgres\nredshift:\n  config:\n    host: <redshift_hostname>\n    port: <redshift_port>\n    database: <redshift_db>\n    username: <redshift_username>\n    password: <redshift_pwd>\n    schema: retail_complains\n    s3_bucket_name: <redshift_s3_bucket>\n    s3_bucket_region: <redshift_s3_region>\n    access_key_id: <redshift_s3_access_key>\n    secret_access_key: <redshift_s3_secret_key>\n",
+  "case_id": "B14-elt-0169",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "clients",
+        "columns": [
+          "client_id",
+          "sex",
+          "full_name",
+          "issue_with_the_longest_server_time",
+          "days_of_longest_delay_of_complaint",
+          "has_in_progress_complaints",
+          "percentage_of_complaint_calls_got_consent",
+          "number_of_complaint_submitted_via_fax"
+        ]
+      }
+    ]
+  }
+}

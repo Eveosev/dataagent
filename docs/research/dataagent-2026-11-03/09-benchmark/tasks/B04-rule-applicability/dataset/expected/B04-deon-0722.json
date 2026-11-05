@@ -1,0 +1,25 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_31455818",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "jurisdiction",
+    "focus_year",
+    "entity",
+    "entity_type",
+    "statute_534_355_empowered_executor_type",
+    "statute_534_355_entity_empowered_to_execute_writ",
+    "legal_entity_empowered_by_law_to_execute_writ",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: Missouri\n    Focus year: 2021\n\n    Question: Is a private company an entity empowered by law to execute a writ of eviction?\n*/\n\n/* -----------------------\n   Scenario (facts)\n   ----------------------- */\n\njurisdiction(missouri).\nfocus_year(2021).\n\n/* We model the question as a concrete scenario involving an example private company entity. */\nentity(acme_evictions_llc).\nentity_type(acme_evictions_llc, private_company).\n\n/* Helper predicate that summarizes the factual statement encoded above. */\nscenario_statement :-\n    jurisdiction(missouri),\n    focus_year(2021),\n    entity(E),\n    entity_type(E, private_company).\n\n/* -----------------------\n   Statute translation\n   ----------------------- */\n\n/*\n  MO Rev Stat  534.355 (2021)\n  In certain actions, when entering judgment for possession, at request of prevailing party,\n  the court may order \"the sheriff or appropriate officer\" to deliver possession within 15 days.\n  This encodes which kinds of entities are empowered by law (per this statute) to execute\n  the court's delivery of possession order (i.e., the eviction execution).\n*/\n\n% statute_534_355_empowered_executor_type(Type).\n% The statute authorizes the \"sheriff\" or \"appropriate officer\" to deliver possession.\nstatute_534_355_empowered_executor_type(sheriff).\nstatute_534_355_empowered_executor_type(appropriate_officer).\n\n/* A concrete entity is empowered to execute the eviction/delivery-of-possession order\n   if it is of an authorized type under the statute. */\nstatute_534_355_entity_empowered_to_execute_writ(Entity) :-\n    entity(Entity),\n    entity_type(Entity, Type),\n    statute_534_355_empowered_executor_type(Type).\n\n/* -----------------------\n   Reasoning for the question\n   ----------------------- */\n\n% legal_entity_empowered_by_law_to_execute_writ(Entity).\n% In this simplified QA, we treat 534.355 as the relevant rule defining who may execute.\nlegal_entity_empowered_by_law_to_execute_writ(Entity) :-\n    statute_534_355_entity_empowered_to_execute_writ(Entity).\n\n/* The question asks about a private company in the scenario.\n   We answer \"yes\" only if that private company entity is empowered by law under the statute. */\nhousing_answer(yes) :-\n    scenario_statement,\n    entity(E),\n    entity_type(E, private_company),\n    legal_entity_empowered_by_law_to_execute_writ(E),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n/* -----------------------\n   Main entrypoint (required)\n   ----------------------- */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-0722",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is a private company an entity empowered by law to execute a writ of eviction?"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_d7e9df2e",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_action",
+    "eviction_action",
+    "primary_method_unsuccessful",
+    "statute_service_method",
+    "method_is_mail",
+    "primary_service_method",
+    "secondary_service_method",
+    "statute_1923_06_c_requires_ordinary_mail",
+    "statute_1923_06_d2c_posting_permitted_if_primary_unsuccessful",
+    "statute_1923_06_g2_requires_ordinary_mail_plus_posting_in_posting_path",
+    "secondary_method_permitted_under_statute",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Topic: Ohio eviction service of process; whether \"mail\" can be a permitted secondary method\n    State: Ohio\n    Focus year: 2021\n*/\n\n/* =========================\n   Scenario facts (question)\n   ========================= */\n\nscenario_state(ohio).\nscenario_focus_year(2021).\n\n% We model a single eviction (forcible entry and detainer) action.\nscenario_action(eviction1).\neviction_action(eviction1).\n\n% Question's definition: \"secondary methods of service\" may be used if the primary method is unsuccessful.\n% We encode that in the scenario: the primary method was unsuccessful.\nprimary_method_unsuccessful(eviction1).\n\n% Helper predicate that succeeds exactly when the scenario's factual statement is satisfied.\nscenario_statement :-\n    scenario_state(ohio),\n    scenario_focus_year(2021),\n    scenario_action(Action),\n    eviction_action(Action),\n    primary_method_unsuccessful(Action),\n    !.\n\n/* =========================\n   Statute encoding (Ohio Rev Code  1923.06 (2021))\n   ========================= */\n\n% --- Service methods recognized in the statute (normalized names) ---\n\n% \"Mail\" methods\nstatute_service_method(ordinary_mail).        % 1923.06(C)\nstatute_service_method(certified_mail).       % 1923.06(E), also 1923.06(F)(2)\n\n% Non-mail methods under division (D)\nstatute_service_method(personal_tender).      % 1923.06(D)(2)(a)\nstatute_service_method(leave_with_suitable).  % 1923.06(D)(2)(b)\nstatute_service_method(posting).              % 1923.06(D)(2)(c)\n\n% Whether a method is \"mail\" in the ordinary sense.\nmethod_is_mail(ordinary_mail) :- !.\nmethod_is_mail(certified_mail) :- !.\nmethod_is_mail(Method) :-\n    statute_service_method(Method),\n    fail.\n\n% --- Primary vs secondary under the QUESTION'S definition (not a statutory definition) ---\n\n% Primary methods (modeled as the first-attempt methods in 1923.06(D)(2)(a)-(b)).\nprimary_service_method(personal_tender) :- !.\nprimary_service_method(leave_with_suitable) :- !.\nprimary_service_method(Method) :-\n    statute_service_method(Method),\n    fail.\n\n% Secondary methods (modeled as methods used/available when primary attempts fail).\n% Under 1923.06(D)(2)(c), posting is available only if (a) and (b) cannot be made.\nsecondary_service_method(posting) :- !.\nsecondary_service_method(Method) :-\n    statute_service_method(Method),\n    fail.\n\n% --- Core statutory duties/permissions ---\n\n% 1923.06(C): In an eviction action, the clerk SHALL mail the summons + complaint by ordinary mail.\nstatute_1923_06_c_requires_ordinary_mail(Action) :-\n    eviction_action(Action).\n\n% 1923.06(D)(2)(c): If service cannot be made by (a) personal tender or (b) leaving with a suitable person,\n% service may be made by posting.\n% We model \"primary unsuccessful\" as the condition for \"cannot be made\" for purposes of this question.\nstatute_1923_06_d2c_posting_permitted_if_primary_unsuccessful(Action) :-\n    eviction_action(Action),\n    primary_method_unsuccessful(Action).\n\n% 1923.06(G)(2): Service is deemed complete when BOTH ordinary mail (C) AND posting (D)(2)(c) have been made.\n% We model that, in the \"posting after primary failure\" path, ordinary mail is part of the required combination.\nstatute_1923_06_g2_requires_ordinary_mail_plus_posting_in_posting_path(Action) :-\n    statute_1923_06_c_requires_ordinary_mail(Action),\n    statute_1923_06_d2c_posting_permitted_if_primary_unsuccessful(Action).\n\n/* =========================\n   Legal reasoning for the question\n   ========================= */\n\n% A method is \"permitted as a secondary method\" (per question's definition) if:\n%  (1) primary was unsuccessful, AND\n%  (2) the statute authorizes/requires that method in the post-failure service path.\nsecondary_method_permitted_under_statute(Action, posting) :-\n    statute_1923_06_d2c_posting_permitted_if_primary_unsuccessful(Action),\n    !.\nsecondary_method_permitted_under_statute(Action, ordinary_mail) :-\n    % In the posting path, 1923.06(G)(2) requires ordinary mail + posting;\n    % and 1923.06(C) independently requires ordinary mail in eviction actions.\n    statute_1923_06_g2_requires_ordinary_mail_plus_posting_in_posting_path(Action),\n    !.\n\n% The question: \"Is mail a permitted secondary method of service for an eviction action?\"\n% We answer \"yes\" if there exists a mail method permitted as secondary in the scenario.\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_action(Action),\n    secondary_method_permitted_under_statute(Action, Method),\n    method_is_mail(Method),\n    !.\nhousing_answer(no) :-\n    !.\n\n/* =========================\n   Main entrypoint (required)\n   ========================= */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-0622",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Secondary methods of service are defined as those methods that may be used if the primary method is unsuccessful. Is mail a permitted secondary method of service for an eviction action?"
+  }
+}

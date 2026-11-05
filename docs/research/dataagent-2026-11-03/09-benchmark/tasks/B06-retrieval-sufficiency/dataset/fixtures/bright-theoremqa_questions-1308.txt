@@ -1,0 +1,35 @@
+## Identifying the essential problem:
+
+The essential problem is to find the minimum number of questions needed to identify a specific card out of 256 in a deck, where the only information available is the answer to the question "Is the card in the first half of the remaining deck?".
+
+## Reasoning step by step:
+
+1. **Initial division:** We start by dividing the deck of 256 cards into two equal halves of 128 cards each. We ask if the card is in the first half.
+2. **Halving the options:** Based on the answer, we know the card is either in the first 128 cards or the second 128 cards. This eliminates half of the possibilities.
+3. **Repeating the process:** We repeat the process of dividing the remaining cards in half and asking if the card is in the first half. With each question, we eliminate half of the remaining possibilities.
+4. **Reaching the final card:** We continue this process until we are left with only one card remaining. This card must be the chosen card.
+
+## Information relevant to the questions:
+
+1. **Number of cards in the deck:** Knowing the total number of cards (256) is crucial for understanding the scope of the problem.
+2. **Dividing the deck in half:** Dividing the deck in half ensures that we consistently eliminate half of the remaining possibilities with each question.
+3. **Answer to the question:** The answer to the question "Is the card in the first half?" provides information about the location of the card within the remaining deck.
+
+## Drafting an answer:
+
+To identify a specific card out of 256, we need to ask **8 questions**. This is because each question eliminates half of the remaining possibilities, and we need to narrow down the options from 256 to 1.
+
+Here's a table demonstrating the process:
+
+| Question | Remaining cards | Elimination |
+|---|---|---|
+| 1 | 256 | 128 |
+| 2 | 128 | 64 |
+| 3 | 64 | 32 |
+| 4 | 32 | 16 |
+| 5 | 16 | 8 |
+| 6 | 8 | 4 |
+| 7 | 4 | 2 |
+| 8 | 2 | 1 | 
+
+Therefore, with 8 strategically placed questions, we can identify the exact card out of 256 using this binary search approach.

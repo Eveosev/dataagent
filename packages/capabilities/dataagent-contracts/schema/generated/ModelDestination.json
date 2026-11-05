@@ -1,0 +1,53 @@
+{
+  "$comment": "generated from dataagent_contracts.core:ModelDestination; do not edit",
+  "$id": "dataagent-contracts/0.1/core/ModelDestination",
+  "additionalProperties": false,
+  "properties": {
+    "deployment": {
+      "enum": [
+        "local",
+        "private_cloud",
+        "vendor_api"
+      ],
+      "title": "Deployment",
+      "type": "string"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "model_ref": {
+      "minLength": 1,
+      "title": "Model Ref",
+      "type": "string"
+    },
+    "terms_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Terms Ref"
+    }
+  },
+  "required": [
+    "model_ref",
+    "deployment"
+  ],
+  "title": "ModelDestination",
+  "type": "object"
+}

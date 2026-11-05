@@ -1,0 +1,204 @@
+{
+  "source": "llamaindex/ExtractBench",
+  "id": "short/dd1155_schedule_continuation_0002",
+  "pdf": "docs/short/dd1155_schedule_continuation_0002.pdf",
+  "schema": {
+    "$defs": {
+      "LineItem": {
+        "properties": {
+          "item_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "UNIQUE 4-character zero-padded CLIN/SLIN identifier — EACH item_number VALUE MUST APPEAR AT MOST ONCE IN THE line_items LIST. Taken from the leftmost 'ITEM NO.' or 'Item' column of the Schedule of Supplies/Services (block 18 / DFARS Section B). Common label aliases: 'ITEM NO.', 'Item', 'Line Item', 'CLIN', 'CLIN/SLIN/ELIN', 'CLIN No.'. Always a 4-character zero-padded numeric string for top-level CLINs (e.g. '0001', '2000', '6100', '8100') and 6-character for SLINs (e.g. '000101', '200001'). Preserve verbatim including leading zeros; do NOT strip or normalize. Do NOT confuse with: requisition/PR number (block 4), purchase order number (block 1), delivery order number (block 2), ACRN (2-letter accounting code like 'AA'), PSC/FSC code (4-character product service code like 'R425'), CIN (long alphanumeric like 'F4FDAT2262A0380000AA'), or the document-page-number 'Page X of Y' header. If the same item_number appears in multiple places in the document (e.g. once in Section B with full data and again in Section E/F/G as a bare reference), this field STILL has only one value in the list — emit a single LineItem with this item_number from the Section B Schedule-of-Supplies row, and do NOT emit any additional LineItem with the same item_number."
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The free-text supply/service description for this CLIN/SLIN, taken from the 'SCHEDULE OF SUPPLIES/SERVICES' column (block 19 on DD-1155) or 'Supplies/Services' / 'Supplies/Service' column on the continuation sheet. Capture the FULL description verbatim — DO NOT TRUNCATE. The description typically begins with an NSN/PSC line (e.g. '1650-00-993-7386') followed by a noun phrase (e.g. 'VALVE,LINEAR,DIRECTIONAL CONTROL') and may continue with manufacturer / CAGE code / part number lines (e.g. 'HYDRO-AIRE INC., DBA CRANE HYDRO-AIRE CAGE 81982', 'P/N: 80791'). Read the ENTIRE description column for that row — including all wrapped or continuation lines that belong to the same row — and capture every line. Preserve line breaks within the description cell as '\\n'. INCLUDE any inline metadata that the agency printed inside the description cell (e.g. 'Data Category Code:', 'Purchase Requisition Number:', 'Product Service Code:', 'Pricing Arrangement:', 'CIN:', 'ACRN:', 'Fund Type', 'Option' suffix). Do NOT include text that appears in a separate column ('UNIT', 'UNIT PRICE', 'AMOUNT') or in standalone subsequent paragraphs ('PRICING TERMS:', 'INSPECTION POINT:', 'DELIVERY DATE:', 'PREP FOR DELIVERY:', 'SAMPLING:', 'PARCEL POST ADDRESS:'). Do NOT confuse with the Statement-of-Work prose body of Section C, the contractor's address (block 9), or the WAWF routing data table. If the description column is literally 'See Schedule' or 'CONT'D' with no real text, return that literal string. NORMALIZE column-wrap whitespace artifacts: if a comma is preceded by a stray space or line-break caused by DD-1155 column-wrap (e.g. 'VALVE,LINEAR ,DIRECT' or 'VALVE,LINEAR\\n,DIRECT'), remove that spurious whitespace so it reads 'VALVE,LINEAR,DIRECT'. This rule applies only to whitespace immediately adjacent to punctuation (comma, period, semicolon); do NOT alter other line breaks or spacing in the description."
+          },
+          "quantity_ordered": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Numeric quantity ordered for this CLIN/SLIN, from the 'QUANTITY ORDERED/ACCEPTED*' column (block 20 on DD-1155) or the 'Qty' / 'Quantity' / 'QTY' column on the continuation sheet. Strip any thousands separators (',') and any trailing unit text (e.g. '21,640.00 Labor Hours' → 21640.0; '3.000' → 3.0; '1.00' → 1.0). Use a JSON number (float OK). Do NOT include the unit-of-issue, unit price, or amount. Do NOT confuse with: '# of Personnel', '# of Days', 'Instances' columns inside Section H travel tables, or the page-of-pages count. Return null only if the row genuinely has no quantity printed (e.g. an NSP / informational sub-item that lists only a description)."
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Unit of issue / unit-of-measure for the quantity, from the 'UNIT' column (block 21 on DD-1155) or the 'Unit' column on the continuation sheet. Verbatim short code or short phrase as printed: 'EA', 'Each', 'Lot', 'Labor Hours', 'HR', 'DA', 'BX', 'GA', 'KT'. Preserve original casing exactly. Do NOT expand abbreviations (do NOT change 'EA' to 'Each' or vice versa). Do NOT confuse with: the unit price, the unit-of-issue inside the description text, or the 'Unit Pack' (QUP) under PKGING DATA. Return null only if the unit cell is genuinely blank for that row."
+          },
+          "unit_price": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Unit price per single unit-of-issue for this CLIN/SLIN, from the 'UNIT PRICE' column (block 22 on DD-1155) or 'Unit Price' / 'Est. Cost' / 'Fixed Fee' / 'CPFF' column on the continuation sheet. Capture verbatim AS PRINTED in the cell — including any currency prefix ('USD', '$'), thousands separators, and decimal point — as a string (e.g. 'USD 1,000.00', '$45,213.00', '0.00'). Do NOT compute or normalize. If multiple price-related sub-columns exist (Est. Cost / Fixed Fee / CPFF), join the populated cells with ' | ' in column order (e.g. 'USD 21,640.00 | USD 1,000.00 | USD 22,640.00'); if only one is populated, use it alone. Return null only if every price/cost cell for that row is genuinely blank (typical for NSP / 'No Separate Pricing' lines and informational sub-items). NSP-CELL RULE: if the row's amount/price column reads literally 'NSP' or 'No Separate Pricing' (typical of 'Cost Type / NSP Items' CLINs like 4000/4100/4200/8000/8100 on AFLCMC IDIQ orders), set unit_price=null AND set amount='NSP' (place the literal 'NSP' marker in the amount field, not the unit_price field). Do NOT confuse with: the Total in block 21/25, an ACRN-table 'Amount' column, or the 'Funded Amount' under the description."
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Total extended amount for this CLIN/SLIN (typically quantity * unit_price), from the 'AMOUNT' column (block 23 on DD-1155) or 'Amount' / 'Funded Amount' / 'Firm Price' column on the continuation sheet. Capture verbatim AS PRINTED — currency prefix, thousands separators, decimals — as a string (e.g. 'USD 1,000.00', '$45,213.00'). STACKED-CELL RULE — when the Amount cell contains BOTH a 'Firm Price' line AND a 'Funded Amount' line stacked vertically (typical of the AFLCMC IDIQ continuation-sheet template, where each CLIN's Amount column shows two labeled sub-rows), capture ONLY the dollar value next to 'Funded Amount' (the obligated dollar figure for THIS line item). Do NOT concatenate, do NOT join, do NOT include the 'Firm Price' line, do NOT prefix with sub-labels — output a single bare dollar string (e.g. 'USD 1,000.00'). NSP-CELL RULE — when the row is a 'Cost Type / NSP' item (typical CLINs 4000/4100/4200/8000/8100 on AFLCMC IDIQ orders) and the price/amount cell reads literally 'NSP' or 'No Separate Pricing', set amount='NSP' (the literal string 'NSP'). Return null only if the cell is genuinely blank, or a CLIN whose amount is deferred to a later modification. Do NOT confuse with: block 25 'TOTAL' for the whole order, ACRN-table 'Amount' (per-accounting-string allocation), Section G 'Line of Accounting' amount, or the page header dollar figure."
+          }
+        },
+        "title": "LineItem",
+        "type": "object"
+      }
+    },
+    "properties": {
+      "contract_purchase_order_number": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The base contract or purchase-order/agreement number that this DD-1155 order is written against, from block 1 'CONTRACT/PURCH ORDER/AGREEMENT NO.' on page 1. Verbatim including all dashes / slashes and any letter prefix (e.g. 'SPE4A7-17-P-5525', 'FA868423DB074', 'N0017819D7712', 'H94003-04-D-0004'). Typical formats: PIID 13-character (e.g. 'N0001719C5001'), DLA 'SPE…-NN-P-NNNN', or IDIQ base contract. Do NOT confuse with: block 2 delivery order/call number (often a shorter PIID), block 4 requisition / purchase request number, the CIN (long string ending in '-AA' or similar inside Section B), or the document page-header reference (which mirrors block 2, not block 1). If block 1 contains a comma-separated pair, capture only the first (the base contract)."
+      },
+      "delivery_order_call_number": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The delivery-order / call / task-order number for this specific order, from block 2 'DELIVERY ORDER/CALL NO.' on page 1. Verbatim including any letter prefix (e.g. 'FA868423FB061', 'N0017422F3007'). On many DD-1155s this is the value that also appears in the upper-right page header (e.g. 'N0017422F3007 - FINAL', 'FA868423FB061 Page 2 of 13'). If block 2 is blank (true for many DLA SPE… purchase orders where there is no separate delivery order), return null. NEVER return empty string ''; use null for blank cells."
+      },
+      "date_of_order": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Date the order was issued, from block 3 'DATE OF ORDER/CALL (YYYYMMMDD)' on page 1. Return verbatim AS PRINTED in the source (the DD-1155 form prescribes the 'YYYYMMMDD' format with a 3-letter uppercase month, e.g. '2017 FEB 17', '2022JUL29', '2022DEC06'). Preserve internal whitespace exactly as printed. Do NOT reformat to ISO-8601, do NOT translate the month, do NOT confuse with: date signed (block 24 BY/DATE SIGNED), delivery date in Section F, document creation timestamp ('Created On:' footer), or Period-of-Performance start date. If block 3 is genuinely blank, return null. NEVER return empty string ''; use null for blank cells."
+      },
+      "requisition_purchase_request_number": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The requisition or purchase-request number that initiated this order, from block 4 'REQUISITION/PURCH REQUEST NO.' on page 1. Verbatim string (e.g. '0065228382', 'A025532', 'F4FDAT2262A038'). If block 4 explicitly says 'Various' (used when the order rolls up many PRs), return the literal string 'Various'. Do NOT confuse with: contract number (block 1), delivery order number (block 2), CIN (Section G accounting CIN like 'F4FDAT2262A0380000AA'), or the per-line 'External PR' values on a Section B continuation."
+      },
+      "total_award_amount": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Grand total dollar value of this order, from block 25 'TOTAL' on the DD-1155 cover page (usually directly above the contracting officer signature in block 24). Capture VERBATIM AS PRINTED including any currency prefix and punctuation as a string (e.g. '$1,772,661.97', 'USD 1,000.00', '$45,213.00'). Return null only if block 25 is genuinely blank (no total printed). NEVER return empty string ''; use null for blank cells. Do NOT compute by summing the line_items, do NOT confuse with: the Section G ACRN line of accounting amount, a per-CLIN unit_price/amount, the 'Funded Amount' on a single CLIN, or 'AMOUNT VERIFIED CORRECT FOR' (block 33)."
+      },
+      "line_items": {
+        "anyOf": [
+          {
+            "items": {
+              "$ref": "#/$defs/LineItem"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "DEDUPLICATED list of every distinct Schedule-of-Supplies/Services CLIN/SLIN row in this DD-1155 order. EACH CLIN/SLIN APPEARS EXACTLY ONCE IN THIS LIST — IT IS A SET-VALUED FIELD KEYED BY item_number, NOT A BAG OF EVERY MENTION. If you find yourself about to emit a second LineItem with the same item_number, DO NOT — that's wrong. Update or merge into the first LineItem instead.\\n\\nSource: block 18-23 of the DD-1155 cover page AND every continuation-sheet 'Section B' / 'SCHEDULE OF SUPPLIES/SERVICES' / 'CLIN - SUPPLIES OR SERVICES' table (including DD-1155C-1 continuation sheets, 'Cost Type Items', 'Cost Only Items', 'Cost Type / NSP Items', and base-year + option-year CLIN groupings).\\n\\nA CLIN qualifies for inclusion ONLY when it appears in a Schedule-of-Supplies/Services TABLE with a populated description/qty/unit/price/amount column. CLIN identifiers are routinely referenced again throughout the document body (Section E inspection clauses, Section F period-of-performance lists, Section G ACRN/CIN cross-reference tables, payment-clause boilerplate, delivery rosters, etc.). Those secondary references are NOT new line items — they do NOT produce additional LineItem entries. The number of LineItem entries you emit MUST equal the number of distinct numeric CLINs in the Schedule-of-Supplies tables (typically 1-30 depending on whether base-year + option-year CLINs are present). It MUST NOT equal the total number of times any CLIN identifier is mentioned anywhere in the document.\\n\\nEXPLICITLY EXCLUDE (do not emit a duplicate row for):\\n- bare CLIN references inside Section E 'INSPECTION AND ACCEPTANCE' clauses\\n- bare CLIN references inside Section F 'DELIVERIES OR PERFORMANCE' / 'Period of Performance' bullet lists\\n- bare CLIN references inside Section G 'CONTRACT ADMINISTRATION DATA' / ACRN / CIN cross-reference tables\\n- CLIN references inside Section H special contract requirements, Section I clauses, Section J attachments, eCRAFT labor crosswalks, deliverable (CDRL A###) summary tables, WAWF routing tables, or address blocks\\n- standalone bullet, paragraph, or footer references to a CLIN number elsewhere in the document\\n\\nDo NOT create a 'shadow' or 'echo' row with null/empty description/qty/unit/unit_price/amount for the same item_number just because the CLIN identifier reappears in Section E/F/G or anywhere else.\\n\\nINCLUDE: informational/funding sub-items such as 'Funding in support of CLIN 2000' (with their own item number like 2001, 2002, 2003) when they appear as their own row in the Schedule-of-Supplies table; option-year CLINs (2100, 2200, 6000, etc.) when they appear as their own row in the Schedule-of-Supplies table. If the cover-page Section 18-23 is literally 'See Schedule' or 'SEE SCHEDULE' or 'Award sent EDI', do not invent a row from it — instead pull all rows from the continuation Section B. Preserve the printed order (typically ascending by item_number, grouped by section). If after a careful pass NO schedule rows exist (extremely rare; DD-1155 always has at least one CLIN), return [].",
+        "title": "Line Items"
+      }
+    },
+    "title": "DD1155Schedule",
+    "type": "object"
+  },
+  "expected": {
+    "kind": "json",
+    "schema_ref": "fixtures/eb-short-dd1155_schedule_continuation_0002-schema.json",
+    "value": {
+      "contract_purchase_order_number": "SPE4A7-17-P-5525",
+      "delivery_order_call_number": null,
+      "date_of_order": "2017 FEB 17",
+      "requisition_purchase_request_number": "0065228382",
+      "total_award_amount": null,
+      "line_items": [
+        {
+          "item_number": "0001",
+          "description": "1650-00-993-7386\nVALVE,LINEAR,DIRECTIONAL CONTROL\nHYDRO-AIRE INC., DBA CRANE HYDRO-AIRE CAGE 81982\nP/N: 80791",
+          "quantity_ordered": 3.0,
+          "unit": "EA",
+          "unit_price": null,
+          "amount": null
+        }
+      ]
+    },
+    "anchored_fields": 6,
+    "no_anchor_fields": 0,
+    "pages": {
+      "contract_purchase_order_number": 1,
+      "delivery_order_call_number": 1,
+      "date_of_order": 1,
+      "requisition_purchase_request_number": 1
+    },
+    "evidence_gold": {
+      "source": "schema-description",
+      "version": 1
+    }
+  },
+  "field_rules": "{\"contract_purchase_order_number\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.07476, 0.0956, 0.10045, 0.00784], \"quote\": \"SPE4A7-17-P-5525\", \"value\": \"SPE4A7-17-P-5525\", \"coarse\": false, \"layer\": \"word\"}, {\"page\": 1, \"bbox\": [0.07476, 0.09455, 0.20588, 0.01182], \"quote\": \"SPE4A7-17-P-5525\", \"value\": \"SPE4A7-17-P-5525\", \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"delivery_order_call_number\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": \"2. DELIVERY ORDER/CALL NO. [block 2 empty on form]\", \"value\": null, \"coarse\": true, \"_verifier_classification\": \"model_failure\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"date_of_order\": {\"comparator\": \"date\", \"evidence\": [{\"page\": 1, \"bbox\": [0.51992, 0.09977, 0.06676, 0.00784], \"quote\": \"2017 FEB 17\", \"value\": \"2017 FEB 17\", \"coarse\": false, \"layer\": \"word\"}, {\"page\": 1, \"bbox\": [0.48898, 0.0985, 0.12747, 0.01136], \"quote\": \"2017 FEB 17\", \"value\": \"2017 FEB 17\", \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"requisition_purchase_request_number\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.63972, 0.09638, 0.06359, 0.00784], \"quote\": \"0065228382\", \"value\": \"0065228382\", \"coarse\": false, \"layer\": \"word\"}, {\"page\": 1, \"bbox\": [0.63972, 0.09533, 0.1757, 0.01182], \"quote\": \"0065228382\", \"value\": \"0065228382\", \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"total_award_amount\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": \"25. TOTAL [block 25 empty on form]\", \"value\": null, \"coarse\": true, \"_verifier_classification\": \"model_failure\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"line_items\": {\"comparator\": {\"item_number\": \"case_insensitive\", \"description\": \"case_insensitive\", \"quantity_ordered\": \"number\", \"unit\": \"case_insensitive\", \"unit_price\": \"case_insensitive\", \"amount\": \"case_insensitive\"}, \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": \"0001\", \"value\": {\"item_number\": \"0001\", \"description\": \"1650-00-993-7386\\nVALVE,LINEAR,DIRECTIONAL CONTROL\\nHYDRO-AIRE INC., DBA CRANE HYDRO-AIRE CAGE 81982\\nP/N: 80791\", \"quantity_ordered\": 3.0, \"unit\": \"EA\", \"unit_price\": null, \"amount\": null}, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"structural\": \"match_by:item_number\"}, \"line_items[0].item_number\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 5, \"bbox\": [0.05882, 0.62439, 0.03133, 0.01055], \"quote\": \"0001\", \"value\": \"0001\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[0].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 3, \"bbox\": [0.06667, 0.22708, 0.37519, 0.03147], \"quote\": \"VALVE,LINEAR,DIRECTIONAL CONTROL HYDRO-AIRE INC., DBA CRANE HYDRO-AIRE CAGE 81982 P/N: 80791\", \"value\": \"1650-00-993-7386\\nVALVE,LINEAR,DIRECTIONAL CONTROL\\nHYDRO-AIRE INC., DBA CRANE HYDRO-AIRE CAGE 81982\\nP/N: 80791\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[0].quantity_ordered\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 5, \"bbox\": [0.3333, 0.62395, 0.03917, 0.01099], \"quote\": \"3.000\", \"value\": 3.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[0].unit\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 5, \"bbox\": [0.47437, 0.62439, 0.01566, 0.01055], \"quote\": \"EA\", \"value\": \"EA\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[0].unit_price\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[0].amount\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}}",
+  "repeated_structure": "{\"line_items\": {\"anyOf\": [{\"items\": {\"$ref\": \"#/$defs/LineItem\"}, \"type\": \"array\"}, {\"type\": \"null\"}], \"description\": \"One entry per distinct Schedule-of-Supplies/Services CLIN/SLIN row. DEDUPLICATE by item_number across the entire document: a CLIN that appears once in the Schedule-of-Supplies table and then is referenced again in Section E/F/G or elsewhere must appear ONLY ONCE in this list. Identified in the text by a numeric item_number in the leftmost 'ITEM NO.' / 'Item' / 'CLIN' column of a Section B / Schedule table (DD-1155 block 18 or any continuation sheet). Excludes accounting/ACRN rows, period-of-performance bullets, deliverable rosters, travel-table entries, and bare CLIN references outside the Schedule-of-Supplies table.\", \"title\": \"Line Items\", \"identity_key\": \"item_number\"}}",
+  "anchored_fields": 6,
+  "no_anchor_fields": 0,
+  "case_id": "B03-eb-0168"
+}

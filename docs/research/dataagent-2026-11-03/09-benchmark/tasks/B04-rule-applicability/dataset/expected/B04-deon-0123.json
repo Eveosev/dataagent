@@ -1,0 +1,37 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_93cfd90b",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "state",
+    "focus_year",
+    "landlord",
+    "tenant",
+    "tenancy",
+    "tenancy_type",
+    "rent_payment_interval_days",
+    "landlord_seeks_to_terminate",
+    "tenant_in_possession",
+    "tenant_neglects_or_refuses_to_pay_rent",
+    "tenant_holds_over_after_controlled_substance_clause_termination",
+    "formal_police_report_filed_controlled_substance",
+    "statute_554_134_1_notice_days_for_at_will_or_sufferance",
+    "statute_554_134_2_notice",
+    "statute_554_134_3_notice",
+    "statute_554_134_4_notice",
+    "statute_554_134_notice_required",
+    "statute_600_5716_demand_requirements",
+    "landlord_must_give_notice_to_vacate_before_termination",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: Michigan\n    Focus year: 2021\n\n    Question: Does the law require the landlord to give the tenant notice to vacate\n    (i.e., notice to quit / notice terminating the tenancy) prior to terminating a tenancy?\n*/\n\n% ----------------------------\n% Scenario facts (question's factual statement encoded)\n% ----------------------------\n\nstate(michigan).\nfocus_year(2021).\n\nlandlord(landlord1).\ntenant(tenant1).\ntenancy(tenancy1).\n\n% The question is general; we encode a minimal, typical termination scenario:\n% - Landlord seeks to terminate an at-will tenancy\n% - Rent is paid monthly (interval between payments = 30 days)\n% - No nonpayment basis, no controlled-substance holdover basis\ntenancy_type(tenancy1, estate_at_will).\nrent_payment_interval_days(tenancy1, 30).\n\nlandlord_seeks_to_terminate(landlord1, tenancy1).\ntenant_in_possession(tenant1, tenancy1).\n\n% Facts indicating special statutory grounds are NOT present in this scenario.\ntenant_neglects_or_refuses_to_pay_rent(tenancy1) :- fail.\ntenant_holds_over_after_controlled_substance_clause_termination(tenancy1) :- fail.\nformal_police_report_filed_controlled_substance(tenancy1) :- fail.\n\n% Helper predicate summarizing the scenario in reusable logical form.\nscenario_statement :-\n    state(michigan),\n    focus_year(2021),\n    landlord(landlord1),\n    tenant(tenant1),\n    tenancy(tenancy1),\n    tenant_in_possession(tenant1, tenancy1),\n    landlord_seeks_to_terminate(landlord1, tenancy1),\n    tenancy_type(tenancy1, estate_at_will),\n    rent_payment_interval_days(tenancy1, 30).\n\n% ----------------------------\n% Statute translations (deterministic predicates)\n% ----------------------------\n\n/*\n  MI Comp L  554.134(1) (2021)\n  - Estate at will or by sufferance: may be terminated by either party by giving 1 month's notice.\n  - If rent is payable at periods < 3 months, notice is sufficient if equal to the interval between payments.\n*/\nstatute_554_134_1_notice_days_for_at_will_or_sufferance(Tenancy, Days) :-\n    rent_payment_interval_days(Tenancy, IntervalDays),\n    (   IntervalDays < 90\n    ->  Days = IntervalDays\n    ;   Days = 30\n    ).\n\n/*\n  MI Comp L  554.134(2) (2021)\n  - If tenant neglects or refuses to pay rent: landlord may terminate by giving written 7-day notice to quit.\n*/\nstatute_554_134_2_notice(nonpayment_of_rent, 7, written_notice_to_quit).\n\n/*\n  MI Comp L  554.134(3) (2021)\n  - Tenancy from year to year: may be terminated by either party by notice to quit.\n  - Notice terminates lease at expiration of 1 year from service.\n*/\nstatute_554_134_3_notice(tenancy_from_year_to_year, 365, notice_to_quit).\n\n/*\n  MI Comp L  554.134(4) (2021)\n  - If tenant holds over after lease terminated under controlled-substance clause AND police report filed:\n    landlord may terminate by giving written 24-hour notice to quit.\n*/\nstatute_554_134_4_notice(controlled_substance_holdover_with_police_report, 1, written_notice_to_quit).\n\n/*\n  Combined rule for MI Comp L  554.134 (2021):\n  Determine the applicable notice required to terminate the tenancy.\n\n  This is written to be deterministic by ordering (most specific grounds first).\n*/\nstatute_554_134_notice_required(Tenancy, Days, NoticeType, Ground) :-\n    %  554.134(4)\n    tenant_holds_over_after_controlled_substance_clause_termination(Tenancy),\n    formal_police_report_filed_controlled_substance(Tenancy),\n    statute_554_134_4_notice(Ground, Days, NoticeType),\n    !.\nstatute_554_134_notice_required(Tenancy, Days, NoticeType, Ground) :-\n    %  554.134(2)\n    tenant_neglects_or_refuses_to_pay_rent(Tenancy),\n    statute_554_134_2_notice(Ground, Days, NoticeType),\n    !.\nstatute_554_134_notice_required(Tenancy, Days, NoticeType, Ground) :-\n    %  554.134(3)\n    tenancy_type(Tenancy, tenancy_from_year_to_year),\n    statute_554_134_3_notice(Ground, Days, NoticeType),\n    !.\nstatute_554_134_notice_required(Tenancy, Days, NoticeType, Ground) :-\n    %  554.134(1)\n    ( tenancy_type(Tenancy, estate_at_will)\n    ; tenancy_type(Tenancy, estate_by_sufferance)\n    ),\n    statute_554_134_1_notice_days_for_at_will_or_sufferance(Tenancy, Days),\n    NoticeType = notice_of_termination,\n    Ground = at_will_or_sufferance,\n    !.\n\n/*\n  MI Comp L  600.5716 (2021)\n  - A demand for possession or payment shall be in writing, addressed to the person in possession,\n    describe premises, state reasons and time to remedy; if nonpayment, state amount due; dated & signed.\n  This can overlap with notices used in summary proceedings, but the core question here is notice to vacate.\n*/\nstatute_600_5716_demand_requirements(\n    writing_required,\n    addressed_to_person_in_possession_required,\n    premises_description_required,\n    reasons_required,\n    time_to_remedy_required,\n    amount_due_if_nonpayment_required,\n    dated_required,\n    signed_by_entitled_person_or_agent_required\n).\n\n% ----------------------------\n% Legal reasoning helpers\n% ----------------------------\n\n% The law \"requires notice prior to termination\" if the landlord, to terminate, must give some notice\n% under  554.134 that is greater than 0 days (including 24-hour notice modeled as 1 day).\nlandlord_must_give_notice_to_vacate_before_termination(Landlord, Tenant, Tenancy, Days, NoticeType, Ground) :-\n    landlord_seeks_to_terminate(Landlord, Tenancy),\n    tenant_in_possession(Tenant, Tenancy),\n    statute_554_134_notice_required(Tenancy, Days, NoticeType, Ground),\n    Days > 0.\n\n% ----------------------------\n% Answer predicate (must be deterministic)\n% ----------------------------\n\nhousing_answer(yes) :-\n    scenario_statement,\n    landlord_must_give_notice_to_vacate_before_termination(landlord1, tenant1, tenancy1, _Days, _NoticeType, _Ground),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n% ----------------------------\n% Main entrypoint (required)\n% ----------------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-0123",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Does the law require the landlord to give the tenant notice to vacate the property prior to terminating a tenancy?"
+  }
+}

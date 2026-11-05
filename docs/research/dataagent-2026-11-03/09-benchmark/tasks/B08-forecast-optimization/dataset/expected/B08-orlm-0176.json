@@ -1,0 +1,11 @@
+{
+  "source": "chenyitian-shanshu/ORLMBenchmark",
+  "subset": "OptMATH_Bench_166.jsonl",
+  "question": "The problem involves assigning employees to shifts across two restaurants to meet skill demands while minimizing costs. There are 2 restaurants, 6 shifts per restaurant, and 6 employees. Each employee has specific skills and availability for shifts. Employees have preference costs for certain skills, and unfulfilled positions incur a penalty cost of 100 units. The demand for skills varies by restaurant, shift, and skill type. For example, Restaurant 0, Shift 0 requires 2 employees with Skill 0, and Restaurant 1, Shift 0 requires 1 employee with Skill 0. Employees can only be assigned to shifts they are available for and to roles they are skilled in. Each employee can be assigned to at most one shift across all restaurants and skills. The objective is to minimize the total cost, which includes preference costs for employee assignments and penalty costs for unfulfilled positions. Constraints ensure that the total number of employees assigned to a specific skill in a shift, plus any unfulfilled positions, equals the demand for that skill. Employee availability and skill requirements are respected, and each employee is limited to one assignment. The preference costs for assignments are as follows: Employee 0 to Skill 0 costs 1 unit, Employee 1 to Skill 0 costs 2 units, and Employee 3 to Skill 0 costs 3 units. The penalty cost for unfulfilled positions is 100 units per position. The goal is to assign employees to shifts and roles in a way that meets all demands while minimizing the total cost.",
+  "answer": 6.0,
+  "case_id": "B08-orlm-0176",
+  "expected": {
+    "kind": "model_answer",
+    "answer": 6.0
+  }
+}

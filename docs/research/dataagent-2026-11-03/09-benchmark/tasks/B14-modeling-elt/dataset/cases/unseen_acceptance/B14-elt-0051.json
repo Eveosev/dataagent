@@ -1,0 +1,35 @@
+{
+  "case_id": "B14-elt-0051",
+  "task_id": "B14",
+  "split_role": "unseen_acceptance",
+  "inputs": [
+    {
+      "kind": "config",
+      "ref": "fixtures/elt-databricks-microsoft_ads-config.yaml",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B14-elt-0051.json"
+  },
+  "evidence": [
+    "bench://elt-bench/elt-bench/databricks/microsoft_ads/data_model.yaml"
+  ],
+  "tags": [
+    "elt-bench",
+    "databricks",
+    "microsoft_ads",
+    "models:6"
+  ],
+  "source": "elt",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

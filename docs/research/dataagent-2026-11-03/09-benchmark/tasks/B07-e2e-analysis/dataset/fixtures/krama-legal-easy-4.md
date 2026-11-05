@@ -1,0 +1,1 @@
+How many frauds were reported by FTC over the web between 2022 and 2024 in total?

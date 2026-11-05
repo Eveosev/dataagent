@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 407,
+  "question": "I'm studying how early in life a patient in the thrombosis cohort can show a high anti-ribonuclear protein (RNP) reading. Please tell me the youngest age, in whole years, at which a patient had a laboratory test showing an anti-RNP result of at least 64. Age in whole years means the year of the test minus the year of birth. If several patients or tests share that youngest age, report that age once. I just need that single youngest age value, nothing else.",
+  "evidence": "Anti-ribonuclear protein (RNP): an antibody measured in the laboratory panel, reported as a titer number or as negative.",
+  "gold_sql": "SELECT MIN(STRFTIME('%Y', T2.`Date`) - STRFTIME('%Y', T1.Birthday)) AS youngest_age FROM Patient AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID WHERE CAST(T2.RNP AS REAL) >= 64",
+  "db_id": "thrombosis_prediction",
+  "case_id": "B05-bird-0408",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT MIN(STRFTIME('%Y', T2.`Date`) - STRFTIME('%Y', T1.Birthday)) AS youngest_age FROM Patient AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID WHERE CAST(T2.RNP AS REAL) >= 64",
+    "db_id": "thrombosis_prediction",
+    "evidence": "Anti-ribonuclear protein (RNP): an antibody measured in the laboratory panel, reported as a titer number or as negative."
+  }
+}

@@ -1,0 +1,36 @@
+[package]
+name = "dataagent/governance-layer"
+version = "0.1.0"
+kind = "bundle"
+description = "DataAgent 评测与治理层：6 个 S0 原子（访问范围检查、模型上下文外发控制、业务验收判据、验收样本隔离、端到端业务验收、结果粒度与合并检查），提供 MCP 入口；CLI 供本地调试、黑盒验收与判据确认管理，不作为 command 组件发布"
+license = "Apache-2.0"
+keywords = ["governance", "acceptance", "access-control", "egress", "mcp"]
+
+[requires]
+api = "^0.1"
+
+[provides]
+mcp_servers = ["dataagent-governance"]
+skills = ["dataagent-acceptance", "dataagent-access"]
+
+[capabilities]
+exec = ["uv"]
+fs.read = ["*"]
+fs.write = [".dataagent/**"]
+
+[capabilities.reason]
+exec = "uv 按锁定的 Python 项目拉起 MCP stdio 服务；不执行包内其它程序"
+"fs.read" = "读取工作区内的输入文件与策略文档；组件拒绝绝对路径、.. 与符号链接越界"
+"fs.write" = "仅在 data_root（默认工作区 .dataagent/）写入内容寻址对象、SQLite 版本库、样本库、暴露台账与判据"
+
+[metadata.runtime]
+requires = ["python>=3.11,<3.14", "uv"]
+
+[metadata.env]
+# DECLARATION ONLY (W0 §6) — Mint 0.1.25 does not inject these from here.
+# The bundle's own .mcp.json server descriptor injects
+# DATAAGENT_ENFORCEMENT_MODE=enforce for the S0 composition; the host can
+# override it through the project-level .mcp.json `env` map.
+DATAAGENT_WORKSPACE = "工作区根目录（默认当前目录）"
+DATAAGENT_DATA_ROOT = "共享 data_root（默认 <workspace>/.dataagent/）：内容寻址对象、SQLite 版本库与共享判定库 db/decisions.sqlite3（数据/应用层复检在同一文件解析治理层铸出的 AccessDecision）"
+DATAAGENT_ENFORCEMENT_MODE = "DA12.1 复检模式 off/warn/enforce；包内 .mcp.json 注入 enforce（无可用判定即拒）；宿主可在项目级 .mcp.json 覆盖"

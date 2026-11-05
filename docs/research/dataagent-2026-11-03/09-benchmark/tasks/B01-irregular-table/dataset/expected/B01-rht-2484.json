@@ -1,0 +1,29 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 848,
+  "table": "labor-table17",
+  "structure": "ColumnHeaderMerge",
+  "question_type": "Numerical Reasoning",
+  "sub_type": "Counting",
+  "answer": "2",
+  "cot": [
+    {
+      "step": "First, we identify the “GV12” section in the table and locate the “Target” percentage, which is 61.30%."
+    },
+    {
+      "step": "We extract the “all shifts” percentages for all days (Monday to Friday)."
+    },
+    {
+      "step": "For each day, we compare the “all shifts” percentage value with the “Target” to determine if it exceeds 61.30%."
+    },
+    {
+      "step": "Finally, we count the total number of days where the “all shifts” percentage exceeded the “Target” percentage and output the result."
+    }
+  ],
+  "case_id": "B01-rht-2484",
+  "expected": {
+    "kind": "answer",
+    "question": "How many shifts across the week for GV12 exceeded the “Target” percentage of 61.30%?",
+    "answer": "2"
+  }
+}

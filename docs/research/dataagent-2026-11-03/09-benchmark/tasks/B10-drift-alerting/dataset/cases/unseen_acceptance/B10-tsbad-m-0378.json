@@ -1,0 +1,34 @@
+{
+  "case_id": "B10-tsbad-m-0378",
+  "task_id": "B10",
+  "split_role": "unseen_acceptance",
+  "inputs": [
+    {
+      "kind": "series",
+      "ref": "bench://tsb-ad-m/TSB-AD-M/032_GHL_id_1_Sensor_tr_50000_1st_65001.csv",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B10-tsbad-m-0378.json"
+  },
+  "evidence": [
+    "bench://tsb-ad-m/TSB-AD-M/032_GHL_id_1_Sensor_tr_50000_1st_65001.csv"
+  ],
+  "tags": [
+    "tsb-ad",
+    "m",
+    "Sensor"
+  ],
+  "source": "tsbad-m",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

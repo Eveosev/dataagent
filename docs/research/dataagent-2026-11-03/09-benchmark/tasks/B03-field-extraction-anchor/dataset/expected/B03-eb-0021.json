@@ -1,0 +1,1117 @@
+{
+  "source": "llamaindex/ExtractBench",
+  "id": "short/08-15427 H-12 1-21-2003 F-01341",
+  "pdf": "docs/short/08-15427 H-12 1-21-2003 F-01341.pdf",
+  "schema": {
+    "$defs": {},
+    "properties": {
+      "operator_name": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 1 'OPERATOR NAME, exactly as shown on P-5 Organization Report' — the full operator/company name typed on the single line in the top-left cell of the header row. Extract verbatim as printed, preserving casing, punctuation, and any 'INC'/'LLC'/'CO' suffix. Do NOT confuse with box 17 field_name or box 18 lease_or_unit_name (those name the geologic field and the lease/unit, not the operator), and do NOT confuse with name_print_or_type in the signature/certificate block at the bottom (the individual who signs the application).",
+        "title": "Operator Name"
+      },
+      "operator_p5_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 2 'OPERATOR P-5 NO.' — the operator's Railroad Commission P-5 Organization Report number, typed in the small cell to the right of box 1. Extract verbatim as a string, preserving any leading zeros. Do NOT confuse with box 3 rrc_district_no_and_county (the RRC district number plus county), box 19 lease_no, or the project numbers in box 21 (inj_auth_a_project_no / inj_auth_b_project_no, which are 'F-' prefixed injection-project numbers).",
+        "title": "Operator P-5 No."
+      },
+      "rrc_district_no_and_county": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 3 'RRC DISTRICT NO. AND COUNTY' — the Railroad Commission district number and the county name, typed in the top-right cell of the header row. Extract the whole entry verbatim (e.g. district number and county as printed on one line). Do NOT confuse with box 2 operator_p5_no (the P-5 organization number) or box 19 lease_no.",
+        "title": "RRC District No. and County"
+      },
+      "mailing_address": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 4 'MAILING ADDRESS, including city, state and zip code' — the operator's full mailing address typed in the left cell of the second header row (street, city, state, ZIP). Concatenate the printed address lines with single spaces and extract verbatim, preserving casing, abbreviations, and ZIP digits. Do NOT confuse with box 1 operator_name (the company name above it) or with the Phone field in the bottom certificate block.",
+        "title": "Mailing Address"
+      },
+      "recovery_waterflood": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 5 'METHOD OF RECOVERY TO BE USED' — the 'waterflood' checkbox (first item in the left checkbox column of box 5, in the right half of the second header row). True if this box is checked/marked on the scan, false if left blank. This is plain waterflood ONLY. Do NOT confuse with the augmented-waterflooding options in the same box (recovery_co2_augmented_waterflooding, recovery_polymer_augmented_waterflooding) or with box 8 fluid_fresh_water / fluid_saltwater / fluid_brackish_water (those name the injected fluid, not the recovery method).",
+        "title": "Recovery Method: Waterflood"
+      },
+      "recovery_co2_augmented_waterflooding": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 5 'METHOD OF RECOVERY TO BE USED' — the 'carbon dioxide augmented waterflooding' checkbox (right checkbox column of box 5, second item from the top). True if checked, false if blank. This is waterflooding augmented with CO2. Do NOT confuse with recovery_waterflood (plain waterflood), recovery_polymer_augmented_waterflooding (polymer-augmented, not CO2), recovery_immiscible_co2_displacement (immiscible CO2 displacement, a different CO2 method), or box 8 fluid_co2 (the 'CO2' injected-fluid checkbox).",
+        "title": "Recovery Method: Carbon Dioxide Augmented Waterflooding"
+      },
+      "recovery_polymer_augmented_waterflooding": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 5 'METHOD OF RECOVERY TO BE USED' — the 'polymer augmented waterflooding' checkbox (right checkbox column of box 5, third item from the top). True if checked, false if blank. This is waterflooding augmented with polymer. Do NOT confuse with recovery_co2_augmented_waterflooding (CO2-augmented), recovery_waterflood (plain waterflood), recovery_microemulsion_micellar_flooding, or box 8 fluid_polymer (the 'polymer' injected-fluid checkbox).",
+        "title": "Recovery Method: Polymer Augmented Waterflooding"
+      },
+      "recovery_immiscible_co2_displacement": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 5 'METHOD OF RECOVERY TO BE USED' — the 'immiscible carbon dioxide displacement' checkbox (right checkbox column of box 5, fourth item from the top). True if checked, false if blank. This is IMMISCIBLE CO2 displacement specifically. Do NOT confuse with recovery_co2_augmented_waterflooding (CO2-augmented waterflooding) or recovery_miscible_fluid_displacement (MISCIBLE fluid displacement, the opposite miscibility regime, located in the left column).",
+        "title": "Recovery Method: Immiscible Carbon Dioxide Displacement"
+      },
+      "recovery_steam_drive_injection": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 5 'METHOD OF RECOVERY TO BE USED' — the 'steam drive injection' checkbox (right checkbox column of box 5, fifth item from the top). True if checked, false if blank. This is continuous steam-drive injection. Do NOT confuse with recovery_cyclic_steam_injection (CYCLIC steam injection, a different steam method in the left column) or recovery_gas_injection (gas, not steam).",
+        "title": "Recovery Method: Steam Drive Injection"
+      },
+      "recovery_gas_injection": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 5 'METHOD OF RECOVERY TO BE USED' — the 'gas injection' checkbox (right checkbox column of box 5, sixth/bottom item). True if checked, false if blank. This is the recovery-METHOD 'gas injection' option. Do NOT confuse with box 8 fluid_natural_gas (the injected-fluid 'natural gas' checkbox), recovery_steam_drive_injection, or recovery_miscible_fluid_displacement.",
+        "title": "Recovery Method: Gas Injection"
+      },
+      "recovery_microemulsion_micellar_flooding": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 5 'METHOD OF RECOVERY TO BE USED' — the 'microemulsion, or micellar/emulsion, flooding' checkbox (top item of the right checkbox column of box 5). True if checked, false if blank. Do NOT confuse with recovery_polymer_augmented_waterflooding or recovery_alkaline_caustic_flooding (other chemical-flooding methods).",
+        "title": "Recovery Method: Microemulsion or Micellar/Emulsion Flooding"
+      },
+      "recovery_alkaline_caustic_flooding": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 5 'METHOD OF RECOVERY TO BE USED' — the 'alkaline (caustic) flooding' checkbox (left checkbox column of box 5, second item from the top). True if checked, false if blank. Do NOT confuse with recovery_microemulsion_micellar_flooding or recovery_polymer_augmented_waterflooding (other chemical-flooding methods).",
+        "title": "Recovery Method: Alkaline (Caustic) Flooding"
+      },
+      "recovery_cyclic_steam_injection": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 5 'METHOD OF RECOVERY TO BE USED' — the 'cyclic steam injection' checkbox (left checkbox column of box 5, third item from the top). True if checked, false if blank. This is CYCLIC steam injection ('huff-and-puff'). Do NOT confuse with recovery_steam_drive_injection (continuous steam DRIVE, in the right column) or recovery_in_situ_combustion.",
+        "title": "Recovery Method: Cyclic Steam Injection"
+      },
+      "recovery_in_situ_combustion": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 5 'METHOD OF RECOVERY TO BE USED' — the 'in situ combustion' checkbox (left checkbox column of box 5, fourth item from the top). True if checked, false if blank. This is the fire-flood / in-situ combustion thermal method. Do NOT confuse with recovery_cyclic_steam_injection or recovery_steam_drive_injection (steam-based thermal methods).",
+        "title": "Recovery Method: In Situ Combustion"
+      },
+      "recovery_miscible_fluid_displacement": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 5 'METHOD OF RECOVERY TO BE USED' — the 'miscible fluid displacement' checkbox (left checkbox column of box 5, fifth item from the top). True if checked, false if blank. This is MISCIBLE fluid displacement. Do NOT confuse with recovery_immiscible_co2_displacement (IMMISCIBLE carbon dioxide displacement, the opposite miscibility regime in the right column) or recovery_gas_injection.",
+        "title": "Recovery Method: Miscible Fluid Displacement"
+      },
+      "recovery_other": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 5 'METHOD OF RECOVERY TO BE USED' — the 'other (specify)' checkbox (bottom item of the left checkbox column of box 5). True if checked, false if blank. This flags a write-in recovery method whose text goes in recovery_other_specify. Do NOT confuse with box 8 fluid_other (the 'other (specify)' checkbox in the Fluid to be Injected box) or with recovery_other_specify (the accompanying free-text value).",
+        "title": "Recovery Method: Other (Specify)"
+      },
+      "recovery_other_specify": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 5 'METHOD OF RECOVERY TO BE USED' — the free-text written beside/after the 'other (specify)' checkbox naming a recovery method not listed. Extract verbatim; null if no text is written (even if recovery_other is checked). Do NOT confuse with fluid_other_specify (the box 8 'other' fluid write-in text) or with the recovery_other boolean (the checkbox itself).",
+        "title": "Recovery Method: Other (Specify) Text"
+      },
+      "new_initial_secondary": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 6A 'TYPE OF ENHANCED RECOVERY PROJECT (NEW)' — the 'initial enhanced recovery project – secondary' checkbox (leftmost of the three boxes on the 6A row). True if checked, false if blank. This is a NEW project that is an INITIAL SECONDARY recovery project. Do NOT confuse with new_initial_tertiary (initial TERTIARY) or new_tertiary_superseding_secondary (tertiary superseding secondary), and do NOT confuse the NEW options in 6A with the EXPANDED options in box 6B.",
+        "title": "6A New Project: Initial Enhanced Recovery Project - Secondary"
+      },
+      "new_initial_tertiary": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 6A 'TYPE OF ENHANCED RECOVERY PROJECT (NEW)' — the 'initial enhanced recovery project - tertiary' checkbox (rightmost of the three boxes on the 6A row). True if checked, false if blank. This is a NEW project that is an INITIAL TERTIARY recovery project. Do NOT confuse with new_initial_secondary (initial SECONDARY) or new_tertiary_superseding_secondary (tertiary SUPERSEDING a secondary project), nor with the EXPANDED options in box 6B.",
+        "title": "6A New Project: Initial Enhanced Recovery Project - Tertiary"
+      },
+      "new_tertiary_superseding_secondary": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 6A 'TYPE OF ENHANCED RECOVERY PROJECT (NEW)' — the 'tertiary operation superseding secondary project' checkbox (middle of the three boxes on the 6A row). True if checked, false if blank. This is a NEW tertiary operation that supersedes an existing secondary project. Do NOT confuse with new_initial_tertiary (a fresh initial tertiary project, not a supersession) or new_initial_secondary, nor with box 6B exp_expansion_tertiary / exp_different_tertiary_method.",
+        "title": "6A New Project: Tertiary Operation Superseding Secondary Project"
+      },
+      "exp_different_secondary_method": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 6B 'TYPE OF ENHANCED RECOVERY PROJECT (EXPANDED)' — the 'different secondary method for existing secondary project' checkbox (top-left of the four 6B boxes). True if checked, false if blank. This changes the METHOD of an existing SECONDARY project. Do NOT confuse with exp_expansion_secondary (EXPANSION of a secondary project, not a method change), exp_different_tertiary_method (tertiary, not secondary), or the NEW options in box 6A.",
+        "title": "6B Expanded Project: Different Secondary Method for Existing Secondary Project"
+      },
+      "exp_expansion_secondary": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 6B 'TYPE OF ENHANCED RECOVERY PROJECT (EXPANDED)' — the 'expansion of secondary project' checkbox (top-right of the four 6B boxes). True if checked, false if blank. This EXPANDS an existing SECONDARY project. Do NOT confuse with exp_different_secondary_method (a METHOD change for a secondary project) or exp_expansion_tertiary (expansion of a TERTIARY project).",
+        "title": "6B Expanded Project: Expansion of Secondary Project"
+      },
+      "exp_different_tertiary_method": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 6B 'TYPE OF ENHANCED RECOVERY PROJECT (EXPANDED)' — the 'different tertiary method for existing tertiary project' checkbox (bottom-left of the four 6B boxes). True if checked, false if blank. This changes the METHOD of an existing TERTIARY project. Do NOT confuse with exp_expansion_tertiary (EXPANSION of a tertiary project) or exp_different_secondary_method (secondary, not tertiary).",
+        "title": "6B Expanded Project: Different Tertiary Method for Existing Tertiary Project"
+      },
+      "exp_expansion_tertiary": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 6B 'TYPE OF ENHANCED RECOVERY PROJECT (EXPANDED)' — the 'expansion of tertiary project' checkbox (bottom-right of the four 6B boxes). True if checked, false if blank. This EXPANDS an existing TERTIARY project. Do NOT confuse with exp_different_tertiary_method (a METHOD change for a tertiary project) or exp_expansion_secondary (expansion of a SECONDARY project).",
+        "title": "6B Expanded Project: Expansion of Tertiary Project"
+      },
+      "change_previous_method": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 7 'If this project is to be a change from an existing process, give the following:' — sub-field 'a. previous method', the free-text describing the previous recovery method, written on the line under the 'a. previous method' heading. Extract verbatim; null if blank. Do NOT confuse with change_previous_fluid (sub-field 'b. previous fluid injected') or with the box 5 recovery-method checkboxes (which describe the PROPOSED method, not the previous one).",
+        "title": "7a. Previous Method"
+      },
+      "change_previous_fluid": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 7 'If this project is to be a change from an existing process, give the following:' — sub-field 'b. previous fluid injected', the free-text naming the fluid previously injected, written on the line under the 'b. previous fluid injected' heading. Extract verbatim; null if blank. Do NOT confuse with change_previous_method (sub-field 'a.') or with the box 8 fluid_* checkboxes (which describe the PROPOSED injection fluid).",
+        "title": "7b. Previous Fluid Injected"
+      },
+      "fluid_brackish_water": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 8 'FLUID TO BE INJECTED' — the 'brackish water' checkbox (first item, top row of box 8). True if checked, false if blank. Do NOT confuse with fluid_saltwater (saltwater) or fluid_fresh_water (fresh water) — three distinct water-type options in box 8.",
+        "title": "Fluid: Brackish Water"
+      },
+      "fluid_saltwater": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 8 'FLUID TO BE INJECTED' — the 'saltwater' checkbox (first item, bottom row of box 8, below 'brackish water'). True if checked, false if blank. Do NOT confuse with fluid_brackish_water (brackish water) or fluid_fresh_water (fresh water).",
+        "title": "Fluid: Saltwater"
+      },
+      "fluid_natural_gas": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 8 'FLUID TO BE INJECTED' — the 'natural gas' checkbox (second item, top row of box 8). True if checked, false if blank. This is the injected FLUID 'natural gas'. Do NOT confuse with box 5 recovery_gas_injection (the recovery-METHOD 'gas injection'), fluid_nitrogen, or fluid_co2.",
+        "title": "Fluid: Natural Gas"
+      },
+      "fluid_fresh_water": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 8 'FLUID TO BE INJECTED' — the 'fresh water' checkbox (second item, bottom row of box 8, below 'natural gas'). True if checked, false if blank. Do NOT confuse with fluid_brackish_water (brackish water) or fluid_saltwater (saltwater).",
+        "title": "Fluid: Fresh Water"
+      },
+      "fluid_air": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 8 'FLUID TO BE INJECTED' — the 'air' checkbox (third item, top row of box 8). True if checked, false if blank. Do NOT confuse with fluid_nitrogen (nitrogen) or fluid_natural_gas; 'air' is the ambient-air injectant option.",
+        "title": "Fluid: Air"
+      },
+      "fluid_polymer": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 8 'FLUID TO BE INJECTED' — the 'polymer' checkbox (third item, bottom row of box 8, below 'air'). True if checked, false if blank. This is the injected FLUID 'polymer'. Do NOT confuse with box 5 recovery_polymer_augmented_waterflooding (the recovery-METHOD using polymer-augmented waterflooding).",
+        "title": "Fluid: Polymer"
+      },
+      "fluid_nitrogen": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 8 'FLUID TO BE INJECTED' — the 'nitrogen' checkbox (fourth item, top row of box 8). True if checked, false if blank. Do NOT confuse with fluid_air (air) or fluid_natural_gas (natural gas).",
+        "title": "Fluid: Nitrogen"
+      },
+      "fluid_lpg": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 8 'FLUID TO BE INJECTED' — the 'LPG' (liquefied petroleum gas) checkbox (fourth item, bottom row of box 8, below 'nitrogen'). True if checked, false if blank. Do NOT confuse with fluid_natural_gas (natural gas) or fluid_co2.",
+        "title": "Fluid: LPG"
+      },
+      "fluid_co2": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 8 'FLUID TO BE INJECTED' — the 'CO2' checkbox (fifth item, bottom row of box 8, below 'other (specify)'). True if checked, false if blank. This is the injected FLUID 'CO2'. Do NOT confuse with box 5 recovery_co2_augmented_waterflooding (carbon-dioxide-augmented waterflooding METHOD) or recovery_immiscible_co2_displacement (immiscible CO2 displacement METHOD).",
+        "title": "Fluid: CO2"
+      },
+      "fluid_other": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 8 'FLUID TO BE INJECTED' — the 'other (specify)' checkbox (fifth/last item, top row of box 8, at the far right). True if checked, false if blank. This flags a write-in injection fluid whose text goes in fluid_other_specify. Do NOT confuse with box 5 recovery_other (the 'other (specify)' checkbox in the Method of Recovery box) or with fluid_other_specify (the accompanying free-text value).",
+        "title": "Fluid: Other (Specify)"
+      },
+      "fluid_other_specify": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 8 'FLUID TO BE INJECTED' — the free-text written beside/after the 'other (specify)' checkbox naming an injection fluid not listed. Extract verbatim; null if no text is written (even if fluid_other is checked). Do NOT confuse with recovery_other_specify (the box 5 'other' recovery-method write-in text) or with the fluid_other boolean (the checkbox itself).",
+        "title": "Fluid: Other (Specify) Text"
+      },
+      "est_avg_volume_fluid_injected": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 9 'Estimated average volume(s) of the fluid(s) to be injected in the project (MCF/day or BBL/day)' — the estimated average injection volume typed in this cell (left side of the row). Extract verbatim as printed, INCLUDING the unit if written (e.g. 'MCF/day' for gas or 'BBL/day' for liquid). Keep as a string. Do NOT confuse with box 10 est_avg_injection_pressure (a psig pressure, not a volume) or box 11 production estimates.",
+        "title": "9. Estimated Average Volume of Fluid Injected (MCF/day or BBL/day)"
+      },
+      "est_avg_injection_pressure": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 10 'Estimated average injection pressure (psig)' — the estimated average injection pressure typed in the small cell at the right end of the box 9/10 row. Extract verbatim, including the 'psig' unit if written. Keep as a string. Do NOT confuse with box 9 est_avg_volume_fluid_injected (an MCF/day or BBL/day VOLUME, not a pressure).",
+        "title": "10. Estimated Average Injection Pressure (psig)"
+      },
+      "est_ult_additional_production_oil": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 11 'Est. ultimate additional production from proposed project' — sub-field 'a. Oil (bbls)', the estimated ultimate additional OIL production (in barrels) typed under the 'a. Oil (bbls)' heading. Extract verbatim as a string, preserving any digit grouping. Do NOT confuse with est_ult_additional_production_gas (sub-field 'b. Gas (MMCF)') or with box 12 est_total_value_oil (a dollar VALUE, not a volume).",
+        "title": "11a. Est. Ultimate Additional Production - Oil (bbls)"
+      },
+      "est_ult_additional_production_gas": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 11 'Est. ultimate additional production from proposed project' — sub-field 'b. Gas (MMCF)', the estimated ultimate additional GAS production (in MMCF) typed under the 'b. Gas (MMCF)' heading. Extract verbatim as a string. Do NOT confuse with est_ult_additional_production_oil (sub-field 'a. Oil (bbls)') or with box 12 est_total_value_gas (a dollar VALUE).",
+        "title": "11b. Est. Ultimate Additional Production - Gas (MMCF)"
+      },
+      "est_total_value_oil": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 12 'Est. total value of additional production from proposed project' — sub-field 'a. Oil', the estimated total dollar VALUE of additional oil production, typed after the '$' under the 'a. Oil' heading. Extract verbatim as a string, preserving the dollar amount as printed (currency symbol/commas as written). Do NOT confuse with est_ult_additional_production_oil (box 11a, a barrel VOLUME) or with est_total_value_gas (sub-field 'b. Gas').",
+        "title": "12a. Est. Total Value of Additional Production - Oil"
+      },
+      "est_total_value_gas": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 12 'Est. total value of additional production from proposed project' — sub-field 'b. Gas', the estimated total dollar VALUE of additional gas production, typed after the '$' under the 'b. Gas' heading. Extract verbatim as a string. Do NOT confuse with est_ult_additional_production_gas (box 11b, an MMCF VOLUME) or with est_total_value_oil (sub-field 'a. Oil').",
+        "title": "12b. Est. Total Value of Additional Production - Gas"
+      },
+      "est_cost_machinery": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 13 'Estimated costs of implementing this project' — sub-field 'a. machinery', the estimated machinery cost typed after the '$' under the 'a. machinery' heading. Extract verbatim as a string. Do NOT confuse with est_cost_project_total (sub-field 'b. project total', the overall project cost) or with the box 12 production-value fields.",
+        "title": "13a. Estimated Cost - Machinery"
+      },
+      "est_cost_project_total": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 13 'Estimated costs of implementing this project' — sub-field 'b. project total', the estimated total project cost typed after the '$' under the 'b. project total' heading. Extract verbatim as a string. Do NOT confuse with est_cost_machinery (sub-field 'a. machinery', a component cost) or with box 12 est_total_value_oil / est_total_value_gas (production VALUES, not implementation COSTS).",
+        "title": "13b. Estimated Cost - Project Total"
+      },
+      "anticipated_date_injection_begin": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 14 'Anticipated date for injection to begin' — the anticipated injection start date typed in the cell at the right end of the box 13/14 row. Extract verbatim exactly as printed (preserve the printed date format, e.g. MM/DD/YYYY). Do NOT confuse with certificate_date (the bottom-block signing Date), inj_auth_a_authority_date (box 21a initial authority date), or inj_auth_b_applied_date (box 21b applied-for date).",
+        "title": "14. Anticipated Date for Injection to Begin"
+      },
+      "multiple_lease_yes": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 15 'Will the project contain more than one lease' — the 'YES' checkbox (left of the YES/NO pair in box 15). True if the YES box is checked, false otherwise. Do NOT confuse with multiple_lease_no (the adjacent 'NO' box for the SAME box-15 question) or with the YES/NO checkboxes in box 20 (unitization), which are a different question.",
+        "title": "15. Project Contains More Than One Lease - Yes"
+      },
+      "multiple_lease_no": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 15 'Will the project contain more than one lease' — the 'NO' checkbox (right of the YES/NO pair in box 15). True if the NO box is checked, false otherwise. Do NOT confuse with multiple_lease_yes (the adjacent 'YES' box for the SAME box-15 question) or with the box 20 unitization YES/NO checkboxes.",
+        "title": "15. Project Contains More Than One Lease - No"
+      },
+      "total_anticipated_leases": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 16 'Total anticipated for project' — the count entered in the 'leases' box (first of the three small count boxes on the box 16 row). Extract verbatim as a string. Do NOT confuse with total_anticipated_producing_wells ('producing wells' count) or total_anticipated_injection_wells ('injection wells' count).",
+        "title": "16. Total Anticipated for Project - Leases"
+      },
+      "total_anticipated_producing_wells": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 16 'Total anticipated for project' — the count entered in the 'producing wells' box (second/middle of the three small count boxes, labeled 'producing wells'). Extract verbatim as a string. Do NOT confuse with total_anticipated_leases ('leases' count) or total_anticipated_injection_wells ('injection wells' count).",
+        "title": "16. Total Anticipated for Project - Producing Wells"
+      },
+      "total_anticipated_injection_wells": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 16 'Total anticipated for project' — the count entered in the 'injection wells' box (third/rightmost of the three small count boxes, labeled 'injection wells'). Extract verbatim as a string. Do NOT confuse with total_anticipated_producing_wells ('producing wells' count) or total_anticipated_leases ('leases' count).",
+        "title": "16. Total Anticipated for Project - Injection Wells"
+      },
+      "field_name": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 17 'FIELD NAME, exactly as shown on Proration Schedule' — the RRC field name typed in the left cell of the box 17/18/19 row. Extract verbatim as printed. Do NOT confuse with box 18 lease_or_unit_name (the lease/unit name) or box 1 operator_name (the operator).",
+        "title": "17. Field Name"
+      },
+      "lease_or_unit_name": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 18 'LEASE OR UNIT NAME, exactly as shown on Proration Schedule' — the lease or unit name typed in the middle cell of the box 17/18/19 row. Extract verbatim as printed. Do NOT confuse with box 17 field_name (the geologic field name) or box 19 lease_no (the numeric lease number).",
+        "title": "18. Lease or Unit Name"
+      },
+      "lease_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 19 'LEASE NO.' — the RRC lease number typed in the small right cell of the box 17/18/19 row. Extract verbatim as a string, preserving leading zeros. Do NOT confuse with box 18 lease_or_unit_name (the lease NAME), box 2 operator_p5_no, or the 'F-' project numbers in box 21.",
+        "title": "19. Lease No."
+      },
+      "unitization_approved_yes": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 20 'Has a unitization agreement for this property been approved by the RRC?' — the first 'YES' checkbox (left member of the FIRST YES/NO pair, immediately after the question). True if checked, false otherwise. Do NOT confuse with unitization_approved_no (the paired 'NO'), nor with the SECOND YES/NO pair later on the same row that answers 'If NO, is unitization needed?' (unitization_needed_yes / unitization_needed_no).",
+        "title": "20. Unitization Agreement Approved by RRC - Yes"
+      },
+      "unitization_approved_no": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 20 'Has a unitization agreement for this property been approved by the RRC?' — the first 'NO' checkbox (right member of the FIRST YES/NO pair). True if checked, false otherwise. Do NOT confuse with unitization_approved_yes (the paired 'YES'), nor with the SECOND YES/NO pair ('If NO, is unitization needed?') captured by unitization_needed_yes / unitization_needed_no.",
+        "title": "20. Unitization Agreement Approved by RRC - No"
+      },
+      "unitization_order_no_and_date": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 20 — the 'If YES, give order no. and date' free-text written on the line in the middle of the box 20 row. Extract verbatim (order number and date together as printed); null if blank. Do NOT confuse with the box 20 checkboxes (unitization_approved_* / unitization_needed_*) or with inj_auth_a_project_no (box 21 'F-' project number).",
+        "title": "20. Unitization Order No. and Date (If YES)"
+      },
+      "unitization_needed_yes": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 20 — the 'If NO, is unitization needed?' 'YES' checkbox (left member of the SECOND YES/NO pair, located to the right side of the box 20 row after 'is unitization needed?'). True if checked, false otherwise. Do NOT confuse with unitization_approved_yes (the FIRST pair answering whether the agreement is already approved) or with unitization_needed_no (the paired 'NO').",
+        "title": "20. Is Unitization Needed (If No) - Yes"
+      },
+      "unitization_needed_no": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 20 — the 'If NO, is unitization needed?' 'NO' checkbox (right member of the SECOND YES/NO pair). True if checked, false otherwise. Do NOT confuse with unitization_approved_no (the FIRST pair's 'NO') or with unitization_needed_yes (the paired 'YES').",
+        "title": "20. Is Unitization Needed (If No) - No"
+      },
+      "inj_auth_a_granted": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 21 'INJECTION AUTHORITY (Complete one or more of the following)' — option 'a.', the 'has already been granted' selection. True if option a. is marked/selected, false otherwise. This indicates injection authority ALREADY GRANTED. Do NOT confuse with option b. inj_auth_b_applied ('has been applied for but has not yet been granted') or option c. inj_auth_c_anticipated ('has not yet been applied for but is anticipated').",
+        "title": "21a. Injection Authority - Has Already Been Granted"
+      },
+      "inj_auth_a_project_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 21 option 'a.' — the 'under project no. F-____' value: the injection project number written after the printed 'F-' on row a. Extract verbatim as a string; you may include or omit the printed 'F-' prefix consistently — capture the number as written. Null if blank. Do NOT confuse with inj_auth_b_project_no (the 'F-' project number on option b.), inj_auth_a_authority_date (the initial authority date on row a.), box 2 operator_p5_no, or box 19 lease_no.",
+        "title": "21a. Injection Authority - Project No. (F-)"
+      },
+      "inj_auth_a_authority_date": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 21 option 'a.' — the 'with an initial authority date of ____' value written on row a. Extract verbatim as printed (preserve the date format). Null if blank. Do NOT confuse with inj_auth_a_project_no (the 'F-' project number on the same row), inj_auth_b_applied_date (option b. applied-for date), or box 14 anticipated_date_injection_begin.",
+        "title": "21a. Injection Authority - Initial Authority Date"
+      },
+      "inj_auth_a_wells": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 21 option 'a.' — the 'for the following wells on above lease or unit:' free-text written on the blank line under row a. Extract verbatim (well numbers/descriptions as printed); null if blank. Do NOT confuse with inj_auth_b_wells (the wells line under option b.) or inj_auth_c_wells (the wells line under option c.).",
+        "title": "21a. Injection Authority - Wells on Above Lease or Unit"
+      },
+      "inj_auth_b_applied": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 21 'INJECTION AUTHORITY' — option 'b.', the 'has been applied for but has not yet been granted' selection. True if option b. is marked/selected, false otherwise. Do NOT confuse with option a. inj_auth_a_granted ('has already been granted') or option c. inj_auth_c_anticipated ('has not yet been applied for but is anticipated').",
+        "title": "21b. Injection Authority - Has Been Applied For But Not Yet Granted"
+      },
+      "inj_auth_b_applied_date": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 21 option 'b.' — the 'applied for (date) ____ (if available)' value written on row b. Extract verbatim as printed (preserve the date format); null if blank. Do NOT confuse with inj_auth_a_authority_date (option a. initial authority date), inj_auth_b_project_no (the 'F-' project number on the same row), or box 14 anticipated_date_injection_begin.",
+        "title": "21b. Injection Authority - Applied For (Date)"
+      },
+      "inj_auth_b_project_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 21 option 'b.' — the 'under project no. F-____' value: the injection project number written after the printed 'F-' on row b. Extract verbatim as a string (capture the number as written). Null if blank. Do NOT confuse with inj_auth_a_project_no (the 'F-' project number on option a.) or inj_auth_b_applied_date (the applied-for date on the same row).",
+        "title": "21b. Injection Authority - Project No. (F-)"
+      },
+      "inj_auth_b_wells": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 21 option 'b.' — the 'for the following wells on above lease or unit:' free-text written on the blank line under row b. Extract verbatim (well numbers/descriptions as printed); null if blank. Do NOT confuse with inj_auth_a_wells (option a. wells line) or inj_auth_c_wells (option c. wells line).",
+        "title": "21b. Injection Authority - Wells on Above Lease or Unit"
+      },
+      "inj_auth_c_anticipated": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 21 'INJECTION AUTHORITY' — option 'c.', the 'has not yet been applied for but is anticipated' selection. True if option c. is marked/selected, false otherwise. Do NOT confuse with option a. inj_auth_a_granted ('has already been granted') or option b. inj_auth_b_applied ('has been applied for but has not yet been granted').",
+        "title": "21c. Injection Authority - Not Yet Applied For But Anticipated"
+      },
+      "inj_auth_c_wells": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Box 21 option 'c.' — the 'for the following wells on above lease or unit:' free-text written on the blank line under row c. Extract verbatim (well numbers/descriptions as printed); null if blank. Do NOT confuse with inj_auth_a_wells (option a. wells line) or inj_auth_b_wells (option b. wells line). Note option c. has no project number or date fields, only this wells line.",
+        "title": "21c. Injection Authority - Wells on Above Lease or Unit"
+      },
+      "signature_present": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Certificate/declaration block at the bottom (under the 'I declare under penalties prescribed in Sec. 91.143 Texas Natural Resources Code...' statement) — the 'Signature' line. Boolean presence flag: true if a handwritten signature/mark is present on the Signature line, false if the line is blank. Do NOT extract the signer's name here — the printed name belongs to name_print_or_type, and the signer's title belongs to title.",
+        "title": "Signature Present"
+      },
+      "title": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Certificate/declaration block at the bottom — the 'Title' line (to the right of the Signature line). The job title of the person signing the application. Extract verbatim; null if blank. Do NOT confuse with name_print_or_type (the signer's printed name) or operator_name (the company).",
+        "title": "Signer Title"
+      },
+      "name_print_or_type": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Certificate/declaration block at the bottom — the 'Name (Print or type)' line (below the Signature line). The printed/typed name of the person signing. Extract verbatim; null if blank. Do NOT confuse with the handwritten Signature (signature_present), the signer's title (title), or operator_name (box 1, the company).",
+        "title": "Name (Print or Type)"
+      },
+      "certificate_date": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Certificate/declaration block at the bottom — the 'Date' line (to the right of 'Name (Print or type)'), the date the applicant signed. Extract verbatim as printed (preserve the date format). Do NOT confuse with box 14 anticipated_date_injection_begin, the box 21 injection-authority dates, or rrc_action_date (the RRC USE ONLY action date).",
+        "title": "Certificate Date"
+      },
+      "phone": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Certificate/declaration block at the bottom — the 'Phone (___)____' line (to the right of the Date), the applicant's telephone number including area code. Extract verbatim as printed, preserving parentheses, dashes, and any area code. Keep as a string. Do NOT confuse with box 4 mailing_address.",
+        "title": "Phone"
+      },
+      "rrc_approved": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "'RRC USE ONLY' box at the very bottom — under 'APPLICATION:', the 'approved' checkbox. True if checked, false otherwise. This is an agency-use disposition field. Do NOT confuse with rrc_denied (the adjacent 'denied' checkbox) or with the applicant-side YES/NO checkboxes in boxes 15 and 20.",
+        "title": "RRC Use Only: Application Approved"
+      },
+      "rrc_denied": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "'RRC USE ONLY' box at the very bottom — under 'APPLICATION:', the 'denied' checkbox (below 'approved'). True if checked, false otherwise. This is an agency-use disposition field. Do NOT confuse with rrc_approved (the 'approved' checkbox above it).",
+        "title": "RRC Use Only: Application Denied"
+      },
+      "rrc_technical_examiner": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "'RRC USE ONLY' box at the very bottom — the 'Technical Examiner:' line (top-right of the RRC USE ONLY box), the name/initials of the RRC technical examiner. Extract verbatim; null if blank. Do NOT confuse with name_print_or_type (the applicant's signer name) or rrc_action_date.",
+        "title": "RRC Use Only: Technical Examiner"
+      },
+      "rrc_action_date": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "'RRC USE ONLY' box at the very bottom — the 'Action Date' line (below the approved/denied checkboxes), the date the RRC acted on the application. Extract verbatim as printed (preserve the date format); null if blank. Do NOT confuse with certificate_date (the applicant's signing Date) or box 14 anticipated_date_injection_begin.",
+        "title": "RRC Use Only: Action Date"
+      }
+    },
+    "title": "RRCH12Extraction",
+    "type": "object"
+  },
+  "expected": {
+    "kind": "json",
+    "schema_ref": "fixtures/eb-short-08-15427 H-12 1-21-2003 F-01341-schema.json",
+    "value": {
+      "operator_name": "OXY USA WTP LP",
+      "operator_p5_no": "630555",
+      "rrc_district_no_and_county": "08 Ector",
+      "mailing_address": "P.O. Box 4294 Houston, TX 77210-4294",
+      "recovery_waterflood": true,
+      "recovery_co2_augmented_waterflooding": false,
+      "recovery_polymer_augmented_waterflooding": false,
+      "recovery_immiscible_co2_displacement": false,
+      "recovery_steam_drive_injection": false,
+      "recovery_gas_injection": false,
+      "recovery_microemulsion_micellar_flooding": false,
+      "recovery_alkaline_caustic_flooding": false,
+      "recovery_cyclic_steam_injection": false,
+      "recovery_in_situ_combustion": false,
+      "recovery_miscible_fluid_displacement": false,
+      "recovery_other": false,
+      "recovery_other_specify": null,
+      "new_initial_secondary": false,
+      "new_initial_tertiary": false,
+      "new_tertiary_superseding_secondary": false,
+      "exp_different_secondary_method": false,
+      "exp_expansion_secondary": true,
+      "exp_different_tertiary_method": false,
+      "exp_expansion_tertiary": false,
+      "change_previous_method": null,
+      "change_previous_fluid": null,
+      "fluid_brackish_water": false,
+      "fluid_saltwater": true,
+      "fluid_natural_gas": false,
+      "fluid_fresh_water": false,
+      "fluid_air": false,
+      "fluid_polymer": false,
+      "fluid_nitrogen": false,
+      "fluid_lpg": false,
+      "fluid_co2": false,
+      "fluid_other": false,
+      "fluid_other_specify": null,
+      "est_avg_volume_fluid_injected": "16,500 BW",
+      "est_avg_injection_pressure": "2000",
+      "est_ult_additional_production_oil": "113MBO",
+      "est_ult_additional_production_gas": null,
+      "est_total_value_oil": "$ 3MM",
+      "est_total_value_gas": null,
+      "est_cost_machinery": null,
+      "est_cost_project_total": "$ 278M",
+      "anticipated_date_injection_begin": "ASAP",
+      "multiple_lease_yes": false,
+      "multiple_lease_no": true,
+      "total_anticipated_leases": "1",
+      "total_anticipated_producing_wells": "17",
+      "total_anticipated_injection_wells": "11",
+      "field_name": "Johnson 47007001",
+      "lease_or_unit_name": "Johnson Grayburg - San Andres",
+      "lease_no": "15427",
+      "unitization_approved_yes": true,
+      "unitization_approved_no": false,
+      "unitization_order_no_and_date": "8-44,420 9/26/60",
+      "unitization_needed_yes": false,
+      "unitization_needed_no": false,
+      "inj_auth_a_granted": true,
+      "inj_auth_a_project_no": "F-1341",
+      "inj_auth_a_authority_date": "8-44,536 9/26/60",
+      "inj_auth_a_wells": null,
+      "inj_auth_b_applied": true,
+      "inj_auth_b_applied_date": null,
+      "inj_auth_b_project_no": "F-1341",
+      "inj_auth_b_wells": null,
+      "inj_auth_c_anticipated": true,
+      "inj_auth_c_wells": "all wells listed as proposed injectors",
+      "signature_present": true,
+      "title": "Tax Incentive Analyst - Regulatory Affairs",
+      "name_print_or_type": "Karen Ellis",
+      "certificate_date": "11/4/02",
+      "phone": "(281)552-1161",
+      "rrc_approved": true,
+      "rrc_denied": false,
+      "rrc_technical_examiner": "McMains P.E.",
+      "rrc_action_date": "JAN 2 1 2003"
+    },
+    "anchored_fields": 78,
+    "no_anchor_fields": 0
+  },
+  "field_rules": "{\"operator_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.07153375256980593, 0.1125623100599678, 0.12461140566612362, 0.01330093890780507], \"quote\": \"OXY USA WTP LP\", \"value\": \"OXY USA WTP LP\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"operator_p5_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.5042143153504891, 0.11008046407109834, 0.08462438364457422, 0.01350953592890166], \"quote\": \"630555\", \"value\": \"630555\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"rrc_district_no_and_county\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.6493778765851999, 0.10735207802441861, 0.19953114363151547, 0.015147921975581378], \"quote\": \"08 Ector\", \"value\": \"08 Ector\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"mailing_address\": {\"comparator\": \"address\", \"evidence\": [{\"page\": 1, \"bbox\": [0.07764, 0.15671, 0.19074, 0.03057], \"quote\": \"P.O. Box 4294 Houston, TX 77210-4294\", \"value\": \"P.O. Box 4294 Houston, TX 77210-4294\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"recovery_waterflood\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.47284672135834477, 0.16346883958721192, 0.015429999999999998, 0.011759999999999998], \"quote\": \"True\", \"value\": true, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"recovery_co2_augmented_waterflooding\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.6789804739281508, 0.1621088395872119, 0.017231535635550868, 0.011759999999999998], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"recovery_polymer_augmented_waterflooding\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.6798110527442922, 0.17849745766944083, 0.016510915929318366, 0.011759999999999998], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"recovery_immiscible_co2_displacement\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.6806416997105854, 0.19431928259717793, 0.015429999999999998, 0.011759999999999998], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"recovery_steam_drive_injection\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.6793104739281508, 0.20923607575166972, 0.015429999999999998, 0.011759999999999998], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"recovery_gas_injection\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.6801310663743225, 0.22534625513438813, 0.015429999999999998, 0.011759999999999998], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"recovery_microemulsion_micellar_flooding\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.6785201777050649, 0.14581023203554916, 0.017231508375490107, 0.011759999999999998], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"recovery_alkaline_caustic_flooding\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.47258641150522857, 0.17900234165166623, 0.015429999999999998, 0.011759999999999998], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"recovery_cyclic_steam_injection\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.4723361016521123, 0.19566928259717797, 0.01687121215240424, 0.011759999999999998], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"recovery_in_situ_combustion\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.4724360880220819, 0.21142116017774584, 0.015429999999999998, 0.011759999999999998], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"recovery_miscible_fluid_displacement\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.47253612891217306, 0.22724302722774758, 0.015429999999999998, 0.011759999999999998], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"recovery_other\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.47336672135834484, 0.24334323820216444, 0.015429999999999998, 0.011759999999999998], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"recovery_other_specify\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"new_initial_secondary\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.06666091592931836, 0.2868641876405356, 0.01541, 0.011759999999999998], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"new_initial_tertiary\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.7000241649054851, 0.28345931418887643, 0.01832245156486924, 0.011213238437206697], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"new_tertiary_superseding_secondary\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.3792365139877914, 0.28480420870166795, 0.015420000000000001, 0.011759999999999998], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"exp_different_secondary_method\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.06624029622308587, 0.3322109386727628, 0.01829244474985405, 0.011759999999999998], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"exp_expansion_secondary\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.4756425837129206, 0.3300560336294051, 0.017952128081722606, 0.012873481003322014], \"quote\": \"True\", \"value\": true, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"exp_different_tertiary_method\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.06634030303810105, 0.35102489427774936, 0.018652747787955108, 0.011759999999999998], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"exp_expansion_tertiary\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.47593349282722375, 0.34804487321661703, 0.01687123259744981, 0.011759999999999998], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"change_previous_method\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"change_previous_fluid\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"fluid_brackish_water\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.23910650932086902, 0.4085393036583102, 0.017221535635550872, 0.011759999999999998], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"fluid_saltwater\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.10156113692990217, 0.4203404535405322, 0.01686122578243462, 0.011759999999999998], \"quote\": \"True\", \"value\": true, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"fluid_natural_gas\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.37211702654453865, 0.40781767917442385, 0.017952128081722606, 0.011759999999999998], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"fluid_fresh_water\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.23936588961463653, 0.4198372151033255, 0.01758183185863674, 0.012873481003322031], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"fluid_air\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.4905117999316536, 0.4061225578913662, 0.017591831858636737, 0.01177], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"fluid_polymer\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.3733285621800896, 0.41884722563389165, 0.017591831858636737, 0.011759999999999998], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"fluid_nitrogen\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.5788740304959391, 0.40700442494136796, 0.017962155341783373, 0.01177], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"fluid_lpg\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.49044244689794686, 0.4188323311211001, 0.017591831858636737, 0.01177], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"fluid_co2\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.578784030495939, 0.41748720457275934, 0.017962155341783373, 0.01177], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"fluid_other\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.6825612827079839, 0.40627443547193404, 0.01724153563555087, 0.01177], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"fluid_other_specify\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"est_avg_volume_fluid_injected\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.38935, 0.44968, 0.1078, 0.01407], \"quote\": \"16,500 BW\", \"value\": \"16,500 BW\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"est_avg_injection_pressure\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.86322, 0.44648, 0.03944, 0.0142], \"quote\": \"2000\", \"value\": \"2000\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"est_ult_additional_production_oil\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.30508704484149146, 0.4800132592632968, 0.059078521289998416, 0.013825791298331997], \"quote\": \"113MBO\", \"value\": \"113MBO\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"est_ult_additional_production_gas\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"est_total_value_oil\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.73558, 0.47719, 0.06635, 0.01415], \"quote\": \"$ 3MM\", \"value\": \"$ 3MM\", \"coarse\": false}, {\"page\": 1, \"bbox\": [0.7533, 0.4766, 0.027, 0.0133], \"quote\": \"3MM\", \"value\": \"3MM\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"est_total_value_gas\": {\"comparator\": \"case_insensitive\", \"evidence\": [], \"source_policy\": \"verbatim\", \"evidence_required\": false, \"verified\": true, \"verified_by\": \"agent\"}, \"est_cost_machinery\": {\"comparator\": \"case_insensitive\", \"evidence\": [], \"source_policy\": \"verbatim\", \"evidence_required\": false, \"verified\": true, \"verified_by\": \"agent\"}, \"est_cost_project_total\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.5182043746814662, 0.5071565187616357, 0.06496080411291072, 0.014085791298332014], \"quote\": \"$ 278M\", \"value\": \"$ 278M\", \"coarse\": true}, {\"page\": 1, \"bbox\": [0.53612, 0.50803, 0.03447, 0.01086], \"quote\": \"278M\", \"value\": \"278M\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"anticipated_date_injection_begin\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.81383, 0.50616, 0.04787, 0.01448], \"quote\": \"ASAP\", \"value\": \"ASAP\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"multiple_lease_yes\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.22381663250581238, 0.538519071622761, 0.015420000000000001, 0.011759999999999998], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"multiple_lease_no\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.25488754843513073, 0.5385874471388747, 0.01830245156486924, 0.011759999999999998], \"quote\": \"True\", \"value\": true, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"total_anticipated_leases\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.65018, 0.52796, 0.04027, 0.01875], \"quote\": \"1\", \"value\": \"1\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"total_anticipated_producing_wells\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.7416340624229222, 0.5282546622422002, 0.04117240360242794, 0.017379293362786333], \"quote\": \"17\", \"value\": \"17\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"total_anticipated_injection_wells\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.8471627477879552, 0.5280614027438612, 0.04029, 0.01647417734501172], \"quote\": \"11\", \"value\": \"11\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"field_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.21000377994326855, 0.559701149882222, 0.2282265162798173, 0.02092885011777804], \"quote\": \"Johnson 47007001\", \"value\": \"Johnson 47007001\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"lease_or_unit_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.45485253360238653, 0.5684744302066509, 0.24952175652273276, 0.014079514867769332], \"quote\": \"Johnson Grayburg - San Andres\", \"value\": \"Johnson Grayburg - San Andres\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"lease_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.8785, 0.56483, 0.04025, 0.01061], \"quote\": \"15427\", \"value\": \"15427\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"unitization_approved_yes\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.29836227385980435, 0.5970572256338916, 0.015429999999999998, 0.01177], \"quote\": \"True\", \"value\": true, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"unitization_approved_no\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.3328567510238334, 0.5967772045727593, 0.017231535635550868, 0.01177], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"unitization_order_no_and_date\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.50147, 0.59326, 0.16186, 0.0114], \"quote\": \"8-44,420 9/26/60\", \"value\": \"8-44,420 9/26/60\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"unitization_needed_yes\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.7994820095637016, 0.5931620832897017, 0.015450000000000002, 0.01177], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"unitization_needed_no\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.8354477261401956, 0.5931704640710983, 0.015450000000000002, 0.01177], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"inj_auth_a_granted\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": \"True\", \"value\": true, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"inj_auth_a_project_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.327, 0.629, 0.0646, 0.0145], \"quote\": \"F-1341\", \"value\": \"F-1341\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"inj_auth_a_authority_date\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.65902, 0.62661, 0.14648, 0.01316], \"quote\": \"8-44,536 9/26/60\", \"value\": \"8-44,536 9/26/60\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"inj_auth_a_wells\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"inj_auth_b_applied\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": \"True\", \"value\": true, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"inj_auth_b_applied_date\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"inj_auth_b_project_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.44304651217468277, 0.6740494480080794, 0.09316679130825586, 0.0274663902854431], \"quote\": \"F-1341\", \"value\": \"F-1341\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"inj_auth_b_wells\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"inj_auth_c_anticipated\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": \"True\", \"value\": true, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\", \"normalizers\": [\"null_equals_false\"]}, \"inj_auth_c_wells\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.33287, 0.7434, 0.32484, 0.01735], \"quote\": \"all wells listed as proposed injectors\", \"value\": \"all wells listed as proposed injectors\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"signature_present\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.12415, 0.84804, 0.36633, 0.01356], \"quote\": \"True\", \"value\": true, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"title\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.510841501076459, 0.8520162786670787, 0.38858, 0.01371], \"quote\": \"Tax Incentive Analyst - Regulatory Affairs\", \"value\": \"Tax Incentive Analyst - Regulatory Affairs\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"name_print_or_type\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.1925155245407141, 0.8723762483313852, 0.11056819983082813, 0.01317], \"quote\": \"Karen Ellis\", \"value\": \"Karen Ellis\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"certificate_date\": {\"comparator\": \"date\", \"evidence\": [{\"page\": 1, \"bbox\": [0.5110659569102387, 0.86989343808127, 0.08490355484642059, 0.014134779813221926], \"quote\": \"11/4/02\", \"value\": \"11/4/02\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"phone\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.7593594669320035, 0.8695462938349255, 0.12604930478607218, 0.01233], \"quote\": \"(281)552-1161\", \"value\": \"(281)552-1161\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\", \"normalizers\": [\"phone_digits\"]}, \"rrc_approved\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.6805830332593452, 0.9002919543952598, 0.01752516176323397, 0.01298287092150251], \"quote\": \"True\", \"value\": true, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"rrc_denied\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.6801741741292654, 0.9146719543952597, 0.018043942391289414, 0.01178], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"rrc_technical_examiner\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.7794, 0.8976, 0.1645, 0.0335], \"quote\": \"McMains P.E.\", \"value\": \"McMains P.E.\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"rrc_action_date\": {\"comparator\": \"date\", \"evidence\": [{\"page\": 1, \"bbox\": [0.792528007677498, 0.92478, 0.158241992322502, 0.01876], \"quote\": \"JAN 2 1 2003\", \"value\": \"JAN 2 1 2003\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}}",
+  "repeated_structure": "{}",
+  "anchored_fields": 78,
+  "no_anchor_fields": 0,
+  "case_id": "B03-eb-0021"
+}

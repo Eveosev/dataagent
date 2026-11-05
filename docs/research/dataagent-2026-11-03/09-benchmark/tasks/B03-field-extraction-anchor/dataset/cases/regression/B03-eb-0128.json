@@ -1,0 +1,53 @@
+{
+  "case_id": "B03-eb-0128",
+  "task_id": "B03",
+  "split_role": "regression",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://extractbench/docs/short/YV4952BL2C1140915_professional_valuation.pdf",
+      "digest": null
+    },
+    {
+      "kind": "schema",
+      "ref": "fixtures/eb-short-YV4952BL2C1140915_professional_valuation-schema.json",
+      "digest": null
+    },
+    {
+      "kind": "rules",
+      "ref": "fixtures/eb-short-YV4952BL2C1140915_professional_valuation-rules.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-eb-0128.json"
+  },
+  "evidence": [
+    "bench://extractbench/docs/short/YV4952BL2C1140915_professional_valuation.pdf",
+    "fixtures/eb-short-YV4952BL2C1140915_professional_valuation-schema.json",
+    "fixtures/eb-short-YV4952BL2C1140915_professional_valuation-rules.md"
+  ],
+  "tags": [
+    "extractbench",
+    "short",
+    "tag:source:real",
+    "tag:challenge:T1.a",
+    "tag:challenge:T1.c",
+    "tag:perception:P2",
+    "tag:delivery:G2",
+    "tag:length:short",
+    "tag:domain:D4",
+    "fields:33"
+  ],
+  "source": "eb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

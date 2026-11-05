@@ -1,0 +1,34 @@
+{
+  "case_id": "B10-tsbad-m-0426",
+  "task_id": "B10",
+  "split_role": "regression",
+  "inputs": [
+    {
+      "kind": "series",
+      "ref": "bench://tsb-ad-m/TSB-AD-M/085_SVDB_id_2_Medical_tr_50000_1st_54982.csv",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B10-tsbad-m-0426.json"
+  },
+  "evidence": [
+    "bench://tsb-ad-m/TSB-AD-M/085_SVDB_id_2_Medical_tr_50000_1st_54982.csv"
+  ],
+  "tags": [
+    "tsb-ad",
+    "m",
+    "Medical"
+  ],
+  "source": "tsbad-m",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

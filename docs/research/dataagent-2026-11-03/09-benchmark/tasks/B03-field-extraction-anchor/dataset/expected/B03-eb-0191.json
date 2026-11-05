@@ -1,0 +1,328 @@
+{
+  "source": "llamaindex/ExtractBench",
+  "id": "short/hingham_lowes_receipt",
+  "pdf": "docs/short/hingham_lowes_receipt.pdf",
+  "schema": {
+    "type": "object",
+    "description": "A single point-of-sale purchase RECEIPT (retail or restaurant). DOC-TYPE / SCOPE RULE: if one file bundles MULTIPLE distinct receipts or transactions (e.g. a Lowe's email containing several purchases, each with its own 'Transaction #' and 'Order #'), extract ONLY the FIRST receipt — the one that appears FIRST in reading order (top of the document, earliest Order Date/time). Ignore all later receipts; do NOT merge line items, totals, or payments across receipts. A receipt is NOT an invoice: there is no bill-to customer, no due date, no PO terms.",
+    "$defs": {
+      "address": {
+        "type": "object",
+        "description": "Merchant street address as printed on the receipt header.",
+        "properties": {
+          "street": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Street line (number + street name), e.g. '600 N CLARK', '729 BRIDGE STREET'. Null if the receipt prints no street address. Do NOT confuse with the merchant name line above it or the city/state line below it."
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "City/town, e.g. 'CHICAGO', 'Weymouth'. Null if absent."
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Two-letter US state code, e.g. 'IL', 'MA'. Null if absent. Do NOT confuse with the ZIP."
+          },
+          "zip_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Postal/ZIP code verbatim including leading zeros, e.g. '60610', '02191'. Null if absent."
+          }
+        },
+        "required": [
+          "street",
+          "city",
+          "state",
+          "zip_code"
+        ]
+      }
+    },
+    "properties": {
+      "merchant_name": {
+        "type": "string",
+        "description": "The selling merchant / store brand printed at the top of the receipt. May appear as a logo word, a 'THANK YOU FOR CHOOSING <X>' line, or a legal entity name. Examples: 'MCDONALDS', 'GOLDEN CORRAL', \"LOWE'S HOME CENTERS, LLC\". Use the brand/legal name verbatim; strip a trailing store number (that goes in store_number). Do NOT confuse with a cardholder, server, or 'sold to' name."
+      },
+      "store_number": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "The store/location identifier for this merchant outlet. Label aliases: 'Store#', 'Store #', a '#NNNN' suffix on the brand line (e.g. 'GOLDEN CORRAL #0938' -> '0938'), or 'MCDONALDS 6676'. Return digits only, verbatim including leading zeros. Do NOT confuse with Terminal #, Register/KS#, Transaction #, Order #, or MER# (merchant id). Null if no store number is printed."
+      },
+      "merchant_address": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/address"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "The merchant's street address block from the receipt header. Null if the receipt prints no address at all (e.g. a receipt that shows only the brand name)."
+      },
+      "merchant_phone": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "Merchant phone number from the header, verbatim as printed (keep the format the receipt uses, e.g. '312-867-0455' or '(781) 340-5964'). Label aliases: 'TEL#', 'TEL', 'PHONE'. Null if not printed. Do NOT confuse with a card authorization code or transaction id."
+      },
+      "transaction_date": {
+        "type": "string",
+        "description": "The date the purchase/transaction occurred, normalized to ISO 'YYYY-MM-DD'. Sources: a header date line ('Dec.08\\'12 (Sat)' -> '2012-12-08'), 'Order Date : 01/21/26' -> '2026-01-21', or a 'MM/DD/YY' near the total ('02/27/15' -> '2015-02-27'). Interpret 2-digit years as 20YY. Do NOT confuse with an AuthTime date if it differs from the order date — prefer the Order/Transaction date. If only 'MM/DD' (no year) is printed, use the year from elsewhere on the same receipt; if truly absent, use the printed value's year."
+      },
+      "transaction_time": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "Time of the transaction in 24-hour 'HH:MM' format. Sources: '(Sat) 00:34' -> '00:34', 'Order Date : 01/21/26 08:13:57' -> '08:13', '1:28p' -> '13:28'. Convert 12-hour am/pm to 24-hour. Null if no time is printed. Do NOT confuse with AuthTime (use the order/transaction time when both exist)."
+      },
+      "transaction_id": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "The primary transaction/receipt identifier for this purchase. Label aliases: 'Transaction #', 'Order #', 'F-NNNN' check id, 'Rec:' number, 'Order'. Prefer the value explicitly labeled 'Transaction #'; else the 'Order #'; else the check/receipt id printed nearest the items. Return the FULL printed token VERBATIM, including any leading letter prefix and hyphen and leading zeros (e.g. 'F-0298' -> 'F-0298', NOT '0298'; 'Transaction # : 11847985' -> '11847985'). Do NOT confuse with store_number, Terminal #, SEQ#, MER#, or the card authorization code. Null if none is printed."
+      },
+      "line_items": {
+        "type": "array",
+        "description": "The list of purchased line items, one entry per printed item row, in top-to-bottom reading order. Include ONLY real purchased items; EXCLUDE subtotal/tax/total rows, 'Invoice NNNN Subtotal' roll-up rows, 'Total # of items' lines, and survey/marketing text. For the multi-receipt scope rule above, include only the first receipt's items.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "line_no": {
+              "type": "integer",
+              "description": "1-based sequential position of this item in the printed item list (first item = 1, second = 2, ...). This is a positional ordinal assigned by reading order, NOT a value printed on the receipt. It is the identity_key for row alignment."
+            },
+            "description": {
+              "type": "string",
+              "description": "The item name/description exactly as printed on its row, e.g. 'MED VANILLA SHAKE', 'BIG MAC', 'PS 6-IN JR HACKSAW', 'SR LUNCH BUFFET', 'TEA'. Verbatim text minus the leading quantity and trailing price. Do NOT include the SKU/Item # (that is its own field)."
+            },
+            "quantity": {
+              "type": "number",
+              "description": "Quantity purchased for this row. Sources: a leading QTY column ('5 MED VANILLA SHAKE' -> 5), or a '1 @ 8.98' unit line -> 1. If no quantity is printed for the row, default to 1. Do NOT confuse with unit_price or item_total."
+            },
+            "unit_price": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Price per single unit, populated ONLY when a per-unit price is explicitly printed SEPARATELY from the line total — e.g. the value after '@' in '1 @ 8.98' -> 8.98, or a dedicated per-unit price column. If the row shows only ONE price (the extended/line amount) with no explicit per-unit notation, that price is the item_total and unit_price MUST be null — even when quantity is 1 (do NOT copy the line total into unit_price, and do NOT compute it by dividing total by quantity). Do NOT confuse with item_total."
+            },
+            "item_total": {
+              "type": "number",
+              "description": "The extended amount charged for this row as printed in the line's price/TOTAL column, e.g. '5 MED VANILLA SHAKE  14.25' -> 14.25, 'PS 6-IN JR HACKSAW $ 8.98' -> 8.98. This is the per-row total, NOT the receipt subtotal/total. Do NOT confuse with unit_price (equal only when quantity is 1)."
+            },
+            "sku": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The merchant item/SKU number for this row when printed, label alias 'Item #:' (e.g. 'Item #: 587724' -> '587724'). Return digits verbatim including leading zeros. Null when no item number is printed (most restaurant receipts). Do NOT confuse with line_no, store_number, or transaction_id."
+            }
+          },
+          "required": [
+            "line_no",
+            "description",
+            "quantity",
+            "item_total"
+          ]
+        }
+      },
+      "subtotal": {
+        "type": "number",
+        "description": "Pre-tax subtotal = sum of line item totals, as PRINTED. Label aliases: 'Subtotal', 'Sub Total', 'Sub Total :'. For multi-receipt files use the first receipt's subtotal. Do NOT confuse with 'Invoice NNNN Subtotal' roll-up duplicates (same value), with tax, or with total."
+      },
+      "tax": {
+        "type": "number",
+        "description": "Total sales tax charged, as PRINTED. Label aliases: 'Tax', 'Total Tax', 'Tax :'. Do NOT confuse with subtotal or total. Return the printed amount (0 only if the receipt prints a zero tax)."
+      },
+      "total": {
+        "type": "number",
+        "description": "The grand total amount due/charged for the purchase, as PRINTED. Label aliases: 'Total', 'TOTAL', 'Eat-In Total', 'TOTAL :', 'TOTAL SALES'. Equals subtotal + tax. For multi-receipt files use the first receipt's total. Do NOT confuse with subtotal, tax, amount_paid/tendered (often equal), or a per-line item_total."
+      },
+      "payment_method": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "The tender / card brand used to pay. Normalize to one of: 'VISA', 'MASTERCARD', 'AMEX', 'DISCOVER', 'DEBIT', 'CASH', 'GIFT_CARD', 'OTHER'. Sources: 'Payment: VISA ending in 3954' -> 'VISA', 'MASTERCARD' memo -> 'MASTERCARD', 'Debit SALE' / 'Cashless' debit -> 'DEBIT'. Null if the tender is not identifiable. Do NOT confuse with the card last-4 or auth code."
+      },
+      "card_last4": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "The last four digits of the card account used, as a 4-character string. Sources: 'ACCOUNT# ************0093' -> '0093', 'VISA ending in 3954' -> '3954', a masked 'xxxxxxxxxxxxx5760' -> '5760'. Null if no card digits are printed (e.g. cash). Do NOT confuse with store_number, auth_code, or transaction_id."
+      },
+      "auth_code": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "The card authorization/approval code for the payment, taken ONLY from a token EXPLICITLY labeled as such. Label aliases (one must be present): 'AUTHORIZATION CODE', 'AUTH CODE', 'AuthCD', 'Approval', 'Approval Code'. Return verbatim (may be alphanumeric, e.g. '861336', '05391D'). Return null if no explicitly-labeled authorization/approval code is printed. Do NOT pull a value from a 'Memo:' line, a 'Rec:' receipt number, REFID, SEQ#, or any unlabeled alphanumeric token. Do NOT confuse with card_last4 or transaction_id."
+      },
+      "amount_paid": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "The amount actually tendered/charged to the payment method. Label aliases: 'AMT-TEND', 'Cashless', 'Payment: ... $X', 'TALLY', 'AMOUNT'. Usually equals total. Null if not separately printed. Do NOT confuse with 'Change', subtotal, or tax."
+      },
+      "currency": {
+        "type": "string",
+        "enum": [
+          "USD",
+          "EUR",
+          "GBP",
+          "CAD",
+          "AUD"
+        ],
+        "description": "ISO 4217 currency code of the receipt amounts. US receipts default to 'USD' (amounts shown with '$' or no symbol on a US merchant receipt). Infer from the merchant locale/currency symbol."
+      }
+    },
+    "required": [
+      "merchant_name",
+      "transaction_date",
+      "line_items",
+      "subtotal",
+      "tax",
+      "total",
+      "currency"
+    ]
+  },
+  "expected": {
+    "kind": "json",
+    "schema_ref": "fixtures/eb-short-hingham_lowes_receipt-schema.json",
+    "value": {
+      "merchant_name": "LOWE'S HOME CENTERS, LLC",
+      "store_number": "1618",
+      "merchant_address": {
+        "street": "729 BRIDGE STREET",
+        "city": "Weymouth",
+        "state": "MA",
+        "zip_code": "02191"
+      },
+      "merchant_phone": "(781) 340-5964",
+      "transaction_date": "2026-01-21",
+      "transaction_time": "08:13",
+      "transaction_id": "11847985",
+      "line_items": [
+        {
+          "line_no": 1,
+          "description": "PS 6-IN JR HACKSAW",
+          "quantity": 1,
+          "unit_price": 8.98,
+          "item_total": 8.98,
+          "sku": "587724"
+        },
+        {
+          "line_no": 2,
+          "description": "GORILLA WALL REPAIR FAST",
+          "quantity": 1,
+          "unit_price": 7.48,
+          "item_total": 7.48,
+          "sku": "6843097"
+        },
+        {
+          "line_no": 3,
+          "description": "PROJECT SOURCE 2-IN BRUSH",
+          "quantity": 1,
+          "unit_price": 3.98,
+          "item_total": 3.98,
+          "sku": "253307"
+        },
+        {
+          "line_no": 4,
+          "description": "SAT NIC 1.875IN X 36IN FL",
+          "quantity": 1,
+          "unit_price": 17.58,
+          "item_total": 17.58,
+          "sku": "574846"
+        }
+      ],
+      "subtotal": 38.02,
+      "tax": 2.38,
+      "total": 40.4,
+      "payment_method": "VISA",
+      "card_last4": "3954",
+      "auth_code": "05391D",
+      "amount_paid": 40.4,
+      "currency": "USD"
+    },
+    "anchored_fields": 22,
+    "no_anchor_fields": 0
+  },
+  "field_rules": "{\"merchant_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.37375, 0.36344, 0.25068, 0.01272], \"quote\": \"LOWE'S HOME CENTERS, LLC\", \"value\": \"LOWE'S HOME CENTERS, LLC\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"store_number\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.70799, 0.6902, 0.03676, 0.01096], \"quote\": \"1618\", \"value\": \"1618\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"merchant_address.street\": {\"comparator\": \"address\", \"evidence\": [{\"page\": 1, \"bbox\": [0.41305, 0.37952, 0.17146, 0.01123], \"quote\": \"729 BRIDGE STREET\", \"value\": \"729 BRIDGE STREET\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"merchant_address.city\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.40879, 0.39551, 0.08655, 0.01392], \"quote\": \"Weymouth\", \"value\": \"Weymouth\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"merchant_address.state\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.51014, 0.39551, 0.02651, 0.01123], \"quote\": \"MA\", \"value\": \"MA\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"merchant_address.zip_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.54139, 0.39551, 0.04564, 0.01123], \"quote\": \"02191\", \"value\": \"02191\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"merchant_phone\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.44108, 0.4115, 0.11597, 0.01392], \"quote\": \"(781) 340-5964\", \"value\": \"(781) 340-5964\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"transaction_date\": {\"comparator\": \"date\", \"evidence\": [{\"page\": 1, \"bbox\": [0.33917, 0.5029, 0.06635, 0.01096], \"quote\": \"01/21/26\", \"value\": \"2026-01-21\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"transaction_time\": {\"comparator\": \"date\", \"evidence\": [{\"page\": 1, \"bbox\": [0.41026, 0.5029, 0.06635, 0.01096], \"quote\": \"08:13:57\", \"value\": \"08:13\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"transaction_id\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.35929, 0.47056, 0.07466, 0.01124], \"quote\": \"11847985\", \"value\": \"11847985\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"line_items\": {\"comparator\": {\"line_no\": \"number\", \"description\": \"case_insensitive\", \"quantity\": \"number\", \"unit_price\": \"number\", \"item_total\": \"number\", \"sku\": \"case_insensitive\"}, \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": \"1\", \"value\": {\"line_no\": 1, \"description\": \"PS 6-IN JR HACKSAW\", \"quantity\": 1, \"unit_price\": 8.98, \"item_total\": 8.98, \"sku\": \"587724\"}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"2\", \"value\": {\"line_no\": 2, \"description\": \"GORILLA WALL REPAIR FAST\", \"quantity\": 1, \"unit_price\": 7.48, \"item_total\": 7.48, \"sku\": \"6843097\"}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"3\", \"value\": {\"line_no\": 3, \"description\": \"PROJECT SOURCE 2-IN BRUSH\", \"quantity\": 1, \"unit_price\": 3.98, \"item_total\": 3.98, \"sku\": \"253307\"}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"4\", \"value\": {\"line_no\": 4, \"description\": \"SAT NIC 1.875IN X 36IN FL\", \"quantity\": 1, \"unit_price\": 17.58, \"item_total\": 17.58, \"sku\": \"574846\"}, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"structural\": \"match_by:line_no\"}, \"subtotal\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": [0.7021, 0.31849, 0.04265, 0.01096], \"quote\": \"38.02\", \"value\": 38.02, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"tax\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": [0.71158, 0.3439, 0.03317, 0.01096], \"quote\": \"2.38\", \"value\": 2.38, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"total\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": [0.68788, 0.36844, 0.05687, 0.01316], \"quote\": \"$ 40.40\", \"value\": 40.4, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"payment_method\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.33428, 0.51255, 0.03979, 0.01097], \"quote\": \"VISA\", \"value\": \"VISA\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"card_last4\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.45932, 0.51255, 0.03791, 0.01097], \"quote\": \"3954\", \"value\": \"3954\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"auth_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.68505, 0.56278, 0.05912, 0.01124], \"quote\": \"05391D\", \"value\": \"05391D\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"amount_paid\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": [0.68788, 0.51151, 0.05687, 0.01349], \"quote\": \"$ 40.40\", \"value\": 40.4, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"currency\": {\"comparator\": \"enum\", \"evidence\": [{\"page\": 2, \"bbox\": null, \"quote\": \"USD\", \"value\": \"USD\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"line_items[0].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": 1, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[0].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.24731, 0.66815, 0.1756, 0.01124], \"quote\": \"PS 6-IN JR HACKSAW\", \"value\": \"PS 6-IN JR HACKSAW\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[0].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.2722, 0.72875, 0.00669, 0.01096], \"quote\": \"1\", \"value\": 1, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[0].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.30734, 0.72875, 0.03317, 0.01096], \"quote\": \"8.98\", \"value\": 8.98, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[0].item_total\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.70549, 0.67792, 0.03317, 0.01096], \"quote\": \"8.98\", \"value\": 8.98, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[0].sku\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.32793, 0.70333, 0.05687, 0.01096], \"quote\": \"587724\", \"value\": \"587724\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[1].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 4, \"bbox\": null, \"quote\": null, \"value\": 2, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[1].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.24672, 0.78012, 0.24158, 0.01124], \"quote\": \"GORILLA WALL REPAIR FAST\", \"value\": \"GORILLA WALL REPAIR FAST\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[1].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.2722, 0.84072, 0.00669, 0.01096], \"quote\": \"1\", \"value\": 1, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[1].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.30734, 0.84072, 0.03317, 0.01096], \"quote\": \"7.48\", \"value\": 7.48, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[1].item_total\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.70549, 0.78953, 0.03317, 0.01124], \"quote\": \"7.48\", \"value\": 7.48, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[1].sku\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.32793, 0.81531, 0.06635, 0.01096], \"quote\": \"6843097\", \"value\": \"6843097\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[2].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": 3, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[2].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.24731, 0.89246, 0.2574, 0.01096], \"quote\": \"PROJECT SOURCE 2-IN BRUSH\", \"value\": \"PROJECT SOURCE 2-IN BRUSH\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[2].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": [0.2722, 0.09652, 0.00669, 0.01124], \"quote\": \"1\", \"value\": 1, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[2].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": [0.30734, 0.09652, 0.03317, 0.01124], \"quote\": \"3.98\", \"value\": 3.98, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[2].item_total\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.70549, 0.90195, 0.03317, 0.01124], \"quote\": \"3.98\", \"value\": 3.98, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[2].sku\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.32793, 0.07102, 0.05687, 0.01096], \"quote\": \"253307\", \"value\": \"253307\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[3].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": null, \"quote\": null, \"value\": 4, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[3].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.24672, 0.14781, 0.21318, 0.01124], \"quote\": \"SAT NIC 1.875IN X 36IN FL\", \"value\": \"SAT NIC 1.875IN X 36IN FL\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[3].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": [0.27219, 0.20841, 0.00669, 0.01096], \"quote\": \"1\", \"value\": 1, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[3].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": [0.30851, 0.20841, 0.04148, 0.01096], \"quote\": \"17.58\", \"value\": 17.58, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[3].item_total\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": [0.69659, 0.15759, 0.04207, 0.01096], \"quote\": \"17.58\", \"value\": 17.58, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[3].sku\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.32793, 0.183, 0.05687, 0.01096], \"quote\": \"574846\", \"value\": \"574846\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}}",
+  "repeated_structure": "{\"line_items\": {\"identity_key\": \"line_no\", \"description\": \"List of purchased items on the (first) receipt. Aligned across extractors by line_no (1-based printed reading-order position). Long-Doc List Completeness scores don't-drop / don't-hallucinate on this list.\"}}",
+  "anchored_fields": 22,
+  "no_anchor_fields": 0,
+  "case_id": "B03-eb-0191"
+}

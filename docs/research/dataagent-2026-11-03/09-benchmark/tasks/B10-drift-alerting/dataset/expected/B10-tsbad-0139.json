@@ -1,0 +1,35 @@
+{
+  "source": "TheDatumOrg/TSB-AD",
+  "series": "261_IOPS_id_2_WebService_tr_2178_1st_2278.csv",
+  "label_ranges": {
+    "n": 8784,
+    "anomaly_count": 6,
+    "anomalies": [
+      2278,
+      2279,
+      2280,
+      6044,
+      6045,
+      6046
+    ]
+  },
+  "file_list": "Datasets/File_List/TSB-AD-U-Eva.csv",
+  "case_id": "B10-tsbad-0139",
+  "expected": {
+    "kind": "anomaly",
+    "series_ref": "bench://tsb-ad-u/TSB-AD-U/261_IOPS_id_2_WebService_tr_2178_1st_2278.csv",
+    "label_column": "Label",
+    "labels": {
+      "n": 8784,
+      "anomaly_count": 6,
+      "anomalies": [
+        2278,
+        2279,
+        2280,
+        6044,
+        6045,
+        6046
+      ]
+    }
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GovernmentFleetRateCard",
+  "description": "A government fleet / motor-pool RATE CARD or FEE SCHEDULE: a flat list of rate lines, each pairing a service/fee/vehicle-class LABEL with one rate VALUE printed verbatim. Covers two shapes: (1) section-grouped fee schedules where each row is label -> single rate (e.g. Utah Fleet Operations FY2024); (2) vehicle rate grids where each vehicle Type has MULTIPLE rate columns (Rate/mile, Daily/Weekly/Monthly minimum) and each (vehicle x column) cell is ONE item (e.g. U. of Illinois Car Pool sheet).",
+  "$defs": {
+    "RateLine": {
+      "type": "object",
+      "description": "ONE rate cell: exactly one (label, basis) -> one verbatim rate value. For a section-grouped fee schedule this is one fee/service line. For a vehicle rate grid this is ONE (vehicle x rate-column) cell, so a 7-row x 4-column grid yields 28 RateLine objects.",
+      "properties": {
+        "section": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The bold section / group HEADER this rate line sits under, VERBATIM (e.g. 'Fuel Network Rates', 'Motor Pool Rates', 'Additional Management', 'Statutory Maintenance Non-Compliance', 'Transactions Group'). Aliases: group, category header, sub-heading. Attribute every line to the nearest preceding bold header above it; carry the header down until the next bold header appears. Do NOT confuse with: the document title ('Fiscal Year 2024 Approved Rates', 'Car Pool Rate Sheet') which is NOT a section; do NOT confuse with the in-grid 'Category' column header. If the document has no section grouping (e.g. the uillinois grid has none), set this to null for every item. Location: bold left-aligned text starting a block."
+        },
+        "item_label": {
+          "type": "string",
+          "description": "The row label naming the service, fee, or vehicle class, VERBATIM as printed including parentheticals and unit notes (e.g. 'State-Owned Sites Markup on Fuel (per gallon)', 'Service Rate (per hour)', 'Past 30 days', 'Heavy Duty On Road', 'Commercial Equipment Rental (per Unit)', 'Sedan - compact', 'Mini Van (7 passenger)'). Aliases: service, item, fee name, vehicle Type, Category. For vehicle-grid cells use ONLY the vehicle Type as the label (the rate column is captured in rate_basis), so 'Sedan - compact' appears 4 times, once per column. For indented sub-rows under a parent label (e.g. 'Past 30 days' under 'Accounts receivable late fees'), use the sub-row label as printed. Do NOT confuse with: the section header (that is 'section'); the rate value (that is 'rate_value'). Do NOT merge a parent intro line and its child rows into one. Location: leftmost text column of each row."
+        },
+        "rate_basis": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The unit / billing basis the rate is charged on, normalized to ONE of this fixed enum. PRIORITY RULE: if the LABEL prints an explicit unit parenthetical, that parenthetical ALWAYS wins and sets the basis, EVEN when the value is text like 'See formula' / 'Actual Cost' (so 'Lease Rate (per month, per vehicle)' -> 'per month' regardless of its 'See formula' value; 'Service Rate (per hour)' -> 'per hour'). Only when the label has NO unit parenthetical do you fall back to the value/grid-column rules below. Infer from the label parenthetical and/or the grid column header. Enum: 'per mile' (Rate/mile column; ALSO every row inside the Motor Pool mileage 'Category -> Rate' grid INCLUDING the 'Pass through' rows like 'Post EVO' and 'FO9499 - VA Supply Transport' -- they are mileage-grid rows so basis is 'per mile' even though their value is text), 'per gallon', 'per month', 'per hour', 'per occurrence', 'daily minimum' (Daily minimum grid column ONLY -- do NOT use for the Utah 'Daily Pool Rates' fee line, which has NO unit so basis is null), 'weekly minimum' (Weekly Minimum grid column), 'monthly minimum' (Monthly Minimum grid column), 'percent of balance' (use for ANY line whose rate is a bare percentage of some monetary base: the 'X% of balance' late-fee tiers AND 'Percentage of Transaction Value on Non-fuel Purchases' (3.0%) -> 'percent of balance'), 'flat' (a one-off / per-item / per-unit / per-accident / per-vehicle / per-day dollar amount with no recurring time unit, e.g. Administrative Fee, Short Term Used Vehicle Lease, Commercial Equipment Rental per Unit, Accident Deductible per accident, a '$25 per day late-return fee'), null (no determinable basis, e.g. 'Materials Rate', the 'Lease Rate ... See formula' and 'Mileage (see grid...) See formula' header lines -> basis null, 'Daily Pool Rates' / 'Actual Cost' pass-through lines with no unit, and any line whose value is 'Varies' / 'Varies(...)' and whose LABEL prints no unit -> basis null, e.g. 'Operator Negligence and Vehicle Abuse'). Mapping hints: '(per month, per vehicle)' -> 'per month'; '(per occurrence each vehicle)' -> 'per occurrence'; '(per accident)' -> 'flat'; '(per Unit)' -> 'flat'; a mileage 'Category' grid row -> 'per mile'. Do NOT confuse with: the rate_value (the number/text). Do NOT invent enum values outside this list.",
+          "enum": [
+            "per mile",
+            "per gallon",
+            "per month",
+            "per hour",
+            "per occurrence",
+            "daily minimum",
+            "weekly minimum",
+            "monthly minimum",
+            "percent of balance",
+            "flat",
+            null
+          ]
+        },
+        "rate_value": {
+          "type": "string",
+          "description": "The rate amount EXACTLY as printed in the document, VERBATIM, including any currency symbol ($, cents sign), percent sign, or descriptive text. Do NOT normalize, parse, round, or strip: keep '$70.00' (not 70 or 70.0), '0.28' (not $0.28), '3.0%' (not 3 or 0.03), '40' for the cent value printed '40' followed by a cent sign -> use '40' ONLY if no symbol; if a cent sign is printed render it as printed (e.g. '40c' / the cents-sign char if visible), '$1.07', '5% of balance' (keep the whole phrase, not 5), 'Actual Cost', 'See formula', 'Pass through', 'Cost plus $12.00 fee', 'Varies(abuse or driver neglect cases only)' (keep the parenthetical), '155.02', '46.00'. For uillinois grid cells, take the single cell value for that (vehicle x column), e.g. Sedan-compact Daily minimum -> '$39'. Do NOT confuse with: item_label or rate_basis. This field is REQUIRED and is the load-bearing answer; never leave it blank when a value is printed. Location: the right-aligned amount on the same row, or the grid cell at (vehicle row, rate column)."
+        }
+      },
+      "required": [
+        "item_label",
+        "rate_value"
+      ]
+    }
+  },
+  "type": "object",
+  "properties": {
+    "issuing_org": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The government organization / agency / department that issued this rate card, VERBATIM (e.g. 'Division of Fleet Operations' or 'Utah Division of Fleet Operations' from the Utah logo/body; 'University of Illinois Car Pool' / inferred from the Car Pool Rate Sheet + fs.illinois.edu). Aliases: agency, department, issuer, provider. Do NOT confuse with: the document title or the fiscal-year period. Location: header logo, body text ('The Division of Fleet Operations...'), or footer URL. Null only if no issuer is identifiable."
+    },
+    "effective_period": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The fiscal year or effective date/period the rates apply to, VERBATIM as printed (e.g. 'Fiscal Year 2024' / 'Fiscal Year 2024 Approved Rates'; 'RATES EFFECTIVE January 2, 2024' / 'effective January 2, 2024'). Aliases: fiscal year, effective date, valid period, FY. Do NOT confuse with: approval dates buried in body prose (e.g. 'approved ... on September 22, 2022') unless that is the only period given; prefer the headline effective/FY statement. Location: title line or a banner near the top. Capture the COMPLETE printed banner verbatim, INCLUDING any leading qualifier such as 'RATES EFFECTIVE' or 'Approved Rates' — do NOT strip it to a bare date (capture 'RATES EFFECTIVE January 2, 2024', not 'January 2, 2024')."
+    },
+    "items": {
+      "type": "array",
+      "description": "Every rate line in the document, one RateLine per rate cell, in top-to-bottom reading order. Include ALL fee/service lines AND every cell of any vehicle rate grid (uillinois: 7 vehicle types x 4 rate columns = 28 items). Do NOT skip indented sub-rows (the 'Past 30/60/90 days' late-fee tiers, the in-grid Category rows like 'Heavy Duty On Road'). Do NOT collapse a vehicle grid into one item per vehicle. EXCLUDE prose footnotes/notes below a grid even if they mention a dollar amount: do NOT create an item for the uillinois 'Vehicles returned late will accrue a $25 per day late-return fee' note or any narrative caveat -- only rows that appear as a labeled rate line in the table/list itself count. So uillinois yields EXACTLY 28 items.",
+      "items": {
+        "$ref": "#/$defs/RateLine"
+      }
+    }
+  },
+  "required": [
+    "items"
+  ]
+}

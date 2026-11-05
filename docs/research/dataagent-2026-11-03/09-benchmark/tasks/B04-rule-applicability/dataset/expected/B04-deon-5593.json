@@ -1,0 +1,32 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "uscis_3611f34e",
+  "expect_label": "yes",
+  "raw_label": "Accepted",
+  "rule_predicates": [
+    "entry_year",
+    "last_removal_year",
+    "i212_filed_year",
+    "filed_within_years_of_last_removal",
+    "favorable_factor",
+    "unfavorable_factor",
+    "count_favorable",
+    "findall",
+    "sort",
+    "length",
+    "count_unfavorable",
+    "decision",
+    "catch",
+    "writeln",
+    "error",
+    "handle_undefined"
+  ],
+  "reference_prolog": "% Facts about the petitioner and timeline (arity-0 predicates used for yes/no facts)\nentered_without_inspection.\nentry_year(1995).\n\n% Removal events\nin_absentia_deportation_1996.\nlast_removal_year(2019).    % most recent removal order entered in 2019\ni212_filed_year(2021).      % Form I-212 filed in 2021\n\n% Family / immigration petition facts\nmarried_uscitizen_2015.\nimmigrant_petition_approved_2016.\nminor_child_present.\n\n% Favorable factors asserted by petitioner (arity-0 true facts)\nno_criminal_history.\ncontinuous_employment_since_2001.\ntps_since_2001.\nfiled_income_tax_returns.\nfamily_hardship_to_spouse_and_child.  % petitioner's claim of hardship to US citizen spouse & minor child\ncountry_conditions_el_salvador.        % hardship to petitioner if returned\n\n% Unfavorable facts\nprior_deportation_1996.\nrecent_removal_2019.\nmotion_reopen_denied_prior_to_1997.   % IJ denied cancellation because placed in proceedings prior to 1997\n\n% Disputed fact: whether petitioner failed to attend the 2019 proceeding.\n% The field office concluded he failed to appear; the petitioner asserts that was error.\n% In this model we represent that the petitioner disputes the field office finding and no\n% affirmative fact of failure to attend is established. Therefore failed_to_attend_proceeding is false.\nfailed_to_attend_proceeding :- false.\n\n% Helper to check whether the I-212 was filed within N years of the last removal\nfiled_within_years_of_last_removal(Years) :-\n    last_removal_year(RemY),\n    i212_filed_year(FileY),\n    Diff is FileY - RemY,\n    Diff =< Years.\n\n% Inadmissibility under INA 212(a)(6)(B): failure to attend without reasonable cause,\n% and seeking admission within 5 years of subsequent departure/removal. This is non-waivable.\ninadmissible_6B :-\n    failed_to_attend_proceeding,\n    filed_within_years_of_last_removal(5).\n\n% Inadmissibility under INA 212(a)(9)(A)(ii): ordered removed and seeks admission within 10 years\ninadmissible_9A :-\n    last_removal_year(_),\n    filed_within_years_of_last_removal(10).\n\n% Discretionary factors (Matter of Lee; Matter of Tin).\n% Favorable factors are represented by the true facts above.\nfavorable_factor(no_criminal_history) :-\n    no_criminal_history.\nfavorable_factor(continuous_employment_since_2001) :-\n    continuous_employment_since_2001.\nfavorable_factor(tps_since_2001) :-\n    tps_since_2001.\nfavorable_factor(filed_income_tax_returns) :-\n    filed_income_tax_returns.\nfavorable_factor(family_hardship_to_spouse_and_child) :-\n    family_hardship_to_spouse_and_child.\nfavorable_factor(country_conditions_el_salvador) :-\n    country_conditions_el_salvador.\n\n% Unfavorable factors derived from the record\nunfavorable_factor(prior_deportation_1996) :-\n    prior_deportation_1996.\nunfavorable_factor(recent_removal_2019) :-\n    recent_removal_2019.\nunfavorable_factor(motion_reopen_denied_prior_to_1997) :-\n    motion_reopen_denied_prior_to_1997.\n% The existence of a removal order itself is an unfavorable factor\nunfavorable_factor(prior_removal_order) :-\n    last_removal_year(_).\n\n% Count favorable and unfavorable factors\ncount_favorable(N) :-\n    findall(F, favorable_factor(F), L),\n    sort(L, SL),            % avoid double-counting any duplicates\n    length(SL, N).\n\ncount_unfavorable(N) :-\n    findall(F, unfavorable_factor(F), L),\n    sort(L, SL),\n    length(SL, N).\n\n% Discretionary approval: if the applicant is not barred by a non-waivable ground (6B),\n% then weigh favorable vs unfavorable factors. Approve if favorable factors outweigh unfavorable.\ndiscretionary_approval_granted :-\n    \\+ inadmissible_6B,     % cannot grant if non-waivable bar applies\n    inadmissible_9A,        % application seeks permission because 9A applies\n    count_favorable(Fav),\n    count_unfavorable(Unfav),\n    Fav > Unfav.\n\n% Eligibility: all conditions necessary to Accept the case\neligibility_met :-\n    discretionary_approval_granted.\n\n% Final decision structure and entrypoint (must appear exactly as specified)\ndecision(Result) :-\n    (   eligibility_met\n    ->  Result = 'Accepted'\n    ;   Result = 'Dismissed'\n    ).\n\nrun :-\n    catch(\n        (   decision(Result),\n            writeln(Result)\n        ),\n        error(existence_error(procedure, PI), _),\n        handle_undefined(PI)\n    ).\n\nhandle_undefined(Name/Arity) :-\n    (   current_predicate(Name/OtherArity),\n        OtherArity \\= Arity\n    ->  format('Programming error: called ~w/~w, but only ~w/~w is defined.~n',\n               [Name, Arity, Name, OtherArity])\n    ;   format('Lack of information: predicate ~w/~w is not defined.~n',\n               [Name, Arity])\n    ).",
+  "case_id": "B04-deon-5593",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "Accepted",
+    "question": "Should this case be accepted or dismissed?"
+  }
+}

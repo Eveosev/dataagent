@@ -1,0 +1,32 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_7c1528e2",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "state",
+    "focus_year",
+    "query_entity",
+    "eviction_action",
+    "real_property",
+    "located_in_county",
+    "writ_of_restitution",
+    "issued_in_eviction_action",
+    "relates_to_premises",
+    "sheriff_of_county",
+    "statute_wi_799_44_writ_may_be_delivered_to_sheriff_for_execution",
+    "statute_wi_799_44_writ_is_directed_to_county_sheriff",
+    "legal_entity_empowered_to_execute_writ",
+    "legal_empowered_by_law_to_execute_eviction_writ",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: Wisconsin\n    Focus year: 2021\n    Question: Is the municipal police department an entity empowered by law to execute a writ of eviction?\n*/\n\n/* -------------------------------\n   Scenario facts (question statement)\n   ------------------------------- */\n\nstate(wisconsin).\nfocus_year(2021).\n\n% The entity we are asking about.\nquery_entity(municipal_police_department).\n\n% We model the context as an eviction action where a writ of restitution (eviction writ) exists.\neviction_action(eviction_case_1).\nreal_property(premises_1).\nlocated_in_county(premises_1, dane).\n\n% The writ at issue (writ of restitution).\nwrit_of_restitution(writ_1).\nissued_in_eviction_action(writ_1, eviction_case_1).\nrelates_to_premises(writ_1, premises_1).\n\n% The county sheriff (a distinct entity from a municipal police department).\nsheriff_of_county(dane, sheriff_dane_county).\n\n% Helper predicate summarizing the scenario in logic form.\nscenario_statement :-\n    state(wisconsin),\n    focus_year(2021),\n    query_entity(municipal_police_department),\n    writ_of_restitution(Writ),\n    issued_in_eviction_action(Writ, Case),\n    eviction_action(Case),\n    relates_to_premises(Writ, Premises),\n    real_property(Premises),\n    located_in_county(Premises, _County).\n\n\n/* -------------------------------\n   Statute translation (WI Stat  799.44 (2021))\n   ------------------------------- */\n\n% WI Stat  799.44(2): \"the writ may be delivered to the sheriff for execution\"\nstatute_wi_799_44_writ_may_be_delivered_to_sheriff_for_execution(Writ, Sheriff) :-\n    writ_of_restitution(Writ),\n    relates_to_premises(Writ, Premises),\n    located_in_county(Premises, County),\n    sheriff_of_county(County, Sheriff).\n\n% WI Stat  799.44(4): Writ \"directed to the sheriff of the county in which the real property is located\"\nstatute_wi_799_44_writ_is_directed_to_county_sheriff(Writ, Sheriff) :-\n    writ_of_restitution(Writ),\n    relates_to_premises(Writ, Premises),\n    located_in_county(Premises, County),\n    sheriff_of_county(County, Sheriff).\n\n/* Core legal conclusion from  799.44 for this question:\n   An entity is empowered by law (under this statute) to execute the writ if it is the county sheriff\n   to whom the writ is directed / to whom it may be delivered for execution.\n*/\nlegal_entity_empowered_to_execute_writ(Entity, Writ) :-\n    statute_wi_799_44_writ_is_directed_to_county_sheriff(Writ, Entity),\n    statute_wi_799_44_writ_may_be_delivered_to_sheriff_for_execution(Writ, Entity).\n\n/* For convenience: \"empowered by law to execute a writ of eviction\" in the scenario. */\nlegal_empowered_by_law_to_execute_eviction_writ(Entity) :-\n    scenario_statement,\n    writ_of_restitution(Writ),\n    legal_entity_empowered_to_execute_writ(Entity, Writ).\n\n\n/* -------------------------------\n   Answer derivation (deterministic)\n   ------------------------------- */\n\nhousing_answer(yes) :-\n    query_entity(Entity),\n    legal_empowered_by_law_to_execute_eviction_writ(Entity),\n    !.\nhousing_answer(no) :-\n    !.\n\n\n/* -------------------------------\n   Main entrypoint\n   ------------------------------- */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-3433",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is the municipal police department an entity empowered by law to execute a writ of eviction?"
+  }
+}

@@ -1,0 +1,131 @@
+{
+  "text": "SEC. 10.1 HYPERBOLIC EQUATIONS\n525\n# Exercises for Hyperbolic Equations\n1. (a) Verify by direct substitution that ${  { u } } ( x , t ) = \\sin ( n \\pi x ) \\cos ( 2 n \\pi t )$ is a solution to the wave equation $u_{ tt} ( x , t ) = 4 u_ { x x } ( x , t )$ for each positive integer $\\ n = 1 , 2 , \\ldots$.\n(b) Verify by direct substitution that $ u\\left( {x,t}\\right) = \\sin \\left( {n\\pi x}\\right) \\cos \\left( {\\operatorname{cn}{\\pi t}}\\right) $ is a solution to the wave equation $ {u}_{tt}\\left( {x,t}\\right) = {c}^{2}{u}_{xx}\\left( {x,t}\\right) $ for each positive integer $ n = 1,  2, \\ldots $ .\n2. Assume that the initial position and velocity are $ u\\left( {x,0}\\right) = f\\left( x\\right) $ and $ {u}_{t}\\left( {x,0}\\right) \\equiv 0 $ , respectively. Show that the d'Alembert solution for this case is\n$$u(x,t)=\\frac{f(x+ct)+f(x\\quad ct)}{2}.$$\n3. Obtain a simplified form of the difference equation (7) in the case$ h = {2ck} $ .\nIn Exercises 4 and 5, use the finite-difference method to calculate the first three rows of the approximate solution for the given wave equation. Carry out your calculations by hand (calculator).\n4. $ {u}_{tt}\\left( {x,t}\\right) = 4{u}_{xx}\\left( {x,t}\\right) $, for $ 0 \\leq x \\leq 1 $ and $ 0 \\leq t \\leq {0.5} $ , with the boundary conditions\n$${ u ( 0 , t ) = 0 \\quad \\text { and  } \\quad u ( 1 . t ) = 0 } \\quad { \\text { for } 0 \\leq t \\leq 0 . 5 , }$$\n$${ u ( x , 0 ) = f ( x ) = \\sin ( \\pi  x ) }\\quad { \\text { for } 0 \\leq x \\leq 1 , }$$\n$${ u _ { t } ( x , 0 ) = g ( x ) = 0 } \\quad { \\text { for } 0 \\leq x \\leq 1 . }$$\nLet $ h = {0.2},k = {0.1} $ , and $ r = 1 $ .\n5. $ {u}_{tt}\\left( {x,t}\\right) = 4{u}_{xx}\\left( {x,t}\\right) $ , for $ 0 \\leq x \\leq 1 $ and $ 0 \\leq t \\leq {0.5} $ , with the boundary conditions\n$${ u ( 0 , t ) = 0 \\quad \\text {and } \\quad u ( 1 , t ) = 0 \\quad \\text { for }\\ 0 \\leq t \\leq 0 . 5 , }$$\n$$u\\left( {x,0}\\right)  = f\\left( x\\right)  = \\left\\{  \\begin{array}{ll} \\frac{5x}{2} & \\text{ for }0 < x \\leq  \\frac{3}{5}, \\\\  \\frac{{15} \\quad{15x}}{4} & \\text{ for }\\frac{3}{5} \\leq  x \\leq  1, \\end{array}\\right.$$\n$$u_{t}(x,0)=g(x)=0\\quad\\text{for}~0<x<1.$$\nLet $ h = {0.2},k = {0.1} $ , and $ r = 1 $ .\n6. Assume that the initial position and velocity are $ u\\left( {x,0}\\right) = f\\left( x\\right) $ and $ {u}_{t}\\left( {x,0}\\right) = g\\left( x\\right) $ , respectively. Show that the d'Alembert solution for this case is\n$$u\\left( {x,t}\\right)  = \\frac{f\\left( {x + {ct}}\\right)  + f\\left( {x\\;{ct}}\\right) }{2} + \\frac{1}{2c}{\\int }_{x\\;{ct}}^{x + {ct}}g\\left( s\\right) {ds}.$$\n7. For the equation $ {u}_{tt}\\left( {x,t}\\right) = 9{u}_{xx}\\left( {x,t}\\right) $ , what relationship between $ h $ and $ k $ must occur in order to produce the difference equation $ {u}_{i,j + 1} = {u}_{i + 1,j} + {u}_{i \\; 1,j}\\quad{u}_{i,j \\; 1} $ ?\n8. What difficulty might occur when trying to use the finite-difference method to solve $ {u}_{tt}\\left( {x,t}\\right) = 4{u}_{xx}\\left( {x,t}\\right) $ with the choice $ k = {0.02} $ and $ h = {0.03} $ ?",
+  "blocks": [
+    {
+      "category": "header",
+      "order": 0,
+      "text": "SEC. 10.1 HYPERBOLIC EQUATIONS"
+    },
+    {
+      "category": "page_number",
+      "order": 1,
+      "text": "525"
+    },
+    {
+      "category": "title",
+      "order": 2,
+      "text": "# Exercises for Hyperbolic Equations"
+    },
+    {
+      "category": "text_block",
+      "order": 3,
+      "text": "1. (a) Verify by direct substitution that ${  { u } } ( x , t ) = \\sin ( n \\pi x ) \\cos ( 2 n \\pi t )$ is a solution to the wave equation $u_{ tt} ( x , t ) = 4 u_ { x x } ( x , t )$ for each positive integer $\\ n = 1 , 2 , \\ldots$."
+    },
+    {
+      "category": "text_block",
+      "order": 4,
+      "text": "(b) Verify by direct substitution that $ u\\left( {x,t}\\right) = \\sin \\left( {n\\pi x}\\right) \\cos \\left( {\\operatorname{cn}{\\pi t}}\\right) $ is a solution to the wave equation $ {u}_{tt}\\left( {x,t}\\right) = {c}^{2}{u}_{xx}\\left( {x,t}\\right) $ for each positive integer $ n = 1,  2, \\ldots $ ."
+    },
+    {
+      "category": "text_block",
+      "order": 5,
+      "text": "2. Assume that the initial position and velocity are $ u\\left( {x,0}\\right) = f\\left( x\\right) $ and $ {u}_{t}\\left( {x,0}\\right) \\equiv 0 $ , respectively. Show that the d'Alembert solution for this case is"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 6,
+      "latex": "$$u(x,t)=\\frac{f(x+ct)+f(x\\quad ct)}{2}.$$"
+    },
+    {
+      "category": "text_block",
+      "order": 7,
+      "text": "3. Obtain a simplified form of the difference equation (7) in the case$ h = {2ck} $ ."
+    },
+    {
+      "category": "text_block",
+      "order": 8,
+      "text": "In Exercises 4 and 5, use the finite-difference method to calculate the first three rows of the approximate solution for the given wave equation. Carry out your calculations by hand (calculator)."
+    },
+    {
+      "category": "text_block",
+      "order": 9,
+      "text": "4. $ {u}_{tt}\\left( {x,t}\\right) = 4{u}_{xx}\\left( {x,t}\\right) $, for $ 0 \\leq x \\leq 1 $ and $ 0 \\leq t \\leq {0.5} $ , with the boundary conditions"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 10,
+      "latex": "$${ u ( 0 , t ) = 0 \\quad \\text { and  } \\quad u ( 1 . t ) = 0 } \\quad { \\text { for } 0 \\leq t \\leq 0 . 5 , }$$"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 11,
+      "latex": "$${ u ( x , 0 ) = f ( x ) = \\sin ( \\pi  x ) }\\quad { \\text { for } 0 \\leq x \\leq 1 , }$$"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 12,
+      "latex": "$${ u _ { t } ( x , 0 ) = g ( x ) = 0 } \\quad { \\text { for } 0 \\leq x \\leq 1 . }$$"
+    },
+    {
+      "category": "text_block",
+      "order": 13,
+      "text": "Let $ h = {0.2},k = {0.1} $ , and $ r = 1 $ ."
+    },
+    {
+      "category": "text_block",
+      "order": 14,
+      "text": "5. $ {u}_{tt}\\left( {x,t}\\right) = 4{u}_{xx}\\left( {x,t}\\right) $ , for $ 0 \\leq x \\leq 1 $ and $ 0 \\leq t \\leq {0.5} $ , with the boundary conditions"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 15,
+      "latex": "$${ u ( 0 , t ) = 0 \\quad \\text {and } \\quad u ( 1 , t ) = 0 \\quad \\text { for }\\ 0 \\leq t \\leq 0 . 5 , }$$"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 16,
+      "latex": "$$u\\left( {x,0}\\right)  = f\\left( x\\right)  = \\left\\{  \\begin{array}{ll} \\frac{5x}{2} & \\text{ for }0 < x \\leq  \\frac{3}{5}, \\\\  \\frac{{15} \\quad{15x}}{4} & \\text{ for }\\frac{3}{5} \\leq  x \\leq  1, \\end{array}\\right.$$"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 17,
+      "latex": "$$u_{t}(x,0)=g(x)=0\\quad\\text{for}~0<x<1.$$"
+    },
+    {
+      "category": "text_block",
+      "order": 18,
+      "text": "Let $ h = {0.2},k = {0.1} $ , and $ r = 1 $ ."
+    },
+    {
+      "category": "text_block",
+      "order": 19,
+      "text": "6. Assume that the initial position and velocity are $ u\\left( {x,0}\\right) = f\\left( x\\right) $ and $ {u}_{t}\\left( {x,0}\\right) = g\\left( x\\right) $ , respectively. Show that the d'Alembert solution for this case is"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 20,
+      "latex": "$$u\\left( {x,t}\\right)  = \\frac{f\\left( {x + {ct}}\\right)  + f\\left( {x\\;{ct}}\\right) }{2} + \\frac{1}{2c}{\\int }_{x\\;{ct}}^{x + {ct}}g\\left( s\\right) {ds}.$$"
+    },
+    {
+      "category": "text_block",
+      "order": 21,
+      "text": "7. For the equation $ {u}_{tt}\\left( {x,t}\\right) = 9{u}_{xx}\\left( {x,t}\\right) $ , what relationship between $ h $ and $ k $ must occur in order to produce the difference equation $ {u}_{i,j + 1} = {u}_{i + 1,j} + {u}_{i \\; 1,j}\\quad{u}_{i,j \\; 1} $ ?"
+    },
+    {
+      "category": "text_block",
+      "order": 22,
+      "text": "8. What difficulty might occur when trying to use the finite-difference method to solve $ {u}_{tt}\\left( {x,t}\\right) = 4{u}_{xx}\\left( {x,t}\\right) $ with the choice $ k = {0.02} $ and $ h = {0.03} $ ?"
+    },
+    {
+      "category": "equation_semantic",
+      "order": null,
+      "latex": ""
+    },
+    {
+      "category": "equation_semantic",
+      "order": null,
+      "latex": ""
+    }
+  ],
+  "tables": []
+}

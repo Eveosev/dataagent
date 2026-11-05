@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 2595,
+  "table": "science-table62",
+  "structure": "ColumnHeaderMerge",
+  "question_type": "Fact Checking",
+  "sub_type": "Value-Matching",
+  "answer": "83.11",
+  "cot": [
+    {
+      "planning": "First, we need to locate the row corresponding to infected mice treated with DCs and PBS."
+    },
+    {
+      "planning": "Then, we need to find the 'SD' column for Expt-2."
+    },
+    {
+      "planning": "Finally, we need to read the value in the 'SD' column for the identified row."
+    }
+  ],
+  "case_id": "B01-rht-4231",
+  "expected": {
+    "kind": "answer",
+    "question": "What is the standard deviation of spleen weight for infected mice treated with DCs and PBS? (Accurate to two decimal places)",
+    "answer": "83.11"
+  }
+}

@@ -1,0 +1,47 @@
+## Essential Problem:
+
+The problem asks us to determine if there are two distinct indices in a given array where the elements at those indices are equal and the absolute difference between the indices is less than or equal to a given value `k`.
+
+## Relevant Information:
+
+* The input is an array of integers.
+* We need to find two indices with equal values.
+* The indices must be distinct (not the same).
+* The absolute difference between the indices must be less than or equal to `k`.
+
+## Draft Answer:
+
+Here's how we can approach this problem:
+
+1. **Iterate through the array**: 
+    * For each element `a[i]`, check if it appears again in the remaining array from index `i+1` to `i+k`.
+    * If it appears again, we have found a pair with equal values and an absolute difference of `j-i` which is less than or equal to `k`.
+2. **Use a hash table**: 
+    * Store the elements we have encountered so far along with their indices in a hash table.
+    * While iterating through the array, check if the current element exists in the hash table.
+    * If it exists, check if the absolute difference between the current index and the index stored in the hash table is less than or equal to `k`. If it is, we have found a valid pair.
+    * Otherwise, update the hash table with the current element and its index.
+
+Here's a possible implementation using the hash table approach:
+
+```pony
+fun isValidPair(nums: Array[ISize], k: USize): Bool {
+    var seen = Dict[ISize, USize]()
+
+    for (i, num) in nums.iter() {
+        if seen.hasKey(num) {
+            let prevIndex = seen[num]
+            if abs(i - prevIndex) <= k {
+                return true
+            }
+        }
+        seen[num] = i
+    }
+
+    return false
+}
+```
+
+This code iterates through the array and checks if each element exists in the `seen` dictionary. If it exists and the absolute difference between the current index and the stored index is less than or equal to `k`, it returns true. Otherwise, it updates the dictionary with the current element and its index. If no such pair is found after iterating through the entire array, it returns false.
+
+This is just one possible solution, and other approaches might be more efficient depending on the specific needs of the problem. The important thing is to understand the problem, identify the relevant information, and design a solution that effectively addresses the requirements. 

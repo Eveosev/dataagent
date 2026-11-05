@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 97,
+  "question": "I'm putting together a showcase of promotional cards and need a list of card names. I want the names of the cards that have a promotional printing and have multiple faces on the same card, but only those printed in the most recent card frame version. A card's frame version is the year its frame style was introduced, so the most recent frame version is the one with the latest year - and it should be the newest frame style overall, not just among promotional multi-faced cards. Please list each card's name once.",
+  "evidence": "A promotional printing is a printing of a card that was given out for promotional purposes. A card with multiple faces has multiple faces printed on the same card.",
+  "gold_sql": "SELECT DISTINCT name FROM cards WHERE isPromo = 1 AND side IS NOT NULL AND CAST(frameVersion AS INTEGER) = (SELECT MAX(CAST(frameVersion AS INTEGER)) FROM cards)",
+  "db_id": "card_games",
+  "case_id": "B05-bird-0098",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT DISTINCT name FROM cards WHERE isPromo = 1 AND side IS NOT NULL AND CAST(frameVersion AS INTEGER) = (SELECT MAX(CAST(frameVersion AS INTEGER)) FROM cards)",
+    "db_id": "card_games",
+    "evidence": "A promotional printing is a printing of a card that was given out for promotional purposes. A card with multiple faces has multiple faces printed on the same card."
+  }
+}

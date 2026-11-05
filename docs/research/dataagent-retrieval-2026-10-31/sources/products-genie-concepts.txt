@@ -1,0 +1,201 @@
+Genie Agents concepts | Databricks on AWS
+Skip to main content
+Get startedGuidesDevelopReferenceResourcesRelease notes
+Help
+Support
+Knowledge Base
+Community
+Training
+English
+English
+日本語
+Português
+Français
+AWS
+Azure
+GCP
+SAPTry Databricks
+Genie
+Genie Agents
+Concepts
+On this page
+Last updated on Oct 30, 2026
+Genie Agents concepts
+Genie Agents is a Databricks feature that allows business teams to interact with their data using natural language. Domain experts configure Genie Agents with datasets, sample queries, and text guidelines to help Genie translate business questions into analytical queries. After setup, business users can ask questions and generate visualizations to understand operational data. For additional information about Databricks AI-powered features, see Databricks AI assistive features.
+note
+Genie Agents were formerly known as Genie Spaces.
+Genie selects relevant names and descriptions from annotated tables and columns to convert natural language questions to an equivalent SQL query. It responds with the generated query and results table, if possible. If Genie can't generate an answer, it can ask follow-up questions to clarify before providing a response.
+Example use case​
+A sales manager wants to understand the top selling product over time in their bakery. They can interact with the Genie Agent using natural language and automatically generate a visualization.
+The following GIF shows this interaction:
+How Genie Agents works​
+Genie Agents use a compound AI system to interpret business questions and generate answers. Instead of using a single large language model, compound AI systems process tasks in AI applications by combining multiple interacting components. Compound AI systems are an increasingly common design pattern for AI applications because of their performance and flexibility. For more information, see The Shift from Models to Compound AI Systems.
+Key concepts​
+Concept
+Description
+Knowledge store
+A collection of curated semantic definitions that enhances Genie's understanding of your data. The knowledge store includes agent-level table and column descriptions, synonyms, join relationships, SQL expressions, and prompt matching settings. Knowledge store configurations are scoped to the agent and do not affect Unity Catalog metadata. See Build a knowledge store.
+Instructions
+Plain-text notes that tell Genie how to interpret your data and respond to questions. Instructions can describe business rules, preferred terminology, date formats, and other domain-specific context. See Provide instructions.
+Example SQL queries
+SQL queries that serve as reference answers for common questions. Genie intelligently selects relevant examples from the agent's query library to generate more accurate responses. See Add example SQL queries and functions.
+Trusted assets
+Parameterized example queries and SQL functions whose exact logic has been verified by an agent author. When Genie uses a trusted asset to generate a response, the answer comes from this verified logic. See Review a response.
+Benchmarks
+A set of test questions used to evaluate and measure Genie Agent response accuracy. Unlike instructions, benchmarks are for evaluation only. Genie does not use benchmark questions or SQL to improve its context. See Benchmarks.
+Agent mode
+A multi-step reasoning mode that performs deeper analysis across your data. Agent mode breaks complex questions into sub-tasks, runs multiple SQL queries, and returns a structured report with findings and visualizations. Use standard Agent mode for in-depth analysis, or Flash (Beta), an Agent mode option, for fast answers to quick questions. See Agent mode.
+←✕
+Concept
+Description
+Knowledge store
+A collection of curated semantic definitions that enhances Genie's understanding of your data. The knowledge store includes agent-level table and column descriptions, synonyms, join relationships, SQL expressions, and prompt matching settings. Knowledge store configurations are scoped to the agent and do not affect Unity Catalog metadata. See Build a knowledge store.
+Instructions
+Plain-text notes that tell Genie how to interpret your data and respond to questions. Instructions can describe business rules, preferred terminology, date formats, and other domain-specific context. See Provide instructions.
+Example SQL queries
+SQL queries that serve as reference answers for common questions. Genie intelligently selects relevant examples from the agent's query library to generate more accurate responses. See Add example SQL queries and functions.
+Trusted assets
+Parameterized example queries and SQL functions whose exact logic has been verified by an agent author. When Genie uses a trusted asset to generate a response, the answer comes from this verified logic. See Review a response.
+Benchmarks
+A set of test questions used to evaluate and measure Genie Agent response accuracy. Unlike instructions, benchmarks are for evaluation only. Genie does not use benchmark questions or SQL to improve its context. See Benchmarks.
+Agent mode
+A multi-step reasoning mode that performs deeper analysis across your data. Agent mode breaks complex questions into sub-tasks, runs multiple SQL queries, and returns a structured report with findings and visualizations. Use standard Agent mode for in-depth analysis, or Flash (Beta), an Agent mode option, for fast answers to quick questions. See Agent mode.
+What data can I use?​
+A Genie Agent is based on data registered to Unity Catalog, including managed tables, external tables, foreign tables, views, metric views, and materialized views. Genie uses the metadata attached to Unity Catalog objects, as well as an author-curated agent-level knowledge store, to generate responses. Well-annotated datasets, paired with specific instructions that you provide, are key to creating a positive experience for end users.
+note
+In Chat mode, Genie works with structured data only. It cannot answer questions about unstructured data such as PDFs, Word documents, or other file-based content. To query unstructured files stored in Unity Catalog volumes (Beta), use Agent mode. See Analyze files in volumes with a Genie Agent. To give a Genie Agent access to external documents and tools such as Google Drive and Slack, attach MCP connectors and use Agent mode. See Connect a Genie Agent to external tools and sources.
+How Genie Agents generates a response​
+When a user submits a question, Genie parses the request, identifies relevant data sources, and determines how to generate an appropriate response. Details provided by authors, combined with relevant Unity Catalog comments, metadata, and sample values from selected columns, allow Genie to infer both business and technical logic. Genie intelligently filters example SQL queries, table and column metadata, and chat history to select the most relevant context for answering the request.
+Genie generates responses using the following components:
+Component
+Description
+Unity Catalog table metadata
+Table names, descriptions, and defined primary key (PK) and foreign key (FK) relationships. Genie uses this data to convert natural language prompts to SQL.
+Column names and descriptions
+Genie intelligently filters for relevant column names and descriptions.
+Knowledge store context
+Agent-specific metadata that authors add locally, including column values relevant to query generation. Does not alter existing Unity Catalog metadata. See Build a knowledge store.
+Example SQL queries
+Genie intelligently selects relevant SQL examples from SQL Queries.
+SQL functions
+All SQL functions that have been added to the agent.
+Instructions
+Plain-text notes provided as General instructions.
+Prompt and response history
+Prompts and responses from the current chat. If necessary, because of set token limits, the oldest parts of the chat record are excluded.
+←✕
+Component
+Description
+Unity Catalog table metadata
+Table names, descriptions, and defined primary key (PK) and foreign key (FK) relationships. Genie uses this data to convert natural language prompts to SQL.
+Column names and descriptions
+Genie intelligently filters for relevant column names and descriptions.
+Knowledge store context
+Agent-specific metadata that authors add locally, including column values relevant to query generation. Does not alter existing Unity Catalog metadata. See Build a knowledge store.
+Example SQL queries
+Genie intelligently selects relevant SQL examples from SQL Queries.
+SQL functions
+All SQL functions that have been added to the agent.
+Instructions
+Plain-text notes provided as General instructions.
+Prompt and response history
+Prompts and responses from the current chat. If necessary, because of set token limits, the oldest parts of the chat record are excluded.
+note
+Some table details, such as the owner and table size, are not included by default. To access this information, use views from the information schema available for all Unity Catalog catalogs. See Information schema.
+In most cases, Genie generates a SQL query that runs on the agent's SQL warehouse. Generated queries are always read-only. Retries are handled automatically, and the SQL warehouse handles concurrency and scale. For details about how Genie maintains security and privacy, see Databricks AI assistive features trust and safety.
+Improve response accuracy using Inspect​
+Preview
+This feature is in Public Preview.
+Inspect uses advanced reasoning to review and improve the accuracy of Genie's generated SQL queries. When you enable Inspect for a response, Genie:
+Reviews the initially generated SQL query.
+Authors smaller SQL statements to verify specific aspects of the query, such as:
+Confirming the correct filter values are included.
+Validating date range logic, such as trailing 7-day windows.
+Checking join conditions and aggregations.
+Identifies gaps or potential issues in the original query.
+If issues are identified, generates an improved SQL query that resolves them.
+Performs a final comparison between the original and improved queries.
+Returns the query that most accurately answers your question.
+Use Inspect when you want additional confidence in query accuracy, especially for complex queries involving filters, date ranges, or multiple tables.
+Agent mode​
+Agent mode lets users get answers to complex, exploratory questions in a Genie Agent using multi-step reasoning and hypothesis testing. When you ask a question, Agent mode creates and refines a research plan, runs multiple SQL queries, learns from each result, and iterates until it has enough evidence to deliver a comprehensive report with citations, visualizations, and supporting tables.
+note
+Agent mode was formerly known as Research Agent. This section covers Genie Agents Agent mode. For the developer-focused assistant that automates code, pipelines, and dashboards, see Genie Code.
+Unlike standard Genie queries, Agent mode:
+Creates research plans: Develops a structured approach and hypotheses for answering complex questions.
+Runs multiple queries: Executes several SQL queries to gather evidence from different angles.
+Learns and iterates: Continuously adjusts its approach based on what it discovers, refining its reasoning until it's confident in the answer.
+Delivers comprehensive reports: Provides detailed summaries with citations, visualizations, and supporting tables.
+Agent mode can also use sources that an author attaches to the agent, including unstructured files in Unity Catalog volumes and external tools and sources connected through Databricks-provided MCP connectors. See Analyze files in volumes with a Genie Agent and Connect a Genie Agent to external tools and sources.
+You can run Agent mode programmatically through the Agent mode APIs. See the Agent mode API reference.
+For Agent mode availability in your region, see Databricks Designated Services.
+Flash​
+Beta
+This feature is in Beta. To use it, a workspace admin must turn on Genie Agents Flash Mode from the Previews page. See Manage Databricks previews.
+Flash is an Agent mode option that prioritizes response speed. It is most efficient on simpler tasks, such as breaking down a metric by region or counting open records.
+Flash uses the same capabilities as standard Agent mode, including SQL queries, files in Unity Catalog volumes, uploaded files, and MCP connectors. To return answers faster, Flash spends less time reasoning, so its responses are more concise than standard Agent mode reports. For complex questions that need multi-step analysis, such as explaining why a metric changed, use standard Agent mode.
+You choose Flash or standard Agent mode when you start a conversation, and the conversation keeps that option. To switch options, start a new conversation.
+In US and EU workspaces, Flash is available in-Geo. In all other workspaces, Flash is available only if cross-Geo processing is enabled. See Enable cross-Geo processing.
+Choose the right mode​
+Genie Agents answers questions in Chat mode or Agent mode. Agent mode runs as standard Agent mode or as Flash, a faster Agent mode option. Each mode suits a different kind of question:
+Mode
+Best for
+Trade-off
+Chat mode
+Questions about structured data that Genie can answer with a single SQL query.
+Cannot analyze unstructured files, use MCP connectors, or break a complex question into multiple steps.
+Standard Agent mode
+Complex, exploratory questions, such as investigating why a metric changed. Returns a detailed report with citations, visualizations, and supporting tables.
+Takes longer to respond than the other modes.
+Agent mode: Flash (Beta)
+Simple questions that you want answered fast, such as "Break down customers by region" or "How many support tickets are still open?" Returns concise, accurate answers.
+Prioritizes speed over depth.
+←✕
+Mode
+Best for
+Trade-off
+Chat mode
+Questions about structured data that Genie can answer with a single SQL query.
+Cannot analyze unstructured files, use MCP connectors, or break a complex question into multiple steps.
+Standard Agent mode
+Complex, exploratory questions, such as investigating why a metric changed. Returns a detailed report with citations, visualizations, and supporting tables.
+Takes longer to respond than the other modes.
+Agent mode: Flash (Beta)
+Simple questions that you want answered fast, such as "Break down customers by region" or "How many support tickets are still open?" Returns concise, accurate answers.
+Prioritizes speed over depth.
+Language support​
+You can use Genie Agents in languages other than English, such as Portuguese and French. However, the underlying agent framework wraps prompts in English.
+Databricks recommends that agent creators add as much metadata as possible in their language of choice. Genie responses might sometimes appear in English due to the underlying system prompts.
+How data access works​
+A Genie Agent uses two separate credentials to answer a question:
+Compute access: The generated SQL query runs on the SQL warehouse using the compute credentials embedded by the agent author. End users do not need direct warehouse permissions.
+Data access: Unity Catalog evaluates data access as the end user's own identity, not the author's. Each user sees only the data they are authorized to access, and each query is attributed to the end user in query history and the agent's monitoring page.
+Any question about data a user cannot access returns an empty response.
+This means:
+You do not need to grant users direct warehouse permissions.
+Row filters and column masks defined in Unity Catalog are automatically enforced per user.
+To implement per-user data filtering, apply row-level security to the underlying tables in Unity Catalog. See Row filters and column masks.
+For information about setting up user permissions for a Genie Agent, see Share a Genie Agent. For privacy and security FAQs, see Data sent to the models.
+Additional resources​
+To create a Genie Agent and configure data and settings, see Create and manage a Genie Agent.
+To add instructions, example queries, and a knowledge store to improve response quality, see Tune Genie Agent quality.
+To ask questions and explore data as a business user, see Use a Genie Agent to explore business data.
+To integrate Genie into applications and agent frameworks, see Use the Genie Agents API.
+To expose a Genie Agent to external non-Databricks end-users with row-level security (RLS), see Filter data per end user with OAuth custom identity claims.
+You are responsible for all activities that occur under your account and will be deemed to have taken any action that you permit or facilitate, including any actions by external users via service principals.
+To understand Genie pricing and set budgets to monitor and control spend, see Manage budgets and cost controls for Genie.
+On this page
+Example use case
+How Genie Agents works
+Key concepts
+What data can I use?
+How Genie Agents generates a response
+Improve response accuracy using Inspect
+Agent mode
+Flash
+Choose the right mode
+Language support
+How data access works
+Additional resources
+Privacy Notice·Terms of Use·Modern Slavery Statement·California Privacy·Your Privacy Choices 
+© Databricks 2026. All rights reserved. Apache, Apache Spark, Spark and the Spark logo are trademarks of the Apache Software Foundation.

@@ -1,0 +1,32 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_69b6c797",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "state",
+    "focus_year",
+    "person",
+    "landlord",
+    "tenant",
+    "housing_accommodation",
+    "rental_relationship",
+    "action",
+    "reason_for_action",
+    "protected_trait_housing",
+    "trait_ok_for_housing",
+    "handicap_unrelated_to_ability",
+    "action_counts_as_terms_conditions_discrimination",
+    "nm_stat_28_1_7_g2_unlawful_discrimination",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    State: New Mexico\n    Focus year: 2021\n\n    Question: Is it unlawful to evict a tenant based on their ancestry?\n*/\n\n% -----------------------\n% Metadata (non-legal)\n% -----------------------\n\nstate(new_mexico).\nfocus_year(2021).\n\n% -----------------------\n% Scenario facts\n% -----------------------\n\n% People and roles\nperson(landlord_alice).\nperson(tenant_bob).\n\nlandlord(landlord_alice).\ntenant(tenant_bob).\n\n% Housing unit / accommodation\nhousing_accommodation(apt1).\n\n% A landlord-tenant relationship exists for the unit\nrental_relationship(landlord_alice, tenant_bob, apt1).\n\n% Action at issue: eviction\naction(landlord_alice, evict, tenant_bob, apt1).\n\n% Motivation: based on ancestry\nreason_for_action(landlord_alice, evict, tenant_bob, apt1, ancestry).\n\n/* scenario_statement/0\n   Succeeds when the question's factual statement (as encoded) is satisfied:\n   a landlord evicts a tenant, and the reason is the tenant's ancestry.\n*/\nscenario_statement :-\n    state(new_mexico),\n    focus_year(2021),\n    landlord(Landlord),\n    tenant(Tenant),\n    housing_accommodation(Housing),\n    rental_relationship(Landlord, Tenant, Housing),\n    action(Landlord, evict, Tenant, Housing),\n    reason_for_action(Landlord, evict, Tenant, Housing, ancestry).\n\n% -----------------------\n% Statute translation\n% -----------------------\n\n/* protected_trait_housing/1\n   NM Stat  28-1-7(G) (2021) protected bases for housing discrimination.\n   (List includes the traits explicitly named in Subsection G.)\n*/\nprotected_trait_housing(race).\nprotected_trait_housing(religion).\nprotected_trait_housing(color).\nprotected_trait_housing(national_origin).\nprotected_trait_housing(ancestry).\nprotected_trait_housing(sex).\nprotected_trait_housing(sexual_orientation).\nprotected_trait_housing(gender_identity).\nprotected_trait_housing(pregnancy_childbirth_or_related_condition).\nprotected_trait_housing(spousal_affiliation).\nprotected_trait_housing(physical_or_mental_handicap).\n\n/* trait_ok_for_housing/3\n   NM Stat  28-1-7(G)(2) proviso:\n   discrimination is prohibited for physical/mental handicap only when the handicap\n   is unrelated to ability to acquire/rent/maintain the housing.\n   For other protected traits, the proviso does not apply.\n*/\ntrait_ok_for_housing(Person, Housing, physical_or_mental_handicap) :-\n    handicap_unrelated_to_ability(Person, Housing).\ntrait_ok_for_housing(_Person, _Housing, Trait) :-\n    Trait \\= physical_or_mental_handicap.\n\n/* action_counts_as_terms_conditions_discrimination/1\n   NM Stat  28-1-7(G)(2) prohibits discrimination in \"terms, conditions or privileges\"\n   of the rental/lease. Eviction is modeled here as an adverse change/termination of\n   the lease terms/privileges (i.e., denial of continued tenancy).\n*/\naction_counts_as_terms_conditions_discrimination(evict).\n\n/* nm_stat_28_1_7_g2_unlawful_discrimination/4\n   NM Stat  28-1-7(G)(2) (2021):\n   Unlawful for any person to discriminate against any person in terms/conditions/privileges\n   of the rental/lease of a housing accommodation because of protected trait (incl. ancestry),\n   subject to the handicap proviso.\n*/\nnm_stat_28_1_7_g2_unlawful_discrimination(Actor, Target, Housing, Trait) :-\n    action(Actor, Act, Target, Housing),\n    action_counts_as_terms_conditions_discrimination(Act),\n    reason_for_action(Actor, Act, Target, Housing, Trait),\n    protected_trait_housing(Trait),\n    trait_ok_for_housing(Target, Housing, Trait).\n\n/* unlawful_eviction_based_on_ancestry/0\n   Helper that ties the scenario to the statute: eviction based on ancestry is unlawful.\n*/\nunlawful_eviction_based_on_ancestry :-\n    landlord(Landlord),\n    tenant(Tenant),\n    housing_accommodation(Housing),\n    nm_stat_28_1_7_g2_unlawful_discrimination(Landlord, Tenant, Housing, ancestry).\n\n% -----------------------\n% Answer derivation (must be deterministic)\n% -----------------------\n\nhousing_answer(yes) :-\n    scenario_statement,\n    unlawful_eviction_based_on_ancestry,\n    !.\nhousing_answer(no) :-\n    !.\n\n% -----------------------\n% Main entrypoint (required)\n% -----------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-4827",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Is it unlawful to evict a tenant based on their ancestry?"
+  }
+}

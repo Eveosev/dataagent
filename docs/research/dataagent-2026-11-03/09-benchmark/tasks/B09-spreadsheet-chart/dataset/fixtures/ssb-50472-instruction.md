@@ -1,0 +1,1 @@
+How can I extract only the number from the string in the provided Excel file?

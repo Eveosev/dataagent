@@ -1,0 +1,26 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_27a01cf3",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_term_in_question",
+    "scenario_concept",
+    "statute_799_44_statutory_removal_order_term",
+    "statute_799_44_writ_directed_to_authority",
+    "statute_799_44_writ_commands_action",
+    "statutory_term_for_concept",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    State: Wisconsin\n    Focus year: 2021\n\n    Question: Is the term 'Writ of ejectment' used to refer to the order from the court\n    to the authorities to remove a tenant?\n*/\n\n% -------------------------\n% Scenario facts (question)\n% -------------------------\n\nscenario_state(wisconsin).\nscenario_focus_year(2021).\n\n% The question concerns the meaning/label of the court order to authorities to remove a tenant.\nscenario_term_in_question(writ_of_ejectment).\n\n% The concept the question is asking about: an order from the court directed to authorities\n% to remove a tenant/defendant and restore possession to the plaintiff.\nscenario_concept(order_to_authorities_to_remove_tenant).\n\n% Helper predicate that succeeds when the factual statement (scenario) is fully present.\nscenario_statement :-\n    scenario_state(wisconsin),\n    scenario_focus_year(2021),\n    scenario_term_in_question(writ_of_ejectment),\n    scenario_concept(order_to_authorities_to_remove_tenant).\n\n% ---------------------------------------\n% Statute translation: WI Stat  799.44\n% ---------------------------------------\n\n/* WI Stat  799.44(2), (4) (2021):\n   - At time of ordering judgment for restitution, the court shall immediately order that\n     a writ of restitution be issued.\n   - The writ is directed to the sheriff and commands immediate removal of the defendant\n     and restoration of plaintiff to possession.\n*/\n\n% (Deterministic) The statutory name for the court-issued process directed to the sheriff\n% commanding removal/restoration in an eviction is \"writ of restitution\".\nstatute_799_44_statutory_removal_order_term(writ_of_restitution).\n\n% The statute defines that the writ of restitution is directed to the sheriff of the county\n% where the property is located. (This captures \"to the authorities\".)\nstatute_799_44_writ_directed_to_authority(writ_of_restitution, sheriff).\n\n% The statute defines the writ's commanded action: remove defendant (tenant) and restore plaintiff.\nstatute_799_44_writ_commands_action(writ_of_restitution, remove_defendant_and_restore_possession).\n\n% (Deterministic) A term refers (under this statute) to the \"order from the court to the authorities\n% to remove a tenant\" if it is the statutory removal order term and has the directed/commanded features.\nstatutory_term_for_concept(Term, order_to_authorities_to_remove_tenant) :-\n    statute_799_44_statutory_removal_order_term(Term),\n    statute_799_44_writ_directed_to_authority(Term, sheriff),\n    statute_799_44_writ_commands_action(Term, remove_defendant_and_restore_possession),\n    !.\n\n% -----------------------------------------\n% Reasoning and answer (yes/no determinism)\n% -----------------------------------------\n\n% If the term in the question matches the statute's term for that concept -> yes, else no.\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_term_in_question(Term),\n    statutory_term_for_concept(Term, order_to_authorities_to_remove_tenant),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n% -------------------------\n% Main entrypoint (required)\n% -------------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-2950",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is the term 'Writ of ejectment' used to refer to the order from the court to the authorities to remove a tenant?"
+  }
+}

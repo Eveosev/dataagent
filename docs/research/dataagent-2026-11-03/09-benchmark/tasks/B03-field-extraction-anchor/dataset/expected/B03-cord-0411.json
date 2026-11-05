@@ -1,0 +1,109 @@
+{
+  "source": "naver-clova-ix/cord-v2",
+  "split": "train",
+  "index": 80,
+  "gt_parse": {
+    "menu": {
+      "nm": "THAI ICED TEA (L)",
+      "unitprice": "16.363",
+      "cnt": "1",
+      "price": "16,363"
+    },
+    "sub_total": {
+      "subtotal_price": "16,363",
+      "tax_price": "1.636"
+    },
+    "total": {
+      "total_price": "17.999",
+      "menuqty_cnt": "1"
+    }
+  },
+  "case_id": "B03-cord-0411",
+  "expected": {
+    "kind": "json",
+    "value": {
+      "menu": {
+        "nm": "THAI ICED TEA (L)",
+        "unitprice": "16.363",
+        "cnt": "1",
+        "price": "16,363"
+      },
+      "sub_total": {
+        "subtotal_price": "16,363",
+        "tax_price": "1.636"
+      },
+      "total": {
+        "total_price": "17.999",
+        "menuqty_cnt": "1"
+      }
+    },
+    "fields": {
+      "menu.nm": "THAI ICED TEA (L)",
+      "menu.unitprice": "16.363",
+      "menu.cnt": "1",
+      "menu.price": "16,363",
+      "sub_total.subtotal_price": "16,363",
+      "sub_total.tax_price": "1.636",
+      "total.total_price": "17.999",
+      "total.menuqty_cnt": "1"
+    },
+    "anchored_fields": 0,
+    "no_anchor_fields": 8,
+    "spans": [
+      {
+        "field": "menu.nm",
+        "text": "THAI ICED TEA (L)",
+        "page": 1
+      },
+      {
+        "field": "menu.unitprice",
+        "text": "16.363",
+        "page": 1
+      },
+      {
+        "field": "menu.cnt",
+        "text": "1",
+        "page": 1
+      },
+      {
+        "field": "menu.price",
+        "text": "16,363",
+        "page": 1
+      },
+      {
+        "field": "sub_total.subtotal_price",
+        "text": "16,363",
+        "page": 1
+      },
+      {
+        "field": "sub_total.tax_price",
+        "text": "1.636",
+        "page": 1
+      },
+      {
+        "field": "total.total_price",
+        "text": "17.999",
+        "page": 1
+      },
+      {
+        "field": "total.menuqty_cnt",
+        "text": "1",
+        "page": 1
+      }
+    ],
+    "pages": {
+      "menu.nm": 1,
+      "menu.unitprice": 1,
+      "menu.cnt": 1,
+      "menu.price": 1,
+      "sub_total.subtotal_price": 1,
+      "sub_total.tax_price": 1,
+      "total.total_price": 1,
+      "total.menuqty_cnt": 1
+    },
+    "evidence_gold": {
+      "source": "cord-valid-line",
+      "version": 1
+    }
+  }
+}

@@ -1,0 +1,194 @@
+{
+  "$defs": {
+    "LaborRow": {
+      "title": "LaborRow",
+      "type": "object",
+      "properties": {
+        "sin": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Special Item Number (SIN) under which this labor category is awarded. Read it from the SIN heading DIRECTLY ABOVE the rate table that contains this labor row (e.g. 'SIN 54151S' on page 4, 'SIN 334512' on page 6, 'SINS 518210C, 541370GEO, 54151, 54151S, 611420, OLM' on page 8). This is NOT the awarded-SIN index on the 'Table of Awarded Special Item Numbers' (CUSTOMER INFORMATION section, item 1a) on page 2 or 3 — that page lists SINs like '54151S/54151SRC' or '54151 / 54151SRC' as a SIN+RecoveredContent pair, but the rate table itself shows only the primary SIN '54151S'. When BOTH forms appear in the document, use the form printed on the rate table heading (e.g. '54151S', NOT '54151S/54151SRC'). When the rate-table heading lists MULTIPLE SINs separated by commas (e.g. 'SINS 518210C, 541370GEO, 54151, 54151S, 611420, OLM'), capture the FULL comma-separated string verbatim (including spaces) as a single value — do not split it into multiple rows and do not drop the secondary SINs. Capture exactly as printed including any trailing letters (S, RC, GEO, C) and dashes ('132-51' style). Do NOT confuse with: the document's contract number (e.g. '47QTCA23D00DX', 'GS-35F-285DA') which identifies the whole pricelist not a single row; UEI/DUNS/CAGE codes; SCLS WD numbers (e.g. '2015-4281'); or the Item # in Leidos-style tables (the small sequence 1..N to the left of Labor Category). If the rate-table heading literally reads 'SIN ANCILLARY' (Leidos) or 'Ancillary Services' (a known group name, not a numeric SIN), capture that exact word ('Ancillary' or 'ANCILLARY' as printed). If no SIN heading exists on or above the row's rate table, return null.",
+          "title": "SIN"
+        },
+        "labor_category_title": {
+          "type": "string",
+          "description": "Verbatim labor category / labor class title as printed in the GSA hourly-rate table (NOT the labor-category descriptions section). Examples: 'Information Technology Engineer III', 'Sr Energy Engineer', 'Executive - Senior', 'Comp Systems Architect Sr Stf', 'Administration Rep Asc'. May appear under labels: 'Labor Category', 'Contract Labor Category', 'Labor Class', 'LABOR CATEGORY', 'Position Title', 'Job Title'. Preserve EXACT casing, abbreviations, hyphens, spacing, and seniority suffixes ('Sr', 'Stf', 'Prin', 'I', 'II', 'III', '- Senior', '- Junior', '- Intermediate', 'Asc'). Do NOT expand abbreviations (do not change 'Sr' to 'Senior', 'Anlst' to 'Analyst', 'Engr' to 'Engineer'). Do NOT confuse with: the SCA Equivalent Code Title in the SCLS matrix (e.g. '14160 - Personal Computer Support Technician'), the SCLS labor category title, the labor-category description heading in the prose Labor Category Descriptions section (which may differ in casing or use the un-abbreviated form), or any SKU / training-course title. If the same title appears in both the rate table AND the descriptions section with different casing/dash style (en-dash vs hyphen), use the form printed in the RATE TABLE.",
+          "title": "Labor Category Title"
+        },
+        "minimum_education": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Minimum education / certification requirement for this labor category, captured VERBATIM as printed. Common forms: 'Bachelors Degree', 'BA or BS', 'BA/BS', 'BS', 'MS', 'PhD', 'HS', 'AA or AS', 'Bachelor of Science', 'High School Diploma'. RESOLUTION RULE — read in this priority order: (1) If the same rate-table row has a 'Minimum Education' / 'Min Edu' / 'Minimum Education/Certification Level' column, use ONLY the degree token(s) from the FIRST line of that cell (e.g. for the multi-line AECOM cell 'BA or BS\\nMaster's degree and 3 years of relevant experience, or Bachelor's degree with over 5 years of relevant experience.' → return exactly 'BA or BS'). DO NOT capture the equivalency clause that follows. (2) If the rate table has NO education column, find the row in the document's 'Labor Category Descriptions' / 'Skill Category Descriptions' table whose Labor Class matches this row's labor_category_title verbatim and read its 'Minimum Education/Certification Level' cell, again using ONLY the first-line degree token. (3) If neither location exists for this category, return null. Do NOT normalize ('Bachelors Degree' must NOT become 'BA/BS'; 'BA or BS' must NOT become 'BA/BS'). Do NOT confuse with: the per-row Description column (the prose role responsibility text), the SCA Equivalent Code Title, or the substitution-equivalency table on later pages (which lists alternate experience-years per substituted degree). When the FIRST-LINE degree token contains a slash form like 'BA/BS' OR an 'or' form like 'BA or BS', preserve whichever form is actually printed.",
+          "title": "Minimum Education"
+        },
+        "minimum_years_experience": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Minimum years of relevant experience required for this labor category, captured VERBATIM as a string (NOT cast to a number). Examples that MUST round-trip verbatim: '3', '3 years', '5', '1 year', '<5', '2-5', '0-2', '10', 'Extensive experience including 6 years of leadership'. Preserve any unit suffix ('year', 'years'), comparison operator ('<', '>=', '<=', '>'), range hyphen, and free-text qualifications. RESOLUTION RULE — same priority order as minimum_education: (1) If the rate-table row has a 'Minimum Experience' / 'Min Exp' / 'Minimum Years of Experience' column, use the cell's value verbatim. (2) Else, find the matching row in the document's Labor Category Descriptions / Skill Category Descriptions table and use its 'Minimum Years of Experience' value verbatim. (3) Else return null. Do NOT confuse with: minimum education (see minimum_education), substitution equivalency tables, or the role's prose Description text. Do NOT split a range string like '2-5' into two numbers — keep it as the printed string '2-5'.",
+          "title": "Minimum Years of Experience"
+        },
+        "site": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Work-location designation for this rate row. Allowed verbatim values: 'Government', 'Contractor', 'Both', 'Customer Facility', 'Contractor Facility', 'Government Site', 'Contractor Site'. Some GSA MAS pricelists publish TWO rate rows for the same labor category — one at Government site and one at Contractor site — at different prices. In that case capture each row separately and set this field to distinguish them. If the document publishes a single rate for both, or annotates the entire table with a footer like '*Contractor (Office) or Customer Site (Field)' meaning the same rate applies to both sites, return 'Both'. If the document is silent about site entirely (no column, no header annotation), return null. Do NOT confuse with: the contractor's address city/state, the Point of Production, or the Geographic Coverage clause (worldwide/CONUS) — those are pricelist-wide, not per-row. Location hint: a column in the rate table labeled 'Site' / 'Location' / 'Govt/Contr', OR an asterisked footer below the rate-table header.",
+          "title": "Site"
+        },
+        "year_1_rate": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Hourly rate (inclusive of IFF / fully-burdened) for the FIRST contract year column in the rate table, as a number with cents preserved (e.g. 89.5, 221.88, 90.83). Drop the '$' sign and any '(w/IFF)' annotation. The first contract-year column is whichever column appears LEFT-MOST after the Labor Category column — it may be labeled 'Year 1', 'BASE YR 1', '2021', or with a date range like '09/14/2023 - 09/13/2024' or '4/22/2021 to 4/21/22'. Use the column ORDER on the page (left-to-right), NOT calendar year, to assign year_1..year_5. May appear under labels: 'Year 1', 'YR 1', 'BASE YR 1', 'Base Year', or a date-range header. SOURCE-OF-TRUTH RULE: when the SAME labor category has rate values printed in TWO locations of the same pricelist — (a) a consolidated 'LCATs & Rates' / 'Labor Category Rates' / 'GSA Awarded Pricing' summary table that lists EVERY LCAT for the SIN in a single block, AND (b) a small 2-row mini-table ('Unit of Issue / Per Hour Price IFF Included' style) embedded inside the LCAT's own description section elsewhere in the document — ALWAYS use the value from the consolidated summary table (a). The summary table is the awarded GSA price; the per-LCAT mini-table inside a description block can have stale or pre-modification numbers. If only the per-LCAT mini-table exists (no consolidated summary table for this SIN), use it. Do NOT confuse with: the contractor's commercial list price (some pricelists show a separate 'Commercial Price' column — capture only the GSA awarded rate), the SCLS WD-based rate, or any price under a non-IT SIN you are not extracting. Return null only when this column genuinely does not exist for this row (e.g. the labor category was added in a later option year and the early-year cell is blank).",
+          "title": "Year 1 Rate"
+        },
+        "year_2_rate": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Hourly rate for the SECOND contract-year column (second from left after Labor Category), same conventions as year_1_rate. May appear under: 'Year 2', 'YR 2', 'BASE YR 2', '2022', '09/14/2024 - 09/13/2025', '4/22/2022 to 4/21/23'. Position-based, NOT calendar-year based.",
+          "title": "Year 2 Rate"
+        },
+        "year_3_rate": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Hourly rate for the THIRD contract-year column (third from left after Labor Category), same conventions as year_1_rate. May appear under: 'Year 3', 'YR 3', 'BASE YR 3', '2023', or a date-range header. Position-based, NOT calendar-year based.",
+          "title": "Year 3 Rate"
+        },
+        "year_4_rate": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Hourly rate for the FOURTH contract-year column, same conventions as year_1_rate. Position-based, NOT calendar-year based.",
+          "title": "Year 4 Rate"
+        },
+        "year_5_rate": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Hourly rate for the FIFTH contract-year column (right-most). Same conventions as year_1_rate. If the table only has fewer than 5 year columns for this row, leave year_5_rate (and any missing intermediate years) null. Position-based, NOT calendar-year based.",
+          "title": "Year 5 Rate"
+        }
+      },
+      "required": [
+        "labor_category_title"
+      ]
+    }
+  },
+  "title": "GsaMasItLaborPricelist",
+  "type": "object",
+  "properties": {
+    "contract_number": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "GSA contract number that identifies the entire MAS / Schedule pricelist. Examples: '47QTCA23D00DX', 'GS-35F-285DA', '47QSWA19D006S'. May appear under labels: 'Contract Number', 'Contract No.', 'Contract #', 'GSA Contract Number', 'GS Contract'. Located on the cover page or page header. Capture verbatim including all dashes and letters. Do NOT confuse with: a SIN code (e.g. '54151S'), UEI (e.g. 'KJ2QKVQM1VE7'), SAM CAGE code, contract modification number ('PS-0002', 'Mod# PA-0026'), or wage-determination number ('2015-4281').",
+      "title": "Contract Number"
+    },
+    "contractor_name": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Legal name of the contractor / vendor whose pricelist this is, verbatim as printed on the cover page. Examples: 'Spahr Solutions Group, LLC', 'AECOM Technical Services, Inc.', 'Leidos, Inc.', 'LEIDOS, INC.'. May appear under: 'Contractor', 'Vendor', 'Company Name', or simply as the centered top-of-cover-page name. Preserve casing and punctuation as printed. Do NOT confuse with: the schedule title ('Multiple Award Schedule', 'Federal Supply Group: Information Technology'), the contract administrator's personal name, or any subcontractor name.",
+      "title": "Contractor Name"
+    },
+    "schedule_title": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "The GSA schedule / supply-group title under which this pricelist is published. Typical values: 'Multiple Award Schedule', 'GSA Multiple Award Schedule (MAS)', 'Federal Supply Group: Information Technology', 'Authorized Federal Supply Schedule FSS Price List'. May appear under labels: 'Schedule Title', 'Schedule', 'Federal Supply Group'. Located on the cover page. Capture verbatim. Do NOT confuse with: the SIN description (e.g. 'Information Technology Professional Services'), the contract number, or the contractor name. If multiple banner lines are equally plausible, prefer the one explicitly labeled 'Schedule Title:' — if no such label exists, prefer 'Multiple Award Schedule' if printed, otherwise the most specific title on the cover.",
+      "title": "Schedule Title"
+    },
+    "labor_categories": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/LaborRow"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Each entry is ONE row from a GSA awarded hourly-rate table — i.e. one (SIN, labor category, site) combination with its 5-year rate columns. A row is identified in the source by appearing as a data row INSIDE a GSA hourly-rate table (a table that has 'Labor Category' / 'Contract Labor Category' / 'LABOR CATEGORY' / 'Labor Class' in its left-most data column AND at least one column whose header is a year, 'Year N', 'BASE YR N', or a contract-period date range). Include rows from EVERY rate-table block in the document, across ALL SINs and ALL section banners (e.g. include both AECOM's ESPC SIN 334512 table AND AECOM's IT Services SINs 518210C/541370GEO/54151/54151S/611420/OLM table; include both Leidos's SIN 54151S table (items 1..93) AND Leidos's SIN ANCILLARY table (items 94..106)). COMPLETENESS IS MANDATORY: if a rate table has 93 numbered rows you MUST return 93 labor_categories entries from that table — do not stop after the first N. Do NOT include: rows from the Labor Category Descriptions / Skill Category Descriptions section (those are prose definitions, NOT rate rows — their data goes into minimum_education / minimum_years_experience of the matching rate row); rows from the Experience & Degree Substitution Equivalencies table (those show substitution math, not awarded rates); rows from the SCLS / Service Contract Labor Standards matrix (those map GSA labels to SCA Equivalent Codes / WD numbers, they do not carry awarded GSA rates); rows from product/software/SaaS tables (those have SKU / Plan / Price-per-License columns, not Labor Category columns — e.g. PlanEngage PE001-ENV-HS-3); rows from training-course catalogs (course-code column); and pricelist-wide header/footer text. If a single labor category appears in TWO separate rate tables (e.g. once under Government Site and once under Contractor Site, or once at Year 1-5 and again at Option Years 6-10), capture each as a SEPARATE entry with the appropriate site or year columns. Order the list in document order (top-to-bottom, left-to-right within a page).",
+      "title": "Labor Categories"
+    }
+  }
+}

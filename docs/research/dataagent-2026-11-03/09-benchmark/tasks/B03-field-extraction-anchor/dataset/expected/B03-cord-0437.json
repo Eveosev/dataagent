@@ -1,0 +1,117 @@
+{
+  "source": "naver-clova-ix/cord-v2",
+  "split": "train",
+  "index": 192,
+  "gt_parse": {
+    "menu": [
+      {
+        "nm": "Kupon 7",
+        "price": "42,727"
+      },
+      {
+        "nm": "MINERAL WATER",
+        "price": "8,182"
+      }
+    ],
+    "sub_total": {
+      "subtotal_price": "50,909",
+      "tax_price": "5,091"
+    },
+    "total": {
+      "total_price": "56,000",
+      "cashprice": "56,000"
+    }
+  },
+  "case_id": "B03-cord-0437",
+  "expected": {
+    "kind": "json",
+    "value": {
+      "menu": [
+        {
+          "nm": "Kupon 7",
+          "price": "42,727"
+        },
+        {
+          "nm": "MINERAL WATER",
+          "price": "8,182"
+        }
+      ],
+      "sub_total": {
+        "subtotal_price": "50,909",
+        "tax_price": "5,091"
+      },
+      "total": {
+        "total_price": "56,000",
+        "cashprice": "56,000"
+      }
+    },
+    "fields": {
+      "menu[0].nm": "Kupon 7",
+      "menu[0].price": "42,727",
+      "menu[1].nm": "MINERAL WATER",
+      "menu[1].price": "8,182",
+      "sub_total.subtotal_price": "50,909",
+      "sub_total.tax_price": "5,091",
+      "total.total_price": "56,000",
+      "total.cashprice": "56,000"
+    },
+    "anchored_fields": 0,
+    "no_anchor_fields": 8,
+    "spans": [
+      {
+        "field": "menu[0].nm",
+        "text": "Kupon 7",
+        "page": 1
+      },
+      {
+        "field": "menu[0].price",
+        "text": "42,727",
+        "page": 1
+      },
+      {
+        "field": "menu[1].nm",
+        "text": "MINERAL WATER",
+        "page": 1
+      },
+      {
+        "field": "menu[1].price",
+        "text": "8,182",
+        "page": 1
+      },
+      {
+        "field": "sub_total.subtotal_price",
+        "text": "50,909",
+        "page": 1
+      },
+      {
+        "field": "sub_total.tax_price",
+        "text": "5,091",
+        "page": 1
+      },
+      {
+        "field": "total.total_price",
+        "text": "56,000",
+        "page": 1
+      },
+      {
+        "field": "total.cashprice",
+        "text": "56,000",
+        "page": 1
+      }
+    ],
+    "pages": {
+      "menu[0].nm": 1,
+      "menu[0].price": 1,
+      "menu[1].nm": 1,
+      "menu[1].price": 1,
+      "sub_total.subtotal_price": 1,
+      "sub_total.tax_price": 1,
+      "total.total_price": 1,
+      "total.cashprice": 1
+    },
+    "evidence_gold": {
+      "source": "cord-valid-line",
+      "version": 1
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "s3306_a_2_A_neg",
+  "expect_label": "no",
+  "raw_label": "0",
+  "rule_predicates": [
+    "employer_agricultural",
+    "wages_for_year",
+    "findall",
+    "wage_record",
+    "sum_list"
+  ],
+  "reference_prolog": "/* ---------- Statutory rules (relevant extracts) ---------- */\n\n/*  3306(a)(2)(A)\n    For agricultural labor, a person is an \"employer\" for a given calendar year Y\n    if the person paid wages of $20,000 or more for agricultural labor\n    either in year Y or in the preceding year Y-1.\n*/\nemployer_agricultural(Person, Year) :-\n    wages_for_year(Person, Year, agricultural, Sum),\n    Sum >= 20000.\nemployer_agricultural(Person, Year) :-\n    PrevYear is Year - 1,\n    wages_for_year(Person, PrevYear, agricultural, Sum),\n    Sum >= 20000.\n\n/* Helper: total wages of a person for a service type during a calendar year */\nwages_for_year(Person, Year, ServiceType, Total) :-\n    findall(Amount,\n            wage_record(Person, _Recipient, Amount, ServiceType, Year),\n            Amounts),\n    sum_list(Amounts, Total).\n\n\n/* ---------- Facts from the case ---------- */\n\n/* wage_record(Payer, Recipient, Amount, ServiceType, CalendarYear) */\nwage_record(alice, bob,  3200, agricultural, 2017).\n/* Bob's payments are irrelevant to Alice's status under 3306(a)(2)(A),\n   but we include them for completeness */\nwage_record(bob,   alice, 4520, agricultural, 2017).\nwage_record(bob,   alice, 4520, agricultural, 2018).\n\n\n/* ---------- Verification of the claim ---------- */\n\n:- (  employer_agricultural(alice, 2017)\n   -> format('Result: Entailment~n')\n   ;  format('Result: Contradiction~n')\n   ).\n:- halt.",
+  "case_id": "B04-deon-5471",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "0",
+    "question": "Under section 3306(a)(2)(A), Alice is an employer for the year 2017."
+  }
+}

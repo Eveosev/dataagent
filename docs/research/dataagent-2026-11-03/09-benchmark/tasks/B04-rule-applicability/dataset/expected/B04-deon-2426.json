@@ -1,0 +1,32 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_b687fbce",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_year",
+    "scenario_proceeding",
+    "scenario_tenant_is_appealing",
+    "statute_sc_27_37_130_appeal_does_not_stay_ejectment",
+    "statute_sc_27_37_130_stay_condition",
+    "statute_sc_27_37_130_bond_deadline_days_after_notice",
+    "statute_sc_27_37_130_appeal_dismissed_if_bond_not_filed_within_deadline",
+    "statute_sc_27_40_800_stay_sufficient_condition",
+    "statute_sc_27_40_800_authority_must_order_stay_upon_undertaking",
+    "statute_sc_27_40_800_payment_grace_days",
+    "legal_no_automatic_stay_on_appeal",
+    "legal_stay_requires_affirmative_tenant_step",
+    "legal_tenant_must_request_or_obtain_stay_for_appeal",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Topic: South Carolina eviction/ejectment appeals and stays of execution (focus year 2021)\n    Question: For eviction proceedings, does a tenant have to request a stay of execution for an appeal?\n*/\n\n/* =========================\n   Scenario (question facts)\n   ========================= */\n\n% The user-provided jurisdiction and year.\nscenario_state(south_carolina).\nscenario_year(2021).\n\n% The proceeding is an eviction/ejectment (magistrates' court ejectment is the typical summary eviction).\nscenario_proceeding(ejectment).\n\n% The tenant is appealing the ejectment judgment.\nscenario_tenant_is_appealing(true).\n\n/* Helper predicate that succeeds when the encoded factual scenario is satisfied. */\nscenario_statement :-\n    scenario_state(south_carolina),\n    scenario_year(2021),\n    scenario_proceeding(ejectment),\n    scenario_tenant_is_appealing(true).\n\n/* =========================\n   Statute translations\n   ========================= */\n\n% --- SC Code  27-37-130 (2021) ---\n% \"An appeal in an ejectment case will not stay ejectment unless ... tenant shall give an appeal bond ...\"\nstatute_sc_27_37_130_appeal_does_not_stay_ejectment(Year) :-\n    Year =:= 2021.\n\n% The condition for a stay under  27-37-130: tenant gives an appeal bond at the time of appealing.\nstatute_sc_27_37_130_stay_condition(Year, condition(appeal_bond_given_at_time_of_appeal)) :-\n    Year =:= 2021.\n\n% \"If tenant fails to file the bond ... within five days after service of notice of appeal such appeal shall be dismissed\"\nstatute_sc_27_37_130_bond_deadline_days_after_notice(Year, 5) :-\n    Year =:= 2021.\n\nstatute_sc_27_37_130_appeal_dismissed_if_bond_not_filed_within_deadline(Year) :-\n    statute_sc_27_37_130_bond_deadline_days_after_notice(Year, Days),\n    Days =:= 5.\n\n% --- SC Code  27-40-800 (2021) ---\n% (b) \"It is sufficient to stay execution ... that the tenant sign an undertaking ... Any magistrate, clerk,\n% or circuit court judge shall order a stay of execution upon the undertaking.\"\nstatute_sc_27_40_800_stay_sufficient_condition(Year, condition(tenant_signs_rent_undertaking)) :-\n    Year =:= 2021.\n\nstatute_sc_27_40_800_authority_must_order_stay_upon_undertaking(Year) :-\n    Year =:= 2021.\n\n% (e) Failure to pay within five days of due date per undertaking allows landlord to dissolve stay, etc.\nstatute_sc_27_40_800_payment_grace_days(Year, 5) :-\n    Year =:= 2021.\n\n/* =========================\n   Legal reasoning helpers\n   ========================= */\n\n% In SC (2021), for ejectment, an appeal alone does not automatically stay execution/ejectment.\nlegal_no_automatic_stay_on_appeal(State, Year, ejectment) :-\n    State == south_carolina,\n    statute_sc_27_37_130_appeal_does_not_stay_ejectment(Year).\n\n% In SC (2021), a stay of execution pending appeal requires an affirmative tenant act:\n% either giving an appeal bond ( 27-37-130) or signing an undertaking ( 27-40-800).\nlegal_stay_requires_affirmative_tenant_step(State, Year, ejectment) :-\n    State == south_carolina,\n    Year =:= 2021,\n    ( statute_sc_27_37_130_stay_condition(Year, condition(appeal_bond_given_at_time_of_appeal))\n    ; statute_sc_27_40_800_stay_sufficient_condition(Year, condition(tenant_signs_rent_undertaking))\n    ).\n\n% We interpret \"request a stay\" in this QA as: the tenant must take some affirmative step to obtain a stay;\n% it is not automatic merely because an appeal is filed.\nlegal_tenant_must_request_or_obtain_stay_for_appeal(State, Year, Proceeding) :-\n    legal_no_automatic_stay_on_appeal(State, Year, Proceeding),\n    legal_stay_requires_affirmative_tenant_step(State, Year, Proceeding).\n\n/* =========================\n   Answer predicate\n   ========================= */\n\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_state(State),\n    scenario_year(Year),\n    scenario_proceeding(Proceeding),\n    scenario_tenant_is_appealing(true),\n    legal_tenant_must_request_or_obtain_stay_for_appeal(State, Year, Proceeding),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n/* =========================\n   Main entrypoint\n   ========================= */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-2426",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "For eviction proceedings, does a tenant have to request a stay of execution for an appeal?"
+  }
+}

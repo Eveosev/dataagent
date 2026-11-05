@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1721,
+  "table": "health-table27",
+  "structure": "SingleRowClassified",
+  "question_type": "Fact Checking",
+  "sub_type": "Value-Matching",
+  "answer": "0.39",
+  "cot": [
+    {
+      "planning": "Locate the row for 'Gender (female)'."
+    },
+    {
+      "planning": "Extract the odds ratio from the 'Multivariate Analysis: OR' column."
+    },
+    {
+      "planning": "Return the OR as the answer."
+    }
+  ],
+  "case_id": "B01-rht-3357",
+  "expected": {
+    "kind": "answer",
+    "question": "What is the odds ratio for gender being female in the multivariate analysis?",
+    "answer": "0.39"
+  }
+}

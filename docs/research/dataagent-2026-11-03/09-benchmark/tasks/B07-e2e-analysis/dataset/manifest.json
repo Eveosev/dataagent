@@ -1,0 +1,88 @@
+{
+  "dataset_id": "B07.dataset",
+  "task_id": "B07",
+  "revision": "v0.2",
+  "status": "collecting",
+  "unit": "task",
+  "sources": [
+    {
+      "name": "dabstep",
+      "locator": "adyen/DABstep",
+      "license": "CC-BY-4.0",
+      "digest": "sha256:3c95655ad9ea5194e1175c568610e919d7f992615a25ed5e2497ac43cf1ceeff",
+      "revision": "22a0bb5708f36d0ccda1355be1868c07050cc7e2",
+      "files": 33,
+      "mb": 25.1,
+      "fetched_at": "2026-11-04T17:44:42+08:00"
+    },
+    {
+      "name": "kramabench",
+      "locator": "https://github.com/mitdbg/KramaBench",
+      "license": "未声明",
+      "digest": "sha256:af158fe8be5ea691463697763fc86e371677bce7dc6fdd7c62fd6e648acfb8e3",
+      "revision": "b2e0d77540263f8b6119f977fe79a8c4386b5a02",
+      "files": 2724,
+      "mb": 1376.1,
+      "fetched_at": "2026-11-04T17:50:30+08:00"
+    }
+  ],
+  "splits": {
+    "development": {
+      "count": 120,
+      "frozen": false
+    },
+    "regression": {
+      "count": 60,
+      "frozen": false
+    },
+    "unseen_acceptance": {
+      "count": 60,
+      "frozen": false
+    }
+  },
+  "exposure": {
+    "ledger_ref": "exposure.jsonl",
+    "entries": 0
+  },
+  "fixtures": {
+    "storage": "local",
+    "path": "fixtures/",
+    "limits": "单文件 <= 2 MB；超出走对象存储并在 digest 记录"
+  },
+  "updated": "2026-11-04",
+  "notes": "由 build_cases.py 从 workspace/benchmark-data 构建；原始数据不入库",
+  "build": {
+    "version": 2,
+    "script": "tools/build_cases.py",
+    "built_at": "2026-11-04",
+    "policy": "DABstep 按题目 level 分层入库；上下文文件走 bench:// 引用。split 按 task_id 哈希。",
+    "available": {
+      "development": 314,
+      "regression": 88,
+      "unseen_acceptance": 117
+    },
+    "selected": {
+      "development": 120,
+      "regression": 60,
+      "unseen_acceptance": 60
+    },
+    "caps": {
+      "development": 120,
+      "regression": 60,
+      "unseen_acceptance": 60
+    },
+    "coverage": {
+      "covered_metrics": [
+        "exact_match_accuracy"
+      ],
+      "missing_metrics": [
+        "step_efficiency",
+        "final_report_quality"
+      ],
+      "note": "步骤效率与报告质量需要轨迹与成稿；先由 harness 记录 steps 与 report"
+    },
+    "counts": {
+      "dabstep": 450
+    }
+  }
+}

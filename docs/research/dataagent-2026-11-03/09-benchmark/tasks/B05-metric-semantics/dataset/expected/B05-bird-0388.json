@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 387,
+  "question": "Among patients older than 55 on 2026-10-09 who have at least one abnormal PT result, what percentage are female? Round to two decimals.",
+  "evidence": "For this task, PT of at least 14 is abnormal.",
+  "gold_sql": "SELECT ROUND(100.0 * SUM(CASE WHEN p.SEX = 'F' THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0), 2) FROM Patient AS p WHERE p.Birthday < '1971-10-09' AND EXISTS (SELECT 1 FROM Laboratory AS l WHERE l.ID = p.ID AND l.PT >= 14)",
+  "db_id": "thrombosis_prediction",
+  "case_id": "B05-bird-0388",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT ROUND(100.0 * SUM(CASE WHEN p.SEX = 'F' THEN 1 ELSE 0 END) / NULLIF(COUNT(*), 0), 2) FROM Patient AS p WHERE p.Birthday < '1971-10-09' AND EXISTS (SELECT 1 FROM Laboratory AS l WHERE l.ID = p.ID AND l.PT >= 14)",
+    "db_id": "thrombosis_prediction",
+    "evidence": "For this task, PT of at least 14 is abnormal."
+  }
+}

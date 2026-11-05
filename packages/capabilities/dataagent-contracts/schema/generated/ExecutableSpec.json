@@ -1,0 +1,127 @@
+{
+  "$comment": "generated from dataagent_contracts.core:ExecutableSpec; do not edit",
+  "$defs": {
+    "EngineBinding": {
+      "additionalProperties": false,
+      "description": "Coordinates of the engine that produced or will execute a spec.\n\n07 §5.4: package name, engine version and, when available, the locked\nwheel digest. Consumers compare against the actually installed version\nand fail closed on mismatch (``da07.engine_version_mismatch``).",
+      "properties": {
+        "engine_id": {
+          "minLength": 1,
+          "title": "Engine Id",
+          "type": "string"
+        },
+        "engine_version": {
+          "minLength": 1,
+          "title": "Engine Version",
+          "type": "string"
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "wheel_digest": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Wheel Digest"
+        }
+      },
+      "required": [
+        "engine_id",
+        "engine_version"
+      ],
+      "title": "EngineBinding",
+      "type": "object"
+    },
+    "VersionedRef": {
+      "description": "Versioned reference serialized as '<id>@<revision>'.",
+      "pattern": "^[^@\\s]+@[^@\\s]+$",
+      "type": "string"
+    }
+  },
+  "$id": "dataagent-contracts/0.1/core/ExecutableSpec",
+  "additionalProperties": false,
+  "description": "Executable form of a rule or metric: closed expression AST or SQL.\n\nMigrated from the application layer into ``core.semantics`` (07 §4.2) so\nDA11.2.3 (result grain and merge checks) and DA11.4.5 can consume it\nwithout importing the application package.\n\nTwo shapes (07 §5.1 / §5.2):\n\n- ``backend_kind = \"expression\"``: ``expression_or_call`` is a JSON AST\n  over the closed operator set (comparisons, arithmetic, logic, ``in``,\n  ``between``, ``is_missing``, date difference, string match). Anything\n  else is rejected at validation time.\n- ``backend_kind = \"sql\"``: ``expression_or_call`` is\n  ``{\"sql\": <single statement>, \"dialect\": <optional>}``.",
+  "properties": {
+    "backend_kind": {
+      "enum": [
+        "expression",
+        "sql"
+      ],
+      "title": "Backend Kind",
+      "type": "string"
+    },
+    "engine_binding": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/EngineBinding"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "expression_or_call": {
+      "additionalProperties": true,
+      "minProperties": 1,
+      "title": "Expression Or Call",
+      "type": "object"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "revision": {
+      "minLength": 1,
+      "title": "Revision",
+      "type": "string"
+    },
+    "source_refs": {
+      "items": {
+        "$ref": "#/$defs/VersionedRef"
+      },
+      "title": "Source Refs",
+      "type": "array"
+    },
+    "spec_id": {
+      "minLength": 1,
+      "title": "Spec Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "spec_id",
+    "revision",
+    "backend_kind",
+    "expression_or_call"
+  ],
+  "title": "ExecutableSpec",
+  "type": "object"
+}

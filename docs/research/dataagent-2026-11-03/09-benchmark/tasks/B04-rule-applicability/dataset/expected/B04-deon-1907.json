@@ -1,0 +1,28 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_e27c2d1a",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_question",
+    "statute_tx_prop_94_206_delinquency_threshold",
+    "statute_tx_prop_94_206_requires_written_notice",
+    "statute_tx_prop_94_206_cure_period_days",
+    "legal_tx_prop_94_206_eviction_permitted",
+    "pass",
+    "legal_min_days_before_eviction_action_for_nonpayment",
+    "law_specifies_minimum_days",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    HousingQA Sample:\n      - state: Texas\n      - focus_year: 2021\n\n    Question:\n      Does the law specify a minimum number of days a tenant can be late on rent\n      before the landlord can file an eviction action for nonpayment?\n*/\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Scenario facts (the question's factual statement)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nscenario_state(texas).\nscenario_focus_year(2021).\nscenario_question(minimum_days_late_before_eviction_action_for_nonpayment).\n\n/* Helper predicate that succeeds when the factual statement we encoded is satisfied. */\nscenario_statement :-\n    scenario_state(texas),\n    scenario_focus_year(2021),\n    scenario_question(minimum_days_late_before_eviction_action_for_nonpayment).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Statute translation: TX Prop  94.206 (2021)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n/*\n  TX Prop  94.206 (2021) TERMINATION AND EVICTION FOR NONPAYMENT OF RENT:\n  Landlord may terminate and evict if:\n   (1) tenant fails to timely pay rent/amounts due that aggregate >= 1 month's rent;\n   (2) landlord notifies tenant in writing that payment is delinquent; and\n   (3) tenant has not tendered delinquent payment in full before the 10th day\n       after the date tenant receives the notice.\n*/\n\n/* Threshold: delinquency must be at least one month's rent. */\nstatute_tx_prop_94_206_delinquency_threshold(months_rent(1)).\n\n/* Notice requirement: written notice of delinquency is required. */\nstatute_tx_prop_94_206_requires_written_notice(yes).\n\n/* Cure period: tenant must be allowed until before the 10th day after receipt of notice. */\nstatute_tx_prop_94_206_cure_period_days(10).\n\n/* Deterministic legal rule capturing when eviction may proceed under 94.206,\n   expressed in abstract terms (with a numeric cure period in days). */\nlegal_tx_prop_94_206_eviction_permitted(DelinquencyInMonthsRent, WrittenNoticeGiven, DaysSinceNoticeReceipt, TenderedInFullBeforeDay10) :-\n    statute_tx_prop_94_206_delinquency_threshold(months_rent(ThresholdMonths)),\n    DelinquencyInMonthsRent >= ThresholdMonths,\n    statute_tx_prop_94_206_requires_written_notice(yes),\n    WrittenNoticeGiven = yes,\n    statute_tx_prop_94_206_cure_period_days(CureDays),\n    DaysSinceNoticeReceipt >= CureDays,\n    TenderedInFullBeforeDay10 = no.\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Legal inference for the question asked\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n/* If the statute provides an explicit day-count cure/waiting period connected to\n   nonpayment eviction, treat it as specifying a minimum number of days that must\n   pass (at least after notice receipt) before eviction action can proceed. */\nlegal_min_days_before_eviction_action_for_nonpayment(State, Year, Days) :-\n    State = texas,\n    Year = 2021,\n    statute_tx_prop_94_206_cure_period_days(Days).\n\n/* Determine whether the law specifies a minimum number of days. */\nlaw_specifies_minimum_days(State, Year) :-\n    legal_min_days_before_eviction_action_for_nonpayment(State, Year, Days),\n    Days > 0.\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Required top-level answer predicate (deterministic)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_state(State),\n    scenario_focus_year(Year),\n    law_specifies_minimum_days(State, Year),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Main entrypoint (required)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-1907",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Does the law specify a minimum number of days a tenant can be late on rent before the landlord can file an eviction action for nonpayment?"
+  }
+}

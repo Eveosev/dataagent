@@ -1,0 +1,24 @@
+{
+  "source": "xlangai/BRIGHT",
+  "query_id": "60",
+  "query": "##  Essential Problem:\n\nThe parameter substitution within the `rosparam` list is not working as expected. The `map_frame` parameter is not being set correctly with the value of the `tf_pre` argument.\n\n## Potential Causes:\n\n* **Incorrect Syntax:**  Double-check the syntax of the substitution. Ensure that the `$(arg tf_pre)` is enclosed in double quotes and that there are no typos.\n* **Variable Scope:**  Make sure the `tf_pre` argument is defined and accessible within the current launch file. If it's defined in another launch file, ensure it's properly passed using the `remap` or `include` tags.\n* **Incorrect Value:**  Verify that the value of `tf_pre` is indeed the intended prefix for the `map_frame`.\n* **Node Execution Order:**  Ensure that the launch file defining `tf_pre` is loaded before the launch file using the `map_frame` parameter. \n* **ROS Version:**  There might be slight differences in how ROS versions handle parameter substitution. Refer to the ROS documentation for your specific version.\n\n## Additional Information:\n\n* Provide the complete launch file where the issue occurs.\n* Share the output of `rosparam get /h1/slam_gmapping/map_frame` to confirm the actual value being set.\n* Specify the ROS version you are using.\n* If you are using multiple launch files, clarify how they are included or remapped.\n\n## Troubleshooting Steps:\n\n1. **Verify Syntax:** Double-check the syntax of the substitution and ensure it follows the correct format.\n2. **Check Variable Scope:** Ensure that the `tf_pre` argument is defined and accessible within the current launch file.\n3. **Confirm Value:** Verify that the value of `tf_pre` is correct and matches the desired prefix for `map_frame`.\n4. **Check Execution Order:** Ensure that the launch file defining `tf_pre` is loaded before the launch file using the `map_frame` parameter.\n5. **Consult ROS Documentation:** Refer to the ROS documentation for your specific version for any known issues or limitations regarding parameter substitution.\n6. **Provide More Information:** Share the complete launch file, the output of `rosparam get`, and your ROS version for further analysis.\n\nBy following these steps and providing additional information, you should be able to identify the root cause of the problem and resolve the issue with the parameter substitution. \n",
+  "gold_ids": [
+    "rosparam/XMLEvaluationorder_13.txt"
+  ],
+  "gold_answer": "$\\begingroup$\n\nYou haven't provided a fully reproducible example to show what is actually\ngoing wrong. But based on your description it looks like you're setting that\nparameter twice and the one that you're trying to parameterize is lower in\nprecedence.\n\nThe last instance of the parameter is the one used. [\nhttp://wiki.ros.org/roslaunch/XML#Evaluation_order\n](http://wiki.ros.org/roslaunch/XML#Evaluation_order)",
+  "corpus": "documents/robotics-00000-of-00001.parquet",
+  "case_id": "B06-bright-0849",
+  "expected": {
+    "kind": "retrieval",
+    "gold_ids": [
+      "rosparam/XMLEvaluationorder_13.txt"
+    ],
+    "gold_ids_long": [
+      "rosparam/XMLEvaluationorder.txt"
+    ],
+    "gold_answer": "$\\begingroup$\n\nYou haven't provided a fully reproducible example to show what is actually\ngoing wrong. But based on your description it looks like you're setting that\nparameter twice and the one that you're trying to parameterize is lower in\nprecedence.\n\nThe last instance of the parameter is the one used. [\nhttp://wiki.ros.org/roslaunch/XML#Evaluation_order\n](http://wiki.ros.org/roslaunch/XML#Evaluation_order)",
+    "excluded_ids": [
+      "N/A"
+    ]
+  }
+}

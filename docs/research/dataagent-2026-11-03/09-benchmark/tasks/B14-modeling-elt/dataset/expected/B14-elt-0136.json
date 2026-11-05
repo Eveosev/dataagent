@@ -1,0 +1,438 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "redshift",
+  "pipeline": "github",
+  "data_model": {
+    "models": [
+      {
+        "name": "github__issues",
+        "description": "Each record represents a github issue. Only considering issues that are not pull request",
+        "columns": [
+          {
+            "name": "issue_id",
+            "description": "The unique ID of an issue."
+          },
+          {
+            "name": "body",
+            "description": "The text body of the issue's main description"
+          },
+          {
+            "name": "closed_at",
+            "description": "The timestamp for when an issue was last closed.  \"null\" for issues that are open",
+            "format": "YYYY-MM-DD HH:MM:SS"
+          },
+          {
+            "name": "created_at",
+            "description": "The timestamp for when an issue was created",
+            "format": "YYYY-MM-DD HH:MM:SS"
+          },
+          {
+            "name": "is_locked",
+            "description": "Boolean indicating if the issue is locked."
+          },
+          {
+            "name": "issue_number",
+            "description": "The number of the issue.  Is unique within a repository, but not across repositories."
+          },
+          {
+            "name": "is_pull_request",
+            "description": "Boolean indicating whether the issue is a pull request"
+          },
+          {
+            "name": "repository_id",
+            "description": "Foreign key that references the repository table"
+          },
+          {
+            "name": "state",
+            "description": "Whether the issue is open or closed"
+          },
+          {
+            "name": "title",
+            "description": "The title of the issue"
+          },
+          {
+            "name": "updated_at",
+            "description": "Timestamp of when the issue was last updated",
+            "format": "YYYY-MM-DD HH:MM:SS"
+          },
+          {
+            "name": "user_id",
+            "description": "Foreign key that references the user table, representing the user who created the issue."
+          },
+          {
+            "name": "number_of_times_reopened",
+            "description": "Total number of times the issue was reopened."
+          },
+          {
+            "name": "number_of_comments",
+            "description": "The total number of comments included in the issue"
+          },
+          {
+            "name": "repository",
+            "description": "The full name of the repository that the issue is applicable to"
+          },
+          {
+            "name": "repository_team_names",
+            "description": "Aggregate of the teams associated with the repository, formed by concatenating team names in ascending alphabetical order, separated by a comma and space."
+          },
+          {
+            "name": "creator_login_name",
+            "description": "The alias of the user uses to login to github who created the issue."
+          },
+          {
+            "name": "creator_name",
+            "description": "The name of the user who created the issue."
+          },
+          {
+            "name": "creator_company",
+            "description": "The company of the user who created the issue."
+          }
+        ]
+      },
+      {
+        "name": "github__pull_requests",
+        "description": "Basic information about pull_requests as well as additional fields about reviews and time between actions",
+        "columns": [
+          {
+            "name": "issue_id",
+            "description": "The unique ID of an issue."
+          },
+          {
+            "name": "body",
+            "description": "the text body of the description of the pull request"
+          },
+          {
+            "name": "closed_at",
+            "description": "Timestamp of when the pull request was closed.  NULL for pull requests that are still open",
+            "format": "YYYY-MM-DD HH:MM:SS"
+          },
+          {
+            "name": "created_at",
+            "description": "Timestamp of when the pull request was created",
+            "format": "YYYY-MM-DD HH:MM:SS"
+          },
+          {
+            "name": "is_locked",
+            "description": "Boolean indicating whether the issue is locked."
+          },
+          {
+            "name": "issue_number",
+            "description": "The number of the issue.  Is unique within a repository, but not across repositories"
+          },
+          {
+            "name": "is_pull_request",
+            "description": "Boolean indiciating whether the issue is a pull request."
+          },
+          {
+            "name": "repository_id",
+            "description": "Foreign key that references the repository table"
+          },
+          {
+            "name": "state",
+            "description": "Whether the pull request is open or closed."
+          },
+          {
+            "name": "title",
+            "description": "The title of the pull request"
+          },
+          {
+            "name": "updated_at",
+            "description": "Timestamp of when the issue was last updated",
+            "format": "YYYY-MM-DD HH:MM:SS"
+          },
+          {
+            "name": "user_id",
+            "description": "Foreign key that references the user table."
+          },
+          {
+            "name": "number_of_times_reopened",
+            "description": "Total number of times the issue was reopened"
+          },
+          {
+            "name": "number_of_comments",
+            "description": "The total number of comments included in the issue"
+          },
+          {
+            "name": "repository",
+            "description": "The full name of the repository that the pull request applies to"
+          },
+          {
+            "name": "repository_team_names",
+            "description": "Aggregate of the teams associated with the repository, formed by concatenating team names in ascending alphabetical order, separated by a comma and space."
+          },
+          {
+            "name": "creator_login_name",
+            "description": "The alias of the user uses to login to github who created the issue."
+          },
+          {
+            "name": "creator_name",
+            "description": "The name of the user who created the issue."
+          },
+          {
+            "name": "creator_company",
+            "description": "The company of the user who created the issue."
+          },
+          {
+            "name": "merged_at",
+            "description": "Timestamp of when the pull request was merged",
+            "format": "YYYY-MM-DD HH:MM:SS"
+          },
+          {
+            "name": "reviewers",
+            "description": "Aggregate of the distinct users who reviewed the pull request, formed by concatenating reviewer names in ascending alphabetical order, separated by a comma and space."
+          },
+          {
+            "name": "number_of_reviews",
+            "description": "Number of times a pull request was reviewed"
+          }
+        ]
+      },
+      {
+        "name": "github__daily_metrics",
+        "description": "Summary numbers for issues and pull requests per repository by day",
+        "columns": [
+          {
+            "name": "day",
+            "description": "The reporting day",
+            "format": "YYYY-MM-DD"
+          },
+          {
+            "name": "repository",
+            "description": "The full name of the repository"
+          },
+          {
+            "name": "number_issues_opened",
+            "description": "The total number of issues created during this time period. Set to 0 if no issues were created."
+          },
+          {
+            "name": "number_issues_closed",
+            "description": "The total number of issues closed during this time period. Set to 0 if no issues were closed."
+          },
+          {
+            "name": "number_prs_opened",
+            "description": "The total number of pull requests created during this time period. Set to 0 if no pull requests were created."
+          },
+          {
+            "name": "number_prs_merged",
+            "description": "The total number of pull requests merged during this time period. Set to 0 if no pull requests were merged."
+          },
+          {
+            "name": "number_prs_closed_without_merge",
+            "description": "The total number of pull requests closed without a merge during this time period. Set to 0 if no pull requests were closed without a merge."
+          }
+        ]
+      },
+      {
+        "name": "github__weekly_metrics",
+        "description": "Summary numbers for issues and pull requests per repository by week",
+        "columns": [
+          {
+            "name": "week",
+            "description": "The Monday that starts the reporting week",
+            "format": "YYYY-MM-DD"
+          },
+          {
+            "name": "repository",
+            "description": "The full name of the repository"
+          },
+          {
+            "name": "total_number_issues_opened",
+            "description": "The total number of issues created during this time period. Set to 0 if no issues were created."
+          },
+          {
+            "name": "total_number_issues_closed",
+            "description": "The total number of issues closed during this time period. Set to 0 if no issues were closed."
+          },
+          {
+            "name": "total_number_prs_opened",
+            "description": "The total number of pull requests created during this time period. Set to 0 if no pull requests were created."
+          },
+          {
+            "name": "total_number_prs_merged",
+            "description": "The total number of pull requests merged during this time period. Set to 0 if no pull requests were merged."
+          },
+          {
+            "name": "number_prs_closed_without_merge",
+            "description": "The total number of pull requests closed without a merge during this time period. Set to 0 if no pull requests were closed without a merge."
+          }
+        ]
+      },
+      {
+        "name": "github__monthly_metrics",
+        "description": "Summary numbers for issues and pull requests per repository by month",
+        "columns": [
+          {
+            "name": "month",
+            "description": "First day of the reporting month",
+            "format": "YYYY-MM-DD"
+          },
+          {
+            "name": "repository",
+            "description": "The full name of the repository"
+          },
+          {
+            "name": "total_number_issues_opened",
+            "description": "The total number of issues created during this time period. Set to 0 if no issues were created."
+          },
+          {
+            "name": "total_number_issues_closed",
+            "description": "The total number of issues closed during this time period. Set to 0 if no issues were closed."
+          },
+          {
+            "name": "total_number_prs_opened",
+            "description": "The total number of pull requests created during this time period. Set to 0 if no pull requests were created."
+          },
+          {
+            "name": "total_number_prs_merged",
+            "description": "The total number of pull requests merged during this time period. Set to 0 if no pull requests were merged."
+          },
+          {
+            "name": "number_prs_closed_without_merge",
+            "description": "The total number of pull requests closed without a merge during this time period. Set to 0 if no pull requests were closed without a merge."
+          }
+        ]
+      },
+      {
+        "name": "github__quarterly_metrics",
+        "description": "Summary numbers for issues and pull requests per repository by quarter",
+        "columns": [
+          {
+            "name": "quarter",
+            "description": "First day of the reporting quarter",
+            "format": "YYYY-MM-DD"
+          },
+          {
+            "name": "repository",
+            "description": "The full name of the repository"
+          },
+          {
+            "name": "total_number_issues_opened",
+            "description": "The total number of issues created during this time period. Set to 0 if no issues were created."
+          },
+          {
+            "name": "total_number_issues_closed",
+            "description": "The total number of issues closed during this time period. Set to 0 if no issues were closed."
+          },
+          {
+            "name": "total_number_prs_opened",
+            "description": "The total number of pull requests created during this time period. Set to 0 if no pull requests were created."
+          },
+          {
+            "name": "total_number_prs_merged",
+            "description": "The total number of pull requests merged during this time period. Set to 0 if no pull requests were merged."
+          },
+          {
+            "name": "number_prs_closed_without_merge",
+            "description": "The total number of pull requests closed without a merge during this time period. Set to 0 if no pull requests were closed without a merge."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    redshift_definition_id: f7a7d195-377f-cf5b-70a5-be6b819019dc\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://github-bucket/repo_team.jsonl\n    sync_mode: full_refresh_append\n    table: repo_team\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - issue_assignee\n    - issue_merged\n    - repository\nflat_files:\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=1eIhuDa2LRFfkKVbgdjRYWV6uv83MH0W0\n  sync_mode: full_refresh_append\n  table: requested_reviewer_history\n- format: csv\n  path: https://drive.google.com/uc?export=download&id=1UqPqN9whWn9OkRKQnNHFVreQYvlGC154\n  sync_mode: full_refresh_append\n  table: issue_label\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: github\n    sync_mode: full_refresh_append\n    tables:\n    - issue_comment\n    - label\n    - pull_request_review\n    - team\npostgres:\n  config:\n    database: github\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - issue\n    - issue_closed_history\n    - pull_request\n    - users\n    user: postgres\nredshift:\n  config:\n    host: <redshift_hostname>\n    port: <redshift_port>\n    database: <redshift_db>\n    username: <redshift_username>\n    password: <redshift_pwd>\n    schema: github\n    s3_bucket_name: <redshift_s3_bucket>\n    s3_bucket_region: <redshift_s3_region>\n    access_key_id: <redshift_s3_access_key>\n    secret_access_key: <redshift_s3_secret_key>\n",
+  "case_id": "B14-elt-0136",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "github__issues",
+        "columns": [
+          "issue_id",
+          "body",
+          "closed_at",
+          "created_at",
+          "is_locked",
+          "issue_number",
+          "is_pull_request",
+          "repository_id",
+          "state",
+          "title",
+          "updated_at",
+          "user_id",
+          "number_of_times_reopened",
+          "number_of_comments",
+          "repository",
+          "repository_team_names",
+          "creator_login_name",
+          "creator_name",
+          "creator_company"
+        ]
+      },
+      {
+        "name": "github__pull_requests",
+        "columns": [
+          "issue_id",
+          "body",
+          "closed_at",
+          "created_at",
+          "is_locked",
+          "issue_number",
+          "is_pull_request",
+          "repository_id",
+          "state",
+          "title",
+          "updated_at",
+          "user_id",
+          "number_of_times_reopened",
+          "number_of_comments",
+          "repository",
+          "repository_team_names",
+          "creator_login_name",
+          "creator_name",
+          "creator_company",
+          "merged_at",
+          "reviewers",
+          "number_of_reviews"
+        ]
+      },
+      {
+        "name": "github__daily_metrics",
+        "columns": [
+          "day",
+          "repository",
+          "number_issues_opened",
+          "number_issues_closed",
+          "number_prs_opened",
+          "number_prs_merged",
+          "number_prs_closed_without_merge"
+        ]
+      },
+      {
+        "name": "github__weekly_metrics",
+        "columns": [
+          "week",
+          "repository",
+          "total_number_issues_opened",
+          "total_number_issues_closed",
+          "total_number_prs_opened",
+          "total_number_prs_merged",
+          "number_prs_closed_without_merge"
+        ]
+      },
+      {
+        "name": "github__monthly_metrics",
+        "columns": [
+          "month",
+          "repository",
+          "total_number_issues_opened",
+          "total_number_issues_closed",
+          "total_number_prs_opened",
+          "total_number_prs_merged",
+          "number_prs_closed_without_merge"
+        ]
+      },
+      {
+        "name": "github__quarterly_metrics",
+        "columns": [
+          "quarter",
+          "repository",
+          "total_number_issues_opened",
+          "total_number_issues_closed",
+          "total_number_prs_opened",
+          "total_number_prs_merged",
+          "number_prs_closed_without_merge"
+        ]
+      }
+    ]
+  }
+}

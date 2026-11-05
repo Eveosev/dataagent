@@ -1,0 +1,21 @@
+{
+  "source": "datadotworld/cwd-benchmark-data",
+  "inquiry_id": "IQ_c4844d67ccc07dbdd134c45536592cb2",
+  "prompt": "What are all our policies that have a claim associated to them by policy and claim number?",
+  "sql": [
+    "select policy_number, company_claim_number\nfrom \n    policy \n    inner join policy_coverage_detail on policy.policy_identifier = policy_coverage_detail.policy_identifier\n    inner join claim_coverage on claim_coverage.policy_coverage_detail_identifier = policy_coverage_detail.policy_coverage_detail_identifier\n    inner join claim on claim.claim_identifier = claim_coverage.claim_identifier\n"
+  ],
+  "sparql": [
+    "PREFIX : <https://myinsurancecompany.linked.data.world/d/chat-with-the-data-benchmark/>\nPREFIX ds-omg-pc-database: <https://myinsurancecompany.linked.data.world/d/omg-pc-database/>\nPREFIX in: <http://data.world/schema/insurance/>\n\nselect ?PolicyNumber ?ClaimNumber\nwhere{\n    SERVICE ds-omg-pc-database:mapped {\n        ?policy a in:Policy;\n            in:policyNumber ?PolicyNumber;\n        .\n        ?coverage a in:PolicyCoverageDetail;\n            in:hasPolicy ?policy;\n        .\n\n        ?claim a in:Claim;\n            in:claimNumber ?ClaimNumber;\n            in:against ?coverage;\n        .\n\n        \n    }\n\n}\n"
+  ],
+  "case_id": "B05-cwd-0020",
+  "expected": {
+    "kind": "query",
+    "question": "What are all our policies that have a claim associated to them by policy and claim number?",
+    "sql": "select policy_number, company_claim_number\nfrom \n    policy \n    inner join policy_coverage_detail on policy.policy_identifier = policy_coverage_detail.policy_identifier\n    inner join claim_coverage on claim_coverage.policy_coverage_detail_identifier = policy_coverage_detail.policy_coverage_detail_identifier\n    inner join claim on claim.claim_identifier = claim_coverage.claim_identifier\n",
+    "alternate_sql": [],
+    "sparql": [
+      "PREFIX : <https://myinsurancecompany.linked.data.world/d/chat-with-the-data-benchmark/>\nPREFIX ds-omg-pc-database: <https://myinsurancecompany.linked.data.world/d/omg-pc-database/>\nPREFIX in: <http://data.world/schema/insurance/>\n\nselect ?PolicyNumber ?ClaimNumber\nwhere{\n    SERVICE ds-omg-pc-database:mapped {\n        ?policy a in:Policy;\n            in:policyNumber ?PolicyNumber;\n        .\n        ?coverage a in:PolicyCoverageDetail;\n            in:hasPolicy ?policy;\n        .\n\n        ?claim a in:Claim;\n            in:claimNumber ?ClaimNumber;\n            in:against ?coverage;\n        .\n\n        \n    }\n\n}\n"
+    ]
+  }
+}

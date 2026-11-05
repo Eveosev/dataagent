@@ -1,0 +1,29 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1071,
+  "table": "economy-table74",
+  "structure": "SingleRowClassified",
+  "question_type": "Numerical Reasoning",
+  "sub_type": "Counting",
+  "answer": "7",
+  "cot": [
+    {
+      "step": "Identify the column labeled “% of Incentive” in the table, which contains the percentage values for each incentive."
+    },
+    {
+      "step": "Convert the column to numeric format to handle any non-numeric values."
+    },
+    {
+      "step": "Filter rows where the percentage value is greater than 0%."
+    },
+    {
+      "step": "Count the number of such rows, resulting in a total of 7 incentives with a percentage value greater than 0%."
+    }
+  ],
+  "case_id": "B01-rht-2707",
+  "expected": {
+    "kind": "answer",
+    "question": "How many incentives have a percentage value greater than 0%?",
+    "answer": "7"
+  }
+}

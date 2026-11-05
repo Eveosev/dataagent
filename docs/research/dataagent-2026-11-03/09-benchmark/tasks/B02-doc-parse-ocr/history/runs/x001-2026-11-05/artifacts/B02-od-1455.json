@@ -1,0 +1,146 @@
+{
+  "text": "8. Let $p$ be an odd prime. Prove that the Legendre symbol is a homomorphism from the multiplicative group $(\\mathbf{Z}/p\\mathbf{Z})^{\\times}$ into $\\{\\pm 1\\}$. What is the kernel of this homomorphism?\n9. For every odd prime $p$, define the Mersenne number\n$$M_{p}=2^{p}-1.$$\nA prime number of the form $M_p$ is called a Mersenne prime (see Exercise 5 in Section 1.5).\nLet $q$ be a prime divisor of $M_p$.\n(a) Prove that 2 has order $p$ modulo $q$, and so $p$ divides $q - 1$.\n*Hint: Fermat's theorem.*\n(b) Prove that $p$ divides $(q-1)/2$, and so\n$$\nq \\equiv 1 \\pmod{2p}\n$$\nand\n$$\n2^{(q-1)/2} \\equiv 1 \\pmod{q}.\n$$\n*Hint:* Both $p$ and  $q$ are odd.\n(c) Prove that $\\left(\\frac{2}{q}\\right) = 1$, and so $q \\equiv \\pm 1 \\pmod 8$.\n10. For every positive integer  $n$, define the Fermat number\n$$F_n = 2^{2^n} + 1.$$\nA prime number of the form $F_{n}$ is called a Fermat prime (see Exercise 7 in Section 1.5).\nLet $n \\geq 2$, and let $q$ be a prime divisor of $F_n$.\n(a) Prove that 2 has order $2^{n+1}$ modulo  $q$.\n*Hint:* Exercise 8 in Section 2.5.\n(b) Prove that\n$$q \\equiv 1 \\pmod{2^{n+1}}.$$\n(c) Prove that there exists an integer  $a$ such that\n$$a^{2^{n+1}} \\equiv -1 \\pmod{q}.$$\n*Hint:* Observe that $\\left(\\frac{2}{q}\\right) = 1$, and so $2 \\equiv a^2 \\pmod{q}$.\n(d) Prove that\n$$ q \\equiv 1 \\pmod{2^{n+2}}. $$\n107\n3.4 Quadratic Residues",
+  "blocks": [
+    {
+      "category": "text_block",
+      "order": 1,
+      "text": "8. Let $p$ be an odd prime. Prove that the Legendre symbol is a homomorphism from the multiplicative group $(\\mathbf{Z}/p\\mathbf{Z})^{\\times}$ into $\\{\\pm 1\\}$. What is the kernel of this homomorphism?"
+    },
+    {
+      "category": "text_block",
+      "order": 2,
+      "text": "9. For every odd prime $p$, define the Mersenne number"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 3,
+      "latex": "$$M_{p}=2^{p}-1.$$"
+    },
+    {
+      "category": "text_block",
+      "order": 4,
+      "text": "A prime number of the form $M_p$ is called a Mersenne prime (see Exercise 5 in Section 1.5)."
+    },
+    {
+      "category": "text_block",
+      "order": 5,
+      "text": "Let $q$ be a prime divisor of $M_p$."
+    },
+    {
+      "category": "text_block",
+      "order": 6,
+      "text": "(a) Prove that 2 has order $p$ modulo $q$, and so $p$ divides $q - 1$."
+    },
+    {
+      "category": "text_block",
+      "order": 7,
+      "text": "*Hint: Fermat's theorem.*"
+    },
+    {
+      "category": "text_block",
+      "order": 8,
+      "text": "(b) Prove that $p$ divides $(q-1)/2$, and so"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 9,
+      "latex": "$$\nq \\equiv 1 \\pmod{2p}\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 10,
+      "text": "and"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 11,
+      "latex": "$$\n2^{(q-1)/2} \\equiv 1 \\pmod{q}.\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 12,
+      "text": "*Hint:* Both $p$ and  $q$ are odd."
+    },
+    {
+      "category": "text_block",
+      "order": 13,
+      "text": "(c) Prove that $\\left(\\frac{2}{q}\\right) = 1$, and so $q \\equiv \\pm 1 \\pmod 8$."
+    },
+    {
+      "category": "text_block",
+      "order": 14,
+      "text": "10. For every positive integer  $n$, define the Fermat number"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 15,
+      "latex": "$$F_n = 2^{2^n} + 1.$$"
+    },
+    {
+      "category": "text_block",
+      "order": 16,
+      "text": "A prime number of the form $F_{n}$ is called a Fermat prime (see Exercise 7 in Section 1.5)."
+    },
+    {
+      "category": "text_block",
+      "order": 17,
+      "text": "Let $n \\geq 2$, and let $q$ be a prime divisor of $F_n$."
+    },
+    {
+      "category": "text_block",
+      "order": 18,
+      "text": "(a) Prove that 2 has order $2^{n+1}$ modulo  $q$."
+    },
+    {
+      "category": "text_block",
+      "order": 19,
+      "text": "*Hint:* Exercise 8 in Section 2.5."
+    },
+    {
+      "category": "text_block",
+      "order": 20,
+      "text": "(b) Prove that"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 21,
+      "latex": "$$q \\equiv 1 \\pmod{2^{n+1}}.$$"
+    },
+    {
+      "category": "text_block",
+      "order": 22,
+      "text": "(c) Prove that there exists an integer  $a$ such that"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 23,
+      "latex": "$$a^{2^{n+1}} \\equiv -1 \\pmod{q}.$$"
+    },
+    {
+      "category": "text_block",
+      "order": 24,
+      "text": "*Hint:* Observe that $\\left(\\frac{2}{q}\\right) = 1$, and so $2 \\equiv a^2 \\pmod{q}$."
+    },
+    {
+      "category": "text_block",
+      "order": 25,
+      "text": "(d) Prove that"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 26,
+      "latex": "$$ q \\equiv 1 \\pmod{2^{n+2}}. $$"
+    },
+    {
+      "category": "page_number",
+      "order": null,
+      "text": "107"
+    },
+    {
+      "category": "header",
+      "order": null,
+      "text": "3.4 Quadratic Residues"
+    }
+  ],
+  "tables": []
+}

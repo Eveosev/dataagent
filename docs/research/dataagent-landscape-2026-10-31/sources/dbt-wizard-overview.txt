@@ -1,0 +1,174 @@
+Overview of dbt Wizard | dbt Developer Hub Skip to main content Relive the best of dbt Summit! Get access to the keynotes and breakout sessions from dbt Summit 2026. See the latest product innovations from dbt, and hear how data teams are leveling up for the agentic era. dbt version ▾
+v2
+v1
+1.13 ( beta )
+1.12
+1.11
+On dbt platform?
+v2 = dbt v2 release tracks
+v1 = dbt v1 release tracks Docs
+Product docs
+References
+Best practices
+Developer blog Guides APIs Help
+Release notes
+FAQs
+Support and billing
+Licensing
+Courses Community
+Join the dbt Community
+Become a contributor
+Community forum
+Webinars
+Events Account
+Log in to dbt
+Create a free account Get started with dbt Search
+About
+About dbt
+Get started
+Feature availability
+Supported features
+dbt releases
+About the dbt platform
+Supported data platforms
+Get started
+dbt Quickstarts
+Get started with dbt
+AI and dbt
+About AI and dbt
+dbt Wizard
+Overview
+Manage AI features
+Use cases and examples
+How dbt Wizard works
+Billing and access FAQs
+Pricing and billing
+Wizard CLI
+Wizard Desktop
+Wizard in platform
+Skills from packages
+dbt Copilot
+dbt MCP server
+dbt AI FAQs
+Build and develop
+Develop with dbt
+Build dbt projects
+Build dbt Mesh
+Deploy and explore
+Deploy dbt
+Optimize builds with dbt State
+Explore your data
+Use the dbt Semantic Layer
+Compute
+About Lake Compute
+Onboarding to Lake Compute
+Lake Compute FAQs
+Business intelligence
+dbt Charts
+Additional tools
+dbt integrations
+Release information
+Available dbt versions
+dbt release notes
+dbt Wizard Copy page Copy page Copy page as Markdown for LLMs View as Markdown View this page as plain Markdown Open in ChatGPT Ask questions about this page Open in Claude Ask questions about this page Open in Perplexity Ask questions about this page On this page
+About dbt Wizard Local development | dbt platform ⓘ
+Your personal dbt agent — wherever you work.
+dbt Wizard is an AI agent purpose-built for governed data development in dbt. Unlike general-purpose coding agents, it understands your dbt project through the dbt Information Schema — a structured view of lineage, model health, tests, contracts, run results, and semantic definitions.
+Think of it like a map of your city: dbt Wizard knows how everything connects before it starts, rather than walking every street to figure out the layout. dbt Wizard comes with:
+Project understanding: The dbt Information Schema for lineage, contracts, tests, and runtime context
+Impact awareness: Checks upstream and downstream dependencies before you change code
+Safe validation: Compiles and builds changes before review
+Complete workflow: Investigate, change, validate, and review in one place
+Setup and governance: Works out of the box with dbt governance built in
+Conversational analytics: Answers questions about production data in plain language through Explore mode , grounded in governed metric definitions Wizard usage and billing
+From September 1st, 2026, dbt Wizard usage is metered per token against your account's usage credits. All credit amounts are per account, not per user. Enterprise and Enterprise+ accounts get monthly credits. Developer and Starter plans start with a 30-day trial and $100 in credits, as do CLI users via a free dbt account.
+Refer to Trial and billing for what each plan gets, spend limits, and paid access.
+Use dbt Wizard ​
+dbt Wizard is for anyone developing with or exploring dbt. You can use it in dbt platform , locally in your terminal or IDE, or through the Wizard Desktop native app, where rich data visualizations, data diffs, and lineage render alongside the chat. dbt Wizard works with any data warehouse and dbt version .
+dbt Wizard is also for people who don’t develop data models. In dbt platform , Explore mode lets read-only users ask questions about production data in plain language with no developer license or setup.
+The following table shows where dbt Wizard is available, the AI keys each surface uses, and how usage is billed:
+Where Status AI access options
+dbt platform : Studio IDE Public preview dbt managed or BYOK
+dbt platform : Wizard home tab Public preview dbt managed or BYOK
+Locally: Wizard Desktop Public beta dbt managed or BYOK
+Locally: Wizard terminal (CLI) Public beta dbt managed , BYOK, or OpenAI subscription Prefer to learn by video?
+Check out the free dbt Wizard video course on dbt Learn!
+Supported providers ​
+dbt Wizard supports managed models (billed by dbt Labs, no key to manage) and bring-your-own-key (BYOK) models (billed directly by your provider).
+Here are the following AI providers supported depending on where you work. Refer to Model Provider Rate table for the full list of available models.
+dbt platform
+Locally (CLI)
+Provider Access
+OpenAI (default) dbt managed or BYOK
+Anthropic † dbt managed or BYOK
+Open weight models (like DeepSeek, Kimi, and so on). dbt managed
+Azure AI Foundry / Azure OpenAI BYOK
+Provider Access
+OpenAI dbt managed or BYOK
+Anthropic † dbt managed or BYOK
+Open weight models (like DeepSeek, Kimi, and so on). dbt managed
+Azure AI Foundry / Azure OpenAI BYOK
+AWS Bedrock BYOK
+Google Gemini BYOK
+Snowflake Cortex BYOK
+Databricks Unity AI Gateway BYOK
+You can also connect a personal OpenAI ChatGPT subscription instead of a key.
+†Anthropic enterprise and subscription licenses (such as Claude Enterprise) aren't supported per Anthropic's terms of service .
+For pricing and how billing works, refer to Models and pricing .
+Get started ​
+You can get started with Wizard wherever you work, whether it's the terminal or dbt platform :
+Wizard Desktop
+Wizard in dbt platform
+Wizard in the CLI
+(Be warned, the wizard has been known to cast spells .)
+Wizard Desktop Beta ​
+Wizard Desktop is Wizard as a native app. Wizard Desktop runs the same engine as the dbt Wizard CLI, but you get the full view: charts, tables, diffs, and lineage render right in the app, so you can see the work, steer it, and keep several chats moving at once, each on its own branch.
+What you get with Desktop:
+Parallel chats: each chat gets its own Git worktree , so several pieces of work run at once without conflicts.
+Visible validation: see structured results, including a dbt-compare view of what your changes did to the data.
+Contextual comments: hover almost anything to comment on that exact spot, then send several together.
+Charts and tables: ask a question about your data and see the answer inline.
+Inline impact: see which models dbt Wizard 's changes touch, with diffs you open inline.
+Lineage, file, and metrics browsing: browse your project right alongside the chat. Download for macOS For Apple silicon Macs · .dmg Download for Windows For x64 processors · .exe Download for Linux For x86_64, Debian-based distributions · .deb
+Need a different build? Intel Mac ( .dmg ) · Linux ARM64 (Debian-based) ( .deb )
+To learn more, refer to Get started with Wizard Desktop .
+Wizard in dbt platform Preview ​
+Leverage agentic capabilities in the home app or Studio IDE for governed data development in dbt.
+AI features are on by default, so most accounts can jump straight in. If your account has them turned off, an admin can turn them back on in Account settings .
+To get started:
+Sign in to dbt platform , or create a free account if you don't have one yet.
+Open dbt Wizard from the home tab in the left sidebar, or from Studio IDE to work alongside the file editor.
+Start with your usage credits or a 30-day trial. Enterprise and Enterprise+ accounts get monthly usage credits; all other plans can start a trial. Refer to Trial and billing .
+Try a prompt, such as:
+summarize what this project does
+list all models with no tests
+add not_null and unique tests to the primary key of stg_customers
+Refer to Use cases and examples for more prompts.
+Wizard in the CLI Beta ​
+A terminal-based agent for governed data development in dbt, whether your team uses dbt platform or self-hosts. Bring your own key to experience the full agentic analytics engineering loop. 1 2 View all steps Next 1 Install the dbt Wizard CLI
+Run the install script for your operating system:
+macOS/Linux: curl -fsSL https://public.cdn.getdbt.com/dbt-wizard/install/install-wizard.sh | sh
+Report incorrect code
+Windows (PowerShell): irm https://public.cdn.getdbt.com/dbt-wizard/install/install-wizard.ps1 | iex
+Report incorrect code
+This installs dbt Wizard to /usr/local/bin/wizard , along with the dbt Information Schema that powers dbt Wizard 's project-aware answers.
+For first-run setup and billing, refer to Install dbt Wizard CLI . New to the terminal?
+If you've never used the terminal before, check out the terminal guide for some helpful tips to help you get started!
+Related docs ​
+dbt Wizard in Studio IDE — generate docs, tests, semantic models, SQL, and delegate end-to-end model work
+Invite read-only users to dbt Wizard — let business users ask questions of production data in Explore mode, without development access
+Use skills in dbt platform — give dbt Wizard reusable instructions for your project
+Use MCP servers with dbt Wizard CLI — connect the dbt Wizard CLI to more tools and context
+Migrate to dbt Wizard — switch from Claude Code, Cursor, or another AI agent to dbt Wizard
+Privacy and data FAQs — understand how dbt Wizard handles privacy and data See it in action and share your feedback
+Want to see dbt Wizard in action? Check out the demo video .
+We'd love to hear how dbt Wizard is working for you. Share your feedback by either running the /feedback slash command in your interactive terminal session or by going to the #dbt-wizard channel in the dbt Community Slack .
+Thanks so much for your help in improving dbt Wizard and dbt data development!
+Was this page helpful? Yes No Privacy policy Create a GitHub issue
+This site is protected by reCAPTCHA and the Google Privacy Policy and Terms of Service apply. 0 Edit this page Last updated on Oct 30, 2026 Previous About AI and dbt Get started
+Start building with dbt.
+The free dbt VS Code extension is the best way to develop locally with dbt. Install free extension Request your demo
+Resources VS Code Extension Resource Hub dbt Learn Certification Developer Blog
+Community Join the Community Become a Contributor Open Source dbt Packages Community Forum
+Support Contact Support Professional Services Find a Partner System Status
+Connect with Us © 2026 dbt Labs, LLC. All Rights Reserved. Terms of Service Privacy Policy Security Cookie Settings

@@ -1,0 +1,27 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_6ec27715",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_year",
+    "scenario_actor",
+    "scenario_writ",
+    "statute_applies",
+    "statute_78b_6_808_empowered_officer",
+    "statute_78b_6_808_authorized_to_return_possession",
+    "legal_writ_equivalent",
+    "legal_empowered_to_execute_writ",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: Utah\n    Focus year: 2021\n\n    Question: Is the constable an individual empowered by law to execute a writ of eviction?\n*/\n\n% --------------------------\n% Scenario facts (question)\n% --------------------------\n\nscenario_state(utah).\nscenario_year(2021).\nscenario_actor(constable).\nscenario_writ(writ_of_eviction).\n\n/* scenario_statement/0\n   Succeeds when the full factual statement encoded for this question holds. */\nscenario_statement :-\n    scenario_state(utah),\n    scenario_year(2021),\n    scenario_actor(constable),\n    scenario_writ(writ_of_eviction).\n\n% --------------------------\n% Statute applicability\n% --------------------------\n\n/* UT Code  78B-6-808 (2021) is treated as applicable in Utah for 2021. */\nstatute_applies(utah, 2021, ut_code_78b_6_808_2021).\n\n% --------------------------\n% Statute translation (UT Code  78B-6-808 (2021))\n% --------------------------\n\n/* UT Code  78B-6-808(5) & (6) (2021)\n   When an order of restitution is granted / plaintiff is entitled to possession,\n   \"A constable or the sheriff ... shall return possession of the property to the plaintiff promptly.\"\n   We encode this as those officers being empowered/authorized by law to execute the court's\n   restitution/eviction process. */\n\n% Enumerate the officers identified by the statute.\nstatute_78b_6_808_empowered_officer(constable).\nstatute_78b_6_808_empowered_officer(sheriff).\n\n/* The statute authorizes these officers to carry out return of possession (execution of restitution). */\nstatute_78b_6_808_authorized_to_return_possession(Officer, State, Year) :-\n    statute_applies(State, Year, ut_code_78b_6_808_2021),\n    statute_78b_6_808_empowered_officer(Officer).\n\n% --------------------------\n% Legal abstractions / mappings\n% --------------------------\n\n/* In Utah unlawful detainer practice, the statute uses \"order of restitution\"\n   (often implemented via a writ/process returning possession). For the purpose of this\n   question, we treat \"writ of eviction\" as equivalent to the \"order of restitution\"\n   execution/return-of-possession process referenced by  78B-6-808(5)-(6). */\n\nlegal_writ_equivalent(writ_of_eviction, order_of_restitution).\nlegal_writ_equivalent(order_of_restitution, order_of_restitution).\n\n/* legal_empowered_to_execute_writ/4\n   Officer is empowered by law to execute the given writ-type in the given State and Year. */\nlegal_empowered_to_execute_writ(Officer, WritType, State, Year) :-\n    legal_writ_equivalent(WritType, order_of_restitution),\n    statute_78b_6_808_authorized_to_return_possession(Officer, State, Year).\n\n% --------------------------\n% Reasoning to answer the question\n% --------------------------\n\n/* housing_answer/1\n   Deterministically returns yes/no based on the scenario and statutes. */\nhousing_answer(Result) :-\n    (   scenario_statement,\n        scenario_state(State),\n        scenario_year(Year),\n        scenario_actor(Officer),\n        scenario_writ(WritType),\n        legal_empowered_to_execute_writ(Officer, WritType, State, Year)\n    ->  Result = yes\n    ;   Result = no\n    ),\n    !.\n\n% --------------------------\n% Main entrypoint (required)\n% --------------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-0751",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Is the constable an individual empowered by law to execute a writ of eviction?"
+  }
+}

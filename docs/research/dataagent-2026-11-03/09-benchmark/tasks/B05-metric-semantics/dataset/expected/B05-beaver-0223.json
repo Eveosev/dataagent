@@ -1,0 +1,27 @@
+{
+  "source": "beaverbench/beaver-query",
+  "id": "dw_3069",
+  "db": "dw",
+  "question": "For each subject, what is the highest variance of the record count for TIP materials associated with that subject across all terms, considering only records where the library material status is 'U' and the TIP material status is 'RQ'? Do not return any rounded answers.",
+  "sql": "WITH inner_cte AS ( SELECT LIBRARY_RESERVE_MATRL_DETAIL.SUBJECT_ID, TIP_DETAIL.TERM_CODE, VARIANCE(TIP_DETAIL.RECORD_COUNT) AS term_record_count_variance FROM LIBRARY_RESERVE_MATRL_DETAIL JOIN TIP_DETAIL ON LIBRARY_RESERVE_MATRL_DETAIL.SUBJECT_ID = TIP_DETAIL.SUBJECT_ID WHERE LIBRARY_RESERVE_MATRL_DETAIL.LIBRARY_MATERIAL_STATUS_KEY = 'U' AND TIP_DETAIL.TIP_MATERIAL_STATUS_KEY = 'RQ' GROUP BY LIBRARY_RESERVE_MATRL_DETAIL.SUBJECT_ID, TIP_DETAIL.TERM_CODE ) SELECT SUBJECT_ID, MAX(term_record_count_variance) AS highest_term_record_count_variance FROM inner_cte GROUP BY SUBJECT_ID ORDER BY highest_term_record_count_variance DESC;",
+  "tables": "[\"LIBRARY_RESERVE_MATRL_DETAIL\", \"TIP_DETAIL\"]",
+  "join_keys": "[[\"LIBRARY_RESERVE_MATRL_DETAIL.SUBJECT_ID\", \"TIP_DETAIL.SUBJECT_ID\"]]",
+  "column_mapping": "{\"subject\": [\"LIBRARY_RESERVE_MATRL_DETAIL.SUBJECT_ID\", \"TIP_DETAIL.SUBJECT_ID\"], \"variance of the record count\": [\"TIP_DETAIL.RECORD_COUNT\"], \"TIP materials\": [\"TIP_DETAIL.TIP_MATERIAL_STATUS_KEY\"], \"terms\": [\"TIP_DETAIL.TERM_CODE\"], \"library material status is 'U'\": [\"LIBRARY_RESERVE_MATRL_DETAIL.LIBRARY_MATERIAL_STATUS_KEY\"], \"TIP material status is 'RQ'\": [\"TIP_DETAIL.TIP_MATERIAL_STATUS_KEY\"]}",
+  "domain_knowledge": "[]",
+  "sub_questions": "[\"For each subject, what is the variance of the record count for TIP materials associated with that subject, considering only records where the library material status is 'U' and the TIP material status is 'RQ'?\"]",
+  "sub_sqls": "[\"SELECT LIBRARY_RESERVE_MATRL_DETAIL.SUBJECT_ID, VARIANCE(TIP_DETAIL.RECORD_COUNT) AS record_count_variance FROM LIBRARY_RESERVE_MATRL_DETAIL JOIN TIP_DETAIL ON LIBRARY_RESERVE_MATRL_DETAIL.SUBJECT_ID = TIP_DETAIL.SUBJECT_ID WHERE LIBRARY_RESERVE_MATRL_DETAIL.LIBRARY_MATERIAL_STATUS_KEY = 'U' AND TIP_DETAIL.TIP_MATERIAL_STATUS_KEY = 'RQ' GROUP BY LIBRARY_RESERVE_MATRL_DETAIL.SUBJECT_ID ORDER BY record_count_variance DESC;\"]",
+  "category": "complex query",
+  "detailed_category": "nested",
+  "case_id": "B05-beaver-0223",
+  "expected": {
+    "kind": "sql",
+    "sql": "WITH inner_cte AS ( SELECT LIBRARY_RESERVE_MATRL_DETAIL.SUBJECT_ID, TIP_DETAIL.TERM_CODE, VARIANCE(TIP_DETAIL.RECORD_COUNT) AS term_record_count_variance FROM LIBRARY_RESERVE_MATRL_DETAIL JOIN TIP_DETAIL ON LIBRARY_RESERVE_MATRL_DETAIL.SUBJECT_ID = TIP_DETAIL.SUBJECT_ID WHERE LIBRARY_RESERVE_MATRL_DETAIL.LIBRARY_MATERIAL_STATUS_KEY = 'U' AND TIP_DETAIL.TIP_MATERIAL_STATUS_KEY = 'RQ' GROUP BY LIBRARY_RESERVE_MATRL_DETAIL.SUBJECT_ID, TIP_DETAIL.TERM_CODE ) SELECT SUBJECT_ID, MAX(term_record_count_variance) AS highest_term_record_count_variance FROM inner_cte GROUP BY SUBJECT_ID ORDER BY highest_term_record_count_variance DESC;",
+    "sub_sqls": "[\"SELECT LIBRARY_RESERVE_MATRL_DETAIL.SUBJECT_ID, VARIANCE(TIP_DETAIL.RECORD_COUNT) AS record_count_variance FROM LIBRARY_RESERVE_MATRL_DETAIL JOIN TIP_DETAIL ON LIBRARY_RESERVE_MATRL_DETAIL.SUBJECT_ID = TIP_DETAIL.SUBJECT_ID WHERE LIBRARY_RESERVE_MATRL_DETAIL.LIBRARY_MATERIAL_STATUS_KEY = 'U' AND TIP_DETAIL.TIP_MATERIAL_STATUS_KEY = 'RQ' GROUP BY LIBRARY_RESERVE_MATRL_DETAIL.SUBJECT_ID ORDER BY record_count_variance DESC;\"]",
+    "db": "dw",
+    "tables": "[\"LIBRARY_RESERVE_MATRL_DETAIL\", \"TIP_DETAIL\"]",
+    "join_keys": "[[\"LIBRARY_RESERVE_MATRL_DETAIL.SUBJECT_ID\", \"TIP_DETAIL.SUBJECT_ID\"]]",
+    "column_mapping": "{\"subject\": [\"LIBRARY_RESERVE_MATRL_DETAIL.SUBJECT_ID\", \"TIP_DETAIL.SUBJECT_ID\"], \"variance of the record count\": [\"TIP_DETAIL.RECORD_COUNT\"], \"TIP materials\": [\"TIP_DETAIL.TIP_MATERIAL_STATUS_KEY\"], \"terms\": [\"TIP_DETAIL.TERM_CODE\"], \"library material status is 'U'\": [\"LIBRARY_RESERVE_MATRL_DETAIL.LIBRARY_MATERIAL_STATUS_KEY\"], \"TIP material status is 'RQ'\": [\"TIP_DETAIL.TIP_MATERIAL_STATUS_KEY\"]}",
+    "category": "complex query",
+    "db_archive": "bench://beaver-table/beaver_db.zip"
+  }
+}

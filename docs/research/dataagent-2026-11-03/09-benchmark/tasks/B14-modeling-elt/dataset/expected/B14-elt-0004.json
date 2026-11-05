@@ -1,0 +1,57 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "databricks",
+  "pipeline": "app_store",
+  "data_model": {
+    "models": [
+      {
+        "name": "apps",
+        "description": "Each record represents an app.",
+        "columns": [
+          {
+            "name": "app_name",
+            "description": "Name of the app."
+          },
+          {
+            "name": "num_negative_comments",
+            "description": "Number of negative comments for the app, replace NULL values with 0."
+          },
+          {
+            "name": "avg_sentiment_subjectivity_score",
+            "description": "The average sentiment subjectivity score of the app."
+          },
+          {
+            "name": "num_nan_or_null_comment_reviews",
+            "description": "the number of reviews the app recieved whose comment is 'nan' or null, replace NULL values with 0."
+          },
+          {
+            "name": "per_ratio_between_positive_and_negative_setiments",
+            "description": "The percentage ratio between the number of positive and negative sentiments for the app, calculated using the formula (Positive / Negative) * 100."
+          },
+          {
+            "name": "num_reviews_with_neutral_attitude",
+            "description": "The number of reviews with a neutral attitude for the app, replace NULL values with 0."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    databricks_definition_id: 072d5540-f236-4294-ba7c-ade8fd918496\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - user_reviews\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: app_store\n    sync_mode: full_refresh_append\n    tables:\n    - playstore\ndatabricks:\n  config:\n    database: <db_database>\n    hostname: <db_hostname>\n    client_id: <db_client_id>\n    secret: <db_secret>\n    schema: app_store\n    http_path: <db_path>\n",
+  "case_id": "B14-elt-0004",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "apps",
+        "columns": [
+          "app_name",
+          "num_negative_comments",
+          "avg_sentiment_subjectivity_score",
+          "num_nan_or_null_comment_reviews",
+          "per_ratio_between_positive_and_negative_setiments",
+          "num_reviews_with_neutral_attitude"
+        ]
+      }
+    ]
+  }
+}

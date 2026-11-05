@@ -1,0 +1,40 @@
+{
+  "case_id": "B05-bird-0376",
+  "task_id": "B05",
+  "split_role": "regression",
+  "inputs": [
+    {
+      "kind": "question",
+      "ref": "fixtures/bird-375-superhero.md",
+      "digest": null
+    },
+    {
+      "kind": "corpus",
+      "ref": "bench://bird-mini-dev/data/mini_dev_sqlite.jsonl",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B05-bird-0376.json"
+  },
+  "evidence": [
+    "fixtures/bird-375-superhero.md#schema",
+    "bench://bird-mini-dev/data/mini_dev_sqlite.jsonl"
+  ],
+  "tags": [
+    "bird",
+    "sqlite",
+    "superhero"
+  ],
+  "source": "bird",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

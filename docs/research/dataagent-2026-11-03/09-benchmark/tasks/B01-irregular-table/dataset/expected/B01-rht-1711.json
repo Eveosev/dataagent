@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 75,
+  "table": "employment-table15",
+  "structure": "ContentCompound",
+  "question_type": "Fact Checking",
+  "sub_type": "Inference-based Fact Checking",
+  "answer": "Yes",
+  "cot": [
+    {
+      "planning": "First, we need to locate the row corresponding to '20 years and over' in the table."
+    },
+    {
+      "planning": "We need to extract the employment numbers for 'Financial Activities' and 'Transportation and Utilities' from this row."
+    },
+    {
+      "planning": "We then compare the values to determine if employment in 'Financial Activities' exceeds that in 'Transportation and Utilities'."
+    }
+  ],
+  "case_id": "B01-rht-1711",
+  "expected": {
+    "kind": "answer",
+    "question": "For persons aged 20 years and over, does employment in Financial Activities exceed that in Transportation and Utilities? Provide 'Yes' or 'No'.",
+    "answer": "Yes"
+  }
+}

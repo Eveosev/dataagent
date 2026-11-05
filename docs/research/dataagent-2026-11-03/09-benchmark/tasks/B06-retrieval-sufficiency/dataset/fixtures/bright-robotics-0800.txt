@@ -1,0 +1,80 @@
+## Identifying the Problem
+
+The core issue is adding an extra argument to a ROS2 C++ callback function. While this is achievable in Python using `lambda` functions, the user desires a similar solution in C++ using `std::bind`.
+
+## Potential Solutions and Considerations
+
+### 1. Using `std::bind`:
+
+- **Syntax:**
+```cpp
+rclcpp::Subscription<MessageType>::SharedPtr subscription = node->create_subscription<MessageType>(
+    topic_name,
+    rclcpp::QoS(10),
+    std::bind(&callback, std::placeholders::_1, additional_argument)
+);
+```
+- **Explanation:**
+    - `std::placeholders::_1` represents the first argument (message) passed to the callback.
+    - `additional_argument` is the extra argument you want to include.
+    - `std::bind` creates a function object that encapsulates the callback and the additional argument.
+
+### 2. Using a Lambda Function:
+
+- **Syntax:**
+```cpp
+rclcpp::Subscription<MessageType>::SharedPtr subscription = node->create_subscription<MessageType>(
+    topic_name,
+    rclcpp::QoS(10),
+    [additional_argument](const MessageType::SharedPtr msg) {
+        callback(msg, additional_argument);
+    }
+);
+```
+- **Explanation:**
+    - The lambda function captures `additional_argument` by value.
+    - It calls the original callback with both the message and the additional argument.
+
+### 3. Using a Member Function:
+
+- **If applicable:**
+    - If the callback is a member function of a class, you can directly pass the additional argument as a member variable or through the constructor.
+- **Example:**
+```cpp
+class MyNode : public rclcpp::Node {
+public:
+  MyNode(rclcpp::NodeOptions options, int additional_argument)
+    : Node("my_node", options), additional_argument_(additional_argument) {}
+
+  void callback(const std_msgs::msg::String::SharedPtr msg) {
+    // Use additional_argument_ here
+  }
+
+private:
+  int additional_argument_;
+};
+
+int main(int argc, char **argv) {
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared<MyNode>(rclcpp::NodeOptions(), 42);
+  node->create_subscription<std_msgs::msg::String>(
+      "my_topic", rclcpp::QoS(10), std::bind(&MyNode::callback, node, std::placeholders::_1));
+  rclcpp::spin(node);
+  rclcpp::shutdown();
+  return 0;
+}
+```
+
+## Choosing the Best Approach
+
+- **`std::bind`:** Offers flexibility and works well with non-member functions.
+- **Lambda function:** Concise and convenient for simple scenarios.
+- **Member function:** Efficient if the callback is already a member function.
+
+Consider the specific context and coding style when selecting the most suitable approach.
+
+## Additional Notes
+
+- Ensure the callback function signature matches the expected arguments, including the additional one.
+- If using `std::bind` or a lambda function, remember to capture the additional argument by value or reference as needed.
+- Test and verify your implementation to ensure it functions as intended.

@@ -1,0 +1,62 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "databricks",
+  "pipeline": "address",
+  "data_model": {
+    "models": [
+      {
+        "name": "states",
+        "description": "Each record represents a state.",
+        "columns": [
+          {
+            "name": "abbreviation",
+            "description": "the abbreviation of the state name"
+          },
+          {
+            "name": "name",
+            "description": "the name of the state"
+          },
+          {
+            "name": "county_with_highest_average_income_per_household",
+            "description": "the county with the highest average income per household in the state, with ties broken by the ascending order of the county"
+          },
+          {
+            "name": "num_asian",
+            "description": "the number of Asian in the state, replace NULL values with 0."
+          },
+          {
+            "name": "num_counties",
+            "description": "the number of counties in the state, replace NULL values with 0."
+          },
+          {
+            "name": "higher_avg_female_per",
+            "description": "Set to 1 if the state’s percentage of female population is higher than the average percentage of female population across all states, otherwise, set to 0"
+          },
+          {
+            "name": "greater_than_15_CBSA_metro",
+            "description": "Set to 1 if the state has greater than 15 distinct CBSA officers of metro type, otherwise, set to 0"
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    databricks_definition_id: 072d5540-f236-4294-ba7c-ade8fd918496\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://address-bucket/CBSA.jsonl\n    sync_mode: full_refresh_append\n    table: CBSA\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - alias\n    - avoid\nflat_files:\n- format: csv\n  path: https://drive.google.com/uc?export=download&id=1xykJApWNgfi2pWv0f44j0y3dA7TrF-N9\n  sync_mode: full_refresh_append\n  table: state\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: address\n    sync_mode: full_refresh_append\n    tables:\n    - congress\npostgres:\n  config:\n    database: address\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - area_code\n    - country\n    - zip_congress\n    - zip_data\n    user: postgres\ndatabricks:\n  config:\n    database: <db_database>\n    hostname: <db_hostname>\n    client_id: <db_client_id>\n    secret: <db_secret>\n    schema: address\n    http_path: <db_path>\n",
+  "case_id": "B14-elt-0001",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "states",
+        "columns": [
+          "abbreviation",
+          "name",
+          "county_with_highest_average_income_per_household",
+          "num_asian",
+          "num_counties",
+          "higher_avg_female_per",
+          "greater_than_15_CBSA_metro"
+        ]
+      }
+    ]
+  }
+}

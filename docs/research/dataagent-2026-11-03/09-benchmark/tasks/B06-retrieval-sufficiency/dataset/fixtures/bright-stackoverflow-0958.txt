@@ -1,0 +1,59 @@
+## Identifying the Problem:
+
+The core issue is that directly modifying the `__call__` method using `setattr` doesn't affect the `obj()` behavior. This happens because Python treats `obj()` as a shortcut for `type(obj).__call__(obj)`. In other words, it bypasses the object's `__call__` attribute and relies on the type's `__call__` implementation.
+
+## Reasoning and Relevant Information:
+
+1. **Method Resolution Order (MRO):** Python follows MRO to determine which method to call. In this case, the MRO for `a()` would be:
+    - `A.__call__` (if not overridden)
+    - `object.__call__` (default method for all objects)
+2. **`setattr` Modifies the Instance:** `setattr` only changes the attribute of the specific object instance, not the class itself.
+3. **`type(obj).__call__` Bypasses Instance:** When you call `obj()`, Python internally calls `type(obj).__call__(obj)`. This directly invokes the `__call__` method of the object's type, bypassing the instance's modified `__call__` attribute.
+
+## Addressing the Questions:
+
+**1. Why does `a()` return 1 and not 100?**
+
+As explained above, `a()` translates to `type(a).__call__(a)`. Since `type(a)` is `A`, and you haven't modified `A.__call__`, it ultimately calls the original `A.__call__`, returning 1.
+
+**2. How to set the `call` method at runtime?**
+
+There are two ways to achieve this:
+
+**a) Modify the Class's `__call__`:**
+
+```python
+class A:
+    def __call__(self):
+        return 1
+
+a = A()
+
+# Modify the class's __call__ attribute
+A.__call__ = lambda self: 100
+
+# Now, both a() and a.__call__() return 100
+print(a())  # Output: 100
+print(a.__call__())  # Output: 100
+```
+
+**b) Use a Decorator:**
+
+```python
+def modify_call(func):
+    def wrapper(self):
+        return 100
+    return wrapper
+
+class A:
+    @modify_call
+    def __call__(self):
+        return 1
+
+a = A()
+
+# a() now returns 100 due to the decorator
+print(a())  # Output: 100
+```
+
+Both methods effectively change the behavior of `a()` at runtime. The first approach directly modifies the class's `__call__`, while the second uses a decorator to intercept the call and provide the desired functionality. 

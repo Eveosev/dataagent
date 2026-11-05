@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1963,
+  "table": "energy-table04",
+  "structure": "BackgroundColor",
+  "question_type": "Fact Checking",
+  "sub_type": "Value-Matching",
+  "answer": "340-1, 340-2, 340-3, 340-4",
+  "cot": [
+    {
+      "Planning": "First, we need to locate all rows where the “Item Description” is “Umbilical Power Converter.”"
+    },
+    {
+      "Planning": "We need to extract the unique values in the “Risk ID” column for these rows."
+    },
+    {
+      "Planning": "Finally, we output the values as the final answer."
+    }
+  ],
+  "case_id": "B01-rht-3599",
+  "expected": {
+    "kind": "answer",
+    "question": "What are the risk ids under “Umbilical Power Converter”?",
+    "answer": "340-1, 340-2, 340-3, 340-4"
+  }
+}

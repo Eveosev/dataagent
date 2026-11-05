@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 432,
+  "question": "For an audit, I need the number of admitted female patients born between 1945 and 1989 (inclusive) who have an ANA examination where the observed pattern is exactly P, with no other pattern alongside it. Please return just that single count.",
+  "evidence": "ANA pattern: the pattern observed in the ANA examination, e.g. 'P' or 'P,S'; the admission mark starting with a plus indicates the patient was admitted.",
+  "gold_sql": "SELECT COUNT(DISTINCT T1.ID) FROM Patient AS T1 INNER JOIN Examination AS T2 ON T1.ID = T2.ID WHERE T1.Admission LIKE '+%' AND T1.SEX = 'F' AND STRFTIME('%Y', T1.Birthday) BETWEEN '1945' AND '1989' AND T2.`ANA Pattern` = 'P'",
+  "db_id": "thrombosis_prediction",
+  "case_id": "B05-bird-0433",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT COUNT(DISTINCT T1.ID) FROM Patient AS T1 INNER JOIN Examination AS T2 ON T1.ID = T2.ID WHERE T1.Admission LIKE '+%' AND T1.SEX = 'F' AND STRFTIME('%Y', T1.Birthday) BETWEEN '1945' AND '1989' AND T2.`ANA Pattern` = 'P'",
+    "db_id": "thrombosis_prediction",
+    "evidence": "ANA pattern: the pattern observed in the ANA examination, e.g. 'P' or 'P,S'; the admission mark starting with a plus indicates the patient was admitted."
+  }
+}

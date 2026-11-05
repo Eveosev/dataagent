@@ -1,0 +1,36 @@
+{
+  "case_id": "B01-mimo-1300",
+  "task_id": "B01",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "table",
+      "ref": "bench://mimotable/unzipped/data/chinese/spreadsheet/北京市07-12年土地出让数据.xlsx",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B01-mimo-1300.json"
+  },
+  "evidence": [
+    "bench://mimotable/unzipped/data/chinese/spreadsheet/北京市07-12年土地出让数据.xlsx#workbook"
+  ],
+  "tags": [
+    "chinese",
+    "single file, multiple sheets, complicate header",
+    "hard table",
+    "op:Edit",
+    "op:Calculate"
+  ],
+  "source": "mimo",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

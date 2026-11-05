@@ -1,0 +1,27 @@
+{
+  "source": "beaverbench/beaver-query",
+  "id": "dw_544",
+  "db": "dw",
+  "question": "For subjects in the academic term with the term code '2019FA' that are in the Mathematics department, show the subject ID, subject title, department name, total units, the rank of each subject within its department (ordered by subject ID), and the deviation of each subject's total units from the average total units of all Mathematics subjects in that term. Do not return any rounded answers.",
+  "sql": "WITH inner_cte AS ( SELECT t1.SUBJECT_ID, t1.SUBJECT_TITLE, t1.DEPARTMENT_NAME, t1.TOTAL_UNITS, RANK() OVER (PARTITION BY t1.DEPARTMENT_NAME ORDER BY t1.SUBJECT_ID) AS window_column FROM ACADEMIC_TERMS t0 JOIN SUBJECT_SUMMARY t1 ON t0.TERM_CODE = t1.TERM_CODE WHERE t0.TERM_CODE = '2019FA' AND t1.DEPARTMENT_NAME = 'Mathematics' ), avg_units_cte AS ( SELECT DEPARTMENT_NAME, AVG(TOTAL_UNITS) AS avg_total_units FROM SUBJECT_SUMMARY WHERE TERM_CODE = '2019FA' AND DEPARTMENT_NAME = 'Mathematics' GROUP BY DEPARTMENT_NAME ) SELECT i.SUBJECT_ID, i.SUBJECT_TITLE, i.DEPARTMENT_NAME, i.TOTAL_UNITS, i.window_column, (i.TOTAL_UNITS - a.avg_total_units) AS deviation_from_avg_units FROM inner_cte i JOIN avg_units_cte a ON i.DEPARTMENT_NAME = a.DEPARTMENT_NAME;",
+  "tables": "[\"ACADEMIC_TERMS\", \"SUBJECT_SUMMARY\"]",
+  "join_keys": "[[\"ACADEMIC_TERMS.TERM_CODE\", \"SUBJECT_SUMMARY.TERM_CODE\"]]",
+  "column_mapping": "{\"subjects\": [\"SUBJECT_SUMMARY.SUBJECT_ID\", \"SUBJECT_SUMMARY.SUBJECT_TITLE\"], \"academic term\": [\"ACADEMIC_TERMS.TERM_CODE\", \"SUBJECT_SUMMARY.TERM_CODE\"], \"term code '2019FA'\": [\"ACADEMIC_TERMS.TERM_CODE\", \"SUBJECT_SUMMARY.TERM_CODE\"], \"Mathematics department\": [\"SUBJECT_SUMMARY.DEPARTMENT_NAME\"], \"subject ID\": [\"SUBJECT_SUMMARY.SUBJECT_ID\"], \"subject title\": [\"SUBJECT_SUMMARY.SUBJECT_TITLE\"], \"department name\": [\"SUBJECT_SUMMARY.DEPARTMENT_NAME\"], \"total units\": [\"SUBJECT_SUMMARY.TOTAL_UNITS\"], \"rank of each subject within its department\": [\"SUBJECT_SUMMARY.DEPARTMENT_NAME\", \"SUBJECT_SUMMARY.SUBJECT_ID\"], \"average total units\": [\"SUBJECT_SUMMARY.TOTAL_UNITS\"], \"deviation of each subject's total units from the average\": [\"SUBJECT_SUMMARY.TOTAL_UNITS\"]}",
+  "domain_knowledge": "[\"\\\"math\\\" is predicated by \\\"TABLE.DEPARTMENT_NAME = 'Mathematics'\\\"\", \"\\\"Course 18\\\" is predicated by \\\"TABLE.DEPARTMENT_NAME = 'Mathematics'\\\"\"]",
+  "sub_questions": "[\"For subjects in the academic term with the term code '2019FA' that are in the Mathematics department, show the subject ID, subject title, department name, total units, and the rank of each subject within its department (ordered by subject ID).\"]",
+  "sub_sqls": "[\"SELECT t1.SUBJECT_ID, t1.SUBJECT_TITLE, t1.DEPARTMENT_NAME, t1.TOTAL_UNITS, RANK() OVER (PARTITION BY t1.DEPARTMENT_NAME ORDER BY t1.SUBJECT_ID) AS window_column FROM ACADEMIC_TERMS t0 JOIN SUBJECT_SUMMARY t1 ON t0.TERM_CODE = t1.TERM_CODE WHERE t0.TERM_CODE = '2019FA' AND t1.DEPARTMENT_NAME = 'Mathematics'\"]",
+  "category": "domain-specific complex query",
+  "detailed_category": "nested",
+  "case_id": "B05-beaver-0042",
+  "expected": {
+    "kind": "sql",
+    "sql": "WITH inner_cte AS ( SELECT t1.SUBJECT_ID, t1.SUBJECT_TITLE, t1.DEPARTMENT_NAME, t1.TOTAL_UNITS, RANK() OVER (PARTITION BY t1.DEPARTMENT_NAME ORDER BY t1.SUBJECT_ID) AS window_column FROM ACADEMIC_TERMS t0 JOIN SUBJECT_SUMMARY t1 ON t0.TERM_CODE = t1.TERM_CODE WHERE t0.TERM_CODE = '2019FA' AND t1.DEPARTMENT_NAME = 'Mathematics' ), avg_units_cte AS ( SELECT DEPARTMENT_NAME, AVG(TOTAL_UNITS) AS avg_total_units FROM SUBJECT_SUMMARY WHERE TERM_CODE = '2019FA' AND DEPARTMENT_NAME = 'Mathematics' GROUP BY DEPARTMENT_NAME ) SELECT i.SUBJECT_ID, i.SUBJECT_TITLE, i.DEPARTMENT_NAME, i.TOTAL_UNITS, i.window_column, (i.TOTAL_UNITS - a.avg_total_units) AS deviation_from_avg_units FROM inner_cte i JOIN avg_units_cte a ON i.DEPARTMENT_NAME = a.DEPARTMENT_NAME;",
+    "sub_sqls": "[\"SELECT t1.SUBJECT_ID, t1.SUBJECT_TITLE, t1.DEPARTMENT_NAME, t1.TOTAL_UNITS, RANK() OVER (PARTITION BY t1.DEPARTMENT_NAME ORDER BY t1.SUBJECT_ID) AS window_column FROM ACADEMIC_TERMS t0 JOIN SUBJECT_SUMMARY t1 ON t0.TERM_CODE = t1.TERM_CODE WHERE t0.TERM_CODE = '2019FA' AND t1.DEPARTMENT_NAME = 'Mathematics'\"]",
+    "db": "dw",
+    "tables": "[\"ACADEMIC_TERMS\", \"SUBJECT_SUMMARY\"]",
+    "join_keys": "[[\"ACADEMIC_TERMS.TERM_CODE\", \"SUBJECT_SUMMARY.TERM_CODE\"]]",
+    "column_mapping": "{\"subjects\": [\"SUBJECT_SUMMARY.SUBJECT_ID\", \"SUBJECT_SUMMARY.SUBJECT_TITLE\"], \"academic term\": [\"ACADEMIC_TERMS.TERM_CODE\", \"SUBJECT_SUMMARY.TERM_CODE\"], \"term code '2019FA'\": [\"ACADEMIC_TERMS.TERM_CODE\", \"SUBJECT_SUMMARY.TERM_CODE\"], \"Mathematics department\": [\"SUBJECT_SUMMARY.DEPARTMENT_NAME\"], \"subject ID\": [\"SUBJECT_SUMMARY.SUBJECT_ID\"], \"subject title\": [\"SUBJECT_SUMMARY.SUBJECT_TITLE\"], \"department name\": [\"SUBJECT_SUMMARY.DEPARTMENT_NAME\"], \"total units\": [\"SUBJECT_SUMMARY.TOTAL_UNITS\"], \"rank of each subject within its department\": [\"SUBJECT_SUMMARY.DEPARTMENT_NAME\", \"SUBJECT_SUMMARY.SUBJECT_ID\"], \"average total units\": [\"SUBJECT_SUMMARY.TOTAL_UNITS\"], \"deviation of each subject's total units from the average\": [\"SUBJECT_SUMMARY.TOTAL_UNITS\"]}",
+    "category": "domain-specific complex query",
+    "db_archive": "bench://beaver-table/beaver_db.zip"
+  }
+}

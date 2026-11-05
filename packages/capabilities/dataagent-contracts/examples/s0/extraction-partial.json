@@ -1,0 +1,25 @@
+{
+  "status": "partial",
+  "data": {
+    "asset": {"id": "rec:r-0042", "kind": "extracted_record", "scope_ref": "tenant:demo/project:p1",
+              "revision": "r1", "resolver": "store", "locator": "records/r-0042"},
+    "document_ref": "doc:r-0042@r1",
+    "target_schema_ref": "xschema:record@v3",
+    "fields": [
+      {"field_id": "amount", "status": "extracted", "value": 5800, "value_type": "money", "unit": "CNY",
+       "confidence": {"score": 0.97, "method": "llm-structured+regex-check"},
+       "evidence": [{"source_ref": "file:r-0042", "source_revision": "sha256:9f1c",
+                     "selector": {"kind": "json_pointer", "pointer": "/body/total"}}]},
+      {"field_id": "approver_level", "status": "missing", "value_type": "enum", "evidence": []}
+    ],
+    "issues": []
+  },
+  "issues": [{"code": "da02.field_missing", "severity": "warning", "message": "未找到审批人级别字段",
+              "target": "approver_level", "retryable": false, "suggested_action": "补充附件或转人工"}],
+  "execution_ref": {"invocation_id": "inv:7a1", "operation": "extract_fields_to_schema", "capability_id": "DA02.12.1",
+                    "implementation_ref": "dataagent-data/extraction@0.1.0#llm-structured",
+                    "input_versions": ["doc:r-0042@r1", "xschema:record@v3"],
+                    "started_at": "2026-11-03T10:02:11+08:00", "finished_at": "2026-11-03T10:02:14+08:00"},
+  "provenance": ["doc:r-0042@r1"],
+  "completeness": {"extent": "complete_in_declared_scope", "declared_scope": "目标结构 v3 的 18 个字段"}
+}

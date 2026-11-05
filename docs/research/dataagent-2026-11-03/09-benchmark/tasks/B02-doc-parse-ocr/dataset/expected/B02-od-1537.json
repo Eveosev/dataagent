@@ -1,0 +1,302 @@
+{
+  "source": "opendatalab/OmniDocBench",
+  "page_no": 4,
+  "image": "exam_paper_en-file-putnam-archive_2007_Solutions_2007s_page_004.png",
+  "attribute": {
+    "data_source": "exam_paper",
+    "language": "english",
+    "layout": "double_column",
+    "special_issue": [
+      "None"
+    ],
+    "subset": "v1.5"
+  },
+  "reading_order": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    null
+  ],
+  "blocks": [
+    {
+      "category": "text_block",
+      "order": 1,
+      "text": "B-2 Put $B = \\max_{0\\leq x\\leq 1} |f'(x)|$ and $g(x) = \\int_{0}^{x} f(y) dy$. Since g(0) = g(1) = 0, the maximum value of $|g(x)|$ must occur at a critical point $y \\in (0, 1)$ satisfying $g'(y) = f(y) = 0$. We may thus take $\\alpha = y$ hereafter."
+    },
+    {
+      "category": "text_block",
+      "order": 2,
+      "text": "Since $\\int_{0}^{\\alpha} f(x) dx = - \\int_{0}^{1-\\alpha} f(1-x) dx$, we may assume\nthat $\\alpha \\leq 1/2$. By then substituting $-f(x)$ for $f(x)$ if\nneeded, we may assume that $\\int_{0}^{\\alpha} f(x) dx \\geq 0$. From the\ninequality $f'(x) \\geq -B$, we deduce $f(x) \\leq B(\\alpha - x)$ for\n$0 \\leq x \\leq \\alpha$, so"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 3,
+      "latex": "$$\n\\begin{array} { c } { {  { \\int _ { 0 } ^ { \\alpha } f ( x ) d x \\le \\int _ { 0 } ^ { \\alpha } B ( \\alpha - x ) d x } } } \\\\ { {  { \\phantom { \\int _ { 0 } ^ { \\alpha } } = - \\left. \\frac { 1 } { 2 } B ( \\alpha - x ) ^ { 2 } \\right| _ { 0 } ^ { \\alpha } } } } \\\\ { {  { \\phantom { \\int _ { 0 } ^ { \\alpha } } = \\frac { \\alpha ^ { 2 } } { 2 } B \\le \\frac { 1 } { 8 } B } } } \\end{array}\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 4,
+      "text": "as desired."
+    },
+    {
+      "category": "text_block",
+      "order": 5,
+      "text": "B-3 First solution: Observing that $x_2/2 = 13, x_3/4 = 34, x_4/8 = 89$, we guess that $x_n = 2^{n-1}F_{2n+3}$, where $F_k$ is the $k$-th Fibonacci number. Thus we claim that $x_n = \\frac{2^{n-1}}{\\sqrt{5}}\\big(\\alpha^{2n+3} - \\alpha^{-(2n+3)}\\big)$, where $\\alpha = \\frac{1+\\sqrt{5}}{2}$, to make the answer $x_{2007} = \\frac{2^{2006}}{\\sqrt{5}}\\big(\\alpha^{3997} - \\alpha^{-3997}\\big).$"
+    },
+    {
+      "category": "text_block",
+      "order": 6,
+      "text": "We prove the claim by induction; the base case $x_0 = 1$ is true, and so it suffices to show that the recursion $x_{n+1} = 3x_n + \\lfloor x_n\\sqrt{5} \\rfloor$ is satisfied for our formula for $x_n$. Indeed, since $\\alpha^2 = \\frac{3+\\sqrt{5}}{2}$, we have"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 7,
+      "latex": "$$\n\\begin{array} { l } { { x _ { n + 1 } - ( 3 + \\sqrt 5 ) x _ { n } = {  \\frac { 2 ^ { n - 1 } } { \\sqrt { 5 } } } \\big ( 2 ( \\alpha ^ { 2 n + 5 } - \\alpha ^ { - ( 2 n + 5 ) } ) } } \\\\ { { { } ~ - ( 3 + \\sqrt 5 ) ( \\alpha ^ { 2 n + 3 } - \\alpha ^ { - ( 2 n + 3 ) } ) \\big ) } } \\\\ { { { } ~ = 2 ^ { n } \\alpha ^ { - ( 2 n + 3 ) } . } } \\end{array}\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 8,
+      "text": "Now $2^n\\alpha^{-(2n+3)} = (\\frac{1-\\sqrt{5}}{2})^3(3-\\sqrt{5})^n$ is between $-1$ and 0; the recursion follows since $x_n, x_{n+1}$ are integers."
+    },
+    {
+      "category": "text_block",
+      "order": 9,
+      "text": "Second solution: (by Catalin Zara) Since $x_n$ is rational,\nwe have $0 < x_n\\sqrt{5} - \\lfloor x_n\\sqrt{5} \\rfloor < 1$. We now have the\ninequalities"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 10,
+      "latex": "$$\n\\begin{array} { r l } & { x _ { n + 1 } - 3 x _ { n } < x _ { n } \\sqrt { 5 } < x _ { n + 1 } - 3 x _ { n } + 1 } \\\\ & { ( 3 + \\sqrt { 5 } ) x _ { n } - 1 < x _ { n + 1 } < ( 3 + \\sqrt { 5 } ) x _ { n } } \\\\ & { 4 x _ { n } - ( 3 - \\sqrt { 5 } ) < ( 3 - \\sqrt { 5 } ) x _ { n + 1 } < 4 x _ { n } } \\\\ & { 3 x _ { n + 1 } - 4 x _ { n } < x _ { n + 1 } \\sqrt { 5 } < 3 x _ { n + 1 } - 4 x _ { n } + ( 3 - \\sqrt { 5 } ) . } \\end{array}\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 11,
+      "text": "Since $0 < 3 - \\sqrt{5} < 1$, this yields $\\lfloor x_{n+1}\\sqrt{5} \\rfloor = 3x_{n+1} - 4x_n$, so we can rewrite the recursion as $x_{n+1} = 6x_n - 4x_{n-1}$ for $n \\geq 2$. It is routine to solve this recursion to obtain the some solution as above."
+    },
+    {
+      "category": "text_block",
+      "order": 12,
+      "text": "Remark: With an initial 1 prepended, this becomes sequence A018903 in Sloane's On-Line Encyclopedia of Integer Sequences: (http://www.research.att.com/~njas/"
+    },
+    {
+      "category": "text_block",
+      "order": 13,
+      "text": "sequences/). Therein, the sequence is described as\nthe case $S(1,5)$ of the sequence $S(a_0, a_1)$ in which $a_{n+2}$\nis the least integer for which $a_{n+2}/a_{n+1} > a_{n+1}/a_n$.\nSloane cites D. W. Boyd, Linear recurrence relations\nfor some generalized Pisot sequences,  Advances in\nNumber Theory (Kingston, ON, 1991), Oxford Univ.\nPress, New York, 1993, p. 333–340."
+    },
+    {
+      "category": "text_block",
+      "order": 14,
+      "text": "B-4 The number of pairs is $2^{n+1}$. The degree condition forces $P$ to have degree $n$ and leading coefficient $\\pm 1$; we may count pairs in which $P$ has leading coefficient 1 as long as we multiply by 2 afterward."
+    },
+    {
+      "category": "text_block",
+      "order": 15,
+      "text": "Factor both sides:"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 16,
+      "latex": "$$\n\\begin{array} { l } { {  ( P ( X ) + Q ( X ) i ) ( P ( X ) - Q ( X ) i ) } \\ ~ } \\\\ { {  = \\prod _ { j = 0 } ^ { n - 1 } ( X - \\exp ( 2 \\pi i ( 2 j + 1 ) / ( 4 n ) ) ) } \\ ~ } \\\\ { {  ~ \\cdot \\prod _ { j = 0 } ^ { n - 1 } ( X + \\exp ( 2 \\pi i ( 2 j + 1 ) / ( 4 n ) ) ) . } } \\end{array}\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 17,
+      "text": "Then each choice of $P,Q$ corresponds to equating\n$P(X) + Q(X)i$ with the product of some $n$ factors on\nthe right, in which we choose exactly one of the two factors for each $j = 0,...,n-1$. (We must take exactly $n$\nfactors because as a polynomial in $X$ with complex coefficients, $P(X) + Q(X)i$ has degree exactly $n$. We must\nchoose one for each $j$ to ensure that $P(X) + Q(X)i$ and\n$P(X) - Q(X)i$ are complex conjugates, so that $P,Q$ have\nreal coefficients.) Thus there are $2^n$ such pairs; multiplying by 2 to allow $P$ to have leading coefficient $-1$\nyields the desired result."
+    },
+    {
+      "category": "text_block",
+      "order": 18,
+      "text": "Remark: If we allow $P$ and $Q$ to have complex coefficients but still require $deg(P) > deg(Q)$, then the number of pairs increases to $2\\binom{2n}{n}$, as we may choose any $n$\nof the $2n$ factors of $X^{2n} + 1$ to use to form $P(X)+Q(X)i$."
+    },
+    {
+      "category": "text_block",
+      "order": 19,
+      "text": "B-5 For $n$ an integer, we have $ \\left\\lfloor \\frac{n}{k} \\right\\rfloor = \\frac{n-j}{k} $ for $j$ the unique\ninteger in $\\{0, ..., k-1\\}$ congruent to $n$ modulo $k$; hence"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 20,
+      "latex": "$$\n\\prod _ { j = 0 } ^ { k - 1 } \\left( \\left\\lfloor { \\frac { n } { k } } \\right\\rfloor - { \\frac { n - j } { k } } \\right) = 0 .\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 21,
+      "text": "By expanding this out, we obtain the desired polynomials $P_0(n),\\ldots,P_{k-1}(n)$."
+    },
+    {
+      "category": "text_block",
+      "order": 22,
+      "text": "Remark: Variants of this solution are possible that construct the $P_i$ less explicitly, using Lagrange interpolation\nor Vandermonde determinants."
+    },
+    {
+      "category": "text_block",
+      "order": 23,
+      "text": "B-6 (Suggested by Oleg Golberg) Assume $n \\geq 2$, or else the\nproblem is trivially false. Throughout this proof, any $C_i$\nwill be a positive constant whose exact value is immaterial. As in the proof of Stirling's approximation, we\nestimate for any fixed $c \\in \\mathbb{R}$,"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 24,
+      "latex": "$$\n\\sum _ { i = 1 } ^ { n } ( i + c ) \\log i = { \\frac { 1 } { 2 } } n ^ { 2 } \\log n - { \\frac { 1 } { 4 } } n ^ { 2 } + O ( n \\log n )\n$$"
+    },
+    {
+      "category": "page_number",
+      "order": null,
+      "text": "4"
+    }
+  ],
+  "tables": [],
+  "case_id": "B02-od-1537",
+  "expected": {
+    "kind": "document",
+    "text": "B-2 Put $B = \\max_{0\\leq x\\leq 1} |f'(x)|$ and $g(x) = \\int_{0}^{x} f(y) dy$. Since g(0) = g(1) = 0, the maximum value of $|g(x)|$ must occur at a critical point $y \\in (0, 1)$ satisfying $g'(y) = f(y) = 0$. We may thus take $\\alpha = y$ hereafter.\nSince $\\int_{0}^{\\alpha} f(x) dx = - \\int_{0}^{1-\\alpha} f(1-x) dx$, we may assume\nthat $\\alpha \\leq 1/2$. By then substituting $-f(x)$ for $f(x)$ if\nneeded, we may assume that $\\int_{0}^{\\alpha} f(x) dx \\geq 0$. From the\ninequality $f'(x) \\geq -B$, we deduce $f(x) \\leq B(\\alpha - x)$ for\n$0 \\leq x \\leq \\alpha$, so\n$$\n\\begin{array} { c } { {  { \\int _ { 0 } ^ { \\alpha } f ( x ) d x \\le \\int _ { 0 } ^ { \\alpha } B ( \\alpha - x ) d x } } } \\\\ { {  { \\phantom { \\int _ { 0 } ^ { \\alpha } } = - \\left. \\frac { 1 } { 2 } B ( \\alpha - x ) ^ { 2 } \\right| _ { 0 } ^ { \\alpha } } } } \\\\ { {  { \\phantom { \\int _ { 0 } ^ { \\alpha } } = \\frac { \\alpha ^ { 2 } } { 2 } B \\le \\frac { 1 } { 8 } B } } } \\end{array}\n$$\nas desired.\nB-3 First solution: Observing that $x_2/2 = 13, x_3/4 = 34, x_4/8 = 89$, we guess that $x_n = 2^{n-1}F_{2n+3}$, where $F_k$ is the $k$-th Fibonacci number. Thus we claim that $x_n = \\frac{2^{n-1}}{\\sqrt{5}}\\big(\\alpha^{2n+3} - \\alpha^{-(2n+3)}\\big)$, where $\\alpha = \\frac{1+\\sqrt{5}}{2}$, to make the answer $x_{2007} = \\frac{2^{2006}}{\\sqrt{5}}\\big(\\alpha^{3997} - \\alpha^{-3997}\\big).$\nWe prove the claim by induction; the base case $x_0 = 1$ is true, and so it suffices to show that the recursion $x_{n+1} = 3x_n + \\lfloor x_n\\sqrt{5} \\rfloor$ is satisfied for our formula for $x_n$. Indeed, since $\\alpha^2 = \\frac{3+\\sqrt{5}}{2}$, we have\n$$\n\\begin{array} { l } { { x _ { n + 1 } - ( 3 + \\sqrt 5 ) x _ { n } = {  \\frac { 2 ^ { n - 1 } } { \\sqrt { 5 } } } \\big ( 2 ( \\alpha ^ { 2 n + 5 } - \\alpha ^ { - ( 2 n + 5 ) } ) } } \\\\ { { { } ~ - ( 3 + \\sqrt 5 ) ( \\alpha ^ { 2 n + 3 } - \\alpha ^ { - ( 2 n + 3 ) } ) \\big ) } } \\\\ { { { } ~ = 2 ^ { n } \\alpha ^ { - ( 2 n + 3 ) } . } } \\end{array}\n$$\nNow $2^n\\alpha^{-(2n+3)} = (\\frac{1-\\sqrt{5}}{2})^3(3-\\sqrt{5})^n$ is between $-1$ and 0; the recursion follows since $x_n, x_{n+1}$ are integers.\nSecond solution: (by Catalin Zara) Since $x_n$ is rational,\nwe have $0 < x_n\\sqrt{5} - \\lfloor x_n\\sqrt{5} \\rfloor < 1$. We now have the\ninequalities\n$$\n\\begin{array} { r l } & { x _ { n + 1 } - 3 x _ { n } < x _ { n } \\sqrt { 5 } < x _ { n + 1 } - 3 x _ { n } + 1 } \\\\ & { ( 3 + \\sqrt { 5 } ) x _ { n } - 1 < x _ { n + 1 } < ( 3 + \\sqrt { 5 } ) x _ { n } } \\\\ & { 4 x _ { n } - ( 3 - \\sqrt { 5 } ) < ( 3 - \\sqrt { 5 } ) x _ { n + 1 } < 4 x _ { n } } \\\\ & { 3 x _ { n + 1 } - 4 x _ { n } < x _ { n + 1 } \\sqrt { 5 } < 3 x _ { n + 1 } - 4 x _ { n } + ( 3 - \\sqrt { 5 } ) . } \\end{array}\n$$\nSince $0 < 3 - \\sqrt{5} < 1$, this yields $\\lfloor x_{n+1}\\sqrt{5} \\rfloor = 3x_{n+1} - 4x_n$, so we can rewrite the recursion as $x_{n+1} = 6x_n - 4x_{n-1}$ for $n \\geq 2$. It is routine to solve this recursion to obtain the some solution as above.\nRemark: With an initial 1 prepended, this becomes sequence A018903 in Sloane's On-Line Encyclopedia of Integer Sequences: (http://www.research.att.com/~njas/\nsequences/). Therein, the sequence is described as\nthe case $S(1,5)$ of the sequence $S(a_0, a_1)$ in which $a_{n+2}$\nis the least integer for which $a_{n+2}/a_{n+1} > a_{n+1}/a_n$.\nSloane cites D. W. Boyd, Linear recurrence relations\nfor some generalized Pisot sequences,  Advances in\nNumber Theory (Kingston, ON, 1991), Oxford Univ.\nPress, New York, 1993, p. 333–340.\nB-4 The number of pairs is $2^{n+1}$. The degree condition forces $P$ to have degree $n$ and leading coefficient $\\pm 1$; we may count pairs in which $P$ has leading coefficient 1 as long as we multiply by 2 afterward.\nFactor both sides:\n$$\n\\begin{array} { l } { {  ( P ( X ) + Q ( X ) i ) ( P ( X ) - Q ( X ) i ) } \\ ~ } \\\\ { {  = \\prod _ { j = 0 } ^ { n - 1 } ( X - \\exp ( 2 \\pi i ( 2 j + 1 ) / ( 4 n ) ) ) } \\ ~ } \\\\ { {  ~ \\cdot \\prod _ { j = 0 } ^ { n - 1 } ( X + \\exp ( 2 \\pi i ( 2 j + 1 ) / ( 4 n ) ) ) . } } \\end{array}\n$$\nThen each choice of $P,Q$ corresponds to equating\n$P(X) + Q(X)i$ with the product of some $n$ factors on\nthe right, in which we choose exactly one of the two factors for each $j = 0,...,n-1$. (We must take exactly $n$\nfactors because as a polynomial in $X$ with complex coefficients, $P(X) + Q(X)i$ has degree exactly $n$. We must\nchoose one for each $j$ to ensure that $P(X) + Q(X)i$ and\n$P(X) - Q(X)i$ are complex conjugates, so that $P,Q$ have\nreal coefficients.) Thus there are $2^n$ such pairs; multiplying by 2 to allow $P$ to have leading coefficient $-1$\nyields the desired result.\nRemark: If we allow $P$ and $Q$ to have complex coefficients but still require $deg(P) > deg(Q)$, then the number of pairs increases to $2\\binom{2n}{n}$, as we may choose any $n$\nof the $2n$ factors of $X^{2n} + 1$ to use to form $P(X)+Q(X)i$.\nB-5 For $n$ an integer, we have $ \\left\\lfloor \\frac{n}{k} \\right\\rfloor = \\frac{n-j}{k} $ for $j$ the unique\ninteger in $\\{0, ..., k-1\\}$ congruent to $n$ modulo $k$; hence\n$$\n\\prod _ { j = 0 } ^ { k - 1 } \\left( \\left\\lfloor { \\frac { n } { k } } \\right\\rfloor - { \\frac { n - j } { k } } \\right) = 0 .\n$$\nBy expanding this out, we obtain the desired polynomials $P_0(n),\\ldots,P_{k-1}(n)$.\nRemark: Variants of this solution are possible that construct the $P_i$ less explicitly, using Lagrange interpolation\nor Vandermonde determinants.\nB-6 (Suggested by Oleg Golberg) Assume $n \\geq 2$, or else the\nproblem is trivially false. Throughout this proof, any $C_i$\nwill be a positive constant whose exact value is immaterial. As in the proof of Stirling's approximation, we\nestimate for any fixed $c \\in \\mathbb{R}$,\n$$\n\\sum _ { i = 1 } ^ { n } ( i + c ) \\log i = { \\frac { 1 } { 2 } } n ^ { 2 } \\log n - { \\frac { 1 } { 4 } } n ^ { 2 } + O ( n \\log n )\n$$\n4",
+    "tables": [],
+    "blocks": [
+      {
+        "category": "text_block",
+        "order": 1,
+        "text": "B-2 Put $B = \\max_{0\\leq x\\leq 1} |f'(x)|$ and $g(x) = \\int_{0}^{x} f(y) dy$. Since g(0) = g(1) = 0, the maximum value of $|g(x)|$ must occur at a critical point $y \\in (0, 1)$ satisfying $g'(y) = f(y) = 0$. We may thus take $\\alpha = y$ hereafter."
+      },
+      {
+        "category": "text_block",
+        "order": 2,
+        "text": "Since $\\int_{0}^{\\alpha} f(x) dx = - \\int_{0}^{1-\\alpha} f(1-x) dx$, we may assume\nthat $\\alpha \\leq 1/2$. By then substituting $-f(x)$ for $f(x)$ if\nneeded, we may assume that $\\int_{0}^{\\alpha} f(x) dx \\geq 0$. From the\ninequality $f'(x) \\geq -B$, we deduce $f(x) \\leq B(\\alpha - x)$ for\n$0 \\leq x \\leq \\alpha$, so"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 3,
+        "latex": "$$\n\\begin{array} { c } { {  { \\int _ { 0 } ^ { \\alpha } f ( x ) d x \\le \\int _ { 0 } ^ { \\alpha } B ( \\alpha - x ) d x } } } \\\\ { {  { \\phantom { \\int _ { 0 } ^ { \\alpha } } = - \\left. \\frac { 1 } { 2 } B ( \\alpha - x ) ^ { 2 } \\right| _ { 0 } ^ { \\alpha } } } } \\\\ { {  { \\phantom { \\int _ { 0 } ^ { \\alpha } } = \\frac { \\alpha ^ { 2 } } { 2 } B \\le \\frac { 1 } { 8 } B } } } \\end{array}\n$$"
+      },
+      {
+        "category": "text_block",
+        "order": 4,
+        "text": "as desired."
+      },
+      {
+        "category": "text_block",
+        "order": 5,
+        "text": "B-3 First solution: Observing that $x_2/2 = 13, x_3/4 = 34, x_4/8 = 89$, we guess that $x_n = 2^{n-1}F_{2n+3}$, where $F_k$ is the $k$-th Fibonacci number. Thus we claim that $x_n = \\frac{2^{n-1}}{\\sqrt{5}}\\big(\\alpha^{2n+3} - \\alpha^{-(2n+3)}\\big)$, where $\\alpha = \\frac{1+\\sqrt{5}}{2}$, to make the answer $x_{2007} = \\frac{2^{2006}}{\\sqrt{5}}\\big(\\alpha^{3997} - \\alpha^{-3997}\\big).$"
+      },
+      {
+        "category": "text_block",
+        "order": 6,
+        "text": "We prove the claim by induction; the base case $x_0 = 1$ is true, and so it suffices to show that the recursion $x_{n+1} = 3x_n + \\lfloor x_n\\sqrt{5} \\rfloor$ is satisfied for our formula for $x_n$. Indeed, since $\\alpha^2 = \\frac{3+\\sqrt{5}}{2}$, we have"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 7,
+        "latex": "$$\n\\begin{array} { l } { { x _ { n + 1 } - ( 3 + \\sqrt 5 ) x _ { n } = {  \\frac { 2 ^ { n - 1 } } { \\sqrt { 5 } } } \\big ( 2 ( \\alpha ^ { 2 n + 5 } - \\alpha ^ { - ( 2 n + 5 ) } ) } } \\\\ { { { } ~ - ( 3 + \\sqrt 5 ) ( \\alpha ^ { 2 n + 3 } - \\alpha ^ { - ( 2 n + 3 ) } ) \\big ) } } \\\\ { { { } ~ = 2 ^ { n } \\alpha ^ { - ( 2 n + 3 ) } . } } \\end{array}\n$$"
+      },
+      {
+        "category": "text_block",
+        "order": 8,
+        "text": "Now $2^n\\alpha^{-(2n+3)} = (\\frac{1-\\sqrt{5}}{2})^3(3-\\sqrt{5})^n$ is between $-1$ and 0; the recursion follows since $x_n, x_{n+1}$ are integers."
+      },
+      {
+        "category": "text_block",
+        "order": 9,
+        "text": "Second solution: (by Catalin Zara) Since $x_n$ is rational,\nwe have $0 < x_n\\sqrt{5} - \\lfloor x_n\\sqrt{5} \\rfloor < 1$. We now have the\ninequalities"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 10,
+        "latex": "$$\n\\begin{array} { r l } & { x _ { n + 1 } - 3 x _ { n } < x _ { n } \\sqrt { 5 } < x _ { n + 1 } - 3 x _ { n } + 1 } \\\\ & { ( 3 + \\sqrt { 5 } ) x _ { n } - 1 < x _ { n + 1 } < ( 3 + \\sqrt { 5 } ) x _ { n } } \\\\ & { 4 x _ { n } - ( 3 - \\sqrt { 5 } ) < ( 3 - \\sqrt { 5 } ) x _ { n + 1 } < 4 x _ { n } } \\\\ & { 3 x _ { n + 1 } - 4 x _ { n } < x _ { n + 1 } \\sqrt { 5 } < 3 x _ { n + 1 } - 4 x _ { n } + ( 3 - \\sqrt { 5 } ) . } \\end{array}\n$$"
+      },
+      {
+        "category": "text_block",
+        "order": 11,
+        "text": "Since $0 < 3 - \\sqrt{5} < 1$, this yields $\\lfloor x_{n+1}\\sqrt{5} \\rfloor = 3x_{n+1} - 4x_n$, so we can rewrite the recursion as $x_{n+1} = 6x_n - 4x_{n-1}$ for $n \\geq 2$. It is routine to solve this recursion to obtain the some solution as above."
+      },
+      {
+        "category": "text_block",
+        "order": 12,
+        "text": "Remark: With an initial 1 prepended, this becomes sequence A018903 in Sloane's On-Line Encyclopedia of Integer Sequences: (http://www.research.att.com/~njas/"
+      },
+      {
+        "category": "text_block",
+        "order": 13,
+        "text": "sequences/). Therein, the sequence is described as\nthe case $S(1,5)$ of the sequence $S(a_0, a_1)$ in which $a_{n+2}$\nis the least integer for which $a_{n+2}/a_{n+1} > a_{n+1}/a_n$.\nSloane cites D. W. Boyd, Linear recurrence relations\nfor some generalized Pisot sequences,  Advances in\nNumber Theory (Kingston, ON, 1991), Oxford Univ.\nPress, New York, 1993, p. 333–340."
+      },
+      {
+        "category": "text_block",
+        "order": 14,
+        "text": "B-4 The number of pairs is $2^{n+1}$. The degree condition forces $P$ to have degree $n$ and leading coefficient $\\pm 1$; we may count pairs in which $P$ has leading coefficient 1 as long as we multiply by 2 afterward."
+      },
+      {
+        "category": "text_block",
+        "order": 15,
+        "text": "Factor both sides:"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 16,
+        "latex": "$$\n\\begin{array} { l } { {  ( P ( X ) + Q ( X ) i ) ( P ( X ) - Q ( X ) i ) } \\ ~ } \\\\ { {  = \\prod _ { j = 0 } ^ { n - 1 } ( X - \\exp ( 2 \\pi i ( 2 j + 1 ) / ( 4 n ) ) ) } \\ ~ } \\\\ { {  ~ \\cdot \\prod _ { j = 0 } ^ { n - 1 } ( X + \\exp ( 2 \\pi i ( 2 j + 1 ) / ( 4 n ) ) ) . } } \\end{array}\n$$"
+      },
+      {
+        "category": "text_block",
+        "order": 17,
+        "text": "Then each choice of $P,Q$ corresponds to equating\n$P(X) + Q(X)i$ with the product of some $n$ factors on\nthe right, in which we choose exactly one of the two factors for each $j = 0,...,n-1$. (We must take exactly $n$\nfactors because as a polynomial in $X$ with complex coefficients, $P(X) + Q(X)i$ has degree exactly $n$. We must\nchoose one for each $j$ to ensure that $P(X) + Q(X)i$ and\n$P(X) - Q(X)i$ are complex conjugates, so that $P,Q$ have\nreal coefficients.) Thus there are $2^n$ such pairs; multiplying by 2 to allow $P$ to have leading coefficient $-1$\nyields the desired result."
+      },
+      {
+        "category": "text_block",
+        "order": 18,
+        "text": "Remark: If we allow $P$ and $Q$ to have complex coefficients but still require $deg(P) > deg(Q)$, then the number of pairs increases to $2\\binom{2n}{n}$, as we may choose any $n$\nof the $2n$ factors of $X^{2n} + 1$ to use to form $P(X)+Q(X)i$."
+      },
+      {
+        "category": "text_block",
+        "order": 19,
+        "text": "B-5 For $n$ an integer, we have $ \\left\\lfloor \\frac{n}{k} \\right\\rfloor = \\frac{n-j}{k} $ for $j$ the unique\ninteger in $\\{0, ..., k-1\\}$ congruent to $n$ modulo $k$; hence"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 20,
+        "latex": "$$\n\\prod _ { j = 0 } ^ { k - 1 } \\left( \\left\\lfloor { \\frac { n } { k } } \\right\\rfloor - { \\frac { n - j } { k } } \\right) = 0 .\n$$"
+      },
+      {
+        "category": "text_block",
+        "order": 21,
+        "text": "By expanding this out, we obtain the desired polynomials $P_0(n),\\ldots,P_{k-1}(n)$."
+      },
+      {
+        "category": "text_block",
+        "order": 22,
+        "text": "Remark: Variants of this solution are possible that construct the $P_i$ less explicitly, using Lagrange interpolation\nor Vandermonde determinants."
+      },
+      {
+        "category": "text_block",
+        "order": 23,
+        "text": "B-6 (Suggested by Oleg Golberg) Assume $n \\geq 2$, or else the\nproblem is trivially false. Throughout this proof, any $C_i$\nwill be a positive constant whose exact value is immaterial. As in the proof of Stirling's approximation, we\nestimate for any fixed $c \\in \\mathbb{R}$,"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 24,
+        "latex": "$$\n\\sum _ { i = 1 } ^ { n } ( i + c ) \\log i = { \\frac { 1 } { 2 } } n ^ { 2 } \\log n - { \\frac { 1 } { 4 } } n ^ { 2 } + O ( n \\log n )\n$$"
+      },
+      {
+        "category": "page_number",
+        "order": null,
+        "text": "4"
+      }
+    ]
+  }
+}

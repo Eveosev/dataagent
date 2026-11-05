@@ -1,0 +1,38 @@
+## Analyzing the Problem
+
+This problem presents a scenario where a biker traverses a series of points with varying altitudes. The objective is to determine the highest altitude reached by the biker during the trip.
+
+## Identifying Relevant Information
+
+To solve this problem, we need to consider the following information:
+
+* **Starting altitude**: The biker starts at point 0 with an altitude of 0.
+* **Altitude gains**: An array `gain` is provided, where `gain[i]` represents the net gain in altitude between points `i` and `i+1`.
+* **Total points**: The total number of points is `n+1` (including the starting point).
+
+## Reasoning and Solution
+
+To find the highest altitude, we need to track the cumulative altitude gain as the biker progresses through the points. We can achieve this by iterating through the `gain` array and adding each element to a running total. The maximum value encountered in this process will represent the highest altitude reached.
+
+## Draft Answer
+
+Here's a draft solution in Pony:
+
+```pony
+fun largestAltitude(gain: Array[I32]): I32
+  var currentAltitude = 0
+  var highestAltitude = 0
+  for i in 0..gain.len - 1
+    currentAltitude += gain[i]
+    highestAltitude = max(highestAltitude, currentAltitude)
+  return highestAltitude
+end
+```
+
+This code iterates through the `gain` array, adding each element to `currentAltitude`. It then compares the updated `currentAltitude` with the existing `highestAltitude` and keeps the larger value. Finally, the function returns the `highestAltitude`. 
+
+## Additional Thoughts
+
+* This solution assumes that the biker can reach any point regardless of the altitude gain. If there are constraints on the biker's ability to climb, additional logic would be needed to account for those limitations.
+* The solution uses the `max` function, which is available in Pony. If using a language without a built-in `max` function, a conditional statement can be used to compare the values.
+* The code can be further optimized by using early termination. If the current altitude exceeds the highest altitude found so far, there's no need to continue iterating through the remaining elements. 

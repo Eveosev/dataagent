@@ -1,0 +1,22 @@
+{
+  "$comment": "generated from dataagent_contracts.core:EvidenceType; do not edit",
+  "$id": "dataagent-contracts/0.1/core/EvidenceType",
+  "anyOf": [
+    {
+      "enum": [
+        "source_text",
+        "extracted_value",
+        "computation_result",
+        "execution_receipt",
+        "human_judgment"
+      ],
+      "type": "string"
+    },
+    {
+      "description": "Dotted namespaced extension value",
+      "pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*)+$",
+      "type": "string"
+    }
+  ],
+  "title": "EvidenceType"
+}

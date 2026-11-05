@@ -1,0 +1,53 @@
+# 评测治理层包的来源快照。发布制品必须能追溯到这三个输入，而不是“当时的工作区”。
+schema = 1
+
+[upstream]
+repository = "AgentOS"
+kernel = "agent-kernel@f0fa521"
+research = "docs/research/dataagent-2026-11-03"
+
+[catalog]
+path = "docs/research/dataagent-2026-11-03/catalog/atomic-capability-catalog.json"
+sha256 = "fbd48e5a54ac5277ec7f8c5a7d623299bb91c5089b1f95456d392cb1fb81c3ae"
+snapshot_sha256 = "6aaa1c30084d3d6173e8da8b156fe52abfa0db9e70da9125c1a4496aa87d40da"
+atoms = 6
+families = { backbone = 5, compute = 1 }
+
+[packages]
+contracts = "dataagent-contracts@0.1.0"
+runtime = "dataagent-runtime@0.1.0"
+governance = "dataagent-governance@0.1.0"
+
+[runtime]
+python = ">=3.11,<3.14"
+uv = ">=0.5"
+
+# 可重建源码归档（reviewer r24 B9）：AgentOS 根目录不是 git 仓库，无法用
+# commit 固定来源；改用确定性的源码归档 + 逐文件 digest。归档内含三包源码
+# （contracts/runtime/governance 当前树、无 pyc）、bundle pyproject、Catalog
+# 与 08 号构建计划，以及归档自己的 MANIFEST.sha256（67 个内容文件）。
+# 归档字节级可复现：tar 条目按目录内文件先于子目录、名字排序，mtime/uid/gid/mode
+# 固定、gzip mtime=0，同一棵树重建两次 digest 一致（已验证）。
+# 重建/校验命令：python scripts/build_source_archive.py（--check 为可复现门禁）。
+[source_archive]
+path = "packaging/source-archive/governance-source-20261105.tar.gz"
+sha256 = "b70475d744d37c5d23dafb237acaae3fa06a5e4339edc7e9cfd7027d5d2336b7"
+manifest = "packaging/source-archive/governance-source-20261105.MANIFEST.sha256"
+files = 68
+created = "2026-11-05T00:00:00Z"
+inputs = [
+  "packages/capabilities/dataagent-contracts/src/dataagent_contracts",
+  "packages/capabilities/dataagent-runtime/src/dataagent_runtime",
+  "packages/capabilities/dataagent-governance/src/dataagent_governance",
+  "packages/capabilities/dataagent-governance/packaging/bundle/pyproject.toml",
+  "docs/research/dataagent-2026-11-03/catalog/atomic-capability-catalog.json",
+  "docs/research/dataagent-2026-11-03/08-governance-layer-build-plan.md",
+]
+reproducible = "tar: PAX, 名字排序, mtime=2026-11-05T00:00:00Z, uid=gid=0, mode=0644; gzip mtime=0"
+note = "AgentOS 根不是 git 仓库（git status exit 128，r24 已调查）；归档 digest 即本包的可验证来源锚点，kernel 侧仍按 upstream.kernel 记录"
+
+[notes]
+layout = "Catalog source_file 优先；其次 08 §3，最后 03-governance-layer.md"
+confirmation = "判据确认是 CLI 管理入口（confirm-criteria），不是 Catalog operation；确认绑定判据 digest 与 revision"
+egress = "vendor_api 且含敏感内容时至少 allow_masked；脱敏产物内容寻址保存为 MaskedArtifactRef"
+provenance = "bundle 一致性 ≠ 可重建来源（r24 B9）：以 source_archive 的归档 digest + 逐文件 manifest 为准"

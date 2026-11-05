@@ -1,0 +1,24 @@
+{
+  "source": "mitdbg/KramaBench",
+  "file": "dr-input/legal/legal_random.json",
+  "raw": {
+    "id": "legal-hard-15",
+    "query": "How many total Identity Theft reports were there in 2024 from cross-state Metropolitan Statistical Areas?",
+    "answer": 593524,
+    "runtime": 1,
+    "answer_type": "numeric_exact",
+    "data_sources": [
+      "State MSA Identity Theft data/*.csv"
+    ]
+  },
+  "case_id": "B07-krama-0490",
+  "expected": {
+    "kind": "answer",
+    "answer": 593524,
+    "answer_type": "numeric_exact",
+    "runtime_s": 1,
+    "data_sources": [
+      "State MSA Identity Theft data/*.csv"
+    ]
+  }
+}

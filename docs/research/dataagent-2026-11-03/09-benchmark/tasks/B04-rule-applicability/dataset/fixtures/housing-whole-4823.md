@@ -1,0 +1,17 @@
+# housing / whole
+
+## 制度原文
+
+[1] IN Code § 33-28-3-4 (2021)
+Sec. 4. (a) This section applies after June 30, 2021.(b) The small claims docket has jurisdiction over the following:(1) Civil actions in which the amount sought or value of the property sought to be recovered is not more than ten thousand dollars ($10,000). The plaintiff in a statement of claim or the defendant in a counterclaim may waive the excess of any claim that exceeds ten thousand dollars ($10,000) in order to bring it within the jurisdiction of the small claims docket.(2) Possessory actions between landlord and tenant in which the rent due at the time the action is filed does not exceed ten thousand dollars ($10,000).(3) Emergency possessory actions between a landlord and tenant under IC 32-31-6.[Pre-2004 Recodification Citation: 33-4-3-7.]As added by P.L.98-2004, SEC.7. Amended by P.L.162-2020, SEC.7; P.L.125-2021, SEC.1.
+
+[2] IN Code § 33-29-2-4 (2021)
+Sec. 4. (a) This section applies after June 30, 2021.(b) The small claims docket has jurisdiction over the following:(1) Civil actions in which the amount sought or value of the property sought to be recovered is not more than ten thousand dollars ($10,000). The plaintiff in a statement of claim or the defendant in a counterclaim may waive the excess of any claim that exceeds ten thousand dollars ($10,000) in order to bring it within the jurisdiction of the small claims docket.(2) Possessory actions between landlord and tenant in which the rent due at the time the action is filed does not exceed ten thousand dollars ($10,000).(3) Emergency possessory actions between a landlord and tenant under IC 32-31-6.[Pre-2004 Recodification Citation: 33-5-2-4.]As added by P.L.98-2004, SEC.8. Amended by P.L.162-2020, SEC.8; P.L.125-2021, SEC.2.
+
+## 事实
+
+
+
+## 问题
+
+Are eviction cases first heard in magistrates court?

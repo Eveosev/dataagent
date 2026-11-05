@@ -1,0 +1,52 @@
+{
+  "case_id": "B03-eb-0299",
+  "task_id": "B03",
+  "split_role": "regression",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://extractbench/docs/medium/gsa_mas_it_labor_0010.pdf",
+      "digest": null
+    },
+    {
+      "kind": "schema",
+      "ref": "fixtures/eb-medium-gsa_mas_it_labor_0010-schema.json",
+      "digest": null
+    },
+    {
+      "kind": "rules",
+      "ref": "fixtures/eb-medium-gsa_mas_it_labor_0010-rules.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-eb-0299.json"
+  },
+  "evidence": [
+    "bench://extractbench/docs/medium/gsa_mas_it_labor_0010.pdf",
+    "fixtures/eb-medium-gsa_mas_it_labor_0010-schema.json",
+    "fixtures/eb-medium-gsa_mas_it_labor_0010-rules.md"
+  ],
+  "tags": [
+    "extractbench",
+    "medium",
+    "tag:source:real",
+    "tag:challenge:T1.d",
+    "tag:structure:S2",
+    "tag:structure:S1",
+    "tag:length:medium",
+    "tag:domain:D3",
+    "fields:8"
+  ],
+  "source": "eb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

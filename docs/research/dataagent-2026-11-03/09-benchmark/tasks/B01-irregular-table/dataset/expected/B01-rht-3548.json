@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1912,
+  "table": "biology-table05",
+  "structure": "MultiColumnClassified",
+  "question_type": "Fact Checking",
+  "sub_type": "Inference-based Fact Checking",
+  "answer": "2016, 2017",
+  "cot": [
+    {
+      "Planning": "First, locate the row corresponding to “China (Mainland)” in the table and extract shrimp import values for the years 2013 to 2018."
+    },
+    {
+      "Planning": "Calculate the year-to-year differences in shrimp import values to identify changes between consecutive years."
+    },
+    {
+      "Planning": "Identify the two consecutive years with the largest positive difference (largest increase)."
+    }
+  ],
+  "case_id": "B01-rht-3548",
+  "expected": {
+    "kind": "answer",
+    "question": "Identify the two consecutive years with the largest increase in shrimp import value for China.",
+    "answer": "2016, 2017"
+  }
+}

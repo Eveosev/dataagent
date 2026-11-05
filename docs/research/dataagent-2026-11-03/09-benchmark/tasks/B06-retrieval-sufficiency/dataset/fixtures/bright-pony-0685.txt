@@ -1,0 +1,37 @@
+## Essential Problem: 
+
+The problem aims to determine the number of balls placed in the box with the highest ball count within a given range `[lowLimit, highLimit]`. Each ball is assigned to a box based on the sum of its digits. 
+
+## Relevant Information:
+
+1. **Range of Balls:** The problem defines a range of ball numbers from `lowLimit` to `highLimit`, inclusive. 
+2. **Box Assignment:** Each ball is assigned to a box whose number equals the sum of its digits. 
+3. **Goal:** Identify the box with the highest number of balls. 
+
+## Reasoning and Approach:
+
+1. **Iterate through balls:** We need to iterate through all the ball numbers within the range `[lowLimit, highLimit]`.
+2. **Calculate box assignment:** For each ball, calculate the sum of its digits to determine its assigned box number.
+3. **Maintain ball count:** Use a data structure, such as a hashmap, to keep track of the number of balls in each box. 
+4. **Identify the box with the maximum count:** After iterating through all the balls, find the box with the highest ball count stored in the hashmap. 
+5. **Return the maximum count:** Return the maximum ball count as the result.
+
+## Draft Answer:
+
+```pony
+fun countBalls(lowLimit: I32, highLimit: I32): I32
+    var boxCounts = HashMap[I32, I32]()
+    for i in lowLimit..highLimit
+        var sumOfDigits = 0
+        var currentNumber = i
+        while currentNumber > 0
+            sumOfDigits += currentNumber % 10
+            currentNumber /= 10
+        end
+        boxCounts[sumOfDigits] = boxCounts.getOrPut(sumOfDigits, 0) + 1
+    end
+    return boxCounts.values.max()
+end
+```
+
+This code iterates through the ball numbers, calculates the sum of digits for each ball, and updates the corresponding count in the `boxCounts` hashmap. Finally, it returns the maximum value from the `boxCounts` hashmap, representing the highest ball count in a single box. 

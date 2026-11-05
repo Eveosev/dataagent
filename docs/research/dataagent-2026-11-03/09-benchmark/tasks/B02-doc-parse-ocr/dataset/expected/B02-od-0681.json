@@ -1,0 +1,170 @@
+{
+  "source": "opendatalab/OmniDocBench",
+  "page_no": 1633,
+  "image": "jiaocaineedrop_chap5.pdf_4.jpg",
+  "attribute": {
+    "data_source": "exam_paper",
+    "language": "english",
+    "layout": "single_column",
+    "special_issue": [
+      "table_fewer_line",
+      "table_horizontal"
+    ],
+    "subset": "v1.5"
+  },
+  "reading_order": [
+    1,
+    2,
+    3,
+    5,
+    6,
+    7,
+    8,
+    9,
+    null,
+    null,
+    null,
+    null
+  ],
+  "blocks": [
+    {
+      "category": "table_caption",
+      "order": 1,
+      "text": "(d)"
+    },
+    {
+      "category": "table",
+      "order": 2,
+      "html": "<table border=\"1\"><tr><td></td><td>Parsing stack</td><td>Input</td><td>Action</td></tr><tr><td>1</td><td>$0</td><td>int x,y,z$</td><td>shift 3</td></tr><tr><td>2</td><td>$0int3</td><td>x,y,z$</td><td>"
+    },
+    {
+      "category": "figure_caption",
+      "order": 3,
+      "text": "(e)"
+    },
+    {
+      "category": "text_block",
+      "order": 5,
+      "text": "(f) The LALR(1) parsing table is the same as the SLR(1) parsing table shown in (c)."
+    },
+    {
+      "category": "title",
+      "order": 6,
+      "text": "Exercise 5.10"
+    },
+    {
+      "category": "text_block",
+      "order": 7,
+      "text": "We use similar language to that on page 210, with appropriate modifications:"
+    },
+    {
+      "category": "text_block",
+      "order": 8,
+      "text": "The SLR(1) parsing algorithm. Let s be the current state whose number is at the top of the parsing stack. Then actions are defined as follows:"
+    },
+    {
+      "category": "text_block",
+      "order": 9,
+      "text": "(1) If state s contains any item of the form $ A \\to\\alpha. X \\beta $ ,where X is a terminal, and X is the next token in the input string, then the action is to remove the current input token and push onto the stack the number of the state containing the item $ A \\to\\alpha X. \\beta $"
+    },
+    {
+      "category": "page_number",
+      "order": null,
+      "text": "Page 5"
+    },
+    {
+      "category": "header",
+      "order": null,
+      "text": "Chapter 5 Exercise Answers,"
+    },
+    {
+      "category": "header",
+      "order": null,
+      "text": "Compiler Construction: Principles and Practice"
+    },
+    {
+      "category": "footer",
+      "order": null,
+      "text": "https://www.coursehero.com/file/23512560/ch5ans/"
+    }
+  ],
+  "tables": [
+    {
+      "html": "<table border=\"1\"><tr><td></td><td>Parsing stack</td><td>Input</td><td>Action</td></tr><tr><td>1</td><td>$0</td><td>int x,y,z$</td><td>shift 3</td></tr><tr><td>2</td><td>$0int3</td><td>x,y,z$</td><td>reduce 2</td></tr><tr><td>3</td><td>$0T2</td><td>x,y,z$</td><td>shift 6</td></tr><tr><td>4</td><td>$0T2id6</td><td>,y,z$</td><td>reduce 5</td></tr><tr><td>5</td><td>$0T2V5</td><td>,y,z$</td><td>shift 7</td></tr><tr><td>6</td><td>$0T2V5,7</td><td>y,z$</td><td>shift 8</td></tr><tr><td>7</td><td>$0T2V5,7id8</td><td>,z$</td><td>reduce 4</td></tr><tr><td>8</td><td>$0T2V5</td><td>,z$</td><td>shift 7</td></tr><tr><td>9</td><td>$0T2V5,7</td><td>z$</td><td>shift 8</td></tr><tr><td>10</td><td>$0T2V5,7id8</td><td>$</td><td>reduce 4</td></tr><tr><td>11</td><td>$0T2V5</td><td>$</td><td>reduce 1</td></tr><tr><td>12</td><td>$0D1</td><td>$</td><td>accept</td></tr></table>",
+      "order": 2
+    }
+  ],
+  "case_id": "B02-od-0681",
+  "expected": {
+    "kind": "document",
+    "text": "(d)\n<table border=\"1\"><tr><td></td><td>Parsing stack</td><td>Input</td><td>Action</td></tr><tr><td>1</td><td>$0</td><td>int x,y,z$</td><td>shift 3</td></tr><tr><td>2</td><td>$0int3</td><td>x,y,z$</td><td>reduce 2</td></tr><tr><td>3</td><td>$0T2</td><td>x,y,z$</td><td>shift 6</td></tr><tr><td>4</td><td>$0T2id6</td><td>,y,z$</td><td>reduce 5</td></tr><tr><td>5</td><td>$0T2V5</td><td>,y,z$</td><td>shift 7</td></tr><tr><td>6</td><td>$0T2V5,7</td><td>y,z$</td><td>shift 8</td></tr><tr><td>7</td><td>$0T2V5,7id8</td><td>,z$</td><td>reduce 4</td></tr><tr><td>8</td><td>$0T2V5</td><td>,z$</td><td>shift 7</td></tr><tr><td>9</td><td>$0T2V5,7</td><td>z$</td><td>shift 8</td></tr><tr><td>10</td><td>$0T2V5,7id8</td><td>$</td><td>reduce 4</td></tr><tr><td>11</td><td>$0T2V5</td><td>$</td><td>reduce 1</td></tr><tr><td>12</td><td>$0D1</td><td>$</td><td>accept</td></tr></table>\n(e)\n(f) The LALR(1) parsing table is the same as the SLR(1) parsing table shown in (c).\nExercise 5.10\nWe use similar language to that on page 210, with appropriate modifications:\nThe SLR(1) parsing algorithm. Let s be the current state whose number is at the top of the parsing stack. Then actions are defined as follows:\n(1) If state s contains any item of the form $ A \\to\\alpha. X \\beta $ ,where X is a terminal, and X is the next token in the input string, then the action is to remove the current input token and push onto the stack the number of the state containing the item $ A \\to\\alpha X. \\beta $\nPage 5\nChapter 5 Exercise Answers,\nCompiler Construction: Principles and Practice\nhttps://www.coursehero.com/file/23512560/ch5ans/",
+    "tables": [
+      {
+        "html": "<table border=\"1\"><tr><td></td><td>Parsing stack</td><td>Input</td><td>Action</td></tr><tr><td>1</td><td>$0</td><td>int x,y,z$</td><td>shift 3</td></tr><tr><td>2</td><td>$0int3</td><td>x,y,z$</td><td>reduce 2</td></tr><tr><td>3</td><td>$0T2</td><td>x,y,z$</td><td>shift 6</td></tr><tr><td>4</td><td>$0T2id6</td><td>,y,z$</td><td>reduce 5</td></tr><tr><td>5</td><td>$0T2V5</td><td>,y,z$</td><td>shift 7</td></tr><tr><td>6</td><td>$0T2V5,7</td><td>y,z$</td><td>shift 8</td></tr><tr><td>7</td><td>$0T2V5,7id8</td><td>,z$</td><td>reduce 4</td></tr><tr><td>8</td><td>$0T2V5</td><td>,z$</td><td>shift 7</td></tr><tr><td>9</td><td>$0T2V5,7</td><td>z$</td><td>shift 8</td></tr><tr><td>10</td><td>$0T2V5,7id8</td><td>$</td><td>reduce 4</td></tr><tr><td>11</td><td>$0T2V5</td><td>$</td><td>reduce 1</td></tr><tr><td>12</td><td>$0D1</td><td>$</td><td>accept</td></tr></table>",
+        "order": 2
+      }
+    ],
+    "blocks": [
+      {
+        "category": "table_caption",
+        "order": 1,
+        "text": "(d)"
+      },
+      {
+        "category": "table",
+        "order": 2,
+        "html": "<table border=\"1\"><tr><td></td><td>Parsing stack</td><td>Input</td><td>Action</td></tr><tr><td>1</td><td>$0</td><td>int x,y,z$</td><td>shift 3</td></tr><tr><td>2</td><td>$0int3</td><td>x,y,z$</td><td>"
+      },
+      {
+        "category": "figure_caption",
+        "order": 3,
+        "text": "(e)"
+      },
+      {
+        "category": "text_block",
+        "order": 5,
+        "text": "(f) The LALR(1) parsing table is the same as the SLR(1) parsing table shown in (c)."
+      },
+      {
+        "category": "title",
+        "order": 6,
+        "text": "Exercise 5.10"
+      },
+      {
+        "category": "text_block",
+        "order": 7,
+        "text": "We use similar language to that on page 210, with appropriate modifications:"
+      },
+      {
+        "category": "text_block",
+        "order": 8,
+        "text": "The SLR(1) parsing algorithm. Let s be the current state whose number is at the top of the parsing stack. Then actions are defined as follows:"
+      },
+      {
+        "category": "text_block",
+        "order": 9,
+        "text": "(1) If state s contains any item of the form $ A \\to\\alpha. X \\beta $ ,where X is a terminal, and X is the next token in the input string, then the action is to remove the current input token and push onto the stack the number of the state containing the item $ A \\to\\alpha X. \\beta $"
+      },
+      {
+        "category": "page_number",
+        "order": null,
+        "text": "Page 5"
+      },
+      {
+        "category": "header",
+        "order": null,
+        "text": "Chapter 5 Exercise Answers,"
+      },
+      {
+        "category": "header",
+        "order": null,
+        "text": "Compiler Construction: Principles and Practice"
+      },
+      {
+        "category": "footer",
+        "order": null,
+        "text": "https://www.coursehero.com/file/23512560/ch5ans/"
+      }
+    ]
+  }
+}

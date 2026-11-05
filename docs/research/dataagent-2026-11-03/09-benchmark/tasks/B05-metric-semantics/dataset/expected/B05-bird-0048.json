@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 47,
+  "question": "I'm preparing a mailing campaign and need a list of public high schools in Los Angeles County that have more than 500 free or reduced-price meal recipients ages 5-17. By public high schools I mean every public high-school category in the meal program report - regular high schools, continuation high schools, and high schools in single-school districts - not just regular ones; middle and junior high schools don't count. For each school, please give me the school name exactly as listed in the school directory, plus the campus (physical) street address - not a mailing or post-office address - along with the city, state and ZIP code, each as a separate field. Schools sharing a name are separate schools, so one row per school. Please sort the list by school name.",
+  "evidence": "'Free or reduced-price meal recipients ages 5-17' refers to the count reported in the meal program report for students ages 5-17 receiving free or reduced-price meals.",
+  "gold_sql": "SELECT s.School AS school_name, s.Street, s.City, s.State, s.Zip FROM frpm f JOIN schools s ON f.CDSCode = s.CDSCode WHERE f.\"County Name\" = 'Los Angeles' AND f.\"School Type\" LIKE '%High School%' AND f.\"School Type\" NOT LIKE '%Junior%' AND f.\"FRPM Count (Ages 5-17)\" > 500 ORDER BY s.School, s.CDSCode",
+  "db_id": "california_schools",
+  "case_id": "B05-bird-0048",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT s.School AS school_name, s.Street, s.City, s.State, s.Zip FROM frpm f JOIN schools s ON f.CDSCode = s.CDSCode WHERE f.\"County Name\" = 'Los Angeles' AND f.\"School Type\" LIKE '%High School%' AND f.\"School Type\" NOT LIKE '%Junior%' AND f.\"FRPM Count (Ages 5-17)\" > 500 ORDER BY s.School, s.CDSCode",
+    "db_id": "california_schools",
+    "evidence": "'Free or reduced-price meal recipients ages 5-17' refers to the count reported in the meal program report for students ages 5-17 receiving free or reduced-price meals."
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 315,
+  "table": "economy-table04",
+  "structure": "ExternalSupply",
+  "question_type": "Data Analysis",
+  "sub_type": "Rudimentary Analysis",
+  "answer": "4322.87, 1890.55",
+  "cot": [
+    {
+      "planning": "First, we need to clean the table by excluding irrelevant rows and ensuring that the “Total” column contains only numeric values."
+    },
+    {
+      "planning": "Then, we calculate the mean (average) of the “Total” column to determine the central tendency of travel expenses."
+    },
+    {
+      "planning": "Next, we compute the standard deviation of the “Total” column to measure the variability of the expenses."
+    },
+    {
+      "planning": "Finally, we return the calculated mean and standard deviation values."
+    }
+  ],
+  "case_id": "B01-rht-1951",
+  "expected": {
+    "kind": "answer",
+    "question": "What is the mean and standard deviation of the “Total” column representing employee travel expenses?",
+    "answer": "4322.87, 1890.55"
+  }
+}

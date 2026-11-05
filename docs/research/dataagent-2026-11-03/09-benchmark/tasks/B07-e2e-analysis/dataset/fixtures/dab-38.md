@@ -1,0 +1,1 @@
+What percentage of transactions came from the top 2 merchants in amount volume?

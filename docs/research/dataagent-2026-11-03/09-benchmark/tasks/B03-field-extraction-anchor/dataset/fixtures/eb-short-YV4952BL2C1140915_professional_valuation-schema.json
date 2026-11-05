@@ -1,0 +1,880 @@
+{
+  "$defs": {
+    "OwnerInfo": {
+      "type": "object",
+      "title": "OwnerInfo",
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Full name of the loss-vehicle owner / insured / claimant as printed under the 'Owner' or 'Insured' label in the Claim Information block at the top of page 1. Examples: 'MARIA GARCIA', 'MICHAEL WILSON', 'MARILYN CUTLER'. Preserve casing exactly as printed. Do NOT include the mailing address, phone number, or email here — those have their own fields. Do NOT confuse with the policyholder if separately listed (use whichever name appears under the 'Owner'/'Insured' header). Do NOT confuse with the payee/dealer names that appear inside Comparable Vehicles."
+        },
+        "address": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Mailing address of the loss-vehicle owner as printed in the Claim Information / Owner block on page 1. Includes street + city + state + ZIP, joined with single spaces — flatten any line breaks into a single string. Example: '7007 HIGHVIEW TER APT 102 HYATTSVILLE, MD 20782'. Do NOT include the owner's name, phone, or email here. Do NOT confuse with the dealer addresses listed for each comparable vehicle."
+        },
+        "phone": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Phone number of the loss-vehicle owner as printed in the Owner / Insured block on page 1 (next to or below the owner's address). Preserve the exact format as printed including any country code, separators, parentheses, or extension. Example: '+1-903-6471427'. Do NOT confuse with the carrier's contact phone in the report header ('Prepared For ...'), nor with dealer phone numbers under Comparable Vehicles. Return null if not printed."
+        },
+        "email": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Email address of the loss-vehicle owner as printed in the Owner / Insured block on page 1. Lowercase as printed. Example: 'lola.g0127@gmail.com'. Return null if no email is printed. Do NOT confuse with carrier email or appraiser email."
+        }
+      }
+    },
+    "LossVehicle": {
+      "type": "object",
+      "title": "LossVehicle",
+      "properties": {
+        "year": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Model year of the loss vehicle, printed under the 'Year' column header in the Vehicle Information block on page 1. Four-digit integer (e.g. 2021, 2022). Do NOT confuse with valuation_report_date year or loss_date year. Do NOT confuse with the model years of the comparable vehicles."
+        },
+        "make": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Manufacturer / make of the loss vehicle, printed under the 'Make' column header in the Vehicle Information block on page 1. Examples: 'Acura', 'Nissan', 'Ford'. Title-case as printed. Do NOT confuse with the make field on comparable vehicles."
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Base model name of the loss vehicle, printed under the 'Model' column in the Vehicle Information block on page 1 — extract ONLY the model name token, not the full trim/body/engine description. Example: for 'ILX w/Technology & A-SPEC Pkg 4 Door Sedan 2.4L 4 Cyl Gas A FWD' return 'ILX'; for 'Altima S 4 Door Sedan 2.5L 4 Cyl Gas A FWD' return 'Altima'; for 'Kicks S 4 Door Utility 103\" WB 1.6L 4 Cyl Gas A FWD' return 'Kicks'. The remaining tokens belong in trim, body_style, engine, drivetrain. Do NOT include the trim package in this field."
+        },
+        "trim": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Trim / sub-model / package designation printed inside the Model field on the Vehicle Information block on page 1, immediately following the base model name. Capture verbatim as printed (preserve casing, punctuation, '&', and abbreviations). Examples: 'w/Technology & A-SPEC Pkg', 'S', 'S'. Look for the same trim restated on the 'Loss vehicle:' lines that appear above each major section (e.g. 'Loss vehicle: 2021 Acura ILX l w/Technology & A-SPEC Pkg l 4 Door Sedan l 2.4L 4 Cyl Gas A FWD'). Do NOT include body_style/engine/drivetrain tokens. Do NOT confuse with the comparable vehicles' trim descriptions ('W/PREMIUM & A-SPEC PKG', etc.)."
+        },
+        "body_style": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Body style / body configuration string printed in the Model field of the Vehicle Information block, after the trim and before the engine/drivetrain. Examples: '4 Door Sedan', '4 Door Utility 103\" WB'. Preserve casing and inch marks. Do NOT include engine size, cylinder count, fuel type, or drivetrain here. Do NOT confuse with the comparable-vehicle body designators like '4D SDN'."
+        },
+        "engine": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Engine specification string from the Model field of the Vehicle Information block — includes displacement, cylinder count, fuel type, and aspiration indicator if printed. Examples: '2.4L 4 Cyl Gas A', '2.5L 4 Cyl Gas A', '1.6L 4 Cyl Gas A'. The trailing 'A' (automatic transmission marker) is part of this field as printed. Do NOT include drivetrain ('FWD'/'AWD'/etc) here."
+        },
+        "drivetrain": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Drivetrain designation from the Model field of the Vehicle Information block. Common values: 'FWD', 'AWD', '4WD', 'RWD', '2WD'. Capture exactly as printed in the loss-vehicle Model line — do NOT translate Mitchell's '2WD' notation used on comparables to 'FWD' or vice versa; report what is printed for the LOSS vehicle here."
+        },
+        "vin": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "17-character Vehicle Identification Number of the LOSS vehicle as printed under the 'VIN' label in the Vehicle Information block on page 1. Always exactly 17 uppercase alphanumeric characters (no 'I', 'O', or 'Q'). Example: '19UDE2F85MA000265'. Do NOT confuse with comparable_vehicles[].vin (which are masked with X's in the body of the report). The loss-vehicle VIN is the unmasked one."
+        },
+        "mileage": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Odometer reading of the loss vehicle in miles, printed under the 'Mileage' label in the Vehicle Information block on page 1. Integer with commas stripped — e.g. '51,114 miles' → 51114. Do NOT confuse with comparable_vehicles[].mileage. Do NOT confuse with the 'Typical Mileage for this vehicle' figure printed inside the Comparable Vehicle Information section (that is a market average, not the loss vehicle's odometer)."
+        },
+        "location": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Loss-vehicle location as printed under the 'Location' label in the Vehicle Information block on page 1. Usually a state + ZIP code (e.g. 'MD 20782') or a 'STATE ZIP' style token (e.g. 'AL 360661923'). Preserve exactly as printed. Do NOT confuse with the owner's mailing address."
+        },
+        "ext_color": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Exterior color of the loss vehicle, printed under the 'Ext Color' label in the Vehicle Information block on page 1. Examples: 'Majestic Black Pearl', 'Brilliant Silver Metallic'. Preserve casing exactly. Return null if not printed."
+        },
+        "license": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "License plate field of the loss vehicle, printed under the 'License' label in the Vehicle Information block on page 1. Often combines plate number + state + 'Exp.' date in one cell, e.g. 'vnp609, Texas, Exp. 07/2025'. Some reports show 'missing, Maryland' when the plate is unknown. Capture verbatim including punctuation. Return null only if the field is wholly absent (not when it says 'missing')."
+        },
+        "title_history": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Title history indicator from the 'Title History' label in the Vehicle Information block on page 1. Typically the single word 'Yes' or 'No' as printed. Preserve casing exactly as printed."
+        }
+      }
+    },
+    "ValuationSummary": {
+      "type": "object",
+      "title": "ValuationSummary",
+      "properties": {
+        "base_value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Base Value of the loss vehicle in USD, printed in the Valuation Summary block on page 1 under 'Loss Vehicle Adjustments → Base Value ='. Also restated as 'Base Value:' at the foot of the Comparable Vehicle Information table on a later page. Report as a number with cents (e.g. 23685.44). Strip dollar sign and thousands separators. Always positive. Do NOT confuse with Market Value (after adjustments) or Settlement Value."
+        },
+        "condition_adjustment": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Condition adjustment applied to the loss vehicle in USD, printed under 'Loss Vehicle Adjustments → Condition' in the Valuation Summary block on page 1. Use the SIGNED value the document conveys: if the report shows 'Condition +' with $20.20 → return +20.20; if it shows 'Condition -' with $393.43 → return -393.43. The sign comes from the +/- symbol next to the label, not from the dollar amount. Cross-check against the 'Condition Adjustment:' header in the dedicated Condition Adjustments section. Do NOT confuse with prior_damage_adjustment or aftermarket_parts_adjustment."
+        },
+        "prior_damage_adjustment": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Prior Damage adjustment applied to the loss vehicle in USD, printed under 'Loss Vehicle Adjustments → Prior Damage' in the Valuation Summary block on page 1. Signed per the +/- symbol next to the 'Prior Damage' label. Often 0.00. Do NOT confuse with condition_adjustment."
+        },
+        "aftermarket_parts_adjustment": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Aftermarket Parts adjustment applied to the loss vehicle in USD, printed under 'Loss Vehicle Adjustments → Aftermarket Parts' in the Valuation Summary block on page 1. Signed per the +/- symbol next to the label. Cross-check against the 'After Market Parts and OEM Equipment Adjustments' table later in the report — the sum of that table should match this number."
+        },
+        "refurbishment_adjustment": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Refurbishment adjustment applied to the loss vehicle in USD, printed under 'Loss Vehicle Adjustments → Refurbishment' in the Valuation Summary block on page 1. Signed per the +/- symbol next to the label. Often 0.00. Do NOT confuse with aftermarket_parts_adjustment."
+        },
+        "market_value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Market Value of the loss vehicle in USD, printed under 'Loss Vehicle Adjustments → Market Value =' in the Valuation Summary block on page 1. Equals base_value + condition_adjustment + prior_damage_adjustment + aftermarket_parts_adjustment + refurbishment_adjustment. Do NOT confuse with base_value (pre-adjustment) or settlement_value (post-tax/post-fees)."
+        },
+        "taxes": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Total taxes applied during settlement, printed under 'Settlement Adjustments → Taxes +' or e.g. '(3.100%) Tax +' in the Valuation Summary block on page 1. Positive number. If the report shows a percentage in parentheses with the label, ignore the percentage and capture only the dollar amount. Return null if there is no Tax line at all."
+        },
+        "fees": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Total fees applied during settlement, printed under 'Settlement Adjustments → Fees +' in the Valuation Summary block on page 1. Positive number. Note some reports break out individual fees (e.g. 'TITLE FEE' line under a 'Settlement Adjustments' detail table later in the doc) but this field captures the aggregate Fees line in the summary. Return null if there is no Fees line in the summary block."
+        },
+        "deductible": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Insurance deductible withheld from settlement, printed under 'Settlement Adjustments → Deductible -' in the Valuation Summary block on page 1. Return as a POSITIVE number (the magnitude withheld); the document's '-' sign indicates it is being subtracted from market value. Return null if no Deductible line is present."
+        },
+        "settlement_adjustment_post_tax": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Post-tax settlement adjustment, printed under 'Settlement Adjustments → Settlement Adjustment (Post-Tax) +' in the Valuation Summary block on page 1. Signed per +/- on the label. Return null if no such line exists."
+        },
+        "settlement_value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Final Settlement Value of the loss vehicle in USD, printed as the large 'Settlement Value: $X,XXX.XX' figure on page 1 and restated under 'Settlement Adjustments → Settlement Value ='. This is the payout total. Always positive. Do NOT confuse with market_value or base_value."
+        }
+      }
+    },
+    "EquipmentAdjustment": {
+      "type": "object",
+      "title": "EquipmentAdjustment",
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Equipment / option name on this adjustment row inside a single comparable vehicle's detail block. STRICT INCLUSION RULE: the row label MUST begin with a bracketed option code such as '[L94]', '[N95]', '[B10]', '[B92]', '[N93]' followed by descriptive uppercase text (e.g. '[N95] CENTER ARMREST W/STORAGE', '[B92] SPLASH GUARDS GRAIN (4 PIECE)', '[L94] FLOOR MATS/TRUNK MAT/HIDEAWAY NET'). EXCLUSION RULE: NEVER include rows whose label is one of the generic adjustment types — 'Mileage', 'Vehicle Configuration Adjustment', 'Projected Sold Adjustment', 'Total Adjustments', 'Adjusted Price'. Those generic rows have dedicated top-level fields on the comparable (mileage_adjustment_amount, vehicle_configuration_adjustment_amount, projected_sold_adjustment_amount, total_adjustments, adjusted_value) and must NOT appear in equipment_adjustments. Equipment rows always appear UNDER a grey 'Equipment' sub-header inside the comparable's adjustment table; if no such sub-header is present, equipment_adjustments must be null or an empty list. Preserve the bracketed option code prefix exactly as printed."
+        },
+        "loss_vehicle_value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Value printed in the 'Loss Vehicle' column for this equipment row inside the comparable's detail block. Typically 'Yes' / 'No' / blank. Preserve casing exactly. Return null only if the cell is empty."
+        },
+        "this_vehicle_value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Value printed in the 'This Vehicle' column for this equipment row inside the comparable's detail block. Typically 'Yes' / 'No' / blank. Preserve casing exactly."
+        },
+        "amount": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Dollar amount printed in the 'Amount' column for this equipment row. Signed: a leading '-' or parenthesized value → negative number. Example: '-$210.21' → -210.21."
+        }
+      }
+    },
+    "ComparableVehicle": {
+      "type": "object",
+      "title": "ComparableVehicle",
+      "properties": {
+        "row_number": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Sequential row number of the comparable vehicle as printed in the '#' column of the Comparable Vehicle Information summary table AND as the large boxed number to the left of each comparable's detail header. Starts at 1. Use this row_number to align the summary-table row with the matching per-comparable detail block."
+        },
+        "vehicle_description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Full vehicle description string as printed for this comparable. Two places carry it: (1) the 'Comparable Vehicle Information' summary table's 'Vehicle Description' column at the top of the Comparable section, and (2) the bold header above each per-comparable detail block in the 'Comparable Vehicles' section. ALWAYS use the form printed in the SUMMARY TABLE — capture verbatim, preserve uppercase and ALL spacing exactly as printed there (the detail-block header may add or omit spaces around tokens like '1.6NORMAL', 'A 2WD'/'A2WD' due to OCR, but the summary table is the canonical form). Examples of valid values: '2021 ACURA ILX W/PREMIUM & A-SPEC PKG 4D SDN 4 2.4NORMAL GAS A 2WD', '2021 NISSAN KICKS S 4D SUV 4 1.6NORMAL GAS A 2WD', '2022 NISSAN ALTIMA S 4D SDN 4 2.5 NORMAL GAS A2WD'. Do NOT split into make/model/trim — keep the full description as a single string verbatim."
+        },
+        "vin": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "VIN of this comparable vehicle as printed under the 'VIN' label in the comparable's detail block. Usually masked with trailing X's for privacy, e.g. '19UDE2F81MAXXXXXX', '3N1CP5BV7MLXXXXXX'. Occasionally fully unmasked (17 alphanumerics). Capture exactly as printed — do NOT alter the X's, do NOT pad or truncate. This is the identity_key for the comparable_vehicles list. Do NOT confuse with the loss vehicle's VIN."
+        },
+        "stock_no": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Dealer's stock number for this comparable vehicle, printed under the 'Stock No' label in the comparable's detail block. Example values: 'KMB250542LA', '27775103', '001545', 'T099805A'. Preserve casing/leading zeros exactly. Frequently blank — return null if not printed."
+        },
+        "listing_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Listing Date for this comparable as printed under 'Listing Date' in the comparable's detail block. MM/DD/YYYY format as printed (e.g. '03/07/2026', '01/08/2026'). Preserve original format; do NOT reformat. Do NOT confuse with the loss-vehicle dates (loss_date / valuation_report_date) on page 1."
+        },
+        "zip_postal_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "ZIP / postal code printed under 'ZIP/Postal Code' for this comparable, in both the summary table 'Location' column and the per-comparable detail block 'ZIP/Postal Code' label. US 5-digit, occasionally 9-digit with hyphen. Capture as a string (preserve leading zeros). Examples: '22044', '20879'. Do NOT confuse with the loss-vehicle location ZIP from page 1."
+        },
+        "distance_from_loss_vehicle_miles": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Numeric distance in miles from this comparable's location to the loss vehicle, printed under 'Distance From Loss Vehicle' in the summary table and restated in the per-comparable detail block. Extract ONLY the integer/number — strip the 'miles' unit suffix. Example: '12 miles' → 12; '105 miles' → 105. Do NOT confuse with the Search Radius value (printed at the very top of the Comparable Vehicle Information section)."
+        },
+        "source": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Source / listing channel for this comparable vehicle, printed under the 'Source' label inside the comparable's detail block. Capture ONLY the top-line source descriptor as printed on the first line under 'Source'. Examples: 'DEALER SALE - COX AUTOMOTIVE', 'DEALER WEB LISTING - CARS.COM', 'FRANCHISE SALE - J.D. POWER AND ASSOCIATES', 'DEALER WEB LISTING - AUTOTRADER.COM', 'DEALER SALE - VIN10', 'DEALER SALE - BUILDSHEET - COX AUTOMOTIVE'. Preserve uppercase exactly. Do NOT include the dealer name/address/phone lines below the source line — those go in dealer_name / dealer_address / dealer_phone."
+        },
+        "dealer_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Selling-dealer name printed in the Source block of THIS comparable's detail block, on the line(s) immediately below the source descriptor and contained inside the same bordered Source cell. Examples: 'MERCEDES-BENZ OF CATONSVILLE', 'CARMAX WHITE MARSH', '1 US MOTORS', 'CMAS TOYOTA OF LEXINGTON PARK', 'CAVENDER\\'S AUTO SALES & LEASING', 'NISSAN OF LEWISVILLE - NEW OWNER'. CRITICAL: only populate this field if the dealer name physically appears within this comparable's own Source cell — typically DEALER WEB LISTING channels have a dealer block, while FRANCHISE SALE - J.D. POWER AND ASSOCIATES, DEALER SALE - COX AUTOMOTIVE, DEALER SALE - VIN10, and DEALER SALE - BUILDSHEET - * channels have NO dealer block. Return null when the Source cell contains ONLY the source descriptor with no dealer block below it. Do NOT borrow the dealer name from an adjacent comparable. Do NOT include street address, city/state, or phone here."
+        },
+        "dealer_address": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Selling-dealer street address (street + city + state + ZIP) printed in the Source block of the per-comparable detail block, below the dealer name when present. Flatten multi-line addresses into a single string with single-space joins. Example: '6631 BALTIMORE NATIONAL PIKE BALTIMORE MD 21228'. Do NOT include dealer phone, source descriptor, or dealer name. Return null if no dealer address is printed."
+        },
+        "dealer_phone": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Selling-dealer phone number printed in the Source block of the per-comparable detail block, on the last line under Source when present. Preserve formatting (parentheses, hyphens). Example: '410-788-7744', '301-863-7555'. Return null if no dealer phone is printed."
+        },
+        "price": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Pre-adjustment list or sold price of this comparable in USD, printed at the upper right of the per-comparable detail block (next to 'Sold Price:' or 'List Price:'), and also in the 'Price' column of the summary table. Strip dollar sign and thousands separator. Example: '$24,966.00' → 24966.00. Always positive. Do NOT confuse with adjusted_value (post-adjustment) or with the Base Value at the bottom of the table."
+        },
+        "price_type": {
+          "type": "string",
+          "enum": [
+            "Sold Price",
+            "List Price"
+          ],
+          "description": "Whether the 'price' field is a Sold Price or List Price, indicated by the label next to the price in the per-comparable detail block ('Sold Price:' vs 'List Price:'). Also indicated underneath the price in the summary table ('Sold Price' or 'List Price' as a sub-label). Use exactly 'Sold Price' or 'List Price' (Title Case). Cross-check both locations agree."
+        },
+        "adjusted_value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Adjusted Price (a.k.a. Adjusted Value) of this comparable in USD AFTER all per-comparable adjustments — printed both in the summary table 'Adjusted Value' column AND at the bottom of the per-comparable detail block as 'Adjusted Price:'. Example: '$24,549.61' → 24549.61. Always positive. The base_value of the loss vehicle equals the average of all comparable_vehicles[].adjusted_value."
+        },
+        "total_adjustments": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Sum of all adjustments applied to this comparable, printed as 'Total Adjustments:' at the bottom of the per-comparable detail block (just above 'Adjusted Price'). Signed: '-$416.39' → -416.39; '$2,322.93' → 2322.93. Equals (adjusted_value − price)."
+        },
+        "loss_vehicle_mileage_displayed": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The loss vehicle's mileage as RESTATED inside this comparable's per-comparable adjustment table 'Loss Vehicle' column on the 'Mileage' row. Should equal the top-level loss_vehicle.mileage in every comparable on the same report. Example: 51114. Capture as integer with commas stripped. Return null only if the row is absent."
+        },
+        "this_vehicle_mileage": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Odometer reading of THIS comparable vehicle, printed in the 'This Vehicle' column on the 'Mileage' adjustment row inside the per-comparable detail block, AND in the summary table 'Mileage' column. Integer with commas stripped. Example: '34,442' → 34442. Do NOT confuse with the loss_vehicle.mileage (loss_vehicle_mileage_displayed) printed alongside it for comparison."
+        },
+        "mileage_adjustment_amount": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Dollar adjustment amount printed in the 'Amount' column on the 'Mileage' row of this comparable's adjustment table. Signed: '-$1,884.77' → -1884.77; '$1,104.81' → 1104.81. Captures only this single row's amount, NOT the total_adjustments. Return null if no Mileage row exists for this comparable."
+        },
+        "vehicle_configuration_adjustment_amount": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Dollar adjustment amount printed in the 'Amount' column on the 'Vehicle Configuration Adjustment' row of this comparable's adjustment table. Signed (per leading '-' or parentheses). Example: '$1,468.38' → 1468.38. Return null if this row is absent."
+        },
+        "projected_sold_adjustment_amount": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Dollar adjustment amount printed in the 'Amount' column on the 'Projected Sold Adjustment' row of this comparable's adjustment table. Signed. Example: '-$550.00' → -550.00; '$0.00' → 0.00. This row is typically present only for List-Price comparables (i.e. price_type='List Price'). Return null if the row is absent."
+        },
+        "equipment_adjustments": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/EquipmentAdjustment"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Ordered list of per-option Equipment rows inside this comparable's adjustment table, under the 'Equipment' sub-header (when present). Each entry corresponds to one row whose label is a bracketed option code (e.g. '[N95] CENTER ARMREST W/STORAGE'). Return null OR an empty list if no Equipment sub-section appears for this comparable. Do NOT lump the generic Mileage / Vehicle Configuration Adjustment / Projected Sold Adjustment rows in here — those have dedicated top-level fields on the comparable."
+        },
+        "comparable_vehicle_option_details": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Free-text content of the explicit 'Comparable Vehicle Option Details:' annotation block printed below the per-comparable detail block (this label appears verbatim in the document as a section header). Content is a comma-separated list of bracketed option codes each followed by the descriptive option name in uppercase (e.g. '[L92] CARPETED FLOOR MATS W/CARGO MAT, [N95] CENTER ARMREST W/STORAGE, [B92] SPLASH GUARDS GRAIN (4 PIECE), [N93] DOOR SILL PLATES', or '[L94] FLOOR MATS/TRUNK MAT/HIDEAWAY NET, [B10] BODY-COLORED SPLASH GUARDS'). Capture the full comma-separated string verbatim. Return null when no 'Comparable Vehicle Option Details:' header is present below the comparable's detail block (most comparables do not have it). Do NOT fabricate this field from the stock number, source, or any other text — a value here must literally consist of one or more [XXX] codes paired with descriptive text. A bare stock number like '[001545]' or '[T099805A]' (no descriptive uppercase suffix) is NOT a valid option_details value — return null in that case."
+        }
+      }
+    }
+  },
+  "properties": {
+    "claim_number": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Unique claim identifier assigned by the insurance carrier, printed under the 'Claim Number' label in the Claim Information block at the top of page 1 (and restated in the page footer as 'Claim # XXX'). Capture exactly as printed including all hyphens and leading zeros. Examples: '26-934652364-02', '26-247950708-01', 'A0001206647-01'. Do NOT confuse with policy_number, valuation_report_id, or any VIN."
+    },
+    "policy_number": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Insurance policy number printed under the 'Policy Number' label in the Claim Information block on page 1. Frequently blank in these reports — return null when the field is empty. Example values when present: '19002777540'. Do NOT confuse with claim_number or valuation_report_id."
+    },
+    "loss_type": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Type of loss covered by the claim, printed under the 'Loss Type' label in the Claim Information block on page 1. Examples: 'LIABILITY', 'COMPREHENSIVE', 'COLLISION', 'UNKNOWN'. Preserve casing exactly as printed (typically all caps)."
+    },
+    "loss_date": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Date of the loss event, printed under the 'Loss Date' label in the Claim Information block on page 1. MM/DD/YYYY format as printed. Example: '04/03/2026'. Do NOT confuse with reported_date or valuation_report_date."
+    },
+    "reported_date": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Date the loss was reported to the carrier, printed under the 'Reported Date' label in the Claim Information block on page 1. MM/DD/YYYY as printed. May equal the loss_date. Do NOT confuse with valuation_report_date."
+    },
+    "valuation_report_date": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Date this valuation report itself was generated, printed under the 'Valuation Report Date' label in the Claim Information block on page 1. MM/DD/YYYY as printed. Do NOT confuse with loss_date or reported_date."
+    },
+    "valuation_report_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Unique ID of this valuation report, printed under the 'Valuation Report ID' label in the Claim Information block on page 1. Numeric string — preserve as printed including any leading zeros. Examples: '1023958989', '1023974415', '15448302'. Do NOT confuse with claim_number, policy_number, or version_number."
+    },
+    "version_number": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Version number of this valuation report, printed under the 'Version Number' label in the Claim Information block on page 1. Small integer (e.g. 1, 2, 3). Do NOT confuse with valuation_report_id."
+    },
+    "prepared_for": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Carrier / customer name printed on the 'Prepared For ...' line of the report header at the top of page 1, between the 'Vehicle Valuation Report' title and the body. Capture the full carrier name string verbatim (Title-Case as printed). Examples: 'Progressive Group of Insurance Companies', 'ALFA Insurance Company'. Do NOT include any trailing phone number from the same line. Do NOT confuse with the loss-vehicle owner."
+    },
+    "prepared_for_phone": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Carrier contact phone number printed on the 'Prepared For ...' header line on page 1, immediately after the carrier name (when present). Preserve format. Example: '(800) 321-9843'. Return null if no phone is on that header line."
+    },
+    "owner": {
+      "$ref": "#/$defs/OwnerInfo",
+      "description": "Loss-vehicle owner / insured / claimant block from the 'Owner' or 'Insured' cell in the Claim Information block on page 1. Object with name, address, phone, email sub-fields. The label can be either 'Owner' or 'Insured' (Mitchell varies per carrier) — treat both as identifying this person."
+    },
+    "loss_vehicle": {
+      "$ref": "#/$defs/LossVehicle",
+      "description": "Loss-vehicle identification block sourced from the 'Vehicle Information' section on page 1. The model line is a concatenated string the schema decomposes into model + trim + body_style + engine + drivetrain — read the 'Loss vehicle: YYYY MAKE MODEL l TRIM l BODY l ENGINE+DRIVETRAIN' line that appears at the top of every subsequent section to disambiguate boundaries."
+    },
+    "valuation_summary": {
+      "$ref": "#/$defs/ValuationSummary",
+      "description": "Loss-vehicle Valuation Summary block from page 1 — includes Base Value, the four Loss Vehicle Adjustments (Condition, Prior Damage, Aftermarket Parts, Refurbishment), Market Value, Settlement Adjustments (Taxes, Fees, Deductible, Post-Tax adjustment), and the final Settlement Value."
+    },
+    "search_radius_miles": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Numeric value of the 'Search Radius used for this valuation: X miles from loss vehicle zip/postal code.' line at the top of the Comparable Vehicle Information section. Integer (miles), example: 75 or 300. Do NOT confuse with the per-comparable distance_from_loss_vehicle_miles."
+    },
+    "typical_mileage_for_this_vehicle": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Numeric value of the 'Typical Mileage for this vehicle: X miles' line at the top of the Comparable Vehicle Information section — represents the expected/market-average mileage for this year/make/model, NOT the loss vehicle's own odometer. Strip commas + 'miles'. Examples: 45000, 58000. Do NOT confuse with loss_vehicle.mileage."
+    },
+    "overall_condition": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Loss-vehicle overall condition rating as printed under 'Overall Condition:' in the Condition Adjustments section. String as printed — preserves the numeric grade and label (e.g. '3.02-Good', '3.00-Good'). Do NOT split into number and label. Do NOT confuse with 'Typical Vehicle Condition' (a separate field below)."
+    },
+    "typical_vehicle_condition": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Typical vehicle condition value as printed under 'Typical Vehicle Condition:' in the Condition Adjustments section — represents the year/make/model norm. Capture exactly as printed (e.g. '3.00'). Do NOT confuse with overall_condition (which is for THIS loss vehicle)."
+    },
+    "comparable_vehicles": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/ComparableVehicle"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Ordered list of comparable vehicles used to compute the loss-vehicle Base Value. The canonical source is the 'Comparable Vehicle Information' summary table (one row per comparable, columns: #, Vehicle Description, Mileage, Location, Distance From Loss Vehicle, Price, Adjusted Value), with each row corresponding 1:1 to a per-comparable 'Comparable Vehicles' detail block later in the same report. Order MUST match the '#' column ascending (1, 2, 3, ...). Do NOT include header rows, the 'Base Value:' total row, or the 'Sub-Model Comparison' table (which is a separate methodology section). Include EVERY numbered row in the summary table — long reports may have 14+ comps; missing any is a 'don't-drop' failure."
+    }
+  },
+  "title": "MitchellVehicleValuationReport",
+  "type": "object"
+}

@@ -1,0 +1,27 @@
+{
+  "source": "beaverbench/beaver-query",
+  "id": "nova_569",
+  "db": "nova",
+  "question": "For each instance power state, show the average, variance, and standard deviation (using STDDEV only and never STDDEV_POP) of the instance memory (in MB) for instances that have a non-empty network_info entry in the instance info cache, restricted to instances running on host \"blaze8-12\". Do not return any rounded answers.",
+  "sql": "SELECT i.power_state, AVG(i.memory_mb) AS avg_memory_mb, VARIANCE(i.memory_mb) AS memory_mb_variance, STDDEV(i.memory_mb) AS memory_mb_stddev FROM INSTANCE_EXTRA ie JOIN INSTANCES i ON ie.instance_uuid = i.uuid JOIN INSTANCE_INFO_CACHES iic ON i.uuid = iic.instance_uuid WHERE iic.network_info IS NOT NULL AND iic.network_info <> '' AND i.host = 'blaze8-12' GROUP BY i.power_state ORDER BY memory_mb_variance DESC;",
+  "tables": "[\"INSTANCE_EXTRA\", \"INSTANCES\", \"INSTANCE_INFO_CACHES\"]",
+  "join_keys": "[[\"INSTANCE_EXTRA.INSTANCE_UUID\", \"INSTANCES.UUID\"], [\"INSTANCES.UUID\", \"INSTANCE_INFO_CACHES.INSTANCE_UUID\"]]",
+  "column_mapping": "{\"instance power state\": [\"INSTANCES.POWER_STATE\"], \"instance memory (in MB)\": [\"INSTANCES.MEMORY_MB\"], \"non-empty network_info entry\": [\"INSTANCE_INFO_CACHES.NETWORK_INFO\"], \"instance info cache\": [\"INSTANCE_INFO_CACHES.INSTANCE_UUID\"], \"instances\": [\"INSTANCES.UUID\"], \"instance uuid\": [\"INSTANCE_EXTRA.INSTANCE_UUID\", \"INSTANCES.UUID\", \"INSTANCE_INFO_CACHES.INSTANCE_UUID\"]}",
+  "domain_knowledge": "[\"Host \\\"blaze8-12\\\" is predicated by \\\"instances.host = 'blaze8-12'\\\"\"]",
+  "sub_questions": "[]",
+  "sub_sqls": "[]",
+  "category": "domain-specific query",
+  "detailed_category": "base",
+  "case_id": "B05-beaver-0551",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT i.power_state, AVG(i.memory_mb) AS avg_memory_mb, VARIANCE(i.memory_mb) AS memory_mb_variance, STDDEV(i.memory_mb) AS memory_mb_stddev FROM INSTANCE_EXTRA ie JOIN INSTANCES i ON ie.instance_uuid = i.uuid JOIN INSTANCE_INFO_CACHES iic ON i.uuid = iic.instance_uuid WHERE iic.network_info IS NOT NULL AND iic.network_info <> '' AND i.host = 'blaze8-12' GROUP BY i.power_state ORDER BY memory_mb_variance DESC;",
+    "sub_sqls": "[]",
+    "db": "nova",
+    "tables": "[\"INSTANCE_EXTRA\", \"INSTANCES\", \"INSTANCE_INFO_CACHES\"]",
+    "join_keys": "[[\"INSTANCE_EXTRA.INSTANCE_UUID\", \"INSTANCES.UUID\"], [\"INSTANCES.UUID\", \"INSTANCE_INFO_CACHES.INSTANCE_UUID\"]]",
+    "column_mapping": "{\"instance power state\": [\"INSTANCES.POWER_STATE\"], \"instance memory (in MB)\": [\"INSTANCES.MEMORY_MB\"], \"non-empty network_info entry\": [\"INSTANCE_INFO_CACHES.NETWORK_INFO\"], \"instance info cache\": [\"INSTANCE_INFO_CACHES.INSTANCE_UUID\"], \"instances\": [\"INSTANCES.UUID\"], \"instance uuid\": [\"INSTANCE_EXTRA.INSTANCE_UUID\", \"INSTANCES.UUID\", \"INSTANCE_INFO_CACHES.INSTANCE_UUID\"]}",
+    "category": "domain-specific query",
+    "db_archive": "bench://beaver-table/beaver_db.zip"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "source": "beaverbench/beaver-query",
+  "id": "dw_302",
+  "db": "dw",
+  "question": "List the minimum department code and the total number of unique department names for degree-granting courses in the School of Engineering, excluding courses from the Physics department, along with the corresponding subject code descriptions. Do not return any rounded answers.",
+  "sql": "WITH inner_cte AS ( SELECT MIN(ssc.DEPARTMENT_CODE) AS min_department_code, COUNT(DISTINCT ssc.DEPARTMENT_NAME) AS total_unique_departments FROM SIS_SUBJECT_CODE ssc JOIN SIS_COURSE_DESCRIPTION scd ON ssc.SUBJECT_CODE = scd.COURSE WHERE scd.SCHOOL_NAME = 'Engineering' AND scd.IS_DEGREE_GRANTING = 'Y' AND ssc.DEPARTMENT_NAME != 'Physics' ) SELECT inner_cte.min_department_code, inner_cte.total_unique_departments, ssc.SUBJECT_CODE_DESC FROM inner_cte JOIN SIS_SUBJECT_CODE ssc ON ssc.DEPARTMENT_CODE = inner_cte.min_department_code;",
+  "tables": "[\"SIS_SUBJECT_CODE\", \"SIS_COURSE_DESCRIPTION\"]",
+  "join_keys": "[[\"SIS_COURSE_DESCRIPTION.COURSE\", \"SIS_SUBJECT_CODE.SUBJECT_CODE\"], [\"SIS_COURSE_DESCRIPTION.COURSE\", \"SIS_SUBJECT_CODE.COURSE_NUMBER\"]]",
+  "column_mapping": "{\"minimum department code\": [\"SIS_SUBJECT_CODE.DEPARTMENT_CODE\"], \"total number of unique department names\": [\"SIS_SUBJECT_CODE.DEPARTMENT_NAME\"], \"degree-granting courses\": [\"SIS_COURSE_DESCRIPTION.IS_DEGREE_GRANTING\"], \"School of Engineering\": [\"SIS_COURSE_DESCRIPTION.SCHOOL_NAME\"], \"Physics department\": [\"SIS_SUBJECT_CODE.DEPARTMENT_NAME\"], \"subject code descriptions\": [\"SIS_SUBJECT_CODE.SUBJECT_CODE_DESC\"]}",
+  "domain_knowledge": "[\"\\\"Physics\\\" is predicated by \\\"TABLE.DEPARTMENT_NAME = 'Physics'\\\"\", \"\\\"Physics\\\" is predicated by \\\"TABLE.DEPARTMENT_NAME = 'Physics'\\\"\"]",
+  "sub_questions": "[\"What is the minimum department code and the total number of unique department names for degree-granting courses in the School of Engineering, excluding courses from the Physics department?\"]",
+  "sub_sqls": "[\"SELECT MIN(ssc.DEPARTMENT_CODE) AS min_department_code, COUNT(DISTINCT ssc.DEPARTMENT_NAME) AS total_unique_departments FROM SIS_SUBJECT_CODE ssc JOIN SIS_COURSE_DESCRIPTION scd ON ssc.SUBJECT_CODE = scd.COURSE WHERE scd.SCHOOL_NAME = 'Engineering' AND scd.IS_DEGREE_GRANTING = 'Y' AND ssc.DEPARTMENT_NAME != 'Physics';\"]",
+  "category": "domain-specific complex query",
+  "detailed_category": "nested",
+  "case_id": "B05-beaver-0019",
+  "expected": {
+    "kind": "sql",
+    "sql": "WITH inner_cte AS ( SELECT MIN(ssc.DEPARTMENT_CODE) AS min_department_code, COUNT(DISTINCT ssc.DEPARTMENT_NAME) AS total_unique_departments FROM SIS_SUBJECT_CODE ssc JOIN SIS_COURSE_DESCRIPTION scd ON ssc.SUBJECT_CODE = scd.COURSE WHERE scd.SCHOOL_NAME = 'Engineering' AND scd.IS_DEGREE_GRANTING = 'Y' AND ssc.DEPARTMENT_NAME != 'Physics' ) SELECT inner_cte.min_department_code, inner_cte.total_unique_departments, ssc.SUBJECT_CODE_DESC FROM inner_cte JOIN SIS_SUBJECT_CODE ssc ON ssc.DEPARTMENT_CODE = inner_cte.min_department_code;",
+    "sub_sqls": "[\"SELECT MIN(ssc.DEPARTMENT_CODE) AS min_department_code, COUNT(DISTINCT ssc.DEPARTMENT_NAME) AS total_unique_departments FROM SIS_SUBJECT_CODE ssc JOIN SIS_COURSE_DESCRIPTION scd ON ssc.SUBJECT_CODE = scd.COURSE WHERE scd.SCHOOL_NAME = 'Engineering' AND scd.IS_DEGREE_GRANTING = 'Y' AND ssc.DEPARTMENT_NAME != 'Physics';\"]",
+    "db": "dw",
+    "tables": "[\"SIS_SUBJECT_CODE\", \"SIS_COURSE_DESCRIPTION\"]",
+    "join_keys": "[[\"SIS_COURSE_DESCRIPTION.COURSE\", \"SIS_SUBJECT_CODE.SUBJECT_CODE\"], [\"SIS_COURSE_DESCRIPTION.COURSE\", \"SIS_SUBJECT_CODE.COURSE_NUMBER\"]]",
+    "column_mapping": "{\"minimum department code\": [\"SIS_SUBJECT_CODE.DEPARTMENT_CODE\"], \"total number of unique department names\": [\"SIS_SUBJECT_CODE.DEPARTMENT_NAME\"], \"degree-granting courses\": [\"SIS_COURSE_DESCRIPTION.IS_DEGREE_GRANTING\"], \"School of Engineering\": [\"SIS_COURSE_DESCRIPTION.SCHOOL_NAME\"], \"Physics department\": [\"SIS_SUBJECT_CODE.DEPARTMENT_NAME\"], \"subject code descriptions\": [\"SIS_SUBJECT_CODE.SUBJECT_CODE_DESC\"]}",
+    "category": "domain-specific complex query",
+    "db_archive": "bench://beaver-table/beaver_db.zip"
+  }
+}

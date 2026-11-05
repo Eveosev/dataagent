@@ -1,0 +1,36 @@
+{
+  "case_id": "B01-mimo-0769",
+  "task_id": "B01",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "table",
+      "ref": "bench://mimotable/unzipped/data/chinese/spreadsheet/图片转文字-20240205221356_94.xlsx",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B01-mimo-0769.json"
+  },
+  "evidence": [
+    "bench://mimotable/unzipped/data/chinese/spreadsheet/图片转文字-20240205221356_94.xlsx#workbook"
+  ],
+  "tags": [
+    "chinese",
+    "single file, single sheet, complicate header",
+    "medium table",
+    "op:Lookup",
+    "op:Compare"
+  ],
+  "source": "mimo",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

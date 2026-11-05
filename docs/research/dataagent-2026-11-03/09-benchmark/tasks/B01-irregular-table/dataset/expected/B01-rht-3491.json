@@ -1,0 +1,32 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1855,
+  "table": "health-table18",
+  "structure": "MultiColumnClassified",
+  "question_type": "Visualization",
+  "sub_type": "ScatterChart Generation",
+  "answer": "[[6.60760963444225, 6.25618769408375, 6.28429077933615, 6.368879770696, 5.75739906580233, 6.29876296431081, 6.15135860463705, 6.06673908126751, 6.36827942254825], [4.72762050043944, 5.57518559029351, 3.84911098886513, 5.4735844071513, 5.39878879122804, 3.80756035333505, 3.72689565997511, 5.83027358641562, 4.99409766660162], [5.76358385126203, 3.38052608682116, 5.29781794278174, 6.19206081086993, 4.01551417560811, 5.47801619747675, 4.83587165064615, 3.99124969145348, 5.20089823960737]]\n",
+  "cot": [
+    {
+      "Planning": "First, we need to save the table as a CSV file to match the input format required by the code."
+    },
+    {
+      "Planning": "Then, we identify the unique “Sampler” categories to assign distinct colors for each."
+    },
+    {
+      "Planning": "Next, we create a scatter plot with “Log10 Recovery (Inoculation Control)” on the X-axis and “Log10 Recovery (Test Sample)” on the Y-axis."
+    },
+    {
+      "Planning": "We ensure that the points in the scatter plot are color-coded based on the “Sampler” and that the plot includes a legend and appropriate labels."
+    },
+    {
+      "Planning": "Finally, we output the Python code that generates this visualization."
+    }
+  ],
+  "case_id": "B01-rht-3491",
+  "expected": {
+    "kind": "answer",
+    "question": "Generate a scatter plot to visualize the relationship between “Log10 Recovery (Inoculation Control)” and “Log10 Recovery (Test Sample)” with points colored by “Sampler”.",
+    "answer": "[[6.60760963444225, 6.25618769408375, 6.28429077933615, 6.368879770696, 5.75739906580233, 6.29876296431081, 6.15135860463705, 6.06673908126751, 6.36827942254825], [4.72762050043944, 5.57518559029351, 3.84911098886513, 5.4735844071513, 5.39878879122804, 3.80756035333505, 3.72689565997511, 5.83027358641562, 4.99409766660162], [5.76358385126203, 3.38052608682116, 5.29781794278174, 6.19206081086993, 4.01551417560811, 5.47801619747675, 4.83587165064615, 3.99124969145348, 5.20089823960737]]\n"
+  }
+}

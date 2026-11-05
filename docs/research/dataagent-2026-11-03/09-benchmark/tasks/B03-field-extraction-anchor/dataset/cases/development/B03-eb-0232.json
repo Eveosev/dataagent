@@ -1,0 +1,52 @@
+{
+  "case_id": "B03-eb-0232",
+  "task_id": "B03",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://extractbench/docs/short/real_wyo_Niobrara_2024.pdf",
+      "digest": null
+    },
+    {
+      "kind": "schema",
+      "ref": "fixtures/eb-short-real_wyo_Niobrara_2024-schema.json",
+      "digest": null
+    },
+    {
+      "kind": "rules",
+      "ref": "fixtures/eb-short-real_wyo_Niobrara_2024-rules.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-eb-0232.json"
+  },
+  "evidence": [
+    "bench://extractbench/docs/short/real_wyo_Niobrara_2024.pdf",
+    "fixtures/eb-short-real_wyo_Niobrara_2024-schema.json",
+    "fixtures/eb-short-real_wyo_Niobrara_2024-rules.md"
+  ],
+  "tags": [
+    "extractbench",
+    "short",
+    "tag:source:synthetic",
+    "tag:challenge:T1.d",
+    "tag:structure:S2",
+    "tag:delivery:G1",
+    "tag:length:short",
+    "tag:domain:D3",
+    "fields:9"
+  ],
+  "source": "eb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

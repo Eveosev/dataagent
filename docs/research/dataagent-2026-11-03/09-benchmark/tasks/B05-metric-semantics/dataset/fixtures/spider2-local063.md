@@ -1,0 +1,1 @@
+Which product has the smallest change in sales share for each product from the top 20% of products by total sales between Q4 in 2019 and 2020 in US without any promotion?

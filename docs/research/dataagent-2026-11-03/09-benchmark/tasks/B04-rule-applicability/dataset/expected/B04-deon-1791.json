@@ -1,0 +1,29 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_b5606483",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_asked_term",
+    "statute_order_name_for_possession",
+    "statute_order_directs_possession_transfer",
+    "statute_execution_deadline_days",
+    "statute_reasonable_force_allowed",
+    "statute_uses_word_execution_as_process",
+    "court_order_to_authorities_for_possession",
+    "statutory_alias",
+    "term_used_to_refer_to_possession_order",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: Kansas\n    Focus year: 2021\n\n    Question: Is the term 'Execution for possession' used to refer to the order\n    from the court to the authorities to remove a tenant?\n*/\n\n% -------------------------\n% Scenario facts (question)\n% -------------------------\n\n% The user is asking about whether a specific term is used as the name for\n% the court's order directing authorities/process servers to remove a tenant.\nscenario_state(kansas).\nscenario_focus_year(2021).\nscenario_asked_term(execution_for_possession).\n\n% This helper succeeds when the factual statement being evaluated is in place.\n% (i.e., we are evaluating the meaning/usage of the asked term in this scenario.)\nscenario_statement :-\n    scenario_state(kansas),\n    scenario_focus_year(2021),\n    scenario_asked_term(execution_for_possession).\n\n% -----------------------------------------\n% Statute translation: KS Stat  61-3808\n% (2021) Writ of restitution\n% -----------------------------------------\n\n/*\nKS Stat  61-3808 (2021)\n(a) If judgment is entered against defendant for possession, court shall issue\n    (at plaintiff request) a writ of restitution directing an authorized process\n    server named in the writ to place plaintiff in possession.\n(b) Executed within 14 days after receipt; reasonable force may be used.\n(c) If stayed by appeal, delay execution; if premises restored to plaintiff,\n    then immediately place defendant back in possession.\n*/\n\n% The statute's name for the instrument/order issued by the court after judgment\n% for possession (at plaintiff request).\nstatute_order_name_for_possession(kansas, 2021, writ_of_restitution).\n\n% The statute describes the writ as directing an authorized person named in the writ\n% to place plaintiff in possession (i.e., the operative effect relevant to removal).\nstatute_order_directs_possession_transfer(kansas, 2021, writ_of_restitution).\n\n% Execution timing rule: executed within 14 days after receipt by the named person.\nstatute_execution_deadline_days(kansas, 2021, writ_of_restitution, 14).\n\n% The statute expressly allows reasonable force as necessary to execute the writ.\nstatute_reasonable_force_allowed(kansas, 2021, writ_of_restitution).\n\n% The statute uses the phrase \"execution\" only as \"execution of the writ\"\n% (not as a separate named order \"execution for possession\").\nstatute_uses_word_execution_as_process(kansas, 2021, writ_of_restitution).\n\n% ----------------------------------------------------\n% Reasoning helpers: \"used to refer to the order\"\n% ----------------------------------------------------\n\n% A \"court order to authorities/process server to remove tenant / restore possession\"\n% is captured here as the statute-defined order that directs possession transfer.\ncourt_order_to_authorities_for_possession(State, Year, OrderName) :-\n    statute_order_name_for_possession(State, Year, OrderName),\n    statute_order_directs_possession_transfer(State, Year, OrderName).\n\n% The term is \"used to refer to\" the order if it matches the statute's name for that order\n% OR if there is an explicit statutory alias recorded here.\n%\n% In this statute, no alias \"execution for possession\" is provided; the term used is\n% \"writ of restitution\". So we leave aliases empty.\nstatutory_alias(_State, _Year, _AliasTerm, _CanonicalOrder) :-\n    fail.\n\nterm_used_to_refer_to_possession_order(State, Year, Term) :-\n    court_order_to_authorities_for_possession(State, Year, Term),\n    !.\nterm_used_to_refer_to_possession_order(State, Year, Term) :-\n    statutory_alias(State, Year, Term, CanonicalOrder),\n    court_order_to_authorities_for_possession(State, Year, CanonicalOrder),\n    !.\nterm_used_to_refer_to_possession_order(_State, _Year, _Term) :-\n    fail.\n\n% -------------------------\n% housing_answer/1\n% -------------------------\n\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_state(State),\n    scenario_focus_year(Year),\n    scenario_asked_term(Term),\n    term_used_to_refer_to_possession_order(State, Year, Term),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n% -------------------------\n% Main / Entrypoint\n% -------------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-1791",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is the term 'Execution for possession' used to refer to the order from the court to the authorities to remove a tenant?"
+  }
+}

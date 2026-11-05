@@ -1,0 +1,26 @@
+{
+  "source": "mitdbg/KramaBench",
+  "file": "dr-input/environment/environment_random.json",
+  "raw": {
+    "id": "environment-hard-7",
+    "query": "What was the difference in bacterial exceedance rates (to 2 decimal places) for marine beach samples collected in 2023 between communities with more than 50% environmental justice (EJ) populations and those with less than 25% EJ populations?",
+    "answer": 10.87,
+    "answer_type": "numeric_exact",
+    "runtime": 0.1,
+    "data_sources": [
+      "environmental-justice-populations.csv",
+      "water-body-testing-2023.csv"
+    ]
+  },
+  "case_id": "B07-krama-0468",
+  "expected": {
+    "kind": "answer",
+    "answer": 10.87,
+    "answer_type": "numeric_exact",
+    "runtime_s": 0.1,
+    "data_sources": [
+      "environmental-justice-populations.csv",
+      "water-body-testing-2023.csv"
+    ]
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "case_id": "B03-eb-0334",
+  "task_id": "B03",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://extractbench/docs/medium/real_vg_reit2_full.pdf",
+      "digest": null
+    },
+    {
+      "kind": "schema",
+      "ref": "fixtures/eb-medium-real_vg_reit2_full-schema.json",
+      "digest": null
+    },
+    {
+      "kind": "rules",
+      "ref": "fixtures/eb-medium-real_vg_reit2_full-rules.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-eb-0334.json"
+  },
+  "evidence": [
+    "bench://extractbench/docs/medium/real_vg_reit2_full.pdf",
+    "fixtures/eb-medium-real_vg_reit2_full-schema.json",
+    "fixtures/eb-medium-real_vg_reit2_full-rules.md"
+  ],
+  "tags": [
+    "extractbench",
+    "medium",
+    "tag:source:synthetic",
+    "tag:challenge:T1.a",
+    "tag:challenge:T1.b",
+    "tag:structure:S1",
+    "tag:structure:S3",
+    "tag:delivery:G1",
+    "tag:length:medium",
+    "tag:domain:D1",
+    "fields:15"
+  ],
+  "source": "eb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

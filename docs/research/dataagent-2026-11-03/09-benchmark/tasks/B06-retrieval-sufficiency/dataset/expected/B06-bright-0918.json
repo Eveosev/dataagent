@@ -1,0 +1,29 @@
+{
+  "source": "xlangai/BRIGHT",
+  "query_id": "28",
+  "query": "## Converting Oracle's `DBMS_RANDOM.VALUE()` to Snowflake\n\nI can help you convert the provided Oracle SQL query to Snowflake, specifically focusing on replacing the `DBMS_RANDOM.VALUE()` function. \n\nHere's the breakdown:\n\n**1. Identify the essential problem:**\n\nThe primary issue is that Snowflake doesn't have a direct equivalent to Oracle's `DBMS_RANDOM.VALUE()` function. This function generates a random number between 0 and 1.\n\n**2. Step-by-step solution:**\n\nTo achieve the same functionality in Snowflake, we can utilize the `RAND()` function. It generates a random number between 0 and 1, similar to `DBMS_RANDOM.VALUE()`.\n\nHere's the converted Snowflake query:\n\n```sql\nSELECT emp_id, emp_name, emp_mob,\nCASE WHEN RAND() >= 0.85 THEN 'Y' ELSE 'N' END AS tag\nFROM eds_dwg.employee_data;\n```\n\n**3. Explanation:**\n\n- We replaced `DBMS_RANDOM.VALUE()` with `RAND()` to generate the random number.\n- The rest of the query remains the same, using the generated random number within the `CASE` statement to assign 'Y' or 'N' based on the condition.\n\n**Additional notes:**\n\n- Snowflake's `RAND()` function is deterministic, meaning it produces the same sequence of random numbers for the same seed value. This differs from Oracle's `DBMS_RANDOM.VALUE()`, which is non-deterministic.\n- If you require true non-deterministic randomness, consider using Snowflake's `SNOWFLAKE_SAMPLE` function or external tools like `RANDOM_BYTES`.\n\nI hope this explanation helps! \n",
+  "gold_ids": [
+    "snowflake_random_controlled_distribution/snowflake_controlled_distribution_0_1.txt",
+    "snowflake_random_controlled_distribution/snowflake_random_2_1.txt",
+    "snowflake_random_controlled_distribution/snowflake_controlled_distribution_4_1.txt"
+  ],
+  "gold_answer": "You can use Snowflake Data generation functions: [\nhttps://docs.snowflake.com/en/sql-reference/functions-data-generation.html\n](https://docs.snowflake.com/en/sql-reference/functions-data-generation.html)\n\nNORMAL() returns a floating point number with a specified mean and standard\ndeviation. Something like this with correct adaptions of the parameters could\nto the trick: [ https://docs.snowflake.com/en/sql-\nreference/functions/normal.html ](https://docs.snowflake.com/en/sql-\nreference/functions/normal.html)\n\nAn alternative can be using UNIFORM(): [ https://docs.snowflake.com/en/sql-\nreference/functions/uniform.html ](https://docs.snowflake.com/en/sql-\nreference/functions/uniform.html)\n\nExample from docs to generate a value between 0 and 1:\n\n    \n    \n    select uniform(0::float, 1::float, random()) from table(generator(rowcount => 5));",
+  "corpus": "documents/stackoverflow-00000-of-00001.parquet",
+  "case_id": "B06-bright-0918",
+  "expected": {
+    "kind": "retrieval",
+    "gold_ids": [
+      "snowflake_random_controlled_distribution/snowflake_controlled_distribution_0_1.txt",
+      "snowflake_random_controlled_distribution/snowflake_random_2_1.txt",
+      "snowflake_random_controlled_distribution/snowflake_controlled_distribution_4_1.txt"
+    ],
+    "gold_ids_long": [
+      "snowflake_random_controlled_distribution/snowflake_controlled_distribution.txt",
+      "snowflake_random_controlled_distribution/snowflake_random.txt"
+    ],
+    "gold_answer": "You can use Snowflake Data generation functions: [\nhttps://docs.snowflake.com/en/sql-reference/functions-data-generation.html\n](https://docs.snowflake.com/en/sql-reference/functions-data-generation.html)\n\nNORMAL() returns a floating point number with a specified mean and standard\ndeviation. Something like this with correct adaptions of the parameters could\nto the trick: [ https://docs.snowflake.com/en/sql-\nreference/functions/normal.html ](https://docs.snowflake.com/en/sql-\nreference/functions/normal.html)\n\nAn alternative can be using UNIFORM(): [ https://docs.snowflake.com/en/sql-\nreference/functions/uniform.html ](https://docs.snowflake.com/en/sql-\nreference/functions/uniform.html)\n\nExample from docs to generate a value between 0 and 1:\n\n    \n    \n    select uniform(0::float, 1::float, random()) from table(generator(rowcount => 5));",
+    "excluded_ids": [
+      "N/A"
+    ]
+  }
+}

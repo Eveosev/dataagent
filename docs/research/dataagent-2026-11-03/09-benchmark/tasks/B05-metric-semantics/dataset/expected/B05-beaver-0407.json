@@ -1,0 +1,27 @@
+{
+  "source": "beaverbench/beaver-query",
+  "id": "dw_5483",
+  "db": "dw",
+  "question": "What is the minimum number of enrolled students in any subject offered and the total number of students enrolled, for subjects offered by departments that are degree granting, have at least one student in the MIT student directory, and are in the Mathematics department (Course 18)? Do not return any rounded answers.",
+  "sql": "SELECT MIN(tso.NUM_ENROLLED_STUDENTS) AS min_enrolled_students, SUM(tso.NUM_ENROLLED_STUDENTS) AS total_enrolled_students FROM TIP_SUBJECT_OFFERED tso JOIN SIS_DEPARTMENT sd ON tso.OFFER_DEPT_CODE = sd.DEPARTMENT_CODE JOIN MIT_STUDENT_DIRECTORY msd ON sd.DEPARTMENT_CODE = msd.DEPARTMENT WHERE sd.IS_DEGREE_GRANTING = 'Y' AND sd.DEPARTMENT_CODE = '18' AND sd.DEPARTMENT_NAME = 'Mathematics'",
+  "tables": "[\"TIP_SUBJECT_OFFERED\", \"SIS_DEPARTMENT\", \"MIT_STUDENT_DIRECTORY\"]",
+  "join_keys": "[[\"TIP_SUBJECT_OFFERED.OFFER_DEPT_CODE\", \"SIS_DEPARTMENT.DEPARTMENT_CODE\"], [\"SIS_DEPARTMENT.DEPARTMENT_CODE\", \"MIT_STUDENT_DIRECTORY.DEPARTMENT\"]]",
+  "column_mapping": "{\"minimum number of enrolled students\": [\"TIP_SUBJECT_OFFERED.NUM_ENROLLED_STUDENTS\"], \"total number of students enrolled\": [\"TIP_SUBJECT_OFFERED.NUM_ENROLLED_STUDENTS\"], \"subjects offered\": [\"TIP_SUBJECT_OFFERED.OFFER_DEPT_CODE\"], \"departments that are degree granting\": [\"SIS_DEPARTMENT.IS_DEGREE_GRANTING\"], \"at least one student in the MIT student directory\": [\"MIT_STUDENT_DIRECTORY.DEPARTMENT\"], \"Mathematics department\": [\"SIS_DEPARTMENT.DEPARTMENT_CODE\", \"SIS_DEPARTMENT.DEPARTMENT_NAME\"]}",
+  "domain_knowledge": "[\"\\\"math\\\" is predicated by \\\"TABLE.DEPARTMENT_NAME = 'Mathematics'\\\"\", \"\\\"Course 18\\\" is predicated by \\\"TABLE.DEPARTMENT_CODE = '18'\\\"\"]",
+  "sub_questions": "[]",
+  "sub_sqls": "[]",
+  "category": "domain-specific query",
+  "detailed_category": "base",
+  "case_id": "B05-beaver-0407",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT MIN(tso.NUM_ENROLLED_STUDENTS) AS min_enrolled_students, SUM(tso.NUM_ENROLLED_STUDENTS) AS total_enrolled_students FROM TIP_SUBJECT_OFFERED tso JOIN SIS_DEPARTMENT sd ON tso.OFFER_DEPT_CODE = sd.DEPARTMENT_CODE JOIN MIT_STUDENT_DIRECTORY msd ON sd.DEPARTMENT_CODE = msd.DEPARTMENT WHERE sd.IS_DEGREE_GRANTING = 'Y' AND sd.DEPARTMENT_CODE = '18' AND sd.DEPARTMENT_NAME = 'Mathematics'",
+    "sub_sqls": "[]",
+    "db": "dw",
+    "tables": "[\"TIP_SUBJECT_OFFERED\", \"SIS_DEPARTMENT\", \"MIT_STUDENT_DIRECTORY\"]",
+    "join_keys": "[[\"TIP_SUBJECT_OFFERED.OFFER_DEPT_CODE\", \"SIS_DEPARTMENT.DEPARTMENT_CODE\"], [\"SIS_DEPARTMENT.DEPARTMENT_CODE\", \"MIT_STUDENT_DIRECTORY.DEPARTMENT\"]]",
+    "column_mapping": "{\"minimum number of enrolled students\": [\"TIP_SUBJECT_OFFERED.NUM_ENROLLED_STUDENTS\"], \"total number of students enrolled\": [\"TIP_SUBJECT_OFFERED.NUM_ENROLLED_STUDENTS\"], \"subjects offered\": [\"TIP_SUBJECT_OFFERED.OFFER_DEPT_CODE\"], \"departments that are degree granting\": [\"SIS_DEPARTMENT.IS_DEGREE_GRANTING\"], \"at least one student in the MIT student directory\": [\"MIT_STUDENT_DIRECTORY.DEPARTMENT\"], \"Mathematics department\": [\"SIS_DEPARTMENT.DEPARTMENT_CODE\", \"SIS_DEPARTMENT.DEPARTMENT_NAME\"]}",
+    "category": "domain-specific query",
+    "db_archive": "bench://beaver-table/beaver_db.zip"
+  }
+}

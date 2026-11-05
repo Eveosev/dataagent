@@ -1,0 +1,928 @@
+{
+  "source": "llamaindex/ExtractBench",
+  "id": "short/stephenville-axon-invoice",
+  "pdf": "docs/short/stephenville-axon-invoice.pdf",
+  "schema": {
+    "type": "object",
+    "required": [
+      "invoice_number",
+      "invoice_type",
+      "date",
+      "vendor",
+      "customer",
+      "line_items",
+      "subtotal",
+      "total_amount",
+      "currency"
+    ],
+    "properties": {
+      "invoice_number": {
+        "type": "string",
+        "description": "The vendor's unique identifier for THIS invoice document. Labels: 'Invoice Number', 'Invoice #', 'Invoice No', 'Invoice ID', 'INVOICE NUMBER'. Verbatim string including any leading zeros, letters, or dashes (e.g. 'NF67652', '9823373304', '025-479686', 'INUS246402', '2105629'). Do NOT confuse with the Customer/Account Number, the Purchase Order Number, the Order/Sales Order Number, or any product Item Number. Located in the invoice header block, usually top-right near the date."
+      },
+      "invoice_type": {
+        "type": "string",
+        "enum": [
+          "standard",
+          "credit_note",
+          "proforma"
+        ],
+        "description": "Classification of the document: 'standard' for an ordinary bill/invoice; 'credit_note' only if the document is explicitly a credit memo / credit note (negative balance owed back to the customer); 'proforma' only if explicitly labeled 'Pro Forma'. Default to 'standard' unless the document text clearly states otherwise. Do NOT infer 'credit_note' from individual negative line/credit rows inside a roll-forward account summary."
+      },
+      "original_invoice_number": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "For credit notes only, the invoice number of the original invoice being credited (verbatim string). Do NOT confuse with this document's own invoice_number. Null for standard and proforma invoices, or whenever no original invoice is referenced."
+      },
+      "date": {
+        "type": "string",
+        "description": "The invoice issue date, normalized to YYYY-MM-DD. Labels: 'Invoice Date', 'Date', 'DATE'. Do NOT confuse with the Due Date, the Order Date, a per-line Tax Date / Shipment Date, or 'Samples Received On'. Located in the header block near the invoice number. Convert from the printed format (e.g. '07/19/14' -> '2014-07-19', '01-May-24' -> '2024-05-01')."
+      },
+      "due_date": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "Payment due date, normalized to YYYY-MM-DD. Labels: 'Due Date', 'Payment Due', 'DUE DATE'. Do NOT confuse with the invoice issue date or the payment-terms string (e.g. 'Net 30'). Located in the header or terms block. Null if no explicit due date is printed."
+      },
+      "purchase_order_number": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "The customer's Purchase Order number referenced on the invoice. Labels: 'Purchase Order Number', 'PO Number', 'P.O. Number', 'PO NUMBER'. Verbatim string exactly as printed (may be alphanumeric or even a free-text reference, e.g. '95055', '212706', 'WEB2454487473', 'Dish 160R Upton St'). Do NOT confuse with the vendor's Order/Sales Order Number (order_number), the Invoice Number, the Customer/Account Number, or 'Your Ref'/'Our Ref'. Located in the header/terms block. Null if no PO field is present or it is blank."
+      },
+      "order_number": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "The vendor-assigned order / sales order number identifying the order this invoice fulfills. Labels: 'Order Number', 'Sales Order Number', 'Ord No', 'ORDER NUMBER'. Verbatim string as printed (e.g. '1491364305', 'S151787147', 'FLDQ324', '189884'). Do NOT confuse with the customer's Purchase Order Number (purchase_order_number), the Invoice Number, the Customer/Account Number, or 'Your Ref'/'Our Ref'. Located in the header block. Null if no order/sales-order number is printed."
+      },
+      "vendor": {
+        "type": "object",
+        "description": "The party issuing the invoice and to be paid (the 'Remit To' / letterhead seller, e.g. 'CDW Government', 'Axon Enterprise Inc.'). Do NOT populate from the Bill To / customer block.",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The vendor/seller name exactly as printed on the letterhead or remit-to block. Do NOT use the Bill To (customer) name."
+          },
+          "address": {
+            "type": "object",
+            "description": "Seller/VENDOR postal address. TIEBREAK: use the seller's PRIMARY address printed in the top letterhead/header block next to the vendor name/logo. If a SEPARATE 'Remit To' / 'Please send payment to' / lockbox / 'Dept. <acct>' payment address is also printed, do NOT use it here (that is a remittance address).",
+            "properties": {
+              "street": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Vendor street line from the letterhead/header block; NOT a Remit-To/lockbox 'Dept.' line."
+              },
+              "city": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "City. Null if not present."
+              },
+              "state": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "State, province, or region (e.g. 'MA', 'TX'). Do NOT confuse with country. Null if not applicable/printed."
+              },
+              "zip_code": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Postal/ZIP code as printed, verbatim string incl any +4 (e.g. '60675-1515'). Null if not present."
+              },
+              "country": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Country. Null if not printed (assume domestic; do not invent a country that is not shown)."
+              }
+            }
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Vendor phone number as printed. Do NOT confuse with the customer's phone. Null if not present."
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "email"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Vendor remittance/AR email as printed. Do NOT confuse with the customer's email. Null if not present."
+          },
+          "tax_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The vendor's tax identifier, verbatim string. Labels: 'FEIN', 'FEI Number', 'TIN', 'Tax ID', 'Federal ID #', 'Fed. ID No.'. Do NOT confuse with the customer's account number or any invoice/order number. Null if not printed."
+          }
+        }
+      },
+      "customer": {
+        "type": "object",
+        "description": "The party being billed (the 'Bill To' / 'Invoice To' recipient who owes payment, e.g. 'Hingham Town Hall Selectmen', 'City of Mission'). Do NOT populate from the vendor letterhead/remit-to block, nor from the 'Ship To' / delivery address if a distinct Bill To exists.",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The customer/Bill To name exactly as printed. Do NOT use the vendor name or the Ship To name when a distinct Bill To exists."
+          },
+          "address": {
+            "$ref": "#/$defs/address"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Customer phone number as printed. Do NOT confuse with the vendor's phone. Null if not present in the Bill To block."
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "email"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Customer email as printed. Do NOT confuse with the vendor's remittance/AR email. Null if not present."
+          },
+          "account_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The customer's account number with this vendor. Labels: 'Customer Number', 'Account Number', 'GRAINGER ACCOUNT NUMBER', 'Cust No', 'Invoice Account'. Verbatim string incl leading zeros (e.g. '1095519', 'C2588144', '838233708', '43895', '141848'). Do NOT confuse with the Invoice Number, the Purchase Order Number, or the Order Number. Located in the header/Bill To block. Null if no customer/account number is printed."
+          }
+        }
+      },
+      "line_items": {
+        "type": "array",
+        "description": "The billed line items from the MAIN charges/details table ONLY (e.g. the 'New charges (details below)' table, the per-item 'Detailed Invoice Information' table, or the numbered 'Line No.' table). EXCLUDE: rows from an 'Account Summary'/balance roll-forward block (Balance Forward, payments/credits, 'Other invoices from this date', Total Amount Due), remittance-stub rows, and subtotal/tax/total summary rows. For invoices that group charges under CATEGORY headers where the price is printed at the header level (e.g. Tyler 'ERP Pro Financials Annual Fees'), emit ONE line_item per priced category header row (description = the category header text, amount = its printed Extended Price); do NOT emit separate rows for the unpriced indented component/'Cycle' sublines.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "line_no": {
+              "type": "integer",
+              "description": "Printed row sequence number of this line item. Labels: 'Line No.', 'Line #', 'Item' (when it is a 1,2,3... counter). If no explicit Line No. column exists, assign 1..N in printed top-to-bottom order. Do NOT confuse with item_code (the product SKU/part number) nor with quantity."
+            },
+            "item_code": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Vendor product code / SKU / part number for this line. Labels: 'Item Number', 'Item #', 'ITEM #', 'Item', 'MFG #' / 'Manufacturer Part Number'. Verbatim string incl leading zeros and letters (e.g. '2856676', '61DE01', 'KID21005779', 'IQ10183', '72036'). Do NOT confuse with line_no (the row sequence counter). Null if the line has no product code column (e.g. service-only invoices)."
+            },
+            "description": {
+              "type": "string",
+              "description": "The product or service NAME for this line as printed in the Description column, including an inline manufacturer/part number if printed on the same item line (e.g. 'OFFICE DEHUMID ... MANUFACTURER # FFAP5033W1'). Tolerate OCR artifacts. EXCLUDE: (a) shipment/delivery/tracking metadata (Delivery#, Date, Carrier, No. of pkgs, Wt, Trk#, SHIPPED FROM); (b) Tax-Date / Shipment-Date / 'Cycle: Start.../End...' / service-period sublines; (c) customer-service annotations or 'Customer has indicated to invoice to...' / 'archived the PO' notes; (d) the item_code, quantity, unit_price, or amount columns. Normalize internal whitespace to single spaces. Do NOT confuse with item_code (the SKU/part-number column) or notes (free-text message block)."
+            },
+            "quantity": {
+              "type": "number",
+              "description": "Quantity billed for this line. Labels: 'Quantity', 'QTY', 'Units', 'QTY SHIP'. May be fractional for hourly/weight-based services. Do NOT confuse with line_no or with unit_price."
+            },
+            "unit_price": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Price per unit for this line as a number (strip currency symbols and thousands separators; e.g. '$2,340.00' -> 2340.00). Labels: 'Unit Price', 'Price', 'Rate', 'Adjusted Price'. Do NOT confuse with the line amount/extended price (that is the quantity-times-unit total). Null if no per-unit price is printed for the line."
+            },
+            "discount_percent": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Line-level discount as a percentage number (e.g. 10 for 10%). Do NOT confuse with tax_rate or with a 'Rush %' surcharge. Null if no discount percent is printed for the line."
+            },
+            "tax_rate": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Line-level tax rate as a percentage number (e.g. 8.25 for 8.25%). Do NOT confuse with discount_percent. Null if no per-line tax rate is printed."
+            },
+            "amount": {
+              "type": "number",
+              "description": "The extended line amount (quantity times unit price, after any line discount, before invoice-level tax) as a number; strip currency symbols and separators. Labels: 'Amount', 'Total', 'EXT PRICE', 'Extended Price', 'TOTAL'. Do NOT confuse with unit_price (per-unit) or with the invoice subtotal/total."
+            }
+          },
+          "required": [
+            "line_no",
+            "description",
+            "amount"
+          ]
+        }
+      },
+      "subtotal": {
+        "type": "number",
+        "description": "Sum of all line item amounts before invoice-level tax, shipping, and discounts, as a number (strip currency symbols/separators). Labels: 'Subtotal', 'SUBTOTAL', 'INVOICE SUB TOTAL', 'Sub Total', 'Sales Amount'. Do NOT confuse with total_amount (the final amount due) or with a per-line amount. Located in the totals block."
+      },
+      "discount_total": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "Total invoice-level discount amount as a number. Labels: 'Discount', 'Total Discount'. Do NOT confuse with a per-line discount_percent or with negative account-summary credit rows. Null if no invoice-level discount line is printed."
+      },
+      "tax_total": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "Total tax amount on the invoice as a number. Labels: 'Sales Tax', 'Tax', 'TAX & BOTTLE DEPOSITS TOTAL'. Do NOT confuse with a per-line tax_rate (a percentage) or with the subtotal. Null if no tax total line is printed."
+      },
+      "shipping": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "Shipping / freight charge total as a number. Labels: 'Shipping', 'Freight'. Do NOT confuse with the subtotal or tax_total. Null if no shipping line is printed."
+      },
+      "total_amount": {
+        "type": "number",
+        "description": "The final total amount due on the invoice as a number (strip currency symbols/separators). Labels: 'Amount Due', 'Total', 'Invoice Total', 'Total Due', 'BALANCE DUE', 'Order Total'. Do NOT confuse with the subtotal, with a per-line amount, or with an 'Account Summary' balance-forward figure. Located in the totals block, usually the last/boldest figure."
+      },
+      "payment_terms": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "Payment terms text as printed. Labels: 'Terms', 'Payment Terms', 'Payment'. Verbatim string (e.g. 'Net 30 Days', 'NET 45', 'NET30'). Do NOT confuse with the due_date (a date). Null if no terms text is printed."
+      },
+      "bank_details": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "bank_name": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Name of the bank for remittance (e.g. 'The Northern Trust', 'JPMorgan Chase'). Null if not printed."
+              },
+              "account_number": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The vendor's bank account number for payment, verbatim string. Do NOT confuse with the customer's account_number or the invoice/order numbers. Null if not printed."
+              },
+              "routing_number": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The bank routing / ABA number for payment, verbatim string. Labels: 'Routing No', 'Bank Routing No'. Null if not printed."
+              }
+            }
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "Vendor bank/remittance details for electronic payment, if an ACH/wire/routing block is present. Null if no bank details are printed on the invoice."
+      },
+      "currency": {
+        "type": "string",
+        "enum": [
+          "USD",
+          "EUR",
+          "GBP",
+          "CAD",
+          "AUD",
+          "JPY",
+          "CNY",
+          "INR",
+          "BRL",
+          "CHF",
+          "KRW"
+        ],
+        "description": "The ISO 4217 currency code of the invoice amounts. Read from an explicit 'Currency' field or a printed code (e.g. 'USD'); otherwise infer from the currency symbol ('$' on a US vendor invoice -> 'USD'). Do NOT guess beyond what the symbol/locale supports."
+      },
+      "notes": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "Verbatim content of an EXPLICITLY LABELED free-text block on the invoice (label one of: Notes, Comments, Message, Remarks, Special Instructions, Important Messages). EXCLUDE payment/remittance boilerplate, marketing ('Go Green', paperless-billing promos), received/paid stamps, finance-charge terms, and vendor address-change notices. Null if the invoice has no such explicitly labeled notes block. Do NOT confuse with line_items.description or payment_terms. If a labeled block's content is entirely excluded categories (marketing/paperless/remittance boilerplate), return null."
+      }
+    },
+    "$defs": {
+      "address": {
+        "type": "object",
+        "description": "A postal address parsed into components.",
+        "properties": {
+          "street": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Street line(s) of the address as printed (incl suite/PO box). Null if not present."
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "City. Null if not present."
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "State, province, or region (e.g. 'MA', 'TX'). Do NOT confuse with country. Null if not applicable/printed."
+          },
+          "zip_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Postal/ZIP code as printed, verbatim string incl any +4 (e.g. '60675-1515'). Null if not present."
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Country. Null if not printed (assume domestic; do not invent a country that is not shown)."
+          }
+        }
+      }
+    }
+  },
+  "expected": {
+    "kind": "json",
+    "schema_ref": "fixtures/eb-short-stephenville-axon-invoice-schema.json",
+    "value": {
+      "invoice_number": "INUS246402",
+      "invoice_type": "standard",
+      "original_invoice_number": null,
+      "date": "2024-05-01",
+      "due_date": "2024-05-31",
+      "purchase_order_number": null,
+      "order_number": null,
+      "vendor": {
+        "name": "Axon Enterprise Inc.",
+        "address": {
+          "street": "PO BOX 29661 DEPARTMENT 2018",
+          "city": "PHOENIX",
+          "state": "AZ",
+          "zip_code": "85038-9661",
+          "country": null
+        },
+        "phone": "1-480-991-0797, option 5, option 1",
+        "email": "arinquiries@axon.com",
+        "tax_id": "86-0741227"
+      },
+      "customer": {
+        "name": "Stephenville Police Dept.- TX",
+        "address": {
+          "street": "356 N Belknap St",
+          "city": "Stephenville",
+          "state": "TX",
+          "zip_code": "76401-3414",
+          "country": "USA"
+        },
+        "phone": null,
+        "email": null,
+        "account_number": "141848"
+      },
+      "line_items": [
+        {
+          "line_no": 1,
+          "item_code": "72036",
+          "description": "FLEET 3 STANDARD 2 CAMERA KIT",
+          "quantity": 14.0,
+          "unit_price": 0.0,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 0.0
+        },
+        {
+          "line_no": 2,
+          "item_code": "73840",
+          "description": "AXON EVIDENCE - ECOM LICENSE - BASIC",
+          "quantity": 34.0,
+          "unit_price": 900.0,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 6120.0
+        },
+        {
+          "line_no": 3,
+          "item_code": "73683",
+          "description": "AXON EVIDENCE - STORAGE - 10GB A LA CARTE",
+          "quantity": 34.0,
+          "unit_price": 0.0,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 0.0
+        },
+        {
+          "line_no": 4,
+          "item_code": "73746",
+          "description": "AXON EVIDENCE - ECOM LICENSE - PRO",
+          "quantity": 14.0,
+          "unit_price": 2340.0,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 6552.0
+        },
+        {
+          "line_no": 5,
+          "item_code": "73683",
+          "description": "AXON EVIDENCE - STORAGE - 10GB A LA CARTE",
+          "quantity": 42.0,
+          "unit_price": 0.0,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 0.0
+        },
+        {
+          "line_no": 6,
+          "item_code": "80464",
+          "description": "AXON BODY - TAP WARRANTY - CAMERA",
+          "quantity": 45.0,
+          "unit_price": 520.9,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 4688.1
+        },
+        {
+          "line_no": 7,
+          "item_code": "73309",
+          "description": "AXON BODY - TAP REFRESH 1 - CAMERA",
+          "quantity": 46.0,
+          "unit_price": 551.25,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 5071.5
+        },
+        {
+          "line_no": 8,
+          "item_code": "73310",
+          "description": "AXON BODY - TAP REFRESH 2 - CAMERA",
+          "quantity": 46.0,
+          "unit_price": 571.33,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 5256.24
+        },
+        {
+          "line_no": 9,
+          "item_code": "80464",
+          "description": "AXON BODY - TAP WARRANTY - CAMERA",
+          "quantity": 1.0,
+          "unit_price": 520.9,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 104.18
+        },
+        {
+          "line_no": 10,
+          "item_code": "73686",
+          "description": "AXON EVIDENCE - STORAGE - UNLIMITED (AXON DEVICE)",
+          "quantity": 45.0,
+          "unit_price": 1440.0,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 12960.0
+        },
+        {
+          "line_no": 11,
+          "item_code": "80465",
+          "description": "AXON BODY - TAP WARRANTY - MULTI BAY DOCK",
+          "quantity": 6.0,
+          "unit_price": 496.93,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 596.32
+        },
+        {
+          "line_no": 12,
+          "item_code": "73689",
+          "description": "AXON BODY - TAP REFRESH 1 - DOCK MULTI BAY",
+          "quantity": 6.0,
+          "unit_price": 625.1,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 750.12
+        },
+        {
+          "line_no": 13,
+          "item_code": "73688",
+          "description": "AXON BODY - TAP REFRESH 2 - DOCK MULTI BAY",
+          "quantity": 6.0,
+          "unit_price": 647.97,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 777.56
+        },
+        {
+          "line_no": 14,
+          "item_code": "80466",
+          "description": "AXON BODY - TAP WARRANTY - SINGLE BAY DOCK",
+          "quantity": 5.0,
+          "unit_price": 233.86,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 233.86
+        },
+        {
+          "line_no": 15,
+          "item_code": "80400",
+          "description": "AXON EVIDENCE - FLEET VEHICLE LICENSE",
+          "quantity": 14.0,
+          "unit_price": 1015.57,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 3138.39
+        },
+        {
+          "line_no": 16,
+          "item_code": "73391",
+          "description": "AXON FLEET 3 - DEPLOYMENT (PER VEHICLE)",
+          "quantity": 14.0,
+          "unit_price": 1015.57,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 3138.39
+        },
+        {
+          "line_no": 17,
+          "item_code": "50041",
+          "description": "AXON INTERVIEW - STREAMING SERVER LICENSE - PER SERVER",
+          "quantity": 2.0,
+          "unit_price": 1750.0,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 700.0
+        },
+        {
+          "line_no": 18,
+          "item_code": "50043",
+          "description": "AXON INTERVIEW - STREAMING SERVER MAINTENANCE - PER SERVER",
+          "quantity": 1.0,
+          "unit_price": 1750.2,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 350.04
+        },
+        {
+          "line_no": 19,
+          "item_code": "73202",
+          "description": "AXON BODY 3 - CAMERA - NA10 US BLK RAPIDLOCK",
+          "quantity": 45.0,
+          "unit_price": 195.07,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 1755.63
+        },
+        {
+          "line_no": 20,
+          "item_code": "73202",
+          "description": "AXON BODY 3 - CAMERA - NA10 US BLK RAPIDLOCK",
+          "quantity": 1.0,
+          "unit_price": 0.0,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 0.0
+        },
+        {
+          "line_no": 21,
+          "item_code": "11534",
+          "description": "USB-C to USB-A CABLE FOR AB3 OR FLEX 2",
+          "quantity": 50.0,
+          "unit_price": 0.0,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 0.0
+        },
+        {
+          "line_no": 22,
+          "item_code": "74211",
+          "description": "AXON BODY 3 - DOCK - SINGLE BAY",
+          "quantity": 5.0,
+          "unit_price": 0.0,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 0.0
+        },
+        {
+          "line_no": 23,
+          "item_code": "71104",
+          "description": "AXON - DOCK/DATAPORT POWERCORD - NORTH AMERICA",
+          "quantity": 5.0,
+          "unit_price": 0.0,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 0.0
+        },
+        {
+          "line_no": 24,
+          "item_code": "74210",
+          "description": "AXON BODY 3 - DOCK - EIGHT BAY",
+          "quantity": 6.0,
+          "unit_price": 0.0,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 0.0
+        },
+        {
+          "line_no": 25,
+          "item_code": "71019",
+          "description": "AXON BODY - DOCK POWERCORD - NORTH AMERICA",
+          "quantity": 6.0,
+          "unit_price": 0.0,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 0.0
+        },
+        {
+          "line_no": 26,
+          "item_code": "70033",
+          "description": "WALL MOUNT BRACKET, ASSY, EVIDENCE.COM DOCK",
+          "quantity": 6.0,
+          "unit_price": 43.9,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 52.68
+        },
+        {
+          "line_no": 27,
+          "item_code": "80495",
+          "description": "AXON FLEET 3 - EXT WARRANTY - 2 CAMERA KIT",
+          "quantity": 14.0,
+          "unit_price": 371.56,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 1148.22
+        },
+        {
+          "line_no": 28,
+          "item_code": "72048",
+          "description": "AXON FLEET 3 - SIM INSERTION - ATT",
+          "quantity": 14.0,
+          "unit_price": 12.69,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 39.22
+        },
+        {
+          "line_no": 29,
+          "item_code": "70112",
+          "description": "AXON SIGNAL - SIGNAL UNIT",
+          "quantity": 14.0,
+          "unit_price": 236.12,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 729.67
+        },
+        {
+          "line_no": 30,
+          "item_code": "80379",
+          "description": "AXON SIGNAL - EXT WARRANTY - SIGNAL UNIT",
+          "quantity": 14.0,
+          "unit_price": 58.9,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 182.02
+        },
+        {
+          "line_no": 31,
+          "item_code": "73313",
+          "description": "AXON BODY - TAP REFRESH 1 - DOCK SINGLE BAY",
+          "quantity": 5.0,
+          "unit_price": 150.24,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 150.24
+        },
+        {
+          "line_no": 32,
+          "item_code": "73314",
+          "description": "AXON BODY - TAP REFRESH 2 - DOCK SINGLE BAY",
+          "quantity": 5.0,
+          "unit_price": 155.91,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 155.91
+        },
+        {
+          "line_no": 33,
+          "item_code": "80410",
+          "description": "AXON EVIDENCE - STORAGE - FLEET 1 CAMERA UNLIMITED",
+          "quantity": 28.0,
+          "unit_price": 863.23,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 5335.23
+        },
+        {
+          "line_no": 34,
+          "item_code": "80504",
+          "description": "INTERVIEW ROOM STANDARD EVIDENCE.COM LICENSE",
+          "quantity": 4.0,
+          "unit_price": 4140.0,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 3312.01
+        },
+        {
+          "line_no": 35,
+          "item_code": "74020",
+          "description": "AXON BODY - MOUNT - MAGNET FLEXIBLE RAPIDLOCK",
+          "quantity": 50.0,
+          "unit_price": 0.0,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 0.0
+        },
+        {
+          "line_no": 36,
+          "item_code": "71200",
+          "description": "AXON FLEET - AIRGAIN ANT - 5-IN-1 2LTE 2WIFI 1GNSS BL",
+          "quantity": 14.0,
+          "unit_price": 210.73,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 651.21
+        },
+        {
+          "line_no": 37,
+          "item_code": "11634",
+          "description": "AXON FLEET - CRADLEPOINT IBR900-1200M-B-NPS+5YR NETCLOUD",
+          "quantity": 14.0,
+          "unit_price": 1057.03,
+          "discount_percent": null,
+          "tax_rate": null,
+          "amount": 3266.51
+        }
+      ],
+      "subtotal": 67215.25,
+      "discount_total": 0.0,
+      "tax_total": 0.0,
+      "shipping": null,
+      "total_amount": 67215.25,
+      "payment_terms": "Net 30 days",
+      "bank_details": {
+        "bank_name": "JPMorgan Chase",
+        "account_number": "634912729",
+        "routing_number": "122100024"
+      },
+      "currency": "USD",
+      "notes": null
+    },
+    "anchored_fields": 41,
+    "no_anchor_fields": 0
+  },
+  "field_rules": "{\"invoice_number\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.70452, 0.07959, 0.07346, 0.00843], \"quote\": \"INUS246402\", \"value\": \"INUS246402\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"invoice_type\": {\"comparator\": \"enum\", \"evidence\": [{\"page\": 1, \"bbox\": [0.53869, 0.04586, 0.08885, 0.016], \"quote\": \"standard\", \"value\": \"standard\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"original_invoice_number\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"date\": {\"comparator\": \"date\", \"evidence\": [{\"page\": 1, \"bbox\": [0.70452, 0.09256, 0.06513, 0.00978], \"quote\": \"01-May-24\", \"value\": \"2024-05-01\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"due_date\": {\"comparator\": \"date\", \"evidence\": [{\"page\": 8, \"bbox\": [0.53872, 0.64634, 0.0691, 0.00978], \"quote\": \"31-May-24\", \"value\": \"2024-05-31\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"purchase_order_number\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": \"Your Ref Q-390730, / Our Ref , Q-390730, (a Your Ref/Our Ref, not a PO Number; schema excludes Your Ref/Our Ref)\", \"value\": null, \"coarse\": true, \"_verifier_classification\": \"model_failure\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"order_number\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": \"Your Ref Q-390730, / Our Ref , Q-390730, (Ref, not an Order/Sales Order Number; Sales Order field is blank)\", \"value\": null, \"coarse\": true, \"_verifier_classification\": \"model_failure\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"vendor.name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.17537, 0.07614, 0.11716, 0.01011], \"quote\": \"Axon Enterprise Inc.\", \"value\": \"Axon Enterprise Inc.\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"vendor.address.street\": {\"comparator\": \"address\", \"evidence\": [{\"page\": 1, \"bbox\": [0.17597, 0.0892, 0.11551, 0.02065], \"quote\": \"PO BOX 29661 DEPARTMENT 2018\", \"value\": \"PO BOX 29661 DEPARTMENT 2018\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"vendor.address.city\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.17537, 0.11438, 0.0584, 0.00938], \"quote\": \"PHOENIX,\", \"value\": \"PHOENIX\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"vendor.address.state\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.23752, 0.11438, 0.01633, 0.00815], \"quote\": \"AZ\", \"value\": \"AZ\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"vendor.address.zip_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.25753, 0.11438, 0.06877, 0.00815], \"quote\": \"85038-9661\", \"value\": \"85038-9661\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"vendor.address.country\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": \"Axon Enterprise Inc. PO BOX 29661 DEPARTMENT 2018 PHOENIX, AZ 85038-9661 (no country printed on vendor letterhead; USA appears only in BILL TO/SHIP TO)\", \"value\": null, \"coarse\": true, \"_verifier_classification\": \"model_failure\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"vendor.phone\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.1977, 0.12669, 0.20656, 0.01011], \"quote\": \"1-480-991-0797, option 5, option 1\", \"value\": \"1-480-991-0797, option 5, option 1\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"vendor.email\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.17537, 0.13966, 0.13151, 0.00978], \"quote\": \"arinquiries@axon.com\", \"value\": \"arinquiries@axon.com\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"vendor.tax_id\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.20264, 0.16461, 0.07057, 0.00843], \"quote\": \"86-0741227\", \"value\": \"86-0741227\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"customer.name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.17537, 0.25672, 0.17041, 0.00978], \"quote\": \"Stephenville Police Dept.- TX\", \"value\": \"Stephenville Police Dept.- TX\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"customer.address.street\": {\"comparator\": \"address\", \"evidence\": [{\"page\": 1, \"bbox\": [0.17537, 0.26903, 0.10152, 0.01011], \"quote\": \"356 N Belknap St\", \"value\": \"356 N Belknap St\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"customer.address.city\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.17537, 0.282, 0.07489, 0.00978], \"quote\": \"Stephenville,\", \"value\": \"Stephenville\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"customer.address.state\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.25406, 0.282, 0.01494, 0.00815], \"quote\": \"TX\", \"value\": \"TX\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"customer.address.zip_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.27271, 0.282, 0.07057, 0.00815], \"quote\": \"76401-3414\", \"value\": \"76401-3414\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"customer.address.country\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.17537, 0.29431, 0.02504, 0.00843], \"quote\": \"USA\", \"value\": \"USA\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"customer.phone\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"customer.email\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"customer.account_number\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.70452, 0.18906, 0.04346, 0.00843], \"quote\": \"141848\", \"value\": \"141848\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"line_items\": {\"comparator\": {\"line_no\": \"number\", \"item_code\": \"case_insensitive\", \"description\": \"case_insensitive\", \"quantity\": \"number\", \"unit_price\": \"number\", \"discount_percent\": \"number\", \"tax_rate\": \"number\", \"amount\": \"number\"}, \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": \"1\", \"value\": {\"line_no\": 1, \"item_code\": \"72036\", \"description\": \"FLEET 3 STANDARD 2 CAMERA KIT\", \"quantity\": 14.0, \"unit_price\": 0.0, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 0.0}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"2\", \"value\": {\"line_no\": 2, \"item_code\": \"73840\", \"description\": \"AXON EVIDENCE - ECOM LICENSE - BASIC\", \"quantity\": 34.0, \"unit_price\": 900.0, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 6120.0}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"3\", \"value\": {\"line_no\": 3, \"item_code\": \"73683\", \"description\": \"AXON EVIDENCE - STORAGE - 10GB A LA CARTE\", \"quantity\": 34.0, \"unit_price\": 0.0, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 0.0}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"4\", \"value\": {\"line_no\": 4, \"item_code\": \"73746\", \"description\": \"AXON EVIDENCE - ECOM LICENSE - PRO\", \"quantity\": 14.0, \"unit_price\": 2340.0, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 6552.0}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"5\", \"value\": {\"line_no\": 5, \"item_code\": \"73683\", \"description\": \"AXON EVIDENCE - STORAGE - 10GB A LA CARTE\", \"quantity\": 42.0, \"unit_price\": 0.0, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 0.0}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"6\", \"value\": {\"line_no\": 6, \"item_code\": \"80464\", \"description\": \"AXON BODY - TAP WARRANTY - CAMERA\", \"quantity\": 45.0, \"unit_price\": 520.9, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 4688.1}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"7\", \"value\": {\"line_no\": 7, \"item_code\": \"73309\", \"description\": \"AXON BODY - TAP REFRESH 1 - CAMERA\", \"quantity\": 46.0, \"unit_price\": 551.25, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 5071.5}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"8\", \"value\": {\"line_no\": 8, \"item_code\": \"73310\", \"description\": \"AXON BODY - TAP REFRESH 2 - CAMERA\", \"quantity\": 46.0, \"unit_price\": 571.33, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 5256.24}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"9\", \"value\": {\"line_no\": 9, \"item_code\": \"80464\", \"description\": \"AXON BODY - TAP WARRANTY - CAMERA\", \"quantity\": 1.0, \"unit_price\": 520.9, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 104.18}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"10\", \"value\": {\"line_no\": 10, \"item_code\": \"73686\", \"description\": \"AXON EVIDENCE - STORAGE - UNLIMITED (AXON DEVICE)\", \"quantity\": 45.0, \"unit_price\": 1440.0, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 12960.0}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"11\", \"value\": {\"line_no\": 11, \"item_code\": \"80465\", \"description\": \"AXON BODY - TAP WARRANTY - MULTI BAY DOCK\", \"quantity\": 6.0, \"unit_price\": 496.93, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 596.32}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"12\", \"value\": {\"line_no\": 12, \"item_code\": \"73689\", \"description\": \"AXON BODY - TAP REFRESH 1 - DOCK MULTI BAY\", \"quantity\": 6.0, \"unit_price\": 625.1, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 750.12}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"13\", \"value\": {\"line_no\": 13, \"item_code\": \"73688\", \"description\": \"AXON BODY - TAP REFRESH 2 - DOCK MULTI BAY\", \"quantity\": 6.0, \"unit_price\": 647.97, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 777.56}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"14\", \"value\": {\"line_no\": 14, \"item_code\": \"80466\", \"description\": \"AXON BODY - TAP WARRANTY - SINGLE BAY DOCK\", \"quantity\": 5.0, \"unit_price\": 233.86, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 233.86}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"15\", \"value\": {\"line_no\": 15, \"item_code\": \"80400\", \"description\": \"AXON EVIDENCE - FLEET VEHICLE LICENSE\", \"quantity\": 14.0, \"unit_price\": 1015.57, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 3138.39}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"16\", \"value\": {\"line_no\": 16, \"item_code\": \"73391\", \"description\": \"AXON FLEET 3 - DEPLOYMENT (PER VEHICLE)\", \"quantity\": 14.0, \"unit_price\": 1015.57, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 3138.39}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"17\", \"value\": {\"line_no\": 17, \"item_code\": \"50041\", \"description\": \"AXON INTERVIEW - STREAMING SERVER LICENSE - PER SERVER\", \"quantity\": 2.0, \"unit_price\": 1750.0, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 700.0}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"18\", \"value\": {\"line_no\": 18, \"item_code\": \"50043\", \"description\": \"AXON INTERVIEW - STREAMING SERVER MAINTENANCE - PER SERVER\", \"quantity\": 1.0, \"unit_price\": 1750.2, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 350.04}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"19\", \"value\": {\"line_no\": 19, \"item_code\": \"73202\", \"description\": \"AXON BODY 3 - CAMERA - NA10 US BLK RAPIDLOCK\", \"quantity\": 45.0, \"unit_price\": 195.07, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 1755.63}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"20\", \"value\": {\"line_no\": 20, \"item_code\": \"73202\", \"description\": \"AXON BODY 3 - CAMERA - NA10 US BLK RAPIDLOCK\", \"quantity\": 1.0, \"unit_price\": 0.0, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 0.0}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"21\", \"value\": {\"line_no\": 21, \"item_code\": \"11534\", \"description\": \"USB-C to USB-A CABLE FOR AB3 OR FLEX 2\", \"quantity\": 50.0, \"unit_price\": 0.0, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 0.0}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"22\", \"value\": {\"line_no\": 22, \"item_code\": \"74211\", \"description\": \"AXON BODY 3 - DOCK - SINGLE BAY\", \"quantity\": 5.0, \"unit_price\": 0.0, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 0.0}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"23\", \"value\": {\"line_no\": 23, \"item_code\": \"71104\", \"description\": \"AXON - DOCK/DATAPORT POWERCORD - NORTH AMERICA\", \"quantity\": 5.0, \"unit_price\": 0.0, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 0.0}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"24\", \"value\": {\"line_no\": 24, \"item_code\": \"74210\", \"description\": \"AXON BODY 3 - DOCK - EIGHT BAY\", \"quantity\": 6.0, \"unit_price\": 0.0, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 0.0}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"25\", \"value\": {\"line_no\": 25, \"item_code\": \"71019\", \"description\": \"AXON BODY - DOCK POWERCORD - NORTH AMERICA\", \"quantity\": 6.0, \"unit_price\": 0.0, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 0.0}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"26\", \"value\": {\"line_no\": 26, \"item_code\": \"70033\", \"description\": \"WALL MOUNT BRACKET, ASSY, EVIDENCE.COM DOCK\", \"quantity\": 6.0, \"unit_price\": 43.9, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 52.68}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"27\", \"value\": {\"line_no\": 27, \"item_code\": \"80495\", \"description\": \"AXON FLEET 3 - EXT WARRANTY - 2 CAMERA KIT\", \"quantity\": 14.0, \"unit_price\": 371.56, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 1148.22}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"28\", \"value\": {\"line_no\": 28, \"item_code\": \"72048\", \"description\": \"AXON FLEET 3 - SIM INSERTION - ATT\", \"quantity\": 14.0, \"unit_price\": 12.69, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 39.22}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"29\", \"value\": {\"line_no\": 29, \"item_code\": \"70112\", \"description\": \"AXON SIGNAL - SIGNAL UNIT\", \"quantity\": 14.0, \"unit_price\": 236.12, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 729.67}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"30\", \"value\": {\"line_no\": 30, \"item_code\": \"80379\", \"description\": \"AXON SIGNAL - EXT WARRANTY - SIGNAL UNIT\", \"quantity\": 14.0, \"unit_price\": 58.9, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 182.02}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"31\", \"value\": {\"line_no\": 31, \"item_code\": \"73313\", \"description\": \"AXON BODY - TAP REFRESH 1 - DOCK SINGLE BAY\", \"quantity\": 5.0, \"unit_price\": 150.24, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 150.24}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"32\", \"value\": {\"line_no\": 32, \"item_code\": \"73314\", \"description\": \"AXON BODY - TAP REFRESH 2 - DOCK SINGLE BAY\", \"quantity\": 5.0, \"unit_price\": 155.91, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 155.91}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"33\", \"value\": {\"line_no\": 33, \"item_code\": \"80410\", \"description\": \"AXON EVIDENCE - STORAGE - FLEET 1 CAMERA UNLIMITED\", \"quantity\": 28.0, \"unit_price\": 863.23, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 5335.23}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"34\", \"value\": {\"line_no\": 34, \"item_code\": \"80504\", \"description\": \"INTERVIEW ROOM STANDARD EVIDENCE.COM LICENSE\", \"quantity\": 4.0, \"unit_price\": 4140.0, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 3312.01}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"35\", \"value\": {\"line_no\": 35, \"item_code\": \"74020\", \"description\": \"AXON BODY - MOUNT - MAGNET FLEXIBLE RAPIDLOCK\", \"quantity\": 50.0, \"unit_price\": 0.0, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 0.0}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"36\", \"value\": {\"line_no\": 36, \"item_code\": \"71200\", \"description\": \"AXON FLEET - AIRGAIN ANT - 5-IN-1 2LTE 2WIFI 1GNSS BL\", \"quantity\": 14.0, \"unit_price\": 210.73, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 651.21}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"37\", \"value\": {\"line_no\": 37, \"item_code\": \"11634\", \"description\": \"AXON FLEET - CRADLEPOINT IBR900-1200M-B-NPS+5YR NETCLOUD\", \"quantity\": 14.0, \"unit_price\": 1057.03, \"discount_percent\": null, \"tax_rate\": null, \"amount\": 3266.51}, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"structural\": \"match_by:line_no\"}, \"subtotal\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 8, \"bbox\": [0.90248, 0.54903, 0.05651, 0.00969], \"quote\": \"67,215.25\", \"value\": 67215.25, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"discount_total\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 8, \"bbox\": [0.93437, 0.58131, 0.02463, 0.00815], \"quote\": \"0.00\", \"value\": 0.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"tax_total\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 8, \"bbox\": [0.93437, 0.59696, 0.02463, 0.00843], \"quote\": \"0.00\", \"value\": 0.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"shipping\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"total_amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 8, \"bbox\": [0.90248, 0.61285, 0.05651, 0.00938], \"quote\": \"67,215.25\", \"value\": 67215.25, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"payment_terms\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.70452, 0.17675, 0.0704, 0.00978], \"quote\": \"Net 30 days\", \"value\": \"Net 30 days\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"bank_details.bank_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.75739, 0.82184, 0.09227, 0.00931], \"quote\": \"JPMorgan Chase\", \"value\": \"JPMorgan Chase\", \"coarse\": false, \"layer\": \"word\"}, {\"page\": 2, \"bbox\": [0.74832, 0.807, 0.21166, 0.07356], \"quote\": \"JPMorgan Chase\", \"value\": \"JPMorgan Chase\", \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"bank_details.account_number\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.18289, 0.82184, 0.06112, 0.00804], \"quote\": \"634912729\", \"value\": \"634912729\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"bank_details.routing_number\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.18349, 0.8336, 0.06052, 0.00776], \"quote\": \"122100024\", \"value\": \"122100024\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"currency\": {\"comparator\": \"enum\", \"evidence\": [{\"page\": 8, \"bbox\": [0.79177, 0.64634, 0.02715, 0.00815], \"quote\": \"USD\", \"value\": \"USD\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"notes\": {\"comparator\": \"address\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"line_items[0].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": 1, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[0].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.19805, 0.36411, 0.03622, 0.00815], \"quote\": \"72036\", \"value\": \"72036\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[0].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.40215, 0.36411, 0.20583, 0.00815], \"quote\": \"FLEET 3 STANDARD 2 CAMERA KIT\", \"value\": \"FLEET 3 STANDARD 2 CAMERA KIT\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[0].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.67297, 0.36411, 0.03129, 0.00815], \"quote\": \"14.00\", \"value\": 14.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[0].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.77218, 0.36411, 0.02463, 0.00815], \"quote\": \"0.00\", \"value\": 0.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[0].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[0].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[0].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.9263, 0.36411, 0.02463, 0.00815], \"quote\": \"0.00\", \"value\": 0.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[1].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": 2, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[1].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.19805, 0.41153, 0.03622, 0.00815], \"quote\": \"73840\", \"value\": \"73840\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[1].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.40215, 0.41162, 0.20328, 0.02064], \"quote\": \"AXON EVIDENCE ECOM LICENSE BASIC\", \"value\": \"AXON EVIDENCE - ECOM LICENSE - BASIC\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[1].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.67238, 0.41153, 0.03188, 0.00815], \"quote\": \"34.00\", \"value\": 34.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[1].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.75769, 0.41153, 0.03912, 0.00815], \"quote\": \"900.00\", \"value\": 900.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[1].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[1].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[1].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.90166, 0.41153, 0.04927, 0.00938], \"quote\": \"6,120.00\", \"value\": 6120.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[2].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": 3, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[2].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.19805, 0.47126, 0.03622, 0.00843], \"quote\": \"73683\", \"value\": \"73683\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[2].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.40215, 0.47126, 0.21449, 0.02106], \"quote\": \"AXON EVIDENCE STORAGE 10GB A LA CARTE\", \"value\": \"AXON EVIDENCE - STORAGE - 10GB A LA CARTE\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[2].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.67238, 0.47126, 0.03188, 0.00843], \"quote\": \"34.00\", \"value\": 34.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[2].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.77218, 0.47126, 0.02463, 0.00843], \"quote\": \"0.00\", \"value\": 0.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[2].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[2].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[2].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.9263, 0.47126, 0.02463, 0.00843], \"quote\": \"0.00\", \"value\": 0.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[3].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": 4, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[3].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.19805, 0.53164, 0.03622, 0.00815], \"quote\": \"73746\", \"value\": \"73746\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[3].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.40215, 0.53174, 0.20328, 0.02064], \"quote\": \"AXON EVIDENCE ECOM LICENSE PRO\", \"value\": \"AXON EVIDENCE - ECOM LICENSE - PRO\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[3].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.67297, 0.53164, 0.03129, 0.00815], \"quote\": \"14.00\", \"value\": 14.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[3].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.74753, 0.53164, 0.04927, 0.00938], \"quote\": \"2,340.00\", \"value\": 2340.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[3].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[3].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[3].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.90166, 0.53164, 0.04927, 0.00938], \"quote\": \"6,552.00\", \"value\": 6552.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[4].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": 5, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[4].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.19805, 0.59138, 0.03622, 0.00843], \"quote\": \"73683\", \"value\": \"73683\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[4].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.40215, 0.59138, 0.21449, 0.02106], \"quote\": \"AXON EVIDENCE STORAGE 10GB A LA CARTE\", \"value\": \"AXON EVIDENCE - STORAGE - 10GB A LA CARTE\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[4].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.67238, 0.59138, 0.03188, 0.00843], \"quote\": \"42.00\", \"value\": 42.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[4].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.77218, 0.59138, 0.02463, 0.00843], \"quote\": \"0.00\", \"value\": 0.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[4].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[4].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[4].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.9263, 0.59138, 0.02463, 0.00843], \"quote\": \"0.00\", \"value\": 0.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[5].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": 6, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[5].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.19805, 0.65176, 0.03622, 0.00815], \"quote\": \"80464\", \"value\": \"80464\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[5].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.40215, 0.65185, 0.18526, 0.02064], \"quote\": \"AXON BODY TAP WARRANTY CAMERA\", \"value\": \"AXON BODY - TAP WARRANTY - CAMERA\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[5].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.67238, 0.65176, 0.03188, 0.00815], \"quote\": \"45.00\", \"value\": 45.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[5].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.75828, 0.65176, 0.03853, 0.00815], \"quote\": \"520.90\", \"value\": 520.9, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[5].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[5].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[5].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.90166, 0.65176, 0.04927, 0.00938], \"quote\": \"4,688.10\", \"value\": 4688.1, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[6].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": null, \"quote\": null, \"value\": 7, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[6].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.19805, 0.34724, 0.03622, 0.00843], \"quote\": \"73309\", \"value\": \"73309\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[6].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.40215, 0.34724, 0.17683, 0.02106], \"quote\": \"AXON BODY TAP REFRESH 1 CAMERA\", \"value\": \"AXON BODY - TAP REFRESH 1 - CAMERA\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[6].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": [0.67238, 0.34724, 0.03188, 0.00843], \"quote\": \"46.00\", \"value\": 46.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[6].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": [0.75828, 0.34724, 0.03853, 0.00843], \"quote\": \"551.25\", \"value\": 551.25, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[6].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[6].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[6].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": [0.90225, 0.34724, 0.04867, 0.00969], \"quote\": \"5,071.50\", \"value\": 5071.5, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[7].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": null, \"quote\": null, \"value\": 8, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[7].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.19805, 0.40762, 0.03622, 0.00815], \"quote\": \"73310\", \"value\": \"73310\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[7].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.40215, 0.40772, 0.17864, 0.02064], \"quote\": \"AXON BODY TAP REFRESH 2 CAMERA\", \"value\": \"AXON BODY - TAP REFRESH 2 - CAMERA\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[7].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": [0.67238, 0.40762, 0.03188, 0.00815], \"quote\": \"46.00\", \"value\": 46.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[7].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": [0.75828, 0.40762, 0.03853, 0.00815], \"quote\": \"571.33\", \"value\": 571.33, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[7].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[7].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[7].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": [0.90225, 0.40762, 0.04867, 0.00938], \"quote\": \"5,256.24\", \"value\": 5256.24, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[8].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": null, \"quote\": null, \"value\": 9, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[8].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.19805, 0.46736, 0.03622, 0.00843], \"quote\": \"80464\", \"value\": \"80464\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[8].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.40215, 0.46736, 0.18526, 0.02106], \"quote\": \"AXON BODY TAP WARRANTY CAMERA\", \"value\": \"AXON BODY - TAP WARRANTY - CAMERA\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[8].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": [0.68021, 0.46736, 0.02405, 0.00843], \"quote\": \"1.00\", \"value\": 1.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[8].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": [0.75828, 0.46736, 0.03853, 0.00843], \"quote\": \"520.90\", \"value\": 520.9, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[8].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[8].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[8].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": [0.91241, 0.46736, 0.03853, 0.00843], \"quote\": \"104.18\", \"value\": 104.18, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[9].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": null, \"quote\": null, \"value\": 10, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[9].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.19805, 0.52733, 0.03622, 0.00815], \"quote\": \"73686\", \"value\": \"73686\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[9].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.40215, 0.52489, 0.1703, 0.02528], \"quote\": \"AXON EVIDENCE STORAGE UNLIMITED (AXON DEVICE)\", \"value\": \"AXON EVIDENCE - STORAGE - UNLIMITED (AXON DEVICE)\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[9].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": [0.67238, 0.52733, 0.03188, 0.00815], \"quote\": \"45.00\", \"value\": 45.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[9].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": [0.74813, 0.52733, 0.04867, 0.00938], \"quote\": \"1,440.00\", \"value\": 1440.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[9].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[9].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[9].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": [0.89441, 0.52733, 0.05651, 0.00938], \"quote\": \"12,960.00\", \"value\": 12960.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[10].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": null, \"quote\": null, \"value\": 11, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[10].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.19805, 0.5878, 0.03622, 0.00815], \"quote\": \"80465\", \"value\": \"80465\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[10].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.40215, 0.58784, 0.18526, 0.0203], \"quote\": \"AXON BODY TAP WARRANTY MULTI BAY DOCK\", \"value\": \"AXON BODY - TAP WARRANTY - MULTI BAY DOCK\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[10].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": [0.67962, 0.5878, 0.02463, 0.00815], \"quote\": \"6.00\", \"value\": 6.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[10].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": [0.75769, 0.5878, 0.03912, 0.00815], \"quote\": \"496.93\", \"value\": 496.93, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[10].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[10].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[10].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": [0.91181, 0.5878, 0.03912, 0.00815], \"quote\": \"596.32\", \"value\": 596.32, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[11].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": null, \"quote\": null, \"value\": 12, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[11].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.19805, 0.64753, 0.03622, 0.00843], \"quote\": \"73689\", \"value\": \"73689\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[11].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.40215, 0.64753, 0.17683, 0.02106], \"quote\": \"AXON BODY TAP REFRESH 1 DOCK MULTI BAY\", \"value\": \"AXON BODY - TAP REFRESH 1 - DOCK MULTI BAY\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[11].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": [0.67962, 0.64753, 0.02463, 0.00843], \"quote\": \"6.00\", \"value\": 6.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[11].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": [0.75769, 0.64753, 0.03912, 0.00843], \"quote\": \"625.10\", \"value\": 625.1, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[11].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[11].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[11].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 2, \"bbox\": [0.91181, 0.64753, 0.03912, 0.00843], \"quote\": \"750.12\", \"value\": 750.12, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[12].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 3, \"bbox\": null, \"quote\": null, \"value\": 13, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[12].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 3, \"bbox\": [0.19805, 0.34724, 0.03622, 0.00843], \"quote\": \"73688\", \"value\": \"73688\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[12].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 3, \"bbox\": [0.40215, 0.34724, 0.17864, 0.02106], \"quote\": \"AXON BODY TAP REFRESH 2 DOCK MULTI BAY\", \"value\": \"AXON BODY - TAP REFRESH 2 - DOCK MULTI BAY\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[12].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 3, \"bbox\": [0.67962, 0.34724, 0.02463, 0.00843], \"quote\": \"6.00\", \"value\": 6.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[12].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 3, \"bbox\": [0.75769, 0.34724, 0.03912, 0.00843], \"quote\": \"647.97\", \"value\": 647.97, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[12].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[12].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[12].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 3, \"bbox\": [0.91181, 0.34724, 0.03912, 0.00843], \"quote\": \"777.56\", \"value\": 777.56, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[13].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 3, \"bbox\": null, \"quote\": null, \"value\": 14, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[13].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 3, \"bbox\": [0.19805, 0.40762, 0.03622, 0.00815], \"quote\": \"80466\", \"value\": \"80466\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[13].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 3, \"bbox\": [0.40215, 0.40772, 0.18526, 0.02064], \"quote\": \"AXON BODY TAP WARRANTY SINGLE BAY DOCK\", \"value\": \"AXON BODY - TAP WARRANTY - SINGLE BAY DOCK\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[13].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 3, \"bbox\": [0.67962, 0.40762, 0.02463, 0.00815], \"quote\": \"5.00\", \"value\": 5.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[13].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 3, \"bbox\": [0.75769, 0.40762, 0.03912, 0.00815], \"quote\": \"233.86\", \"value\": 233.86, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[13].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[13].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[13].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 3, \"bbox\": [0.91181, 0.40762, 0.03912, 0.00815], \"quote\": \"233.86\", \"value\": 233.86, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[14].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 3, \"bbox\": null, \"quote\": null, \"value\": 15, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[14].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 3, \"bbox\": [0.19805, 0.46736, 0.03622, 0.00843], \"quote\": \"80400\", \"value\": \"80400\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[14].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 3, \"bbox\": [0.40215, 0.46736, 0.20017, 0.02106], \"quote\": \"AXON EVIDENCE FLEET VEHICLE LICENSE\", \"value\": \"AXON EVIDENCE - FLEET VEHICLE LICENSE\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[14].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 3, \"bbox\": [0.67297, 0.46736, 0.03129, 0.00843], \"quote\": \"14.00\", \"value\": 14.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[14].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 3, \"bbox\": [0.74813, 0.46736, 0.04867, 0.00969], \"quote\": \"1,015.57\", \"value\": 1015.57, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[14].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[14].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[14].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 3, \"bbox\": [0.90166, 0.46736, 0.04927, 0.00969], \"quote\": \"3,138.39\", \"value\": 3138.39, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[15].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 3, \"bbox\": null, \"quote\": null, \"value\": 16, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[15].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 3, \"bbox\": [0.19805, 0.52733, 0.03444, 0.00815], \"quote\": \"73391\", \"value\": \"73391\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[15].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 3, \"bbox\": [0.40215, 0.52489, 0.21131, 0.02528], \"quote\": \"AXON FLEET 3 DEPLOYMENT (PER VEHICLE)\", \"value\": \"AXON FLEET 3 - DEPLOYMENT (PER VEHICLE)\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[15].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 3, \"bbox\": [0.67297, 0.52733, 0.03129, 0.00815], \"quote\": \"14.00\", \"value\": 14.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[15].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 3, \"bbox\": [0.74813, 0.52733, 0.04867, 0.00938], \"quote\": \"1,015.57\", \"value\": 1015.57, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[15].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[15].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[15].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 3, \"bbox\": [0.90166, 0.52733, 0.04927, 0.00938], \"quote\": \"3,138.39\", \"value\": 3138.39, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[16].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 3, \"bbox\": null, \"quote\": null, \"value\": 17, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[16].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 3, \"bbox\": [0.19805, 0.5878, 0.03444, 0.00815], \"quote\": \"50041\", \"value\": \"50041\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[16].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 3, \"bbox\": [0.40215, 0.58784, 0.19253, 0.0203], \"quote\": \"AXON INTERVIEW STREAMING SERVER LICENSE PER SERVER\", \"value\": \"AXON INTERVIEW - STREAMING SERVER LICENSE - PER SERVER\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[16].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 3, \"bbox\": [0.67962, 0.5878, 0.02463, 0.00815], \"quote\": \"2.00\", \"value\": 2.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[16].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 3, \"bbox\": [0.74813, 0.5878, 0.04867, 0.00938], \"quote\": \"1,750.00\", \"value\": 1750.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[16].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[16].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[16].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 3, \"bbox\": [0.91181, 0.5878, 0.03912, 0.00815], \"quote\": \"700.00\", \"value\": 700.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[17].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 4, \"bbox\": null, \"quote\": null, \"value\": 18, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[17].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 4, \"bbox\": [0.19805, 0.34724, 0.03622, 0.00843], \"quote\": \"50043\", \"value\": \"50043\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[17].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 4, \"bbox\": [0.40215, 0.34727, 0.19253, 0.03366], \"quote\": \"AXON INTERVIEW STREAMING SERVER MAINTENANCE PER SERVER\", \"value\": \"AXON INTERVIEW - STREAMING SERVER MAINTENANCE - PER SERVER\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[17].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 4, \"bbox\": [0.68021, 0.34724, 0.02405, 0.00843], \"quote\": \"1.00\", \"value\": 1.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[17].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 4, \"bbox\": [0.74813, 0.34724, 0.04867, 0.00969], \"quote\": \"1,750.20\", \"value\": 1750.2, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[17].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[17].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[17].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 4, \"bbox\": [0.91181, 0.34724, 0.03912, 0.00843], \"quote\": \"350.04\", \"value\": 350.04, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[18].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 4, \"bbox\": null, \"quote\": null, \"value\": 19, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[18].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 4, \"bbox\": [0.19805, 0.41994, 0.03622, 0.00843], \"quote\": \"73202\", \"value\": \"73202\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[18].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 4, \"bbox\": [0.40215, 0.41994, 0.19731, 0.02106], \"quote\": \"AXON BODY 3 CAMERA NA10 US BLK RAPIDLOCK\", \"value\": \"AXON BODY 3 - CAMERA - NA10 US BLK RAPIDLOCK\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[18].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 4, \"bbox\": [0.67238, 0.41994, 0.03188, 0.00843], \"quote\": \"45.00\", \"value\": 45.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[18].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 4, \"bbox\": [0.75828, 0.41994, 0.03853, 0.00843], \"quote\": \"195.07\", \"value\": 195.07, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[18].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[18].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[18].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 4, \"bbox\": [0.90225, 0.41994, 0.04867, 0.00969], \"quote\": \"1,755.63\", \"value\": 1755.63, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[19].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 4, \"bbox\": null, \"quote\": null, \"value\": 20, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[19].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 4, \"bbox\": [0.19805, 0.48032, 0.03622, 0.00815], \"quote\": \"73202\", \"value\": \"73202\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[19].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 4, \"bbox\": [0.40215, 0.48042, 0.19731, 0.02064], \"quote\": \"AXON BODY 3 CAMERA NA10 US BLK RAPIDLOCK\", \"value\": \"AXON BODY 3 - CAMERA - NA10 US BLK RAPIDLOCK\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[19].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 4, \"bbox\": [0.68021, 0.48032, 0.02405, 0.00815], \"quote\": \"1.00\", \"value\": 1.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[19].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 4, \"bbox\": [0.77218, 0.48032, 0.02463, 0.00815], \"quote\": \"0.00\", \"value\": 0.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[19].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[19].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[19].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 4, \"bbox\": [0.9263, 0.48032, 0.02463, 0.00815], \"quote\": \"0.00\", \"value\": 0.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[20].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 4, \"bbox\": null, \"quote\": null, \"value\": 21, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[20].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 4, \"bbox\": [0.19865, 0.54005, 0.03562, 0.00843], \"quote\": \"11534\", \"value\": \"11534\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[20].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 4, \"bbox\": [0.40215, 0.54005, 0.21472, 0.02106], \"quote\": \"USB-C to USB-A CABLE FOR AB3 OR FLEX 2\", \"value\": \"USB-C to USB-A CABLE FOR AB3 OR FLEX 2\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[20].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 4, \"bbox\": [0.67238, 0.54005, 0.03188, 0.00843], \"quote\": \"50.00\", \"value\": 50.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[20].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 4, \"bbox\": [0.77218, 0.54005, 0.02463, 0.00843], \"quote\": \"0.00\", \"value\": 0.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[20].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[20].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[20].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 4, \"bbox\": [0.9263, 0.54005, 0.02463, 0.00843], \"quote\": \"0.00\", \"value\": 0.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[21].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 4, \"bbox\": null, \"quote\": null, \"value\": 22, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[21].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 4, \"bbox\": [0.19805, 0.60003, 0.03444, 0.00815], \"quote\": \"74211\", \"value\": \"74211\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[21].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 4, \"bbox\": [0.40215, 0.60011, 0.1903, 0.02106], \"quote\": \"AXON BODY 3 DOCK SINGLE BAY\", \"value\": \"AXON BODY 3 - DOCK - SINGLE BAY\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[21].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 4, \"bbox\": [0.67962, 0.60003, 0.02463, 0.00815], \"quote\": \"5.00\", \"value\": 5.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[21].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 4, \"bbox\": [0.77218, 0.60003, 0.02463, 0.00815], \"quote\": \"0.00\", \"value\": 0.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[21].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[21].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[21].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 4, \"bbox\": [0.9263, 0.60003, 0.02463, 0.00815], \"quote\": \"0.00\", \"value\": 0.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[22].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 5, \"bbox\": null, \"quote\": null, \"value\": 23, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[22].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 5, \"bbox\": [0.19805, 0.34724, 0.03622, 0.00843], \"quote\": \"71104\", \"value\": \"71104\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[22].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 5, \"bbox\": [0.40215, 0.34724, 0.19829, 0.02106], \"quote\": \"AXON DOCK/DATAPORT POWERCORD NORTH AMERICA\", \"value\": \"AXON - DOCK/DATAPORT POWERCORD - NORTH AMERICA\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[22].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 5, \"bbox\": [0.67962, 0.34724, 0.02463, 0.00843], \"quote\": \"5.00\", \"value\": 5.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[22].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 5, \"bbox\": [0.77218, 0.34724, 0.02463, 0.00843], \"quote\": \"0.00\", \"value\": 0.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[22].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[22].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[22].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 5, \"bbox\": [0.9263, 0.34724, 0.02463, 0.00843], \"quote\": \"0.00\", \"value\": 0.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[23].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 5, \"bbox\": null, \"quote\": null, \"value\": 24, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[23].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 5, \"bbox\": [0.19805, 0.40762, 0.03622, 0.00815], \"quote\": \"74210\", \"value\": \"74210\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[23].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 5, \"bbox\": [0.40215, 0.40762, 0.21086, 0.00815], \"quote\": \"AXON BODY 3 DOCK EIGHT BAY\", \"value\": \"AXON BODY 3 - DOCK - EIGHT BAY\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[23].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 5, \"bbox\": [0.67962, 0.40762, 0.02463, 0.00815], \"quote\": \"6.00\", \"value\": 6.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[23].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 5, \"bbox\": [0.77218, 0.40762, 0.02463, 0.00815], \"quote\": \"0.00\", \"value\": 0.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[23].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[23].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[23].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 5, \"bbox\": [0.9263, 0.40762, 0.02463, 0.00815], \"quote\": \"0.00\", \"value\": 0.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[24].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 5, \"bbox\": null, \"quote\": null, \"value\": 25, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[24].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 5, \"bbox\": [0.19805, 0.45464, 0.03622, 0.00815], \"quote\": \"71019\", \"value\": \"71019\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[24].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 5, \"bbox\": [0.40215, 0.45472, 0.20815, 0.02106], \"quote\": \"AXON BODY DOCK POWERCORD NORTH AMERICA\", \"value\": \"AXON BODY - DOCK POWERCORD - NORTH AMERICA\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[24].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 5, \"bbox\": [0.67962, 0.45464, 0.02463, 0.00815], \"quote\": \"6.00\", \"value\": 6.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[24].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 5, \"bbox\": [0.77218, 0.45464, 0.02463, 0.00815], \"quote\": \"0.00\", \"value\": 0.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[24].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[24].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[24].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 5, \"bbox\": [0.9263, 0.45464, 0.02463, 0.00815], \"quote\": \"0.00\", \"value\": 0.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[25].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 5, \"bbox\": null, \"quote\": null, \"value\": 26, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[25].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 5, \"bbox\": [0.19805, 0.5151, 0.03622, 0.00815], \"quote\": \"70033\", \"value\": \"70033\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[25].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 5, \"bbox\": [0.40215, 0.51515, 0.18398, 0.0203], \"quote\": \"WALL MOUNT BRACKET, ASSY, EVIDENCE.COM DOCK\", \"value\": \"WALL MOUNT BRACKET, ASSY, EVIDENCE.COM DOCK\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[25].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 5, \"bbox\": [0.67962, 0.5151, 0.02463, 0.00815], \"quote\": \"6.00\", \"value\": 6.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[25].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 5, \"bbox\": [0.76493, 0.5151, 0.03188, 0.00815], \"quote\": \"43.90\", \"value\": 43.9, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[25].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[25].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[25].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 5, \"bbox\": [0.91906, 0.5151, 0.03188, 0.00815], \"quote\": \"52.68\", \"value\": 52.68, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[26].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 5, \"bbox\": null, \"quote\": null, \"value\": 27, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[26].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 5, \"bbox\": [0.19805, 0.57483, 0.03622, 0.00843], \"quote\": \"80495\", \"value\": \"80495\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[26].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 5, \"bbox\": [0.40215, 0.57483, 0.21356, 0.02106], \"quote\": \"AXON FLEET 3 EXT WARRANTY 2 CAMERA KIT\", \"value\": \"AXON FLEET 3 - EXT WARRANTY - 2 CAMERA KIT\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[26].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 5, \"bbox\": [0.67297, 0.57483, 0.03129, 0.00843], \"quote\": \"14.00\", \"value\": 14.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[26].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 5, \"bbox\": [0.75769, 0.57483, 0.03912, 0.00843], \"quote\": \"371.56\", \"value\": 371.56, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[26].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[26].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[26].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 5, \"bbox\": [0.90225, 0.57483, 0.04867, 0.00969], \"quote\": \"1,148.22\", \"value\": 1148.22, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[27].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 5, \"bbox\": null, \"quote\": null, \"value\": 28, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[27].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 5, \"bbox\": [0.19805, 0.63522, 0.03622, 0.00815], \"quote\": \"72048\", \"value\": \"72048\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[27].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 5, \"bbox\": [0.40215, 0.63531, 0.19047, 0.02064], \"quote\": \"AXON FLEET 3 SIM INSERTION ATT\", \"value\": \"AXON FLEET 3 - SIM INSERTION - ATT\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[27].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 5, \"bbox\": [0.67297, 0.63522, 0.03129, 0.00815], \"quote\": \"14.00\", \"value\": 14.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[27].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 5, \"bbox\": [0.76552, 0.63522, 0.03129, 0.00815], \"quote\": \"12.69\", \"value\": 12.69, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[27].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[27].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[27].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 5, \"bbox\": [0.91906, 0.63522, 0.03188, 0.00815], \"quote\": \"39.22\", \"value\": 39.22, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[28].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 6, \"bbox\": null, \"quote\": null, \"value\": 29, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[28].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 6, \"bbox\": [0.19805, 0.34724, 0.03622, 0.00843], \"quote\": \"70112\", \"value\": \"70112\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[28].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 6, \"bbox\": [0.40215, 0.34724, 0.17673, 0.00843], \"quote\": \"AXON SIGNAL SIGNAL UNIT\", \"value\": \"AXON SIGNAL - SIGNAL UNIT\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[28].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 6, \"bbox\": [0.67297, 0.34724, 0.03129, 0.00843], \"quote\": \"14.00\", \"value\": 14.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[28].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 6, \"bbox\": [0.75769, 0.34724, 0.03912, 0.00843], \"quote\": \"236.12\", \"value\": 236.12, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[28].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[28].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[28].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 6, \"bbox\": [0.91181, 0.34724, 0.03912, 0.00843], \"quote\": \"729.67\", \"value\": 729.67, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[29].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 6, \"bbox\": null, \"quote\": null, \"value\": 30, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[29].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 6, \"bbox\": [0.19805, 0.39466, 0.03622, 0.00843], \"quote\": \"80379\", \"value\": \"80379\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[29].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 6, \"bbox\": [0.40215, 0.39466, 0.19408, 0.02106], \"quote\": \"AXON SIGNAL EXT WARRANTY SIGNAL UNIT\", \"value\": \"AXON SIGNAL - EXT WARRANTY - SIGNAL UNIT\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[29].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 6, \"bbox\": [0.67297, 0.39466, 0.03129, 0.00843], \"quote\": \"14.00\", \"value\": 14.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[29].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 6, \"bbox\": [0.76552, 0.39466, 0.03129, 0.00843], \"quote\": \"58.90\", \"value\": 58.9, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[29].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[29].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[29].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 6, \"bbox\": [0.91241, 0.39466, 0.03853, 0.00843], \"quote\": \"182.02\", \"value\": 182.02, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[30].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 6, \"bbox\": null, \"quote\": null, \"value\": 31, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[30].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 6, \"bbox\": [0.19805, 0.45464, 0.03622, 0.00815], \"quote\": \"73313\", \"value\": \"73313\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[30].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 6, \"bbox\": [0.40215, 0.45472, 0.17683, 0.02106], \"quote\": \"AXON BODY TAP REFRESH 1 DOCK SINGLE BAY\", \"value\": \"AXON BODY - TAP REFRESH 1 - DOCK SINGLE BAY\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[30].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 6, \"bbox\": [0.67962, 0.45464, 0.02463, 0.00815], \"quote\": \"5.00\", \"value\": 5.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[30].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 6, \"bbox\": [0.75828, 0.45464, 0.03853, 0.00815], \"quote\": \"150.24\", \"value\": 150.24, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[30].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[30].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[30].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 6, \"bbox\": [0.91241, 0.45464, 0.03853, 0.00815], \"quote\": \"150.24\", \"value\": 150.24, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[31].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 6, \"bbox\": null, \"quote\": null, \"value\": 32, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[31].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 6, \"bbox\": [0.19805, 0.5151, 0.03622, 0.00815], \"quote\": \"73314\", \"value\": \"73314\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[31].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 6, \"bbox\": [0.40215, 0.51515, 0.17864, 0.0203], \"quote\": \"AXON BODY TAP REFRESH 2 DOCK SINGLE BAY\", \"value\": \"AXON BODY - TAP REFRESH 2 - DOCK SINGLE BAY\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[31].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 6, \"bbox\": [0.67962, 0.5151, 0.02463, 0.00815], \"quote\": \"5.00\", \"value\": 5.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[31].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 6, \"bbox\": [0.75828, 0.5151, 0.03734, 0.00815], \"quote\": \"155.91\", \"value\": 155.91, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[31].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[31].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[31].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 6, \"bbox\": [0.91241, 0.5151, 0.03675, 0.00815], \"quote\": \"155.91\", \"value\": 155.91, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[32].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 6, \"bbox\": null, \"quote\": null, \"value\": 33, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[32].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 6, \"bbox\": [0.19805, 0.57483, 0.03622, 0.00843], \"quote\": \"80410\", \"value\": \"80410\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[32].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 6, \"bbox\": [0.40215, 0.57483, 0.17241, 0.02106], \"quote\": \"AXON EVIDENCE STORAGE FLEET 1 CAMERA UNLIMITED\", \"value\": \"AXON EVIDENCE - STORAGE - FLEET 1 CAMERA UNLIMITED\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[32].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 6, \"bbox\": [0.67238, 0.57483, 0.03188, 0.00843], \"quote\": \"28.00\", \"value\": 28.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[32].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 6, \"bbox\": [0.75769, 0.57483, 0.03912, 0.00843], \"quote\": \"863.23\", \"value\": 863.23, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[32].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[32].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[32].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 6, \"bbox\": [0.90225, 0.57483, 0.04867, 0.00969], \"quote\": \"5,335.23\", \"value\": 5335.23, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[33].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 6, \"bbox\": null, \"quote\": null, \"value\": 34, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[33].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 6, \"bbox\": [0.19805, 0.63522, 0.03622, 0.00815], \"quote\": \"80504\", \"value\": \"80504\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[33].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 6, \"bbox\": [0.40215, 0.63531, 0.18294, 0.02064], \"quote\": \"INTERVIEW ROOM STANDARD EVIDENCE.COM LICENSE\", \"value\": \"INTERVIEW ROOM STANDARD EVIDENCE.COM LICENSE\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[33].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 6, \"bbox\": [0.67962, 0.63522, 0.02463, 0.00815], \"quote\": \"4.00\", \"value\": 4.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[33].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 6, \"bbox\": [0.74753, 0.63522, 0.04927, 0.00938], \"quote\": \"4,140.00\", \"value\": 4140.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[33].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[33].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[33].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 6, \"bbox\": [0.90166, 0.63522, 0.04749, 0.00938], \"quote\": \"3,312.01\", \"value\": 3312.01, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[34].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 7, \"bbox\": null, \"quote\": null, \"value\": 35, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[34].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 7, \"bbox\": [0.19805, 0.34724, 0.03622, 0.00843], \"quote\": \"74020\", \"value\": \"74020\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[34].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 7, \"bbox\": [0.40215, 0.34724, 0.20295, 0.02106], \"quote\": \"AXON BODY MOUNT MAGNET FLEXIBLE RAPIDLOCK\", \"value\": \"AXON BODY - MOUNT - MAGNET FLEXIBLE RAPIDLOCK\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[34].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 7, \"bbox\": [0.67238, 0.34724, 0.03188, 0.00843], \"quote\": \"50.00\", \"value\": 50.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[34].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 7, \"bbox\": [0.77218, 0.34724, 0.02463, 0.00843], \"quote\": \"0.00\", \"value\": 0.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[34].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[34].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[34].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 7, \"bbox\": [0.9263, 0.34724, 0.02463, 0.00843], \"quote\": \"0.00\", \"value\": 0.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[35].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 7, \"bbox\": null, \"quote\": null, \"value\": 36, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[35].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 7, \"bbox\": [0.19805, 0.40762, 0.03622, 0.00815], \"quote\": \"71200\", \"value\": \"71200\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[35].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 7, \"bbox\": [0.40215, 0.40772, 0.21231, 0.02064], \"quote\": \"AXON FLEET AIRGAIN ANT 5-IN- 1 2LTE 2WIFI 1GNSS BL\", \"value\": \"AXON FLEET - AIRGAIN ANT - 5-IN-1 2LTE 2WIFI 1GNSS BL\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[35].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 7, \"bbox\": [0.67297, 0.40762, 0.03129, 0.00815], \"quote\": \"14.00\", \"value\": 14.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[35].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 7, \"bbox\": [0.75769, 0.40762, 0.03912, 0.00815], \"quote\": \"210.73\", \"value\": 210.73, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[35].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[35].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[35].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 7, \"bbox\": [0.91181, 0.40762, 0.03734, 0.00815], \"quote\": \"651.21\", \"value\": 651.21, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[36].line_no\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 7, \"bbox\": null, \"quote\": null, \"value\": 37, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[36].item_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 7, \"bbox\": [0.19865, 0.46736, 0.03562, 0.00843], \"quote\": \"11634\", \"value\": \"11634\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[36].description\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 7, \"bbox\": [0.40215, 0.46738, 0.17257, 0.03366], \"quote\": \"AXON FLEET CRADLEPOINT IBR900-1200M-B-NPS+5YR NETCLOUD\", \"value\": \"AXON FLEET - CRADLEPOINT IBR900-1200M-B-NPS+5YR NETCLOUD\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[36].quantity\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 7, \"bbox\": [0.67297, 0.46736, 0.03129, 0.00843], \"quote\": \"14.00\", \"value\": 14.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[36].unit_price\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 7, \"bbox\": [0.74813, 0.46736, 0.04867, 0.00969], \"quote\": \"1,057.03\", \"value\": 1057.03, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[36].discount_percent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[36].tax_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"line_items[36].amount\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 7, \"bbox\": [0.90166, 0.46736, 0.04749, 0.00969], \"quote\": \"3,266.51\", \"value\": 3266.51, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}}",
+  "repeated_structure": "{}",
+  "anchored_fields": 41,
+  "no_anchor_fields": 0,
+  "case_id": "B03-eb-0241"
+}

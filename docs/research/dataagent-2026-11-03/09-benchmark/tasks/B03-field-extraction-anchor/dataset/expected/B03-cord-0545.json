@@ -1,0 +1,126 @@
+{
+  "source": "naver-clova-ix/cord-v2",
+  "split": "train",
+  "index": 52,
+  "gt_parse": {
+    "menu": [
+      {
+        "nm": "WHDP JR 15K",
+        "price": "15,000"
+      },
+      {
+        "nm": "TakeQuay Charge",
+        "price": "909"
+      }
+    ],
+    "sub_total": {
+      "subtotal_price": "15,909",
+      "tax_price": "1,591"
+    },
+    "total": {
+      "total_price": "17,500",
+      "cashprice": "20,000",
+      "changeprice": "2,500"
+    }
+  },
+  "case_id": "B03-cord-0545",
+  "expected": {
+    "kind": "json",
+    "value": {
+      "menu": [
+        {
+          "nm": "WHDP JR 15K",
+          "price": "15,000"
+        },
+        {
+          "nm": "TakeQuay Charge",
+          "price": "909"
+        }
+      ],
+      "sub_total": {
+        "subtotal_price": "15,909",
+        "tax_price": "1,591"
+      },
+      "total": {
+        "total_price": "17,500",
+        "cashprice": "20,000",
+        "changeprice": "2,500"
+      }
+    },
+    "fields": {
+      "menu[0].nm": "WHDP JR 15K",
+      "menu[0].price": "15,000",
+      "menu[1].nm": "TakeQuay Charge",
+      "menu[1].price": "909",
+      "sub_total.subtotal_price": "15,909",
+      "sub_total.tax_price": "1,591",
+      "total.total_price": "17,500",
+      "total.cashprice": "20,000",
+      "total.changeprice": "2,500"
+    },
+    "anchored_fields": 0,
+    "no_anchor_fields": 9,
+    "spans": [
+      {
+        "field": "menu[0].nm",
+        "text": "WHDP JR 15K",
+        "page": 1
+      },
+      {
+        "field": "menu[0].price",
+        "text": "15,000",
+        "page": 1
+      },
+      {
+        "field": "menu[1].nm",
+        "text": "TakeQuay Charge",
+        "page": 1
+      },
+      {
+        "field": "menu[1].price",
+        "text": "909",
+        "page": 1
+      },
+      {
+        "field": "sub_total.subtotal_price",
+        "text": "15,909",
+        "page": 1
+      },
+      {
+        "field": "sub_total.tax_price",
+        "text": "1,591",
+        "page": 1
+      },
+      {
+        "field": "total.total_price",
+        "text": "17,500",
+        "page": 1
+      },
+      {
+        "field": "total.cashprice",
+        "text": "20,000",
+        "page": 1
+      },
+      {
+        "field": "total.changeprice",
+        "text": "2,500",
+        "page": 1
+      }
+    ],
+    "pages": {
+      "menu[0].nm": 1,
+      "menu[0].price": 1,
+      "menu[1].nm": 1,
+      "menu[1].price": 1,
+      "sub_total.subtotal_price": 1,
+      "sub_total.tax_price": 1,
+      "total.total_price": 1,
+      "total.cashprice": 1,
+      "total.changeprice": 1
+    },
+    "evidence_gold": {
+      "source": "cord-valid-line",
+      "version": 1
+    }
+  }
+}

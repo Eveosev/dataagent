@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 284,
+  "question": "For the 2017 Italian Grand Prix, who set the fastest lap time in Q3 (the final qualifying session), and what was that time? Give me the driver code along with the fastest Q3 time. If two or more drivers tie for the fastest Q3 time, list every tied driver.",
+  "evidence": "Q3: the third and final qualifying session; a driver's Q3 time is the lap time that driver set in that session",
+  "gold_sql": "SELECT T2.code, T1.q3 FROM qualifying AS T1 INNER JOIN drivers AS T2 ON T2.driverId = T1.driverId WHERE T1.raceId = (SELECT raceId FROM races WHERE year = 2017 AND name = 'Italian Grand Prix') AND T1.q3 <> '' AND T1.q3 = (SELECT MIN(q3) FROM qualifying WHERE raceId = (SELECT raceId FROM races WHERE year = 2017 AND name = 'Italian Grand Prix') AND q3 <> '')",
+  "db_id": "formula_1",
+  "case_id": "B05-bird-0285",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT T2.code, T1.q3 FROM qualifying AS T1 INNER JOIN drivers AS T2 ON T2.driverId = T1.driverId WHERE T1.raceId = (SELECT raceId FROM races WHERE year = 2017 AND name = 'Italian Grand Prix') AND T1.q3 <> '' AND T1.q3 = (SELECT MIN(q3) FROM qualifying WHERE raceId = (SELECT raceId FROM races WHERE year = 2017 AND name = 'Italian Grand Prix') AND q3 <> '')",
+    "db_id": "formula_1",
+    "evidence": "Q3: the third and final qualifying session; a driver's Q3 time is the lap time that driver set in that session"
+  }
+}

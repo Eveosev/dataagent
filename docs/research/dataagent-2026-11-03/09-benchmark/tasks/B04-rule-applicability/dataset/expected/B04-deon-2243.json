@@ -1,0 +1,28 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_593f3a10",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "state",
+    "focus_year",
+    "authority",
+    "statute_12_vsa_4854_writ_issues_on_judgment_entry",
+    "statute_12_vsa_4854_writ_directs_sheriff_to_put_plaintiff_into_possession",
+    "legal_writ_of_possession_is_court_order_to_authority",
+    "legal_put_plaintiff_into_possession_implies_remove_tenant",
+    "legal_term_refers_to_order_from_court_to_authorities_to_remove_tenant",
+    "scenario_term",
+    "scenario_claimed_meaning",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "% Self-contained SWI-Prolog program encoding:\n% - Vermont statute 12 V.S.A.  4854 (writ of possession)\n% - The question's factual statement\n% - A derived yes/no answer\n\n% -----------------------\n% Basic context facts\n% -----------------------\n\nstate(vermont).\nfocus_year(2021).\n\nauthority(sheriff).  % sheriff is the relevant authority mentioned in the statute\n\n% -----------------------\n% Statute translation (deterministic predicates)\n% -----------------------\n\n% 12 V.S.A.  4854: If plaintiff is entitled to possession, judgment for possession enters.\n% \"A writ of possession shall issue on the date judgment is entered, unless ... stay.\"\nstatute_12_vsa_4854_writ_issues_on_judgment_entry(yes).\n\n% 12 V.S.A.  4854: \"The writ shall direct the sheriff ... to serve the writ upon the defendant and,\n% not earlier than 14 days after the writ is served, to put the plaintiff into possession.\"\nstatute_12_vsa_4854_writ_directs_sheriff_to_put_plaintiff_into_possession(yes).\n\n% Derived legal meaning from  4854: the \"writ of possession\" is a court-issued directive to an authority\n% (the sheriff) to execute possession for the plaintiff (which operationally requires removing the tenant/defendant).\nlegal_writ_of_possession_is_court_order_to_authority(yes) :-\n    statute_12_vsa_4854_writ_issues_on_judgment_entry(yes),\n    statute_12_vsa_4854_writ_directs_sheriff_to_put_plaintiff_into_possession(yes),\n    authority(sheriff),\n    !.\nlegal_writ_of_possession_is_court_order_to_authority(no) :-\n    !.\n\n% Helper: \"put the plaintiff into possession\" implies the tenant/defendant is removed if still in possession.\n% This captures the functional equivalence needed for the question.\nlegal_put_plaintiff_into_possession_implies_remove_tenant(yes) :-\n    statute_12_vsa_4854_writ_directs_sheriff_to_put_plaintiff_into_possession(yes),\n    !.\nlegal_put_plaintiff_into_possession_implies_remove_tenant(no) :-\n    !.\n\n% Combined derived meaning: the term \"writ of possession\" refers to an order from the court to authorities\n% to remove a tenant/defendant (so plaintiff can take possession).\nlegal_term_refers_to_order_from_court_to_authorities_to_remove_tenant(writ_of_possession, yes) :-\n    legal_writ_of_possession_is_court_order_to_authority(yes),\n    legal_put_plaintiff_into_possession_implies_remove_tenant(yes),\n    !.\nlegal_term_refers_to_order_from_court_to_authorities_to_remove_tenant(writ_of_possession, no) :-\n    !.\n\n% -----------------------\n% Scenario translation (facts + a summarizing predicate)\n% -----------------------\n\n% The question asks whether the term 'Writ of possession' is used to refer to:\n% \"the order from the court to the authorities to remove a tenant\".\nscenario_term(writ_of_possession).\nscenario_claimed_meaning(order_from_court_to_authorities_to_remove_tenant).\n\n% Succeeds when the factual statement (the question's described meaning) is the scenario we encoded.\nscenario_statement :-\n    scenario_term(writ_of_possession),\n    scenario_claimed_meaning(order_from_court_to_authorities_to_remove_tenant),\n    !.\n\n% -----------------------\n% Answer derivation (must not hardcode)\n% -----------------------\n\nhousing_answer(yes) :-\n    scenario_statement,\n    legal_term_refers_to_order_from_court_to_authorities_to_remove_tenant(writ_of_possession, yes),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    legal_term_refers_to_order_from_court_to_authorities_to_remove_tenant(writ_of_possession, no),\n    !.\nhousing_answer(no) :-\n    % Fallback for unexpected missing scenario facts (kept deterministic).\n    !.\n\n% -----------------------\n% Main entrypoint (REQUIRED)\n% -----------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-2243",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Is the term 'Writ of possession' used to refer to the order from the court to the authorities to remove a tenant?"
+  }
+}

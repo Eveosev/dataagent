@@ -1,0 +1,21 @@
+{
+  "source": "datadotworld/cwd-benchmark-data",
+  "inquiry_id": "IQ_8b9dc0d26e4b77f615fb74c234c602b4",
+  "prompt": "Return policy holders and the claims they have made and the correspoinding catastrophe",
+  "sql": [
+    "SELECT\n    party_identifier as AgentID,\n    policy_number,\n    company_claim_number,\n    catastrophe_name\nFROM\n    Claim\n    inner join catastrophe on claim.catastrophe_identifier = catastrophe.catastrophe_identifier\n    inner join claim_coverage on claim.claim_identifier = claim_coverage.claim_identifier\n    inner join policy_coverage_detail on claim_coverage.policy_coverage_detail_identifier = policy_coverage_detail.policy_coverage_detail_identifier\n    inner join policy on policy.policy_identifier = policy_coverage_detail.policy_identifier\n    inner join  agreement_party_role  on agreement_party_role.agreement_identifier = policy.policy_identifier\nwhere  agreement_party_role.party_role_code = 'PH'"
+  ],
+  "sparql": [
+    "PREFIX : <https://myinsurancecompany.linked.data.world/d/chat-with-the-data-benchmark/>\nPREFIX in: <http://data.world/schema/insurance/>\n\nSELECT ?policyHolderId ?policyNumber ?claimNumber  ?catastropheName\nWHERE {\nSERVICE :mapped {\n    ?p a in:Policy.\n    ?p in:policyNumber ?policyNumber.\n    ?p in:hasPolicyHolder [ in:policyHolderId ?policyHolderId] .\n    ?pcd in:hasPolicy ?p.\n    ?c in:against ?pcd.\n    ?c in:claimNumber ?claimNumber.\n    ?c in:hasCatastrophe ?catastrophe .\n    ?catastrophe in:catastropheName ?catastropheName\n    }\n}\n"
+  ],
+  "case_id": "B05-cwd-0006",
+  "expected": {
+    "kind": "query",
+    "question": "Return policy holders and the claims they have made and the correspoinding catastrophe",
+    "sql": "SELECT\n    party_identifier as AgentID,\n    policy_number,\n    company_claim_number,\n    catastrophe_name\nFROM\n    Claim\n    inner join catastrophe on claim.catastrophe_identifier = catastrophe.catastrophe_identifier\n    inner join claim_coverage on claim.claim_identifier = claim_coverage.claim_identifier\n    inner join policy_coverage_detail on claim_coverage.policy_coverage_detail_identifier = policy_coverage_detail.policy_coverage_detail_identifier\n    inner join policy on policy.policy_identifier = policy_coverage_detail.policy_identifier\n    inner join  agreement_party_role  on agreement_party_role.agreement_identifier = policy.policy_identifier\nwhere  agreement_party_role.party_role_code = 'PH'",
+    "alternate_sql": [],
+    "sparql": [
+      "PREFIX : <https://myinsurancecompany.linked.data.world/d/chat-with-the-data-benchmark/>\nPREFIX in: <http://data.world/schema/insurance/>\n\nSELECT ?policyHolderId ?policyNumber ?claimNumber  ?catastropheName\nWHERE {\nSERVICE :mapped {\n    ?p a in:Policy.\n    ?p in:policyNumber ?policyNumber.\n    ?p in:hasPolicyHolder [ in:policyHolderId ?policyHolderId] .\n    ?pcd in:hasPolicy ?p.\n    ?c in:against ?pcd.\n    ?c in:claimNumber ?claimNumber.\n    ?c in:hasCatastrophe ?catastrophe .\n    ?catastrophe in:catastropheName ?catastropheName\n    }\n}\n"
+    ]
+  }
+}

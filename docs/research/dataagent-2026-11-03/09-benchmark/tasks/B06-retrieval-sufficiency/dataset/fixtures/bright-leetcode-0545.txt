@@ -1,0 +1,22 @@
+## Identifying the essential problem:
+
+The core problem is to determine the optimal way for Bob to allocate his `numArrows` across the 12 scoring sections to **maximize** his total points, considering Alice's arrow distribution and the scoring rules.
+
+## Reasoning step-by-step:
+
+1. **Analyze Alice's arrow distribution**: Understanding where Alice has concentrated her arrows is crucial. Sections where Alice has a high arrow count are less attractive to Bob, as he's less likely to gain points there.
+2. **Prioritize high-scoring sections**: Bob should prioritize sections with higher scores (`10` and `11`) where even a single arrow can secure a significant advantage if Alice has no presence there.
+3. **Consider the "tie-breaker" rule**: Sections where both Bob and Alice have no arrows (`ak == bk == 0`) won't contribute points to anyone. Bob can strategically place arrows on such sections to prevent Alice from gaining points in the future.
+4. **Utilize remaining arrows**: After addressing high-scoring sections and potential tie-breaker scenarios, Bob can distribute his remaining arrows to further optimize his point gain, focusing on sections where he can potentially outnumber Alice.
+
+## Drafting a potential answer:
+
+Here's a possible approach to construct Bob's arrow distribution (`bobArrows`):
+
+1. **Start from high-scoring sections**: Begin by placing arrows on sections 10 and 11 if Alice has 0 arrows there. Allocate as many arrows as possible to these sections until Bob exhausts his arrows or reaches a point where placing another arrow wouldn't yield additional benefit (e.g., Alice already has arrows on those sections).
+2. **Address "tie-breaker" sections**: Identify sections with `ak == bk == 0` and place one arrow on each of those sections to prevent Alice from claiming points later.
+3. **Fill remaining sections**: With remaining arrows, focus on sections where Bob can outnumber Alice. Prioritize sections with higher scores first. If multiple options exist with the same score, choose one that provides the highest advantage over Alice.
+
+This strategy prioritizes maximizing points on high-scoring sections, prevents Alice from gaining advantage on "tie-breaker" sections, and strategically utilizes remaining arrows to outnumber Alice wherever possible, leading to Bob's maximum point potential.
+
+**Note**: This is one potential approach, and other strategies might also yield the maximum point gain. The specific optimal solution might depend on the exact distribution of Alice's arrows. 

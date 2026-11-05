@@ -1,0 +1,73 @@
+{
+  "source": "xlangai/BRIGHT",
+  "query_id": "62",
+  "query": "## Essential Problem:\n\nThe core problem is to determine whether a given integer array `nums` is monotonic, meaning it's either monotonically increasing or monotonically decreasing. \n\n## Information Gathering:\n\n- **Monotonically Increasing:** Each element is greater than or equal to the element before it.\n- **Monotonically Decreasing:** Each element is less than or equal to the element before it.\n- **Array:** A collection of ordered elements.\n\n## Reasoning and Approach:\n\n1. **Initialization:** We need to initialize two variables: `increasing` and `decreasing` to `true`. These variables track whether the array is monotonically increasing or decreasing, respectively.\n2. **Iteration:** We iterate through the array, comparing each element with its previous element.\n3. **Comparison:**\n    - If the current element is greater than the previous element, we set `increasing` to `true` and `decreasing` to `false`.\n    - If the current element is less than the previous element, we set `increasing` to `false` and `decreasing` to `true`.\n    - If the current element is equal to the previous element, we continue checking.\n4. **Return:** After iterating through the entire array, we return `true` if either `increasing` or `decreasing` is `true`. Otherwise, we return `false`.\n\n## Draft Answer:\n\n```pony\nfun isMonotonic(nums: Array[I32]): Bool {\n    var increasing = true\n    var decreasing = true\n\n    for i in 1..nums.length - 1 {\n        if nums[i] > nums[i - 1] {\n            decreasing = false\n        } else if nums[i] < nums[i - 1] {\n            increasing = false\n        }\n    }\n\n    return increasing or decreasing\n}\n```\n\nThis code first initializes the `increasing` and `decreasing` variables. Then, it iterates through the array, comparing each element with its previous element and updating the variables accordingly. Finally, it returns `true` if the array is either monotonically increasing or decreasing, and `false` otherwise. \n\n## Further Considerations:\n\n- This solution assumes that the array contains at least two elements. \n- We can optimize the code by breaking the loop as soon as we encounter an element that violates the monotonic property. \n- We can also consider handling cases where the array contains duplicate elements. \n",
+  "gold_ids": [
+    "Pony/4_control-structures_1.txt",
+    "Pony/6_errors_2.txt",
+    "Pony/1_variables_1.txt",
+    "Pony/4_control-structures_2.txt",
+    "Pony/6_errors_3.txt",
+    "Pony/4_control-structures_18.txt",
+    "Pony/collections-Range-_0.txt",
+    "Pony/4_control-structures_16.txt",
+    "Pony/4_control-structures_17.txt",
+    "Pony/4_control-structures_11.txt",
+    "Pony/4_control-structures_13.txt",
+    "Pony/5_methods_1.txt",
+    "Pony/4_control-structures_15.txt",
+    "Pony/2_ops_2.txt",
+    "Pony/4_control-structures_12.txt",
+    "Pony/2_primitives_3.txt",
+    "Pony/6_errors_1.txt",
+    "Pony/4_control-structures_14.txt",
+    "Pony/1_variables_2.txt",
+    "Pony/4_control-structures_19.txt",
+    "Pony/4_control-structures_3.txt",
+    "Pony/2_ops_1.txt"
+  ],
+  "gold_answer": "N/A",
+  "corpus": "documents/pony-00000-of-00001.parquet",
+  "case_id": "B06-bright-0638",
+  "expected": {
+    "kind": "retrieval",
+    "gold_ids": [
+      "Pony/4_control-structures_1.txt",
+      "Pony/6_errors_2.txt",
+      "Pony/1_variables_1.txt",
+      "Pony/4_control-structures_2.txt",
+      "Pony/6_errors_3.txt",
+      "Pony/4_control-structures_18.txt",
+      "Pony/collections-Range-_0.txt",
+      "Pony/4_control-structures_16.txt",
+      "Pony/4_control-structures_17.txt",
+      "Pony/4_control-structures_11.txt",
+      "Pony/4_control-structures_13.txt",
+      "Pony/5_methods_1.txt",
+      "Pony/4_control-structures_15.txt",
+      "Pony/2_ops_2.txt",
+      "Pony/4_control-structures_12.txt",
+      "Pony/2_primitives_3.txt",
+      "Pony/6_errors_1.txt",
+      "Pony/4_control-structures_14.txt",
+      "Pony/1_variables_2.txt",
+      "Pony/4_control-structures_19.txt",
+      "Pony/4_control-structures_3.txt",
+      "Pony/2_ops_1.txt"
+    ],
+    "gold_ids_long": [
+      "Pony/4_control-structures.txt",
+      "Pony/6_errors.txt",
+      "Pony/5_methods.txt",
+      "Pony/1_variables.txt",
+      "Pony/2_primitives.txt",
+      "Pony/collections-Range-.txt",
+      "Pony/src-collections-range-.txt",
+      "Pony/2_ops.txt"
+    ],
+    "gold_answer": "N/A",
+    "excluded_ids": [
+      "N/A"
+    ]
+  }
+}

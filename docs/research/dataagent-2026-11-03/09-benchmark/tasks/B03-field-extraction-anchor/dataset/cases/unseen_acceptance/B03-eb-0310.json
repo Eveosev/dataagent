@@ -1,0 +1,51 @@
+{
+  "case_id": "B03-eb-0310",
+  "task_id": "B03",
+  "split_role": "unseen_acceptance",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://extractbench/docs/medium/q4-2025-earnings-press-release.pdf",
+      "digest": null
+    },
+    {
+      "kind": "schema",
+      "ref": "fixtures/eb-medium-q4-2025-earnings-press-release-schema.json",
+      "digest": null
+    },
+    {
+      "kind": "rules",
+      "ref": "fixtures/eb-medium-q4-2025-earnings-press-release-rules.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-eb-0310.json"
+  },
+  "evidence": [
+    "bench://extractbench/docs/medium/q4-2025-earnings-press-release.pdf",
+    "fixtures/eb-medium-q4-2025-earnings-press-release-schema.json",
+    "fixtures/eb-medium-q4-2025-earnings-press-release-rules.md"
+  ],
+  "tags": [
+    "extractbench",
+    "medium",
+    "tag:source:real",
+    "tag:challenge:T2.b",
+    "tag:challenge:T2.d",
+    "tag:length:medium",
+    "tag:domain:D1",
+    "fields:15"
+  ],
+  "source": "eb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

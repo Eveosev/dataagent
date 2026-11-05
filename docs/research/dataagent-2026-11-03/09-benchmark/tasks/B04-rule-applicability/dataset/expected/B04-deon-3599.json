@@ -1,0 +1,24 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_f5b4ca22",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "state",
+    "focus_year",
+    "scenario_term",
+    "scenario_concept",
+    "statute_term_used_for_concept",
+    "statute_writ_of_possession_authorizes_sheriff_removal",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    State: New Hampshire\n    Focus year: 2021\n\n    Question:\n    \"Is the term 'Eviction order' used to refer to the order from the court to the authorities\n     to remove a tenant?\"\n*/\n\n% ----------------------------\n% Jurisdiction / context facts\n% ----------------------------\n\nstate(new_hampshire).\nfocus_year(2021).\n\n% ----------------------------\n% Scenario encoding (question's factual statement)\n% ----------------------------\n\n% The term whose usage is being asked about.\nscenario_term(eviction_order).\n\n% The concept described in the question: \"the order from the court to the authorities to remove a tenant\".\nscenario_concept(court_order_to_authority_to_remove_tenant).\n\n% Helper predicate that succeeds when the factual statement is fully captured.\nscenario_statement :-\n    scenario_term(eviction_order),\n    scenario_concept(court_order_to_authority_to_remove_tenant).\n\n% ----------------------------\n% Statute translation: NH Rev Stat  540:14 (2021)\n% ----------------------------\n\n/*\n  NH Rev Stat  540:14(I) (2021), key language:\n  - \"... judgment shall be rendered ... and a writ of possession shall issue.\"\n  - \"The judgment may be enforced ... by directing the sheriff to serve the writ of possession ...\"\n  - \"A writ of possession shall authorize the sheriff to remove the defendant from the premises.\"\n\n  We encode the relevant legal concept mapping:\n  The instrument/order that authorizes the sheriff (authority) to remove the tenant/defendant is the \"writ of possession\".\n*/\n\n% statute_term_used_for_concept(+State,+Year,+Term,+Concept)\n% Deterministic mapping of statutory terminology to the legal concept.\nstatute_term_used_for_concept(new_hampshire, 2021, writ_of_possession, court_order_to_authority_to_remove_tenant) :- !.\n\n% A more explicit statutory meaning: writ of possession authorizes sheriff removal.\n% (This supports the above mapping; included to reflect the statutory content.)\nstatute_writ_of_possession_authorizes_sheriff_removal(new_hampshire, 2021) :- !.\n\n% ----------------------------\n% Reasoning helpers\n% ----------------------------\n\n% The question asks whether \"eviction_order\" is the statutory term for the concept.\nstatute_uses_eviction_order_for_removal_concept :-\n    state(State),\n    focus_year(Year),\n    statute_term_used_for_concept(State, Year, eviction_order, court_order_to_authority_to_remove_tenant).\n\n% Also allow the concept to be determined from the scenario facts.\nscenario_asks_about_eviction_order_term_for_removal_concept :-\n    scenario_statement,\n    scenario_term(eviction_order),\n    scenario_concept(court_order_to_authority_to_remove_tenant).\n\n% ----------------------------\n% Final answer predicate (deterministic)\n% ----------------------------\n\nhousing_answer(yes) :-\n    scenario_asks_about_eviction_order_term_for_removal_concept,\n    statute_uses_eviction_order_for_removal_concept,\n    !.\nhousing_answer(no) :-\n    scenario_asks_about_eviction_order_term_for_removal_concept,\n    \\+ statute_uses_eviction_order_for_removal_concept,\n    !.\n\n% ----------------------------\n% Main entrypoint\n% ----------------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-3599",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is the term 'Eviction order' used to refer to the order from the court to the authorities to remove a tenant?"
+  }
+}

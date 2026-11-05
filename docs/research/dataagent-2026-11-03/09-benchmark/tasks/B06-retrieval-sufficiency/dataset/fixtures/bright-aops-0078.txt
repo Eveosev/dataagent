@@ -1,0 +1,49 @@
+## Essential Problem
+
+We need to find the hundreds digit of $2011^{2011}.$
+
+## Reasoning:
+
+**Step 1: Find a pattern.**
+
+Noticing that only the units digit of the base $2011$ is odd, we focus on the pattern formed only by the units digits of the powers of $2011.$ We have: \begin{align*}
+2011^1 &\equiv 1\pmod{10}, \\
+2011^2 &\equiv 1\cdot 1 \equiv 1\pmod{10}, \\
+2011^3 &\equiv 1\cdot 1 \equiv 1\pmod{10}, \\
+&\ \,\vdots
+\end{align*}This suggests that the units digit of all positive integer powers of $2011$ is always $1.$ Therefore, the hundreds digit of $2011^{2011}$ is simply the hundreds digit of $1,$ which is $\boxed{0}.$
+
+## Alternative Approaches
+
+**Method 1: Binomial Theorem**
+
+Using the Binomial Theorem, we can express $2011^{2011}$ as follows: \begin{align*}
+2011^{2011} & = (2000+11)^{2011} \\
+&= \binom{2011}{0}(2000)^{2011} + \binom{2011}{1}(2000)^{2010}\cdot11^1+\binom{2011}{2}(2000)^{2009}\cdot 11^2+\cdots+\binom{2011}{2011} 11^{2011} \\
+&\equiv \binom{2011}{2}\cdot 11^2\pmod{1000},
+\end{align*}since all other terms are multiples of $1000.$ Furthermore, since $\binom{2011}{2}=2011\choose 2009=\frac{2011!}{2\cdot2009!}=\frac{2011\cdot2010}{2}=2011\cdot1005,$ we know this term has a units digit of $0$ and hundreds digit of $0$ as desired.
+
+**Method 2: Modular/Cyclic Reasoning**
+
+We know that $2011\equiv 11\pmod{100}.$ Raising both sides to the $2011$th power, we get \begin{align*}
+2011^{2011} \equiv 11^{2011} \pmod{100}.
+\end{align*}Now we need to find the remainder of $11^{2011}$ upon division by $100.$ Notice that \begin{align*}
+11^{2011} &=(11^2)^{1005}\cdot11 \\
+&=121^{1005}\cdot11 \\
+&\equiv 21^{1005}\cdot11\pmod{100}.
+\end{align*}Writing $21$ as $20+1$, we have: \begin{align*}
+21^{1005}\cdot11 &\equiv(20+1)^{1005}\cdot11 \\
+&\equiv 20^{1005}\cdot11+ \binom{1005}{1}20^{1004}\cdot11^1+\binom{1005}{2}20^{1003}\cdot11^2+\cdots+\binom{1005}{1004}20^1\cdot11^{1004}+11^{1005} \\
+&\equiv 11+ \binom{1005}{1}20\cdot11+\binom{1005}{2}20^2\cdot11^2+\cdots+\binom{1005}{1004}20^{1004}\cdot11^{1004}\pmod{100},
+\end{align*}since all terms with powers of $20$ greater than or equal to $3$ are multiples of $100$ and hence can be ignored.
+
+We can use the identity \begin{align*}
+\sum_{k=0}^{n-1}\binom{n-1}{k}=2^{n-1}
+\end{align*}to simplify our expression even further:  \begin{align*}
+11+ \binom{1005}{1}20\cdot11+\binom{1005}{2}20^2\cdot11^2+\cdots+\binom{1005}{1004}20^{1004}\cdot11^{1004} &\equiv 11+20\cdot11\cdot2^{1004} \\
+&\equiv 11+20\cdot 11\cdot16 \\
+&\equiv 11+33\cdot 16 \\
+&\equiv 11+13\cdot 16\\
+&\equiv 11+52\\
+&\equiv 63\pmod{100}.
+\end{align*}Thus, $2011^{2011} \equiv 63\pmod{100},$ so its hundreds digit is indeed $\boxed{0}.$

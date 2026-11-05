@@ -1,0 +1,87 @@
+{
+  "source": "naver-clova-ix/cord-v2",
+  "split": "train",
+  "index": 12,
+  "gt_parse": {
+    "menu": {
+      "nm": "CHOCO CROSSIANT",
+      "cnt": "1",
+      "price": "13,000"
+    },
+    "total": {
+      "total_price": "13,000",
+      "cashprice": "50,000",
+      "changeprice": "37,000"
+    }
+  },
+  "case_id": "B03-cord-0488",
+  "expected": {
+    "kind": "json",
+    "value": {
+      "menu": {
+        "nm": "CHOCO CROSSIANT",
+        "cnt": "1",
+        "price": "13,000"
+      },
+      "total": {
+        "total_price": "13,000",
+        "cashprice": "50,000",
+        "changeprice": "37,000"
+      }
+    },
+    "fields": {
+      "menu.nm": "CHOCO CROSSIANT",
+      "menu.cnt": "1",
+      "menu.price": "13,000",
+      "total.total_price": "13,000",
+      "total.cashprice": "50,000",
+      "total.changeprice": "37,000"
+    },
+    "anchored_fields": 0,
+    "no_anchor_fields": 6,
+    "spans": [
+      {
+        "field": "menu.nm",
+        "text": "CHOCO CROSSIANT",
+        "page": 1
+      },
+      {
+        "field": "menu.cnt",
+        "text": "1",
+        "page": 1
+      },
+      {
+        "field": "menu.price",
+        "text": "13,000",
+        "page": 1
+      },
+      {
+        "field": "total.total_price",
+        "text": "13,000",
+        "page": 1
+      },
+      {
+        "field": "total.cashprice",
+        "text": "50,000",
+        "page": 1
+      },
+      {
+        "field": "total.changeprice",
+        "text": "37,000",
+        "page": 1
+      }
+    ],
+    "pages": {
+      "menu.nm": 1,
+      "menu.cnt": 1,
+      "menu.price": 1,
+      "total.total_price": 1,
+      "total.cashprice": 1,
+      "total.changeprice": 1
+    },
+    "evidence_gold": {
+      "source": "cord-valid-line",
+      "version": 1
+    }
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "databricks",
+  "pipeline": "cars",
+  "data_model": {
+    "models": [
+      {
+        "name": "countries",
+        "description": "Each record represents a country.",
+        "columns": [
+          {
+            "name": "origin",
+            "description": "The unique identifier for the origin country."
+          },
+          {
+            "name": "country",
+            "description": "the origin country of the car."
+          },
+          {
+            "name": "fastest_car",
+            "description": "Name of the fastest car produced in the country, with ties broken by the ascending order of the car name. Fastest car is determined by the highest acceleration."
+          },
+          {
+            "name": "most_fuel_efficient_car",
+            "description": "Name of the most fuel-efficient car produced in the country, with ties broken by the descending order of the car name."
+          },
+          {
+            "name": "num_cars",
+            "description": "Number of cars produced in the country; different model years are counted as different cars. Replace NULL values with 0."
+          },
+          {
+            "name": "num_car_worth_over_35000_and_acceleration_14",
+            "description": "Number of cars produced in the country that are worth over $35,000 and have an acceleration of 14, different model years are counted as different cars, replace NULL values with 0."
+          },
+          {
+            "name": "avg_car_price",
+            "description": "Average price of cars produced in the country, where different model years are counted as different cars."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    databricks_definition_id: 072d5540-f236-4294-ba7c-ade8fd918496\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://cars-bucket/country.jsonl\n    sync_mode: full_refresh_append\n    table: country\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - data\nflat_files:\n- format: csv\n  path: https://drive.google.com/uc?export=download&id=1RVq5HKZF1nkco2OoX2NAGf93T7cQp67G\n  sync_mode: full_refresh_append\n  table: production\npostgres:\n  config:\n    database: cars\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - price\n    user: postgres\ndatabricks:\n  config:\n    database: <db_database>\n    hostname: <db_hostname>\n    client_id: <db_client_id>\n    secret: <db_secret>\n    schema: cars\n    http_path: <db_path>\n",
+  "case_id": "B14-elt-0015",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "countries",
+        "columns": [
+          "origin",
+          "country",
+          "fastest_car",
+          "most_fuel_efficient_car",
+          "num_cars",
+          "num_car_worth_over_35000_and_acceleration_14",
+          "avg_car_price"
+        ]
+      }
+    ]
+  }
+}

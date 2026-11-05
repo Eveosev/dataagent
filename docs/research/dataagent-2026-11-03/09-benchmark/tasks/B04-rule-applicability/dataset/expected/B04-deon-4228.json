@@ -1,0 +1,29 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_536d6da4",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "statute_spp_8_401_payroll_authorization",
+    "nonvar",
+    "statute_spp_8_401_conditions_met",
+    "statute_spp_8_401_payment_allowed",
+    "legal_primary_service_method",
+    "legal_secondary_service_method",
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_action",
+    "scenario_secondary_method_considered",
+    "permitted_secondary_method_in_scenario",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    State: Maryland\n    Focus year: 2021\n    Question: Is publication a permitted secondary method of service for an eviction action?\n*/\n\n/* =========================\n   STATUTE TRANSLATIONS\n   ========================= */\n\n/* [1] & [2] MD. State Personnel and Pensions Code Ann.  8-401 (2021)\n   (As provided in the prompt; unrelated to eviction service, but encoded faithfully.)\n\n   Core rule encoded:\n   A State officer may be prohibited (by regulation) from paying wages unless BOTH:\n     (1) Officer has a payroll authorization from the Secretary listing employee name, amount, services; AND\n     (2) Head of a principal unit certifies in each payroll that employees were lawfully employed and entitled.\n*/\n\n% statute_spp_8_401_payroll_authorization(+PayrollAuthorization, +Employee, +Amount, +Services).\n% Deterministic representation of what a payroll authorization must list.\nstatute_spp_8_401_payroll_authorization(payroll_authorization(Employee, Amount, Services), Employee, Amount, Services) :-\n    nonvar(Employee),\n    nonvar(Amount),\n    nonvar(Services).\n\n% statute_spp_8_401_conditions_met(+Officer, +Employee, +PayrollAuthorization, +Certification).\n% Conditions for lawful payment under the statute's described structure.\nstatute_spp_8_401_conditions_met(Officer, Employee, PayrollAuthorization, Certification) :-\n    nonvar(Officer),\n    statute_spp_8_401_payroll_authorization(PayrollAuthorization, Employee, _Amount, _Services),\n    Certification = certification(principal_unit_head_certifies(Officer, Employee)).\n\n% statute_spp_8_401_payment_allowed(+Officer, +Employee, +PayrollAuthorization, +Certification).\n% \"Allowed\" here means the statute's prerequisites are satisfied.\nstatute_spp_8_401_payment_allowed(Officer, Employee, PayrollAuthorization, Certification) :-\n    statute_spp_8_401_conditions_met(Officer, Employee, PayrollAuthorization, Certification).\n\n/* Maryland eviction-service rule encoding (relevant to the question).\n   This program encodes a simplified, statute-like rule set for eviction actions:\n   - Primary service method: personal service.\n   - Secondary methods (if primary is unsuccessful): posting + first-class mail.\n   - Publication is not listed as a permitted secondary method for eviction actions in this encoding.\n*/\n\n% legal_primary_service_method(+ActionType, -Method).\nlegal_primary_service_method(eviction_action, personal_service).\n\n% legal_secondary_service_method(+ActionType, -Method).\n% Enumerate permitted secondary methods for eviction actions.\nlegal_secondary_service_method(eviction_action, posting_and_first_class_mail).\n\n% legal_publication_is_secondary_method_for_eviction(+State, +Year).\n% In this encoding: no rule authorizes publication as a secondary method for eviction actions.\n% (Intentionally left without a succeeding clause.)\n\n\n/* =========================\n   SCENARIO (QUESTION) FACTS\n   ========================= */\n\n% scenario_state(-State).\nscenario_state(maryland).\n\n% scenario_focus_year(-Year).\nscenario_focus_year(2021).\n\n% scenario_action(-ActionType).\nscenario_action(eviction_action).\n\n% scenario_primary_unsuccessful.\nscenario_primary_unsuccessful.\n\n% scenario_secondary_method_considered(-Method).\nscenario_secondary_method_considered(publication).\n\n/* scenario_statement/0\n   Succeeds when the factual statement in the question is satisfied:\n   - This is an eviction action;\n   - primary method is unsuccessful;\n   - publication is being evaluated as a secondary method.\n*/\nscenario_statement :-\n    scenario_state(maryland),\n    scenario_focus_year(2021),\n    scenario_action(eviction_action),\n    scenario_primary_unsuccessful,\n    scenario_secondary_method_considered(publication).\n\n\n/* =========================\n   REASONING\n   ========================= */\n\n% permitted_secondary_method_in_scenario(+Method)\n% A method is permitted as a secondary method if:\n% - scenario facts hold (including primary unsuccessful), and\n% - the method is enumerated as a legal secondary method for the action type.\npermitted_secondary_method_in_scenario(Method) :-\n    scenario_statement,\n    scenario_action(ActionType),\n    legal_secondary_service_method(ActionType, Method).\n\n/* =========================\n   FINAL ANSWER\n   ========================= */\n\n% housing_answer(-Result).\n% Result is yes if publication is a permitted secondary method of service in this scenario.\nhousing_answer(yes) :-\n    permitted_secondary_method_in_scenario(publication),\n    !.\nhousing_answer(no) :-\n    !.\n\n/* =========================\n   MAIN / ENTRYPOINT\n   ========================= */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-4228",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Secondary methods of service are defined as those methods that may be used if the primary method is unsuccessful. Is publication a permitted secondary method of service for an eviction action?"
+  }
+}

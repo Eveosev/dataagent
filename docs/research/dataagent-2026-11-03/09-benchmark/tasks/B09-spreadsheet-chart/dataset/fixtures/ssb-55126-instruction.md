@@ -1,0 +1,2 @@
+How can I create a formula in Excel that will display a result from Column C when I input any one piece of data from either Column A or B? The formula should work regardless of whether the data in Columns A and B are integers or text. It was mentioned that when the user switched the data between Columns A and B, the initially provided formula no longer worked, indicating that sometimes Column A contains integer data and sometimes Column B does.
+   My current formula is:INDEX(A:C,MATCH(G3,A:A,0),3)

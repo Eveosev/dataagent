@@ -1,0 +1,26 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_8a8d863e",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "landlord",
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_topic",
+    "eviction_statute_for_state_year",
+    "statute_landlord_category",
+    "statute_specifies_landlord_types",
+    "law_regulating_residential_evictions_specifies_landlord_types",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program encoding cited Ohio statutes and the question scenario.\n\n    Question (Ohio, 2021): Does the law regulating residential evictions specify the type(s) of\n    landlord(s) regulated?\n\n    We treat Ohio Rev Code Chapter 1923 (Forcible Entry and Detainer) as the core \"residential\n    evictions\" law for this QA, and we encode its statutory definition of \"landlord\" from\n    Ohio Rev Code  1923.01(C)(2) (2021). We also encode  5321.01(B) (2021) as supporting context.\n*/\n\n/* =========================\n   Scenario / factual statement\n   ========================= */\n\n% Encoded question metadata (facts)\nscenario_state(ohio).\nscenario_focus_year(2021).\nscenario_topic(residential_evictions).\n\n% Helper predicate: succeeds when the scenario facts are present/consistent.\nscenario_statement :-\n    scenario_state(ohio),\n    scenario_focus_year(2021),\n    scenario_topic(residential_evictions).\n\n/* =========================\n   Statute translations (deterministic, citation-labeled)\n   ========================= */\n\n% eviction_statute_for_state_year(State, Year, StatuteId).\n% Identifies the statute/chapter regulating (residential) evictions for this QA.\neviction_statute_for_state_year(ohio, 2021, orc_1923_chapter).\n\n/* --- Ohio Rev Code  1923.01(C)(2) (2021): definition of \"Landlord\" for Chapter 1923 --- */\n\n% statute_landlord_category(State, Year, StatuteId, CategoryAtom, CitationOrNote).\n% Categories are \"types of landlord\" explicitly included within the statutory definition.\nstatute_landlord_category(ohio, 2021, orc_1923_chapter, owner, 'ORC 1923.01(C)(2) (2021)').\nstatute_landlord_category(ohio, 2021, orc_1923_chapter, lessor, 'ORC 1923.01(C)(2) (2021)').\nstatute_landlord_category(ohio, 2021, orc_1923_chapter, sublessor, 'ORC 1923.01(C)(2) (2021)').\nstatute_landlord_category(ohio, 2021, orc_1923_chapter, agent_authorized_to_manage_premises, 'ORC 1923.01(C)(2) (2021)').\nstatute_landlord_category(ohio, 2021, orc_1923_chapter, person_authorized_to_receive_rent, 'ORC 1923.01(C)(2) (2021)').\n% Exception/alternate meaning within the same definition:\nstatute_landlord_category(ohio, 2021, orc_1923_chapter, park_operator_if_required_by_facts, 'ORC 1923.01(C)(2) (2021)').\n\n/* --- Ohio Rev Code  5321.01(B) (2021): definition of \"Landlord\" for Chapter 5321 --- */\n/* Not strictly needed to answer (eviction law is Chapter 1923), but included as part of translating\n   the provided statutes and to show consistent specification of landlord types. */\n\nstatute_landlord_category(ohio, 2021, orc_5321_chapter, owner, 'ORC 5321.01(B) (2021)').\nstatute_landlord_category(ohio, 2021, orc_5321_chapter, lessor, 'ORC 5321.01(B) (2021)').\nstatute_landlord_category(ohio, 2021, orc_5321_chapter, sublessor, 'ORC 5321.01(B) (2021)').\nstatute_landlord_category(ohio, 2021, orc_5321_chapter, agent_of_owner_lessor_or_sublessor, 'ORC 5321.01(B) (2021)').\nstatute_landlord_category(ohio, 2021, orc_5321_chapter, person_authorized_to_manage_premises, 'ORC 5321.01(B) (2021)').\nstatute_landlord_category(ohio, 2021, orc_5321_chapter, person_authorized_to_receive_rent, 'ORC 5321.01(B) (2021)').\n\n/* =========================\n   Reasoning helpers\n   ========================= */\n\n% statute_specifies_landlord_types(State, Year, StatuteId)\n% True if the statute contains at least one explicit landlord category.\nstatute_specifies_landlord_types(State, Year, StatuteId) :-\n    statute_landlord_category(State, Year, StatuteId, _SomeCategory, _Citation),\n    !.\n\n% law_regulating_residential_evictions_specifies_landlord_types(State, Year)\n% True if the eviction-regulating law (here, ORC Chapter 1923) specifies landlord types.\nlaw_regulating_residential_evictions_specifies_landlord_types(State, Year) :-\n    eviction_statute_for_state_year(State, Year, EvictionStatute),\n    statute_specifies_landlord_types(State, Year, EvictionStatute),\n    !.\n\n/* =========================\n   Final answer\n   ========================= */\n\n% housing_answer(Result) where Result is yes/no (deterministic).\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_state(State),\n    scenario_focus_year(Year),\n    law_regulating_residential_evictions_specifies_landlord_types(State, Year),\n    !.\nhousing_answer(no) :-\n    !.\n\n/* =========================\n   Main entrypoint (required)\n   ========================= */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-5057",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Does the law regulating residential evictions specify the type(s) of landlord(s) regulated?"
+  }
+}

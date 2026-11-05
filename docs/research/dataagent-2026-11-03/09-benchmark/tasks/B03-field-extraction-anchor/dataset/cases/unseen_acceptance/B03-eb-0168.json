@@ -1,0 +1,51 @@
+{
+  "case_id": "B03-eb-0168",
+  "task_id": "B03",
+  "split_role": "unseen_acceptance",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://extractbench/docs/short/dd1155_schedule_continuation_0002.pdf",
+      "digest": null
+    },
+    {
+      "kind": "schema",
+      "ref": "fixtures/eb-short-dd1155_schedule_continuation_0002-schema.json",
+      "digest": null
+    },
+    {
+      "kind": "rules",
+      "ref": "fixtures/eb-short-dd1155_schedule_continuation_0002-rules.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-eb-0168.json"
+  },
+  "evidence": [
+    "bench://extractbench/docs/short/dd1155_schedule_continuation_0002.pdf",
+    "fixtures/eb-short-dd1155_schedule_continuation_0002-schema.json",
+    "fixtures/eb-short-dd1155_schedule_continuation_0002-rules.md"
+  ],
+  "tags": [
+    "extractbench",
+    "short",
+    "tag:source:real",
+    "tag:challenge:T2.a",
+    "tag:challenge:T3.a",
+    "tag:length:short",
+    "tag:domain:D3",
+    "fields:12"
+  ],
+  "source": "eb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

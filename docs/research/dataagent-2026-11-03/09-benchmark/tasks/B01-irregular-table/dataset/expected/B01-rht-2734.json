@@ -1,0 +1,29 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1098,
+  "table": "manufacture-table16",
+  "structure": "MultiColumnClassified",
+  "question_type": "Data Analysis",
+  "sub_type": "Rudimentary Analysis",
+  "answer": "8.56, 6.41",
+  "cot": [
+    {
+      "step": "First, we need to locate all rows in the table under the “HARDWARE” category."
+    },
+    {
+      "step": "Extract the “QTY ON HAND” values for all items in this category."
+    },
+    {
+      "step": "Calculate the average (mean) of these values by summing them and dividing by the total number of items."
+    },
+    {
+      "step": "Calculate the standard deviation by measuring the square root of the variance (the average of the squared differences from the mean)."
+    }
+  ],
+  "case_id": "B01-rht-2734",
+  "expected": {
+    "kind": "answer",
+    "question": "What is the average quantity on hand and the standard deviation for all items in the “HARDWARE” category?",
+    "answer": "8.56, 6.41"
+  }
+}

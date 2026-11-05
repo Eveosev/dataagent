@@ -1,0 +1,1 @@
+Which state has the most land area (in Acres) impacted by fire, per capita?

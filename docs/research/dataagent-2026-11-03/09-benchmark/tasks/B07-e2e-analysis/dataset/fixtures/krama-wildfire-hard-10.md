@@ -1,0 +1,1 @@
+By count, are there more fires in Democratic states or Republican states? Answer **only** with 'Democratic' or 'Republican'.

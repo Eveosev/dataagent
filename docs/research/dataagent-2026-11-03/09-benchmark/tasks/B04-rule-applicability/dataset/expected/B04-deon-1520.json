@@ -1,0 +1,25 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_7033b15b",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "statute_sc_27_37_160_executor_role",
+    "legal_entity_empowered_to_execute_writ",
+    "entity_role",
+    "scenario_state",
+    "scenario_year",
+    "scenario_entity",
+    "entity_type",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "% Self-contained SWI-Prolog program\n% Jurisdiction: South Carolina\n% Focus year: 2021\n\n% ------------------------------------------------------------------------------\n% Statute translation: SC Code  27-37-160 (2021)\n% Topic: Who executes a writ of ejectment/eviction and what duties they have.\n%\n% Key legal point used for this question:\n% The statute specifies that execution is performed by \"the constable or deputy sheriff\".\n% No other entities are named as empowered executors.\n% ------------------------------------------------------------------------------\n\n% statute_sc_27_37_160_executor_role(Role).\n% SC Code  27-37-160 (2021): \"the constable or deputy sheriff shall proceed...\"\nstatute_sc_27_37_160_executor_role(constable).\nstatute_sc_27_37_160_executor_role(deputy_sheriff).\n\n% legal_entity_empowered_to_execute_writ(State, Year, Entity).\n% Deterministic gateway for empowerment under the translated statute.\nlegal_entity_empowered_to_execute_writ(south_carolina, 2021, Entity) :-\n    entity_role(Entity, Role),\n    statute_sc_27_37_160_executor_role(Role),\n    !.\nlegal_entity_empowered_to_execute_writ(_State, _Year, _Entity) :-\n    fail.\n\n% ------------------------------------------------------------------------------\n% Scenario translation (facts)\n% Question: \"Is a private company an entity empowered by law to execute a writ of eviction?\"\n% We encode a scenario with an entity that is a private company and ask whether it is empowered.\n% ------------------------------------------------------------------------------\n\n% scenario metadata\nscenario_state(south_carolina).\nscenario_year(2021).\n\n% The entity at issue\nscenario_entity(private_company_acme).\n\n% Fact: private_company_acme is a private company.\nentity_type(private_company_acme, private_company).\n\n% For this scenario, the private company does NOT have the statutory roles.\n% (We encode what the scenario says: it is a private company; no constable/deputy_sheriff role.)\nentity_role(private_company_acme, private_company_agent).\n\n% scenario_statement/0 succeeds when the scenario is set up as described.\nscenario_statement :-\n    scenario_state(south_carolina),\n    scenario_year(2021),\n    scenario_entity(E),\n    entity_type(E, private_company),\n    entity_role(E, private_company_agent).\n\n% ------------------------------------------------------------------------------\n% Reasoning for the question asked\n% ------------------------------------------------------------------------------\n\n% scenario_entity_empowered/0: whether the scenario entity is empowered by law to execute the writ.\nscenario_entity_empowered :-\n    scenario_statement,\n    scenario_state(State),\n    scenario_year(Year),\n    scenario_entity(E),\n    legal_entity_empowered_to_execute_writ(State, Year, E).\n\n% housing_answer(Result) where Result is yes or no (deterministic).\nhousing_answer(yes) :-\n    scenario_entity_empowered,\n    !.\nhousing_answer(no) :-\n    !.\n\n% ------------------------------------------------------------------------------\n% Main entrypoint (required)\n% ------------------------------------------------------------------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-1520",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is a private company an entity empowered by law to execute a writ of eviction?"
+  }
+}

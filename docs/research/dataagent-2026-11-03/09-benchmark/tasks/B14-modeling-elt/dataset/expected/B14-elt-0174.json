@@ -1,0 +1,67 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "redshift",
+  "pipeline": "shakespeare",
+  "data_model": {
+    "models": [
+      {
+        "name": "shakespeare__works",
+        "description": "Each record represents a work.",
+        "columns": [
+          {
+            "name": "id",
+            "description": "Unique identifier for the work."
+          },
+          {
+            "name": "title",
+            "description": "The title of the work."
+          },
+          {
+            "name": "genretype",
+            "description": "The genre type of the work."
+          },
+          {
+            "name": "num_characters",
+            "description": "The number of characters in the work, replace NULL values with 0."
+          },
+          {
+            "name": "num_scenes",
+            "description": "The number of scenes in the work, replace NULL values with 0."
+          },
+          {
+            "name": "has_a_character_as_a_Third_Servingman",
+            "description": "Set to 1 if the work has  a character as a \"Third Servingman\", otherwise, set to 0."
+          },
+          {
+            "name": "is_one_act_work",
+            "description": "Set to 1 if the work is a one-act work, 0 otherwise."
+          },
+          {
+            "name": "average_scene_per_act",
+            "description": "The average number of scenes per act in the work."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    redshift_definition_id: f7a7d195-377f-cf5b-70a5-be6b819019dc\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://shakespeare-bucket/chapters.jsonl\n    sync_mode: full_refresh_append\n    table: chapters\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - works\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: shakespeare\n    sync_mode: full_refresh_append\n    tables:\n    - characters\npostgres:\n  config:\n    database: shakespeare\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - paragraphs\n    user: postgres\nredshift:\n  config:\n    host: <redshift_hostname>\n    port: <redshift_port>\n    database: <redshift_db>\n    username: <redshift_username>\n    password: <redshift_pwd>\n    schema: shakespeare\n    s3_bucket_name: <redshift_s3_bucket>\n    s3_bucket_region: <redshift_s3_region>\n    access_key_id: <redshift_s3_access_key>\n    secret_access_key: <redshift_s3_secret_key>\n",
+  "case_id": "B14-elt-0174",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "shakespeare__works",
+        "columns": [
+          "id",
+          "title",
+          "genretype",
+          "num_characters",
+          "num_scenes",
+          "has_a_character_as_a_Third_Servingman",
+          "is_one_act_work",
+          "average_scene_per_act"
+        ]
+      }
+    ]
+  }
+}

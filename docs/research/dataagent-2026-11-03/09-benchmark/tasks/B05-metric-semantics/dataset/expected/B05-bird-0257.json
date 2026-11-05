@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 256,
+  "question": "For the 2010 Formula 1 season, how many drivers did Lucas di Grassi qualify ahead of? I want a single number: the count of drivers he out-qualified over the whole season. By 'qualify ahead of' I mean recording a better qualifying position than that driver in the same race, with a lower position number being better. The 2010 season means the races held in the year 2010.",
+  "evidence": "qualifying position: the starting slot a driver earns in the qualifying session before a race",
+  "gold_sql": "SELECT COUNT(DISTINCT T2.driverId) AS drivers_qualified_ahead_of FROM qualifying AS T1 JOIN qualifying AS T2 ON T2.raceId = T1.raceId AND T2.position > T1.position JOIN drivers AS D ON D.driverId = T1.driverId JOIN races AS R ON R.raceId = T1.raceId WHERE D.forename = 'Lucas' AND D.surname = 'di Grassi' AND R.year = 2010;",
+  "db_id": "formula_1",
+  "case_id": "B05-bird-0257",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT COUNT(DISTINCT T2.driverId) AS drivers_qualified_ahead_of FROM qualifying AS T1 JOIN qualifying AS T2 ON T2.raceId = T1.raceId AND T2.position > T1.position JOIN drivers AS D ON D.driverId = T1.driverId JOIN races AS R ON R.raceId = T1.raceId WHERE D.forename = 'Lucas' AND D.surname = 'di Grassi' AND R.year = 2010;",
+    "db_id": "formula_1",
+    "evidence": "qualifying position: the starting slot a driver earns in the qualifying session before a race"
+  }
+}

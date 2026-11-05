@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 398,
+  "table": "economy-table05",
+  "structure": "MultiColumnClassified",
+  "question_type": "Data Analysis",
+  "sub_type": "Rudimentary Analysis",
+  "answer": "17745",
+  "cot": [
+    {
+      "planning": "First, extract the “Bankruptcies” column and remove any non-numeric or missing data."
+    },
+    {
+      "planning": "Calculate the mean of the remaining values across all years."
+    },
+    {
+      "planning": "Output the calculated mean value in the required format."
+    }
+  ],
+  "case_id": "B01-rht-2034",
+  "expected": {
+    "kind": "answer",
+    "question": "What is the mean number of bankruptcies reported across all years?",
+    "answer": "17745"
+  }
+}

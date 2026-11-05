@@ -1,0 +1,199 @@
+{
+  "source": "llamaindex/ExtractBench",
+  "id": "medium/smfg-kessan-tanshin-2024-ja",
+  "pdf": "docs/medium/smfg-kessan-tanshin-2024-ja.pdf",
+  "schema": {
+    "type": "object",
+    "title": "EarningsDeckHeadlineKPIs",
+    "description": "Headline financial-highlights KPIs from a quarterly/annual earnings or investor deck. WHICH PERIOD: extract the period whose name appears as the heading of the deck's HEADLINE financial-highlights slide (the slide presenting the consolidated KPI tiles such as Sales / EPS / EBITDA). If that slide's heading says 'Full Year YYYY' use the FULL FISCAL YEAR; if it says a quarter (e.g. 'Q1 2026', '4Q25') use that QUARTER; for a Japanese 決算短信 use the current reporting fiscal year (the first/topmost year, e.g. '2024年3月期'), NOT the prior-year comparative and NOT the next-year forecast (業績予想). NEVER use a GUIDANCE / OUTLOOK / forecast period or a guidance range value. Every monetary figure is in MILLIONS of the reporting currency unless stated otherwise below.\n\nGLOBAL CONVENTIONS: (1) PERIOD — every scalar KPI must come from the SAME headline reporting period column; for a quarterly deck use the current-quarter column, never the year-to-date/full-year column. (2) ROUNDING — percentages/margins are reported to 2 decimal places; a currency metric presented as a rounded headline figure on a highlights/summary slide (e.g. '$2.1B') is captured as that rounded value (2100), not recomputed from reconciliation detail.",
+    "properties": {
+      "period": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Fiscal period of the headline ACTUALS, formatted 'Qx FYYYYY' for a quarter (e.g. 'Q1 FY2026') or 'FYYYYY' for a full fiscal year (e.g. 'FY2025'). Aliases seen on the page: 'Q4 2025','4Q25','1Q'26','Full Year 2025','FY25','2024年3月期'(=fiscal year ended March 2024 => 'FY2024'). RULE: if the headline highlights slide is titled 'Full Year YYYY' the period is 'FYYYYY' even when the overall deck is titled 'Qx'; a Japanese 決算短信's headline is the current fiscal year (FY of the FIRST data row). Do NOT confuse with: the prior-year comparative period, or a forward guidance/forecast year. Format: 'Qx FYYYYY' or 'FYYYYY'."
+      },
+      "currency": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "ISO-4217 currency code of the reported figures: 'USD','JPY','EUR','GBP'. Infer from the currency symbol ($=USD, ¥/円=JPY). Do NOT confuse with a secondary currency mentioned in geographic commentary. Format: 3-letter uppercase code."
+      },
+      "fiscal_period_end_date": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Last calendar day of the reported period (the SAME period as `period`), ISO 'YYYY-MM-DD'. A Full Year 2025 ending December 31, 2025 => '2025-12-31'; Japanese '2024年3月期' => '2024-03-31'; a fiscal quarter uses its printed end date. Do NOT confuse with: the report/publication date, the prior-year comparative end date, or a guidance period end. Format: 'YYYY-MM-DD'."
+      },
+      "total_revenue": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "description": "Top-line revenue for the headline period. PICK THE TOPMOST/most-inclusive revenue line of the issuer's income statement: for an industrial use 'Total revenue'/'Net sales'/'Sales'; for a BANK/credit-card issuer use the topmost 'Interest income' or 'Total revenues' line (NOT net interest income, NOT total ordinary income's sub-lines); for a Japanese bank use '経常収益' (ordinary income, the FIRST/topmost revenue figure). Do NOT confuse with: a single SEGMENT's revenue, NET interest income (a sub-total after interest expense), gross profit, operating income, or a prior-year comparative. Format: number in reporting currency in MILLIONS, no symbol, no thousands separators (e.g. 5503; 9353590 for ¥9,353,590 million; 685.25 for $685,250 thousand => keep as 685.25). If the deck reports the figure ONLY in BILLIONS, multiply by 1000 to express millions (e.g. $42B => 42000, $5.6bn => 5600). NEVER report a billions-scale value like 42 or 5.6 for a figure that is actually billions."
+      },
+      "revenue_growth_yoy": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "description": "Year-over-year growth of TOTAL REPORTED total_revenue for the headline period = (this period total_revenue / prior period total_revenue - 1). Use the TOTAL/AS-REPORTED revenue growth that ties to total_revenue, NEVER 'core', 'organic', 'same-store', or 'constant-currency' growth even when those are more prominent on the slide. For a Japanese 決算短信 use the '％' on the 経常収益 row of the current fiscal year. Do NOT confuse with: core/organic/same-store/constant-currency sales growth, segment growth, volume growth, or a margin change in bps. Format: percent as a plain number, e.g. 6.0; negative for a decline (e.g. -2.3). Round to 2 decimal places."
+      },
+      "gross_profit": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "description": "GAAP (as-reported, NOT adjusted) gross profit for the headline period = Sales minus Cost of sales. Alias: 'Gross profit'. If the issuer's headline reconciliation shows Sales and Cost of sales but no explicit gross-profit line, compute Sales - |Cost of sales|. Use null if the issuer reports no gross-profit concept (banks, REITs, MLPs). Do NOT confuse with: gross MARGIN (a percent), ADJUSTED gross profit, net revenue, or operating profit. Format: number in reporting currency in MILLIONS, no symbol."
+      },
+      "operating_income": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "description": "GAAP (as-reported, NOT adjusted) operating income/profit for the headline period. Aliases: 'Operating income','Operating profit','Income from operations'; for a Japanese bank use '経常利益' (ordinary profit) of the current fiscal year. Use the line labeled 'Reported (GAAP)' when both GAAP and Adjusted are shown. Do NOT confuse with: ADJUSTED operating profit/margin, EBITDA, gross profit, pre-tax earnings, or net income. Format: number in reporting currency in MILLIONS, no symbol."
+      },
+      "net_income": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "description": "GAAP net income/earnings for the headline period. Use the bottom-line 'Net income'/'Net earnings' line ATTRIBUTABLE TO THE COMPANY (after deducting non-controlling interests when an NCI line exists); for a Japanese filing use '親会社株主に帰属する当期純利益' of the current fiscal year. If a 'Net income attributable to common stockholders' line exists (after NCI but before preferred dividends), prefer it over a separate 'available to common — after preferred dividends' line. Do NOT confuse with: adjusted/non-GAAP net income, net income BEFORE NCI, comprehensive income (包括利益), pre-tax/operating income, or 'available to common after preferred dividends'. Format: number in reporting currency in MILLIONS, no symbol."
+      },
+      "adjusted_ebitda": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "description": "TOTAL/consolidated Adjusted EBITDA (non-GAAP) for the headline period. Aliases: 'Adjusted EBITDA','Adj. EBITDA','AEBITDA'. Use the company-wide ACTUAL for the headline period only. Use null if the deck reports only unadjusted EBITDA, only a guidance range, or no consolidated EBITDA. Do NOT confuse with: a SEGMENT's Adjusted EBITDA, EBITDA MARGIN (a percent), a guidance/forecast range, or operating income. Format: number in reporting currency in MILLIONS, no symbol (e.g. 1379; 2800 for $2.8B). Convert billions to millions. If a highlights/summary slide presents a rounded figure (e.g. '$2.1B'), capture that rounded headline value (2100), not a recomputed reconciliation figure."
+      },
+      "gaap_eps_diluted": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "description": "GAAP DILUTED earnings per share for the headline period. Aliases: 'Diluted EPS','Net income per common share - diluted','Diluted earnings per share','Reported (GAAP) ... diluted net earnings per common share'; Japanese '潜在株式調整後1株当たり当期純利益' (use the diluted figure, NOT the basic '1株当たり当期純利益') of the current fiscal year. Must be GAAP/reported, not adjusted. Do NOT confuse with: ADJUSTED/non-GAAP diluted EPS, BASIC EPS, per-share dividend, or FFO/AFFO per share. Format: number per share in reporting currency, decimals exactly as printed (e.g. 0.24, 2.27, 3.76, 724.34)."
+      },
+      "adjusted_eps_diluted": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "description": "ADJUSTED (non-GAAP) DILUTED earnings-per-share ACTUAL for the headline period — applies ONLY when the issuer reports an explicit 'Adjusted EPS' / 'Adjusted diluted EPS' / 'Adjusted Net Diluted Earnings Per Share' / 'Non-GAAP EPS' line. Use the reported full-period ACTUAL only. MUST be null when: no non-GAAP EPS line exists; the issuer is a REIT reporting FFO/AFFO/Core FFO per share (those are NOT adjusted EPS — return null); or the only figure shown is a GUIDANCE/OUTLOOK range or guidance midpoint. Do NOT confuse with: GAAP diluted EPS, basic adjusted EPS, guidance ranges, Core FFO/AFFO per share, or distributable-cash-flow per unit. Format: number per share in reporting currency (e.g. 3.90, 1.04)."
+      },
+      "gross_margin": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "description": "GAAP (as-reported) gross profit margin (percent) for the headline period. Aliases: 'Gross profit margin','Gross margin'. Use the 'Reported (GAAP)' gross-profit-margin value when both GAAP and Adjusted are shown. Use null if the issuer reports no gross profit. Do NOT confuse with: ADJUSTED gross margin, operating/EBITDA margin, or net interest margin. Format: percent as a plain number, e.g. 59.9. Round to 2 decimal places."
+      },
+      "operating_margin": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "description": "GAAP (as-reported) operating margin (percent) for the headline period = GAAP operating_income / total_revenue. Aliases: 'Operating margin','Operating profit margin' on the 'Reported (GAAP)' line. Use null if only an ADJUSTED operating profit margin is shown and no GAAP one. Do NOT confuse with: ADJUSTED operating profit margin, gross margin, EBITDA margin, net interest margin, or 経常利益率 (which is ordinary-profit-to-revenue and may be reported separately — only use it if it is the GAAP operating margin). Format: percent as a plain number, e.g. 23.2. Round to 2 decimal places (e.g. -0.08 means -0.08%)."
+      },
+      "free_cash_flow": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "description": "Free cash flow (non-GAAP) ACTUAL for the headline period. Aliases: 'Free cash flow','FCF','Free cash flow (non-GAAP)'. Use the headline-period total actual. Do NOT confuse with: cash from operations, FCF CONVERSION % (a ratio), distributable cash flow (DCF), or a guidance value. Format: number in reporting currency in MILLIONS, no symbol. Use null if FCF is not reported."
+      },
+      "segments": {
+        "type": "array",
+        "description": "Reportable business/operating SEGMENTS from the deck's SEGMENT P&L table (segment Sales/Revenue and/or segment Profit/Operating profit/AEBITDA) for the headline period. INCLUDE only genuine income-statement reportable segments. EXCLUDE: 'Total Company'/'Consolidated'/eliminations/subtotal rows, AND any table that is NOT a P&L segment breakdown (e.g. loan-receivables 'by platform' asset tables, geographic regions, or product categories are NOT segments). Return an EMPTY array if the deck has no per-segment P&L (revenue or profit) table.",
+        "items": {
+          "$ref": "#/$defs/Segment"
+        }
+      }
+    },
+    "$defs": {
+      "Segment": {
+        "type": "object",
+        "properties": {
+          "segment_name": {
+            "type": "string",
+            "description": "Reportable segment name exactly as printed in the segment P&L table (e.g. 'Water Quality','Product Quality & Innovation','Fuel Distribution', Japanese 'ホールセール事業部門'). Do NOT confuse with: a geographic region, a product line, a loan-platform name, or the 'Total Company' row. Format: verbatim segment label."
+          },
+          "segment_revenue": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "That segment's revenue/sales for the headline period. Aliases under the segment: 'Sales','Revenue','Net sales'; Japanese segment 業務粗利益/経常収益 line. Use null if the segment table gives only profit, not revenue. Do NOT confuse with: total-company revenue, segment profit, loan receivables, or a growth percent. Format: number in reporting currency in MILLIONS, no symbol."
+          },
+          "segment_profit": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "That segment's GAAP/reported operating profit (segment operating income) for the headline period from the formal segment-results table. IF BOTH a GAAP/reported segment operating profit AND an adjusted/non-GAAP segment profit (adjusted operating profit, segment Adjusted EBITDA/AEBITDA) are shown for the segment, USE THE GAAP FIGURE. Only when NO GAAP segment operating profit is reported, fall back to the adjusted operating profit / segment Adjusted EBITDA / 経常利益 the deck labels. Use null if no per-segment profit is reported. Do NOT confuse with: segment revenue, segment margin (a percent), adjusted segment profit when a GAAP one exists, or total-company profit. Format: number in the reporting unit (MILLIONS unless the segment table states otherwise), no currency symbol."
+          }
+        },
+        "required": [
+          "segment_name"
+        ]
+      }
+    }
+  },
+  "expected": {
+    "kind": "json",
+    "schema_ref": "fixtures/eb-medium-smfg-kessan-tanshin-2024-ja-schema.json",
+    "value": {
+      "period": "FY2024",
+      "currency": "JPY",
+      "fiscal_period_end_date": "2024-03-31",
+      "total_revenue": 9353590.0,
+      "revenue_growth_yoy": 52.3,
+      "gross_profit": 3738818.0,
+      "operating_income": 1466128.0,
+      "net_income": 962946.0,
+      "adjusted_ebitda": null,
+      "gaap_eps_diluted": 724.34,
+      "adjusted_eps_diluted": null,
+      "gross_margin": null,
+      "operating_margin": 15.7,
+      "free_cash_flow": null,
+      "segments": [
+        {
+          "segment_name": "ホールセール事業部門",
+          "segment_revenue": 835200,
+          "segment_profit": 632100
+        },
+        {
+          "segment_name": "リテール事業部門",
+          "segment_revenue": 1290000,
+          "segment_profit": 215700
+        },
+        {
+          "segment_name": "グローバル事業部門",
+          "segment_revenue": 1375900,
+          "segment_profit": 644900
+        },
+        {
+          "segment_name": "市場事業部門",
+          "segment_revenue": 526200,
+          "segment_profit": 389900
+        },
+        {
+          "segment_name": "本社管理等",
+          "segment_revenue": -288482,
+          "segment_profit": -322389
+        }
+      ]
+    },
+    "anchored_fields": 15,
+    "no_anchor_fields": 0
+  },
+  "field_rules": "{\"period\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.09647, 0.3267, 0.08313, 0.0107], \"quote\": \"2024年3月期\", \"value\": \"FY2024\", \"coarse\": false, \"layer\": \"word\"}, {\"page\": 1, \"bbox\": [0.09395, 0.31509, 0.09556, 0.03681], \"quote\": \"2024年3月期\", \"value\": \"FY2024\", \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"currency\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.28705, 0.31588, 0.03779, 0.0089], \"quote\": \"JPY\", \"value\": \"JPY\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"fiscal_period_end_date\": {\"comparator\": \"date\", \"evidence\": [{\"page\": 1, \"bbox\": [0.09395, 0.26202, 0.40055, 0.01068], \"quote\": \"1．2024年3月期の連結業績(2023年4月1日～2024年3月31日)\", \"value\": \"2024-03-31\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"total_revenue\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.25686, 0.32672, 0.06802, 0.01069], \"quote\": \"9,353,590\", \"value\": 9353590.0, \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"revenue_growth_yoy\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.39542, 0.32713, 0.02964, 0.00945], \"quote\": \"52.3\", \"value\": 52.3, \"coarse\": false, \"layer\": \"word\"}, {\"page\": 1, \"bbox\": [0.32824, 0.31509, 0.10077, 0.03681], \"quote\": \"52.3\", \"value\": 52.3, \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"gross_profit\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 15, \"bbox\": [0.83222, 0.23724, 0.06802, 0.00945], \"quote\": \"3,738,818\", \"value\": 3738818.0, \"coarse\": false, \"layer\": \"word\"}, {\"page\": 15, \"bbox\": [0.80199, 0.23175, 0.10581, 0.05629], \"quote\": \"3,738,818\", \"value\": 3738818.0, \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"operating_income\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.49635, 0.32672, 0.06802, 0.01069], \"quote\": \"1,466,128\", \"value\": 1466128.0, \"coarse\": false, \"layer\": \"word\"}, {\"page\": 1, \"bbox\": [0.42901, 0.31509, 0.13872, 0.03681], \"quote\": \"1,466,128\", \"value\": 1466128.0, \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"net_income\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.75096, 0.32672, 0.0529, 0.01069], \"quote\": \"962,946\", \"value\": 962946.0, \"coarse\": false, \"layer\": \"word\"}, {\"page\": 1, \"bbox\": [0.6685, 0.31509, 0.13872, 0.03681], \"quote\": \"962,946\", \"value\": 962946.0, \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"adjusted_ebitda\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"gaap_eps_diluted\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.46722, 0.40595, 0.04475, 0.00945], \"quote\": \"724.34\", \"value\": 724.34, \"coarse\": false, \"layer\": \"word\"}, {\"page\": 1, \"bbox\": [0.35242, 0.39404, 0.16291, 0.03622], \"quote\": \"724.34\", \"value\": 724.34, \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"adjusted_eps_diluted\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"gross_margin\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"operating_margin\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 1, \"bbox\": [0.87592, 0.40595, 0.02904, 0.00945], \"quote\": \"15.7\", \"value\": 15.7, \"coarse\": false, \"layer\": \"word\"}, {\"page\": 1, \"bbox\": [0.77733, 0.39404, 0.131, 0.03622], \"quote\": \"15.7\", \"value\": 15.7, \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"free_cash_flow\": {\"comparator\": \"number\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"segments\": {\"comparator\": {\"segment_name\": \"case_insensitive\", \"segment_revenue\": \"number\", \"segment_profit\": \"number\"}, \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": \"ホールセール事業部門\", \"value\": {\"segment_name\": \"ホールセール事業部門\", \"segment_revenue\": 835200, \"segment_profit\": 632100}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"リテール事業部門\", \"value\": {\"segment_name\": \"リテール事業部門\", \"segment_revenue\": 1290000, \"segment_profit\": 215700}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"グローバル事業部門\", \"value\": {\"segment_name\": \"グローバル事業部門\", \"segment_revenue\": 1375900, \"segment_profit\": 644900}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"市場事業部門\", \"value\": {\"segment_name\": \"市場事業部門\", \"segment_revenue\": 526200, \"segment_profit\": 389900}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"本社管理等\", \"value\": {\"segment_name\": \"本社管理等\", \"segment_revenue\": -288482, \"segment_profit\": -322389}, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"structural\": \"match_by:segment_name\"}, \"segments[0].segment_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 15, \"bbox\": [0.28052, 0.20793, 0.09069, 0.02136], \"quote\": \"ホールセール事業部門\", \"value\": \"ホールセール事業部門\", \"coarse\": false, \"layer\": \"word\"}, {\"page\": 15, \"bbox\": [0.27296, 0.20504, 0.10581, 0.02672], \"quote\": \"ホールセール事業部門\", \"value\": \"ホールセール事業部門\", \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"segments[0].segment_revenue\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 15, \"bbox\": [0.31831, 0.23724, 0.0529, 0.00945], \"quote\": \"835,200\", \"value\": 835200, \"coarse\": false, \"layer\": \"word\"}, {\"page\": 15, \"bbox\": [0.27296, 0.23175, 0.10581, 0.05629], \"quote\": \"835,200\", \"value\": 835200, \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"segments[0].segment_profit\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 15, \"bbox\": [0.31831, 0.29353, 0.0529, 0.00945], \"quote\": \"632,100\", \"value\": 632100, \"coarse\": false, \"layer\": \"word\"}, {\"page\": 15, \"bbox\": [0.27296, 0.28805, 0.10581, 0.01875], \"quote\": \"632,100\", \"value\": 632100, \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"segments[1].segment_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 15, \"bbox\": [0.40144, 0.20793, 0.06046, 0.02136], \"quote\": \"リテール事業部門\", \"value\": \"リテール事業部門\", \"coarse\": false, \"layer\": \"word\"}, {\"page\": 15, \"bbox\": [0.37877, 0.20504, 0.10581, 0.02672], \"quote\": \"リテール事業部門\", \"value\": \"リテール事業部門\", \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"segments[1].segment_revenue\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 15, \"bbox\": [0.4102, 0.23724, 0.06681, 0.00945], \"quote\": \"1,290,000\", \"value\": 1290000, \"coarse\": false, \"layer\": \"word\"}, {\"page\": 15, \"bbox\": [0.37877, 0.23175, 0.10581, 0.05629], \"quote\": \"1,290,000\", \"value\": 1290000, \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"segments[1].segment_profit\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 15, \"bbox\": [0.42411, 0.29353, 0.0529, 0.00945], \"quote\": \"215,700\", \"value\": 215700, \"coarse\": false, \"layer\": \"word\"}, {\"page\": 15, \"bbox\": [0.37877, 0.28805, 0.10581, 0.01875], \"quote\": \"215,700\", \"value\": 215700, \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"segments[2].segment_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 15, \"bbox\": [0.49969, 0.20793, 0.07558, 0.02136], \"quote\": \"グローバル事業部門\", \"value\": \"グローバル事業部門\", \"coarse\": false, \"layer\": \"word\"}, {\"page\": 15, \"bbox\": [0.48457, 0.20504, 0.10581, 0.02672], \"quote\": \"グローバル事業部門\", \"value\": \"グローバル事業部門\", \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"segments[2].segment_revenue\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 15, \"bbox\": [0.51601, 0.23724, 0.06681, 0.00945], \"quote\": \"1,375,900\", \"value\": 1375900, \"coarse\": false, \"layer\": \"word\"}, {\"page\": 15, \"bbox\": [0.48457, 0.23175, 0.10581, 0.05629], \"quote\": \"1,375,900\", \"value\": 1375900, \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"segments[2].segment_profit\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 15, \"bbox\": [0.52992, 0.29353, 0.0529, 0.00945], \"quote\": \"644,900\", \"value\": 644900, \"coarse\": false, \"layer\": \"word\"}, {\"page\": 15, \"bbox\": [0.48457, 0.28805, 0.10581, 0.01875], \"quote\": \"644,900\", \"value\": 644900, \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"segments[3].segment_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 15, \"bbox\": [0.59794, 0.21328, 0.09069, 0.01068], \"quote\": \"市場事業部門\", \"value\": \"市場事業部門\", \"coarse\": false, \"layer\": \"word\"}, {\"page\": 15, \"bbox\": [0.59038, 0.20504, 0.10581, 0.02672], \"quote\": \"市場事業部門\", \"value\": \"市場事業部門\", \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"segments[3].segment_revenue\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 15, \"bbox\": [0.63573, 0.23724, 0.0529, 0.00945], \"quote\": \"526,200\", \"value\": 526200, \"coarse\": false, \"layer\": \"word\"}, {\"page\": 15, \"bbox\": [0.59038, 0.23175, 0.10581, 0.05629], \"quote\": \"526,200\", \"value\": 526200, \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"segments[3].segment_profit\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 15, \"bbox\": [0.63573, 0.29353, 0.0529, 0.00945], \"quote\": \"389,900\", \"value\": 389900, \"coarse\": false, \"layer\": \"word\"}, {\"page\": 15, \"bbox\": [0.59038, 0.28805, 0.10581, 0.01875], \"quote\": \"389,900\", \"value\": 389900, \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"segments[4].segment_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": \"本社管理等\", \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"segments[4].segment_revenue\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 15, \"bbox\": [0.72642, 0.23601, 0.06802, 0.01069], \"quote\": \"△288,482\", \"value\": -288482, \"coarse\": false, \"layer\": \"word\"}, {\"page\": 15, \"bbox\": [0.69619, 0.23175, 0.10581, 0.05629], \"quote\": \"△288,482\", \"value\": -288482, \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"segments[4].segment_profit\": {\"comparator\": \"number\", \"evidence\": [{\"page\": 15, \"bbox\": [0.72642, 0.29229, 0.06802, 0.01069], \"quote\": \"△322,389\", \"value\": -322389, \"coarse\": false, \"layer\": \"word\"}, {\"page\": 15, \"bbox\": [0.69619, 0.28805, 0.10581, 0.01875], \"quote\": \"△322,389\", \"value\": -322389, \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}}",
+  "repeated_structure": "{\"segments\": {\"identity_key\": [\"segment_name\"]}}",
+  "anchored_fields": 15,
+  "no_anchor_fields": 0,
+  "case_id": "B03-eb-0344"
+}

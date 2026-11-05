@@ -1,0 +1,364 @@
+{
+  "$defs": {
+    "TransactionRow": {
+      "type": "object",
+      "title": "1099-B transaction",
+      "properties": {
+        "number_of_shares": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Number of shares",
+          "description": "The share/unit quantity for this sale line, printed in the leftmost 'Number of shares' column headed '(Box 5)' (IRS Form 1099-B Box 5, 'No. of shares exchanged'). JSON number exactly as printed, e.g. 4.0000, 249.6460, 82.3900; null if the column is blank on the row."
+        },
+        "cusip": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "CUSIP",
+          "description": "The 9-character security identifier printed in the 'CUSIP' column headed '(Box 1b)' (IRS Form 1099-B Box 1b, 'CUSIP no.'). Verbatim as printed, e.g. 25179M103, H27013100. Identifies the row: transaction rows are aligned by CUSIP at eval time, not by position; when the same CUSIP has several lots/sale dates the rows are matched in printed order within that CUSIP. Null only if the security prints no CUSIP."
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description",
+          "description": "The security description printed in the 'Description' column headed '(Box 7)' (IRS Form 1099-B Box 7). Verbatim as printed, joining a wrapped two-line name with a single space, e.g. 'DEVON ENERGY CORP COM', 'DREYFUS BOSTON CO SMALLCAP EQTY TE'."
+        },
+        "date_acquired": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Date Acquired",
+          "description": "The acquisition date printed in the 'Date Acquired' column (a broker supplemental column; no IRS box). Verbatim as printed: either a date like '02/27/2009' or the literal word 'VARIOUS' when multiple lots were acquired; null if blank."
+        },
+        "date_of_sale": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Date of Sale",
+          "description": "The sale/disposition date printed in the 'Date of Sale' column headed '(Box 1a)' (IRS Form 1099-B Box 1a, 'Date of sale or exchange'). Verbatim as printed, e.g. '09/09/2009'; the literal 'VARIOUS' if the statement prints it; null if blank."
+        },
+        "proceeds": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Proceeds (Stocks, bonds, etc.)",
+          "description": "The sale proceeds printed in the 'Stocks Bonds, etc.' column headed '(Box 2)' (IRS Form 1099-B Box 2, 'Stocks, bonds, etc.'). JSON number exactly as printed with the thousands comma removed, e.g. 258.17, 4061.08; null if blank."
+        },
+        "cost_or_other_basis": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cost or other Basis",
+          "description": "The cost basis printed in the 'Cost or other Basis' column (a broker supplemental column; not an IRS-reported box on the 2009 form). JSON number exactly as printed, e.g. 177.15, 3499.47; null if blank."
+        },
+        "net_gain_or_loss": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Net Gain or Loss",
+          "description": "The gain/loss printed in the 'Net Gain or Loss' column (a broker supplemental column; no IRS box). JSON number exactly as printed; a loss prints with a leading minus and is negative, e.g. 81.02, -31.21, -3636.11; null if blank."
+        },
+        "federal_income_tax_withheld": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Federal Income Tax Withheld",
+          "description": "The backup withholding printed in the rightmost 'Federal Income Tax Withheld' column headed '(Box 4)' (IRS Form 1099-B Box 4). JSON number exactly as printed, usually 0.00; null if the column is blank."
+        }
+      }
+    },
+    "SectionSubtotal": {
+      "type": "object",
+      "title": "Section subtotal",
+      "properties": {
+        "section_label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Section label",
+          "description": "The label of a printed section-summary line, verbatim, e.g. 'Total Short Term Sales Reported on 1099-B', 'Long Term 15% Sales Reported on 1099-B', 'Total Long Term Sales Reported on 1099-B'. Identifies the row; these summary lines are NOT transactions (they carry no CUSIP or share count) and must not be placed in the transactions array. A section header printed with no totals on this page still yields a row with null amounts."
+        },
+        "proceeds": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Subtotal proceeds",
+          "description": "The section total in the 'Stocks Bonds, etc.' / '(Box 2)' column for this summary line; JSON number, comma removed; null if not printed."
+        },
+        "cost_or_other_basis": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Subtotal cost or other basis",
+          "description": "The section total in the 'Cost or other Basis' column for this summary line; JSON number; null if not printed."
+        },
+        "net_gain_or_loss": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Subtotal net gain or loss",
+          "description": "The section total in the 'Net Gain or Loss' column for this summary line; JSON number, negative for a net loss; null if not printed."
+        },
+        "federal_income_tax_withheld": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Subtotal federal income tax withheld",
+          "description": "The section total in the 'Federal Income Tax Withheld' / '(Box 4)' column for this summary line; JSON number; null if not printed."
+        }
+      }
+    }
+  },
+  "type": "object",
+  "title": "Form 1099-B Proceeds From Broker and Barter Exchange Transactions (2009 consolidated statement)",
+  "properties": {
+    "payer_name": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Payer name",
+      "description": "The payer/broker name printed under 'Payer's Name and Address' at the top-left, verbatim; join multiple name lines with a single space, e.g. 'SUNTRUST BANK W&IM TAX SERVICES', 'GIBRALTAR PRIVATE BANK & TRUST'."
+    },
+    "payer_address": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Payer address",
+      "description": "The payer/broker mailing address printed under 'Payer's Name and Address', below the name line(s); join street and city/state/ZIP lines with ', ', e.g. 'P.O. BOX 1908, ORLANDO, FL 32802-1908'."
+    },
+    "payer_phone": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Payer phone",
+      "description": "The payer telephone number printed on the 'Questions?' line in the header, verbatim as printed, e.g. '(305)476-1982'; null when the statement variant prints no phone."
+    },
+    "payer_federal_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Payer's Federal ID number",
+      "description": "The payer TIN printed beside 'Payer's Federal ID number', verbatim including the hyphen, e.g. '59-3482833'."
+    },
+    "account_number": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Account Number",
+      "description": "The brokerage account number printed beside 'Account Number:', verbatim, e.g. '5630064', '0920035'."
+    },
+    "recipient_name": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Recipient name",
+      "description": "The recipient name printed under 'Recipient's Name and Address', verbatim (first name line before the address), e.g. 'THE GOYEN FOUNDATION INC.', 'ROGER WINFIELD SCOTT FOUNDATION, INC'."
+    },
+    "recipient_address": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Recipient address",
+      "description": "The recipient mailing address printed under 'Recipient's Name and Address', below the name; join the street and city/state/ZIP lines with ', ', e.g. '104 RIVERSIDE DRIVE #205C, COCOA, FL 32922'."
+    },
+    "recipient_tax_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Recipient's Tax ID number",
+      "description": "The recipient TIN printed beside 'Recipient's Tax ID number', verbatim including the hyphen, e.g. '59-3338187', '58-0655183'."
+    },
+    "corrected": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Corrected",
+      "description": "The 'Corrected' checkbox in the header. TWO-STATE: true only if a mark is printed inside the box; false otherwise, including when this statement leaves it blank (the usual case). Never return null for this field."
+    },
+    "second_tin_notice": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "2nd TIN notice",
+      "description": "The '2nd TIN notice' checkbox in the header. TWO-STATE: true only if a mark is printed inside the box; false otherwise, including blank (the usual case). Never return null for this field."
+    },
+    "transactions": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TransactionRow"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Transactions",
+      "description": "Every individual sale line in the 1099-B proceeds table on this page, in printed top-to-bottom order. Each row carries a CUSIP '(Box 1b)' and share count '(Box 5)'. Do NOT include section-summary lines such as 'Total Short Term Sales Reported on 1099-B' here — those go in section_subtotals. Null only if the page prints no transaction rows."
+    },
+    "section_subtotals": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SectionSubtotal"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Section subtotals",
+      "description": "The section-summary lines printed on this page (e.g. 'Total Short Term Sales Reported on 1099-B', 'Long Term 15% Sales Reported on 1099-B'), each with its column totals. Null when the page prints no summary line (most mid-section pages)."
+    }
+  }
+}

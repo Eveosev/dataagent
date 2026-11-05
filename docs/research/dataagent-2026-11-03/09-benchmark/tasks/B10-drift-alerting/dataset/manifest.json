@@ -1,0 +1,89 @@
+{
+  "dataset_id": "B10.dataset",
+  "task_id": "B10",
+  "revision": "v0.4",
+  "status": "collecting",
+  "unit": "series",
+  "sources": [
+    {
+      "name": "tsb-ad-u",
+      "locator": "https://www.thedatum.org/datasets/TSB-AD-U.zip",
+      "license": "见各数据集原始许可",
+      "digest": null,
+      "revision": null,
+      "files": null,
+      "mb": null,
+      "fetched_at": null
+    },
+    {
+      "name": "tsb-ad-m",
+      "locator": "https://www.thedatum.org/datasets/TSB-AD-M.zip",
+      "license": "见各数据集原始许可",
+      "digest": null,
+      "revision": null,
+      "files": null,
+      "mb": null,
+      "fetched_at": null
+    }
+  ],
+  "splits": {
+    "development": {
+      "count": 120,
+      "frozen": false
+    },
+    "regression": {
+      "count": 60,
+      "frozen": false
+    },
+    "unseen_acceptance": {
+      "count": 60,
+      "frozen": false
+    }
+  },
+  "exposure": {
+    "ledger_ref": "exposure.jsonl",
+    "entries": 0
+  },
+  "fixtures": {
+    "storage": "local",
+    "path": "fixtures/",
+    "limits": "单文件 <= 2 MB；超出走对象存储并在 digest 记录"
+  },
+  "updated": "2026-11-04",
+  "notes": "由 build_cases.py 从 workspace/benchmark-data 构建；原始数据不入库",
+  "build": {
+    "version": 4,
+    "script": "tools/build_cases.py",
+    "built_at": "2026-11-04",
+    "policy": "按官方 Eva 列表入库；label 列由 harness 在评测时剥离，避免标签泄漏。split 按文件名哈希。",
+    "available": {
+      "development": 308,
+      "regression": 92,
+      "unseen_acceptance": 130
+    },
+    "selected": {
+      "development": 120,
+      "regression": 60,
+      "unseen_acceptance": 60
+    },
+    "caps": {
+      "development": 120,
+      "regression": 60,
+      "unseen_acceptance": 60
+    },
+    "coverage": {
+      "covered_metrics": [
+        "vus_pr",
+        "affiliation_f1"
+      ],
+      "missing_metrics": [
+        "alert_budget_compliance"
+      ],
+      "note": "告警预算需 harness 统计巡检次数；先由 scorecard 记录 alert_count"
+    },
+    "counts": {
+      "u": 350,
+      "m": 180
+    }
+  }
+}

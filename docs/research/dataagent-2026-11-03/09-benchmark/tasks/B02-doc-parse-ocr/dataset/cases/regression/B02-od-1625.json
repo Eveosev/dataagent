@@ -1,0 +1,37 @@
+{
+  "case_id": "B02-od-1625",
+  "task_id": "B02",
+  "split_role": "regression",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://omnidocbench/images/magazine_TheEconomist.2023.12.02_page_056.png",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B02-od-1625.json"
+  },
+  "evidence": [
+    "bench://omnidocbench/images/magazine_TheEconomist.2023.12.02_page_056.png"
+  ],
+  "tags": [
+    "omnidocbench",
+    "magazine",
+    "english",
+    "other_layout",
+    "v1.5",
+    "no_table"
+  ],
+  "source": "od",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "id": "B09",
+  "slug": "spreadsheet-chart",
+  "title": "表格计算、图表与报告",
+  "plan_row": 9,
+  "plan_ref": "../../../09-benchmark-plan.md",
+  "catalog_atoms": [
+    "DA10.1.1",
+    "DA10.1.2",
+    "DA10.1.3",
+    "DA10.1.4",
+    "DA10.2.1",
+    "DA10.2.2",
+    "DA10.3.1",
+    "DA10.3.2",
+    "DA10.3.3"
+  ],
+  "slice": "S0 / 按需",
+  "unit": "task",
+  "why_not_unit_tested": "大型多 sheet 工作簿里的目标单元格选错、未修改区域被改坏，只有整簿比对才可见",
+  "reference_benchmarks": [
+    {
+      "name": "SpreadsheetBench 2",
+      "url": "https://arxiv.org/abs/2606.29955",
+      "scale_note": "321 任务，平均 11.8 sheet；逐单元格比对，最佳 34.89%"
+    },
+    {
+      "name": "VisEval",
+      "url": "https://arxiv.org/abs/2407.00981",
+      "scale_note": "2,524 查询 / 146 库；合法性、可读性多检查器"
+    },
+    {
+      "name": "nvBench 2.0",
+      "url": "https://arxiv.org/abs/2503.12880",
+      "scale_note": "7,878 个有歧义查询，一对多图表"
+    }
+  ],
+  "dataset": {
+    "sources": [
+      "SpreadsheetBench 2",
+      "VisEval",
+      "nvBench 2.0",
+      "自建多 sheet 工作簿"
+    ],
+    "composition": "工作簿整簿快照比对；图表可读性用固定 rubric 双人评分并记录分歧",
+    "manifest_ref": "dataset/manifest.json",
+    "refresh": {
+      "unseen_acceptance_every_rounds": 6,
+      "replace_ratio": 0.25,
+      "rule": "样本一经暴露即降级为 regression；unseen_acceptance 不得参与调参"
+    }
+  },
+  "graders": [
+    "chart_readability_rubric",
+    "chart_schema_check",
+    "sheet_untouched_diff",
+    "workbook_cell_diff"
+  ],
+  "metrics": [
+    {
+      "id": "cell_accuracy",
+      "label": "单元格级正确率",
+      "direction": "higher",
+      "primary": true,
+      "unit": "ratio",
+      "aggregation": "mean_over_cases",
+      "grader": "workbook_cell_diff",
+      "threshold_status": "pending_baseline"
+    },
+    {
+      "id": "chart_validity",
+      "label": "图表合法性",
+      "direction": "higher",
+      "primary": false,
+      "unit": "ratio",
+      "aggregation": "mean_over_cases",
+      "grader": "chart_schema_check",
+      "threshold_status": "pending_baseline"
+    },
+    {
+      "id": "chart_readability",
+      "label": "图表可读性",
+      "direction": "higher",
+      "primary": false,
+      "unit": "score",
+      "aggregation": "mean_over_cases",
+      "grader": "chart_readability_rubric",
+      "threshold_status": "pending_baseline"
+    },
+    {
+      "id": "unmodified_region_retention",
+      "label": "未修改区域保持率",
+      "direction": "higher",
+      "primary": false,
+      "unit": "ratio",
+      "aggregation": "mean_over_cases",
+      "grader": "sheet_untouched_diff",
+      "threshold_status": "pending_baseline"
+    }
+  ],
+  "gate": {
+    "tier": "warn",
+    "in_ci": true,
+    "blocking_metrics": [
+      "cell_accuracy"
+    ],
+    "ref": "../../monitor/thresholds.json"
+  },
+  "status": "collecting",
+  "owner": "TBD",
+  "notes_ref": "NOTES.md",
+  "created": "2026-11-04"
+}

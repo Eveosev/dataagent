@@ -1,0 +1,67 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "redshift",
+  "pipeline": "coinmarketcap",
+  "data_model": {
+    "models": [
+      {
+        "name": "coinmarket__coins",
+        "description": "Each record represents a coin.",
+        "columns": [
+          {
+            "name": "coin_id",
+            "description": "Unique identifier for the coin."
+          },
+          {
+            "name": "coin_name",
+            "description": "Name of the coin."
+          },
+          {
+            "name": "coin_status",
+            "description": "Status of the coin."
+          },
+          {
+            "name": "highest_price",
+            "description": "Maximum value of highest price observed for the coin across all dates. Highest price refers to the high column in the source data."
+          },
+          {
+            "name": "date_lowest_price",
+            "description": "Date of the row with the smallest lowest price for the coin, with ties broken by the ascending order of the date. Lowest price refers to the low column in the source data."
+          },
+          {
+            "name": "is_above_average_20180428",
+            "description": "Set to 1 if the price of the coin on 2018-04-28 is above the average price of all coins on 2018-04-28; otherwise, set to 0."
+          },
+          {
+            "name": "average_price",
+            "description": "Average price of the coin."
+          },
+          {
+            "name": "date_with_greatest_price_decline",
+            "description": "the date of transactions with the greatest decline in percent change in percent change in the first hour, with ties broken by the descending order of the date"
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    redshift_definition_id: f7a7d195-377f-cf5b-70a5-be6b819019dc\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - coins\npostgres:\n  config:\n    database: coinmarketcap\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - historical\n    user: postgres\nredshift:\n  config:\n    host: <redshift_hostname>\n    port: <redshift_port>\n    database: <redshift_db>\n    username: <redshift_username>\n    password: <redshift_pwd>\n    schema: coinmarketcap\n    s3_bucket_name: <redshift_s3_bucket>\n    s3_bucket_region: <redshift_s3_region>\n    access_key_id: <redshift_s3_access_key>\n    secret_access_key: <redshift_s3_secret_key>\n",
+  "case_id": "B14-elt-0120",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "coinmarket__coins",
+        "columns": [
+          "coin_id",
+          "coin_name",
+          "coin_status",
+          "highest_price",
+          "date_lowest_price",
+          "is_above_average_20180428",
+          "average_price",
+          "date_with_greatest_price_decline"
+        ]
+      }
+    ]
+  }
+}

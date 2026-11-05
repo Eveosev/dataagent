@@ -1,0 +1,57 @@
+## Essential Problem:
+
+The user wants to publish the rotor velocities of a quadcopter simulated in Gazebo Garden using Gazebo topics. They are unsure if it's possible to modify or extend the existing `gz-sim-multicopter-control-system` plugin to achieve this.
+
+## Relevant Information:
+
+* User is using Gazebo Garden (gz-sim7) and ROS 2 Humble.
+* User has implemented two pre-existing Gazebo plugins: `gz-sim-multicopter-motor-model-system` and `gz-sim-multicopter-control-system`.
+* User wants to access and publish rotor velocities which are not readily available from the existing plugins.
+
+## Addressing the Questions:
+
+**1. Can the rotor velocities be published using Gazebo topics?**
+
+Yes, it is possible to publish the rotor velocities using Gazebo topics. However, the existing plugins don't directly provide access to this data.
+
+**2. Can the existing plugins be modified or extended?**
+
+Yes, modifying or extending the existing plugins is a potential solution. Here are two approaches:
+
+**a) Modifying the `gz-sim-multicopter-control-system` plugin:**
+
+This approach involves directly modifying the plugin source code to include functionality for publishing rotor velocities. This requires familiarity with C++ and the Gazebo plugin development process.
+
+**b) Creating a custom plugin:**
+
+This approach involves creating a new plugin that reads the relevant data from the existing plugins and publishes it to Gazebo topics. This could be a simpler approach if you are comfortable with C++ and plugin development.
+
+## Expanding on the Proposed Solutions:
+
+**1. Modifying the `gz-sim-multicopter-control-system` plugin:**
+
+* Identify the location of the plugin source code.
+* Add code to calculate and store the rotor velocities.
+* Create a new Gazebo topic to publish the rotor velocities.
+* Modify the plugin to publish the data to the newly created topic.
+* Recompile and rebuild the plugin.
+* Replace the original plugin with the modified version in your Gazebo model.
+
+**2. Creating a custom plugin:**
+
+* Create a new plugin class that inherits from the `gz::sim::Plugin` class.
+* Implement methods to read the rotor velocities from the existing plugins.
+* Create a new Gazebo topic to publish the rotor velocities.
+* Implement methods to publish the data to the topic.
+* Build and install the custom plugin in your Gazebo workspace.
+* Load the custom plugin in your Gazebo model alongside the existing plugins.
+
+## Additional Considerations:
+
+* Make sure you understand the implications of modifying existing plugins, as this may affect future updates or compatibility.
+* Consider the complexity of each approach and choose the one that best suits your skills and project requirements.
+* Refer to the Gazebo documentation and plugin development resources for detailed instructions and examples.
+
+## Conclusion:
+
+Publishing the rotor velocities as Gazebo topics is achievable through modifying existing plugins or creating a custom plugin. Choose the approach that best suits your skills and project requirements, and ensure you follow proper development practices.

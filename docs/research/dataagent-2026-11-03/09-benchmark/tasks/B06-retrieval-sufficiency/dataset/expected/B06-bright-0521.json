@@ -1,0 +1,71 @@
+{
+  "source": "xlangai/BRIGHT",
+  "query_id": "87",
+  "query": "## Identifying the Essential Problem\n\nThe essential problem is to determine, for each person in a queue, how many people they can see to their right, given their heights and the constraint that they can only see people who are shorter than both them and everyone in between.\n\n## Reasoning and Identifying Relevant Information\n\nTo solve this problem, we can use the following steps:\n\n1. **Iterate through the heights array from right to left.**\n2. **Maintain a stack to keep track of the heights of people we have already processed.**\n3. **For each height in the array:**\n    * **While the stack is not empty and the top element of the stack is less than the current height:**\n        * **Pop the top element from the stack.**\n    * **If the stack is empty, the current person can see everyone to their right.**\n    * **Otherwise, the current person can see everyone to their right up to the person at the top of the stack.**\n    * **Push the current height onto the stack.**\n4. **The final stack contains the heights of the people who can see everyone to their right. The answer array is the length of the original heights array minus the size of the final stack.**\n\n## Draft Answer\n\nHere is a draft answer containing the steps and reasoning outlined above:\n\n```python\ndef canSeePersonsCount(heights):\n    n = len(heights)\n    answer = [0] * n\n    stack = []\n\n    # Iterate through the heights array from right to left\n    for i in range(n - 1, -1, -1):\n        # While the stack is not empty and the top element is less than the current height\n        while stack and stack[-1] < heights[i]:\n            stack.pop()\n\n        # If the stack is empty, the current person can see everyone to their right\n        if not stack:\n            answer[i] = n - i - 1\n        # Otherwise, the current person can see everyone to their right up to the person at the top of the stack\n        else:\n            answer[i] = stack[-1] - i - 1\n\n        # Push the current height onto the stack\n        stack.append(heights[i])\n\n    return answer\n```\n\nThis code iterates through the heights array from right to left, maintaining a stack of the heights of people who can see everyone to their right. It then calculates the number of people each person can see based on the stack and returns the answer array.\n\n## Additional Thoughts\n\n* This solution has a time complexity of O(n) and a space complexity of O(n), where n is the number of people in the queue.\n* This solution assumes that all heights are distinct. If there are duplicate heights, the solution will need to be modified to handle this case.\n* This solution can be adapted to solve other problems involving visibility, such as determining the number of buildings that can be seen from a given point.",
+  "gold_ids": [
+    "leetcode/leetcode_2104.txt",
+    "leetcode/leetcode_2281.txt"
+  ],
+  "gold_answer": "N/A",
+  "corpus": "documents/leetcode-00000-of-00001.parquet",
+  "case_id": "B06-bright-0521",
+  "expected": {
+    "kind": "retrieval",
+    "gold_ids": [
+      "leetcode/leetcode_2104.txt",
+      "leetcode/leetcode_2281.txt"
+    ],
+    "gold_ids_long": [
+      "N/A"
+    ],
+    "gold_answer": "N/A",
+    "excluded_ids": [
+      "leetcode/leetcode_1996.txt",
+      "leetcode/leetcode_85.txt",
+      "leetcode/leetcode_581.txt",
+      "leetcode/leetcode_2334.txt",
+      "leetcode/leetcode_2019.txt",
+      "leetcode/leetcode_2289.txt",
+      "leetcode/leetcode_496.txt",
+      "leetcode/leetcode_1944.txt",
+      "leetcode/leetcode_2487.txt",
+      "leetcode/leetcode_2454.txt",
+      "leetcode/leetcode_735.txt",
+      "leetcode/leetcode_456.txt",
+      "leetcode/leetcode_42.txt",
+      "leetcode/leetcode_1526.txt",
+      "leetcode/leetcode_1856.txt",
+      "leetcode/leetcode_962.txt",
+      "leetcode/leetcode_682.txt",
+      "leetcode/leetcode_1504.txt",
+      "leetcode/leetcode_2030.txt",
+      "leetcode/leetcode_946.txt",
+      "leetcode/leetcode_769.txt",
+      "leetcode/leetcode_84.txt",
+      "leetcode/leetcode_739.txt",
+      "leetcode/leetcode_1019.txt",
+      "leetcode/leetcode_1776.txt",
+      "leetcode/leetcode_1081.txt",
+      "leetcode/leetcode_1475.txt",
+      "leetcode/leetcode_768.txt",
+      "leetcode/leetcode_2216.txt",
+      "leetcode/leetcode_150.txt",
+      "leetcode/leetcode_1598.txt",
+      "leetcode/leetcode_975.txt",
+      "leetcode/leetcode_2589.txt",
+      "leetcode/leetcode_853.txt",
+      "leetcode/leetcode_316.txt",
+      "leetcode/leetcode_1124.txt",
+      "leetcode/leetcode_636.txt",
+      "leetcode/leetcode_907.txt",
+      "leetcode/leetcode_1574.txt",
+      "leetcode/leetcode_2197.txt",
+      "leetcode/leetcode_1441.txt",
+      "leetcode/leetcode_1793.txt",
+      "leetcode/leetcode_503.txt",
+      "leetcode/leetcode_402.txt",
+      "leetcode/leetcode_1130.txt",
+      "leetcode/leetcode_1673.txt"
+    ]
+  }
+}

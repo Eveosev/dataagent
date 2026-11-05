@@ -1,0 +1,35 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1139,
+  "table": "economy-table80",
+  "structure": "SingleRowClassified",
+  "question_type": "Fact Checking",
+  "sub_type": "Value-Matching",
+  "answer": "17.90",
+  "cot": [
+    {
+      "step": "First, we need to focus on the rows corresponding to the “Cilantro Root” item, which are “ctn 24's” and “wood 24's”. We can find these in the table."
+    },
+    {
+      "step": "Next, we extract the delivery cost from the “Del” column for both “ctn 24's” and “wood 24's”:"
+    },
+    {
+      "step": "• For “Cilantro Root ctn 24's”, the delivery cost is $8.70."
+    },
+    {
+      "step": "• For “Cilantro Root wood 24's”, the delivery cost is $9.20."
+    },
+    {
+      "step": "We then add these two delivery costs together: $8.70 + $9.20 = $17.90."
+    },
+    {
+      "step": "Finally, the total delivery cost for all items of “Cilantro Root” (including both “ctn 24's” and “wood 24's”) is $17.90."
+    }
+  ],
+  "case_id": "B01-rht-2775",
+  "expected": {
+    "kind": "answer",
+    "question": "What is the total delivery cost for all items of “Cilantro Root”? Include both “ctn 24's” and “wood 24's”.",
+    "answer": "17.90"
+  }
+}

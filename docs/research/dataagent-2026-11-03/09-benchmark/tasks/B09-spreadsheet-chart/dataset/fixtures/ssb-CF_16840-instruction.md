@@ -1,0 +1,1 @@
+How can I use conditional formatting to highlight cells in column C with yellow that are not in the 'Complete' or 'Referred' status and are overdue? I need to incorporate an 'either or' factor into the formula, which I'm unsure how to do.The highlight color should be yellow.

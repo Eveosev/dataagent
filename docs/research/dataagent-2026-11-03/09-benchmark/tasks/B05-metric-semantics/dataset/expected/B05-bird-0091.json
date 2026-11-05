@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 90,
+  "question": "I'm tracking John Avon's artwork. Among his cards that exist as powerful foils, what is the most recent frame year, and how many of those cards carry it? If several years are tied for most recent, give each year with its own count. Match John Avon on the illustrator's name.",
+  "evidence": "powerful foil: a card whose Card Kingdom identifiers are both present – the regular identifier and the foil identifier.",
+  "gold_sql": "SELECT frameVersion AS frame_year, COUNT(id) AS card_count FROM cards WHERE artist = 'John Avon' AND cardKingdomId IS NOT NULL AND cardKingdomFoilId IS NOT NULL GROUP BY frameVersion HAVING CAST(frameVersion AS INTEGER) = (SELECT MAX(CAST(frameVersion AS INTEGER)) FROM cards WHERE artist = 'John Avon' AND cardKingdomId IS NOT NULL AND cardKingdomFoilId IS NOT NULL)",
+  "db_id": "card_games",
+  "case_id": "B05-bird-0091",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT frameVersion AS frame_year, COUNT(id) AS card_count FROM cards WHERE artist = 'John Avon' AND cardKingdomId IS NOT NULL AND cardKingdomFoilId IS NOT NULL GROUP BY frameVersion HAVING CAST(frameVersion AS INTEGER) = (SELECT MAX(CAST(frameVersion AS INTEGER)) FROM cards WHERE artist = 'John Avon' AND cardKingdomId IS NOT NULL AND cardKingdomFoilId IS NOT NULL)",
+    "db_id": "card_games",
+    "evidence": "powerful foil: a card whose Card Kingdom identifiers are both present – the regular identifier and the foil identifier."
+  }
+}

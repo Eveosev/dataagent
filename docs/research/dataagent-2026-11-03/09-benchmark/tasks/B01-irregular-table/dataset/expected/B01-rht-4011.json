@@ -1,0 +1,32 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 2375,
+  "table": "labor-table43",
+  "structure": "MultiColumnClassified",
+  "question_type": "Numerical Reasoning",
+  "sub_type": "Ranking",
+  "answer": "Cash & Carry",
+  "cot": [
+    {
+      "step": "First, we need to identify all the companies listed in the “Company” column."
+    },
+    {
+      "step": "Next, we need to extract the areas where each employee is located from the “Area 1” and “Area 2” columns."
+    },
+    {
+      "step": "We will focus on employees whose areas are “Manchester”."
+    },
+    {
+      "step": "Then, we will count the number of employees associated with each company who are listed under “Manchester”."
+    },
+    {
+      "step": "Finally, we will determine which company has the highest count of employees working in “Manchester”."
+    }
+  ],
+  "case_id": "B01-rht-4011",
+  "expected": {
+    "kind": "answer",
+    "question": "Which company has the highest number of employees working in “Manchester”?",
+    "answer": "Cash & Carry"
+  }
+}

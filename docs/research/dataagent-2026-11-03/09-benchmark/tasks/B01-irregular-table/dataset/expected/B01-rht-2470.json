@@ -1,0 +1,29 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 834,
+  "table": "economy-table32",
+  "structure": "MultiColumnClassified",
+  "question_type": "Numerical Reasoning",
+  "sub_type": "Comparison",
+  "answer": "CZABB, 503881.70",
+  "cot": [
+    {
+      "step": "First, locate the “SellerRu” column to identify rows associated with “CHABB” and “CZABB.”"
+    },
+    {
+      "step": "Locate the “Amount” column and filter rows for each seller."
+    },
+    {
+      "step": "Sum the “Amount” values for rows corresponding to “CHABB” and “CZABB.”"
+    },
+    {
+      "step": "Compare the totals for both sellers and determine which seller has the higher total. Calculate the difference between the two totals."
+    }
+  ],
+  "case_id": "B01-rht-2470",
+  "expected": {
+    "kind": "answer",
+    "question": "Compare the total amounts invoiced by “CHABB” and “CZABB.” Which seller has the higher total, and by how much?",
+    "answer": "CZABB, 503881.70"
+  }
+}

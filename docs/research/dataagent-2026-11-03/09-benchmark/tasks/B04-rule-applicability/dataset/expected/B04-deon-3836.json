@@ -1,0 +1,31 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_8a4c306e",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_year",
+    "scenario_case",
+    "scenario_case_type",
+    "scenario_case_location",
+    "scenario_governed_by_act",
+    "legal_district_court_has_jurisdiction_over_action",
+    "nonvar",
+    "statute_58_2542_applies",
+    "action_in_state",
+    "action_governed_by_act",
+    "integer",
+    "legal_proper_initial_court",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "% Self-contained SWI-Prolog program\n% State: Kansas\n% Focus year: 2021\n% Question: Are eviction cases first heard in district court?\n\n% ------------------------------------------------------------------------------\n% Scenario facts (encode the question's factual statement)\n% ------------------------------------------------------------------------------\n\n% We model a representative eviction case in Kansas in 2021.\nscenario_state(kansas).\nscenario_year(2021).\n\n% A representative case\nscenario_case(case1).\nscenario_case_type(case1, eviction).\nscenario_case_location(case1, kansas).\n\n% We treat eviction as a landlord-tenant action governed by the Kansas Residential\n% Landlord and Tenant Act for purposes of applying KS Stat  58-2542.\nscenario_governed_by_act(case1, ks_residential_landlord_tenant_act).\n\n% The statement in reusable logical form:\n% \"There is an eviction case in Kansas (focus year 2021).\"\nscenario_statement :-\n    scenario_state(kansas),\n    scenario_year(2021),\n    scenario_case(Case),\n    scenario_case_type(Case, eviction),\n    scenario_case_location(Case, kansas),\n    scenario_governed_by_act(Case, ks_residential_landlord_tenant_act).\n\n% ------------------------------------------------------------------------------\n% Statute translation (deterministic predicates capturing KS Stat  58-2542)\n% ------------------------------------------------------------------------------\n\n% KS Stat  58-2542 (2021): \"The district court shall have jurisdiction over any\n% landlord or tenant with respect to any conduct in this state governed by this act\n% or with respect to any claim arising from a transaction subject to this act...\"\n%\n% We encode the core jurisdictional rule as a deterministic predicate:\n% legal_district_court_has_jurisdiction_over_action(Action, State, Year).\nlegal_district_court_has_jurisdiction_over_action(Action, State, Year) :-\n    nonvar(Action),\n    nonvar(State),\n    nonvar(Year),\n    statute_58_2542_applies(Year),\n    action_in_state(Action, State),\n    action_governed_by_act(Action, ks_residential_landlord_tenant_act),\n    !.\n\n% The statute is provided for focus_year 2021; we treat it as applicable in 2021.\nstatute_58_2542_applies(Year) :-\n    integer(Year),\n    Year =:= 2021,\n    !.\n\n% Helper: action_in_state/2 and action_governed_by_act/2 derive from scenario facts.\naction_in_state(Action, State) :-\n    scenario_case(Action),\n    scenario_case_location(Action, State),\n    !.\n\naction_governed_by_act(Action, Act) :-\n    scenario_case(Action),\n    scenario_governed_by_act(Action, Act),\n    !.\n\n% KS Stat  58-2542 (2021) also says such actions \"may be commenced\" pursuant to the\n% code of civil procedure for limited actions (in district court, given jurisdiction).\n%\n% We model \"first heard\" as \"commenced in\" (i.e., the initial court of filing/hearing).\nlegal_proper_initial_court(Action, State, Year, district_court) :-\n    legal_district_court_has_jurisdiction_over_action(Action, State, Year),\n    !.\n\n% ------------------------------------------------------------------------------\n% Reasoning specific to the question\n% ------------------------------------------------------------------------------\n\n% The question asks generally about eviction cases; we answer based on whether, in the\n% scenario, an eviction case would be properly commenced (first heard) in district court.\neviction_cases_first_heard_in_district_court :-\n    scenario_statement,\n    scenario_case(Case),\n    scenario_state(State),\n    scenario_year(Year),\n    scenario_case_type(Case, eviction),\n    legal_proper_initial_court(Case, State, Year, district_court),\n    !.\n\n% ------------------------------------------------------------------------------\n% housing_answer(Result): must be deterministic and yield yes/no\n% ------------------------------------------------------------------------------\n\nhousing_answer(yes) :-\n    eviction_cases_first_heard_in_district_court,\n    !.\nhousing_answer(no) :-\n    !.\n\n% ------------------------------------------------------------------------------\n% Main entrypoint (required)\n% ------------------------------------------------------------------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-3836",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Are eviction cases first heard in district court?"
+  }
+}

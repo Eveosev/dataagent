@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 99,
+  "question": "I'm researching printings of the Magic: The Gathering card Tarmogoyf. I want to identify every reprint of Tarmogoyf that was published in a card frame style that was already at least 10 full years old when the set came out. Please give me the set name and release date of every set that qualifies, not just one. Two rules: the frame version is the year that frame style dates from (the frame style itself, not any frame artwork effects), and 'at least 10 full years' is inclusive, measured between the frame version's year and the set's release year.",
+  "evidence": "Frame version: the year the card frame style of a printing dates from.",
+  "gold_sql": "SELECT s.name AS set_name, s.releaseDate AS release_date FROM cards AS c INNER JOIN sets AS s ON s.code = c.setCode WHERE c.name = 'Tarmogoyf' AND CAST(c.frameVersion AS INTEGER) = c.frameVersion AND CAST(strftime('%Y', s.releaseDate) AS INTEGER) - CAST(c.frameVersion AS INTEGER) >= 10",
+  "db_id": "card_games",
+  "case_id": "B05-bird-0100",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT s.name AS set_name, s.releaseDate AS release_date FROM cards AS c INNER JOIN sets AS s ON s.code = c.setCode WHERE c.name = 'Tarmogoyf' AND CAST(c.frameVersion AS INTEGER) = c.frameVersion AND CAST(strftime('%Y', s.releaseDate) AS INTEGER) - CAST(c.frameVersion AS INTEGER) >= 10",
+    "db_id": "card_games",
+    "evidence": "Frame version: the year the card frame style of a printing dates from."
+  }
+}

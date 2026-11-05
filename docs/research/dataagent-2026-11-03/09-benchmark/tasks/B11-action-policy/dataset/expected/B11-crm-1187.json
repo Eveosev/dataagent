@@ -1,0 +1,26 @@
+{
+  "source": "Salesforce/CRMArenaPro",
+  "raw": {
+    "idx": 1186,
+    "answer": [
+      "005Ws000005RJ25IAG"
+    ],
+    "task": "transfer_count",
+    "persona": "You are collaborative and team-oriented, valuing input from all stakeholders before making decisions.",
+    "metadata": {
+      "required": "## Transfer Count Policy\n- Definition: The number of instances a case was reassigned or transferred from one agent to another. Each transfer from agent A to agent B adds to the transfer count for agent A.\n- In the queries that specify 'agents managed/queries x cases' -- this filter applies to both the first agent that the case was first assigned to and the agent that the case was transferred to. This means that if an agent has 2 cases that was initially assigned to itself by admin and 1 case transferred from another agent, a filter like 'handled/managed at least 3 cases' would not filter this agent out.\n- For cases that have NOT been transferred to an other agent, there will be only ONE 'Owner Assignment', and for those that have been transferred, there will be MORE THAN ONE 'Owner Assignment'. \n\n## Today's date: 2024-01-26",
+      "optional": "# Domain Details\n## Quarters of the Year\n- Q1: January 1 to March 31 (both inclusive).\n- Q2: April 1 to June 30 (both inclusive).\n- Q3: July 1 to September 30 (both inclusive).\n- Q4: October 1 to December 31 (both inclusive).\n## Seasons\n- Winter (2024): December 1, 2024 to February 28/29, 2025 (both inclusive), specifying the year to avoid ambiguity.\n- Spring: March 1 to May 31 (both inclusive).\n- Summer: June 1 to August 31 (both inclusive).\n- Autumn/Fall: September 1 to November 30 (both inclusive).\n## Time Periods\n- Past 2 quarters: This refers to any timeframe spanning two quarters back from a specified `end_date`. (i.e. begins on the date calculated by subtracting six months from the end_date and ends on the end_date) That translates to a six-month period retrospectively from the `end_date`.\n- Issue Significantly More Than Other Months: This means there is a month where the number of cases reported are larger than all other months."
+    },
+    "reward_metric": "exact_match",
+    "query": "Identify the agent with the lowest transfer counts over the last 3 months among those who handled at least one case. Return only the Id of the agent."
+  },
+  "case_id": "B11-crm-1187",
+  "expected": {
+    "kind": "answer",
+    "answer": [
+      "005Ws000005RJ25IAG"
+    ],
+    "reward_metric": "exact_match",
+    "task": "transfer_count"
+  }
+}

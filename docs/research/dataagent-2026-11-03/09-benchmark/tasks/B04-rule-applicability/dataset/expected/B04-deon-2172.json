@@ -1,0 +1,36 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_628a71ba",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "jurisdiction",
+    "focus_year",
+    "statute_va_801_129_appeal_period_days",
+    "statute_va_801_129_notice_before_execution_hours",
+    "statute_va_801_129_judge_orders_writ_immediately_if_requested",
+    "statute_va_801_129_clerk_delivers_writ_to_sheriff",
+    "statute_va_801_129_sheriff_executes_writ",
+    "statute_va_801_129_minimum_notice_hours_before_execution",
+    "statute_va_801_129_no_eviction_before_appeal_expires",
+    "statute_va_801_470_writ_type_for_property",
+    "statute_va_801_470_writ_issues_pursuant_to_order_of_possession",
+    "statute_va_801_470_officer_executes",
+    "statute_va_801_470_minimum_notice_hours_before_execution",
+    "statutory_term_for_court_to_authority_removal_order",
+    "statutory_term_is_enforcement_step",
+    "scenario_term",
+    "scenario_concept",
+    "term_matches_statutory_removal_order_term",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    State: Virginia\n    Focus year: 2021\n\n    Question:\n    \"Is the term 'Execution for possession' used to refer to the order from the court\n     to the authorities to remove a tenant?\"\n*/\n\n% -------------------------\n% Metadata (non-legal)\n% -------------------------\n\njurisdiction(virginia).\nfocus_year(2021).\n\n% -------------------------\n% Statute translations\n% -------------------------\n\n/* VA Code  8.01-129 (2021)\n   Key points encoded:\n   - Defendant has a 10-day appeal period from judgment.\n   - In an unlawful detainer under  8.01-126: if judgment for possession is granted and plaintiff requests,\n     judge orders writ of eviction to issue immediately upon entry of judgment.\n   - Clerk delivers writ of eviction to sheriff.\n   - Sheriff must give at least 72 hours notice prior to execution.\n   - Sheriff may not evict before expiration of the 10-day appeal period.\n*/\nstatute_va_801_129_appeal_period_days(10).\nstatute_va_801_129_notice_before_execution_hours(72).\n\nstatute_va_801_129_judge_orders_writ_immediately_if_requested(yes).\nstatute_va_801_129_clerk_delivers_writ_to_sheriff(writ_of_eviction).\nstatute_va_801_129_sheriff_executes_writ(writ_of_eviction).\n\nstatute_va_801_129_minimum_notice_hours_before_execution(Writ, Hours) :-\n    Writ = writ_of_eviction,\n    statute_va_801_129_notice_before_execution_hours(Hours).\n\nstatute_va_801_129_no_eviction_before_appeal_expires(Days) :-\n    statute_va_801_129_appeal_period_days(Days).\n\n/* VA Code  8.01-470 (2021)\n   Key points encoded:\n   - On a judgment for recovery of specific property, a writ of eviction for real property may issue\n     pursuant to an order of possession entered by a court.\n   - Officer (sheriff) must serve notice at least 72 hours before execution of a writ of eviction.\n   - The \"execution of the writ of eviction\" is something the officer does (i.e., enforcement step).\n*/\nstatute_va_801_470_writ_type_for_property(real_property, writ_of_eviction).\nstatute_va_801_470_writ_type_for_property(personal_property, writ_of_possession).\n\nstatute_va_801_470_writ_issues_pursuant_to_order_of_possession(Writ) :-\n    Writ = writ_of_eviction.\n\nstatute_va_801_470_officer_executes(Writ) :-\n    Writ = writ_of_eviction.\n\nstatute_va_801_470_minimum_notice_hours_before_execution(Writ, Hours) :-\n    Writ = writ_of_eviction,\n    Hours = 72.\n\n% -------------------------\n% Legal concept helpers derived from statutes (terminology mapping)\n% -------------------------\n\n/* The \"order from the court to the authorities to remove a tenant\"\n   is modeled as the legal instrument that:\n   (a) is issued by/through the court (pursuant to an order of possession / ordered to issue), AND\n   (b) is delivered to the sheriff/officer for execution to recover real property (eviction).\n\n   From the cited statutes, that instrument is the \"writ of eviction\".\n*/\nstatutory_term_for_court_to_authority_removal_order(Term) :-\n    Term = writ_of_eviction,\n    statute_va_801_129_clerk_delivers_writ_to_sheriff(Term),\n    statute_va_801_470_writ_type_for_property(real_property, Term).\n\n/* Distinguish \"execution\" (enforcement step by sheriff/officer) from the court's order/instrument.\n   The statutes speak of \"execution of such writ\" / \"execution of the writ of eviction\" as an act,\n   not as the name of the court-issued instrument itself.\n*/\nstatutory_term_is_enforcement_step(execution_of_writ_of_eviction) :-\n    statute_va_801_129_sheriff_executes_writ(writ_of_eviction),\n    statute_va_801_470_officer_executes(writ_of_eviction).\n\n% -------------------------\n% Scenario (question statement) encoding\n% -------------------------\n\n/* Factual statement implicit in the question:\n   We are asking whether the term 'execution_for_possession' is used (in the relevant statutes)\n   to refer to the order from the court to the authorities to remove a tenant.\n*/\nscenario_term(execution_for_possession).\nscenario_concept(order_from_court_to_authorities_to_remove_tenant).\n\nscenario_statement :-\n    scenario_term(execution_for_possession),\n    scenario_concept(order_from_court_to_authorities_to_remove_tenant).\n\n% -------------------------\n% Reasoning and answer\n% -------------------------\n\n/* The question is treated as: does the statutory term for the court-to-authority removal order\n   equal the term being asked about (\"execution_for_possession\")?\n*/\nterm_matches_statutory_removal_order_term(Term) :-\n    statutory_term_for_court_to_authority_removal_order(Term).\n\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_term(Term),\n    term_matches_statutory_removal_order_term(Term),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n% -------------------------\n% Main entrypoint\n% -------------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-2172",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is the term 'Execution for possession' used to refer to the order from the court to the authorities to remove a tenant?"
+  }
+}

@@ -1,0 +1,1 @@
+In 2024, what was the ratio of reports between the most frequent and the least frequent category (rounded to two decimal places)?

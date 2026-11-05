@@ -1,0 +1,68 @@
+{
+  "source": "xlangai/BRIGHT",
+  "query_id": "0",
+  "query": "## Essential Problem:\n\nThe core problem is to design an algorithm that efficiently determines whether a given non-negative integer is prime. A prime number is a natural number greater than 1 that is not a product of two smaller natural numbers.\n\n## Information and Reasoning:\n\n1. **Properties of Prime Numbers**: \n    - A prime number has exactly two distinct positive divisors: 1 and itself.\n    - Any integer greater than 1 can be factored into a unique product of prime numbers (Fundamental Theorem of Arithmetic).\n    - Every prime number greater than 3 can be written in the form 6k ± 1, where k is an integer.\n\n2. **Possible Approaches**:\n    - **Trial Division**: Divide the input number by all integers from 2 to its square root. If none of these divisions result in a whole number, the number is prime. This approach is simple but can be computationally expensive for large numbers.\n    - **Sieve of Eratosthenes**: Build a sieve of all numbers from 2 to the input number. Starting from 2, mark all multiples of 2 as composite. Then, move to the next unmarked number, mark all its multiples as composite, and repeat the process. The remaining unmarked numbers are prime. This approach is faster than trial division for large numbers.\n    - **Probabilistic Primality Tests**: These tests use probabilistic algorithms to determine the primality of a number with a high degree of accuracy but cannot guarantee a definitive answer.\n\n3. **Implementation Considerations**:\n    - **Handling Non-negative Integers**: The function should only accept non-negative integers as input. Negative numbers and zero are not considered prime.\n    - **Efficiency**: The chosen approach should be efficient for the expected range of input numbers.\n    - **Clarity**: The code should be well-commented and easy to understand.\n\n## Draft Answer:\n\nHere is a draft of the program using the Sieve of Eratosthenes approach:\n\n```pony\nfun isPrime(num: USize): bool =>\n  if num <= 1 then\n    # 0 and 1 are not prime\n    return false\n  else if num <= 3 then\n    # 2 and 3 are prime\n    return true\n  else if num % 2 == 0 or num % 3 == 0 then\n    # Even numbers and multiples of 3 are not prime\n    return false\n  else\n    # Check for divisibility by numbers in the form 6k ± 1 up to the square root of num\n    i = 5\n    while i * i <= num do\n      if num % i == 0 or num % (i + 2) == 0 then\n        return false\n      end\n      i += 6\n    end\n    # If no divisors are found, the number is prime\n    return true\n  end\n```\n\n## Additional Notes:\n\n- This code could be further optimized by precomputing a list of prime numbers up to a certain limit and using it for faster checking.\n- For very large numbers, probabilistic primality tests may be more suitable.\n- The code includes comments to explain the logic behind each step.",
+  "gold_ids": [
+    "Pony/4_control-structures_13.txt",
+    "Pony/2_ops_1.txt",
+    "Pony/5_methods_1.txt",
+    "Pony/2_ops_9.txt",
+    "Pony/4_control-structures_3.txt",
+    "Pony/4_control-structures_19.txt",
+    "Pony/4_control-structures_12.txt",
+    "Pony/2_ops_11.txt",
+    "Pony/2_ops_2.txt",
+    "Pony/4_control-structures_2.txt",
+    "Pony/4_control-structures_11.txt",
+    "Pony/4_control-structures_14.txt",
+    "Pony/1_variables_1.txt",
+    "Pony/1_variables_2.txt",
+    "Pony/4_control-structures_17.txt",
+    "Pony/4_control-structures_15.txt",
+    "Pony/2_primitives_3.txt",
+    "Pony/4_control-structures_16.txt",
+    "Pony/2_ops_10.txt",
+    "Pony/4_control-structures_1.txt",
+    "Pony/4_control-structures_18.txt"
+  ],
+  "gold_answer": "N/A",
+  "corpus": "documents/pony-00000-of-00001.parquet",
+  "case_id": "B06-bright-0576",
+  "expected": {
+    "kind": "retrieval",
+    "gold_ids": [
+      "Pony/4_control-structures_13.txt",
+      "Pony/2_ops_1.txt",
+      "Pony/5_methods_1.txt",
+      "Pony/2_ops_9.txt",
+      "Pony/4_control-structures_3.txt",
+      "Pony/4_control-structures_19.txt",
+      "Pony/4_control-structures_12.txt",
+      "Pony/2_ops_11.txt",
+      "Pony/2_ops_2.txt",
+      "Pony/4_control-structures_2.txt",
+      "Pony/4_control-structures_11.txt",
+      "Pony/4_control-structures_14.txt",
+      "Pony/1_variables_1.txt",
+      "Pony/1_variables_2.txt",
+      "Pony/4_control-structures_17.txt",
+      "Pony/4_control-structures_15.txt",
+      "Pony/2_primitives_3.txt",
+      "Pony/4_control-structures_16.txt",
+      "Pony/2_ops_10.txt",
+      "Pony/4_control-structures_1.txt",
+      "Pony/4_control-structures_18.txt"
+    ],
+    "gold_ids_long": [
+      "Pony/4_control-structures.txt",
+      "Pony/5_methods.txt",
+      "Pony/1_variables.txt",
+      "Pony/2_primitives.txt",
+      "Pony/2_ops.txt"
+    ],
+    "gold_answer": "N/A",
+    "excluded_ids": [
+      "N/A"
+    ]
+  }
+}

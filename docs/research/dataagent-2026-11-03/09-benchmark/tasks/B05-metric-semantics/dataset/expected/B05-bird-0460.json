@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 459,
+  "question": "I'm studying antiphospholipid antibodies in Sjögren's syndrome (SJS). Could you tell me the average anti-cardiolipin IgM concentration among SJS patients, rounded to two decimal places? To clarify: use only patients with an established SJS diagnosis recorded at the patient level (a diagnosis marked 'susp', such as 'SJS susp', is only a suspicion and those patients should not be included). Include every examination recorded for these patients regardless of date. A recorded anti-cardiolipin IgM value of 0 means the antibody was not detected at that examination, so treat it as no measurement and leave it out of the average - count only examinations where a concentration was detected.",
+  "evidence": "SJS is the abbreviation used for Sjögren's syndrome; a diagnosis marked 'susp' (e.g. 'SJS susp') is only a suspicion of the disease, not an established diagnosis.",
+  "gold_sql": "WITH RECURSIVE tokens AS (SELECT ID, '' AS tok, COALESCE (Diagnosis, '') || ',' AS rest FROM Patient UNION ALL SELECT ID, trim(substr(rest, 1, instr(rest, ',') - 1)), substr(rest, instr(rest, ',') + 1) FROM tokens WHERE rest <> '') SELECT ROUND(AVG(CASE WHEN e.\"aCL IgM\" > 0 THEN e.\"aCL IgM\" END), 2) AS avg_aCL_IgM FROM Examination AS e WHERE e.ID IN (SELECT ID FROM tokens WHERE tok = 'SJS')",
+  "db_id": "thrombosis_prediction",
+  "case_id": "B05-bird-0460",
+  "expected": {
+    "kind": "sql",
+    "sql": "WITH RECURSIVE tokens AS (SELECT ID, '' AS tok, COALESCE (Diagnosis, '') || ',' AS rest FROM Patient UNION ALL SELECT ID, trim(substr(rest, 1, instr(rest, ',') - 1)), substr(rest, instr(rest, ',') + 1) FROM tokens WHERE rest <> '') SELECT ROUND(AVG(CASE WHEN e.\"aCL IgM\" > 0 THEN e.\"aCL IgM\" END), 2) AS avg_aCL_IgM FROM Examination AS e WHERE e.ID IN (SELECT ID FROM tokens WHERE tok = 'SJS')",
+    "db_id": "thrombosis_prediction",
+    "evidence": "SJS is the abbreviation used for Sjögren's syndrome; a diagnosis marked 'susp' (e.g. 'SJS susp') is only a suspicion of the disease, not an established diagnosis."
+  }
+}

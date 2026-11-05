@@ -1,0 +1,1 @@
+According to the RFM definition document, how much is the average sales per order for each customer within distinct RFM segments, considering only 'delivered' orders? Please rank the customers into segments to analyze differences in average sales across these segments

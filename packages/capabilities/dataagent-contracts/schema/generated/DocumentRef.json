@@ -1,0 +1,214 @@
+{
+  "$comment": "generated from dataagent_contracts.core:DocumentRef; do not edit",
+  "$defs": {
+    "AssetRef": {
+      "additionalProperties": false,
+      "properties": {
+        "digest": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Digest"
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "minLength": 1,
+          "title": "Kind",
+          "type": "string"
+        },
+        "locator": {
+          "minLength": 1,
+          "title": "Locator",
+          "type": "string"
+        },
+        "media_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Media Type"
+        },
+        "resolver": {
+          "minLength": 1,
+          "title": "Resolver",
+          "type": "string"
+        },
+        "revision": {
+          "minLength": 1,
+          "title": "Revision",
+          "type": "string"
+        },
+        "scope_ref": {
+          "minLength": 1,
+          "title": "Scope Ref",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "scope_ref",
+        "revision",
+        "resolver",
+        "locator"
+      ],
+      "title": "AssetRef",
+      "type": "object"
+    },
+    "OcrInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "engine_ref": {
+          "minLength": 1,
+          "title": "Engine Ref",
+          "type": "string"
+        },
+        "engine_version": {
+          "minLength": 1,
+          "title": "Engine Version",
+          "type": "string"
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "low_confidence_pages": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Low Confidence Pages",
+          "type": "array"
+        },
+        "mean_confidence": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Mean Confidence",
+          "type": "number"
+        }
+      },
+      "required": [
+        "engine_ref",
+        "engine_version",
+        "mean_confidence"
+      ],
+      "title": "OcrInfo",
+      "type": "object"
+    },
+    "VersionedRef": {
+      "description": "Versioned reference serialized as '<id>@<revision>'.",
+      "pattern": "^[^@\\s]+@[^@\\s]+$",
+      "type": "string"
+    }
+  },
+  "$id": "dataagent-contracts/0.1/core/DocumentRef",
+  "additionalProperties": false,
+  "properties": {
+    "asset": {
+      "$ref": "#/$defs/AssetRef"
+    },
+    "blocks_ref": {
+      "minLength": 1,
+      "title": "Blocks Ref",
+      "type": "string"
+    },
+    "content_type": {
+      "enum": [
+        "pdf_text",
+        "pdf_scanned",
+        "image",
+        "json",
+        "text"
+      ],
+      "title": "Content Type",
+      "type": "string"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "ocr": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/OcrInfo"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "original_ref": {
+      "$ref": "#/$defs/VersionedRef"
+    },
+    "page_count": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Page Count"
+    }
+  },
+  "required": [
+    "asset",
+    "original_ref",
+    "content_type",
+    "blocks_ref"
+  ],
+  "title": "DocumentRef",
+  "type": "object"
+}

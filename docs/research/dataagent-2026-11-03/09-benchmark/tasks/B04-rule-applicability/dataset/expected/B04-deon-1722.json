@@ -1,0 +1,28 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_fe20ce0e",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_actor",
+    "scenario_actor_role",
+    "scenario_writ",
+    "scenario_writ_type",
+    "statute_ga_44_7_55_writ_authorizes_removal",
+    "statute_ga_44_7_55_executing_officer_role",
+    "legal_empowered_to_execute_writ",
+    "scenario_role_at_issue",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    HousingQA Sample:\n      - state: Georgia\n      - focus_year: 2021\n\n    Question:\n      \"Is the bailiff an individual empowered by law to execute a writ of eviction?\"\n*/\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Scenario facts (question's factual statement)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nscenario_state(georgia).\nscenario_focus_year(2021).\n\n% The individual/role asked about in the question.\nscenario_actor(bailiff_person).\nscenario_actor_role(bailiff_person, bailiff).\n\n% The writ at issue (modeled as a writ of possession / eviction writ).\nscenario_writ(writ_1).\nscenario_writ_type(writ_1, writ_of_possession).\n\n% Helper predicate that \"summarizes\" the scenario in logic form.\nscenario_statement :-\n    scenario_state(georgia),\n    scenario_focus_year(2021),\n    scenario_actor(Actor),\n    scenario_actor_role(Actor, bailiff),\n    scenario_writ(Writ),\n    scenario_writ_type(Writ, writ_of_possession).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Statute translation (GA Code  44-7-55 (2021))\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n/*\n  GA Code  44-7-55 (2021) (key parts encoded)\n\n  - Court shall issue a writ of possession after judgment against tenant.\n  - Any writ of possession issued pursuant to this article shall authorize removal\n    of the tenant / personal property and permit placement as designated by the\n    landlord and approved by the executing officer. (Subsection (c) language)\n  - Nothing in this Code section shall require a sheriff, constable, or marshal to\n    execute a writ of possession within 30 days... (Subsection (e))\n\n  The statute text refers to an \"executing officer\" and specifically references\n  sheriffs, constables, and marshals in connection with executing the writ.\n*/\n\n% GA Code  44-7-55: A writ of possession authorizes removal by an executing officer.\n% (We model this as: if there is a writ_of_possession, it is executable by a legally\n% recognized executing officer.)\nstatute_ga_44_7_55_writ_authorizes_removal(writ_of_possession).\n\n% GA Code  44-7-55(e): mentions sheriff, constable, or marshal in the context of executing.\n% We treat these as the roles clearly contemplated as executing officers for writs of possession.\nstatute_ga_44_7_55_executing_officer_role(sheriff).\nstatute_ga_44_7_55_executing_officer_role(constable).\nstatute_ga_44_7_55_executing_officer_role(marshal).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Legal reasoning predicates\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n% A role is legally empowered (under the encoded statute) to execute a writ of possession\n% if the role is one of the executing-officer roles referenced by GA Code  44-7-55 (2021).\nlegal_empowered_to_execute_writ(Role, WritType) :-\n    statute_ga_44_7_55_writ_authorizes_removal(WritType),\n    statute_ga_44_7_55_executing_officer_role(Role).\n\n% Extract the scenario's actor role.\nscenario_role_at_issue(Role) :-\n    scenario_actor(Actor),\n    scenario_actor_role(Actor, Role).\n\n% Determine whether, in this scenario, the actor is empowered to execute the writ.\nscenario_actor_empowered_to_execute_writ :-\n    scenario_statement,\n    scenario_role_at_issue(Role),\n    scenario_writ(Writ),\n    scenario_writ_type(Writ, WritType),\n    legal_empowered_to_execute_writ(Role, WritType).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Answer predicate (deterministic yes/no)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nhousing_answer(yes) :-\n    scenario_actor_empowered_to_execute_writ,\n    !.\nhousing_answer(no) :-\n    !.\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Main entrypoint\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-1722",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is the bailiff an individual empowered by law to execute a writ of eviction?"
+  }
+}

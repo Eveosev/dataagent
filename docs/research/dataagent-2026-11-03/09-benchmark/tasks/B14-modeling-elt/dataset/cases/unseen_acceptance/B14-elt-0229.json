@@ -1,0 +1,35 @@
+{
+  "case_id": "B14-elt-0229",
+  "task_id": "B14",
+  "split_role": "unseen_acceptance",
+  "inputs": [
+    {
+      "kind": "config",
+      "ref": "fixtures/elt-snowflake-european_football_2-config.yaml",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B14-elt-0229.json"
+  },
+  "evidence": [
+    "bench://elt-bench/elt-bench/snowflake/european_football_2/data_model.yaml"
+  ],
+  "tags": [
+    "elt-bench",
+    "snowflake",
+    "european_football_2",
+    "models:3"
+  ],
+  "source": "elt",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

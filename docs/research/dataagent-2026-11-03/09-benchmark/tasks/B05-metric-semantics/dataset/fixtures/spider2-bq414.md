@@ -1,0 +1,1 @@
+Retrieve the object id, title, and the formatted metadata date (as a string in 'YYYY-MM-DD' format) for objects in the "The Libraries" department where the cropConfidence is greater than 0.5, the object's title contains the word "book".

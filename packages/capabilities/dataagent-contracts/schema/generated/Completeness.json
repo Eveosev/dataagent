@@ -1,0 +1,87 @@
+{
+  "$comment": "generated from dataagent_contracts.core:Completeness; do not edit",
+  "$defs": {
+    "CompletenessExtent": {
+      "enum": [
+        "complete_in_declared_scope",
+        "page",
+        "sampled",
+        "truncated",
+        "unknown"
+      ],
+      "title": "CompletenessExtent",
+      "type": "string"
+    }
+  },
+  "$id": "dataagent-contracts/0.1/core/Completeness",
+  "additionalProperties": false,
+  "properties": {
+    "declared_scope": {
+      "minLength": 1,
+      "title": "Declared Scope",
+      "type": "string"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "extent": {
+      "$ref": "#/$defs/CompletenessExtent"
+    },
+    "observed": {
+      "anyOf": [
+        {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Observed"
+    },
+    "reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reason"
+    },
+    "snapshot_consistent": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Snapshot Consistent"
+    }
+  },
+  "required": [
+    "extent",
+    "declared_scope"
+  ],
+  "title": "Completeness",
+  "type": "object"
+}

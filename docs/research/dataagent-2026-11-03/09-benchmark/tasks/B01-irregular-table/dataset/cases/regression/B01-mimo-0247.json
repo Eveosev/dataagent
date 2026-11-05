@@ -1,0 +1,37 @@
+{
+  "case_id": "B01-mimo-0247",
+  "task_id": "B01",
+  "split_role": "regression",
+  "inputs": [
+    {
+      "kind": "table",
+      "ref": "bench://mimotable/unzipped/data/english/spreadsheet/WorkplaceGeneral(33).xlsx",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B01-mimo-0247.json"
+  },
+  "evidence": [
+    "bench://mimotable/unzipped/data/english/spreadsheet/WorkplaceGeneral(33).xlsx#workbook"
+  ],
+  "tags": [
+    "english",
+    "single file, single sheet, simple header",
+    "simple table",
+    "op:Lookup",
+    "op:Calculate",
+    "op:Compare"
+  ],
+  "source": "mimo",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "redshift",
+  "pipeline": "financial",
+  "data_model": {
+    "models": [
+      {
+        "name": "districts",
+        "description": "Each record represents a district.",
+        "columns": [
+          {
+            "name": "district_id",
+            "description": "The unique identifier for the district."
+          },
+          {
+            "name": "district_name",
+            "description": "The name of the district."
+          },
+          {
+            "name": "num_opened_accounts",
+            "description": "The number of accounts opened in the district, replace NULL values with 0."
+          },
+          {
+            "name": "num_male_clients",
+            "description": "The number of male clients in the district, replace NULL values with 0."
+          },
+          {
+            "name": "avg_transaction_amount_1997",
+            "description": "The average amount per transaction in 1997 (across all transaction types)."
+          },
+          {
+            "name": "num_accounts_with_load_finished_no_problem",
+            "description": "The number of accounts with loan contracts finished with no problems, replace NULL values with 0. No problems refers to status = 'A'."
+          },
+          {
+            "name": "per_account_opened_1993",
+            "description": "The percentage of accounts from the district among all accounts opened in 1993."
+          }
+        ]
+      },
+      {
+        "name": "clients",
+        "description": "Each record represents a client.",
+        "columns": [
+          {
+            "name": "client_id",
+            "description": "The unique identifier for the client."
+          },
+          {
+            "name": "gender",
+            "description": "The gender of the client."
+          },
+          {
+            "name": "birth_date",
+            "description": "The birth date of the client."
+          },
+          {
+            "name": "amount_of_first_transaction",
+            "description": "the amount of the first transaction by the client, with ties broken by the descending order of the amount."
+          },
+          {
+            "name": "largest_loan_amount",
+            "description": "The largest loan amount the client has taken. Loan the client has taken refers to disp.type = 'OWNER'"
+          },
+          {
+            "name": "num_withdrawals_in_cash_transactions",
+            "description": "The number of withdrawals in cash transactions by the client, replace NULL values with 0."
+          },
+          {
+            "name": "avg_loan_amount",
+            "description": "The average loan amount the client has taken. Loan the client has taken refers to disp.type = 'OWNER'"
+          },
+          {
+            "name": "total_pay_for_all_transactions_1998",
+            "description": "The total amount the client paid for all of the transactions in 1998, replace NULL values with 0."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    redshift_definition_id: f7a7d195-377f-cf5b-70a5-be6b819019dc\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://financial-bucket/district.csv\n    sync_mode: full_refresh_append\n    table: district\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - card\nflat_files:\n- format: parquet\n  path: https://drive.google.com/uc?export=download&id=1s4nFoyjq-ZsQjDmbLHOJ62tXP79TmswO\n  sync_mode: full_refresh_append\n  table: disp\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: financial\n    sync_mode: full_refresh_append\n    tables:\n    - client\npostgres:\n  config:\n    database: financial\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - account\n    - loan\n    - orders\n    - trans\n    user: postgres\nredshift:\n  config:\n    host: <redshift_hostname>\n    port: <redshift_port>\n    database: <redshift_db>\n    username: <redshift_username>\n    password: <redshift_pwd>\n    schema: financial\n    s3_bucket_name: <redshift_s3_bucket>\n    s3_bucket_region: <redshift_s3_region>\n    access_key_id: <redshift_s3_access_key>\n    secret_access_key: <redshift_s3_secret_key>\n",
+  "case_id": "B14-elt-0131",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "districts",
+        "columns": [
+          "district_id",
+          "district_name",
+          "num_opened_accounts",
+          "num_male_clients",
+          "avg_transaction_amount_1997",
+          "num_accounts_with_load_finished_no_problem",
+          "per_account_opened_1993"
+        ]
+      },
+      {
+        "name": "clients",
+        "columns": [
+          "client_id",
+          "gender",
+          "birth_date",
+          "amount_of_first_transaction",
+          "largest_loan_amount",
+          "num_withdrawals_in_cash_transactions",
+          "avg_loan_amount",
+          "total_pay_for_all_transactions_1998"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "snowflake",
+  "pipeline": "bike_share_1",
+  "data_model": {
+    "models": [
+      {
+        "name": "stations",
+        "description": "Each record represents a bike share station.",
+        "columns": [
+          {
+            "name": "station_id",
+            "description": "Unique identifier for the station."
+          },
+          {
+            "name": "name",
+            "description": "Name of the station."
+          },
+          {
+            "name": "city",
+            "description": "City where the station is located."
+          },
+          {
+            "name": "num_borrowed_bike",
+            "description": "Number of bikes borrowed from the station, replace NULL values with 0."
+          },
+          {
+            "name": "date_most_bikes_available",
+            "description": "Date when the station had the most bikes available, with ties broken by the ascending order of the date."
+          },
+          {
+            "name": "above_avg_duration_trips",
+            "description": "Set to 1 if the average duration of trips starting from the station is above the overall average trip duration; otherwise, set to 0."
+          },
+          {
+            "name": "per_subscriber",
+            "description": "Percentage of trips starting from the station that are made by subscribers."
+          },
+          {
+            "name": "diff_bewteen_as_start_station_and_as_end_station",
+            "description": "Difference between the number of trips starting from the station and the number of trips ending at the station."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    snowflake_definition_id: 424892c4-daac-4491-b35d-c6688ba547ba\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - weather\nflat_files:\n- format: csv\n  path: https://drive.google.com/uc?export=download&id=1Wi_KDIkhJX0uGPV4a61ziuwUBa4skkQa\n  sync_mode: full_refresh_append\n  table: station\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: bike_share_1\n    sync_mode: full_refresh_append\n    tables:\n    - trip\npostgres:\n  config:\n    database: bike_share_1\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - status\n    user: postgres\nsnowflake:\n  config:\n    database: bike_share_1\n    password: Snowflake@123\n    role: AIRBYTE_ROLE\n    schema: AIRBYTE_SCHEMA\n    username: AIRBYTE_USER\n    warehouse: AIRBYTE_WAREHOUSE\n",
+  "case_id": "B14-elt-0209",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "stations",
+        "columns": [
+          "station_id",
+          "name",
+          "city",
+          "num_borrowed_bike",
+          "date_most_bikes_available",
+          "above_avg_duration_trips",
+          "per_subscriber",
+          "diff_bewteen_as_start_station_and_as_end_station"
+        ]
+      }
+    ]
+  }
+}

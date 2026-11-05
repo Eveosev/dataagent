@@ -1,0 +1,33 @@
+{
+  "case_id": "B06-bright-0377",
+  "task_id": "B06",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "query",
+      "ref": "fixtures/bright-economics-0377.txt",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B06-bright-0377.json"
+  },
+  "evidence": [
+    "bench://bright/documents/economics-00000-of-00001.parquet"
+  ],
+  "tags": [
+    "bright",
+    "economics"
+  ],
+  "source": "bright",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

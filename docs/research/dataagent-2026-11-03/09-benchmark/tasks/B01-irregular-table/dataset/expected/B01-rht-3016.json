@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1380,
+  "table": "society-table27",
+  "structure": "MultiColumnClassified",
+  "question_type": "Fact Checking",
+  "sub_type": "Inference-based Fact Checking",
+  "answer": "Case management of neonatal sepsis/pneumonia",
+  "cot": [
+    {
+      "planning": "First, we need to scan the 'Benefit-Risk Ratio' column to identify the highest value."
+    },
+    {
+      "planning": "Then, we need to find the corresponding intervention in the same row."
+    },
+    {
+      "planning": "Finally, we can state the answer based on the identified intervention."
+    }
+  ],
+  "case_id": "B01-rht-3016",
+  "expected": {
+    "kind": "answer",
+    "question": "Which intervention has the highest Benefit-Risk Ratio?",
+    "answer": "Case management of neonatal sepsis/pneumonia"
+  }
+}

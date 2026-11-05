@@ -1,0 +1,35 @@
+{
+  "case_id": "B14-elt-0008",
+  "task_id": "B14",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "config",
+      "ref": "fixtures/elt-databricks-beer_factory-config.yaml",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B14-elt-0008.json"
+  },
+  "evidence": [
+    "bench://elt-bench/elt-bench/databricks/beer_factory/data_model.yaml"
+  ],
+  "tags": [
+    "elt-bench",
+    "databricks",
+    "beer_factory",
+    "models:2"
+  ],
+  "source": "elt",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

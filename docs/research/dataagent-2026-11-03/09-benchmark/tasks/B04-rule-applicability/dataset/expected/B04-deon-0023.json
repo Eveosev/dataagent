@@ -1,0 +1,43 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_87f38c2b",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "all_paid",
+    "paid",
+    "statute_535_160_action_under_chapter",
+    "eviction_action",
+    "pursuant_to_chapter_535",
+    "statute_535_160_requires_stay_of_further_proceedings",
+    "money_judgment_given",
+    "tendered_to_landlord",
+    "brought_into_court",
+    "statute_535_160_requires_stay_of_execution_for_possession",
+    "original_trial_occurred",
+    "legal_must_halt_eviction_process_at_stage",
+    "landlord",
+    "tenant",
+    "state",
+    "focus_year",
+    "filed",
+    "stage",
+    "tenant_unable_to_pay_due_to_military_service",
+    "tenant_in_action",
+    "landlord_in_action",
+    "judgment_final",
+    "money_judgment_satisfied",
+    "costs_paid",
+    "question_stage",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    State: Missouri\n    Focus year: 2021\n\n    Question:\n    Must a landlord halt the eviction process after filing but prior to the judgment\n    if the tenant is unable to pay rent due to military service?\n\n    Statute encoded:\n    - MO Rev Stat  535.160 (2021)\n*/\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Basic helpers (standalone, no external modules)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n% all_paid/1: true when a required bundle of items has been paid/tendered/satisfied.\nall_paid([]).\nall_paid([H|T]) :-\n    paid(H),\n    all_paid(T).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Statute translation: MO Rev Stat  535.160 (2021)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n/*\n  MO Rev Stat  535.160 (2021) (relevant parts, encoded):\n\n  (A) If the defendant, on the date any money judgment is given in an action\n      pursuant to this chapter, either:\n      - tenders to the landlord, OR\n      - brings into the court where the suit is pending,\n      all the rent then in arrears AND all the costs,\n      further proceedings in the action shall cease and be stayed.\n\n  (B) If on any date after the date of any original trial, but before the judgment\n      becomes final, the defendant satisfies such money judgment and pays all costs,\n      any execution for possession shall cease and be stayed.\n*/\n\n% statute_535_160_action_under_chapter/1:\n% the action must be one \"pursuant to this chapter\".\nstatute_535_160_action_under_chapter(Action) :-\n    eviction_action(Action),\n    pursuant_to_chapter_535(Action).\n\n% statute_535_160_requires_stay_of_further_proceedings/2:\n% Maps to  535.160 first sentence: stay of further proceedings on money-judgment date\n% if tenant tenders/brings into court all arrears + costs.\nstatute_535_160_requires_stay_of_further_proceedings(Action, judgment_date) :-\n    statute_535_160_action_under_chapter(Action),\n    money_judgment_given(Action),\n    (\n        tendered_to_landlord(Action, rent_in_arrears),\n        tendered_to_landlord(Action, costs)\n    ;\n        brought_into_court(Action, rent_in_arrears),\n        brought_into_court(Action, costs)\n    ).\n\n% statute_535_160_requires_stay_of_execution_for_possession/2:\n% Maps to  535.160 second sentence: after original trial but before judgment final,\n% if money judgment satisfied + all costs paid, execution for possession is stayed.\nstatute_535_160_requires_stay_of_execution_for_possession(Action, after_trial_before_final) :-\n    statute_535_160_action_under_chapter(Action),\n    original_trial_occurred(Action),\n    \\+ judgment_final(Action),\n    money_judgment_given(Action),\n    all_paid([money_judgment_satisfied(Action), costs_paid(Action)]).\n\n% legal_must_halt_eviction_process_at_stage/2:\n% General \"must halt\" predicate derived from statute effects.\n% For the question, we care about a halt \"after filing but prior to judgment\".\nlegal_must_halt_eviction_process_at_stage(Action, Stage) :-\n    ( statute_535_160_requires_stay_of_further_proceedings(Action, Stage)\n    ; statute_535_160_requires_stay_of_execution_for_possession(Action, Stage)\n    ).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Scenario facts (encode the entire question's factual statement)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n% Parties and action\nlandlord(l1).\ntenant(t1).\neviction_action(a1).\n\nstate(missouri).\nfocus_year(2021).\n\n% The eviction action is pursuant to MO Chapter 535 (unlawful detainer / rent & possession).\npursuant_to_chapter_535(a1).\n\n% Procedural posture: after filing but prior to any judgment.\nfiled(a1).\nstage(a1, before_judgment).\n\n% The tenant cannot pay rent because of military service (fact stated in question).\ntenant_unable_to_pay_due_to_military_service(t1).\ntenant_in_action(a1, t1).\nlandlord_in_action(a1, l1).\n\n% Critical missing statutory triggers (as implied by the question posture):\n% - No money judgment has been given yet (pre-judgment).\n% - No trial yet / no final judgment yet.\nmoney_judgment_given(_Action) :- fail.\noriginal_trial_occurred(_Action) :- fail.\njudgment_final(_Action) :- fail.\n\n% No tenders or payments are stated; inability to pay suggests no tender/payment.\ntendered_to_landlord(_Action, _What) :- fail.\nbrought_into_court(_Action, _What) :- fail.\n\n% Paid markers (used by all_paid/1). None are satisfied in this scenario.\npaid(_Thing) :- fail.\n\n% Convenience functors for paid/1 checks (kept as structured terms).\nmoney_judgment_satisfied(Action) :- paid(money_judgment_satisfied(Action)).\ncosts_paid(Action) :- paid(costs_paid(Action)).\n\n% scenario_statement/0: succeeds when the question's factual statement is satisfied.\nscenario_statement :-\n    state(missouri),\n    focus_year(2021),\n    eviction_action(a1),\n    pursuant_to_chapter_535(a1),\n    filed(a1),\n    stage(a1, before_judgment),\n    tenant_in_action(a1, t1),\n    landlord_in_action(a1, l1),\n    tenant_unable_to_pay_due_to_military_service(t1).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Answer logic (derive yes/no without hardcoding outcome)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n% question_stage/2: interpret the question's timing: \"after filing but prior to the judgment\"\nquestion_stage(Action, before_judgment) :-\n    stage(Action, before_judgment).\n\n% housing_answer/1:\n% yes if, under the encoded statute(s), landlord must halt at that stage; otherwise no.\nhousing_answer(yes) :-\n    scenario_statement,\n    question_stage(a1, Stage),\n    legal_must_halt_eviction_process_at_stage(a1, Stage),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Main entrypoint (required)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-0023",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Must a landlord halt the eviction process after filing but prior to the judgment if the tenant is unable to pay rent due to military service?"
+  }
+}

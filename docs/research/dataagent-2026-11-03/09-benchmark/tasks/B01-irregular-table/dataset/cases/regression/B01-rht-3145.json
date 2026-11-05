@@ -1,0 +1,35 @@
+{
+  "case_id": "B01-rht-3145",
+  "task_id": "B01",
+  "split_role": "regression",
+  "inputs": [
+    {
+      "kind": "table",
+      "ref": "bench://realthitbench-data/csv/education-table29.csv",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B01-rht-3145.json"
+  },
+  "evidence": [
+    "bench://realthitbench-data/csv/education-table29.csv"
+  ],
+  "tags": [
+    "realthitbench",
+    "SingleRowClassified",
+    "Data Analysis",
+    "figshare"
+  ],
+  "source": "rht",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "uscis_e536f6c7",
+  "expect_label": "no",
+  "raw_label": "Dismissed",
+  "rule_predicates": [
+    "petitioner",
+    "filed_form_i140",
+    "denial_reason",
+    "decision",
+    "catch",
+    "writeln",
+    "error",
+    "handle_undefined"
+  ],
+  "reference_prolog": "% Facts about the case\npetitioner(data_analytics_specialist).\nfiled_form_i140('2021-09-21').\ndenial_reason(not_merit_niw).\nappeal_dismissed.\nmotions_to_reopen_and_reconsider_filed.\n\n% Documentary submissions presented with the motions (all postdate the petition filing or appellate dismissal as described)\nsubmitted_blog_post_august_2023.\nsubmitted_revised_business_plan_after_dismissal.\nsubmitted_white_house_fact_sheet.\nsubmitted_sbirs_printouts.\nsubmitted_dod_printouts.\n\n% Motion filings (booleans use arity 0 as required)\nmotion_to_reopen_filed.\nmotion_to_reconsider_filed.\n\n% Motion-to-reopen requirements: must state new facts and be supported by documentary evidence.\n% The petitioner did submit new documentary evidence that postdates the petition filing and the appellate dismissal.\nmotion_to_reopen_states_new_facts.\nmotion_to_reopen_supported_by_documentary_evidence.\nnew_evidence_postdates_filing_and_dismissal.\n\n% Matter of Coelho requirement: new evidence must have the potential to change the outcome.\n% Based on the record described, the newly submitted materials are general, postdate the decision, and do not demonstrate the specific, material change needed to overcome the discretionary determination.\n% Therefore, the petitioner did not submit new evidence that has the potential to change the outcome.\nnew_evidence_potential_to_change_outcome :- fail.\nnew_evidence_potential_to_change_outcome_false.\n% Define a positively named boolean for clarity; keep it false by not asserting it.\n% (We assert the contrary predicate above to indicate the evaluation.)\n\n% Motion-to-reconsider requirements: must state reasons, be supported by pertinent precedent, and show the decision was incorrect based on the record at the time.\nmotion_to_reconsider_states_reasons.\n% No pertinent precedent decision is alleged or provided in the facts given.\nmotion_to_reconsider_supported_by_precedent :- fail.\n% The petitioner introduced new evidence that postdates the decision rather than demonstrating that the prior decision was incorrect based on the record as it existed at that time.\nmotion_to_reconsider_shows_incorrect_based_on_record_at_time :- fail.\n\n% Grant logic for motions\nreopen_granted :-\n    motion_to_reopen_filed,\n    motion_to_reopen_states_new_facts,\n    motion_to_reopen_supported_by_documentary_evidence,\n    new_evidence_potential_to_change_outcome.\n\nreconsider_granted :-\n    motion_to_reconsider_filed,\n    motion_to_reconsider_states_reasons,\n    motion_to_reconsider_supported_by_precedent,\n    motion_to_reconsider_shows_incorrect_based_on_record_at_time.\n\n% Eligibility: acceptance requires at least one successful motion that demonstrates eligibility.\neligibility_met :-\n    reopen_granted.\neligibility_met :-\n    reconsider_granted.\n\ndecision(Result) :-\n    (   eligibility_met\n    ->  Result = 'Accepted'\n    ;   Result = 'Dismissed'\n    ).\n\nrun :-\n    catch(\n        (   decision(Result),\n            writeln(Result)\n        ),\n        error(existence_error(procedure, PI), _),\n        handle_undefined(PI)\n    ).\n\nhandle_undefined(Name/Arity) :-\n    (   current_predicate(Name/OtherArity),\n        OtherArity \\= Arity\n    ->  format('Programming error: called ~w/~w, but only ~w/~w is defined.~n',\n               [Name, Arity, Name, OtherArity])\n    ;   format('Lack of information: predicate ~w/~w is not defined.~n',\n               [Name, Arity])\n    ).",
+  "case_id": "B04-deon-5615",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "Dismissed",
+    "question": "Should this case be accepted or dismissed?"
+  }
+}

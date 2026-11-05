@@ -1,0 +1,23 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_e77e07ce",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "scenario_claim",
+    "statute_wy_1_21_1001_court_with_jurisdiction",
+    "legal_characterization",
+    "proper_hearing_court_for_category",
+    "first_heard_in",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    State: Wyoming\n    Focus year: 2021\n\n    Question: Are eviction cases first heard in county court?\n*/\n\n/* -----------------------------\n   Scenario facts (question statement)\n   ----------------------------- */\n\n% We encode the question's factual statement as a claim about the forum.\n% The statement to test: \"eviction cases are first heard in county court\".\nscenario_claim(first_heard_in, eviction_case, county_court).\n\n% Helper predicate that succeeds when the encoded question statement is present.\nscenario_statement :-\n    scenario_claim(first_heard_in, eviction_case, county_court).\n\n/* -----------------------------\n   Statute encoding (deterministic)\n   ----------------------------- */\n\n% WY Stat  1-21-1001 (2021) - Jurisdiction of circuit courts.\n% \"Any circuit court ... may inquire against those who make unlawful and forcible entry ...\n% and detain ... or ... having a lawful and peaceable entry ... unlawfully ... hold the same.\"\n%\n% We encode this as: circuit courts have jurisdiction over forcible entry and detainer matters,\n% which are a core category of eviction proceedings.\nstatute_wy_1_21_1001_court_with_jurisdiction(circuit_court, forcible_entry_and_detainer) :- !.\n\n% Map the scenario category \"eviction_case\" to the statute's covered category.\n% This is the legal characterization step: eviction cases (as asked generally) include\n% forcible entry and detainer/unlawful detainer proceedings described in  1-21-1001.\nlegal_characterization(eviction_case, forcible_entry_and_detainer) :- !.\n\n/* -----------------------------\n   Reasoning helpers\n   ----------------------------- */\n\n% Determine which court the statute assigns as the proper hearing court for the category.\nproper_hearing_court_for_category(Category, Court) :-\n    legal_characterization(Category, StatuteCategory),\n    statute_wy_1_21_1001_court_with_jurisdiction(Court, StatuteCategory),\n    !.\n\n% For this question we treat \"first heard\" as the initial forum with jurisdiction\n% under the provided statute(s).\nfirst_heard_in(Category, Court) :-\n    proper_hearing_court_for_category(Category, Court),\n    !.\n\n/* -----------------------------\n   Final answer (must be yes/no, deterministic)\n   ----------------------------- */\n\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_claim(first_heard_in, Category, ClaimedCourt),\n    first_heard_in(Category, ClaimedCourt),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n/* -----------------------------\n   Main entrypoint\n   ----------------------------- */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-4188",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Are eviction cases first heard in county court?"
+  }
+}

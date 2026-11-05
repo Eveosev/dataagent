@@ -1,0 +1,37 @@
+## Essential Problem
+
+The problem asks us to count the number of $1$ by $1$ squares in the first quadrant that are completely below the line $9x + 223y = 2007$. 
+
+## Reasoning
+
+**Step 1: Find intercepts**
+
+First, we find the $x$ and $y$ intercepts of the line. Setting $x$ to zero, we get $y = \frac{2007}{223}$. Setting $y$ to zero, we get $x = \frac{2007}{9}$. 
+
+**Step 2: Consider the first quadrant**
+
+We only care about the part of the line in the first quadrant, so we restrict our attention to positive values of $x$ and $y$. 
+
+**Step 3: Analyze the location of squares**
+
+For a square to be completely below the line, the upper right corner of the square must be below the line. This means that any square with an upper right corner that has coordinates $(x,y)$ satisfying $9x + 223y > 2007$ will not be completely below the line.
+
+**Step 4: Count the squares**
+
+We know that the $x$ and $y$ coordinates of the squares are integers. We also know that the $x$ coordinate ranges from $1$ to $\frac{2007}{9}$ and the $y$ coordinate ranges from $1$ to $\frac{2007}{223}$. Therefore, we can count the number of squares by finding the number of integers in each range that satisfy the inequality $9x + 223y \leq 2007$.
+
+**Step 5: Simplify the inequality**
+
+To make the counting easier, we can divide both sides of the inequality by $9$. This gives us $x + \frac{223}{9} y \leq \frac{2007}{9}$. Since $\frac{223}{9}$ is not an integer, we know that the $y$ coordinate of any point on the line that passes through a square must be an integer. Therefore, we can ignore the fractional part of $\frac{223}{9}$ and simply consider the inequality $x + 22y \leq 223$.
+
+**Step 6: Count the integers**
+
+There are $223 - 1 + 1 = 223$ integers from $1$ to $223$. For each of these integers, there are $\frac{223 - x}{22}$ integers from $1$ to $\frac{2007}{223}$ that satisfy the inequality $x + 22y \leq 223$. Therefore, the total number of squares that are completely below the line is 
+
+$$
+\sum_{x=1}^{223} \frac{223 - x}{22} = \frac{223 \times 222}{2 \times 22} = 111 \times 22 = \boxed{2442}.
+$$ 
+
+## Conclusion
+
+There are $2442$ squares in the first quadrant that are completely below the line $9x + 223y = 2007$. 

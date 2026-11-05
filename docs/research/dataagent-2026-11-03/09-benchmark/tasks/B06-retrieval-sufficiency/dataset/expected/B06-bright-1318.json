@@ -1,0 +1,24 @@
+{
+  "source": "xlangai/BRIGHT",
+  "query_id": "TheoremQA_panlu/similarity2.json",
+  "query": "## Identifying the Essential Problem:\n\nThe essential problem is to find the value of $y$ in the scaled model (Model B) given the proportional relationship between corresponding parts of Model A and Model B. We know the following:\n\n- Model A: Length = 12 units, Door width = 9 units\n- Model B: Length = 3y-1 units, Door width = 6 units, Hood length = 10 units\n\nWe need to find the value of $y$ that maintains the proportionality between the corresponding parts of both models.\n\n## Step-by-Step Reasoning:\n\n1. **Identify proportional relationships:**\n    - We know that the door width scales proportionally with the length. This means that the ratio of door width to length should be the same for both models.\n    - We can also assume that the hood length scales proportionally with the length.\n\n2. **Set up equations based on proportionality:**\n    - For door width: $\\frac{Door width_A}{Length_A} = \\frac{Door width_B}{Length_B}$\n    - Substituting the values: $\\frac{9}{12} = \\frac{6}{3y-1}$\n\n3. **Solve for y:**\n    - Cross-multiply: $9(3y-1) = 6(12)$\n    - Expand: $27y - 9 = 72$\n    - Combine like terms: $27y = 81$\n    - Solve for y: $y = \\frac{81}{27}$\n    - Simplify: $y = 3$\n\n## Draft Answer:\n\nBased on the proportional relationship between corresponding parts of Model A and Model B, the value of $y$ in the scaled model (Model B) is **3**. This ensures that the door width and, by extension, the hood length, scale proportionally with the overall length of the model. \n",
+  "gold_ids": [
+    "22806",
+    "14371"
+  ],
+  "gold_answer": "N/A",
+  "corpus": "documents/theoremqa_theorems-00000-of-00001.parquet",
+  "case_id": "B06-bright-1318",
+  "expected": {
+    "kind": "retrieval",
+    "gold_ids": [
+      "22806",
+      "14371"
+    ],
+    "gold_ids_long": [
+      "N/A"
+    ],
+    "gold_answer": "N/A",
+    "excluded_ids": []
+  }
+}

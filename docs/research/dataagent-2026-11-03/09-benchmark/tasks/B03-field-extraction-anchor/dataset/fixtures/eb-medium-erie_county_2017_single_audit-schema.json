@@ -1,0 +1,97 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "Schedule of Expenditures of Federal Awards (SEFA) — Uniform Guidance Single Audit",
+  "$defs": {
+    "Award": {
+      "type": "object",
+      "properties": {
+        "federal_agency": {
+          "type": "string",
+          "description": "The federal awarding department/agency heading this program is listed under — the bold, left-most, un-indented section header above the row (e.g. 'U.S. Department of Education', 'U.S. Department of Housing and Urban Development', 'United States Department of Health and Human Services'). Carry the current agency header down to every program beneath it until a new agency header appears. May appear as 'Federal Grantor' or 'Federal/State Grantor'. Do NOT confuse with: the pass-through / state grantor entity (that is `pass_through_entity`), the cluster name (`cluster_name`), or the program title."
+        },
+        "cluster_name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The federal program cluster this program is grouped under, if any — e.g. 'Student Financial Assistance Cluster', 'TRIO Cluster', 'CDBG - Entitlement Grants Cluster', 'WIOA Cluster', or a 'COVID-19 - ...' grouping. Cluster headers usually end in 'Cluster' or name a COVID-19 funding group. Record the cluster name WITHOUT any trailing punctuation (strip a trailing ':'); e.g. 'COVID-19 - Education Stabilization Fund', not 'COVID-19 - Education Stabilization Fund:'. Use null when the program is not grouped under any cluster (a standalone program is NOT its own cluster). Do NOT confuse with `federal_agency` (the department header) or `program_title` (the individual program)."
+        },
+        "program_title": {
+          "type": "string",
+          "description": "The federal program / grant NAME for this award line, e.g. 'Federal Pell Grant Program', 'Community Development Block Grants/Entitlement Grants', 'Times News', 'Coastal Zone Management'. IMPORTANT — when the Assistance Listing Number sits on a line whose own text is only a date / year / period qualifier (e.g. '2023/2024 Grant Year', '2023/2024 Program Year', '2023/2024 Services', 'Award Period September 1, 2022 - August 31, 2023', 'Contract Period 07/01/2016 to 06/30/2017'), do NOT use that qualifier as the title — use the PROGRAM NAME printed on the line(s) immediately above it (so the title is 'Federal Pell Grant Program', NOT '2023/2024 Grant Year'). Only when the award's own row label is a genuine sub-grantee / project name (e.g. 'Times News', 'Millcreek CDBG') use that name as the title. RECORD THE NAME ONLY — EXCLUDE any trailing grant/award/contract identifier appended after the name (those belong in `pass_through_or_grantor_number`); e.g. record 'Coastal Zone Management', not 'Coastal Zone Management NA13N0S4190131'. Use the official program name as printed (do not paraphrase). Do NOT confuse with `cluster_name`, `federal_agency`, or `pass_through_or_grantor_number`."
+        },
+        "assistance_listing_number": {
+          "type": "string",
+          "description": "Assistance Listing Number (formerly CFDA Number) for the program, taken from the 'Assistance Listing Number' / 'CFDA Number' column. Format NN.NNN, optionally with a trailing letter suffix; record VERBATIM including the suffix, e.g. '84.007', '84.042A', '84.425G', '14.218', '93.870'. EVERY award entry MUST have an Assistance Listing Number — if a line in the schedule has a blank AL/CFDA cell (e.g. an indented subrecipient breakdown line under a parent award), it is NOT a separate award and MUST NOT be emitted as an entry (see the `awards` array description). When several Assistance Listing Numbers are stacked together for a SINGLE shared expenditure amount with no per-AL breakdown (e.g. a WIOA program listing 17.258 / 17.259 / 17.278 against one total), emit ONE award entry using the FIRST listed AL number. Do NOT confuse with `pass_through_or_grantor_number` (an alphanumeric contract id) or any dollar amount."
+        },
+        "pass_through_entity": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The entity through which the federal award was received, taken ONLY from an explicit 'Passed Through' / 'Pass-Through Grantor' column. The literal 'Direct' means received directly from the federal agency — record 'Direct' only when the column literally shows 'Direct'. Otherwise the state agency or intermediary printed in that column (e.g. 'MiLEAP', 'MDE', 'MDL'). If the schedule has NO such pass-through column at all, return null — do NOT infer or guess 'Direct'. Use null when the column exists but the cell is blank. Do NOT confuse with `federal_agency` (the awarding department) or a subrecipient that funds were passed TO. For schedules with no explicit Direct/Pass-through column, derive the pass-through entity from the 'Passed-Through <ENTITY>:' section header governing the row; use null only for awards received directly from the federal agency."
+        },
+        "pass_through_or_grantor_number": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The pass-through grantor's award / contract / grant identifying number for this award, from the 'Pass-through / Grantor Number' / 'Grant Number' / 'Pass-Through or Award Number' column, recorded VERBATIM, e.g. 'P007A232021', 'B16MC420107', 'HHS001105400005', '243510-2421', 'MSC 221030-CV'. Use null when the cell is blank. Do NOT confuse with `assistance_listing_number` (NN.NNN format) or any dollar amount. If the document prints a literal 'N/A' in the grant/contract-number column, record the string \"N/A\" (not null); use null only when the cell is genuinely blank."
+        },
+        "federal_expenditures": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Federal expenditures for THIS award line during the audit period, from the 'Federal Expenditures' / 'Expenditures' column (on combined Federal-and-State schedules, the 'Federal/State Expenditures' column value on the award's own row). Numeric only — strip '$', commas, and whitespace; keep cents if shown; parenthesized/negative values become negative numbers. This is the amount on this award's own AL-bearing row, NOT a cluster subtotal, agency subtotal, or grand total, and NOT a subrecipient breakdown amount. Do NOT confuse with `passed_through_to_subrecipients`, federal grant receipts, or accrued-revenue columns."
+        },
+        "passed_through_to_subrecipients": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Amount printed in the 'Expenditures to Subrecipients' / 'Passed Through to Subrecipients' / 'Pass-Through Expenditures' column ON THIS AWARD'S OWN ROW. Numeric only (strip '$' and commas). Do NOT sum or aggregate the separate subrecipient breakdown lines — record only the value shown on the award row itself. Return null when the schedule has no such column, or the cell on this row is blank, zero-not-shown, or a dash '-'. Do NOT confuse with `federal_expenditures` (the total for the line)."
+        }
+      },
+      "required": [
+        "federal_agency",
+        "program_title",
+        "assistance_listing_number",
+        "federal_expenditures"
+      ]
+    }
+  },
+  "properties": {
+    "auditee_name": {
+      "type": "string",
+      "description": "Legal name of the auditee/entity, from the SEFA page header (e.g. 'JACKSON COLLEGE', 'COUNTY OF ERIE, PENNSYLVANIA', 'UNITED WAY OF SAN ANTONIO AND BEXAR COUNTY'). Verbatim including state if printed. Do NOT confuse with a federal grantor agency name or the audit firm's name."
+    },
+    "fiscal_year_end": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The fiscal year-end date the schedule covers, from the 'For the Year Ended ...' / 'Year Ended ...' subtitle under the title. Format strictly YYYY-MM-DD (e.g. 'For the Year Ended June 30, 2024' -> '2024-06-30'; 'Year Ended December 31, 2017' -> '2017-12-31'). Do NOT confuse with a prior-year comparative date or an individual award period range."
+    },
+    "total_federal_expenditures": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Grand total of FEDERAL expenditures for the entire schedule — the bottom 'Total Expenditures of Federal Awards' / 'Total Federal Awards' line in the Federal Expenditures column. Numeric only (strip '$' and commas). Do NOT confuse with a department/agency subtotal, a cluster subtotal, the total passed through to subrecipients, or (on combined Federal-and-State schedules) the state or grand-combined total — use the FEDERAL grand total only."
+    },
+    "awards": {
+      "type": "array",
+      "description": "Every individual federal award line in the SEFA. EMIT ONE ENTRY PER AL-BEARING ROW — a line that carries its own Assistance Listing Number (CFDA number) AND a value in the Federal Expenditures column. INCLUDE per-subrecipient / per-project rows ONLY when that row has its own Assistance Listing Number (e.g. the County of Erie CDBG sub-grant rows, which each repeat AL 14.218 with their own grant number and expenditure). EXCLUDE indented subrecipient/pass-through breakdown lines that have a BLANK Assistance Listing Number and whose amount appears only in a 'Pass-Through / Subrecipient Expenditures' column (those are the breakdown of a parent award's pass-through total, NOT separate federal awards — fold their meaning into the parent award's `passed_through_to_subrecipients` only if the value is printed on the parent row). EXCLUDE all subtotal/total rows ('Total <Cluster>', 'Total <Department>', 'Subtotal for AL ...', 'Total Expenditures of Federal Awards'). EXCLUDE header-only rows with no amount.",
+      "items": {
+        "$ref": "#/$defs/Award"
+      }
+    }
+  },
+  "required": [
+    "auditee_name",
+    "awards",
+    "total_federal_expenditures"
+  ]
+}

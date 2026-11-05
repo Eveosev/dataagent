@@ -1,0 +1,35 @@
+{
+  "case_id": "B14-elt-0110",
+  "task_id": "B14",
+  "split_role": "unseen_acceptance",
+  "inputs": [
+    {
+      "kind": "config",
+      "ref": "fixtures/elt-redshift-book_publishing_company-config.yaml",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B14-elt-0110.json"
+  },
+  "evidence": [
+    "bench://elt-bench/elt-bench/redshift/book_publishing_company/data_model.yaml"
+  ],
+  "tags": [
+    "elt-bench",
+    "redshift",
+    "book_publishing_company",
+    "models:3"
+  ],
+  "source": "elt",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

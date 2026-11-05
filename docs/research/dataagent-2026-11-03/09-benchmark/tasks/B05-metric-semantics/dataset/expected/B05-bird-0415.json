@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 414,
+  "question": "I'm reviewing thrombosis ward patients and need a chart-review list. Can you give me, for every patient who had a single lab visit where the panel showed both an LDH result strictly between 600 and 800 and urine protein of 300 mg/dL or more, the patient ID and their completed age in years as of 2026-10-09? If any one visit's panel shows both findings, that patient qualifies. Please note that a proteinuria result reported as \"at least\" a level counts at that stated level (e.g., \"at least 300\" counts as 300 mg/dL or more), and a plain number is in mg/dL. Nothing else needed, just patient ID and completed age.",
+  "evidence": "Proteinuria result codes: '-' means negative, 'TR' means trace.",
+  "gold_sql": "SELECT p.ID, CAST(SUBSTR('2026-10-09', 1, 4) AS INTEGER) - CAST(SUBSTR(CAST(p.Birthday AS CHAR(10)), 1, 4) AS INTEGER) - CASE WHEN SUBSTR('2026-10-09', 6, 5) < SUBSTR(CAST(p.Birthday AS CHAR(10)), 6, 5) THEN 1 ELSE 0 END AS age FROM Patient AS p WHERE p.Birthday IS NOT NULL AND EXISTS (SELECT 1 FROM Laboratory AS l WHERE l.ID = p.ID AND l.LDH > 600 AND l.LDH < 800 AND CAST(REPLACE(REPLACE(CAST(l.`U-PRO` AS TEXT), '>', ''), '=', '') AS REAL) >= 300) ORDER BY p.ID",
+  "db_id": "thrombosis_prediction",
+  "case_id": "B05-bird-0415",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT p.ID, CAST(SUBSTR('2026-10-09', 1, 4) AS INTEGER) - CAST(SUBSTR(CAST(p.Birthday AS CHAR(10)), 1, 4) AS INTEGER) - CASE WHEN SUBSTR('2026-10-09', 6, 5) < SUBSTR(CAST(p.Birthday AS CHAR(10)), 6, 5) THEN 1 ELSE 0 END AS age FROM Patient AS p WHERE p.Birthday IS NOT NULL AND EXISTS (SELECT 1 FROM Laboratory AS l WHERE l.ID = p.ID AND l.LDH > 600 AND l.LDH < 800 AND CAST(REPLACE(REPLACE(CAST(l.`U-PRO` AS TEXT), '>', ''), '=', '') AS REAL) >= 300) ORDER BY p.ID",
+    "db_id": "thrombosis_prediction",
+    "evidence": "Proteinuria result codes: '-' means negative, 'TR' means trace."
+  }
+}

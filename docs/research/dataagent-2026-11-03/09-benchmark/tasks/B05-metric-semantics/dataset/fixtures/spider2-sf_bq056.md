@@ -1,0 +1,1 @@
+How many different pairs of roads classified as motorway, trunk, primary, secondary, or residential in California overlap each other without sharing nodes and do not have a bridge tag, where these roads are tagged with 'highway'

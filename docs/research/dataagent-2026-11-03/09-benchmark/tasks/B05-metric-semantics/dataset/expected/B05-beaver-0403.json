@@ -1,0 +1,27 @@
+{
+  "source": "beaverbench/beaver-query",
+  "id": "dw_5449",
+  "db": "dw",
+  "question": "For each academic year, what is the standard deviation (using STDDEV only and never STDDEV_POP) of the maximum enrollment for IAP activities offered by the Mathematics department (Course 18), considering only years with more than five activities, and what is the corresponding academic year description? Do not return any rounded answers.",
+  "sql": "SELECT ata.ACADEMIC_YEAR, ata.ACADEMIC_YEAR_DESC, STDDEV_SAMP(isd.MAX_ENROLLMENT) AS stddev_max_enrollment FROM IAP_SUBJECT_DETAIL isd JOIN ACADEMIC_TERMS_ALL ata ON isd.TERM_CODE = ata.TERM_CODE JOIN COURSE_CATALOG_SUBJECT_OFFERED ccso ON isd.TERM_CODE = ccso.TERM_CODE WHERE ccso.DEPARTMENT_NAME = 'Mathematics' AND isd.MAX_ENROLLMENT IS NOT NULL GROUP BY ata.ACADEMIC_YEAR, ata.ACADEMIC_YEAR_DESC HAVING COUNT(isd.MAX_ENROLLMENT) > 5 ORDER BY ata.ACADEMIC_YEAR;",
+  "tables": "[\"IAP_SUBJECT_DETAIL\", \"ACADEMIC_TERMS_ALL\", \"COURSE_CATALOG_SUBJECT_OFFERED\"]",
+  "join_keys": "[[\"IAP_SUBJECT_DETAIL.TERM_CODE\", \"ACADEMIC_TERMS_ALL.TERM_CODE\"], [\"ACADEMIC_TERMS_ALL.TERM_CODE\", \"COURSE_CATALOG_SUBJECT_OFFERED.TERM_CODE\"]]",
+  "column_mapping": "{\"academic year\": [\"ACADEMIC_TERMS_ALL.ACADEMIC_YEAR\"], \"standard deviation of the maximum enrollment\": [\"IAP_SUBJECT_DETAIL.MAX_ENROLLMENT\"], \"IAP activities\": [\"IAP_SUBJECT_DETAIL.MAX_ENROLLMENT\"], \"Mathematics department (Course 18)\": [\"COURSE_CATALOG_SUBJECT_OFFERED.DEPARTMENT_NAME\"], \"academic year description\": [\"ACADEMIC_TERMS_ALL.ACADEMIC_YEAR_DESC\"], \"years with more than five activities\": [\"IAP_SUBJECT_DETAIL.MAX_ENROLLMENT\"]}",
+  "domain_knowledge": "[\"\\\"math\\\" is predicated by \\\"TABLE.DEPARTMENT_NAME = 'Mathematics'\\\"\", \"\\\"Course 18\\\" is predicated by \\\"TABLE.DEPARTMENT_NAME = 'Mathematics'\\\"\"]",
+  "sub_questions": "[]",
+  "sub_sqls": "[]",
+  "category": "domain-specific query",
+  "detailed_category": "base",
+  "case_id": "B05-beaver-0403",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT ata.ACADEMIC_YEAR, ata.ACADEMIC_YEAR_DESC, STDDEV_SAMP(isd.MAX_ENROLLMENT) AS stddev_max_enrollment FROM IAP_SUBJECT_DETAIL isd JOIN ACADEMIC_TERMS_ALL ata ON isd.TERM_CODE = ata.TERM_CODE JOIN COURSE_CATALOG_SUBJECT_OFFERED ccso ON isd.TERM_CODE = ccso.TERM_CODE WHERE ccso.DEPARTMENT_NAME = 'Mathematics' AND isd.MAX_ENROLLMENT IS NOT NULL GROUP BY ata.ACADEMIC_YEAR, ata.ACADEMIC_YEAR_DESC HAVING COUNT(isd.MAX_ENROLLMENT) > 5 ORDER BY ata.ACADEMIC_YEAR;",
+    "sub_sqls": "[]",
+    "db": "dw",
+    "tables": "[\"IAP_SUBJECT_DETAIL\", \"ACADEMIC_TERMS_ALL\", \"COURSE_CATALOG_SUBJECT_OFFERED\"]",
+    "join_keys": "[[\"IAP_SUBJECT_DETAIL.TERM_CODE\", \"ACADEMIC_TERMS_ALL.TERM_CODE\"], [\"ACADEMIC_TERMS_ALL.TERM_CODE\", \"COURSE_CATALOG_SUBJECT_OFFERED.TERM_CODE\"]]",
+    "column_mapping": "{\"academic year\": [\"ACADEMIC_TERMS_ALL.ACADEMIC_YEAR\"], \"standard deviation of the maximum enrollment\": [\"IAP_SUBJECT_DETAIL.MAX_ENROLLMENT\"], \"IAP activities\": [\"IAP_SUBJECT_DETAIL.MAX_ENROLLMENT\"], \"Mathematics department (Course 18)\": [\"COURSE_CATALOG_SUBJECT_OFFERED.DEPARTMENT_NAME\"], \"academic year description\": [\"ACADEMIC_TERMS_ALL.ACADEMIC_YEAR_DESC\"], \"years with more than five activities\": [\"IAP_SUBJECT_DETAIL.MAX_ENROLLMENT\"]}",
+    "category": "domain-specific query",
+    "db_archive": "bench://beaver-table/beaver_db.zip"
+  }
+}

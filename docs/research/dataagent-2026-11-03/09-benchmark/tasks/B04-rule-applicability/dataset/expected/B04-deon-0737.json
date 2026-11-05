@@ -1,0 +1,30 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_e3184599",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_eviction_case_general",
+    "scenario_claimed_first_hearing_court",
+    "court_type",
+    "permitted_by_supreme_court",
+    "legal_cognizable_court_18_60_306",
+    "legal_cognizable_court_18_16_503",
+    "legal_cognizable_court_18_17_701",
+    "legal_jurisdiction_18_17_203",
+    "eviction_case_type",
+    "legal_eviction_cognizable_in",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    State: Arkansas\n    Focus year: 2021 (statutes provided are 2020 versions, applicable context)\n    Question: \"Are eviction cases first heard in municipal court?\"\n*/\n\n/* ------------------------- Scenario facts ------------------------- */\n\nscenario_state(arkansas).\nscenario_focus_year(2021).\n\n/* The question concerns eviction cases generally (i.e., the common eviction causes of action). */\nscenario_eviction_case_general(eviction_case).\n\n/* Municipal court is the court named in the question. */\nscenario_claimed_first_hearing_court(municipal_court).\n\n/* Helper predicate that succeeds when the factual statement (question scenario) is present. */\nscenario_statement :-\n    scenario_state(arkansas),\n    scenario_focus_year(2021),\n    scenario_eviction_case_general(eviction_case),\n    scenario_claimed_first_hearing_court(municipal_court).\n\n/* ------------------------- Court taxonomy ------------------------- */\n\ncourt_type(circuit_court).\ncourt_type(district_court).\ncourt_type(municipal_court).\n\n/* ------------------------- Statute translations ------------------------- */\n\n/* AR Code  18-60-306 (2020)\n   (a) Forcible entries and detainers and unlawful detainers are cognizable before:\n       (1) circuit court; and\n       (2) district court with concurrent jurisdiction if permitted by Supreme Court rule/order.\n   (b) \"court\" means circuit court; and if permitted, district court.\n*/\npermitted_by_supreme_court(district_concurrent_jurisdiction, yes).\n\nlegal_cognizable_court_18_60_306(forcible_entry_detainer, circuit_court).\nlegal_cognizable_court_18_60_306(unlawful_detainer, circuit_court).\nlegal_cognizable_court_18_60_306(forcible_entry_detainer, district_court) :-\n    permitted_by_supreme_court(district_concurrent_jurisdiction, yes).\nlegal_cognizable_court_18_60_306(unlawful_detainer, district_court) :-\n    permitted_by_supreme_court(district_concurrent_jurisdiction, yes).\n\n/* AR Code  18-16-503 (2020)\n   (b) Nuisance/criminal-offense based eviction civil action is cognizable before:\n       (1) circuit court; and\n       (2) district court with concurrent jurisdiction if permitted by Supreme Court rule/order.\n   (c) \"court\" means circuit court; and if permitted, district court.\n*/\nlegal_cognizable_court_18_16_503(nuisance_or_criminal_eviction, circuit_court).\nlegal_cognizable_court_18_16_503(nuisance_or_criminal_eviction, district_court) :-\n    permitted_by_supreme_court(district_concurrent_jurisdiction, yes).\n\n/* AR Code  18-17-701 (2020)\n   (c)(1) Landlord may obtain ... judgments, or evictions in circuit court or district court\n          for any noncompliance by the tenant with the rental agreement.\n*/\nlegal_cognizable_court_18_17_701(tenant_noncompliance_eviction, circuit_court).\nlegal_cognizable_court_18_17_701(tenant_noncompliance_eviction, district_court).\n\n/* AR Code  18-17-203 (2020)\n   \"The district court or appropriate court of this state shall exercise jurisdiction ...\"\n   This supports district-court jurisdiction generally, but does not identify municipal court\n   as the eviction forum.\n*/\nlegal_jurisdiction_18_17_203(district_court).\n\n/* ------------------------- Consolidated legal reasoning ------------------------- */\n\n/* Define the eviction case types covered by the provided eviction-related statutes. */\neviction_case_type(forcible_entry_detainer).\neviction_case_type(unlawful_detainer).\neviction_case_type(nuisance_or_criminal_eviction).\neviction_case_type(tenant_noncompliance_eviction).\n\n/* A court is legally authorized (cognizable forum) for an eviction case type if any statute grants it. */\nlegal_eviction_cognizable_in(CaseType, Court) :-\n    eviction_case_type(CaseType),\n    court_type(Court),\n    legal_cognizable_court_18_60_306(CaseType, Court).\nlegal_eviction_cognizable_in(CaseType, Court) :-\n    eviction_case_type(CaseType),\n    court_type(Court),\n    legal_cognizable_court_18_16_503(CaseType, Court).\nlegal_eviction_cognizable_in(CaseType, Court) :-\n    eviction_case_type(CaseType),\n    court_type(Court),\n    legal_cognizable_court_18_17_701(CaseType, Court).\n\n/* Municipal court is \"a court where eviction cases are first heard\" only if it is a cognizable forum\n   for eviction actions under the provided statutes. */\nmunicipal_court_has_eviction_jurisdiction :-\n    legal_eviction_cognizable_in(_AnyEvictionCaseType, municipal_court).\n\n/* ------------------------- Answer ------------------------- */\n\nhousing_answer(yes) :-\n    scenario_statement,\n    municipal_court_has_eviction_jurisdiction,\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    \\+ municipal_court_has_eviction_jurisdiction,\n    !.\n\n/* ------------------------- Main entrypoint ------------------------- */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-0737",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Are eviction cases first heard in municipal court?"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1844,
+  "table": "health-table16",
+  "structure": "MultiColumnClassified",
+  "question_type": "Data Analysis",
+  "sub_type": "Summary Analysis",
+  "answer": "The table presents “Log10 Recovery (Test Sample)” values that vary significantly across test materials and organisms. ABS Plastic shows lower average recovery values, indicating higher effectiveness against organisms like Escherichia coli, while Glass and Stainless Steel exhibit higher recovery, suggesting lesser effectiveness. Organisms like Serratia marcescens generally result in higher recovery values, showing varied resilience.",
+  "cot": [
+    {
+      "Planning": "First, we need to review the “Log10 Recovery (Test Sample)” column and analyze its values across different test materials and organisms."
+    },
+    {
+      "Planning": "We need to group the data by “Test Material” and “Organism” to identify patterns or trends in recovery values."
+    },
+    {
+      "Planning": "We need to compute summary statistics such as mean, minimum, and maximum for “Log10 Recovery (Test Sample)” for each group."
+    },
+    {
+      "Planning": "Finally, we interpret the patterns and determine any notable trends or relationships among the test materials and organisms."
+    }
+  ],
+  "case_id": "B01-rht-3480",
+  "expected": {
+    "kind": "answer",
+    "question": "Summarize the key patterns observed in the “Log10 Recovery (Test Sample)” across different test materials and organisms.",
+    "answer": "The table presents “Log10 Recovery (Test Sample)” values that vary significantly across test materials and organisms. ABS Plastic shows lower average recovery values, indicating higher effectiveness against organisms like Escherichia coli, while Glass and Stainless Steel exhibit higher recovery, suggesting lesser effectiveness. Organisms like Serratia marcescens generally result in higher recovery values, showing varied resilience."
+  }
+}

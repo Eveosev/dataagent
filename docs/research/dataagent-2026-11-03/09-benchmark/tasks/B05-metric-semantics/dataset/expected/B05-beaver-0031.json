@@ -1,0 +1,27 @@
+{
+  "source": "beaverbench/beaver-query",
+  "id": "dw_426",
+  "db": "dw",
+  "question": "For each department, what is the department name and the highest variance of the number of enrolled students in courses offered by that department across all terms, considering only degree-granting courses and excluding the Chemistry department? Do not return any rounded answers.",
+  "sql": "WITH inner_cte AS ( SELECT SCD.DEPARTMENT_NAME, LSO.TERM_CODE, VARIANCE(LSO.NUM_ENROLLED_STUDENTS) AS enrolled_students_variance FROM SIS_COURSE_DESCRIPTION SCD JOIN SIS_SUBJECT_CODE SSC ON SCD.COURSE = SSC.COURSE_NUMBER JOIN LIBRARY_SUBJECT_OFFERED LSO ON SSC.COURSE_NUMBER = LSO.COURSE_NUMBER WHERE SCD.IS_DEGREE_GRANTING = 'Y' AND SCD.DEPARTMENT_NAME <> 'Chemistry' GROUP BY SCD.DEPARTMENT_NAME, LSO.TERM_CODE ) SELECT DEPARTMENT_NAME, MAX(enrolled_students_variance) AS highest_enrolled_students_variance FROM inner_cte GROUP BY DEPARTMENT_NAME ORDER BY highest_enrolled_students_variance DESC;",
+  "tables": "[\"SIS_COURSE_DESCRIPTION\", \"SIS_SUBJECT_CODE\", \"LIBRARY_SUBJECT_OFFERED\"]",
+  "join_keys": "[[\"SIS_COURSE_DESCRIPTION.COURSE\", \"SIS_SUBJECT_CODE.COURSE_NUMBER\"], [\"LIBRARY_SUBJECT_OFFERED.COURSE_NUMBER\", \"SIS_SUBJECT_CODE.COURSE_NUMBER\"]]",
+  "column_mapping": "{\"department\": [\"SIS_COURSE_DESCRIPTION.DEPARTMENT_NAME\"], \"department name\": [\"SIS_COURSE_DESCRIPTION.DEPARTMENT_NAME\"], \"number of enrolled students\": [\"LIBRARY_SUBJECT_OFFERED.NUM_ENROLLED_STUDENTS\"], \"courses offered by that department\": [\"SIS_COURSE_DESCRIPTION.DEPARTMENT_NAME\", \"LIBRARY_SUBJECT_OFFERED.COURSE_NUMBER\"], \"terms\": [\"LIBRARY_SUBJECT_OFFERED.TERM_CODE\"], \"degree-granting courses\": [\"SIS_COURSE_DESCRIPTION.IS_DEGREE_GRANTING\"], \"Chemistry department\": [\"SIS_COURSE_DESCRIPTION.DEPARTMENT_NAME\"]}",
+  "domain_knowledge": "[\"\\\"degree-granting courses\\\" is predicated by \\\"TABLE.IS_DEGREE_GRANTING = 'Y'\\\"\", \"\\\"Chemistry\\\" is predicated by \\\"TABLE.DEPARTMENT_NAME = 'Chemistry'\\\"\"]",
+  "sub_questions": "[\"For each department, what is the department name and the variance of the number of enrolled students in courses offered by that department during the term '2014FA', considering only degree-granting courses and excluding the Chemistry department?\"]",
+  "sub_sqls": "[\"SELECT SCD.DEPARTMENT_NAME, VARIANCE(LSO.NUM_ENROLLED_STUDENTS) AS enrolled_students_variance FROM SIS_COURSE_DESCRIPTION SCD JOIN SIS_SUBJECT_CODE SSC ON SCD.COURSE = SSC.COURSE_NUMBER JOIN LIBRARY_SUBJECT_OFFERED LSO ON SSC.COURSE_NUMBER = LSO.COURSE_NUMBER WHERE LSO.TERM_CODE = '2014FA' AND SCD.IS_DEGREE_GRANTING = 'Y' AND SCD.DEPARTMENT_NAME <> 'Chemistry' GROUP BY SCD.DEPARTMENT_NAME ORDER BY enrolled_students_variance DESC;\"]",
+  "category": "domain-specific complex query",
+  "detailed_category": "nested",
+  "case_id": "B05-beaver-0031",
+  "expected": {
+    "kind": "sql",
+    "sql": "WITH inner_cte AS ( SELECT SCD.DEPARTMENT_NAME, LSO.TERM_CODE, VARIANCE(LSO.NUM_ENROLLED_STUDENTS) AS enrolled_students_variance FROM SIS_COURSE_DESCRIPTION SCD JOIN SIS_SUBJECT_CODE SSC ON SCD.COURSE = SSC.COURSE_NUMBER JOIN LIBRARY_SUBJECT_OFFERED LSO ON SSC.COURSE_NUMBER = LSO.COURSE_NUMBER WHERE SCD.IS_DEGREE_GRANTING = 'Y' AND SCD.DEPARTMENT_NAME <> 'Chemistry' GROUP BY SCD.DEPARTMENT_NAME, LSO.TERM_CODE ) SELECT DEPARTMENT_NAME, MAX(enrolled_students_variance) AS highest_enrolled_students_variance FROM inner_cte GROUP BY DEPARTMENT_NAME ORDER BY highest_enrolled_students_variance DESC;",
+    "sub_sqls": "[\"SELECT SCD.DEPARTMENT_NAME, VARIANCE(LSO.NUM_ENROLLED_STUDENTS) AS enrolled_students_variance FROM SIS_COURSE_DESCRIPTION SCD JOIN SIS_SUBJECT_CODE SSC ON SCD.COURSE = SSC.COURSE_NUMBER JOIN LIBRARY_SUBJECT_OFFERED LSO ON SSC.COURSE_NUMBER = LSO.COURSE_NUMBER WHERE LSO.TERM_CODE = '2014FA' AND SCD.IS_DEGREE_GRANTING = 'Y' AND SCD.DEPARTMENT_NAME <> 'Chemistry' GROUP BY SCD.DEPARTMENT_NAME ORDER BY enrolled_students_variance DESC;\"]",
+    "db": "dw",
+    "tables": "[\"SIS_COURSE_DESCRIPTION\", \"SIS_SUBJECT_CODE\", \"LIBRARY_SUBJECT_OFFERED\"]",
+    "join_keys": "[[\"SIS_COURSE_DESCRIPTION.COURSE\", \"SIS_SUBJECT_CODE.COURSE_NUMBER\"], [\"LIBRARY_SUBJECT_OFFERED.COURSE_NUMBER\", \"SIS_SUBJECT_CODE.COURSE_NUMBER\"]]",
+    "column_mapping": "{\"department\": [\"SIS_COURSE_DESCRIPTION.DEPARTMENT_NAME\"], \"department name\": [\"SIS_COURSE_DESCRIPTION.DEPARTMENT_NAME\"], \"number of enrolled students\": [\"LIBRARY_SUBJECT_OFFERED.NUM_ENROLLED_STUDENTS\"], \"courses offered by that department\": [\"SIS_COURSE_DESCRIPTION.DEPARTMENT_NAME\", \"LIBRARY_SUBJECT_OFFERED.COURSE_NUMBER\"], \"terms\": [\"LIBRARY_SUBJECT_OFFERED.TERM_CODE\"], \"degree-granting courses\": [\"SIS_COURSE_DESCRIPTION.IS_DEGREE_GRANTING\"], \"Chemistry department\": [\"SIS_COURSE_DESCRIPTION.DEPARTMENT_NAME\"]}",
+    "category": "domain-specific complex query",
+    "db_archive": "bench://beaver-table/beaver_db.zip"
+  }
+}

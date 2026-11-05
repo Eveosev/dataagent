@@ -1,0 +1,1 @@
+How can I create a formula in Excel that will calculate a running sum of data numbers found in Column B, grouping these numbers in periods covering every three consecutive days, starting from the second row (C2), based on the daily dates listed in Column A? I failed when the date cross different month.

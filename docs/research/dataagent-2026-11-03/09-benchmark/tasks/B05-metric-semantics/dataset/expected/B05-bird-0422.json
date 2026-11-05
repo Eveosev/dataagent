@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 421,
+  "question": "How many patients in our thrombosis ward are followed at the outpatient clinic (rather than admitted) with a normal Rheumatoid Factor and no positive measure of degree of coagulation? Please give me a single number. For context: a normal Rheumatoid Factor is '-' or '+-', a positive measure of degree of coagulation is '+' on any of the coagulation measures (KCT, RVVT, LAC), and an outpatient-clinic patient is one with Admission = '-'. If a patient has no recorded coagulation measure, count them as having no positive measure.",
+  "evidence": "",
+  "gold_sql": "SELECT COUNT(DISTINCT T1.ID) AS patient_count FROM Patient AS T1 WHERE T1.Admission = '-' AND T1.ID IN (SELECT ID FROM Laboratory WHERE RA IN ('-', '+-')) AND NOT EXISTS (SELECT 1 FROM Examination E WHERE E.ID = T1.ID AND (E.KCT = '+' OR E.RVVT = '+' OR E.LAC = '+'))",
+  "db_id": "thrombosis_prediction",
+  "case_id": "B05-bird-0422",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT COUNT(DISTINCT T1.ID) AS patient_count FROM Patient AS T1 WHERE T1.Admission = '-' AND T1.ID IN (SELECT ID FROM Laboratory WHERE RA IN ('-', '+-')) AND NOT EXISTS (SELECT 1 FROM Examination E WHERE E.ID = T1.ID AND (E.KCT = '+' OR E.RVVT = '+' OR E.LAC = '+'))",
+    "db_id": "thrombosis_prediction",
+    "evidence": ""
+  }
+}

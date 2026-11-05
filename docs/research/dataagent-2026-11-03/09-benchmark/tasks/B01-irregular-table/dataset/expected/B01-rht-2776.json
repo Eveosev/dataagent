@@ -1,0 +1,38 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1140,
+  "table": "economy-table80",
+  "structure": "SingleRowClassified",
+  "question_type": "Numerical Reasoning",
+  "sub_type": "Comparison",
+  "answer": "no/Tops",
+  "cot": [
+    {
+      "step": "First, we need to focus on the rows corresponding to “Daikon W/Tops” and “Daikon no/Tops”. These rows are for “W/Tops” and “no/Tops” under the “Daikon” category in the table."
+    },
+    {
+      "step": "Next, we extract the total delivery cost (in the “Del” column) for both categories:"
+    },
+    {
+      "step": "• For “Daikon W/Tops”, the total delivery cost is $12.70."
+    },
+    {
+      "step": "• For “Daikon no/Tops”, the total delivery cost is $20.35."
+    },
+    {
+      "step": "We compare the two delivery costs:"
+    },
+    {
+      "step": "• $12.70 (W/Tops) vs $20.35 (no/Tops)."
+    },
+    {
+      "step": "Since $20.35 is greater than $12.70, “Daikon no/Tops” has the higher total delivery cost."
+    }
+  ],
+  "case_id": "B01-rht-2776",
+  "expected": {
+    "kind": "answer",
+    "question": "Which item, “Daikon W/Tops” or “Daikon no/Tops,” has the higher total delivery cost?",
+    "answer": "no/Tops"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_55878606",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_minimal_landlord_category",
+    "statute_ncgs_42_40_definition",
+    "includes",
+    "means",
+    "statute_ncgs_42_14_min_notice_days",
+    "statute_property_count_threshold",
+    "statute_explicitly_regulates_minimal_landlords",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program (North Carolina, focus year 2021)\n\n    Question: Does NC eviction law explicitly regulate landlords with minimal rental properties\n    (e.g., <=5 single family homes; <=3 homes/properties; <=3 condo/co-op units)?\n\n    Statutes provided:\n      [1] NC Gen Stat  42-40 (2021) Definitions\n      [2] NC Gen Stat  42-14 (2021) Notice to quit in certain tenancies\n\n    This program encodes those statutes and the question scenario, then derives yes/no.\n*/\n\n% --------------------------\n% Scenario (facts)\n% --------------------------\n\nscenario_state(north_carolina).\nscenario_focus_year(2021).\n\n% The question's \"minimal landlord\" categories (encoded as the scenario's target categories).\nscenario_minimal_landlord_category(five_or_fewer_single_family_homes, max_count(5)).\nscenario_minimal_landlord_category(three_or_less_homes_or_rental_properties, max_count(3)).\nscenario_minimal_landlord_category(three_or_less_condo_or_coop_units, max_count(3)).\n\n% Helper that succeeds when the question scenario is fully represented in facts.\nscenario_statement :-\n    scenario_state(north_carolina),\n    scenario_focus_year(2021),\n    scenario_minimal_landlord_category(five_or_fewer_single_family_homes, max_count(5)),\n    scenario_minimal_landlord_category(three_or_less_homes_or_rental_properties, max_count(3)),\n    scenario_minimal_landlord_category(three_or_less_condo_or_coop_units, max_count(3)).\n\n% --------------------------\n% Statutes (translated)\n% --------------------------\n\n/* [1] NC Gen Stat  42-40 (2021) - Definitions (Article scope definitions)\n   Encoded as deterministic definitional facts.\n*/\nstatute_ncgs_42_40_definition(2021, action,\n    includes([recoupment, counterclaim, defense, setoff, other_proceeding_including_action_for_possession])).\n\nstatute_ncgs_42_40_definition(2021, premises,\n    means(dwelling_unit_including([mobile_home, mobile_home_space]),\n          includes([structure_part, facilities, appurtenances, grounds, areas, facilities_held_out_for_residential_tenants_use]))).\n\nstatute_ncgs_42_40_definition(2021, landlord,\n    means(any_owner_or_authorized_agent,\n          includes([owner, rental_management_company, rental_agency, other_person_with_actual_or_apparent_agent_authority]))).\n\nstatute_ncgs_42_40_definition(2021, protected_tenant,\n    means(tenant_or_household_member_victim_of([domestic_violence_chapter_50b, sexual_assault_chapter_14, stalking_chapter_14]))).\n\n\n/* [2] NC Gen Stat  42-14 (2021) - Notice to quit in certain tenancies\n   Encoded as minimum notice requirements in days.\n   Note: For \"one month or more\" we encode the minimum as 30 days.\n*/\nstatute_ncgs_42_14_min_notice_days(2021, year_to_year, 30).\nstatute_ncgs_42_14_min_notice_days(2021, month_to_month, 7).\nstatute_ncgs_42_14_min_notice_days(2021, week_to_week, 2).\nstatute_ncgs_42_14_min_notice_days(2021, manufactured_home_space_any_term, 60).\n\n/* Core concept for this question:\n   \"Explicitly regulate landlords with minimal rental properties\" means: the statute text\n   includes rules/definitions that turn on the NUMBER of units/homes/properties owned.\n\n   The provided NC statutes (42-40 and 42-14) do NOT create any such property-count-based\n   classification. We encode that by providing no successful instances of property-count thresholds.\n*/\n\n% If NC eviction law (as provided here) had an explicit \"small landlord\" threshold, it would appear here.\n% Intentionally fails for all inputs, because the provided statutes contain no such thresholds.\nstatute_property_count_threshold(_State, _Year, _Category, _MaxCount) :-\n    fail.\n\n% Derived legal conclusion: explicit regulation exists only if a property-count threshold exists.\nstatute_explicitly_regulates_minimal_landlords(State, Year) :-\n    statute_property_count_threshold(State, Year, _Category, _MaxCount),\n    !.\n\n% --------------------------\n% Reasoning to answer the question\n% --------------------------\n\n% The question is answered \"yes\" only if:\n%   (a) the scenario is about minimal-property landlords, AND\n%   (b) the encoded statute set explicitly regulates landlords based on property count.\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_state(State),\n    scenario_focus_year(Year),\n    statute_explicitly_regulates_minimal_landlords(State, Year),\n    !.\nhousing_answer(no) :-\n    !.\n\n% --------------------------\n% Main entrypoint\n% --------------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-3722",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Does state/territory eviction law explicitly regulate landlords with minimal rental properties? This includes includes: landlords who own five or fewer single family homes; landlords who own three or less homes or rental properties; and owners of three or less condominium or cooperative units."
+  }
+}

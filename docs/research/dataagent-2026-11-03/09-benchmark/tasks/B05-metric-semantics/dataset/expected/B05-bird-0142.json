@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 141,
+  "question": "Among all posts whose title contains the phrase 'principal component scores', which one has the most related posts linked to it? For each such post, give me the post title and the number of related posts. If several posts tie for the most, list every one of them with their counts. The count should cover related posts across the site's entire history.",
+  "evidence": "A related post is another post that the community's link records connect to a given post.",
+  "gold_sql": "WITH counts AS (SELECT p.Id AS post_id, p.Title AS title, COUNT(DISTINCT pl.RelatedPostId) AS related_posts FROM posts p JOIN postLinks pl ON pl.PostId = p.Id WHERE p.Title LIKE '%principal component scores%' GROUP BY p.Id, p.Title) SELECT title, related_posts FROM counts WHERE related_posts = (SELECT MAX(related_posts) FROM counts) ORDER BY title",
+  "db_id": "codebase_community",
+  "case_id": "B05-bird-0142",
+  "expected": {
+    "kind": "sql",
+    "sql": "WITH counts AS (SELECT p.Id AS post_id, p.Title AS title, COUNT(DISTINCT pl.RelatedPostId) AS related_posts FROM posts p JOIN postLinks pl ON pl.PostId = p.Id WHERE p.Title LIKE '%principal component scores%' GROUP BY p.Id, p.Title) SELECT title, related_posts FROM counts WHERE related_posts = (SELECT MAX(related_posts) FROM counts) ORDER BY title",
+    "db_id": "codebase_community",
+    "evidence": "A related post is another post that the community's link records connect to a given post."
+  }
+}

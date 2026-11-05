@@ -1,0 +1,42 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_7cd53c55",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "state",
+    "focus_year",
+    "person",
+    "dwelling",
+    "landlord_of",
+    "tenant_of",
+    "action",
+    "action_type",
+    "actor",
+    "target_person",
+    "target_dwelling",
+    "eviction_reason",
+    "tenant_has_sufficient_income",
+    "not_owner_occupied_exempt",
+    "protected_basis_46a_64c",
+    "reason_maps_to_basis",
+    "statute_46a_64c_owner_occupied_exemption_applies",
+    "statute_46a_64c_insufficient_income_exception_applies",
+    "statute_46a_64c_discriminatory_practice",
+    "protected_basis_46a_81e",
+    "statute_46a_81e_discriminatory_practice",
+    "eviction_because_of_protected_basis",
+    "eviction_matches_statutory_conduct",
+    "unlawful_eviction_under_46a_64c",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: Connecticut\n    Focus year: 2021\n\n    Question: Is it unlawful to evict a tenant because of the type of income they receive,\n    their status with regard to public assistance, or because they have a housing voucher?\n*/\n\n/* =========================\n   Basic domain vocabulary\n   ========================= */\n\nstate(connecticut).\nfocus_year(2021).\n\n/* Parties and dwelling */\nperson(landlord1).\nperson(tenant1).\ndwelling(dwelling1).\n\n/* Relationship */\nlandlord_of(landlord1, dwelling1).\ntenant_of(tenant1, dwelling1).\n\n/* Action: eviction */\naction(evict1).\naction_type(evict1, eviction).\nactor(evict1, landlord1).\ntarget_person(evict1, tenant1).\ntarget_dwelling(evict1, dwelling1).\n\n/* Reasons asserted in the question (encoded as facts) */\neviction_reason(evict1, type_of_income).\neviction_reason(evict1, public_assistance_status).\neviction_reason(evict1, housing_voucher).\n\n/* Facts to avoid statutory exception \"solely on the basis of insufficient income\"\n   (CT Gen Stat  46a-64c(b)(5)) */\ntenant_has_sufficient_income(tenant1).\n\n/* Facts to avoid owner-occupied small-building exemptions in  46a-64c(b)(1)\n   (We encode that this dwelling is NOT within those exemptions.) */\nnot_owner_occupied_exempt(dwelling1).\n\n/* =========================\n   Scenario helper predicate\n   ========================= */\n\nscenario_statement :-\n    state(connecticut),\n    focus_year(2021),\n    person(landlord1),\n    person(tenant1),\n    dwelling(dwelling1),\n    landlord_of(landlord1, dwelling1),\n    tenant_of(tenant1, dwelling1),\n    action(evict1),\n    action_type(evict1, eviction),\n    actor(evict1, landlord1),\n    target_person(evict1, tenant1),\n    target_dwelling(evict1, dwelling1),\n    eviction_reason(evict1, type_of_income),\n    eviction_reason(evict1, public_assistance_status),\n    eviction_reason(evict1, housing_voucher),\n    tenant_has_sufficient_income(tenant1),\n    not_owner_occupied_exempt(dwelling1).\n\n/* =========================\n   Statute translations\n   ========================= */\n\n/* --- CT Gen Stat  46a-64c (2020): Protected classes/bases (subset used + full list) --- */\nprotected_basis_46a_64c(race).\nprotected_basis_46a_64c(creed).\nprotected_basis_46a_64c(color).\nprotected_basis_46a_64c(national_origin).\nprotected_basis_46a_64c(ancestry).\nprotected_basis_46a_64c(sex).\nprotected_basis_46a_64c(gender_identity_or_expression).\nprotected_basis_46a_64c(marital_status).\nprotected_basis_46a_64c(age).\nprotected_basis_46a_64c(lawful_source_of_income).\nprotected_basis_46a_64c(familial_status).\nprotected_basis_46a_64c(status_as_a_veteran).\nprotected_basis_46a_64c(learning_disability).\nprotected_basis_46a_64c(physical_disability).\nprotected_basis_46a_64c(mental_disability).\n\n/* --- Map common \"income\" reasons to the statute's protected basis \"lawful source of income\"\n   CT Gen Stat  46a-64c(a)(1)-(2) --- */\nreason_maps_to_basis(type_of_income, lawful_source_of_income).\nreason_maps_to_basis(public_assistance_status, lawful_source_of_income).\nreason_maps_to_basis(housing_voucher, lawful_source_of_income).\n\n/* --- CT Gen Stat  46a-64c(b)(1): Exemptions for certain owner-occupied situations.\n   We encode the exemption check as a predicate; the scenario asserts it does not apply. --- */\nstatute_46a_64c_owner_occupied_exemption_applies(Dwelling) :-\n    \\+ not_owner_occupied_exempt(Dwelling).\n\n/* --- CT Gen Stat  46a-64c(b)(5): \"lawful source of income\" does not prohibit denial\n   solely on the basis of insufficient income. We model an exception for income-based actions. --- */\nstatute_46a_64c_insufficient_income_exception_applies(Person) :-\n    \\+ tenant_has_sufficient_income(Person).\n\n/* --- CT Gen Stat  46a-64c(a)(2): discriminatory practice to discriminate in terms,\n   conditions, or privileges of rental because of a protected basis. We treat eviction as\n   affecting privileges/terms of rental (loss of tenancy). --- */\nstatute_46a_64c_discriminatory_practice(terms_conditions_privileges_rental, Actor, Person, Dwelling, Basis) :-\n    person(Actor),\n    person(Person),\n    dwelling(Dwelling),\n    protected_basis_46a_64c(Basis).\n\n/* --- CT Gen Stat  46a-64c(a)(1): discriminatory practice to \"otherwise make unavailable\n   or deny\" a dwelling because of a protected basis. We treat eviction as making the dwelling\n   unavailable to the tenant. --- */\nstatute_46a_64c_discriminatory_practice(make_unavailable_or_deny, Actor, Person, Dwelling, Basis) :-\n    person(Actor),\n    person(Person),\n    dwelling(Dwelling),\n    protected_basis_46a_64c(Basis).\n\n/* --- CT Gen Stat  46a-81e (2020): Sexual orientation/civil union housing discrimination.\n   Not needed to answer the income/voucher question, but included as a translation of the provided statute. --- */\nprotected_basis_46a_81e(sexual_orientation).\nprotected_basis_46a_81e(civil_union_status).\n\nstatute_46a_81e_discriminatory_practice(terms_conditions_privileges_rental, Actor, Person, Dwelling, Basis) :-\n    person(Actor),\n    person(Person),\n    dwelling(Dwelling),\n    protected_basis_46a_81e(Basis).\n\nstatute_46a_81e_discriminatory_practice(make_unavailable_or_deny, Actor, Person, Dwelling, Basis) :-\n    person(Actor),\n    person(Person),\n    dwelling(Dwelling),\n    protected_basis_46a_81e(Basis).\n\n/* =========================\n   Reasoning: unlawful eviction\n   ========================= */\n\n/* Determine which protected basis the eviction is \"because of\" */\neviction_because_of_protected_basis(Action, Basis) :-\n    action(Action),\n    action_type(Action, eviction),\n    eviction_reason(Action, Reason),\n    reason_maps_to_basis(Reason, Basis),\n    protected_basis_46a_64c(Basis).\n\n/* Eviction constitutes \"terms/conditions/privileges of rental\" discrimination */\neviction_matches_statutory_conduct(terms_conditions_privileges_rental).\n\n/* Eviction also constitutes \"make unavailable or deny\" */\neviction_matches_statutory_conduct(make_unavailable_or_deny).\n\n/* Unlawful eviction under CT Gen Stat  46a-64c, subject to encoded exceptions */\nunlawful_eviction_under_46a_64c(Action) :-\n    action(Action),\n    action_type(Action, eviction),\n    actor(Action, Actor),\n    target_person(Action, Person),\n    target_dwelling(Action, Dwelling),\n    eviction_because_of_protected_basis(Action, Basis),\n    eviction_matches_statutory_conduct(Conduct),\n    statute_46a_64c_discriminatory_practice(Conduct, Actor, Person, Dwelling, Basis),\n    \\+ statute_46a_64c_owner_occupied_exemption_applies(Dwelling),\n    \\+ statute_46a_64c_insufficient_income_exception_applies(Person).\n\n/* Scenario-level query: does the encoded scenario describe an unlawful eviction? */\nscenario_unlawful_eviction :-\n    scenario_statement,\n    unlawful_eviction_under_46a_64c(evict1).\n\n/* =========================\n   Final answer predicate\n   ========================= */\n\nhousing_answer(yes) :-\n    scenario_unlawful_eviction,\n    !.\nhousing_answer(no) :-\n    !.\n\n/* =========================\n   Main entrypoint\n   ========================= */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-3331",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Is it unlawful to evict a tenant because of the type of income they receive, their status with regard to public assistance, or because they have a housing voucher?"
+  }
+}

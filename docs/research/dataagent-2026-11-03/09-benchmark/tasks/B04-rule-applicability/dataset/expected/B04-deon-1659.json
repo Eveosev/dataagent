@@ -1,0 +1,25 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_b72a4ce1",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "jurisdiction",
+    "focus_year",
+    "statute_34_18_48_authorized_recipient_type",
+    "legal_empowered_by_34_18_48_to_execute_eviction_writ",
+    "entity_type",
+    "entity",
+    "scenario_entity",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: Rhode Island\n    Focus year: 2021\n\n    Question: Is a private company an entity empowered by law to execute a writ of eviction?\n*/\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Basic domain facts (jurisdiction/year context)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\njurisdiction(rhode_island).\nfocus_year(2021).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Statute translation\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n/*\n  RI Gen L  34-18-48 (2021) - Execution.\n  Key authorization language:\n  \"Executions shall be issued to the division of sheriffs or certified constable.\"\n*/\n\n% statute_34_18_48_authorized_recipient_type/1\n% Enumerates the only entity types to whom an eviction execution (writ) is issued.\nstatute_34_18_48_authorized_recipient_type(division_of_sheriffs).\nstatute_34_18_48_authorized_recipient_type(certified_constable).\n\n% legal_empowered_by_34_18_48_to_execute_eviction_writ/1\n% An entity is empowered (authorized) to execute the eviction writ if it is of an\n% authorized recipient type under  34-18-48.\nlegal_empowered_by_34_18_48_to_execute_eviction_writ(Entity) :-\n    entity_type(Entity, Type),\n    statute_34_18_48_authorized_recipient_type(Type).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Scenario translation (facts specific to the question)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n% The \"private company\" referenced by the question.\nentity(acme_private_company).\nentity_type(acme_private_company, private_company).\n\n% Helper: identifies the scenario's actor (the entity whose authority is being asked about).\nscenario_entity(acme_private_company).\n\n% scenario_statement/0 succeeds when the encoded factual statement is satisfied:\n% i.e., the relevant entity is a private company in this scenario.\nscenario_statement :-\n    scenario_entity(E),\n    entity(E),\n    entity_type(E, private_company).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Reasoning + answer\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n% A private company is empowered only if it falls into one of the statute's authorized types.\n% Under  34-18-48, authorized types are limited to:\n%   - division of sheriffs\n%   - certified constable\n% Therefore, an entity typed as \"private_company\" is not empowered (absent additional facts).\nhousing_answer(Result) :-\n    scenario_statement,\n    scenario_entity(E),\n    (   legal_empowered_by_34_18_48_to_execute_eviction_writ(E)\n    ->  Result = yes\n    ;   Result = no\n    ),\n    !.\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Main entrypoint (required)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-1659",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is a private company an entity empowered by law to execute a writ of eviction?"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 162,
+  "question": "For my February 2013 activity report: how many SME customers actually purchased gas in February 2013? Please give me just a single whole number - the count of SME customers who consumed gas during the calendar month of February 2013 (Feb 1-28, 2013).",
+  "evidence": "By \"gas\" I mean gasoline (motor fuel) purchases, not natural gas.",
+  "gold_sql": "SELECT COUNT(DISTINCT T2.CustomerID) AS sme_gas_customers FROM customers AS T1 INNER JOIN yearmonth AS T2 ON T1.CustomerID = T2.CustomerID WHERE T1.Segment = 'SME' AND T2.Date = '201302' AND T2.Consumption > 0",
+  "db_id": "debit_card_specializing",
+  "case_id": "B05-bird-0163",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT COUNT(DISTINCT T2.CustomerID) AS sme_gas_customers FROM customers AS T1 INNER JOIN yearmonth AS T2 ON T1.CustomerID = T2.CustomerID WHERE T1.Segment = 'SME' AND T2.Date = '201302' AND T2.Consumption > 0",
+    "db_id": "debit_card_specializing",
+    "evidence": "By \"gas\" I mean gasoline (motor fuel) purchases, not natural gas."
+  }
+}

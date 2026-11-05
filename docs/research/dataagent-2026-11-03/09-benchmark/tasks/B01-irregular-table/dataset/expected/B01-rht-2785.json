@@ -1,0 +1,29 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1149,
+  "table": "economy-table82",
+  "structure": "ColumnHeaderMerge",
+  "question_type": "Fact Checking",
+  "sub_type": "Multi-hop Fact Checking",
+  "answer": "0.10, 0.20",
+  "cot": [
+    {
+      "step": "First, we need to locate “Paragraph 3 of Article 17” in the table."
+    },
+    {
+      "step": "Then, we need to focus on the row corresponding to “other property” under Paragraph 3 of Article 17."
+    },
+    {
+      "step": "Next, we identify the “Heirs Internal” column for both the first floor and second floor."
+    },
+    {
+      "step": "Finally, we compare the heirs' rate for “Internal heirs” between the first and second floors for “other property”."
+    }
+  ],
+  "case_id": "B01-rht-2785",
+  "expected": {
+    "kind": "answer",
+    "question": "Based on Paragraph 3 of Article 17, how does the heirs' rate for “other property” compare between the first floor and second floor for “Internal heirs”?",
+    "answer": "0.10, 0.20"
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "databricks",
+  "pipeline": "debit_card_specializing",
+  "data_model": {
+    "models": [
+      {
+        "name": "debit_card__customers",
+        "description": "Each record represents a customer.",
+        "columns": [
+          {
+            "name": "customerid",
+            "description": "The unique identifier for the customer."
+          },
+          {
+            "name": "segment",
+            "description": "The segment the customer belongs to."
+          },
+          {
+            "name": "currency",
+            "description": "The currency the customer uses."
+          },
+          {
+            "name": "consumption_in_2012",
+            "description": "The total amount the customer consumed in 2012, replace NULL values with 0."
+          },
+          {
+            "name": "consumption_decrease_rate_from_2012_to_2013",
+            "description": "The rate of decrease in consumption from 2012 to 2013, expressed as a fraction."
+          },
+          {
+            "name": "avg_price_per_single_item",
+            "description": "The average price per single item the customer pays."
+          },
+          {
+            "name": "amount_spent_at_gas_station",
+            "description": "The total amount the customer spent at gas stations, replace NULL values with 0."
+          },
+          {
+            "name": "paid_in_euro_and_avg_monthly_consumption_over_1000",
+            "description": "Set to 1 if the customer paid in euro and has a monthly consumption of over 1000, otherwise, set to 0"
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    databricks_definition_id: 072d5540-f236-4294-ba7c-ade8fd918496\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - gasstations\nflat_files:\n- format: csv\n  path: https://drive.google.com/uc?export=download&id=18u4ZTA_uZ3eQy02nfNDROm1CSuAI12MY\n  sync_mode: full_refresh_append\n  table: products\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: debit_card_specializing\n    sync_mode: full_refresh_append\n    tables:\n    - customers\npostgres:\n  config:\n    database: debit_card_specializing\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - transactions_1k\n    - yearmonth\n    user: postgres\ndatabricks:\n  config:\n    database: <db_database>\n    hostname: <db_hostname>\n    client_id: <db_client_id>\n    secret: <db_secret>\n    schema: debit_card_specializing\n    http_path: <db_path>\n",
+  "case_id": "B14-elt-0025",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "debit_card__customers",
+        "columns": [
+          "customerid",
+          "segment",
+          "currency",
+          "consumption_in_2012",
+          "consumption_decrease_rate_from_2012_to_2013",
+          "avg_price_per_single_item",
+          "amount_spent_at_gas_station",
+          "paid_in_euro_and_avg_monthly_consumption_over_1000"
+        ]
+      }
+    ]
+  }
+}

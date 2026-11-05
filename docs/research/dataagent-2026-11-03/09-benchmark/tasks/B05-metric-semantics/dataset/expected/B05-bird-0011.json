@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 10,
+  "question": "I'm profiling the High Tech High charter network in San Diego. For charter number 756, what is the average number of SAT test takers per school across all of its schools with a San Diego mailing city? Count every school regardless of operational status, and treat a school with no SAT record as having zero test takers. Round the average to two decimals.",
+  "evidence": "Charter number 756 is the state-issued charter number.",
+  "gold_sql": "SELECT ROUND(SUM(COALESCE(sc.NumTstTakr, 0)) * 1.0 / COUNT(*), 2) AS avg_sat_test_takers_per_school FROM schools s LEFT JOIN satscores sc ON sc.cds = s.CDSCode WHERE CAST(s.CharterNum AS INTEGER) = 756 AND s.MailCity = 'San Diego'",
+  "db_id": "california_schools",
+  "case_id": "B05-bird-0011",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT ROUND(SUM(COALESCE(sc.NumTstTakr, 0)) * 1.0 / COUNT(*), 2) AS avg_sat_test_takers_per_school FROM schools s LEFT JOIN satscores sc ON sc.cds = s.CDSCode WHERE CAST(s.CharterNum AS INTEGER) = 756 AND s.MailCity = 'San Diego'",
+    "db_id": "california_schools",
+    "evidence": "Charter number 756 is the state-issued charter number."
+  }
+}

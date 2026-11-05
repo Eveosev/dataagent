@@ -1,0 +1,1 @@
+I need to display the number of days an action item is past its due date in a spreadsheet I'm working on. The due date of the action items is in a column, and I want to calculate and show in Column I how many days each item is overdue. I have attempted solutions from similar problems but haven't had success, and I'm looking for assistance to get this right.

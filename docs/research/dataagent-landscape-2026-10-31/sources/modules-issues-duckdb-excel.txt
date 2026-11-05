@@ -1,0 +1,193 @@
+Issues · duckdb/duckdb-excel · GitHub
+Skip to content
+Navigation Menu
+Sign in
+Products
+Platform
+GitHubRepository hosting, code review, and collaboration
+CopilotAI coding agent for tasks, projects and automated work
+Build & Ship
+ActionsCI/CD and automation
+Code QualityQuality analysis, fixes, and enforcement
+CodespacesCloud development environments
+Secure
+Code SecurityVulnerability detection and remediation
+Secret ProtectionSecret scanning and leak prevention
+All Features
+Developers
+Learn
+Documentation
+Training
+Certifications
+Build
+Build with Copilot
+Customize Copilot
+Integrations
+Explore
+Trending repos
+GitHub Sponsors
+Events
+Changelog
+ChangelogYour source for the latest features, improvements, and fixes across GitHub products, all in one place.
+Businesses
+By Stage
+Enterprises
+Team
+Startups
+Nonprofits
+By Industry
+Healthcare
+Financial services
+Manufacturing
+Government
+See all industries
+Evaluate GitHub
+Why GitHub
+Customer Stories
+Business insights
+Trust Center
+Add-ons
+GitHub Advanced SecurityEnterprise-grade code security
+Copilot for businessEnterprise-grade AI features
+Premium SupportEnterprise-grade 24/7 support
+Resources
+Learn & Connect
+Documentation
+Resource center
+Blog
+Events & webinars
+Community Forum
+Customer Stories
+Integrations
+Support
+Customer support
+Training
+GitHub Status
+Company
+About
+Partners
+Changelog
+GitHub Universe
+GitHub UniverseThe event for developers, by developers — talks, workshops, and what’s next for GitHub.
+Pricing
+Search/
+Sign inSign up
+Appearance settings
+You signed in with another tab or window. Reload to refresh your session.
+You signed out in another tab or window. Reload to refresh your session.
+You switched accounts on another tab or window. Reload to refresh your session.
+Dismiss alert
+{{ message }}
+duckdb
+duckdb-excel
+Repository navigation
+Code
+Issues43 (43)
+Pull requests5 (5)
+Actions
+Projects
+Security and quality
+Insights
+More items
+Issues
+Assigned to me
+Created by me
+Mentioned
+Recent activity
+Views
+Projects
+Milestones
+Labels
+FeedbackPreview
+Collapse sidebar
+IssuesChange the issues type filter
+Issues
+New issue
+Search issues
+is:issue state:open
+is:issue state:openClear filterSearch
+Issues
+Open43 (43)
+Closed
+Author
+Labels
+Projects
+Milestones
+Assignees
+Types
+Newest
+Comfortable display density
+Compact display density
+DuckDB 2.0.0 on Windows: LOAD excel fails with "A dynamic link library (DLL) initialization routine failed"
+duckdb/duckdb-excel#116 · Filter by author MarkSimUM opened on Oct 27, 2026
+2.0.0: read_xlsx over httpfs issues one HTTP request per small read (2,535 GETs for a 40 KB file; ~250x slower than 1.5.6)
+duckdb/duckdb-excel#114 · Filter by author scottynomad opened on Oct 21, 2026
+1
+When reading an xlsx file using duckdb read_xlsx, a text value of 0.07 is returned as 7.00000000000007E-2 instead of 0.07
+duckdb/duckdb-excel#113 · Filter by author michaelkovatt opened on Oct 20, 2026
+read_xlsx / COPY TO xlsx: dates before 1900-03-01 are off by one day (Excel 1900 leap-year serial)
+duckdb/duckdb-excel#112 · Filter by author JonaGeishauser opened on Oct 20, 2026
+read_xlsx: "No sheets found" for xlsx whose ZIP entries use Zip64-style (8-byte) data descriptors without a Zip64 extra field
+duckdb/duckdb-excel#110 · Filter by author onnimonni opened on Oct 20, 2026
+1
+read_xlsx / COPY … (FORMAT xlsx) ignore the 1904 date system (dates 1462 days early)
+duckdb/duckdb-excel#104 · Filter by author seanspicer opened on Oct 6, 2026
+read_xlsx never returns on a truncated file that ends inside a zip record
+duckdb/duckdb-excel#102 · Filter by author kinghuang opened on Sep 29, 2026
+Memory leak in zip_file.cpp
+duckdb/duckdb-excel#96 · Filter by author thomas-0816 opened on Sep 6, 2026
+Binder Error when sheet name includes some special characters
+duckdb/duckdb-excel#95 · Filter by author billwallis opened on Jul 14, 2026
+no sheets found in xlsx file
+duckdb/duckdb-excel#89 · Filter by author bugsbugsbux opened on May 1, 2026
+feature request: skip_rows_top=n, skip_rows_bottom=n
+duckdb/duckdb-excel#88 · Filter by author bugsbugsbux opened on May 1, 2026
+duckdb GlobFiles API has been chanced since 1.5.0.
+duckdb/duckdb-excel#87 · Filter by author toge opened on Mar 12, 2026
+1
+Support forward slash in windows paths
+duckdb/duckdb-excel#85 · Filter by author grantith opened on Feb 25, 2026
+Feature request: Allow flexible schema overrides for specific column(s) when reading data
+duckdb/duckdb-excel#84 · Filter by author HeWhoHeWho opened on Jan 29, 2026
+1
+Feature request: Allow batch operation/processing for reading multiple files / worksheets at once
+duckdb/duckdb-excel#83 · Filter by author HeWhoHeWho opened on Jan 25, 2026
+KeyError: "There is no item named 'xl/sharedStrings.xml' in the archive"
+duckdb/duckdb-excel#82 · Filter by author yangg opened on Jan 16, 2026
+1
+empty_as_varchar fails to work when cell borders are present
+duckdb/duckdb-excel#77 · Filter by author davidliudev opened on Dec 24, 2025
+all_varchar = true converts boolean values to numbers before returning them as strings
+duckdb/duckdb-excel#76 · Filter by author naiyerasif opened on Dec 16, 2025
+1
+read_xlsx: Could not convert string 'https://static.inaturalist.org/sounds/637821.mp3?1681086265' to DOUBLE
+duckdb/duckdb-excel#75 · Filter by author humphd opened on Dec 6, 2025
+1
+Anyone else feels like the Header parameter should be set to true by default for exports to excel files
+duckdb/duckdb-excel#72 · Filter by author infobeltech opened on Oct 17, 2025
+2
+Type inference fails when first data row contains empty cells, causing   data loss
+duckdb/duckdb-excel#69 · Filter by author booandrew opened on Aug 28, 2025
+False Exception when writing to XLSX
+duckdb/duckdb-excel#68 · Filter by author HeWhoHeWho opened on Aug 21, 2025
+Add filename as parameter to read_xlsx
+duckdb/duckdb-excel#67 · Filter by author CristianAven opened on Aug 19, 2025
+Excel export: missing values
+duckdb/duckdb-excel#66 · Filter by author teklinp opened on Aug 8, 2025
+5
+read_xlsx column names with new line
+duckdb/duckdb-excel#59 · Filter by author dareklima opened on Jul 4, 2025
+Previous12Next
+Footer
+© 2026 GitHub, Inc.
+Footer navigation
+Terms
+Privacy
+Security
+Status
+Community
+Docs
+Contact
+Manage cookies
+Do not share my personal information
+You can’t perform that action at this time.

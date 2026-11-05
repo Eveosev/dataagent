@@ -1,0 +1,1928 @@
+Python Client API – DuckDB
+⌘K
+ctrl+k
+2.0 LTS
+2.0LTS
+1.5
+1.4LTS
+1.3
+1.2
+Search Shortcut cmd + k | ctrl + k
+Search docs
+⌘Kctrl+k
+Start
+Overview
+Installation
+Quickstart
+How-to Guides
+Reference
+Import & Export
+Import & Export
+Overview
+Data Sources
+CSV Files
+Overview
+Auto Detection
+Reading Faulty CSV Files
+Tips
+JSON Files
+Overview
+Creating JSON
+Loading JSON
+Writing JSON
+JSON Type
+JSON Functions
+Format Settings
+Installing and Loading
+SQL to / from JSON
+Caveats
+Parquet Files
+Overview
+Metadata
+Encryption
+Tips
+Multiple Files
+Overview
+Combining Schemas
+Partitioning
+Hive Partitioning
+Partitioned Writes
+Lakehouse
+Overview
+IO
+Appender
+INSERT Statements
+SQL
+SQL
+Introduction
+Friendly SQL
+Statements
+Overview
+ANALYZE
+ALTER DATABASE
+ALTER TABLE
+ALTER VIEW
+ATTACH and DETACH
+CALL
+CHECKPOINT
+COMMENT ON
+CONNECT and DISCONNECT
+COPY
+CREATE INDEX
+CREATE MACRO
+CREATE SCHEMA
+CREATE SECRET
+CREATE SEQUENCE
+CREATE TABLE
+CREATE VIEW
+CREATE TRIGGER
+CREATE TYPE
+DELETE
+DESCRIBE
+DROP
+EXPORT and IMPORT DATABASE
+INSERT
+LOAD / INSTALL
+MERGE INTO
+PIVOT
+Profiling
+PREPARE, EXECUTE, and DEALLOCATE
+SELECT
+SET / RESET
+SET VARIABLE
+SHOW and SHOW DATABASES
+SUMMARIZE
+Transaction Management
+UNPIVOT
+UPDATE
+UPDATE EXTENSIONS
+USE
+VACUUM
+Query Syntax
+SELECT
+FROM and JOIN
+WHERE
+GROUP BY
+GROUPING SETS
+HAVING
+ORDER BY
+LIMIT and OFFSET
+SAMPLE
+Samples
+Unnesting
+WITH
+WINDOW
+QUALIFY
+VALUES
+FILTER
+Set Operations
+Prepared Statements
+Data Types
+Overview
+Array
+Bitstring
+Blob
+Boolean
+Date
+Enum
+Geometry
+Interval
+List
+Literal Types
+Map
+NULL Values
+Numeric
+Struct
+Text
+Time
+Timestamp
+Time Zones
+Union
+Typecasting
+Variant
+Functions
+Overview
+Aggregate Functions
+Array Functions
+Bitstring Functions
+Blob Functions
+Date Format Functions
+Date Functions
+Date Part Functions
+Enum Functions
+Geometry Functions
+Interval Functions
+Lambda Functions
+List Functions
+Map Functions
+Nested Functions
+Numeric Functions
+Pattern Matching
+Regular Expressions
+Struct Functions
+Text Functions
+Time Functions
+Timestamp Functions
+Timestamp with Time Zone Functions
+Union Functions
+Utility Functions
+Variant Functions
+Window Functions
+Expressions
+Overview
+CASE Expression
+Casting
+Collations
+Comparisons
+IN Operator
+Logical Operators
+Star Expression
+Subqueries
+TRY
+Meta Queries
+Information Schema
+Metadata Functions
+Constraints
+Indexes
+DuckDB's SQL Dialect
+Overview
+Indexing
+Keywords and Identifiers
+Order Preservation
+PostgreSQL Compatibility
+SQL Quirks
+PEG Parser
+Client APIs
+Client APIs
+Overview
+Connecting to DuckDB
+Python
+Overview
+Data Ingestion
+Appender
+Conversion between DuckDB and Python
+DB API
+Relational API
+Function API
+Types API
+Expression API
+Spark API
+API Reference
+Known Python Issues
+Migrating to 2.0
+Installation
+Executing SQL
+Jupyter Notebooks
+marimo Notebooks
+SQL on Pandas
+Import from Pandas
+Export to Pandas
+Import from Numpy
+Export to Numpy
+SQL on Arrow
+Import from Arrow
+Export to Arrow
+Relational API on Pandas
+Multiple Python Threads
+Integration with Ibis
+Integration with Polars
+Integration with PyTorch
+Using fsspec Filesystems
+CLI
+Overview
+Arguments
+Dot Commands
+Output Formats
+Agent Mode
+Editing
+Friendly CLI
+Safe Mode
+Autocomplete
+Syntax Highlighting
+Known Issues
+Node.js (Neo)
+Overview
+Java (JDBC)
+Overview
+Connect
+Import Data
+Run Queries
+Handle Results
+Write User Defined Functions
+Profile and Monitor
+Deploy as Native Image
+Troubleshoot
+R
+Go
+Overview
+Connect
+Import Data
+Run Queries
+Handle Results
+Write User Defined Functions
+Profile and Monitor
+Troubleshoot
+Rust
+Overview
+Connect
+Import Data
+Run Queries
+Handle Results
+Write User Defined Functions
+Profile and Monitor
+Troubleshoot
+C/C++
+Overview
+Startup
+Configuration
+Query
+Data Chunks
+Vectors
+Values
+Types
+Prepared Statements
+Appender
+Table Functions
+Replacement Scans
+API Reference
+C++
+Wasm
+Overview
+Instantiate
+Import Data
+Run Queries
+Load Extensions
+Deploy
+Troubleshoot
+ODBC/ADBC
+Overview
+Linux Setup
+Windows Setup
+macOS Setup
+Configuration
+ADBC
+Other Clients
+Overview
+Julia
+PHP
+PHP (PDO)
+Swift
+Extensions
+Extensions
+Using Extensions
+Overview
+Installing Extensions
+Advanced Installation Methods
+Versioning of Extensions
+Troubleshooting of Extensions
+Core Extensions
+Overview
+AutoComplete
+Avro
+AWS
+Azure
+Delta
+DuckLake
+Encodings
+Excel
+Full Text Search
+httpfs (HTTP and S3)
+Overview
+HTTP(S) Support
+S3 API Support
+S3 and AWS Authentication
+Hugging Face
+Legacy Authentication Scheme for S3 API
+Iceberg
+ICU
+inet
+Lance
+Legacy Parser
+MotherDuck
+MySQL
+ODBC
+Quack
+PostgreSQL
+Sirius
+Spatial
+SQLite
+SQLSmith
+TPC-DS
+TPC-H
+UI
+Unity Catalog
+Vortex
+VSS
+Community Extensions
+Building Extensions
+Distributing Extensions
+Extension Repositories
+Server & Remote
+Server & Remote
+Overview
+Setup
+Overview
+Reverse Proxy
+Deployment
+Using from Wasm
+Security
+Reference
+Troubleshooting
+Performance & Operations
+Performance & Operations
+Overview
+Performance
+Overview
+Environment
+Import
+Schema
+Indexing
+Join Operations
+File Formats
+How to Tune Workloads
+My Workload Is Slow
+Out-of-Memory Issues
+Benchmarks
+Working with Huge Databases
+Configuration
+Overview
+Secrets
+Pragmas
+Concurrency
+Non-Deterministic Behavior
+Security
+Overview
+Embedding DuckDB
+Securing Extensions
+Deployment
+Installing DuckDB
+Install Script
+Requirements
+Docker
+User Agents
+Limits
+Migrating to DuckDB 2.0
+Backup Extension Repositories
+Storage Footprint
+Files Created by DuckDB
+Gitignore for DuckDB
+Reclaiming Space
+Logging
+Development & Internals
+Development & Internals
+Overview
+Building DuckDB
+Overview
+Build Configuration
+Building Extensions
+Statically Linking Extensions
+Platforms
+Android
+OpenHarmony
+Linux
+macOS
+Raspberry Pi
+Windows
+Python
+R
+Unofficial and Unsupported Platforms
+Troubleshooting
+Testing
+Overview
+sqllogictest Introduction
+Writing Tests
+Unit Tester Configuration
+Debugging
+Result Verification
+Persistent Testing
+Loops
+Multiple Connections
+Catch
+Internals
+Overview
+Storage Versions and Format
+Execution Format
+Jemalloc
+Pivot
+Internal Errors
+Profiling & Benchmarking
+Profiling
+Metrics
+Benchmark Suite
+Project
+Release Cycle
+DuckDB Repositories
+Troubleshooting
+Docs
+Copy Markdown
+Python Client API
+Connection¶
+class duckdb.Appender¶
+Bases: object
+append_row(self, *args) → None¶
+Buffer one row, one value per column, each converted as an executemany parameter would be
+append_rows(self, rows: object) → None¶
+Buffer each row of an iterable of sequences, stopping at the first bad row and keeping the rows before it
+clear(self) → None¶
+Drop the buffered rows
+flush(self) → None¶
+Apply the rows buffered since the last flush with one statement on the appender’s connection
+class duckdb.DuckDBPyConnection¶
+Bases: object
+abort(self) → None¶
+Cancel the rest of the result of execute(); a statement that may write fails an open transaction
+append(self, table_name: str, df: object, *, by_name: bool = False) → _duckdb.DuckDBPyConnection¶
+Append the passed DataFrame to the named table
+appender(self, table: str, *, columns: list | None = None, action: str = 'insert', key: list | None = None) → _duckdb.Appender¶
+Create an appender that buffers rows and inserts, upserts, updates or deletes them in the named table at each flush
+array_type(self, type: _duckdb._sqltypes.DuckDBPyType, size: int) → _duckdb._sqltypes.DuckDBPyType¶
+Create an array type object of ‘type’
+begin(self) → _duckdb.DuckDBPyConnection¶
+Start a new transaction
+checkpoint(self) → _duckdb.DuckDBPyConnection¶
+Synchronizes data in the write-ahead log (WAL) to the database data file (no-op for in-memory connections)
+close(self) → None¶
+Close the connection
+commit(self) → _duckdb.DuckDBPyConnection¶
+Commit changes performed within a transaction
+complete(self) → None¶
+Run the result of execute() to its end without reading its rows
+create_function(self, name: str, function: collections.abc.Callable, parameters: object | None = None, return_type: object | None = None, *, type: PythonUDFType = PythonUDFType.NATIVE, null_handling: FunctionNullHandling = FunctionNullHandling.DEFAULT, exception_handling: PythonExceptionHandling = PythonExceptionHandling.DEFAULT, side_effects: bool = False) → _duckdb.DuckDBPyConnection¶
+Create a DuckDB function out of the passing in Python function so it can be used in queries
+cursor(self) → _duckdb.DuckDBPyConnection¶
+Create a duplicate of the current connection
+decimal_type(self, width: int, scale: int) → _duckdb._sqltypes.DuckDBPyType¶
+Create a decimal type with ‘width’ and ‘scale’
+property description¶
+Get result set attributes, mainly column names
+df(self, *, date_as_object: bool = False) → object¶
+Fetch a result as DataFrame following execute()
+disable_profiling(self) → None¶
+Disable profiling for subsequent queries
+dtype(self, type_str: str) → _duckdb._sqltypes.DuckDBPyType¶
+Create a type object by parsing the ‘type_str’ string
+duplicate(self) → _duckdb.DuckDBPyConnection¶
+Create a duplicate of the current connection
+enable_profiling(self) → None¶
+Enable profiling for subsequent queries
+enum_type(self, name: str, type: _duckdb._sqltypes.DuckDBPyType, values: list) → _duckdb._sqltypes.DuckDBPyType¶
+Create an enum type of underlying ‘type’, consisting of the list of ‘values’
+execute(self, query: object, parameters: object | None = None) → _duckdb.DuckDBPyConnection¶
+Execute the given SQL query, optionally using prepared statements with parameters set. A query runs until its first rows are ready, so an error there raises here; every other statement runs to its end
+executemany(self, query: object, parameters: object | None = None) → _duckdb.DuckDBPyConnection¶
+Execute the given prepared statement multiple times using the list of parameter sets in parameters
+extract_statements(self, query: str) → list¶
+Parse the query string and extract the Statement object(s) produced
+fetch_df(self, *, date_as_object: bool = False) → object¶
+Fetch a result as DataFrame following execute()
+fetch_df_chunk(self, vectors_per_chunk: int = 1, *, date_as_object: bool = False) → object¶
+Fetch a chunk of the result as DataFrame following execute()
+fetchall(self) → list¶
+Fetch all rows from a result following execute
+fetchdf(self, *, date_as_object: bool = False) → object¶
+Fetch a result as DataFrame following execute()
+fetchmany(self, size: int = 1) → list¶
+Fetch the next set of rows from a result following execute
+fetchnumpy(self) → dict¶
+Fetch a result as list of NumPy arrays following execute
+fetchone(self) → object¶
+Fetch a single row from a result following execute
+filesystem_is_registered(self, name: str) → bool¶
+Check if a filesystem with the provided name is currently registered
+from_arrow(arrow_object: object) → DuckDBPyRelation¶
+Create a relation object from an Arrow object.
+from_csv_auto(*args: object, **kwargs: object) → DuckDBPyRelation¶
+Create a relation object from the CSV file in ‘name’.
+from_df(df: object) → DuckDBPyRelation¶
+Create a relation object from the DataFrame in df.
+from_parquet(path_or_buffer: object, binary_as_string: bool = False, **kwargs: Any) → DuckDBPyRelation¶
+Create a relation object from the Parquet path(s) or file-like object(s) in ‘path_or_buffer’.
+from_query(query: object, *, alias: str = '', params: object = None) → DuckDBPyRelation | None¶
+Run a SQL query. A statement that only reads returns a relation that runs the query each time it is read, parameter values bound at every run. Any other statement runs once, now, and gives a relation over what it returned. Statements before the last one run immediately.
+get_profiling_information(self, format: str = 'json') → str¶
+Get profiling information for a query
+get_table_names(self, query: str, *, qualified: bool = False) → set[str]¶
+Extract the required table names from a query
+install_extension(self, extension: str, *, force_install: bool = False, repository: object | None = None, repository_url: object | None = None, version: object | None = None) → None¶
+Install an extension by name, with an optional version and/or repository to get the extension from
+interrupt(self) → None¶
+Interrupt pending operations
+list_filesystems(self) → list¶
+List registered filesystems, including builtin ones
+list_type(self, type: _duckdb._sqltypes.DuckDBPyType) → _duckdb._sqltypes.DuckDBPyType¶
+Create a list type object of ‘type’
+load_extension(self, extension: str) → None¶
+Load an installed extension
+map_type(self, key: _duckdb._sqltypes.DuckDBPyType, value: _duckdb._sqltypes.DuckDBPyType) → _duckdb._sqltypes.DuckDBPyType¶
+Create a map type object from ‘key_type’ and ‘value_type’
+query(query: object, *, alias: str = '', params: object = None) → DuckDBPyRelation | None¶
+Run a SQL query. A statement that only reads returns a relation that runs the query each time it is read, parameter values bound at every run. Any other statement runs once, now, and gives a relation over what it returned. Statements before the last one run immediately.
+query_appender(self, dml: str, columns: dict, *, source: str | None = None) → _duckdb.Appender¶
+Create an appender that buffers rows of the declared columns and runs the DML over them at each flush
+query_progress(self) → float¶
+Query progress of pending operation
+read_csv(*args: object, **kwargs: object) → DuckDBPyRelation¶
+Create a relation object from the CSV file in ‘name’.
+read_json(path_or_buffer: object, **kwargs: Any) → DuckDBPyRelation¶
+Create a relation object from the JSON file in ‘name’.
+read_parquet(path_or_buffer: object, binary_as_string: bool = False, **kwargs: Any) → DuckDBPyRelation¶
+Create a relation object from the Parquet path(s) or file-like object(s) in ‘path_or_buffer’.
+register(self, view_name: str, python_object: object) → _duckdb.DuckDBPyConnection¶
+Register the passed Python Object value for querying with a view
+register_filesystem(self, filesystem: object | None) → None¶
+Register a fsspec compliant filesystem
+remove_function(self, name: str) → _duckdb.DuckDBPyConnection¶
+Remove a previously created function
+rollback(self) → _duckdb.DuckDBPyConnection¶
+Roll back changes performed within a transaction
+row_type(self, fields: object) → _duckdb._sqltypes.DuckDBPyType¶
+Create a struct type object from ‘fields’
+property rowcount¶
+Get result set row count
+sql(query: object, *, alias: str = '', params: object = None) → DuckDBPyRelation | None¶
+Run a SQL query. A statement that only reads returns a relation that runs the query each time it is read, parameter values bound at every run. Any other statement runs once, now, and gives a relation over what it returned. Statements before the last one run immediately.
+sqltype(self, type_str: str) → _duckdb._sqltypes.DuckDBPyType¶
+Create a type object by parsing the ‘type_str’ string
+string_type(self, collation: str = '') → _duckdb._sqltypes.DuckDBPyType¶
+Create a string type with an optional collation
+struct_type(self, fields: object) → _duckdb._sqltypes.DuckDBPyType¶
+Create a struct type object from ‘fields’
+table(table_name: str) → DuckDBPyRelation¶
+Create a relation object for the named table.
+table_function(name: str, parameters: object = None) → DuckDBPyRelation¶
+Create a relation object from the named table function with given parameters.
+tf(self) → dict¶
+Fetch a result as dict of TensorFlow Tensors following execute()
+to_arrow_reader(batch_size: int = 131072) → Any¶
+A reader over every row the pending result still holds.
+to_arrow_table(batch_size: int = 131072) → Any¶
+Every row the pending result still holds, as an Arrow Table.
+torch(self) → dict¶
+Fetch a result as dict of PyTorch Tensors following execute()
+type(self, type_str: str) → _duckdb._sqltypes.DuckDBPyType¶
+Create a type object by parsing the ‘type_str’ string
+union_type(self, members: object) → _duckdb._sqltypes.DuckDBPyType¶
+Create a union type object from ‘members’
+unregister(self, view_name: str) → _duckdb.DuckDBPyConnection¶
+Unregister the view name
+unregister_filesystem(self, name: str) → None¶
+Unregister a filesystem
+values(*args: object) → DuckDBPyRelation¶
+Create a relation object from the passed values.
+view(view_name: str) → DuckDBPyRelation¶
+Create a relation object for the named view.
+class duckdb.Statement¶
+Bases: object
+property expected_result_type¶
+Get the expected type of result produced by this statement, actual type may vary depending on the statement.
+property named_parameters¶
+Get the map of named parameters this statement has.
+property query¶
+Get the query equivalent to this statement.
+property type¶
+Get the type of the statement.
+Relation¶
+class duckdb.DuckDBPyRelation(*args: object, **kwargs: object)¶
+Bases: object
+A query built a step at a time; it runs only when a method reads its rows, and runs again on every read.
+Detailed examples can be found at Relational API page.
+aggregate(aggr_expr: object, group_expr: object = '') → DuckDBPyRelation¶
+Compute the aggregate aggr_expr by the optional groups group_expr on the relation.
+Detailed examples can be found at Relational API page.
+alias¶
+Get the name of the current alias.
+Detailed examples can be found at Relational API page.
+any_value(expression: str, groups: str = '', window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Returns the first non-null value from a given expression.
+Detailed examples can be found at Relational API page.
+apply(function_name: str, function_aggr: str, group_expr: str = '', function_parameter: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Compute the function of a single column or a list of columns by the optional groups on the relation.
+Detailed examples can be found at Relational API page.
+arg_max(arg_column: str, value_column: str, groups: str = '', window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Finds the row with the maximum value for a value column and returns the value of that row for an argument column.
+Detailed examples can be found at Relational API page.
+arg_min(arg_column: str, value_column: str, groups: str = '', window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Finds the row with the minimum value for a value column and returns the value of that row for an argument column.
+Detailed examples can be found at Relational API page.
+arrow(batch_size: int = 131072) → Any¶
+Alias of to_arrow_reader(). We recommend using to_arrow_reader() instead.
+Detailed examples can be found at Relational API page.
+avg(expression: str, groups: str = '', window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Computes the average of a given expression.
+Detailed examples can be found at Relational API page.
+bit_and(expression: str, groups: str = '', window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Computes the bitwise AND of all bits present in a given expression.
+Detailed examples can be found at Relational API page.
+bit_or(expression: str, groups: str = '', window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Computes the bitwise OR of all bits present in a given expression.
+Detailed examples can be found at Relational API page.
+bit_xor(expression: str, groups: str = '', window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Computes the bitwise XOR of all bits present in a given expression.
+Detailed examples can be found at Relational API page.
+bitstring_agg(expression: str, min: int | None = None, max: int | None = None, groups: str = '', window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Computes a bitstring with bits set for each distinct value in a given expression.
+Detailed examples can be found at Relational API page.
+bool_and(expression: str, groups: str = '', window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Computes the logical AND of all values present in a given expression.
+Detailed examples can be found at Relational API page.
+bool_or(expression: str, groups: str = '', window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Computes the logical OR of all values present in a given expression.
+Detailed examples can be found at Relational API page.
+close() → None¶
+Does nothing: a relation holds no result.
+Detailed examples can be found at Relational API page.
+columns¶
+Return a list containing the names of the columns of the relation.
+Detailed examples can be found at Relational API page.
+count(expression: str, groups: str = '', window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Computes the number of elements present in a given expression.
+Detailed examples can be found at Relational API page.
+create(table_name: str) → None¶
+Creates a new table named table_name with the contents of the relation object.
+The name is table, schema.table or catalog.schema.table, and a part may be double quoted; a name of more than
+three parts needs SQL (CREATE TABLE AS) for now.
+Detailed examples can be found at Relational API page.
+create_view(view_name: str, replace: bool = True) → DuckDBPyRelation¶
+Creates a view named view_name that refers to the relation object.
+Detailed examples can be found at Relational API page.
+cross(other_rel: DuckDBPyRelation) → DuckDBPyRelation¶
+Create cross/cartesian product of two relational objects.
+Detailed examples can be found at Relational API page.
+cume_dist(window_spec: str, projected_columns: str = '') → DuckDBPyRelation¶
+Computes the cumulative distribution within the partition.
+Detailed examples can be found at Relational API page.
+dense_rank(window_spec: str, projected_columns: str = '') → DuckDBPyRelation¶
+Computes the dense rank within the partition.
+Detailed examples can be found at Relational API page.
+describe() → DuckDBPyRelation¶
+Gives basic statistics (e.g., min, max) and if NULL exists for each column of the relation.
+Detailed examples can be found at Relational API page.
+description¶
+Return the description of the result.
+Detailed examples can be found at Relational API page.
+df(*, date_as_object: bool = False) → Any¶
+Execute and fetch all rows as a pandas DataFrame.
+Detailed examples can be found at Relational API page.
+distinct(on: object = None) → DuckDBPyRelation¶
+Retrieve distinct rows from this relation object, or the first row of each distinct value of on.
+Detailed examples can be found at Relational API page.
+drop(*columns: str) → DuckDBPyRelation¶
+Remove columns.
+Detailed examples can be found at Relational API page.
+dtypes¶
+Return a list containing the types of the columns of the relation.
+Detailed examples can be found at Relational API page.
+except_(other_rel: DuckDBPyRelation) → DuckDBPyRelation¶
+Create the set except of this relation object with another relation object in other_rel.
+Detailed examples can be found at Relational API page.
+explain(type: object = ExplainType.STANDARD, format: str | None = None, *, analyze: bool = False) → str¶
+The plan the engine runs for this relation, as text; under Jupyter the default is shown as HTML.
+Detailed examples can be found at Relational API page.
+favg(expression: str, groups: str = '', window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Computes the average of all values present in a given expression using a more accurate floating point summation (Kahan Sum).
+Detailed examples can be found at Relational API page.
+fetch_arrow_reader(batch_size: int = 131072) → Any¶
+Deprecated: use to_arrow_reader() instead.
+Detailed examples can be found at Relational API page.
+fetch_arrow_table(batch_size: int = 131072) → Any¶
+Deprecated: use to_arrow_table() instead.
+Detailed examples can be found at Relational API page.
+fetch_record_batch(rows_per_batch: int = 131072) → Any¶
+Deprecated: use to_arrow_reader() instead.
+Detailed examples can be found at Relational API page.
+fetchall() → builtins.list[tuple[Any, ...]]¶
+Execute and fetch all rows as a list of tuples.
+Detailed examples can be found at Relational API page.
+fetchdf(*, date_as_object: bool = False) → Any¶
+Execute and fetch all rows as a pandas DataFrame.
+Detailed examples can be found at Relational API page.
+fetchnumpy() → dict[str, Any]¶
+Execute and fetch all rows as a Python dict mapping each column to one numpy arrays.
+Detailed examples can be found at Relational API page.
+filter(filter_expr: object) → DuckDBPyRelation¶
+Filter the relation object by the filter in filter_expr.
+Detailed examples can be found at Relational API page.
+first(expression: str, groups: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Returns the first value of a given expression.
+Detailed examples can be found at Relational API page.
+first_value(expression: str, window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Computes the first value within the group or partition.
+Detailed examples can be found at Relational API page.
+fsum(expression: str, groups: str = '', window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Computes the sum of all values present in a given expression using a more accurate floating point summation (Kahan Sum).
+Detailed examples can be found at Relational API page.
+geomean(expression: str, groups: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Computes the geometric mean over all values present in a given expression.
+Detailed examples can be found at Relational API page.
+group_by(*columns: object) → GroupedRelation¶
+Begin a grouped aggregation; continue with .agg(…).
+Detailed examples can be found at Relational API page.
+head(n: int = 5) → DuckDBPyRelation¶
+The first n rows.
+Detailed examples can be found at Relational API page.
+histogram(expression: str, groups: str = '', window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Computes the histogram over all values present in a given expression.
+Detailed examples can be found at Relational API page.
+insert(values: object) → None¶
+Inserts the given values into the relation.
+Detailed examples can be found at Relational API page.
+insert_into(table_name: str) → None¶
+Inserts the relation object into an existing table named table_name.
+The name is table, schema.table or catalog.schema.table, and a part may be double quoted; a name of more than
+three parts needs SQL (INSERT INTO) for now.
+Detailed examples can be found at Relational API page.
+intersect(other_rel: DuckDBPyRelation) → DuckDBPyRelation¶
+Create the set intersection of this relation object with another relation object in other_rel.
+Detailed examples can be found at Relational API page.
+iter_rows(batch_size: int = 1024) → Iterator[tuple[Any, ...]]¶
+Every row, a batch at a time, over one run of the relation.
+The rows are read once into the engine’s memory, so every batch comes from the same run and the connection
+is free between batches; the caller holds one batch at a time rather than the whole result.
+Detailed examples can be found at Relational API page.
+join(other_rel: object, condition: object = None, how: str = 'inner', suffix: str | None = None) → DuckDBPyRelation¶
+Join the relation object with another relation object in other_rel.
+The condition is SQL text, a column name or a list of them for a USING join, an Expression, or a function of
+the two sides. Types supported are ‘inner’, ‘left’, ‘right’, ‘outer’, ‘full’, ‘semi’, ‘anti’, ‘cross’,
+‘positional’, ‘natural’ and ‘asof’. With suffix, a column of the right side whose name the left side
+already has is renamed with the suffix appended.
+Detailed examples can be found at Relational API page.
+lag(expression: str, window_spec: str, offset: int = 1, default_value: str = 'NULL', ignore_nulls: bool = False, projected_columns: str = '') → DuckDBPyRelation¶
+Computes the lag within the partition.
+Detailed examples can be found at Relational API page.
+last(expression: str, groups: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Returns the last value of a given expression.
+Detailed examples can be found at Relational API page.
+last_value(expression: str, window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Computes the last value within the group or partition.
+Detailed examples can be found at Relational API page.
+lead(expression: str, window_spec: str, offset: int = 1, default_value: str = 'NULL', ignore_nulls: bool = False, projected_columns: str = '') → DuckDBPyRelation¶
+Computes the lead within the partition.
+Detailed examples can be found at Relational API page.
+limit(n: int, offset: int = 0) → DuckDBPyRelation¶
+Only retrieve the first n rows from this relation object, starting at offset.
+Detailed examples can be found at Relational API page.
+list(expression: str, groups: str = '', window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Returns a list containing all values present in a given expression.
+Detailed examples can be found at Relational API page.
+map(map_function: Callable[..., Any], *, schema: object = None) → DuckDBPyRelation¶
+Calls the passed function on the relation.
+Detailed examples can be found at Relational API page.
+materialize() → DuckDBPyRelation¶
+Execute once and return a relation over the rows, held in client memory.
+Detailed examples can be found at Relational API page.
+max(expression: str, groups: str = '', window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Returns the maximum value present in a given expression.
+Detailed examples can be found at Relational API page.
+mean(expression: str, groups: str = '', window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Computes the average of a given expression.
+Detailed examples can be found at Relational API page.
+median(expression: str, groups: str = '', window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Computes the median over all values present in a given expression.
+Detailed examples can be found at Relational API page.
+min(expression: str, groups: str = '', window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Returns the minimum value present in a given expression.
+Detailed examples can be found at Relational API page.
+mode(expression: str, groups: str = '', window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Computes the mode over all values present in a given expression.
+Detailed examples can be found at Relational API page.
+n_tile(window_spec: str, num_buckets: int, projected_columns: str = '') → DuckDBPyRelation¶
+Divides the partition as equally as possible into num_buckets.
+Detailed examples can be found at Relational API page.
+nth_value(expression: str, window_spec: str, offset: int, ignore_nulls: bool = False, projected_columns: str = '') → DuckDBPyRelation¶
+Computes the nth value within the partition.
+Detailed examples can be found at Relational API page.
+offset(n: int) → DuckDBPyRelation¶
+Skip n rows.
+Detailed examples can be found at Relational API page.
+order(order_expr: object) → DuckDBPyRelation¶
+Reorder the relation object by order_expr, which is SQL order text or an expression.
+Detailed examples can be found at Relational API page.
+percent_rank(window_spec: str, projected_columns: str = '') → DuckDBPyRelation¶
+Computes the relative rank within the partition.
+Detailed examples can be found at Relational API page.
+pivot(column: object, values: Iterable[object], aggregate: object) → DuckDBPyRelation¶
+Turn the given values of column into columns holding aggregate; the values are explicit.
+Detailed examples can be found at Relational API page.
+pl(batch_size: int = 131072, *, lazy: bool = False) → Any¶
+Execute and fetch all rows as a Polars DataFrame.
+Detailed examples can be found at Relational API page.
+preview(limit: int = 10) → str¶
+The first limit rows drawn as a table, with the footer __repr__ prints for the relation.
+Detailed examples can be found at Relational API page.
+product(expression: str, groups: str = '', window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Returns the product of all values present in a given expression.
+Detailed examples can be found at Relational API page.
+project(*args: object, groups: str = '') → DuckDBPyRelation¶
+Project the relation object by the projection in project_expr.
+Detailed examples can be found at Relational API page.
+quantile(expression: str, q: float | builtins.list[float] = 0.5, groups: str = '', window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Computes the exact quantile value for a given expression.
+Detailed examples can be found at Relational API page.
+quantile_cont(expression: str, q: float | builtins.list[float] = 0.5, groups: str = '', window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Computes the interpolated quantile value for a given expression.
+Detailed examples can be found at Relational API page.
+quantile_disc(expression: str, q: float | builtins.list[float] = 0.5, groups: str = '', window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Computes the exact quantile value for a given expression.
+Detailed examples can be found at Relational API page.
+query(virtual_table_name: str, sql_query: str) → DuckDBPyRelation | None¶
+Run the given SQL query in sql_query on the view named virtual_table_name that refers to the relation object.
+The name is this query’s own: it is a common table expression over the relation, and a catalog entry for the
+length of the call, so a table function or a query that defines the name itself can bind against it. Nothing
+of it is left afterwards. A statement that does not only read, which includes a SELECT whose common table
+expression writes, runs at the call and the relation holds what it returned.
+Detailed examples can be found at Relational API page.
+rank(window_spec: str, projected_columns: str = '') → DuckDBPyRelation¶
+Computes the rank within the partition.
+Detailed examples can be found at Relational API page.
+rank_dense(window_spec: str, projected_columns: str = '') → DuckDBPyRelation¶
+Computes the dense rank within the partition.
+Detailed examples can be found at Relational API page.
+rename(**columns: str) → DuckDBPyRelation¶
+Rename columns, given as old=new.
+Detailed examples can be found at Relational API page.
+row_number(window_spec: str, projected_columns: str = '') → DuckDBPyRelation¶
+Computes the row number within the partition.
+Detailed examples can be found at Relational API page.
+sample(n: int | None = None, *, percent: float | None = None, seed: int | None = None, method: str | None = None) → DuckDBPyRelation¶
+A random subset: n rows, or percent of them, with seed repeating a draw.
+Detailed examples can be found at Relational API page.
+select(*args: object, groups: str = '') → DuckDBPyRelation¶
+Project the relation object by the projection in project_expr.
+Detailed examples can be found at Relational API page.
+select_dtypes(types: object) → DuckDBPyRelation¶
+Select columns from the relation, by filtering based on type(s).
+Detailed examples can be found at Relational API page.
+select_types(types: object) → DuckDBPyRelation¶
+Select columns from the relation, by filtering based on type(s).
+Detailed examples can be found at Relational API page.
+set_alias(alias: str) → DuckDBPyRelation¶
+Rename the relation object to new alias.
+Detailed examples can be found at Relational API page.
+shape¶
+Tuple of # of rows, # of columns in relation.
+Detailed examples can be found at Relational API page.
+show(*, max_width: int | None = None, max_rows: int | None = None, max_col_width: int | None = None, null_value: str | None = None, render_mode: object = None) → None¶
+Display a summary of the data.
+Detailed examples can be found at Relational API page.
+sort(*args: object) → DuckDBPyRelation¶
+Reorder the relation object by the provided expressions.
+Detailed examples can be found at Relational API page.
+sql_query() → str¶
+Get the SQL query that is equivalent to the relation; values given as params= stay markers.
+Detailed examples can be found at Relational API page.
+std(expression: str, groups: str = '', window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Computes the sample standard deviation for a given expression.
+Detailed examples can be found at Relational API page.
+stddev(expression: str, groups: str = '', window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Computes the sample standard deviation for a given expression.
+Detailed examples can be found at Relational API page.
+stddev_pop(expression: str, groups: str = '', window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Computes the population standard deviation for a given expression.
+Detailed examples can be found at Relational API page.
+stddev_samp(expression: str, groups: str = '', window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Computes the sample standard deviation for a given expression.
+Detailed examples can be found at Relational API page.
+string_agg(expression: str, sep: str = ',', groups: str = '', window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Concatenates the values present in a given expression with a separator.
+Detailed examples can be found at Relational API page.
+sum(expression: str, groups: str = '', window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Computes the sum of all values present in a given expression.
+Detailed examples can be found at Relational API page.
+tf() → dict[str, Any]¶
+Fetch a result as dict of TensorFlow Tensors.
+Detailed examples can be found at Relational API page.
+to_arrow_reader(batch_size: int = 131072) → Any¶
+Execute and return an Arrow Record Batch Reader that yields all rows.
+Detailed examples can be found at Relational API page.
+to_arrow_table(batch_size: int = 131072) → Any¶
+Execute and fetch all rows as an Arrow Table.
+Detailed examples can be found at Relational API page.
+to_csv(file_name: str, *, sep: str | None = None, na_rep: str | None = None, header: bool | None = None, quotechar: str | None = None, escapechar: str | None = None, date_format: str | None = None, timestamp_format: str | None = None, quoting: str | int | None = None, encoding: str | None = None, compression: str | None = None, overwrite: bool | None = None, per_thread_output: bool | None = None, use_tmp_file: bool | None = None, partition_by: builtins.list[str] | None = None, write_partition_columns: bool | None = None) → None¶
+Write the relation object to a CSV file in ‘file_name’.
+Detailed examples can be found at Relational API page.
+to_df(*, date_as_object: bool = False) → Any¶
+Execute and fetch all rows as a pandas DataFrame.
+Detailed examples can be found at Relational API page.
+to_dicts() → builtins.list[dict[str, Any]]¶
+Every row, as a dict keyed by column name.
+Detailed examples can be found at Relational API page.
+to_parquet(file_name: str, *, compression: str | None = None, field_ids: object = None, row_group_size_bytes: int | str | None = None, row_group_size: int | None = None, overwrite: bool | None = None, per_thread_output: bool | None = None, use_tmp_file: bool | None = None, partition_by: builtins.list[str] | None = None, write_partition_columns: bool | None = None, append: bool | None = None, filename_pattern: str | None = None, file_size_bytes: str | int | None = None) → None¶
+Write the relation object to a Parquet file in ‘file_name’.
+Detailed examples can be found at Relational API page.
+to_table(table_name: str) → None¶
+Creates a new table named table_name with the contents of the relation object.
+The name is table, schema.table or catalog.schema.table, and a part may be double quoted; a name of more than
+three parts needs SQL (CREATE TABLE AS) for now.
+Detailed examples can be found at Relational API page.
+to_view(view_name: str, replace: bool = True) → DuckDBPyRelation¶
+Creates a view named view_name that refers to the relation object.
+Detailed examples can be found at Relational API page.
+torch() → dict[str, Any]¶
+Fetch a result as dict of PyTorch Tensors.
+Detailed examples can be found at Relational API page.
+type¶
+Get the type of the relation.
+Detailed examples can be found at Relational API page.
+types¶
+Return a list containing the types of the columns of the relation.
+Detailed examples can be found at Relational API page.
+union(union_rel: DuckDBPyRelation) → DuckDBPyRelation¶
+Create the set union of this relation object with another relation object in other_rel.
+Detailed examples can be found at Relational API page.
+union_by_name(other: DuckDBPyRelation, *, all: bool = True) → DuckDBPyRelation¶
+Rows from both relations, matching columns by name; keeps duplicates unless all is false.
+Detailed examples can be found at Relational API page.
+unique(unique_aggr: str) → DuckDBPyRelation¶
+Returns the distinct values in a column.
+Detailed examples can be found at Relational API page.
+unnest(*columns: str) → DuckDBPyRelation¶
+Expand list columns to one row per element.
+Detailed examples can be found at Relational API page.
+unpivot(*columns: str, name: str = 'name', value: str = 'value') → DuckDBPyRelation¶
+Turn the named columns into rows; name and value name the two new columns.
+Detailed examples can be found at Relational API page.
+update(set: object, *, condition: object = None) → None¶
+Update the given relation with the provided expressions.
+Detailed examples can be found at Relational API page.
+value_counts(expression: str, groups: str = '') → DuckDBPyRelation¶
+Computes the number of elements present in a given expression, also projecting the original expression.
+Detailed examples can be found at Relational API page.
+var(expression: str, groups: str = '', window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Computes the sample variance for a given expression.
+Detailed examples can be found at Relational API page.
+var_pop(expression: str, groups: str = '', window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Computes the population variance for a given expression.
+Detailed examples can be found at Relational API page.
+var_samp(expression: str, groups: str = '', window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Computes the sample variance for a given expression.
+Detailed examples can be found at Relational API page.
+variance(expression: str, groups: str = '', window_spec: str = '', projected_columns: str = '') → DuckDBPyRelation¶
+Computes the sample variance for a given expression.
+Detailed examples can be found at Relational API page.
+with_columns(**columns: object) → DuckDBPyRelation¶
+Add columns, replacing any of the same name in place.
+Detailed examples can be found at Relational API page.
+write_csv(file_name: str, *, sep: str | None = None, na_rep: str | None = None, header: bool | None = None, quotechar: str | None = None, escapechar: str | None = None, date_format: str | None = None, timestamp_format: str | None = None, quoting: str | int | None = None, encoding: str | None = None, compression: str | None = None, overwrite: bool | None = None, per_thread_output: bool | None = None, use_tmp_file: bool | None = None, partition_by: builtins.list[str] | None = None, write_partition_columns: bool | None = None) → None¶
+Write the relation object to a CSV file in ‘file_name’.
+Detailed examples can be found at Relational API page.
+write_parquet(file_name: str, *, compression: str | None = None, field_ids: object = None, row_group_size_bytes: int | str | None = None, row_group_size: int | None = None, overwrite: bool | None = None, per_thread_output: bool | None = None, use_tmp_file: bool | None = None, partition_by: builtins.list[str] | None = None, write_partition_columns: bool | None = None, append: bool | None = None, filename_pattern: str | None = None, file_size_bytes: str | int | None = None) → None¶
+Write the relation object to a Parquet file in ‘file_name’.
+Detailed examples can be found at Relational API page.
+Expressions¶
+duckdb.CaseExpression(condition: object, value: object) → Expression¶
+CASE WHEN condition THEN value, extended by .when(condition, value) and closed by .otherwise(value).
+duckdb.coalesce(*values: object) → Expression¶
+The first argument that is not NULL.
+duckdb.CoalesceOperator(*args: object) → Expression¶
+The first argument that is not NULL.
+duckdb.col(*parts: str) → Expression¶
+A column by name, or by the parts of a qualified name: col(“t”, “i”) is “t”.”i”.
+Every part is quoted whole, so any name works and none is split; a struct field is col(“st”)[“field”].
+duckdb.ColumnExpression(*names: str) → Expression¶
+A column by name, or by the parts of a qualified name: ColumnExpression(“t”, “a”) is “t”.”a”.
+A name is taken whole and never split, so ColumnExpression(“a.b”) is the column called a.b; the one name *
+is the star, as StarExpression() is.
+duckdb.ConstantExpression(value: object) → Expression¶
+A value; a duckdb.Value is written as a cast to its type, and a numpy array as the list it holds.
+duckdb.count_all() → Expression¶
+How many rows there are, as count(*); unlike col(“x”).count(), NULLs are not skipped.
+duckdb.DefaultExpression() → Expression¶
+DEFAULT, the column’s default value, where an INSERT or UPDATE takes one.
+duckdb.dense_rank(*args: object) → Expression¶
+The dense_rank window function.
+class duckdb.Expression(*args: object, **kwargs: object)¶
+Bases: AggregateMethods, FuncNamespaces
+One node of an expression tree; Expression(“x”) is the column x and Expression(1) the value 1.
+alias(name: str) → Expression¶
+Name the column in the output; an empty name removes the alias, as it did in the earlier API.
+any_value(*args: ValueOrExpr) → Expression¶
+Any one of the values, whichever is cheapest. SQL: any_value.
+arg_max(*args: ValueOrExpr) → Expression¶
+The value of the argument where this is largest. SQL: arg_max.
+arg_min(*args: ValueOrExpr) → Expression¶
+The value of the argument where this is smallest. SQL: arg_min.
+array_agg(*args: ValueOrExpr) → Expression¶
+The values gathered into a list. SQL: array_agg.
+as_order() → str¶
+The SQL for an ORDER BY item, carrying the direction and the null order where they were asked for.
+as_select() → str¶
+The SQL for a select list, carrying the alias if there is one.
+asc() → Expression¶
+Sort ascending. Keeps any null order already set.
+avg(*args: ValueOrExpr) → Expression¶
+The average of the values. The same as mean. SQL: avg.
+between(low: object = <object object>, high: object = <object object>, *, lower: object = <object object>, upper: object = <object object>) → Expression¶
+Inclusive range; lower and upper are the earlier API’s names for the same two bounds.
+bit_and(*args: ValueOrExpr) → Expression¶
+The bitwise AND of the values. SQL: bit_and.
+bit_or(*args: ValueOrExpr) → Expression¶
+The bitwise OR of the values. SQL: bit_or.
+bool_and(*args: ValueOrExpr) → Expression¶
+Whether every value is true. SQL: bool_and.
+bool_or(*args: ValueOrExpr) → Expression¶
+Whether any value is true. SQL: bool_or.
+cast(type_text: str | DuckDBPyType | type = <object object>, *, type: str | DuckDBPyType | type = <object object>) → Expression¶
+Cast to a SQL type, a DuckDBPyType, or text spliced in as SQL and so never taken from untrusted input.
+type is the earlier API’s name for the same argument.
+collate(collation: str) → Expression¶
+Compare and sort by a collation, such as nocase; nocase.noaccent combines two.
+concat(*others: object) → Expression¶
+Join text values.
+count(*args: ValueOrExpr) → Expression¶
+How many values are not NULL. For rows, use count_all(). SQL: count.
+desc() → Expression¶
+Sort descending. Keeps any null order already set.
+dt() → DtExpr¶
+This expression as a date, time or timestamp: col(“placed”).dt().year().
+entropy(*args: ValueOrExpr) → Expression¶
+The entropy of the distribution. SQL: entropy.
+first(*args: ValueOrExpr) → Expression¶
+The first value seen. Order it with .over() or sort to make that mean something. SQL: first.
+fragment() → str¶
+The SQL for this node, parenthesised so precedence cannot change what it means.
+get_name() → str¶
+The name a query gives this expression’s column: its alias, a column’s own name, or else its SQL text.
+ignore_nulls() → Expression¶
+Skip NULLs, for first_value, last_value, lag, lead and nth_value.
+ilike(pattern: object, *, escape: str | None = None) → Expression¶
+like, ignoring case.
+is_not_null() → Expression¶
+Whether this is not NULL.
+is_null() → Expression¶
+Whether this is NULL. Not the same as == None, which gives NULL.
+isin(*values: object) → Expression¶
+Membership of several values, as isin(1, 2), the form of the earlier expression API.
+One argument is one member, so a list given as one argument is compared whole; its elements are several
+arguments, and asking whether a list-typed column holds a value is fn(“list_contains”, …).
+isnotin(*values: object) → Expression¶
+The negation of isin, taking the same arguments.
+isnotnull() → Expression¶
+is_not_null, under the name of the earlier expression API.
+isnull() → Expression¶
+is_null, under the name of the earlier expression API.
+json() → JsonExpr¶
+This expression as JSON, with the string functions in scope too: col(“p”).json().extract(“$.id”).
+kurtosis(*args: ValueOrExpr) → Expression¶
+The kurtosis of the distribution. SQL: kurtosis.
+last(*args: ValueOrExpr) → Expression¶
+The last value seen. SQL: last.
+like(pattern: object, *, escape: str | None = None) → Expression¶
+Text match where % is any run of characters and _ is any one; negate with ~.
+list() → ListExpr¶
+This expression as a list: col(“tags”).list().contains(“vip”).
+max(*args: ValueOrExpr) → Expression¶
+The largest value. SQL: max.
+mean(*args: ValueOrExpr) → Expression¶
+The average of the values. SQL: avg.
+median(*args: ValueOrExpr) → Expression¶
+The middle value. SQL: median.
+min(*args: ValueOrExpr) → Expression¶
+The smallest value. SQL: min.
+mode(*args: ValueOrExpr) → Expression¶
+The most frequent value. SQL: mode.
+n_unique() → Expression¶
+How many distinct values there are, ignoring NULL.
+nulls_first() → Expression¶
+Where NULLs sort. Leaves the direction as it was, so the connection’s default holds until one is given.
+nulls_last() → Expression¶
+Where NULLs sort. Leaves the direction as it was, so the connection’s default holds until one is given.
+otherwise(value: object) → Expression¶
+The value of a CASE built by CaseExpression where no branch matches, NULL until given.
+over(partition_by: Exprs | None = None, order_by: Exprs | None = None, *, rows: tuple[int | None, int | None] | None = None, range: tuple[int | None, int | None] | None = None) → Expression¶
+Turn an aggregate into a window function.
+rows and range bound it as (start, end), counted from the current row, with None meaning unbounded.
+So rows=(-2, 0) is the current row and the two before it.
+product(*args: ValueOrExpr) → Expression¶
+The product of the values. SQL: product.
+quantile(*args: ValueOrExpr) → Expression¶
+The value at a quantile, one of the values themselves. Pass the quantile, 0 to 1. SQL: quantile_disc.
+quantile_cont(*args: ValueOrExpr) → Expression¶
+The value at a quantile, interpolated. Pass the quantile, 0 to 1. SQL: quantile_cont.
+show() → None¶
+Print the SQL text.
+skewness(*args: ValueOrExpr) → Expression¶
+The skewness of the distribution. SQL: skewness.
+std(*args: ValueOrExpr) → Expression¶
+The sample standard deviation. SQL: stddev_samp.
+str() → StrExpr¶
+This expression with the string functions in scope, col(“s”).str().upper(); nothing is checked or cast.
+string_agg(*args: ValueOrExpr) → Expression¶
+The values joined as text. Pass the separator as an argument. SQL: string_agg.
+sum(*args: ValueOrExpr) → Expression¶
+The sum of the values. SQL: sum.
+try_cast(type_text: str | DuckDBPyType | type = <object object>, *, type: str | DuckDBPyType | type = <object object>) → Expression¶
+Cast to a SQL type, giving NULL where the cast would fail; the type is taken as for cast.
+var(*args: ValueOrExpr) → Expression¶
+The sample variance. SQL: var_samp.
+when(condition: object, value: object) → Expression¶
+Another branch of a CASE built by CaseExpression, tried after the ones before it.
+where(predicate: Expression) → Expression¶
+Aggregate only rows where the predicate holds; goes before .over(), and a scalar call fails at run time.
+duckdb.first_value(subject: Expression, /, *args: object) → Expression¶
+The first_value window function: subject at the first row of the window frame.
+duckdb.fn(name: str | tuple[str, ...], /, *args: object, **named: object) → Expression¶
+Any SQL function by name, a tuple for a schema-qualified one, with the arguments treated as anywhere else.
+A keyword argument passes by name: fn(“round”, col(“x”), precision=1) is round(“x”, “precision” := 1).
+duckdb.FunctionExpression(function_name: str | tuple[str, ...], *args: object) → Expression¶
+A call of the function by its name, a bare string argument being a value as everywhere else.
+duckdb.lag(subject: Expression, /, *args: object) → Expression¶
+The lag window function: subject some rows back, lag(col(“x”)) or lag(col(“x”), 2, 0).
+duckdb.LambdaExpression(lhs: str | Expression | tuple[str | Expression, ...], rhs: object) → Expression¶
+lambda lhs: rhs, lhs naming one parameter or a tuple of them, for functions such as list_transform.
+duckdb.last_value(subject: Expression, /, *args: object) → Expression¶
+The last_value window function: subject at the last row of the window frame.
+duckdb.lead(subject: Expression, /, *args: object) → Expression¶
+The lead window function: subject some rows ahead, lead(col(“x”)) or lead(col(“x”), 2, 0).
+duckdb.lit(value: object) → Expression¶
+A Python value. Rarely needed, since operators accept values directly.
+duckdb.ntile(*args: object) → Expression¶
+The ntile window function.
+duckdb.rank(*args: object) → Expression¶
+The rank window function.
+duckdb.row_number(*args: object) → Expression¶
+The row_number window function.
+duckdb.sql_expr(sql: str) → Expression¶
+A raw SQL fragment, spliced in unchanged and never escaped, so never build one from untrusted input.
+duckdb.SQLExpression(expression: str) → Expression¶
+One SQL expression, checked by the parser here and written as given, never from untrusted input.
+An alias in the text names the column, as SQLExpression(“sum(x) AS total”) does; the rest of the text is what
+the SQL holds, in parentheses on lines of its own.
+duckdb.star(exclude: ColumnNames = (), rename: _Renames | None = None) → Expression¶
+*, optionally dropping or renaming columns; exclude=”id” drops the one column id.
+duckdb.StarExpression(*, exclude: Iterable[str | Expression] | None = None) → Expression¶
+*, leaving out the columns in exclude, each a name or a ColumnExpression for a qualified one.
+duckdb.when(condition: object) → CaseBuilder¶
+Begins a CASE. Continue with .then(…).
+class duckdb._expression_namespaces.StrExpr(*args: object, **kwargs: object)¶
+Text functions, applied to this expression as the string.
+SPEC: ClassVar[dict[str, tuple[str, int, list[str]]]] = {'ascii': ('ascii', 0, ['VARCHAR']), 'bin': ('bin', 0, ['VARCHAR']), 'bit_length': ('bit_length', 0, ['VARCHAR']), 'concat_ws': ('concat_ws', 1, ['VARCHAR', 'ANY']), 'contains': ('contains', 0, ['VARCHAR', 'VARCHAR']), 'damerau_levenshtein': ('damerau_levenshtein', 0, ['VARCHAR', 'VARCHAR']), 'format': ('format', 0, ['VARCHAR']), 'from_base64': ('from_base64', 0, ['VARCHAR']), 'hamming': ('hamming', 0, ['VARCHAR', 'VARCHAR']), 'ilike_escape': ('ilike_escape', 0, ['VARCHAR', 'VARCHAR', 'VARCHAR']), 'instr': ('instr', 0, ['VARCHAR', 'VARCHAR']), 'jaccard': ('jaccard', 0, ['VARCHAR', 'VARCHAR']), 'jaro_similarity': ('jaro_similarity', 0, ['VARCHAR', 'VARCHAR']), 'jaro_winkler_similarity': ('jaro_winkler_similarity', 0, ['VARCHAR', 'VARCHAR']), 'left': ('left', 0, ['VARCHAR', 'BIGINT']), 'left_grapheme': ('left_grapheme', 0, ['VARCHAR', 'BIGINT']), 'length': ('length', 0, ['VARCHAR']), 'length_grapheme': ('length_grapheme', 0, ['VARCHAR']), 'levenshtein': ('levenshtein', 0, ['VARCHAR', 'VARCHAR']), 'like_escape': ('like_escape', 0, ['VARCHAR', 'VARCHAR', 'VARCHAR']), 'lower': ('lower', 0, ['VARCHAR']), 'lpad': ('lpad', 0, ['VARCHAR', 'INTEGER', 'VARCHAR']), 'ltrim': ('ltrim', 0, ['VARCHAR']), 'md5': ('md5', 0, ['VARCHAR']), 'md5_number': ('md5_number', 0, ['VARCHAR']), 'nfc_normalize': ('nfc_normalize', 0, ['VARCHAR']), 'not_ilike_escape': ('not_ilike_escape', 0, ['VARCHAR', 'VARCHAR', 'VARCHAR']), 'not_like_escape': ('not_like_escape', 0, ['VARCHAR', 'VARCHAR', 'VARCHAR']), 'overlay': ('overlay', 0, ['VARCHAR', 'VARCHAR', 'BIGINT']), 'parse_dirname': ('parse_dirname', 0, ['VARCHAR']), 'parse_dirpath': ('parse_dirpath', 0, ['VARCHAR']), 'parse_filename': ('parse_filename', 0, ['VARCHAR']), 'parse_formatted_bytes': ('parse_formatted_bytes', 0, ['VARCHAR']), 'parse_path': ('parse_path', 0, ['VARCHAR']), 'path_join': ('path_join', 0, ['VARCHAR']), 'prefix': ('prefix', 0, ['VARCHAR', 'VARCHAR']), 'printf': ('printf', 0, ['VARCHAR']), 'regexp_escape': ('regexp_escape', 0, ['VARCHAR']), 'regexp_extract': ('regexp_extract', 0, ['VARCHAR', 'VARCHAR']), 'regexp_extract_all': ('regexp_extract_all', 0, ['VARCHAR', 'VARCHAR']), 'regexp_full_match': ('regexp_full_match', 0, ['VARCHAR', 'VARCHAR']), 'regexp_matches': ('regexp_matches', 0, ['VARCHAR', 'VARCHAR']), 'regexp_replace': ('regexp_replace', 0, ['VARCHAR', 'VARCHAR', 'VARCHAR']), 'replace': ('replace', 0, ['VARCHAR', 'VARCHAR', 'VARCHAR']), 'reverse': ('reverse', 0, ['VARCHAR']), 'right': ('right', 0, ['VARCHAR', 'BIGINT']), 'right_grapheme': ('right_grapheme', 0, ['VARCHAR', 'BIGINT']), 'rpad': ('rpad', 0, ['VARCHAR', 'INTEGER', 'VARCHAR']), 'rtrim': ('rtrim', 0, ['VARCHAR']), 'sha1': ('sha1', 0, ['VARCHAR']), 'sha256': ('sha256', 0, ['VARCHAR']), 'string_split': ('string_split', 0, ['VARCHAR', 'VARCHAR']), 'string_split_regex': ('string_split_regex', 0, ['VARCHAR', 'VARCHAR']), 'strip_accents': ('strip_accents', 0, ['VARCHAR']), 'strlen': ('strlen', 0, ['VARCHAR']), 'substring': ('substring', 0, ['VARCHAR', 'BIGINT']), 'substring_grapheme': ('substring_grapheme', 0, ['VARCHAR', 'BIGINT']), 'suffix': ('suffix', 0, ['VARCHAR', 'VARCHAR']), 'translate': ('translate', 0, ['VARCHAR', 'VARCHAR', 'VARCHAR']), 'trim': ('trim', 0, ['VARCHAR']), 'unbin': ('unbin', 0, ['VARCHAR']), 'unhex': ('unhex', 0, ['VARCHAR']), 'unicode': ('unicode', 0, ['VARCHAR']), 'upper': ('upper', 0, ['VARCHAR']), 'url_decode': ('url_decode', 0, ['VARCHAR']), 'url_encode': ('url_encode', 0, ['VARCHAR'])}¶
+Method name to (function, position of the expression, parameter types).
+ascii(*args: ValueOrExpr) → Expression¶
+The Unicode code point of the first character. SQL: ascii.
+bin(*args: ValueOrExpr) → StrExpr¶
+Converts the string to binary representation. SQL: bin.
+bit_length(*args: ValueOrExpr) → Expression¶
+Number of bits in a string. SQL: bit_length.
+concat_ws(separator: ValueOrExpr, *args: ValueOrExpr) → StrExpr¶
+Concatenates many strings, separated by separator. Arguments: separator. SQL: concat_ws.
+contains(*args: ValueOrExpr) → Expression¶
+Returns true if search_string is found within string. Arguments: search_string. SQL: contains.
+damerau_levenshtein(*args: ValueOrExpr) → Expression¶
+Edit distance, counting a swap of neighbours as one edit. Arguments: s2. SQL: damerau_levenshtein.
+format(*args: ValueOrExpr) → StrExpr¶
+Formats a string using the fmt syntax. SQL: format.
+from_base64(*args: ValueOrExpr) → Expression¶
+Converts a base64 encoded string to a character string (BLOB). SQL: from_base64.
+hamming(*args: ValueOrExpr) → Expression¶
+How many positions differ, for two strings of equal length. Arguments: s2. SQL: hamming.
+ilike_escape(*args: ValueOrExpr) → Expression¶
+Matches the pattern, ignoring case. Arguments: like_specifier, escape_character. SQL: ilike_escape.
+instr(*args: ValueOrExpr) → Expression¶
+Where the search string first occurs, or 0. Arguments: search_string. SQL: instr.
+jaccard(*args: ValueOrExpr) → Expression¶
+The Jaccard similarity between two strings. Arguments: s2. SQL: jaccard.
+jaro_similarity(*args: ValueOrExpr) → Expression¶
+The Jaro similarity between two strings. Arguments: s2. SQL: jaro_similarity.
+jaro_winkler_similarity(*args: ValueOrExpr) → Expression¶
+The Jaro-Winkler similarity between two strings. Arguments: s2. SQL: jaro_winkler_similarity.
+left(*args: ValueOrExpr) → StrExpr¶
+Extracts the left-most count characters. Arguments: count. SQL: left.
+left_grapheme(*args: ValueOrExpr) → StrExpr¶
+Extracts the left-most count grapheme clusters. Arguments: count. SQL: left_grapheme.
+length(*args: ValueOrExpr) → Expression¶
+Number of characters in string. SQL: length.
+length_grapheme(*args: ValueOrExpr) → Expression¶
+Number of grapheme clusters in string. SQL: length_grapheme.
+levenshtein(*args: ValueOrExpr) → Expression¶
+The number of single-character edits between two strings. Arguments: s2. SQL: levenshtein.
+like_escape(*args: ValueOrExpr) → Expression¶
+Whether it matches the pattern. Arguments: like_specifier, escape_character. SQL: like_escape.
+lower(*args: ValueOrExpr) → StrExpr¶
+Converts string to lower case. SQL: lower.
+lpad(*args: ValueOrExpr) → StrExpr¶
+Padded on the left with the character, to a total length. Arguments: count, character. SQL: lpad.
+ltrim(*args: ValueOrExpr) → StrExpr¶
+Trimmed on the left of any of the characters, spaces by default. SQL: ltrim.
+md5(*args: ValueOrExpr) → StrExpr¶
+Returns the MD5 hash of the string as a VARCHAR. SQL: md5.
+md5_number(*args: ValueOrExpr) → Expression¶
+Returns the MD5 hash of the string as a HUGEINT. SQL: md5_number.
+nfc_normalize(*args: ValueOrExpr) → StrExpr¶
+Converts string to Unicode NFC normalized string. SQL: nfc_normalize.
+not_ilike_escape(*args: ValueOrExpr) → Expression¶
+Does not match, ignoring case. Arguments: like_specifier, escape_character. SQL: not_ilike_escape.
+not_like_escape(*args: ValueOrExpr) → Expression¶
+Does not match the pattern. Arguments: like_specifier, escape_character. SQL: not_like_escape.
+overlay(*args: ValueOrExpr) → StrExpr¶
+The replacement written over the string, at a position. Arguments: replacement, start. SQL: overlay.
+parse_dirname(*args: ValueOrExpr) → StrExpr¶
+Returns the top-level directory name from the given path. SQL: parse_dirname.
+parse_dirpath(*args: ValueOrExpr) → StrExpr¶
+The path up to the last separator, as Python’s os.path.dirname gives it. SQL: parse_dirpath.
+parse_filename(*args: ValueOrExpr) → StrExpr¶
+The last component of the path, optionally without its extension. SQL: parse_filename.
+parse_formatted_bytes(*args: ValueOrExpr) → Expression¶
+A human-readable size such as ‘4KB’ as a number of bytes. SQL: parse_formatted_bytes.
+parse_path(*args: ValueOrExpr) → ListExpr¶
+The path split into its directories and filename. SQL: parse_path.
+path_join(*args: ValueOrExpr) → StrExpr¶
+The path components joined with the platform’s separator. SQL: path_join.
+prefix(*args: ValueOrExpr) → Expression¶
+Returns true if string starts with search_string. Arguments: search_string. SQL: prefix.
+printf(*args: ValueOrExpr) → StrExpr¶
+Formats a string using printf syntax. SQL: printf.
+regexp_escape(*args: ValueOrExpr) → StrExpr¶
+The string escaped so it matches itself as a regular expression. SQL: regexp_escape.
+regexp_extract(*args: ValueOrExpr) → StrExpr¶
+The first match of the pattern, or an empty string. Arguments: regex. SQL: regexp_extract.
+regexp_extract_all(*args: ValueOrExpr) → ListExpr¶
+Every match of the pattern, as a list. Arguments: regex. SQL: regexp_extract_all.
+regexp_full_match(*args: ValueOrExpr) → Expression¶
+Returns true if the entire string matches the regex. Arguments: regex. SQL: regexp_full_match.
+regexp_matches(*args: ValueOrExpr) → Expression¶
+Whether the pattern matches anywhere in the string. Arguments: regex. SQL: regexp_matches.
+regexp_replace(*args: ValueOrExpr) → StrExpr¶
+The first match of the pattern replaced. Arguments: regex, replacement. SQL: regexp_replace.
+replace(*args: ValueOrExpr) → StrExpr¶
+Every occurrence of the source replaced by the target. Arguments: source, target. SQL: replace.
+reverse(*args: ValueOrExpr) → StrExpr¶
+Reverses the string. SQL: reverse.
+right(*args: ValueOrExpr) → StrExpr¶
+Extract the right-most count characters. Arguments: count. SQL: right.
+right_grapheme(*args: ValueOrExpr) → StrExpr¶
+Extracts the right-most count grapheme clusters. Arguments: count. SQL: right_grapheme.
+rpad(*args: ValueOrExpr) → StrExpr¶
+Padded on the right with the character, to a total length. Arguments: count, character. SQL: rpad.
+rtrim(*args: ValueOrExpr) → StrExpr¶
+Trimmed on the right of any of the characters, spaces by default. SQL: rtrim.
+sha1(*args: ValueOrExpr) → StrExpr¶
+Returns a VARCHAR with the SHA-1 hash of the value. SQL: sha1.
+sha256(*args: ValueOrExpr) → StrExpr¶
+Returns a VARCHAR with the SHA-256 hash of the value. SQL: sha256.
+string_split(*args: ValueOrExpr) → ListExpr¶
+Splits the string along the separator. Arguments: separator. SQL: string_split.
+string_split_regex(*args: ValueOrExpr) → ListExpr¶
+Splits the string along the regex. Arguments: regex. SQL: string_split_regex.
+strip_accents(*args: ValueOrExpr) → StrExpr¶
+Strips accents from string. SQL: strip_accents.
+strlen(*args: ValueOrExpr) → Expression¶
+Number of bytes in string. SQL: strlen.
+substring(*args: ValueOrExpr) → StrExpr¶
+The rest of the string from a start position. Arguments: start. SQL: substring.
+substring_grapheme(*args: ValueOrExpr) → StrExpr¶
+The rest of the string, counting grapheme clusters. Arguments: start. SQL: substring_grapheme.
+suffix(*args: ValueOrExpr) → Expression¶
+Returns true if string ends with search_string. Arguments: search_string. SQL: suffix.
+translate(*args: ValueOrExpr) → StrExpr¶
+Each character in from replaced by the one in to. Arguments: from, to. SQL: translate.
+trim(*args: ValueOrExpr) → StrExpr¶
+Trimmed on both sides of any of the characters, spaces by default. SQL: trim.
+unbin(*args: ValueOrExpr) → Expression¶
+Converts a value from binary representation to a blob. SQL: unbin.
+unhex(*args: ValueOrExpr) → Expression¶
+Converts a value from hexadecimal representation to a blob. SQL: unhex.
+unicode(*args: ValueOrExpr) → Expression¶
+The Unicode code point of the first character, as an INTEGER. SQL: unicode.
+upper(*args: ValueOrExpr) → StrExpr¶
+Converts string to upper case. SQL: upper.
+url_decode(*args: ValueOrExpr) → StrExpr¶
+Decodes a URL from a representation using Percent-Encoding. SQL: url_decode.
+url_encode(*args: ValueOrExpr) → StrExpr¶
+Encodes a URL to a representation using Percent-Encoding. SQL: url_encode.
+class duckdb._expression_namespaces.DtExpr(*args: object, **kwargs: object)¶
+Date and time functions, applied to this expression as the date, time or timestamp.
+SPEC: ClassVar[dict[str, tuple[str, int, list[str]]]] = {'age': ('age', 0, ['TIMESTAMP']), 'century': ('century', 0, ['DATE']), 'day': ('day', 0, ['DATE']), 'dayname': ('dayname', 0, ['DATE']), 'dayofmonth': ('dayofmonth', 0, ['DATE']), 'dayofweek': ('dayofweek', 0, ['DATE']), 'dayofyear': ('dayofyear', 0, ['DATE']), 'days_in_month': ('days_in_month', 0, []), 'decade': ('decade', 0, ['DATE']), 'diff': ('date_diff', 1, ['VARCHAR', 'DATE', 'DATE']), 'epoch': ('epoch', 0, ['DATE']), 'epoch_ns': ('epoch_ns', 0, ['DATE']), 'epoch_us': ('epoch_us', 0, ['DATE']), 'era': ('era', 0, ['DATE']), 'hour': ('hour', 0, ['DATE']), 'isodow': ('isodow', 0, ['DATE']), 'isoyear': ('isoyear', 0, ['DATE']), 'julian': ('julian', 0, ['DATE']), 'last_day': ('last_day', 0, ['DATE']), 'microsecond': ('microsecond', 0, ['DATE']), 'millennium': ('millennium', 0, ['DATE']), 'millisecond': ('millisecond', 0, ['DATE']), 'minute': ('minute', 0, ['DATE']), 'month': ('month', 0, ['DATE']), 'monthname': ('monthname', 0, ['DATE']), 'nanosecond': ('nanosecond', 0, ['DATE']), 'normalized_interval': ('normalized_interval', 0, ['INTERVAL']), 'part': ('date_part', 1, ['VARCHAR', 'DATE']), 'quarter': ('quarter', 0, ['DATE']), 'second': ('second', 0, ['DATE']), 'strftime': ('strftime', 0, ['DATE', 'VARCHAR']), 'sub': ('date_sub', 1, ['VARCHAR', 'DATE', 'DATE']), 'time_bucket': ('time_bucket', 1, ['INTERVAL', 'DATE']), 'timetz_byte_comparable': ('timetz_byte_comparable', 0, ['TIME WITH TIME ZONE']), 'timezone': ('timezone', 0, ['TIMESTAMP']), 'timezone_hour': ('timezone_hour', 0, ['DATE']), 'timezone_minute': ('timezone_minute', 0, ['DATE']), 'trunc': ('date_trunc', 1, ['VARCHAR', 'DATE']), 'week': ('week', 0, ['DATE']), 'weekday': ('weekday', 0, ['DATE']), 'weekofyear': ('weekofyear', 0, ['DATE']), 'year': ('year', 0, ['DATE']), 'yearweek': ('yearweek', 0, ['DATE'])}¶
+Method name to (function, position of the expression, parameter types).
+age(*args: ValueOrExpr) → DtExpr¶
+The time between two timestamps, or between one and now. SQL: age.
+century(*args: ValueOrExpr) → Expression¶
+Extract the century component from a date or timestamp. SQL: century.
+day(*args: ValueOrExpr) → Expression¶
+Extract the day component from a date or timestamp. SQL: day.
+dayname(*args: ValueOrExpr) → StrExpr¶
+The (English) name of the weekday. SQL: dayname.
+dayofmonth(*args: ValueOrExpr) → Expression¶
+Extract the dayofmonth component from a date or timestamp. SQL: dayofmonth.
+dayofweek(*args: ValueOrExpr) → Expression¶
+Extract the dayofweek component from a date or timestamp. SQL: dayofweek.
+dayofyear(*args: ValueOrExpr) → Expression¶
+Extract the dayofyear component from a date or timestamp. SQL: dayofyear.
+days_in_month(*args: ValueOrExpr) → Expression¶
+How many days the date’s month has. SQL: days_in_month.
+decade(*args: ValueOrExpr) → Expression¶
+Extract the decade component from a date or timestamp. SQL: decade.
+diff(part: ValueOrExpr, *args: ValueOrExpr) → Expression¶
+The number of partition boundaries between the timestamps. Arguments: part, enddate. SQL: date_diff.
+epoch(*args: ValueOrExpr) → Expression¶
+Extract the epoch component from a temporal type. SQL: epoch.
+epoch_ns(*args: ValueOrExpr) → Expression¶
+Extract the epoch component in nanoseconds from a temporal type. SQL: epoch_ns.
+epoch_us(*args: ValueOrExpr) → Expression¶
+Extract the epoch component in microseconds from a temporal type. SQL: epoch_us.
+era(*args: ValueOrExpr) → Expression¶
+Extract the era component from a date or timestamp. SQL: era.
+hour(*args: ValueOrExpr) → Expression¶
+Extract the hour component from a date or timestamp. SQL: hour.
+isodow(*args: ValueOrExpr) → Expression¶
+Extract the isodow component from a date or timestamp. SQL: isodow.
+isoyear(*args: ValueOrExpr) → Expression¶
+Extract the isoyear component from a date or timestamp. SQL: isoyear.
+julian(*args: ValueOrExpr) → Expression¶
+Extract the Julian Day number from a date or timestamp. SQL: julian.
+last_day(*args: ValueOrExpr) → DtExpr¶
+Returns the last day of the month. SQL: last_day.
+microsecond(*args: ValueOrExpr) → Expression¶
+Extract the microsecond component from a date or timestamp. SQL: microsecond.
+millennium(*args: ValueOrExpr) → Expression¶
+Extract the millennium component from a date or timestamp. SQL: millennium.
+millisecond(*args: ValueOrExpr) → Expression¶
+Extract the millisecond component from a date or timestamp. SQL: millisecond.
+minute(*args: ValueOrExpr) → Expression¶
+Extract the minute component from a date or timestamp. SQL: minute.
+month(*args: ValueOrExpr) → Expression¶
+Extract the month component from a date or timestamp. SQL: month.
+monthname(*args: ValueOrExpr) → StrExpr¶
+The (English) name of the month. SQL: monthname.
+nanosecond(*args: ValueOrExpr) → Expression¶
+Extract the nanosecond component from a date or timestamp. SQL: nanosecond.
+normalized_interval(*args: ValueOrExpr) → DtExpr¶
+Normalizes an INTERVAL to an equivalent interval. SQL: normalized_interval.
+part(part: ValueOrExpr, *args: ValueOrExpr) → Expression¶
+Get subfield (equivalent to extract). Arguments: part. SQL: date_part.
+quarter(*args: ValueOrExpr) → Expression¶
+Extract the quarter component from a date or timestamp. SQL: quarter.
+second(*args: ValueOrExpr) → Expression¶
+Extract the second component from a date or timestamp. SQL: second.
+strftime(*args: ValueOrExpr) → StrExpr¶
+Format as text, with a strftime pattern. Arguments: format. SQL: strftime.
+sub(part: ValueOrExpr, *args: ValueOrExpr) → Expression¶
+The number of complete partitions between the timestamps. Arguments: part, enddate. SQL: date_sub.
+time_bucket(bucket_width: ValueOrExpr, *args: ValueOrExpr) → DtExpr¶
+Truncate TIMESTAMPTZ by the specified interval bucket_width. Arguments: bucket_width. SQL: time_bucket.
+timetz_byte_comparable(*args: ValueOrExpr) → Expression¶
+Converts a TIME WITH TIME ZONE to an integer sort key. SQL: timetz_byte_comparable.
+timezone(*args: ValueOrExpr) → Expression¶
+The time zone offset, in seconds. SQL: timezone.
+timezone_hour(*args: ValueOrExpr) → Expression¶
+Extract the timezone_hour component from a date or timestamp. SQL: timezone_hour.
+timezone_minute(*args: ValueOrExpr) → Expression¶
+Extract the timezone_minute component from a date or timestamp. SQL: timezone_minute.
+trunc(part: ValueOrExpr, *args: ValueOrExpr) → DtExpr¶
+Truncate to specified precision. Arguments: part. SQL: date_trunc.
+week(*args: ValueOrExpr) → Expression¶
+Extract the week component from a date or timestamp. SQL: week.
+weekday(*args: ValueOrExpr) → Expression¶
+Extract the weekday component from a date or timestamp. SQL: weekday.
+weekofyear(*args: ValueOrExpr) → Expression¶
+Extract the weekofyear component from a date or timestamp. SQL: weekofyear.
+year(*args: ValueOrExpr) → Expression¶
+Extract the year component from a date or timestamp. SQL: year.
+yearweek(*args: ValueOrExpr) → Expression¶
+Extract the yearweek component from a date or timestamp. SQL: yearweek.
+class duckdb._expression_namespaces.ListExpr(*args: object, **kwargs: object)¶
+List functions, applied to this expression as the list. A callable argument is given expressions, not values.
+SPEC: ClassVar[dict[str, tuple[str, int, list[str]]]] = {'aggregate': ('list_aggregate', 0, ['ANY[]', 'VARCHAR']), 'any_value': ('list_any_value', 0, []), 'append': ('list_append', 0, []), 'approx_count_distinct': ('list_approx_count_distinct', 0, []), 'avg': ('list_avg', 0, []), 'bit_and': ('list_bit_and', 0, []), 'bit_or': ('list_bit_or', 0, []), 'bit_xor': ('list_bit_xor', 0, []), 'bool_and': ('list_bool_and', 0, []), 'bool_or': ('list_bool_or', 0, []), 'contains': ('list_contains', 0, ['T[]', 'T']), 'cosine_distance': ('list_cosine_distance', 0, ['DOUBLE[]', 'DOUBLE[]']), 'cosine_similarity': ('list_cosine_similarity', 0, ['DOUBLE[]', 'DOUBLE[]']), 'count': ('list_count', 0, []), 'distance': ('list_distance', 0, ['DOUBLE[]', 'DOUBLE[]']), 'distinct': ('list_distinct', 0, ['T[]']), 'entropy': ('list_entropy', 0, []), 'extract': ('list_extract', 0, ['T[]', 'BIGINT']), 'filter': ('list_filter', 0, ['ANY[]', 'LAMBDA']), 'first': ('list_first', 0, []), 'flatten': ('flatten', 0, ['T[][]']), 'grade_up': ('list_grade_up', 0, ['ANY[]']), 'has_all': ('list_has_all', 0, ['T[]', 'T[]']), 'has_any': ('list_has_any', 0, ['T[]', 'T[]']), 'histogram': ('list_histogram', 0, []), 'inner_product': ('list_inner_product', 0, ['DOUBLE[]', 'DOUBLE[]']), 'intersect': ('list_intersect', 0, ['T[]', 'T[]']), 'kurtosis': ('list_kurtosis', 0, []), 'kurtosis_pop': ('list_kurtosis_pop', 0, []), 'last': ('list_last', 0, []), 'mad': ('list_mad', 0, []), 'mask': ('list_where', 0, ['T[]', 'BOOLEAN[]']), 'max': ('list_max', 0, []), 'median': ('list_median', 0, []), 'min': ('list_min', 0, []), 'mode': ('list_mode', 0, []), 'negative_inner_product': ('list_negative_inner_product', 0, ['DOUBLE[]', 'DOUBLE[]']), 'position': ('list_position', 0, ['T[]', 'T']), 'prepend': ('list_prepend', 1, []), 'product': ('list_product', 0, []), 'reduce': ('list_reduce', 0, ['ANY[]', 'LAMBDA']), 'resize': ('list_resize', 0, ['ANY[]', 'ANY']), 'reverse': ('list_reverse', 0, []), 'reverse_sort': ('list_reverse_sort', 0, ['ANY[]']), 'select': ('list_select', 0, ['T[]', 'BIGINT[]']), 'sem': ('list_sem', 0, []), 'skewness': ('list_skewness', 0, []), 'sort': ('list_sort', 0, ['ANY[]']), 'stddev_pop': ('list_stddev_pop', 0, []), 'stddev_samp': ('list_stddev_samp', 0, []), 'string_agg': ('list_string_agg', 0, []), 'sum': ('list_sum', 0, []), 'transform': ('list_transform', 0, ['ANY[]', 'LAMBDA']), 'unique': ('list_unique', 0, ['ANY[]']), 'var_pop': ('list_var_pop', 0, []), 'var_samp': ('list_var_samp', 0, [])}¶
+Method name to (function, position of the expression, parameter types).
+aggregate(*args: ValueOrExpr) → Expression¶
+The named aggregate applied to the elements. Arguments: function_name. SQL: list_aggregate.
+any_value(*args: ValueOrExpr) → Expression¶
+Any one element, whichever is cheapest. SQL: list_any_value.
+append(*args: ValueOrExpr) → ListExpr¶
+The list_append function. Arguments: e. SQL: list_append.
+approx_count_distinct(*args: ValueOrExpr) → Expression¶
+An approximate count of the distinct elements. SQL: list_approx_count_distinct.
+avg(*args: ValueOrExpr) → Expression¶
+The average of the elements. SQL: list_avg.
+bit_and(*args: ValueOrExpr) → Expression¶
+The bitwise AND of the elements. SQL: list_bit_and.
+bit_or(*args: ValueOrExpr) → Expression¶
+The bitwise OR of the elements. SQL: list_bit_or.
+bit_xor(*args: ValueOrExpr) → Expression¶
+The bitwise XOR of the elements. SQL: list_bit_xor.
+bool_and(*args: ValueOrExpr) → Expression¶
+Whether every element is true. SQL: list_bool_and.
+bool_or(*args: ValueOrExpr) → Expression¶
+Whether any element is true. SQL: list_bool_or.
+contains(*args: ValueOrExpr) → Expression¶
+Returns true if the list contains the element. Arguments: element. SQL: list_contains.
+cosine_distance(*args: ValueOrExpr) → Expression¶
+Computes the cosine distance between two same-sized lists. Arguments: list2. SQL: list_cosine_distance.
+cosine_similarity(*args: ValueOrExpr) → Expression¶
+The cosine similarity of two lists of numbers. Arguments: list2. SQL: list_cosine_similarity.
+count(*args: ValueOrExpr) → Expression¶
+How many elements are not NULL. SQL: list_count.
+distance(*args: ValueOrExpr) → Expression¶
+The Euclidean distance between two lists of numbers. Arguments: list2. SQL: list_distance.
+distinct(*args: ValueOrExpr) → ListExpr¶
+Removes all duplicates and NULL values from a list. SQL: list_distinct.
+entropy(*args: ValueOrExpr) → Expression¶
+The entropy of the elements. SQL: list_entropy.
+extract(*args: ValueOrExpr) → Expression¶
+Extract the index`th (1-based) value from the list. Arguments: index. SQL: `list_extract.
+filter(function: ValueOrExpr, *args: ValueOrExpr) → ListExpr¶
+The elements the function holds for: lambda x: x > 0. SQL: list_filter.
+first(*args: ValueOrExpr) → Expression¶
+The first element. SQL: list_first.
+flatten(*args: ValueOrExpr) → ListExpr¶
+Flattens a nested list by one level. SQL: flatten.
+grade_up(*args: ValueOrExpr) → ListExpr¶
+The positions the elements would take once sorted, rather than the elements. SQL: list_grade_up.
+has_all(*args: ValueOrExpr) → Expression¶
+Returns true if all elements of list2 are in list1. Arguments: list2. SQL: list_has_all.
+has_any(*args: ValueOrExpr) → Expression¶
+Returns true if the lists have any element in common. Arguments: list2. SQL: list_has_any.
+histogram(*args: ValueOrExpr) → Expression¶
+How often each element occurs, as a map. SQL: list_histogram.
+inner_product(*args: ValueOrExpr) → Expression¶
+Computes the inner product between two same-sized lists. Arguments: list2. SQL: list_inner_product.
+intersect(*args: ValueOrExpr) → ListExpr¶
+The distinct elements present in both lists. Arguments: list2. SQL: list_intersect.
+kurtosis(*args: ValueOrExpr) → Expression¶
+The kurtosis of the elements. SQL: list_kurtosis.
+kurtosis_pop(*args: ValueOrExpr) → Expression¶
+The population kurtosis of the elements. SQL: list_kurtosis_pop.
+last(*args: ValueOrExpr) → Expression¶
+The last element. SQL: list_last.
+mad(*args: ValueOrExpr) → Expression¶
+The median absolute deviation of the elements. SQL: list_mad.
+mask(*args: ValueOrExpr) → ListExpr¶
+The elements where the matching boolean is true. Arguments: mask_list. SQL: list_where.
+max(*args: ValueOrExpr) → Expression¶
+The largest element. SQL: list_max.
+median(*args: ValueOrExpr) → Expression¶
+The middle element. SQL: list_median.
+min(*args: ValueOrExpr) → Expression¶
+The smallest element. SQL: list_min.
+mode(*args: ValueOrExpr) → Expression¶
+The most frequent element. SQL: list_mode.
+negative_inner_product(*args: ValueOrExpr) → Expression¶
+The inner product of two lists, negated. Arguments: list2. SQL: list_negative_inner_product.
+position(*args: ValueOrExpr) → Expression¶
+The index of the element, or NULL when absent. Arguments: element. SQL: list_position.
+prepend(e: ValueOrExpr, *args: ValueOrExpr) → ListExpr¶
+The list_prepend function. Arguments: e. SQL: list_prepend.
+product(*args: ValueOrExpr) → Expression¶
+The product of the elements. SQL: list_product.
+reduce(function: ValueOrExpr, *args: ValueOrExpr) → Expression¶
+The list folded to one value, left to right: lambda acc, x: acc + x. SQL: list_reduce.
+resize(*args: ValueOrExpr) → ListExpr¶
+Resizes the list to contain size elements. Arguments: size. SQL: list_resize.
+reverse(*args: ValueOrExpr) → ListExpr¶
+The elements in reverse order. SQL: list_reverse.
+reverse_sort(*args: ValueOrExpr) → ListExpr¶
+Sorts the elements of the list in reverse order. SQL: list_reverse_sort.
+select(*args: ValueOrExpr) → ListExpr¶
+The elements at the given indexes. Arguments: index_list. SQL: list_select.
+sem(*args: ValueOrExpr) → Expression¶
+The standard error of the mean of the elements. SQL: list_sem.
+skewness(*args: ValueOrExpr) → Expression¶
+The skewness of the elements. SQL: list_skewness.
+sort(*args: ValueOrExpr) → ListExpr¶
+Sorts the elements of the list. SQL: list_sort.
+stddev_pop(*args: ValueOrExpr) → Expression¶
+The population standard deviation of the elements. SQL: list_stddev_pop.
+stddev_samp(*args: ValueOrExpr) → Expression¶
+The sample standard deviation of the elements. SQL: list_stddev_samp.
+string_agg(*args: ValueOrExpr) → StrExpr¶
+The elements joined as text, separated by commas. SQL: list_string_agg.
+sum(*args: ValueOrExpr) → Expression¶
+The sum of the elements. SQL: list_sum.
+transform(function: ValueOrExpr, *args: ValueOrExpr) → ListExpr¶
+Each element through the function: lambda x: x * 2. SQL: list_transform.
+unique(*args: ValueOrExpr) → Expression¶
+Counts the unique elements of a list. SQL: list_unique.
+var_pop(*args: ValueOrExpr) → Expression¶
+The population variance of the elements. SQL: list_var_pop.
+var_samp(*args: ValueOrExpr) → Expression¶
+The sample variance of the elements. SQL: list_var_samp.
+class duckdb._expression_namespaces.JsonExpr(*args: object, **kwargs: object)¶
+JSON functions, applied to this expression as the document.
+SPEC: ClassVar[dict[str, tuple[str, int, list[str]]]] = {'array_length': ('json_array_length', 0, ['JSON']), 'contains': ('json_contains', 0, ['JSON', 'JSON']), 'deep_merge': ('json_deep_merge', 0, ['JSON', 'JSON']), 'exists': ('json_exists', 0, ['JSON', 'VARCHAR']), 'extract': ('json_extract', 0, ['JSON', 'VARCHAR']), 'extract_path': ('json_extract_path', 0, ['JSON', 'VARCHAR']), 'extract_path_text': ('json_extract_path_text', 0, ['JSON', 'VARCHAR']), 'extract_string': ('json_extract_string', 0, ['JSON', 'VARCHAR']), 'insert': ('json_insert', 0, ['JSON', 'VARCHAR', 'JSON']), 'keys': ('json_keys', 0, ['JSON']), 'merge_patch_diff': ('json_merge_patch_diff', 0, ['JSON', 'JSON']), 'normalize': ('json_normalize', 0, ['JSON']), 'parse': ('json', 0, []), 'pretty': ('json_pretty', 0, ['JSON']), 'remove': ('json_remove', 0, ['JSON', 'VARCHAR']), 'replace': ('json_replace', 0, ['JSON', 'VARCHAR', 'JSON']), 'set': ('json_set', 0, ['JSON', 'VARCHAR', 'JSON']), 'strip_nulls': ('json_strip_nulls', 0, ['JSON']), 'structure': ('json_structure', 0, ['JSON']), 'transform': ('json_transform', 0, ['JSON', 'VARCHAR']), 'transform_strict': ('json_transform_strict', 0, ['JSON', 'VARCHAR']), 'type': ('json_type', 0, ['JSON']), 'valid': ('json_valid', 0, ['JSON']), 'value': ('json_value', 0, ['JSON', 'VARCHAR'])}¶
+Method name to (function, position of the expression, parameter types).
+array_length(*args: ValueOrExpr) → Expression¶
+How many elements the array holds. SQL: json_array_length.
+contains(*args: ValueOrExpr) → Expression¶
+The json_contains function. Arguments: needle. SQL: json_contains.
+deep_merge(*args: ValueOrExpr) → JsonExpr¶
+The json_deep_merge function. Arguments: json2. SQL: json_deep_merge.
+exists(*args: ValueOrExpr) → Expression¶
+The json_exists function. Arguments: path. SQL: json_exists.
+extract(*args: ValueOrExpr) → JsonExpr¶
+The json_extract function. Arguments: path. SQL: json_extract.
+extract_path(*args: ValueOrExpr) → JsonExpr¶
+The json_extract_path function. Arguments: path. SQL: json_extract_path.
+extract_path_text(*args: ValueOrExpr) → StrExpr¶
+The json_extract_path_text function. Arguments: path. SQL: json_extract_path_text.
+extract_string(*args: ValueOrExpr) → StrExpr¶
+The json_extract_string function. Arguments: path. SQL: json_extract_string.
+insert(*args: ValueOrExpr) → JsonExpr¶
+The json_insert function. Arguments: path, value. SQL: json_insert.
+keys(*args: ValueOrExpr) → ListExpr¶
+The keys of the object, as a list. SQL: json_keys.
+merge_patch_diff(*args: ValueOrExpr) → JsonExpr¶
+The json_merge_patch_diff function. Arguments: new. SQL: json_merge_patch_diff.
+normalize(*args: ValueOrExpr) → StrExpr¶
+The document minified, with object keys sorted. SQL: json_normalize.
+parse(*args: ValueOrExpr) → JsonExpr¶
+The text parsed as a JSON document, minified. SQL: json.
+pretty(*args: ValueOrExpr) → StrExpr¶
+The document printed with indentation. SQL: json_pretty.
+remove(*args: ValueOrExpr) → JsonExpr¶
+The json_remove function. Arguments: path. SQL: json_remove.
+replace(*args: ValueOrExpr) → JsonExpr¶
+The json_replace function. Arguments: path, value. SQL: json_replace.
+set(*args: ValueOrExpr) → JsonExpr¶
+The json_set function. Arguments: path, value. SQL: json_set.
+strip_nulls(*args: ValueOrExpr) → JsonExpr¶
+The document without its null-valued object fields. SQL: json_strip_nulls.
+structure(*args: ValueOrExpr) → JsonExpr¶
+The shape of the document, with types in place of values. SQL: json_structure.
+transform(*args: ValueOrExpr) → Expression¶
+The json_transform function. Arguments: structure. SQL: json_transform.
+transform_strict(*args: ValueOrExpr) → Expression¶
+The json_transform_strict function. Arguments: structure. SQL: json_transform_strict.
+type(*args: ValueOrExpr) → StrExpr¶
+The type of the top value: OBJECT, ARRAY, VARCHAR and so on. SQL: json_type.
+valid(*args: ValueOrExpr) → Expression¶
+Whether the text is valid JSON. SQL: json_valid.
+value(*args: ValueOrExpr) → StrExpr¶
+The json_value function. Arguments: path. SQL: json_value.
+Module Functions¶
+duckdb.abort(*, connection: _duckdb.DuckDBPyConnection | None = None) → None¶
+Cancel the rest of the result of execute(); a statement that may write fails an open transaction
+duckdb.aggregate(df: object, aggr_expr: object, group_expr: object = '', *, connection: DuckDBPyConnection | None = None) → DuckDBPyRelation¶
+Compute the aggregate aggr_expr by the optional groups group_expr on the relation.
+duckdb.alias(df: object, alias: str, *, connection: DuckDBPyConnection | None = None) → DuckDBPyRelation¶
+Rename the relation object to new alias.
+duckdb.append(table_name: str, df: object, *, by_name: bool = False, connection: _duckdb.DuckDBPyConnection | None = None) → _duckdb.DuckDBPyConnection¶
+Append the passed DataFrame to the named table
+duckdb.appender(table: str, *, columns: list | None = None, action: str = 'insert', key: list | None = None, connection: _duckdb.DuckDBPyConnection | None = None) → _duckdb.Appender¶
+Create an appender that buffers rows and inserts, upserts, updates or deletes them in the named table at each flush
+duckdb.arrow(arrow_object: object, *, connection: DuckDBPyConnection | None = None) → DuckDBPyRelation¶
+Create a relation object from an Arrow object.
+duckdb.begin(*, connection: _duckdb.DuckDBPyConnection | None = None) → _duckdb.DuckDBPyConnection¶
+Start a new transaction
+duckdb.build_info() → dict[str, str]¶
+The versions and the commits this build was made from, for the package and the bundled DuckDB engine.
+duckdb.checkpoint(*, connection: _duckdb.DuckDBPyConnection | None = None) → _duckdb.DuckDBPyConnection¶
+Synchronizes data in the write-ahead log (WAL) to the database data file (no-op for in-memory connections)
+duckdb.close(*, connection: _duckdb.DuckDBPyConnection | None = None) → None¶
+Close the connection
+duckdb.commit(*, connection: _duckdb.DuckDBPyConnection | None = None) → _duckdb.DuckDBPyConnection¶
+Commit changes performed within a transaction
+duckdb.complete(*, connection: _duckdb.DuckDBPyConnection | None = None) → None¶
+Run the result of execute() to its end without reading its rows
+duckdb.connect(database: object = ':memory:', read_only: bool = False, config: dict = {}) → _duckdb.DuckDBPyConnection¶
+Create a DuckDB database instance. Can take a database file name to read/write persistent data and a read_only flag if no changes are desired
+duckdb.create_function(name: str, function: collections.abc.Callable, parameters: object | None = None, return_type: object | None = None, *, type: PythonUDFType = PythonUDFType.NATIVE, null_handling: FunctionNullHandling = FunctionNullHandling.DEFAULT, exception_handling: PythonExceptionHandling = PythonExceptionHandling.DEFAULT, side_effects: bool = False, connection: _duckdb.DuckDBPyConnection | None = None) → _duckdb.DuckDBPyConnection¶
+Create a DuckDB function out of the passing in Python function so it can be used in queries
+duckdb.cursor(*, connection: _duckdb.DuckDBPyConnection | None = None) → _duckdb.DuckDBPyConnection¶
+Create a duplicate of the current connection
+duckdb.default_connection() → _duckdb.DuckDBPyConnection¶
+Retrieve the connection currently registered as the default to be used by the module
+duckdb.description(*, connection: _duckdb.DuckDBPyConnection | None = None) → object¶
+Get result set attributes, mainly column names
+duckdb.df(df: object = None, *, date_as_object: bool = False, connection: DuckDBPyConnection | None = None) → Any¶
+A relation over a DataFrame, or with no DataFrame the DataFrame of the connection’s pending result.
+duckdb.disable_profiling(*, connection: _duckdb.DuckDBPyConnection | None = None) → None¶
+Disable profiling for the current connection
+duckdb.distinct(df: object, *, connection: DuckDBPyConnection | None = None) → DuckDBPyRelation¶
+Retrieve distinct rows from this relation object.
+duckdb.duplicate(*, connection: _duckdb.DuckDBPyConnection | None = None) → _duckdb.DuckDBPyConnection¶
+Create a duplicate of the current connection
+duckdb.enable_profiling(*, connection: _duckdb.DuckDBPyConnection | None = None) → None¶
+Enable profiling for the current connection
+duckdb.execute(query: object, parameters: object | None = None, *, connection: _duckdb.DuckDBPyConnection | None = None) → _duckdb.DuckDBPyConnection¶
+Execute the given SQL query, optionally using prepared statements with parameters set. A query runs until its first rows are ready, so an error there raises here; every other statement runs to its end
+duckdb.executemany(query: object, parameters: object | None = None, *, connection: _duckdb.DuckDBPyConnection | None = None) → _duckdb.DuckDBPyConnection¶
+Execute the given prepared statement multiple times using the list of parameter sets in parameters
+duckdb.extract_statements(query: str, *, connection: _duckdb.DuckDBPyConnection | None = None) → list¶
+Parse the query string and extract the Statement object(s) produced
+duckdb.fetch_df(*, date_as_object: bool = False, connection: _duckdb.DuckDBPyConnection | None = None) → object¶
+Fetch a result as DataFrame following execute()
+duckdb.fetch_df_chunk(vectors_per_chunk: int = 1, *, date_as_object: bool = False, connection: _duckdb.DuckDBPyConnection | None = None) → object¶
+Fetch a chunk of the result as DataFrame following execute()
+duckdb.fetchall(*, connection: _duckdb.DuckDBPyConnection | None = None) → list¶
+Fetch all rows from a result following execute
+duckdb.fetchdf(*, date_as_object: bool = False, connection: _duckdb.DuckDBPyConnection | None = None) → object¶
+Fetch a result as DataFrame following execute()
+duckdb.fetchmany(size: int = 1, *, connection: _duckdb.DuckDBPyConnection | None = None) → list¶
+Fetch the next set of rows from a result following execute
+duckdb.fetchnumpy(*, connection: _duckdb.DuckDBPyConnection | None = None) → dict¶
+Fetch a result as list of NumPy arrays following execute
+duckdb.fetchone(*, connection: _duckdb.DuckDBPyConnection | None = None) → object¶
+Fetch a single row from a result following execute
+duckdb.filesystem_is_registered(name: str, *, connection: _duckdb.DuckDBPyConnection | None = None) → bool¶
+Check if a filesystem with the provided name is currently registered
+duckdb.filter(df: object, filter_expr: object, *, connection: DuckDBPyConnection | None = None) → DuckDBPyRelation¶
+Filter the relation object by the filter in filter_expr.
+duckdb.from_arrow(arrow_object: object, *, connection: DuckDBPyConnection | None = None) → DuckDBPyRelation¶
+Create a relation object from an Arrow object.
+duckdb.from_csv_auto(*args: object, **kwargs: object) → DuckDBPyRelation¶
+Create a relation object from the CSV file in ‘name’.
+duckdb.from_df(df: object, *, connection: DuckDBPyConnection | None = None) → DuckDBPyRelation¶
+Create a relation object from the DataFrame in df.
+duckdb.from_parquet(path_or_buffer: object, binary_as_string: bool = False, *, connection: DuckDBPyConnection | None = None, **kwargs: Any) → DuckDBPyRelation¶
+Create a relation object from the Parquet path(s) or file-like object(s) in ‘path_or_buffer’.
+duckdb.from_query(query: object, *, alias: str = '', params: object = None, connection: DuckDBPyConnection | None = None) → DuckDBPyRelation | None¶
+Run a SQL query. A statement that only reads returns a relation that runs the query each time it is read, parameter values bound at every run. Any other statement runs once, now, and gives a relation over what it returned. Statements before the last one run immediately.
+duckdb.get_profiling_information(*, format: str = 'json', connection: _duckdb.DuckDBPyConnection | None = None) → str¶
+Get profiling information from a query
+duckdb.get_table_names(query: str, *, qualified: bool = False, connection: _duckdb.DuckDBPyConnection | None = None) → set[str]¶
+Extract the required table names from a query
+duckdb.install_extension(extension: str, *, force_install: bool = False, repository: object | None = None, repository_url: object | None = None, version: object | None = None, connection: _duckdb.DuckDBPyConnection | None = None) → None¶
+Install an extension by name, with an optional version and/or repository to get the extension from
+duckdb.interrupt(*, connection: _duckdb.DuckDBPyConnection | None = None) → None¶
+Interrupt pending operations
+duckdb.limit(df: object, n: int, offset: int = 0, *, connection: DuckDBPyConnection | None = None) → DuckDBPyRelation¶
+Only retrieve the first n rows from this relation object, starting at offset.
+duckdb.list_filesystems(*, connection: _duckdb.DuckDBPyConnection | None = None) → list¶
+List registered filesystems, including builtin ones
+duckdb.load_extension(extension: str, *, connection: _duckdb.DuckDBPyConnection | None = None) → None¶
+Load an installed extension
+duckdb.order(df: object, order_expr: str, *, connection: DuckDBPyConnection | None = None) → DuckDBPyRelation¶
+Reorder the relation object by order_expr.
+duckdb.project(df: object, *args: object, groups: str = '', connection: DuckDBPyConnection | None = None) → DuckDBPyRelation¶
+Project the relation object by the projection in project_expr.
+duckdb.query(query: object, *, alias: str = '', params: object = None, connection: DuckDBPyConnection | None = None) → DuckDBPyRelation | None¶
+Run a SQL query. A statement that only reads returns a relation that runs the query each time it is read, parameter values bound at every run. Any other statement runs once, now, and gives a relation over what it returned. Statements before the last one run immediately.
+duckdb.query_appender(dml: str, columns: dict, *, source: str | None = None, connection: _duckdb.DuckDBPyConnection | None = None) → _duckdb.Appender¶
+Create an appender that buffers rows of the declared columns and runs the DML over them at each flush
+duckdb.query_df(df: object, virtual_table_name: str, sql_query: str, *, connection: DuckDBPyConnection | None = None) → DuckDBPyRelation | None¶
+Run the given SQL query in sql_query on the view named virtual_table_name that refers to the relation object.
+duckdb.query_progress(*, connection: _duckdb.DuckDBPyConnection | None = None) → float¶
+Query progress of pending operation
+duckdb.read_csv(*args: object, **kwargs: object) → DuckDBPyRelation¶
+Create a relation object from the CSV file in ‘name’.
+duckdb.read_json(path_or_buffer: object, *, connection: DuckDBPyConnection | None = None, **kwargs: Any) → DuckDBPyRelation¶
+Create a relation object from the JSON file in ‘name’.
+duckdb.read_parquet(path_or_buffer: object, binary_as_string: bool = False, *, connection: DuckDBPyConnection | None = None, **kwargs: Any) → DuckDBPyRelation¶
+Create a relation object from the Parquet path(s) or file-like object(s) in ‘path_or_buffer’.
+duckdb.register(view_name: str, python_object: object, *, connection: _duckdb.DuckDBPyConnection | None = None) → _duckdb.DuckDBPyConnection¶
+Register the passed Python Object value for querying with a view
+duckdb.register_filesystem(filesystem: object, *, connection: _duckdb.DuckDBPyConnection | None = None) → None¶
+Register a fsspec compliant filesystem
+duckdb.remove_function(name: str, *, connection: _duckdb.DuckDBPyConnection | None = None) → _duckdb.DuckDBPyConnection¶
+Remove a previously created function
+duckdb.rollback(*, connection: _duckdb.DuckDBPyConnection | None = None) → _duckdb.DuckDBPyConnection¶
+Roll back changes performed within a transaction
+duckdb.rowcount(*, connection: _duckdb.DuckDBPyConnection | None = None) → int¶
+Get result set row count
+duckdb.set_default_connection(connection: _duckdb.DuckDBPyConnection) → None¶
+Register the provided connection as the default to be used by the module
+duckdb.sql(query: object, *, alias: str = '', params: object = None, connection: DuckDBPyConnection | None = None) → DuckDBPyRelation | None¶
+Run a SQL query. A statement that only reads returns a relation that runs the query each time it is read, parameter values bound at every run. Any other statement runs once, now, and gives a relation over what it returned. Statements before the last one run immediately.
+duckdb.table(table_name: str, *, connection: DuckDBPyConnection | None = None) → DuckDBPyRelation¶
+Create a relation object for the named table.
+duckdb.table_function(name: str, parameters: object = None, *, connection: DuckDBPyConnection | None = None) → DuckDBPyRelation¶
+Create a relation object from the named table function with given parameters.
+duckdb.tf(*, connection: _duckdb.DuckDBPyConnection | None = None) → dict¶
+Fetch a result as dict of TensorFlow Tensors following execute()
+duckdb.to_arrow_reader(batch_size: int = 131072, *, connection: DuckDBPyConnection | None = None) → Any¶
+A reader over every row the connection’s pending result still holds.
+duckdb.to_arrow_table(batch_size: int = 131072, *, connection: DuckDBPyConnection | None = None) → Any¶
+Every row the connection’s pending result still holds, as an Arrow Table.
+duckdb.tokenize(query: str) → list¶
+Tokenizes a SQL string, returning a list of (position, type) tuples that can be used for e.g., syntax highlighting
+duckdb.torch(*, connection: _duckdb.DuckDBPyConnection | None = None) → dict¶
+Fetch a result as dict of PyTorch Tensors following execute()
+duckdb.unregister(view_name: str, *, connection: _duckdb.DuckDBPyConnection | None = None) → _duckdb.DuckDBPyConnection¶
+Unregister the view name
+duckdb.unregister_filesystem(name: str, *, connection: _duckdb.DuckDBPyConnection | None = None) → None¶
+Unregister a filesystem
+duckdb.values(*args: object, connection: DuckDBPyConnection | None = None) → DuckDBPyRelation¶
+Create a relation object from the passed values.
+duckdb.view(view_name: str, *, connection: DuckDBPyConnection | None = None) → DuckDBPyRelation¶
+Create a relation object for the named view.
+duckdb.write_csv(df: object, filename: str, *, connection: DuckDBPyConnection | None = None, **kwargs: Any) → None¶
+Write the relation object to a CSV file in ‘file_name’.
+Types and Values¶
+duckdb.array_type(type: _duckdb._sqltypes.DuckDBPyType, size: int, *, connection: _duckdb.DuckDBPyConnection | None = None) → _duckdb._sqltypes.DuckDBPyType¶
+Create an array type object of ‘type’
+class duckdb.BinaryValue(object: Any)¶
+Bases: Value
+class duckdb.BitValue(object: Any)¶
+Bases: Value
+class duckdb.BlobValue(object: Any)¶
+Bases: Value
+class duckdb.BooleanValue(object: Any)¶
+Bases: Value
+class duckdb.DateValue(object: Any)¶
+Bases: Value
+duckdb.decimal_type(width: int, scale: int, *, connection: _duckdb.DuckDBPyConnection | None = None) → _duckdb._sqltypes.DuckDBPyType¶
+Create a decimal type with ‘width’ and ‘scale’
+class duckdb.DecimalValue(object: Any, width: int, scale: int)¶
+Bases: Value
+class duckdb.DoubleValue(object: Any)¶
+Bases: Value
+duckdb.dtype(type_str: str, *, connection: _duckdb.DuckDBPyConnection | None = None) → _duckdb._sqltypes.DuckDBPyType¶
+Create a type object by parsing the ‘type_str’ string
+duckdb.enum_type(name: str, type: _duckdb._sqltypes.DuckDBPyType, values: list, *, connection: _duckdb.DuckDBPyConnection | None = None) → _duckdb._sqltypes.DuckDBPyType¶
+Create an enum type of underlying ‘type’, consisting of the list of ‘values’
+class duckdb.FloatValue(object: Any)¶
+Bases: Value
+class duckdb.HugeIntegerValue(object: Any)¶
+Bases: Value
+class duckdb.IntegerValue(object: Any)¶
+Bases: Value
+class duckdb.IntervalValue(object: Any)¶
+Bases: Value
+duckdb.list_type(type: _duckdb._sqltypes.DuckDBPyType, *, connection: _duckdb.DuckDBPyConnection | None = None) → _duckdb._sqltypes.DuckDBPyType¶
+Create a list type object of ‘type’
+class duckdb.ListValue(object: Any, child_type: DuckDBPyType)¶
+Bases: Value
+class duckdb.LongValue(object: Any)¶
+Bases: Value
+duckdb.map_type(key: _duckdb._sqltypes.DuckDBPyType, value: _duckdb._sqltypes.DuckDBPyType, *, connection: _duckdb.DuckDBPyConnection | None = None) → _duckdb._sqltypes.DuckDBPyType¶
+Create a map type object from ‘key_type’ and ‘value_type’
+class duckdb.MapValue(object: Any, key_type: DuckDBPyType, value_type: DuckDBPyType)¶
+Bases: Value
+class duckdb.NullValue¶
+Bases: Value
+duckdb.row_type(fields: object, *, connection: _duckdb.DuckDBPyConnection | None = None) → _duckdb._sqltypes.DuckDBPyType¶
+Create a struct type object from ‘fields’
+class duckdb.ShortValue(object: Any)¶
+Bases: Value
+duckdb.sqltype(type_str: str, *, connection: _duckdb.DuckDBPyConnection | None = None) → _duckdb._sqltypes.DuckDBPyType¶
+Create a type object by parsing the ‘type_str’ string
+duckdb.string_type(collation: str = '', *, connection: _duckdb.DuckDBPyConnection | None = None) → _duckdb._sqltypes.DuckDBPyType¶
+Create a string type with an optional collation
+class duckdb.StringValue(object: Any)¶
+Bases: Value
+duckdb.struct_type(fields: object, *, connection: _duckdb.DuckDBPyConnection | None = None) → _duckdb._sqltypes.DuckDBPyType¶
+Create a struct type object from ‘fields’
+class duckdb.StructValue(object: Any, children: dict[str, DuckDBPyType])¶
+Bases: Value
+class duckdb.TimestampMillisecondValue(object: Any)¶
+Bases: Value
+class duckdb.TimestampNanosecondValue(object: Any)¶
+Bases: Value
+class duckdb.TimestampSecondValue(object: Any)¶
+Bases: Value
+class duckdb.TimestampTimeZoneValue(object: Any)¶
+Bases: Value
+class duckdb.TimestampValue(object: Any)¶
+Bases: Value
+class duckdb.TimeTimeZoneValue(object: Any)¶
+Bases: Value
+class duckdb.TimeValue(object: Any)¶
+Bases: Value
+duckdb.type(type_str: str, *, connection: _duckdb.DuckDBPyConnection | None = None) → _duckdb._sqltypes.DuckDBPyType¶
+Create a type object by parsing the ‘type_str’ string
+duckdb.union_type(members: object, *, connection: _duckdb.DuckDBPyConnection | None = None) → _duckdb._sqltypes.DuckDBPyType¶
+Create a union type object from ‘members’
+class duckdb.UnionType(object: Any, members: dict[str, DuckDBPyType])¶
+Bases: Value
+class duckdb.UnsignedBinaryValue(object: Any)¶
+Bases: Value
+class duckdb.UnsignedHugeIntegerValue(object: Any)¶
+Bases: Value
+class duckdb.UnsignedIntegerValue(object: Any)¶
+Bases: Value
+class duckdb.UnsignedLongValue(object: Any)¶
+Bases: Value
+class duckdb.UnsignedShortValue(object: Any)¶
+Bases: Value
+class duckdb.UUIDValue(object: Any)¶
+Bases: Value
+class duckdb.Value(object: Any, type: DuckDBPyType)¶
+Bases: object
+Enumerations¶
+class duckdb.CSVLineTerminator(*values)¶
+Bases: Enum
+class duckdb.ExpectedResultType(*values)¶
+Bases: Enum
+class duckdb.ExplainType(*values)¶
+Bases: Enum
+class duckdb.PythonExceptionHandling(*values)¶
+Bases: Enum
+class duckdb.RenderMode(*values)¶
+Bases: Enum
+class duckdb.StatementType(*values)¶
+Bases: Enum
+class duckdb.token_type(*values)¶
+Bases: Enum
+Exceptions¶
+class duckdb.BinderException¶
+Bases: ProgrammingError
+class duckdb.CatalogException¶
+Bases: ProgrammingError
+class duckdb.ConnectionException¶
+Bases: OperationalError
+class duckdb.ConstraintException¶
+Bases: IntegrityError
+class duckdb.ConversionException¶
+Bases: DataError
+class duckdb.DatabaseError¶
+Bases: Error
+class duckdb.DataError¶
+Bases: DatabaseError
+class duckdb.DependencyException¶
+Bases: DatabaseError
+class duckdb.Error¶
+Bases: Exception
+class duckdb.FatalException¶
+Bases: DatabaseError
+class duckdb.HTTPException¶
+Bases: IOException
+Thrown when an error occurs in the httpfs extension, or whilst downloading an extension.
+class duckdb.IntegrityError¶
+Bases: DatabaseError
+class duckdb.InternalError¶
+Bases: DatabaseError
+class duckdb.InternalException¶
+Bases: InternalError
+class duckdb.InterruptException¶
+Bases: DatabaseError
+class duckdb.InvalidInputException¶
+Bases: ProgrammingError
+class duckdb.InvalidTypeException¶
+Bases: ProgrammingError
+class duckdb.IOException¶
+Bases: OperationalError
+class duckdb.NotImplementedException¶
+Bases: NotSupportedError
+class duckdb.NotSupportedError¶
+Bases: DatabaseError
+class duckdb.OperationalError¶
+Bases: DatabaseError
+class duckdb.OutOfMemoryException¶
+Bases: OperationalError
+class duckdb.OutOfRangeException¶
+Bases: DataError
+class duckdb.ParserException¶
+Bases: ProgrammingError
+class duckdb.PermissionException¶
+Bases: DatabaseError
+class duckdb.ProgrammingError¶
+Bases: DatabaseError
+class duckdb.ResourceInUseException¶
+Bases: OperationalError
+class duckdb.SequenceException¶
+Bases: DatabaseError
+class duckdb.SerializationException¶
+Bases: OperationalError
+class duckdb.SyntaxException¶
+Bases: ProgrammingError
+class duckdb.TransactionException¶
+Bases: OperationalError
+class duckdb.TypeMismatchException¶
+Bases: DataError
+class duckdb.Warning¶
+Bases: Exception
+View Markdown
+Edit on GitHub
+Report an issue
+© 2026 DuckDB Foundation, Amsterdam NL
+DuckDB Home
+Code of Conduct
+Trademark Use
+Blog
+In this article
+Connection¶
+Relation¶
+Expressions¶
+Module Functions¶
+Types and Values¶
+Enumerations¶
+Exceptions¶

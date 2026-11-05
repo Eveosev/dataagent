@@ -1,0 +1,40 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_7a4f9c07",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "greater_than",
+    "state",
+    "focus_year",
+    "property",
+    "foreclosure_sale_scheduled",
+    "subject_to_ors_chapter_90",
+    "tenant",
+    "occupies_as_residential_tenant",
+    "borrower",
+    "not_borrower",
+    "not_close_family_of_borrower",
+    "arms_length_rental_agreement",
+    "rent_not_substantially_below_fmr_or_subsidized",
+    "rental_agreement_entered_before_foreclosure_sale",
+    "tenancy_type",
+    "new_owner_primary_residence_intent",
+    "statute_or_86_771_2021_requires_tenant_notice_in_sale_notice",
+    "bona_fide_tenant",
+    "required_notice_days_after_foreclosure_sale",
+    "usual_minimum_notice_days_oregon",
+    "foreclosure_tenant_notice_days",
+    "requires_longer_than_usual_notice",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    State: Oregon\n    Focus year: 2021\n\n    Question: For tenants residing in properties that go into foreclosure,\n    does the law require longer-than-usual notice?\n*/\n\n% -----------------------------\n% Basic helpers (no modules)\n% -----------------------------\n\ngreater_than(A, B) :- number(A), number(B), A > B.\n\n% -----------------------------\n% Scenario facts (question statement)\n% -----------------------------\n\nstate(oregon).\nfocus_year(2021).\n\n% A residential property goes into foreclosure (trust deed foreclosure sale context).\nproperty(p1).\nforeclosure_sale_scheduled(p1).\n\n% The property includes dwelling units subject to ORS chapter 90 (residential landlord-tenant).\nsubject_to_ors_chapter_90(p1).\n\n% Tenant resides/occupies the property.\ntenant(t1).\noccupies_as_residential_tenant(t1, p1).\n\n% To apply the tenant-protection language in ORS 86.771(10)'s mandated tenant notice,\n% the tenant must be a \"bona fide tenant\" (as described in the statutory notice text).\n% We encode it as facts satisfying those conditions.\nborrower(owner1).\nnot_borrower(t1).                % tenant is not the borrower/property owner\nnot_close_family_of_borrower(t1). % not child/spouse/parent of borrower\narms_length_rental_agreement(t1).\nrent_not_substantially_below_fmr_or_subsidized(t1).\nrental_agreement_entered_before_foreclosure_sale(t1).\n\n% Lease type (needed to determine 30 vs 60 days in the statute's tenant-protection notice).\n% The question is general; we instantiate a common covered case: a bona fide tenant with a fixed term lease.\ntenancy_type(t1, fixed_term).\n\n% Whether the post-foreclosure new owner wants to move in as primary residence (affects notice length).\n% In this scenario, assume no (so fixed-term tenant gets 60 days under the statute text).\nnew_owner_primary_residence_intent(p1, no).\n\n/* scenario_statement/0\n   Succeeds when the question scenario (as encoded) holds. */\nscenario_statement :-\n    state(oregon),\n    focus_year(2021),\n    property(p1),\n    foreclosure_sale_scheduled(p1),\n    subject_to_ors_chapter_90(p1),\n    tenant(t1),\n    occupies_as_residential_tenant(t1, p1).\n\n% -----------------------------\n% Statute translation (Oregon, 2021)\n% -----------------------------\n\n/* OR Rev Stat  86.771(10) (2021)\n   If the property includes one or more dwelling units subject to ORS chapter 90,\n   the notice of sale must include a notice addressed to occupants who are or might be residential tenants,\n   including information concerning the right to notice under ORS 86.782(6)(c).\n\n   We encode the operative condition that triggers tenant-protective notice content:\n   property subject to ORS ch 90 => required to provide tenant-facing notice in sale notice.\n*/\nstatute_or_86_771_2021_requires_tenant_notice_in_sale_notice(Property) :-\n    subject_to_ors_chapter_90(Property).\n\n/* The statute-mandated tenant notice text (embedded in  86.771(10)) states, in substance:\n   - After the foreclosure sale, the new owner must provide written termination notice.\n   - If bona fide tenant:\n       * fixed term lease => right to continue for 60 days from date given written termination notice; OR\n       * month-to-month or week-to-week => at least 30 days from date given written termination notice.\n   - If new owner wants to move in as primary residence => may require move-out after 30 days even with fixed term.\n   We encode these durations as deterministic rules for required minimum days after termination notice.\n*/\n\n% bona_fide_tenant/1 encoded from the statutory notice text definition\nbona_fide_tenant(Tenant) :-\n    tenant(Tenant),\n    not_borrower(Tenant),\n    not_close_family_of_borrower(Tenant),\n    arms_length_rental_agreement(Tenant),\n    rent_not_substantially_below_fmr_or_subsidized(Tenant),\n    rental_agreement_entered_before_foreclosure_sale(Tenant).\n\n/* required_notice_days_after_foreclosure_sale/3\n   required_notice_days_after_foreclosure_sale(Tenant, Property, Days)\n   captures the minimum time the tenant may remain AFTER receiving the new owner's written termination notice,\n   per the tenant-protection text required by ORS 86.771(10) (referencing ORS 86.782(6)(c)). */\nrequired_notice_days_after_foreclosure_sale(Tenant, Property, 30) :-\n    bona_fide_tenant(Tenant),\n    occupies_as_residential_tenant(Tenant, Property),\n    new_owner_primary_residence_intent(Property, yes),\n    !.\nrequired_notice_days_after_foreclosure_sale(Tenant, Property, 60) :-\n    bona_fide_tenant(Tenant),\n    occupies_as_residential_tenant(Tenant, Property),\n    new_owner_primary_residence_intent(Property, no),\n    tenancy_type(Tenant, fixed_term),\n    !.\nrequired_notice_days_after_foreclosure_sale(Tenant, Property, 30) :-\n    bona_fide_tenant(Tenant),\n    occupies_as_residential_tenant(Tenant, Property),\n    tenancy_type(Tenant, month_to_month),\n    !.\nrequired_notice_days_after_foreclosure_sale(Tenant, Property, 30) :-\n    bona_fide_tenant(Tenant),\n    occupies_as_residential_tenant(Tenant, Property),\n    tenancy_type(Tenant, week_to_week),\n    !.\n\n% -----------------------------\n% \"Usual\" notice baseline (for comparison)\n% -----------------------------\n\n/* For purposes of the question (\"longer-than-usual notice\"), we use a baseline\n   \"usual\" minimum termination notice of 30 days for ordinary periodic tenancies.\n   This baseline is used only for the comparative question, not to restate ORS ch 90 fully. */\nusual_minimum_notice_days_oregon(30).\n\n% -----------------------------\n% Reasoning: does foreclosure require longer-than-usual notice?\n% -----------------------------\n\nforeclosure_tenant_notice_days(Property, Tenant, Days) :-\n    foreclosure_sale_scheduled(Property),\n    occupies_as_residential_tenant(Tenant, Property),\n    statute_or_86_771_2021_requires_tenant_notice_in_sale_notice(Property),\n    required_notice_days_after_foreclosure_sale(Tenant, Property, Days).\n\nrequires_longer_than_usual_notice(Property, Tenant) :-\n    foreclosure_tenant_notice_days(Property, Tenant, Days),\n    usual_minimum_notice_days_oregon(Usual),\n    greater_than(Days, Usual).\n\n% -----------------------------\n% Output predicate\n% -----------------------------\n\nhousing_answer(yes) :-\n    scenario_statement,\n    requires_longer_than_usual_notice(p1, t1),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n% -----------------------------\n% Main entrypoint (required)\n% -----------------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-4321",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "For tenants residing in properties that go into foreclosure, does the law require longer-than-usual notice?"
+  }
+}

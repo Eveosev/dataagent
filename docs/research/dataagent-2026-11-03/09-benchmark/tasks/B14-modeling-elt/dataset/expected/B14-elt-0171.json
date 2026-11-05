@@ -1,0 +1,118 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "redshift",
+  "pipeline": "retails",
+  "data_model": {
+    "models": [
+      {
+        "name": "nations",
+        "description": "Each record represents a nation.",
+        "columns": [
+          {
+            "name": "n_nationkey",
+            "description": "Unique identifier for the nation."
+          },
+          {
+            "name": "n_name",
+            "description": "The name of the nation."
+          },
+          {
+            "name": "n_regionkey",
+            "description": "The region key of the nation."
+          },
+          {
+            "name": "num_suppliers_in_debt",
+            "description": "The number of suppliers whose accounts are in debt in the nation, replace NULL values with 0."
+          },
+          {
+            "name": "num_customers",
+            "description": "The number of customers come from the nation, replace NULL values with 0."
+          },
+          {
+            "name": "balance_larger_thant_avg_balance",
+            "description": "Set to 1 if the average account balance of the customers in the nation is larger than the average account balance across all customers, otherwise, set to 0"
+          },
+          {
+            "name": "total_price_of_all_orders",
+            "description": "The total price of all orders from the nation, replace NULL values with 0."
+          },
+          {
+            "name": "per_indebted_suppliers",
+            "description": "The percentage of suppliers whose accounts are in debt in the nation"
+          }
+        ]
+      },
+      {
+        "name": "customers",
+        "description": "Each record represents a customer.",
+        "columns": [
+          {
+            "name": "c_custkey",
+            "description": "Unique identifier for the customer."
+          },
+          {
+            "name": "c_nationkey",
+            "description": "The nation key of the customer."
+          },
+          {
+            "name": "c_name",
+            "description": "The name of the customer."
+          },
+          {
+            "name": "num_orders",
+            "description": "The number of orders the customer has made, replace NULL values with 0."
+          },
+          {
+            "name": "average_total_price_per_order",
+            "description": "The average total price per order the customer has made."
+          },
+          {
+            "name": "has_above_average_account_balance",
+            "description": "Set to 1 if the account balance of the customer is above the average account balance of all customers, otherwise, set to 0"
+          },
+          {
+            "name": "order_date_highest_total_price",
+            "description": "The order date with the highest total price the customer has made, with ties broken by the ascending order of the order date."
+          },
+          {
+            "name": "balance_lower_than_4000_and_in_US",
+            "description": "Set to 1 if the account balance of the customer is lower than 4000 and the customer is from the US, otherwise, set to 0"
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    redshift_definition_id: f7a7d195-377f-cf5b-70a5-be6b819019dc\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://retails-bucket/region.csv\n    sync_mode: full_refresh_append\n    table: region\n  - path: s3://retails-bucket/supplier.parquet\n    sync_mode: full_refresh_append\n    table: supplier\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - part\nflat_files:\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=1bpJheSVxnPfDbWzWtGSgK8y6eQL81PPl\n  sync_mode: full_refresh_append\n  table: nation\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: retails\n    sync_mode: full_refresh_append\n    tables:\n    - customer\n    - partsupp\npostgres:\n  config:\n    database: retails\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - lineitem\n    - orders\n    user: postgres\nredshift:\n  config:\n    host: <redshift_hostname>\n    port: <redshift_port>\n    database: <redshift_db>\n    username: <redshift_username>\n    password: <redshift_pwd>\n    schema: retails\n    s3_bucket_name: <redshift_s3_bucket>\n    s3_bucket_region: <redshift_s3_region>\n    access_key_id: <redshift_s3_access_key>\n    secret_access_key: <redshift_s3_secret_key>\n",
+  "case_id": "B14-elt-0171",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "nations",
+        "columns": [
+          "n_nationkey",
+          "n_name",
+          "n_regionkey",
+          "num_suppliers_in_debt",
+          "num_customers",
+          "balance_larger_thant_avg_balance",
+          "total_price_of_all_orders",
+          "per_indebted_suppliers"
+        ]
+      },
+      {
+        "name": "customers",
+        "columns": [
+          "c_custkey",
+          "c_nationkey",
+          "c_name",
+          "num_orders",
+          "average_total_price_per_order",
+          "has_above_average_account_balance",
+          "order_date_highest_total_price",
+          "balance_lower_than_4000_and_in_US"
+        ]
+      }
+    ]
+  }
+}

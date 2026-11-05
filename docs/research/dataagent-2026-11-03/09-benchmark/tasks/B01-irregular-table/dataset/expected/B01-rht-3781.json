@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 2145,
+  "table": "religion-table03",
+  "structure": "ColumnHeaderMerge",
+  "question_type": "Data Analysis",
+  "sub_type": "Anomaly Analysis",
+  "answer": "1 anomaly detected: Negative standard error (-15) for women's median weekly earnings in the '45 to 48 hours' category.",
+  "cot": [
+    {
+      "planning": "First, we need to examine the median weekly earnings data for women across different hours of work to identify any unusual patterns or outliers."
+    },
+    {
+      "planning": "We need to review the standard errors of the median earnings for women to check for any unusually high values that might indicate data reliability issues."
+    },
+    {
+      "planning": "We also need to compare the earnings data for women with the corresponding data for men to check for any significant discrepancies or inconsistencies."
+    }
+  ],
+  "case_id": "B01-rht-3781",
+  "expected": {
+    "kind": "answer",
+    "question": "Are there any anomalies in the earnings data for women? (Final answer should describe the anomaly and its characteristics.)",
+    "answer": "1 anomaly detected: Negative standard error (-15) for women's median weekly earnings in the '45 to 48 hours' category."
+  }
+}

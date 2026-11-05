@@ -1,0 +1,53 @@
+{
+  "case_id": "B03-eb-0235",
+  "task_id": "B03",
+  "split_role": "regression",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://extractbench/docs/short/sched_i__idaho_humanities_council_inc_ty2023.pdf",
+      "digest": null
+    },
+    {
+      "kind": "schema",
+      "ref": "fixtures/eb-short-sched_i__idaho_humanities_council_inc_ty2023-schema.json",
+      "digest": null
+    },
+    {
+      "kind": "rules",
+      "ref": "fixtures/eb-short-sched_i__idaho_humanities_council_inc_ty2023-rules.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-eb-0235.json"
+  },
+  "evidence": [
+    "bench://extractbench/docs/short/sched_i__idaho_humanities_council_inc_ty2023.pdf",
+    "fixtures/eb-short-sched_i__idaho_humanities_council_inc_ty2023-schema.json",
+    "fixtures/eb-short-sched_i__idaho_humanities_council_inc_ty2023-rules.md"
+  ],
+  "tags": [
+    "extractbench",
+    "short",
+    "tag:source:real",
+    "tag:challenge:T1.e",
+    "tag:challenge:T1.a",
+    "tag:structure:S5",
+    "tag:delivery:G1",
+    "tag:length:short",
+    "tag:domain:D1",
+    "fields:21"
+  ],
+  "source": "eb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

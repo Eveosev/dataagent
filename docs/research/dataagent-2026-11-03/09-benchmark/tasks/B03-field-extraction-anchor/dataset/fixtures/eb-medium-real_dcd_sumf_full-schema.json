@@ -1,0 +1,50 @@
+{
+  "type": "object",
+  "title": "Real-content legal facts extraction schema",
+  "description": "Extract the caption fields and every numbered paragraph from a statement of undisputed material facts. Paragraphs are numbered sequentially and may span page breaks; section headings are not facts.",
+  "required": [
+    "court",
+    "title",
+    "facts"
+  ],
+  "properties": {
+    "court": {
+      "type": "string",
+      "description": "Court name from the caption."
+    },
+    "case_number": {
+      "type": "string",
+      "description": "Civil action number from the caption."
+    },
+    "title": {
+      "type": "string",
+      "description": "Document title."
+    },
+    "facts": {
+      "type": "array",
+      "description": "Every numbered fact paragraph in order.",
+      "items": {
+        "type": "object",
+        "required": [
+          "fact_number",
+          "text",
+          "source_page"
+        ],
+        "properties": {
+          "fact_number": {
+            "type": "integer",
+            "description": "Paragraph number."
+          },
+          "text": {
+            "type": "string",
+            "description": "Full paragraph text without the leading number."
+          },
+          "source_page": {
+            "type": "integer",
+            "description": "1-indexed page where the paragraph starts."
+          }
+        }
+      }
+    }
+  }
+}

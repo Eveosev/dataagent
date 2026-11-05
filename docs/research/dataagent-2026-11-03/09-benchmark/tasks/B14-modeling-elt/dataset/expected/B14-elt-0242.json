@@ -1,0 +1,67 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "snowflake",
+  "pipeline": "language_corpus",
+  "data_model": {
+    "models": [
+      {
+        "name": "language_corpus__words",
+        "description": "Each record represents a word",
+        "columns": [
+          {
+            "name": "word_id",
+            "description": "The unique identifier of the word"
+          },
+          {
+            "name": "word",
+            "description": "The word"
+          },
+          {
+            "name": "occurrences",
+            "description": "The number of occurrences of the word"
+          },
+          {
+            "name": "num_biword",
+            "description": "The number of biwords that contain the word, replace NULL values with 0."
+          },
+          {
+            "name": "percentage_occurrence_Art_higher_Astronomia",
+            "description": "The percentage difference in the word’s occurrence rate on the page titled “Art” relative to \"Astronomia\", calculated as (occurrences in Art - occurrences in Astronomia) / occurrences in Astronomia * 100. Leave NULL if the word does not appear on the page titled \"Art\" or \"Astronomia\"."
+          },
+          {
+            "name": "same_word_appears_in_a_pair",
+            "description": "set to 1 if the word appears more than once in a pair, otherwise, set to 0. Appears in a pair refers to w1st is the same as w2nd in the biword table."
+          },
+          {
+            "name": "repetition_more_than_16000",
+            "description": "set to 1 if the word appears more than 16000 times, otherwise, set to 0"
+          },
+          {
+            "name": "avg_occurrence_per_page",
+            "description": "the average occurrence of the word on each Wikipedia page that has this word. Replace NULL values with 0."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    snowflake_definition_id: 424892c4-daac-4491-b35d-c6688ba547ba\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://language-corpus-bucket/words.csv\n    sync_mode: full_refresh_append\n    table: words\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - langs_words\nflat_files:\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=1dacx5CmvKq647mNCG8h3xVCt6fx8Te-2\n  sync_mode: full_refresh_append\n  table: langs\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: language_corpus\n    sync_mode: full_refresh_append\n    tables:\n    - pages\npostgres:\n  config:\n    database: language_corpus\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - biwords\n    - pages_words\n    user: postgres\nsnowflake:\n  config:\n    database: language_corpus\n    password: Snowflake@123\n    role: AIRBYTE_ROLE\n    schema: AIRBYTE_SCHEMA\n    username: AIRBYTE_USER\n    warehouse: AIRBYTE_WAREHOUSE\n",
+  "case_id": "B14-elt-0242",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "language_corpus__words",
+        "columns": [
+          "word_id",
+          "word",
+          "occurrences",
+          "num_biword",
+          "percentage_occurrence_Art_higher_Astronomia",
+          "same_word_appears_in_a_pair",
+          "repetition_more_than_16000",
+          "avg_occurrence_per_page"
+        ]
+      }
+    ]
+  }
+}

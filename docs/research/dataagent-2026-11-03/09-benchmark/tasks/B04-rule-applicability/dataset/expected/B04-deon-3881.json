@@ -1,0 +1,37 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_b801be1d",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_question",
+    "statute_6_316_judgment_requires_restitution",
+    "statute_6_316_judgment_declares_forfeiture_if_unlawful_detainer_ground",
+    "statute_6_316_stay_of_execution_applies",
+    "number",
+    "statute_6_316_stay_period_days",
+    "statute_6_316_time_to_remove_belongings_hours",
+    "statute_6_316_time_to_remove_belongings_days",
+    "statute_6_316_writ_delivery_allowed_by",
+    "statute_55_2003_landlord_role",
+    "statute_55_2003_landlord_includes_agents",
+    "statute_55_2003_manager_includes_company",
+    "statute_55_2704_landlord_role",
+    "statute_55_2704_landlord_includes_agents",
+    "eviction_law_statute",
+    "statute_explicitly_regulates_corporate_landlords",
+    "eviction_law_explicitly_regulates_corporate_landlords",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    State: Idaho\n    Focus year: 2021\n    Question: Does state/territory eviction law explicitly regulate corporate landlords?\n*/\n\n/* =========================\n   Scenario facts (question)\n   ========================= */\n\nscenario_state(idaho).\nscenario_focus_year(2021).\nscenario_question(does_eviction_law_explicitly_regulate_corporate_landlords).\n\n/* The \"statement\" being evaluated: we are examining Idaho eviction law in 2021. */\nscenario_statement :-\n    scenario_state(idaho),\n    scenario_focus_year(2021),\n    scenario_question(does_eviction_law_explicitly_regulate_corporate_landlords).\n\n/* =========================\n   Statute encodings\n   ========================= */\n\n/* ---------------------------------------------------------\n   ID Code  6-316 (2021) - Judgment / restitution timelines\n   --------------------------------------------------------- */\n\n/*  6-316(1): If verdict/finding favors plaintiff -> restitution of premises. */\nstatute_6_316_judgment_requires_restitution(plaintiff_wins) :- !.\n\n/*  6-316(1): If proceeding is unlawful detainer after certain grounds -> forfeiture declared. */\nstatute_6_316_judgment_declares_forfeiture_if_unlawful_detainer_ground(default_in_payment_of_rent) :- !.\nstatute_6_316_judgment_declares_forfeiture_if_unlawful_detainer_ground(neglect_or_failure_to_perform_lease_covenants) :- !.\nstatute_6_316_judgment_declares_forfeiture_if_unlawful_detainer_ground(controlled_substance_activity_reasonable_grounds) :- !.\n\n/*  6-316(1): For certain >5 acre rent-default cases, execution delayed 5 days and tenant may cure by paying. */\nstatute_6_316_stay_of_execution_applies(land_acres(Acres), proceeding_unlawful_detainer_after_default_in_rent, lease_not_expired_by_terms) :-\n    number(Acres),\n    Acres > 5,\n    !.\n\nstatute_6_316_stay_period_days(5) :- !.\n\n/*  6-316(2): Time to remove belongings depends on tenant type / acreage. */\nstatute_6_316_time_to_remove_belongings_hours(residential_tenant, 72) :- !.\nstatute_6_316_time_to_remove_belongings_days(commercial_tenant, 7) :- !.\nstatute_6_316_time_to_remove_belongings_days(tenant_with_tract_5_acres_or_more, 7) :- !.\n\n/*  6-316(2): Landlord or his agents may deliver writ / request sheriff deliver writ. */\nstatute_6_316_writ_delivery_allowed_by(landlord) :- !.\nstatute_6_316_writ_delivery_allowed_by(landlord_agent) :- !.\n\n/* NOTE:  6-316 uses \"landlord\" and \"agents\" but does not explicitly mention corporations/companies\n   as landlords, nor create special rules for corporate landlords specifically. */\n\n/* ---------------------------------------------------------\n   ID Code  55-2003 (2021) - Definitions (manufactured home communities)\n   --------------------------------------------------------- */\n\n/*  55-2003(6): \"Landlord\" means owner/lessor/sublessor/operator, includes agents. */\nstatute_55_2003_landlord_role(owner) :- !.\nstatute_55_2003_landlord_role(lessor) :- !.\nstatute_55_2003_landlord_role(sublessor) :- !.\nstatute_55_2003_landlord_role(operator) :- !.\nstatute_55_2003_landlord_includes_agents(true) :- !.\n\n/*  55-2003(8): \"Manager\" includes any company chosen by the landlord to administer/supervise. */\nstatute_55_2003_manager_includes_company(true) :- !.\n\n/* ---------------------------------------------------------\n   ID Code  55-2704 (2021) - Definitions (floating home moorage)\n   --------------------------------------------------------- */\n\n/*  55-2704(3): \"Landlord\" means owner of floating home marina and includes agent. */\nstatute_55_2704_landlord_role(owner_of_floating_home_marina) :- !.\nstatute_55_2704_landlord_includes_agents(true) :- !.\n\n/* =========================\n   Domain model / reasoning\n   ========================= */\n\n/* Identify which provided statute(s) are eviction-law rules for this question.\n   (Here,  6-316 is the explicit eviction/unlawful detainer judgment/restitution statute.) */\neviction_law_statute(id_code_6_316_2021) :- !.\n\n/* Determine whether an eviction-law statute explicitly regulates corporate landlords.\n\n   Interpretation encoded:\n   - \"Explicitly regulate corporate landlords\" requires the eviction-law statute itself\n     to mention corporate/organizational forms (e.g., corporation, company, LLC) as landlords\n     or create rules specifically triggered by a landlord being a corporation/company.\n\n   The encoded  6-316 rules do not mention corporation/company/LLC, and do not distinguish\n   corporate vs. individual landlords.\n\n   (Definitions in other chapters mentioning \"company\" for \"manager\" are not an eviction-law\n    rule and also do not define \"landlord\" as a company.)\n*/\nstatute_explicitly_regulates_corporate_landlords(id_code_6_316_2021) :-\n    % If we had an explicit corporate trigger, it would be encoded here.\n    % For 2021 Idaho  6-316 as provided, there is none.\n    fail.\n\n/* Global query: does Idaho eviction law (as encoded here) explicitly regulate corporate landlords? */\neviction_law_explicitly_regulates_corporate_landlords(State, Year) :-\n    State = idaho,\n    Year = 2021,\n    eviction_law_statute(StatuteId),\n    statute_explicitly_regulates_corporate_landlords(StatuteId),\n    !.\n\n/* =========================\n   Answer\n   ========================= */\n\nhousing_answer(yes) :-\n    scenario_statement,\n    eviction_law_explicitly_regulates_corporate_landlords(idaho, 2021),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    \\+ eviction_law_explicitly_regulates_corporate_landlords(idaho, 2021),\n    !.\n\n/* =========================\n   Main entrypoint\n   ========================= */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-3881",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Does state/territory eviction law explicitly regulate corporate landlords?"
+  }
+}

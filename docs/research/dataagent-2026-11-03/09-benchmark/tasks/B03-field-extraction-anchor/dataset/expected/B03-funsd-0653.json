@@ -1,0 +1,576 @@
+{
+  "source": "nielsr/funsd",
+  "split": "test",
+  "id": "49",
+  "entities": [
+    {
+      "label": "QUESTION",
+      "text": "TO:",
+      "box": [
+        131,
+        196,
+        151,
+        206
+      ]
+    },
+    {
+      "label": "QUESTION",
+      "text": "ATTN:",
+      "box": [
+        206,
+        242,
+        244,
+        253
+      ]
+    },
+    {
+      "label": "QUESTION",
+      "text": "DATE:",
+      "box": [
+        657,
+        191,
+        693,
+        202
+      ]
+    },
+    {
+      "label": "QUESTION",
+      "text": "ADVERTISER:",
+      "box": [
+        615,
+        223,
+        693,
+        234
+      ]
+    },
+    {
+      "label": "QUESTION",
+      "text": "PRODUCT:",
+      "box": [
+        629,
+        256,
+        692,
+        267
+      ]
+    },
+    {
+      "label": "ANSWER",
+      "text": "LORILLARD",
+      "box": [
+        710,
+        223,
+        782,
+        233
+      ]
+    },
+    {
+      "label": "ANSWER",
+      "text": "NEWPORT",
+      "box": [
+        713,
+        256,
+        775,
+        267
+      ]
+    },
+    {
+      "label": "QUESTION",
+      "text": "AD#:",
+      "box": [
+        127,
+        376,
+        159,
+        387
+      ]
+    },
+    {
+      "label": "QUESTION",
+      "text": "CAPTION:",
+      "box": [
+        303,
+        374,
+        360,
+        385
+      ]
+    },
+    {
+      "label": "QUESTION",
+      "text": "SPACE:",
+      "box": [
+        500,
+        373,
+        545,
+        384
+      ]
+    },
+    {
+      "label": "QUESTION",
+      "text": "DATE:",
+      "box": [
+        694,
+        373,
+        732,
+        384
+      ]
+    },
+    {
+      "label": "ANSWER",
+      "text": "P5CE",
+      "box": [
+        500,
+        404,
+        533,
+        415
+      ]
+    },
+    {
+      "label": "QUESTION",
+      "text": "PO",
+      "box": [
+        129,
+        453,
+        148,
+        463
+      ]
+    },
+    {
+      "label": "ANSWER",
+      "text": "#77219",
+      "box": [
+        152,
+        453,
+        190,
+        463
+      ]
+    },
+    {
+      "label": "QUESTION",
+      "text": "ATTN:",
+      "box": [
+        592,
+        827,
+        629,
+        837
+      ]
+    },
+    {
+      "label": "HEADER",
+      "text": "LORILLARD MEDIA SERVICES ONE PARK AVENUE, NEW YORK, NY 10016- 5896 MAGAZINE INSERTION ORDER",
+      "box": [
+        275,
+        81,
+        736,
+        143
+      ]
+    },
+    {
+      "label": "ANSWER",
+      "text": "ESSENCE 1500 BROADWAY NEW YORK, NY 10036",
+      "box": [
+        206,
+        196,
+        343,
+        236
+      ]
+    },
+    {
+      "label": "ANSWER",
+      "text": "JOYCE WINSTON",
+      "box": [
+        253,
+        242,
+        362,
+        252
+      ]
+    },
+    {
+      "label": "ANSWER",
+      "text": "MARCH 17, 1995",
+      "box": [
+        713,
+        193,
+        816,
+        201
+      ]
+    },
+    {
+      "label": "ANSWER",
+      "text": "NPT- 533- 7",
+      "box": [
+        129,
+        405,
+        205,
+        418
+      ]
+    },
+    {
+      "label": "ANSWER",
+      "text": "FOUNTAIN COUPLE",
+      "box": [
+        303,
+        402,
+        429,
+        417
+      ]
+    },
+    {
+      "label": "ANSWER",
+      "text": "JUNE 1995",
+      "box": [
+        696,
+        404,
+        763,
+        415
+      ]
+    },
+    {
+      "label": "QUESTION",
+      "text": "POSITION URGENTLY REQUESTED:",
+      "box": [
+        127,
+        518,
+        330,
+        529
+      ]
+    },
+    {
+      "label": "QUESTION",
+      "text": "COPY INSTRUCTIONS:",
+      "box": [
+        127,
+        613,
+        257,
+        624
+      ]
+    },
+    {
+      "label": "QUESTION",
+      "text": "SURGEON GENERALS WARNING",
+      "box": [
+        611,
+        619,
+        766,
+        631
+      ]
+    },
+    {
+      "label": "QUESTION",
+      "text": "IMPORTANT INSTRUCTIONS:",
+      "box": [
+        127,
+        676,
+        291,
+        687
+      ]
+    },
+    {
+      "label": "QUESTION",
+      "text": "SPACE BILLING INSTRUCTIONS:",
+      "box": [
+        594,
+        672,
+        781,
+        685
+      ]
+    },
+    {
+      "label": "QUESTION",
+      "text": "The space is being brdered by:",
+      "box": [
+        592,
+        701,
+        767,
+        714
+      ]
+    }
+  ],
+  "case_id": "B03-funsd-0653",
+  "expected": {
+    "kind": "entities",
+    "entities": [
+      {
+        "label": "QUESTION",
+        "text": "TO:",
+        "box": [
+          131,
+          196,
+          151,
+          206
+        ]
+      },
+      {
+        "label": "QUESTION",
+        "text": "ATTN:",
+        "box": [
+          206,
+          242,
+          244,
+          253
+        ]
+      },
+      {
+        "label": "QUESTION",
+        "text": "DATE:",
+        "box": [
+          657,
+          191,
+          693,
+          202
+        ]
+      },
+      {
+        "label": "QUESTION",
+        "text": "ADVERTISER:",
+        "box": [
+          615,
+          223,
+          693,
+          234
+        ]
+      },
+      {
+        "label": "QUESTION",
+        "text": "PRODUCT:",
+        "box": [
+          629,
+          256,
+          692,
+          267
+        ]
+      },
+      {
+        "label": "ANSWER",
+        "text": "LORILLARD",
+        "box": [
+          710,
+          223,
+          782,
+          233
+        ]
+      },
+      {
+        "label": "ANSWER",
+        "text": "NEWPORT",
+        "box": [
+          713,
+          256,
+          775,
+          267
+        ]
+      },
+      {
+        "label": "QUESTION",
+        "text": "AD#:",
+        "box": [
+          127,
+          376,
+          159,
+          387
+        ]
+      },
+      {
+        "label": "QUESTION",
+        "text": "CAPTION:",
+        "box": [
+          303,
+          374,
+          360,
+          385
+        ]
+      },
+      {
+        "label": "QUESTION",
+        "text": "SPACE:",
+        "box": [
+          500,
+          373,
+          545,
+          384
+        ]
+      },
+      {
+        "label": "QUESTION",
+        "text": "DATE:",
+        "box": [
+          694,
+          373,
+          732,
+          384
+        ]
+      },
+      {
+        "label": "ANSWER",
+        "text": "P5CE",
+        "box": [
+          500,
+          404,
+          533,
+          415
+        ]
+      },
+      {
+        "label": "QUESTION",
+        "text": "PO",
+        "box": [
+          129,
+          453,
+          148,
+          463
+        ]
+      },
+      {
+        "label": "ANSWER",
+        "text": "#77219",
+        "box": [
+          152,
+          453,
+          190,
+          463
+        ]
+      },
+      {
+        "label": "QUESTION",
+        "text": "ATTN:",
+        "box": [
+          592,
+          827,
+          629,
+          837
+        ]
+      },
+      {
+        "label": "HEADER",
+        "text": "LORILLARD MEDIA SERVICES ONE PARK AVENUE, NEW YORK, NY 10016- 5896 MAGAZINE INSERTION ORDER",
+        "box": [
+          275,
+          81,
+          736,
+          143
+        ]
+      },
+      {
+        "label": "ANSWER",
+        "text": "ESSENCE 1500 BROADWAY NEW YORK, NY 10036",
+        "box": [
+          206,
+          196,
+          343,
+          236
+        ]
+      },
+      {
+        "label": "ANSWER",
+        "text": "JOYCE WINSTON",
+        "box": [
+          253,
+          242,
+          362,
+          252
+        ]
+      },
+      {
+        "label": "ANSWER",
+        "text": "MARCH 17, 1995",
+        "box": [
+          713,
+          193,
+          816,
+          201
+        ]
+      },
+      {
+        "label": "ANSWER",
+        "text": "NPT- 533- 7",
+        "box": [
+          129,
+          405,
+          205,
+          418
+        ]
+      },
+      {
+        "label": "ANSWER",
+        "text": "FOUNTAIN COUPLE",
+        "box": [
+          303,
+          402,
+          429,
+          417
+        ]
+      },
+      {
+        "label": "ANSWER",
+        "text": "JUNE 1995",
+        "box": [
+          696,
+          404,
+          763,
+          415
+        ]
+      },
+      {
+        "label": "QUESTION",
+        "text": "POSITION URGENTLY REQUESTED:",
+        "box": [
+          127,
+          518,
+          330,
+          529
+        ]
+      },
+      {
+        "label": "QUESTION",
+        "text": "COPY INSTRUCTIONS:",
+        "box": [
+          127,
+          613,
+          257,
+          624
+        ]
+      },
+      {
+        "label": "QUESTION",
+        "text": "SURGEON GENERALS WARNING",
+        "box": [
+          611,
+          619,
+          766,
+          631
+        ]
+      },
+      {
+        "label": "QUESTION",
+        "text": "IMPORTANT INSTRUCTIONS:",
+        "box": [
+          127,
+          676,
+          291,
+          687
+        ]
+      },
+      {
+        "label": "QUESTION",
+        "text": "SPACE BILLING INSTRUCTIONS:",
+        "box": [
+          594,
+          672,
+          781,
+          685
+        ]
+      },
+      {
+        "label": "QUESTION",
+        "text": "The space is being brdered by:",
+        "box": [
+          592,
+          701,
+          767,
+          714
+        ]
+      }
+    ],
+    "answer_count": 10,
+    "anchored_fields": 10,
+    "no_anchor_fields": 0
+  }
+}

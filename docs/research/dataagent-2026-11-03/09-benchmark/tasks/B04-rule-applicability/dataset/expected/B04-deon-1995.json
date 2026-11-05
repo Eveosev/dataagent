@@ -1,0 +1,33 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_68e48abb",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_landlord",
+    "scenario_tenant",
+    "scenario_dwelling",
+    "scenario_action",
+    "scenario_because_of",
+    "statute_wy_1_21_1302_def",
+    "statute_wy_1_21_1303c_prohibits_termination_based_solely_on_victim_status",
+    "statute_wy_40_26_103_protected_class",
+    "statute_wy_40_26_103a_action_makes_unavailable",
+    "statute_wy_40_26_103a_unlawful_make_unavailable_because_of",
+    "because_of",
+    "statute_wy_1_21_1303c_unlawful_termination_based_solely_on_victim_status",
+    "solely_because_of",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: Wyoming\n    Focus year: 2021\n\n    Question: Is it unlawful to evict a tenant because of their gender identity?\n\n    This program encodes ONLY the provided statutes:\n      - WY Stat  1-21-1302 (2021) (definitions, limited relevance here)\n      - WY Stat  1-21-1303 (2021) (victim-status termination prohibition)\n      - WY Stat  40-26-103 (2021) (fair housing protected classes: race, color, religion, sex, disability, familial status, national origin)\n*/\n\n% -------------------------\n% Scenario facts (question)\n% -------------------------\n\nscenario_state(wyoming).\nscenario_focus_year(2021).\n\n% Parties and dwelling in the scenario.\nscenario_landlord(landlord1).\nscenario_tenant(tenant1).\nscenario_dwelling(dwelling1).\n\n% The landlord evicts the tenant from the dwelling.\nscenario_action(evict, landlord1, tenant1, dwelling1).\n\n% The eviction is because of the tenant's gender identity.\nscenario_because_of(evict, tenant1, gender_identity).\n\n% Helper predicate: succeeds when the scenario as stated is satisfied.\nscenario_statement :-\n    scenario_state(wyoming),\n    scenario_focus_year(2021),\n    scenario_landlord(L),\n    scenario_tenant(T),\n    scenario_dwelling(D),\n    scenario_action(evict, L, T, D),\n    scenario_because_of(evict, T, gender_identity).\n\n% -----------------------------------------\n% Statute translations (deterministic core)\n% -----------------------------------------\n\n/* WY Stat  1-21-1302 (2021) - Definitions (minimal encoding)\n   We encode definitional categories used by  1-21-1303.\n*/\nstatute_wy_1_21_1302_def(domestic_abuse).\nstatute_wy_1_21_1302_def(sexual_violence).\nstatute_wy_1_21_1302_def(landlord).\nstatute_wy_1_21_1302_def(tenant).\n\n/* WY Stat  1-21-1303(c) (2021)\n   \"A landlord may not terminate a tenancy based solely on the tenant's (or household member's)\n    status as a victim of domestic abuse or sexual violence.\"\n*/\nstatute_wy_1_21_1303c_prohibits_termination_based_solely_on_victim_status(domestic_abuse).\nstatute_wy_1_21_1303c_prohibits_termination_based_solely_on_victim_status(sexual_violence).\n\n/* WY Stat  40-26-103 (2021)\n   Protected classes enumerated in the statute.\n*/\nstatute_wy_40_26_103_protected_class(race).\nstatute_wy_40_26_103_protected_class(color).\nstatute_wy_40_26_103_protected_class(religion).\nstatute_wy_40_26_103_protected_class(sex).\nstatute_wy_40_26_103_protected_class(disability).\nstatute_wy_40_26_103_protected_class(familial_status).\nstatute_wy_40_26_103_protected_class(national_origin).\n\n/* WY Stat  40-26-103(a) (2021)\n   A person may not \"in any other manner make unavailable or deny a dwelling\" because of a protected class.\n\n   We treat eviction/termination as making the dwelling unavailable to the tenant.\n*/\nstatute_wy_40_26_103a_action_makes_unavailable(evict).\nstatute_wy_40_26_103a_action_makes_unavailable(terminate_tenancy).\n\n/* WY Stat  40-26-103(a) (2021)\n   Unlawful if: action makes unavailable/denies + because of protected class.\n*/\nstatute_wy_40_26_103a_unlawful_make_unavailable_because_of(Action, Person, ProtectedClass) :-\n    statute_wy_40_26_103a_action_makes_unavailable(Action),\n    statute_wy_40_26_103_protected_class(ProtectedClass),\n    because_of(Action, Person, ProtectedClass).\n\n/* WY Stat  1-21-1303(c) (2021)\n   Unlawful if: termination/eviction based solely on victim status (domestic abuse or sexual violence).\n   We model \"based solely on\" by requiring a single stated reason.\n*/\nstatute_wy_1_21_1303c_unlawful_termination_based_solely_on_victim_status(Action, Person, Status) :-\n    ( Action = evict ; Action = terminate_tenancy ),\n    statute_wy_1_21_1303c_prohibits_termination_based_solely_on_victim_status(Status),\n    solely_because_of(Action, Person, Status).\n\n% -------------------------\n% Generic reasoning helpers\n% -------------------------\n\n% In this self-contained program, \"because_of/3\" is derived from the scenario facts.\nbecause_of(Action, Person, Trait) :-\n    scenario_because_of(Action, Person, Trait).\n\n% \"Solely because of\" means that the program has exactly one reason recorded for that action/person.\nsolely_because_of(Action, Person, Trait) :-\n    because_of(Action, Person, Trait),\n    \\+ (because_of(Action, Person, OtherTrait), OtherTrait \\= Trait).\n\n% -------------------------\n% Unlawful eviction analysis\n% -------------------------\n\n% Unlawful eviction if it violates either provided statutory prohibition.\nunlawful_eviction_under_provided_statutes :-\n    scenario_statement,\n    scenario_action(Action, _L, T, _D),\n    (\n        statute_wy_40_26_103a_unlawful_make_unavailable_because_of(Action, T, _ProtectedClass)\n    ;\n        statute_wy_1_21_1303c_unlawful_termination_based_solely_on_victim_status(Action, T, _VictimStatus)\n    ).\n\n% -------------------------\n% Answer (deterministic)\n% -------------------------\n\nhousing_answer(yes) :-\n    unlawful_eviction_under_provided_statutes,\n    !.\nhousing_answer(no) :-\n    !.\n\n% -------------------------\n% Main entrypoint\n% -------------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-1995",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is it unlawful to evict a tenant because of their gender identity?"
+  }
+}

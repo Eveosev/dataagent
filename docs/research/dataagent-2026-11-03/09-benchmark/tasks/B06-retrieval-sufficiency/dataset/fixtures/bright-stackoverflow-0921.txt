@@ -1,0 +1,55 @@
+## Disabling Swagger UI in FastAPI for Production
+
+There are several ways to disable Swagger UI in FastAPI for a production server. Here are three common approaches:
+
+**1. Using `openapi_url` and `redoc_url` arguments:**
+
+This is the simplest method and involves setting both `openapi_url` and `redoc_url` to `None` when creating your FastAPI application instance. 
+
+```python
+from fastapi import FastAPI
+
+app = FastAPI(
+    openapi_url=None,
+    redoc_url=None,
+)
+```
+
+**2. Using the `--no-docs` flag with `uvicorn`:**
+
+When starting your application with `uvicorn`, you can use the `--no-docs` flag to disable the automatic generation of Swagger UI documentation.
+
+```bash
+uvicorn main:app --host 0.0.0.0 --port 8000 --no-docs
+```
+
+**3. Using a custom startup event:**
+
+This method allows for more granular control over the disabling of Swagger UI. You can define a custom startup event that removes the `/docs` and `/redoc` endpoints from the application.
+
+```python
+from fastapi import FastAPI
+from fastapi.openapi.docs import get_swagger_ui_html
+from fastapi.openapi.utils import get_openapi
+
+app = FastAPI()
+
+@app.on_event("startup")
+async def remove_docs():
+    app.openapi_url = None
+    app.redoc_url = None
+
+    # Remove the docs and redoc endpoints
+    app.router.routes = [
+        route for route in app.router.routes if route.path not in ["/docs", "/redoc"]
+    ]
+
+```
+
+**Additional Considerations:**
+
+* Remember to remove any references to Swagger UI in your application code, such as links or buttons.
+* If you are using a deployment tool like Docker, you can configure it to disable Swagger UI by setting environment variables or using command-line arguments.
+* Make sure to back up your application code before making any changes.
+
+By following these steps, you can effectively disable Swagger UI in your FastAPI application for production, ensuring a cleaner and more secure deployment.

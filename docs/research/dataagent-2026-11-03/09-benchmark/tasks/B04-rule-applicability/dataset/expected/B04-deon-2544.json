@@ -1,0 +1,35 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_a5b29f5e",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "jurisdiction_state",
+    "focus_year",
+    "landlord",
+    "tenant",
+    "property",
+    "landlord_owns",
+    "occupied_by",
+    "landlord_intends_to_sell",
+    "scenario_is_conversion",
+    "statute_356c_chapter_applies",
+    "statute_356c3_duty_notice_intent_to_convert",
+    "statute_356c3_duty_notice_registration",
+    "statute_356c3_requires_registration_with_ag_before_offering_units",
+    "statute_356c3_allows_consolidated_tenant_notice",
+    "statute_356c5_exclusive_right_to_purchase",
+    "statute_356c6_eviction_protection_applies",
+    "legal_duty_notice",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: New Hampshire\n    focus_year: 2021\n\n    Question: When a landlord wants to sell a property occupied by a tenant,\n    does the law require they provide local government with notice?\n\n    Statutes encoded:\n      - NH Rev Stat  356-C:3 (2021) (tenant notices for condominium/co-op conversion)\n      - NH Rev Stat  356-C:5 (2021) (exclusive right to purchase for tenants in conversion)\n      - NH Rev Stat  356-C:6 (2021) (eviction protections after conversion notice)\n*/\n\n% -----------------------\n% Basic jurisdiction facts\n% -----------------------\n\njurisdiction_state(new_hampshire).\nfocus_year(2021).\n\n% -----------------------\n% Scenario facts (encode the question's factual statement)\n% -----------------------\n\n% Actors and property\nlandlord(l1).\ntenant(t1).\nproperty(p1).\n\nlandlord_owns(l1, p1).\noccupied_by(p1, t1).\n\n% The factual statement: landlord wants to sell a property occupied by a tenant.\nlandlord_intends_to_sell(l1, p1).\n\n/*\n  Important: The question states a sale of an occupied property, not a condominium/co-op conversion.\n  So we do NOT assert any intent to convert, and we encode that the scenario is not a conversion.\n*/\n\nscenario_is_conversion(no).\n\n% Helper predicate that succeeds when the scenario as stated is satisfied.\nscenario_statement :-\n    jurisdiction_state(new_hampshire),\n    focus_year(2021),\n    landlord(l1),\n    tenant(t1),\n    property(p1),\n    landlord_owns(l1, p1),\n    occupied_by(p1, t1),\n    landlord_intends_to_sell(l1, p1),\n    scenario_is_conversion(no).\n\n% -----------------------\n% Statute translations (deterministic predicates capturing duties/rights/thresholds)\n% -----------------------\n\n/* NH Rev Stat  356-C:3 (2021)\n   Applies to conversions (condominium/stock cooperative/other ownership arrangement).\n   Duty: owner/agent must mail notices to EACH TENANT (registered mail, return receipt requested).\n   Also mentions registration with the attorney general.\n   -> No duty stated to notify local government.\n*/\n\n% Determine whether a situation is a \"conversion subject to this chapter\" for our model.\n% (We keep it deterministic and scenario-driven.)\nstatute_356c_chapter_applies(Context) :-\n    Context = scenario,\n    scenario_is_conversion(yes),\n    !.\nstatute_356c_chapter_applies(_Context) :-\n    !,\n    fail.\n\n% Legal duty to send a notice of intent to convert to each tenant (not local government).\n% (NH Rev Stat  356-C:3(I)(a) (2021))\nstatute_356c3_duty_notice_intent_to_convert(Context, owner_or_agent, tenant) :-\n    statute_356c_chapter_applies(Context),\n    !.\n\n% Legal duty to send a registration notice to each tenant after conversion registered.\n% (NH Rev Stat  356-C:3(I)(b) (2021))\nstatute_356c3_duty_notice_registration(Context, owner_or_agent, tenant) :-\n    statute_356c_chapter_applies(Context),\n    !.\n\n% Legal requirement that conversion be registered with the attorney general before offering/selling units.\n% (NH Rev Stat  356-C:3(I)(a)(3) (2021)) and related text.\nstatute_356c3_requires_registration_with_ag_before_offering_units(Context) :-\n    statute_356c_chapter_applies(Context),\n    !.\n\n% Consolidation of notices is permitted in some cases (still only to tenants).\n% (NH Rev Stat  356-C:3(I)(c) (2021))\nstatute_356c3_allows_consolidated_tenant_notice(Context) :-\n    statute_356c_chapter_applies(Context),\n    !.\n\n/* NH Rev Stat  356-C:5 (2021)\n   Tenant exclusive right to purchase in a conversion.\n*/\nstatute_356c5_exclusive_right_to_purchase(Context, tenant) :-\n    statute_356c_chapter_applies(Context),\n    !.\n\n/* NH Rev Stat  356-C:6 (2021)\n   Eviction protections after notice under 356-C:3.\n*/\nstatute_356c6_eviction_protection_applies(Context, tenant) :-\n    statute_356c_chapter_applies(Context),\n    !.\n\n% -----------------------\n% Unified legal reasoning layer: duties to give notice to a particular recipient\n% -----------------------\n\n/*\n  legal_duty_notice(Context, RecipientType)\n\n  We keep it simple for this question:\n   - If the chapter applies, duties exist to notify tenants.\n   - No encoded statute creates a duty to notify \"local government\" about a sale.\n*/\n\nlegal_duty_notice(Context, tenant) :-\n    (   statute_356c3_duty_notice_intent_to_convert(Context, owner_or_agent, tenant)\n    ;   statute_356c3_duty_notice_registration(Context, owner_or_agent, tenant)\n    ),\n    !.\n\nlegal_duty_notice(_Context, local_government) :-\n    % None of the provided statutes impose a local-government notice duty.\n    % Keep deterministic: always fail.\n    !,\n    fail.\n\n% Helper: does the law require local government notice in the scenario?\nlegal_requires_local_government_notice_in_scenario :-\n    scenario_statement,\n    legal_duty_notice(scenario, local_government).\n\n% -----------------------\n% Answer predicate (must be deterministic yes/no)\n% -----------------------\n\nhousing_answer(yes) :-\n    legal_requires_local_government_notice_in_scenario,\n    !.\nhousing_answer(no) :-\n    !.\n\n% -----------------------\n% Main entrypoint (REQUIRED)\n% -----------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-2544",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "When a landlord wants to sell a property occupied by a tenant, does the law require they provide local government with notice?"
+  }
+}

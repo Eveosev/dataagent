@@ -1,0 +1,29 @@
+##  Essential Problem:
+
+The parameter substitution within the `rosparam` list is not working as expected. The `map_frame` parameter is not being set correctly with the value of the `tf_pre` argument.
+
+## Potential Causes:
+
+* **Incorrect Syntax:**  Double-check the syntax of the substitution. Ensure that the `$(arg tf_pre)` is enclosed in double quotes and that there are no typos.
+* **Variable Scope:**  Make sure the `tf_pre` argument is defined and accessible within the current launch file. If it's defined in another launch file, ensure it's properly passed using the `remap` or `include` tags.
+* **Incorrect Value:**  Verify that the value of `tf_pre` is indeed the intended prefix for the `map_frame`.
+* **Node Execution Order:**  Ensure that the launch file defining `tf_pre` is loaded before the launch file using the `map_frame` parameter. 
+* **ROS Version:**  There might be slight differences in how ROS versions handle parameter substitution. Refer to the ROS documentation for your specific version.
+
+## Additional Information:
+
+* Provide the complete launch file where the issue occurs.
+* Share the output of `rosparam get /h1/slam_gmapping/map_frame` to confirm the actual value being set.
+* Specify the ROS version you are using.
+* If you are using multiple launch files, clarify how they are included or remapped.
+
+## Troubleshooting Steps:
+
+1. **Verify Syntax:** Double-check the syntax of the substitution and ensure it follows the correct format.
+2. **Check Variable Scope:** Ensure that the `tf_pre` argument is defined and accessible within the current launch file.
+3. **Confirm Value:** Verify that the value of `tf_pre` is correct and matches the desired prefix for `map_frame`.
+4. **Check Execution Order:** Ensure that the launch file defining `tf_pre` is loaded before the launch file using the `map_frame` parameter.
+5. **Consult ROS Documentation:** Refer to the ROS documentation for your specific version for any known issues or limitations regarding parameter substitution.
+6. **Provide More Information:** Share the complete launch file, the output of `rosparam get`, and your ROS version for further analysis.
+
+By following these steps and providing additional information, you should be able to identify the root cause of the problem and resolve the issue with the parameter substitution. 

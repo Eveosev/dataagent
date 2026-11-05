@@ -1,0 +1,20 @@
+{
+  "source": "KAKA22/SpreadsheetBench",
+  "raw": {
+    "id": 53367,
+    "instruction": "How can I adjust my Excel formula to compare the value in cell A3 only to non-blank cells in the range A4 to A20 without encountering a #VALUE error? My goal is to determine if the value in A3 is out of order, without considering any blank cells in the comparison range. I've attempted using a SUMPRODUCT function with a combination of NOT(ISBLANK()) to ignore blanks, but I'm still getting incorrect results, possibly due to the formula treating blank cells as '0', or due to an unsuccessful attempt to multiply boolean values with the range in question. This is the formula I tried but it fails with a #VALUE error. =SUMPRODUCT(($A3>($A$4:$A$20*NOT(ISBLANK($A$4:$A$20)))))>0 I'm sure it fails because it's trying to multiply text by a number. However, stepping through the formula I noticed the blank cells are being treated as a value '0' and A3 is always going to be 'greater' than '0'. The goal is to see if A3 is out of order. ",
+    "spreadsheet_path": "spreadsheet/53367",
+    "instruction_type": "Cell-Level Manipulation",
+    "answer_position": "G3"
+  },
+  "case_id": "B09-ssb-0510",
+  "expected": {
+    "kind": "sheet_answer",
+    "instruction": "How can I adjust my Excel formula to compare the value in cell A3 only to non-blank cells in the range A4 to A20 without encountering a #VALUE error? My goal is to determine if the value in A3 is out of order, without considering any blank cells in the comparison range. I've attempted using a SUMPRODUCT function with a combination of NOT(ISBLANK()) to ignore blanks, but I'm still getting incorrect results, possibly due to the formula treating blank cells as '0', or due to an unsuccessful attempt to multiply boolean values with the range in question. This is the formula I tried but it fails with a #VALUE error. =SUMPRODUCT(($A3>($A$4:$A$20*NOT(ISBLANK($A$4:$A$20)))))>0 I'm sure it fails because it's trying to multiply text by a number. However, stepping through the formula I noticed the blank cells are being treated as a value '0' and A3 is always going to be 'greater' than '0'. The goal is to see if A3 is out of order. ",
+    "answer": null,
+    "answer_sheet": null,
+    "answer_position": "G3",
+    "data_position": null,
+    "instruction_type": "Cell-Level Manipulation"
+  }
+}

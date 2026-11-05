@@ -1,0 +1,35 @@
+{
+  "case_id": "B14-elt-0036",
+  "task_id": "B14",
+  "split_role": "unseen_acceptance",
+  "inputs": [
+    {
+      "kind": "config",
+      "ref": "fixtures/elt-databricks-github-config.yaml",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B14-elt-0036.json"
+  },
+  "evidence": [
+    "bench://elt-bench/elt-bench/databricks/github/data_model.yaml"
+  ],
+  "tags": [
+    "elt-bench",
+    "databricks",
+    "github",
+    "models:6"
+  ],
+  "source": "elt",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "case_id": "B01-mimo-0609",
+  "task_id": "B01",
+  "split_role": "unseen_acceptance",
+  "inputs": [
+    {
+      "kind": "table",
+      "ref": "bench://mimotable/unzipped/data/english/spreadsheet/FinancialStatements-AccountsReceivableAnalysisTable1(3).xlsx",
+      "digest": null
+    },
+    {
+      "kind": "table",
+      "ref": "bench://mimotable/unzipped/data/english/spreadsheet/Year-endStoreSalesAnalysisTable1.xlsx",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B01-mimo-0609.json"
+  },
+  "evidence": [
+    "bench://mimotable/unzipped/data/english/spreadsheet/FinancialStatements-AccountsReceivableAnalysisTable1(3).xlsx#workbook"
+  ],
+  "tags": [
+    "english",
+    "multiple files, complicate header",
+    "hard table",
+    "op:Lookup",
+    "op:Calculate"
+  ],
+  "source": "mimo",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "case_id": "B01-mimo-1447",
+  "task_id": "B01",
+  "split_role": "unseen_acceptance",
+  "inputs": [
+    {
+      "kind": "table",
+      "ref": "bench://mimotable/unzipped/data/chinese/spreadsheet/工程项目收支管理表1.xlsx",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B01-mimo-1447.json"
+  },
+  "evidence": [
+    "bench://mimotable/unzipped/data/chinese/spreadsheet/工程项目收支管理表1.xlsx#workbook"
+  ],
+  "tags": [
+    "chinese",
+    "multiple tables",
+    "hard table",
+    "op:Lookup",
+    "op:Calculate",
+    "op:Edit"
+  ],
+  "source": "mimo",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

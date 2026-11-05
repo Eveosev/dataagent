@@ -1,0 +1,1 @@
+How can I create a macro in Excel that identifies and deletes rows starting from a duplicated 'Stock Number' header and all rows that follow it? For example, in the provided sample data, the macro should remove the data from cell A13 to A21.

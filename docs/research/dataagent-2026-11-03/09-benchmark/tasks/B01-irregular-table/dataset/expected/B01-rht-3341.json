@@ -1,0 +1,29 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1705,
+  "table": "health-table23",
+  "structure": "SingleRowClassified",
+  "question_type": "Data Analysis",
+  "sub_type": "Summary Analysis",
+  "answer": "The table summarizes a univariate analysis of factors affecting the Optimal CT rate, covering demographic and socioeconomic variables. Key insights reveal a significantly lower Optimal CT rate for females and those without a spouse, while higher education and family income levels are associated with a higher Optimal CT rate.",
+  "cot": [
+    {
+      "planning": "First, we need to identify the main columns in the table, which include Variable, n (number of observations), % (percentage of total), Optimal CT (Computed Tomography) rate, and Univariate Analysis results including OR (Odds Ratio), 95% Confidence Interval (IC95%), and p-value."
+    },
+    {
+      "planning": "Then, we need to understand that the table is organized by different demographic and socioeconomic variables, such as Age Group, Gender, Marital Status, Skin Color, Education Level, and Family Income."
+    },
+    {
+      "planning": "Next, we should observe the data within each variable category, noting the number and percentage of individuals, the Optimal CT rate, and the statistical significance of the univariate analysis."
+    },
+    {
+      "planning": "Finally, we must highlight any notable trends or patterns, such as significant differences in the Optimal CT rate between categories or statistically significant odds ratios."
+    }
+  ],
+  "case_id": "B01-rht-3341",
+  "expected": {
+    "kind": "answer",
+    "question": "Can you provide a concise summary of the table, including the main columns and any basic insights derived from the data?",
+    "answer": "The table summarizes a univariate analysis of factors affecting the Optimal CT rate, covering demographic and socioeconomic variables. Key insights reveal a significantly lower Optimal CT rate for females and those without a spouse, while higher education and family income levels are associated with a higher Optimal CT rate."
+  }
+}

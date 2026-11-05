@@ -1,0 +1,29 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_b04c1d2b",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "statute_va_801_129_appeal_period_days",
+    "statute_va_801_129_writ_may_issue_immediately_if_requested",
+    "legal_eviction_execution_stayed_during_pending_appeal",
+    "case_type",
+    "judgment_for_possession_entered",
+    "appeal_perfected_by_defendant",
+    "appeal_pending",
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_case",
+    "scenario_eviction_execution_stayed_answer",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    State: Virginia\n    Focus year: 2021\n\n    Question: When a tenant appeals, is the execution of eviction stayed\n    for the duration of the pending appeal?\n*/\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% STATUTE TRANSLATION (VA Code  8.01-129 (2021))\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n% VA Code  8.01-129(A): appeal period is 10 days.\nstatute_va_801_129_appeal_period_days(10).\n\n% VA Code  8.01-129(B): in unlawful detainer with judgment for possession,\n% upon plaintiff request judge orders writ of eviction issue immediately.\nstatute_va_801_129_writ_may_issue_immediately_if_requested(unlawful_detainer).\n\n% VA Code  8.01-129(B): sheriff may not evict before expiration of 10-day appeal period.\nstatute_va_801_129_no_eviction_before_appeal_period_expires.\n\n% VA Code  8.01-129(B): if defendant perfects an appeal, sheriff shall return the writ to the clerk.\nstatute_va_801_129_return_writ_if_defendant_perfects_appeal.\n\n% Legal effect modeled from  8.01-129(B):\n% If the writ is returned because the defendant perfected an appeal, then the sheriff\n% cannot execute that writ while the appeal is pending (i.e., execution is stayed).\nlegal_eviction_execution_stayed_during_pending_appeal(Case) :-\n    case_type(Case, unlawful_detainer),\n    judgment_for_possession_entered(Case, yes),\n    appeal_perfected_by_defendant(Case, yes),\n    appeal_pending(Case, yes),\n    statute_va_801_129_return_writ_if_defendant_perfects_appeal,\n    !.\n\n% If the appeal is not pending or not perfected, we do not treat the statute as creating\n% a stay for the duration of a pending appeal (because there is no pending perfected appeal).\nlegal_eviction_execution_stayed_during_pending_appeal(_Case) :-\n    !,\n    fail.\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% SCENARIO FACTS (encode the question's factual statement)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n% Scenario context\nscenario_state(virginia).\nscenario_focus_year(2021).\n\n% A single case instance for this question.\nscenario_case(case1).\n\n% Facts reflecting the question: \"When a tenant appeals ...\"\n% We model the tenant as the defendant in an unlawful detainer eviction case.\ncase_type(case1, unlawful_detainer).\njudgment_for_possession_entered(case1, yes).\n\n% The tenant (defendant) appeals and the appeal is pending.\nappeal_perfected_by_defendant(case1, yes).\nappeal_pending(case1, yes).\n\n% Helper predicate that succeeds when the factual statement is satisfied.\nscenario_statement :-\n    scenario_state(virginia),\n    scenario_focus_year(2021),\n    scenario_case(Case),\n    case_type(Case, unlawful_detainer),\n    judgment_for_possession_entered(Case, yes),\n    appeal_perfected_by_defendant(Case, yes),\n    appeal_pending(Case, yes),\n    !.\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% APPLY REASONING TO ANSWER THE QUESTION\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n% Question mapped to: is execution of eviction stayed for the duration of the pending appeal?\nscenario_eviction_execution_stayed_answer(yes) :-\n    scenario_statement,\n    scenario_case(Case),\n    legal_eviction_execution_stayed_during_pending_appeal(Case),\n    !.\nscenario_eviction_execution_stayed_answer(no) :-\n    scenario_statement,\n    !.\n\nhousing_answer(Result) :-\n    scenario_eviction_execution_stayed_answer(Result),\n    !.\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% MAIN ENTRYPOINT (REQUIRED)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-0804",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "When a tenant appeals, is the execution of eviction stayed for the duration of the pending appeal?"
+  }
+}

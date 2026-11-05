@@ -1,0 +1,169 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "snowflake",
+  "pipeline": "car_retails",
+  "data_model": {
+    "models": [
+      {
+        "name": "car_retails__customers",
+        "description": "Each record represents a customer.",
+        "columns": [
+          {
+            "name": "customernumber",
+            "description": "Unique identifier for the customer."
+          },
+          {
+            "name": "customername",
+            "description": "Name of the customer."
+          },
+          {
+            "name": "country",
+            "description": "Country where the customer is located."
+          },
+          {
+            "name": "has_credit_limit_not_more_than_100000",
+            "description": "Set to 1 if the credit limit of the customer is not more than $100,000; otherwise, set to 0."
+          },
+          {
+            "name": "total_payments_2003",
+            "description": "Total payments made by the customer in 2003, replace NULL values with 0."
+          },
+          {
+            "name": "has_paid_more_than_three_times_in_2003",
+            "description": "Set to 1 if the customer has made more than three payments in 2003; otherwise, set to 0."
+          },
+          {
+            "name": "total_actual_profit_gained",
+            "description": "Total actual profit gained from the customer, replace NULL values with 0."
+          },
+          {
+            "name": "total_price_of_product_shipped_in_2003",
+            "description": "Total price of products shipped to the customer in 2003, replace NULL values with 0."
+          }
+        ]
+      },
+      {
+        "name": "car_retails__employees",
+        "description": "Each record represents an employee.",
+        "columns": [
+          {
+            "name": "employeenumber",
+            "description": "Unique identifier for the employee."
+          },
+          {
+            "name": "officecode",
+            "description": "Office code where the employee is located."
+          },
+          {
+            "name": "name",
+            "description": "The name of the employee, formed by concatenating the first name and last name with a space in between."
+          },
+          {
+            "name": "number_of_customers",
+            "description": "Number of customers the employee is responsible for, replace NULL values with 0."
+          },
+          {
+            "name": "is_in_Sydney",
+            "description": "Set to 1 if the employee is located in Sydney; otherwise, set to 0."
+          },
+          {
+            "name": "product_name_of_the_highest_amount_of_order",
+            "description": "Name of the product with the highest total amount paid across all orders handled by the employee; with ties broken by the ascending order of the product name."
+          },
+          {
+            "name": "customer_made_highest_payment",
+            "description": "Name of the customer who made the highest total payment to the employee, with ties broken by the descending order of the customer name."
+          },
+          {
+            "name": "highest_customer_credit_limit",
+            "description": "The highest credit limit among the customers the employee is responsible for."
+          }
+        ]
+      },
+      {
+        "name": "car_retails__products",
+        "description": "Each record represents a product.",
+        "columns": [
+          {
+            "name": "productcode",
+            "description": "Unique identifier for the product."
+          },
+          {
+            "name": "productname",
+            "description": "Name of the product."
+          },
+          {
+            "name": "buyprice",
+            "description": "Price at which the product is bought."
+          },
+          {
+            "name": "number_of_product_ordered",
+            "description": "Number of the product has been ordered, replace NULL values with 0."
+          },
+          {
+            "name": "expected_profit_per_piece",
+            "description": "Expected profit per piece of the product."
+          },
+          {
+            "name": "num_of_customers",
+            "description": "Number of customers who have ordered the product, replace NULL values with 0."
+          },
+          {
+            "name": "total_quantity_sold_in_2003",
+            "description": "Total quantity of the product sold in 2003, replace NULL values with 0."
+          },
+          {
+            "name": "average_actual_profit",
+            "description": "Average actual profit per unit sold for the product."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    snowflake_definition_id: 424892c4-daac-4491-b35d-c6688ba547ba\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://car-retails-bucket/offices.jsonl\n    sync_mode: full_refresh_append\n    table: offices\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - productlines\nflat_files:\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=162_-w6klN-f_oxR8I_4Kwz3XyaTTVIvM\n  sync_mode: full_refresh_append\n  table: employees\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: car_retails\n    sync_mode: full_refresh_append\n    tables:\n    - customers\n    - products\npostgres:\n  config:\n    database: car_retails\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - orderdetails\n    - orders\n    - payments\n    user: postgres\nsnowflake:\n  config:\n    database: car_retails\n    password: Snowflake@123\n    role: AIRBYTE_ROLE\n    schema: AIRBYTE_SCHEMA\n    username: AIRBYTE_USER\n    warehouse: AIRBYTE_WAREHOUSE\n",
+  "case_id": "B14-elt-0213",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "car_retails__customers",
+        "columns": [
+          "customernumber",
+          "customername",
+          "country",
+          "has_credit_limit_not_more_than_100000",
+          "total_payments_2003",
+          "has_paid_more_than_three_times_in_2003",
+          "total_actual_profit_gained",
+          "total_price_of_product_shipped_in_2003"
+        ]
+      },
+      {
+        "name": "car_retails__employees",
+        "columns": [
+          "employeenumber",
+          "officecode",
+          "name",
+          "number_of_customers",
+          "is_in_Sydney",
+          "product_name_of_the_highest_amount_of_order",
+          "customer_made_highest_payment",
+          "highest_customer_credit_limit"
+        ]
+      },
+      {
+        "name": "car_retails__products",
+        "columns": [
+          "productcode",
+          "productname",
+          "buyprice",
+          "number_of_product_ordered",
+          "expected_profit_per_piece",
+          "num_of_customers",
+          "total_quantity_sold_in_2003",
+          "average_actual_profit"
+        ]
+      }
+    ]
+  }
+}

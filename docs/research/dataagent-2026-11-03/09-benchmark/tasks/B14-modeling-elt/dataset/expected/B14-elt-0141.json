@@ -1,0 +1,143 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "redshift",
+  "pipeline": "instagram_business",
+  "data_model": {
+    "models": [
+      {
+        "name": "instagram_business__posts",
+        "description": "Each record represents the daily performance of a post or story. Use the most recent version of the user and post to ensure the most up-to-date data.",
+        "columns": [
+          {
+            "name": "account_name",
+            "description": "The name of this user."
+          },
+          {
+            "name": "user_id",
+            "description": "The ID of this user."
+          },
+          {
+            "name": "created_timestamp",
+            "description": "The timestamp this post or story was created",
+            "format": "YYYY-MM-DD HH:MM:SS"
+          },
+          {
+            "name": "post_id",
+            "description": "The media ID of this post or story"
+          },
+          {
+            "name": "is_comment_enabled",
+            "description": "Whether comments are enabled for this post or story"
+          },
+          {
+            "name": "is_story",
+            "description": "Whether this is a story"
+          },
+          {
+            "name": "media_type",
+            "description": "Media type. Can be CAROUSEL_ALBUM, IMAGE, or VIDEO."
+          },
+          {
+            "name": "media_url",
+            "description": "Media URL. Will be omitted from responses if the media contains copyrighted material, or has been flagged for a copyright violation."
+          },
+          {
+            "name": "permanent_url",
+            "description": "Permanent URL to the media."
+          },
+          {
+            "name": "shortcode",
+            "description": "Shortcode to the media."
+          },
+          {
+            "name": "username",
+            "description": "Username of user who created the media."
+          },
+          {
+            "name": "comment_count",
+            "description": "Total number of comments on the IG Media object."
+          },
+          {
+            "name": "like_count",
+            "description": "Total number of likes on the IG Media object."
+          },
+          {
+            "name": "video_photo_engagement",
+            "description": "Total number of likes and IG Comments on the video IG Media object."
+          },
+          {
+            "name": "video_photo_impressions",
+            "description": "Total number of times the video IG Media object has been seen."
+          },
+          {
+            "name": "video_photo_reach",
+            "description": "Total number of unique Instagram accounts that have seen the video IG Media object."
+          },
+          {
+            "name": "video_photo_saved",
+            "description": "Total number of unique Instagram accounts that have saved the video IG Media object."
+          },
+          {
+            "name": "reel_comments",
+            "description": "Total number of comments on the reel IG Media object."
+          },
+          {
+            "name": "reel_likes",
+            "description": "Total number of likes on the reel IG Media object."
+          },
+          {
+            "name": "reel_plays",
+            "description": "Total number of times the reel IG Media object has been played."
+          },
+          {
+            "name": "reel_reach",
+            "description": "Total number of unique Instagram accounts that have seen the reel IG Media object."
+          },
+          {
+            "name": "reel_shares",
+            "description": "Total number of times the reel IG Media object has been shared."
+          },
+          {
+            "name": "reel_total_interactions",
+            "description": "Total number of interactions the reel IG Media object had."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    redshift_definition_id: f7a7d195-377f-cf5b-70a5-be6b819019dc\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - media_history\nflat_files:\n- format: csv\n  path: https://drive.google.com/uc?export=download&id=1Wxl9EvsVE9x1fGMci9XGm8Zy5spZy6tZ\n  sync_mode: full_refresh_append\n  table: user_history\npostgres:\n  config:\n    database: instagram_business\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - media_insights\n    user: postgres\nredshift:\n  config:\n    host: <redshift_hostname>\n    port: <redshift_port>\n    database: <redshift_db>\n    username: <redshift_username>\n    password: <redshift_pwd>\n    schema: instagram_business\n    s3_bucket_name: <redshift_s3_bucket>\n    s3_bucket_region: <redshift_s3_region>\n    access_key_id: <redshift_s3_access_key>\n    secret_access_key: <redshift_s3_secret_key>\n",
+  "case_id": "B14-elt-0141",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "instagram_business__posts",
+        "columns": [
+          "account_name",
+          "user_id",
+          "created_timestamp",
+          "post_id",
+          "is_comment_enabled",
+          "is_story",
+          "media_type",
+          "media_url",
+          "permanent_url",
+          "shortcode",
+          "username",
+          "comment_count",
+          "like_count",
+          "video_photo_engagement",
+          "video_photo_impressions",
+          "video_photo_reach",
+          "video_photo_saved",
+          "reel_comments",
+          "reel_likes",
+          "reel_plays",
+          "reel_reach",
+          "reel_shares",
+          "reel_total_interactions"
+        ]
+      }
+    ]
+  }
+}

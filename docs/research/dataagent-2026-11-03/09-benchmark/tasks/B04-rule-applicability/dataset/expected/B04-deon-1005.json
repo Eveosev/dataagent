@@ -1,0 +1,39 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_a79e941d",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "jurisdiction",
+    "focus_year",
+    "case",
+    "eviction_proceeding",
+    "party",
+    "role_in_case",
+    "county_court_judgment_rendered",
+    "feels_aggrieved",
+    "appeal_filed",
+    "appeal_taken_by_court",
+    "statute_co_13_40_117_may_appeal",
+    "statute_co_13_40_117_stay_upon_appeal_taken",
+    "statute_co_13_40_117_appellee_may_petition_additional_undertaking",
+    "believes_serious_economic_harm_during_pendency",
+    "statute_co_13_40_117_court_orders_additional_undertaking_only_if",
+    "additional_undertaking_petitioned",
+    "hearing_held_on_additional_undertaking",
+    "finding_substantial_likelihood_serious_economic_harm",
+    "finding_not_adequately_protected_by_existing_appeal_requirements",
+    "stay_is_automatic_upon_appeal_taken",
+    "tenant_must_request_stay_of_execution_for_appeal",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    State: Colorado\n    Focus year: 2021\n\n    Question: For eviction proceedings, does a tenant have to request a stay of execution for an appeal?\n*/\n\n% ----------------------------\n% Scenario facts (question statement)\n% ----------------------------\n\njurisdiction(colorado).\nfocus_year(2021).\n\ncase(eviction_case1).\neviction_proceeding(eviction_case1).\n\nparty(tenant1).\nparty(landlord1).\n\nrole_in_case(tenant1, eviction_case1, tenant).\nrole_in_case(landlord1, eviction_case1, landlord).\n\ncounty_court_judgment_rendered(eviction_case1).\n\n% Tenant is \"aggrieved\" by the county court judgment and appeals.\nfeels_aggrieved(tenant1, eviction_case1).\nappeal_filed(tenant1, eviction_case1).\n\n% In the statute, the stay occurs \"Upon the court's taking such appeal\".\n% We encode that the court has taken/accepted the appeal.\nappeal_taken_by_court(eviction_case1).\n\n% Scenario summary predicate required by the instructions.\nscenario_statement :-\n    jurisdiction(colorado),\n    focus_year(2021),\n    case(Case),\n    Case = eviction_case1,\n    eviction_proceeding(Case),\n    role_in_case(Tenant, Case, tenant),\n    Tenant = tenant1,\n    county_court_judgment_rendered(Case),\n    feels_aggrieved(Tenant, Case),\n    appeal_filed(Tenant, Case),\n    appeal_taken_by_court(Case).\n\n% ----------------------------\n% Statute translations (deterministic predicates)\n% ----------------------------\n\n/*\n  CO Code  13-40-117 (2021)\n  \"If either party feels aggrieved by the judgment rendered ... before the county court, he may appeal ...\"\n*/\nstatute_co_13_40_117_may_appeal(Party, Case) :-\n    party(Party),\n    case(Case),\n    county_court_judgment_rendered(Case),\n    feels_aggrieved(Party, Case).\n\n/*\n  CO Code  13-40-117 (2021)\n  \"Upon the court's taking such appeal, all further proceedings in the case shall be stayed ...\"\n  Encoded as an automatic stay triggered by the court taking the appeal.\n*/\nstatute_co_13_40_117_stay_upon_appeal_taken(Case) :-\n    case(Case),\n    appeal_taken_by_court(Case).\n\n/*\n  CO Code  13-40-117 (2021)\n  Appellee may petition for additional undertaking if they believe serious economic harm may occur.\n  (Not necessary to answer the stay-request question, but included to encode the statute's major parts.)\n*/\nstatute_co_13_40_117_appellee_may_petition_additional_undertaking(Appellee, Case) :-\n    party(Appellee),\n    case(Case),\n    appeal_taken_by_court(Case),\n    role_in_case(Appellee, Case, appellee),\n    believes_serious_economic_harm_during_pendency(Appellee, Case).\n\n/*\n  CO Code  13-40-117 (2021)\n  \"The court shall order such undertaking only after a hearing and upon a finding that...\"\n*/\nstatute_co_13_40_117_court_orders_additional_undertaking_only_if(Case) :-\n    case(Case),\n    additional_undertaking_petitioned(Case),\n    hearing_held_on_additional_undertaking(Case),\n    finding_substantial_likelihood_serious_economic_harm(Case),\n    finding_not_adequately_protected_by_existing_appeal_requirements(Case).\n\n% ----------------------------\n% Reasoning helpers\n% ----------------------------\n\n% In Colorado under  13-40-117, a stay is automatic once the appeal is taken by the court.\nstay_is_automatic_upon_appeal_taken(Case) :-\n    statute_co_13_40_117_stay_upon_appeal_taken(Case).\n\n% The question asks whether the tenant must REQUEST a stay of execution for an appeal.\n% Under this statute, the stay is automatic; thus a request is not required when the appeal is taken.\ntenant_must_request_stay_of_execution_for_appeal(Case) :-\n    eviction_proceeding(Case),\n    % If the stay is automatic, then no request is needed; so a \"must request\" only holds when not automatic.\n    \\+ stay_is_automatic_upon_appeal_taken(Case).\n\n% ----------------------------\n% Final answer (must be deterministic: yes or no)\n% ----------------------------\n\nhousing_answer(yes) :-\n    scenario_statement,\n    case(Case),\n    Case = eviction_case1,\n    tenant_must_request_stay_of_execution_for_appeal(Case),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n% ----------------------------\n% Main entrypoint + required initialization\n% ----------------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-1005",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "For eviction proceedings, does a tenant have to request a stay of execution for an appeal?"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "source": "xlangai/BRIGHT",
+  "query_id": "TheoremQA_maxku/cv-colorsci1-rgb.json",
+  "query": "## Identifying the essential problem: \n\nThe problem asks us to determine the total number of unique colors a single pixel can display on a digital screen with 256 levels of intensity for each of the red, green, and blue primary colors.\n\n## Step-by-step reasoning: \n\n1. **Understanding the color system:** Each pixel uses an additive color system where red, green, and blue light are combined to create various colors. \n2. **Intensity levels:** Each primary color can be adjusted across 256 levels of intensity, ranging from 0 (no intensity) to 255 (maximum intensity).\n3. **Calculating unique color combinations:** To determine the total number of unique colors, we need to consider all possible combinations of red, green, and blue intensity levels.\n\n##  Answering the question:\n\nWe can approach this problem in two ways:\n\n**Method 1: Using the permutation formula:**\n\n- We can think of choosing an intensity level for each color as a separate event. \n- There are 256 options for each color (red, green, and blue).\n- Using the permutation formula (nPr = n! / (n-r)!), where n is the total number of options and r is the number of choices made, we get:\n\nTotal unique colors = 256 (red) * 256 (green) * 256 (blue) = 256^3\n\nTotal unique colors = 16,777,216\n\n**Method 2: Using the concept of color space:**\n\n- We can visualize the combination of red, green, and blue intensity levels as a 3D space where each axis represents the intensity of a primary color. \n- Each point in this space corresponds to a unique color.\n- Since each axis has 256 levels, the total number of points in this 3D space is:\n\nTotal unique colors = 256 (red) * 256 (green) * 256 (blue) = 256^3\n\nTotal unique colors = 16,777,216\n\nBoth methods lead to the same answer: a single pixel can display **16,777,216 unique colors** on a digital screen with 256 levels of intensity for each primary color.\n",
+  "gold_ids": [
+    "TheoremQA_maxku/cv-colorsci2-hsi.json",
+    "TheoremQA_maxku/cv-colorsci3-rgb.json",
+    "TheoremQA_maxku/cv-colorsci4-hsi.json",
+    "TheoremQA_maxku/cv-colorsci3-rgb.json",
+    "TheoremQA_maxku/cv-colorsci2-hsi.json"
+  ],
+  "gold_answer": "N/A",
+  "corpus": "documents/theoremqa_questions-00000-of-00001.parquet",
+  "case_id": "B06-bright-1234",
+  "expected": {
+    "kind": "retrieval",
+    "gold_ids": [
+      "TheoremQA_maxku/cv-colorsci2-hsi.json",
+      "TheoremQA_maxku/cv-colorsci3-rgb.json",
+      "TheoremQA_maxku/cv-colorsci4-hsi.json",
+      "TheoremQA_maxku/cv-colorsci3-rgb.json",
+      "TheoremQA_maxku/cv-colorsci2-hsi.json"
+    ],
+    "gold_ids_long": [
+      "N/A"
+    ],
+    "gold_answer": "N/A",
+    "excluded_ids": [
+      "TheoremQA_maxku/cv-colorsci1-rgb.json"
+    ]
+  }
+}

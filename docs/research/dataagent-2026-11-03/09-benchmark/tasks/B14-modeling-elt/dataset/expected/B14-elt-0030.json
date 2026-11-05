@@ -1,0 +1,284 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "databricks",
+  "pipeline": "facebook_ads",
+  "data_model": {
+    "models": [
+      {
+        "name": "facebook_ads__ad_report",
+        "description": "Each record represents the daily performance of a Facebook ad. Use the most recent version of the account, ad, campaign, and ad set to ensure the most up-to-date data if there are multiple versions for the same account, ad, campaign, or ad set.",
+        "columns": [
+          {
+            "name": "date_day",
+            "description": "The date of the performance.",
+            "format": "YYYY-MM-DD"
+          },
+          {
+            "name": "account_id",
+            "description": "The ID of the related account."
+          },
+          {
+            "name": "account_name",
+            "description": "The name of the related account."
+          },
+          {
+            "name": "campaign_id",
+            "description": "The ID of the related campaign."
+          },
+          {
+            "name": "campaign_name",
+            "description": "The name of the related campaign."
+          },
+          {
+            "name": "ad_set_id",
+            "description": "The ID of the related ad set."
+          },
+          {
+            "name": "ad_set_name",
+            "description": "The name of the related ad set."
+          },
+          {
+            "name": "ad_id",
+            "description": "The ID of the ad."
+          },
+          {
+            "name": "ad_name",
+            "description": "The name of the ad."
+          },
+          {
+            "name": "clicks",
+            "description": "The number of clicks the ad had on the given day."
+          },
+          {
+            "name": "impressions",
+            "description": "The number of impressions the ad had on the given day."
+          },
+          {
+            "name": "spend",
+            "description": "The spend on the ad in the given day."
+          },
+          {
+            "name": "conversions",
+            "description": "Total number of conversions using the default attribution window on the given day. Set to 0 if the value is NULL."
+          },
+          {
+            "name": "conversions_value",
+            "description": "Total monetary of conversions using the default attribution window on the given day. Set to 0 if the value is NULL."
+          }
+        ]
+      },
+      {
+        "name": "facebook_ads__ad_set_report",
+        "description": "Each record represents the daily performance of a Facebook ad set. Use the most recent version of the account, ad, campaign, and ad set to ensure the most up-to-date data if there are multiple versions for the same account, ad, campaign, or ad set.",
+        "columns": [
+          {
+            "name": "date_day",
+            "description": "The date of the performance.",
+            "format": "YYYY-MM-DD"
+          },
+          {
+            "name": "account_id",
+            "description": "The ID of the related account."
+          },
+          {
+            "name": "account_name",
+            "description": "The name of the related account."
+          },
+          {
+            "name": "campaign_id",
+            "description": "The ID of the related campaign."
+          },
+          {
+            "name": "campaign_name",
+            "description": "The name of the related campaign."
+          },
+          {
+            "name": "ad_set_id",
+            "description": "The ID of the ad set."
+          },
+          {
+            "name": "ad_set_name",
+            "description": "The name of the ad set."
+          },
+          {
+            "name": "clicks",
+            "description": "The number of clicks across all ads in the ad set had on the given day."
+          },
+          {
+            "name": "impressions",
+            "description": "The number of impressions across all ads in the ad set had on the given day."
+          },
+          {
+            "name": "spend",
+            "description": "The spend on all ads in the ad set in the given day."
+          },
+          {
+            "name": "conversions",
+            "description": "Total number of conversions using the default attribution window on the given day. Set to 0 if the value is NULL."
+          },
+          {
+            "name": "conversions_value",
+            "description": "Total monetary of conversions using the default attribution window on the given day. Set to 0 if the value is NULL."
+          }
+        ]
+      },
+      {
+        "name": "facebook_ads__campaign_report",
+        "description": "Each record represents the daily performance of a Facebook campaign. Use the most recent version of the account, ad, and campaign to ensure the most up-to-date data if there are multiple versions for the same account, ad, or campaign.",
+        "columns": [
+          {
+            "name": "date_day",
+            "description": "The date of the performance.",
+            "format": "YYYY-MM-DD"
+          },
+          {
+            "name": "account_id",
+            "description": "The ID of the related account."
+          },
+          {
+            "name": "account_name",
+            "description": "The name of the related account."
+          },
+          {
+            "name": "campaign_id",
+            "description": "The ID of the campaign."
+          },
+          {
+            "name": "campaign_name",
+            "description": "The name of the campaign."
+          },
+          {
+            "name": "clicks",
+            "description": "The number of clicks across all ads in the campaign had on the given day."
+          },
+          {
+            "name": "impressions",
+            "description": "The number of impressions across all ads in the campaign had on the given day."
+          },
+          {
+            "name": "spend",
+            "description": "The spend across all ads in the campaign in the given day."
+          },
+          {
+            "name": "conversions",
+            "description": "Total number of conversions using the default attribution window on the given day. Set to 0 if the value is NULL."
+          },
+          {
+            "name": "conversions_value",
+            "description": "Total monetary of conversions using the default attribution window on the given day. Set to 0 if the value is NULL."
+          }
+        ]
+      },
+      {
+        "name": "facebook_ads__account_report",
+        "description": "Each record represents the daily performance of a Facebook account. Use the latest version of the account to ensure the most up-to-date data if there are multiple versions for the same account.",
+        "columns": [
+          {
+            "name": "date_day",
+            "description": "The date of the performance.",
+            "format": "YYYY-MM-DD"
+          },
+          {
+            "name": "account_id",
+            "description": "The ID of the account."
+          },
+          {
+            "name": "account_name",
+            "description": "The name of the account."
+          },
+          {
+            "name": "clicks",
+            "description": "The number of clicks across all ads in the account had on the given day."
+          },
+          {
+            "name": "impressions",
+            "description": "The number of impressions across all ads in the account had on the given day."
+          },
+          {
+            "name": "spend",
+            "description": "The spend on across all ads in the account in the given day."
+          },
+          {
+            "name": "conversions",
+            "description": "Total number of conversions using the default attribution window on the given day. Set to 0 if the value is NULL."
+          },
+          {
+            "name": "conversions_value",
+            "description": "Total monetary of conversions using the default attribution window on the given day. Set to 0 if the value is NULL."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    databricks_definition_id: 072d5540-f236-4294-ba7c-ade8fd918496\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://facebook-ads-bucket/basic_ad_actions.parquet\n    sync_mode: full_refresh_append\n    table: basic_ad_actions\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - account_history\n    - campaign_history\nflat_files:\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=1QA-hAM1JvYa2iZxZEU2cK87gng08R99t\n  sync_mode: full_refresh_append\n  table: creative_history\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: facebook_ads\n    sync_mode: full_refresh_append\n    tables:\n    - ad_set_history\n    - basic_ad\npostgres:\n  config:\n    database: facebook_ads\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - ad_history\n    - basic_ad_action_values\n    user: postgres\ndatabricks:\n  config:\n    database: <db_database>\n    hostname: <db_hostname>\n    client_id: <db_client_id>\n    secret: <db_secret>\n    schema: facebook_ads\n    http_path: <db_path>\n",
+  "case_id": "B14-elt-0030",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "facebook_ads__ad_report",
+        "columns": [
+          "date_day",
+          "account_id",
+          "account_name",
+          "campaign_id",
+          "campaign_name",
+          "ad_set_id",
+          "ad_set_name",
+          "ad_id",
+          "ad_name",
+          "clicks",
+          "impressions",
+          "spend",
+          "conversions",
+          "conversions_value"
+        ]
+      },
+      {
+        "name": "facebook_ads__ad_set_report",
+        "columns": [
+          "date_day",
+          "account_id",
+          "account_name",
+          "campaign_id",
+          "campaign_name",
+          "ad_set_id",
+          "ad_set_name",
+          "clicks",
+          "impressions",
+          "spend",
+          "conversions",
+          "conversions_value"
+        ]
+      },
+      {
+        "name": "facebook_ads__campaign_report",
+        "columns": [
+          "date_day",
+          "account_id",
+          "account_name",
+          "campaign_id",
+          "campaign_name",
+          "clicks",
+          "impressions",
+          "spend",
+          "conversions",
+          "conversions_value"
+        ]
+      },
+      {
+        "name": "facebook_ads__account_report",
+        "columns": [
+          "date_day",
+          "account_id",
+          "account_name",
+          "clicks",
+          "impressions",
+          "spend",
+          "conversions",
+          "conversions_value"
+        ]
+      }
+    ]
+  }
+}

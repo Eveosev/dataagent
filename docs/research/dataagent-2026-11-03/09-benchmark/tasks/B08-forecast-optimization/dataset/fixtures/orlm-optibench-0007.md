@@ -1,0 +1,1 @@
+A man is trapped in a swamp at the location: (3/4,0). The swamp is a curve that y >= x^2, and x >= 0. The rescue team must stay as close to him as possible so that they can pass a rope to him. Find the BEST LOCATION of the rope required to rescue him.

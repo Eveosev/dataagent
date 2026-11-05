@@ -1,0 +1,27 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_7b5ad2e7",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "focus_year",
+    "focus_state",
+    "case",
+    "case_state",
+    "case_year",
+    "case_type",
+    "statute_ct_47a_23a_returnable_court",
+    "legal_is_summary_process_action",
+    "legal_first_hearing_court",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    State: Connecticut\n    Focus year: 2021\n    Question: Are eviction cases first heard in court of common pleas?\n*/\n\n/* =========================\n   Scenario (facts)\n   ========================= */\n\n% We model a single eviction case in Connecticut in the focus year.\nfocus_year(2021).\nfocus_state(connecticut).\n\ncase(eviction_case_1).\ncase_state(eviction_case_1, connecticut).\ncase_year(eviction_case_1, 2021).\ncase_type(eviction_case_1, eviction).\n\n% Helper predicate that succeeds when the scenario facts are satisfied.\nscenario_statement :-\n    focus_year(Year),\n    focus_state(State),\n    case(Case),\n    case_state(Case, State),\n    case_year(Case, Year),\n    case_type(Case, eviction).\n\n/* =========================\n   Statute translations\n   ========================= */\n\n% --- CT Gen Stat  47a-23a(a) (2020) ---\n% \"Such complaint shall be returnable to the Superior Court.\"\n% We encode the court to which an eviction (summary process) complaint is returnable.\n% Note: For this question, we treat \"eviction\" as the Connecticut \"summary process\" action.\nstatute_ct_47a_23a_returnable_court(connecticut, superior_court).\n\n% Connecticut eviction actions are brought as \"summary process\" actions.\nlegal_is_summary_process_action(Case) :-\n    case(Case),\n    case_type(Case, eviction).\n\n/* =========================\n   Legal reasoning helpers\n   ========================= */\n\n% The court where the eviction case is first heard is modeled as the \"returnable\" court.\n% (Because 47a-23a(a) requires the complaint be returnable to the Superior Court.)\nlegal_first_hearing_court(Case, Court) :-\n    case_state(Case, State),\n    legal_is_summary_process_action(Case),\n    statute_ct_47a_23a_returnable_court(State, Court).\n\n/* =========================\n   Question answering\n   ========================= */\n\n% The question asks whether eviction cases are first heard in \"court of common pleas\".\n% Under 47a-23a(a), they are returnable to (and thus first heard in) the Superior Court.\nhousing_answer(yes) :-\n    scenario_statement,\n    legal_first_hearing_court(eviction_case_1, court_of_common_pleas),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-4186",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Are eviction cases first heard in court of common pleas?"
+  }
+}

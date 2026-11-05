@@ -1,0 +1,28 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_0c58ca92",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "member_of",
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_action",
+    "scenario_queried_service_method",
+    "statute_pr_1_4_4_service_mechanism",
+    "statute_pr_1_4_4_recipient_category",
+    "statute_pr_1_4_4_primary_method",
+    "service_rules_apply_to_action",
+    "primary_method_for_action",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: Puerto Rico\n    Focus year: 2021\n    Question: Whether delivery by commercial carrier is a \"primary\" method of service for eviction actions.\n*/\n\n/* ------------------------------\n   Basic helpers (no modules)\n   ------------------------------ */\n\nmember_of(X, [X|_]) :- !.\nmember_of(X, [_|T]) :- member_of(X, T).\n\n/* ------------------------------\n   Scenario facts (question statement)\n   ------------------------------ */\n\nscenario_state(puerto_rico).\nscenario_focus_year(2021).\n\n/* The question concerns eviction actions. */\nscenario_action(eviction_action_case).\n\n/* The method being asked about: delivery by commercial carrier (e.g., FedEx/UPS). */\nscenario_queried_service_method(delivery_by_commercial_carrier).\n\n/* scenario_statement/0 succeeds when the factual scenario encoded matches the question. */\nscenario_statement :-\n    scenario_state(puerto_rico),\n    scenario_focus_year(2021),\n    scenario_action(eviction_action_case),\n    scenario_queried_service_method(delivery_by_commercial_carrier).\n\n/* ------------------------------\n   Statute encoding\n   PR Laws tit. 1,  4.4 (2020)\n   ------------------------------ */\n\n/*\n   4.4 describes service of summons and complaint together, by delivering copies\n  physically to the defendant (or specified substitute recipients), or making them\n  accessible in the defendant's immediate presence, and noting details on the summons.\n\n  It enumerates categories of recipients (adult, agent, parent/tutor, corporate officer, etc.)\n  but the service mechanism is in-person delivery / immediate presence accessibility,\n  not delivery by commercial carrier.\n*/\n\n/* The statute's core service mechanism: in-person delivery or immediate-presence access. */\nstatute_pr_1_4_4_service_mechanism(in_person_physical_delivery).\nstatute_pr_1_4_4_service_mechanism(immediate_presence_access).\n\n/* Enumerated recipient categories in 4.4 (modeled at a high level). */\nstatute_pr_1_4_4_recipient_category(adult_personally).\nstatute_pr_1_4_4_recipient_category(adult_authorized_agent).\nstatute_pr_1_4_4_recipient_category(minor_under_14_parent_or_tutor_or_caretaker).\nstatute_pr_1_4_4_recipient_category(minor_14_or_more_minor_and_parent_or_tutor_or_caretaker).\nstatute_pr_1_4_4_recipient_category(judicially_incapacitated_person_and_tutor).\nstatute_pr_1_4_4_recipient_category(mental_health_institution_person_and_director).\nstatute_pr_1_4_4_recipient_category(correctional_institution_person_and_director).\nstatute_pr_1_4_4_recipient_category(entity_officer_or_authorized_agent).\nstatute_pr_1_4_4_recipient_category(marital_community_both_spouses).\nstatute_pr_1_4_4_recipient_category(commonwealth_secretary_of_justice_or_designee).\nstatute_pr_1_4_4_recipient_category(official_or_instrumentality_head_plus_secretary_of_justice).\nstatute_pr_1_4_4_recipient_category(municipality_executive_or_designee).\n\n/*\n  Deterministic predicate capturing \"primary methods\":\n  Primary methods are those the statute affirmatively provides as the default manner\n  to effect service (i.e., what must be attempted before any \"secondary\" methods, if any,\n  would be allowed by some other rule).\n*/\nstatute_pr_1_4_4_primary_method(in_person_physical_delivery) :- !.\nstatute_pr_1_4_4_primary_method(immediate_presence_access) :- !.\n\n/* Delivery by commercial carrier is not among 4.4's mechanisms. */\nstatute_pr_1_4_4_primary_method(delivery_by_commercial_carrier) :- fail.\n\n/* ------------------------------\n   Application to eviction actions (scenario reasoning layer)\n   ------------------------------ */\n\n/* In this QA, we treat eviction actions as civil actions using 4.4 service rules. */\nservice_rules_apply_to_action(eviction_action_case, pr_1_4_4) :- !.\nservice_rules_apply_to_action(_, _) :- fail.\n\n/* A method is a primary method for the action if the applicable statute defines it as primary. */\nprimary_method_for_action(Action, Method) :-\n    service_rules_apply_to_action(Action, pr_1_4_4),\n    statute_pr_1_4_4_primary_method(Method).\n\n/* ------------------------------\n   Answer predicate\n   ------------------------------ */\n\nhousing_answer(Result) :-\n    scenario_statement,\n    scenario_action(Action),\n    scenario_queried_service_method(Method),\n    (   primary_method_for_action(Action, Method)\n    ->  Result = yes\n    ;   Result = no\n    ),\n    !.\n\n/* ------------------------------\n   Main entrypoint (required)\n   ------------------------------ */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-3393",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Primary methods of service are defined as those methods that must be attempted before a secondary method is permitted. Is delivery by commercial carrier a primary method of service for eviction actions?"
+  }
+}

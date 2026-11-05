@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 2197,
+  "table": "religion-table02",
+  "structure": "MultiColumnClassified",
+  "question_type": "Numerical Reasoning",
+  "sub_type": "Counting",
+  "answer": "6",
+  "cot": [
+    {
+      "planning": "Identify the column for the year 2018 in the table."
+    },
+    {
+      "planning": "Look at the 'Estimate' rows for each religion under the 2018 column to find the unemployment rates."
+    },
+    {
+      "planning": "Count the number of religions with an unemployment rate below 4%."
+    }
+  ],
+  "case_id": "B01-rht-3833",
+  "expected": {
+    "kind": "answer",
+    "question": "How many religions had an unemployment rate below 4% in 2018? (Final answer should be an integer.)",
+    "answer": "6"
+  }
+}

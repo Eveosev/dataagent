@@ -1,0 +1,27 @@
+{
+  "source": "beaverbench/beaver-query",
+  "id": "nova_515",
+  "db": "nova",
+  "question": "For each migration status, show the status and compute the average and variance of the migrated instance memory size in MB, considering only non-deleted migrations for instances that have an INSTANCE_EXTRA record, and only for active migrations. Do not return any rounded answers.",
+  "sql": "SELECT m.status, AVG(i.memory_mb) AS avg_memory_mb, VARIANCE(i.memory_mb) AS memory_mb_variance FROM migrations AS m JOIN instances AS i ON m.instance_uuid = i.uuid JOIN instance_extra AS ie ON i.uuid = ie.instance_uuid WHERE m.deleted = 0 AND m.status NOT IN ('accepted', 'confirmed', 'reverted', 'error', 'failed', 'completed') GROUP BY m.status ORDER BY memory_mb_variance DESC;",
+  "tables": "[\"MIGRATIONS\", \"INSTANCES\", \"INSTANCE_EXTRA\"]",
+  "join_keys": "[[\"MIGRATIONS.INSTANCE_UUID\", \"INSTANCES.UUID\"], [\"INSTANCES.UUID\", \"INSTANCE_EXTRA.INSTANCE_UUID\"]]",
+  "column_mapping": "{\"migration status\": [\"MIGRATIONS.STATUS\"], \"migrated instance memory size in MB\": [\"INSTANCES.MEMORY_MB\"], \"non-deleted migrations\": [\"MIGRATIONS.DELETED\"], \"instances that have an INSTANCE_EXTRA record\": [\"INSTANCE_EXTRA.INSTANCE_UUID\"]}",
+  "domain_knowledge": "[\"\\\"Active migrations\\\" is predicated by \\\"migrations.status NOT IN ('accepted', 'confirmed', 'reverted', 'error', 'failed', 'completed')\\\"\"]",
+  "sub_questions": "[]",
+  "sub_sqls": "[]",
+  "category": "domain-specific query",
+  "detailed_category": "base",
+  "case_id": "B05-beaver-0545",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT m.status, AVG(i.memory_mb) AS avg_memory_mb, VARIANCE(i.memory_mb) AS memory_mb_variance FROM migrations AS m JOIN instances AS i ON m.instance_uuid = i.uuid JOIN instance_extra AS ie ON i.uuid = ie.instance_uuid WHERE m.deleted = 0 AND m.status NOT IN ('accepted', 'confirmed', 'reverted', 'error', 'failed', 'completed') GROUP BY m.status ORDER BY memory_mb_variance DESC;",
+    "sub_sqls": "[]",
+    "db": "nova",
+    "tables": "[\"MIGRATIONS\", \"INSTANCES\", \"INSTANCE_EXTRA\"]",
+    "join_keys": "[[\"MIGRATIONS.INSTANCE_UUID\", \"INSTANCES.UUID\"], [\"INSTANCES.UUID\", \"INSTANCE_EXTRA.INSTANCE_UUID\"]]",
+    "column_mapping": "{\"migration status\": [\"MIGRATIONS.STATUS\"], \"migrated instance memory size in MB\": [\"INSTANCES.MEMORY_MB\"], \"non-deleted migrations\": [\"MIGRATIONS.DELETED\"], \"instances that have an INSTANCE_EXTRA record\": [\"INSTANCE_EXTRA.INSTANCE_UUID\"]}",
+    "category": "domain-specific query",
+    "db_archive": "bench://beaver-table/beaver_db.zip"
+  }
+}

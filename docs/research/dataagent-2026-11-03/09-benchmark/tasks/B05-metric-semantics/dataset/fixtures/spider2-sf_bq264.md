@@ -1,0 +1,1 @@
+Identify the difference in the number of the oldest and youngest users registered between January 1, 2019, and April 30, 2022, from our e-commerce platform data.

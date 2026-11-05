@@ -1,0 +1,29 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 2126,
+  "table": "labor-table54",
+  "structure": "ContentCompound",
+  "question_type": "Fact Checking",
+  "sub_type": "Inference-based Fact Checking",
+  "answer": "1979",
+  "cot": [
+    {
+      "planning": "Locate the section of the table that contains data for men."
+    },
+    {
+      "planning": "Identify the column for the age group 25 to 34 years within the men's section."
+    },
+    {
+      "planning": "Scan through the years to find the highest value in this column."
+    },
+    {
+      "planning": "Identify the year corresponding to this highest value."
+    }
+  ],
+  "case_id": "B01-rht-3762",
+  "expected": {
+    "kind": "answer",
+    "question": "In which year did men aged 25 to 34 years have the highest inflation-adjusted median hourly earnings? (Final answer should be a specific year.)",
+    "answer": "1979"
+  }
+}

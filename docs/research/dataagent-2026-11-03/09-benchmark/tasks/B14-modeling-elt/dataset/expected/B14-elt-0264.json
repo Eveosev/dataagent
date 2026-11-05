@@ -1,0 +1,118 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "snowflake",
+  "pipeline": "public_review_platform",
+  "data_model": {
+    "models": [
+      {
+        "name": "public_review_platform__users",
+        "description": "Each record represents a user.",
+        "columns": [
+          {
+            "name": "user_id",
+            "description": "Unique identifier for the user."
+          },
+          {
+            "name": "user_yelping_since_year",
+            "description": "The time when the user join Yelp."
+          },
+          {
+            "name": "user_fans",
+            "description": "The total number of fans / followers the user has"
+          },
+          {
+            "name": "num_5_star_reviews",
+            "description": "The number of 5-star reviews the user has given, replace NULL values with 0."
+          },
+          {
+            "name": "num_business_reviewed",
+            "description": "The number of businesses the user has reviewed, replace NULL values with 0."
+          },
+          {
+            "name": "received_funny_type_of_compliments",
+            "description": "Set to 1 if the user has received a funny type of compliment, 0 otherwise."
+          },
+          {
+            "name": "is_an_elite_user_for_5_years_or_more",
+            "description": "Set to 1 if the user has been an elite user for 5 years or more, 0 otherwise."
+          },
+          {
+            "name": "received_less_than_5_low_compliments_from_other_users",
+            "description": "Set to 1 if the user has received less than 5 low compliments from other users, 0 otherwise."
+          }
+        ]
+      },
+      {
+        "name": "public_review_platform__businesses",
+        "description": "Each record represents a business.",
+        "columns": [
+          {
+            "name": "business_id",
+            "description": "Unique identifier for the business."
+          },
+          {
+            "name": "active",
+            "description": "whether the business is still actively running until now"
+          },
+          {
+            "name": "city",
+            "description": "The city where the business is located."
+          },
+          {
+            "name": "num_long_reviews",
+            "description": "The number of long reviews the business has received, replace NULL values with 0."
+          },
+          {
+            "name": "is_under_the_category_of_Food_are_good_for_kids",
+            "description": "Set to 1 if the business is under the category of Food and are good for kids, 0 otherwise."
+          },
+          {
+            "name": "average_review_star",
+            "description": "The average review star of the business"
+          },
+          {
+            "name": "has_more_than_10_attributes",
+            "description": "Set to 1 if the business has more than 10 attributes whose value is 'true', 0 otherwise."
+          },
+          {
+            "name": "received_the_review_of_4_star_and_above_by_65_per_of_user",
+            "description": "Set to 1 if at least 65% of users have given the business a review of 4 stars or higher; otherwise, set to 0."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    snowflake_definition_id: 424892c4-daac-4491-b35d-c6688ba547ba\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://public-review-platform-bucket/Days.jsonl\n    sync_mode: full_refresh_append\n    table: Days\n  - path: s3://public-review-platform-bucket/Categories.csv\n    sync_mode: full_refresh_append\n    table: Categories\n  - path: s3://public-review-platform-bucket/Checkins.csv\n    sync_mode: full_refresh_append\n    table: Checkins\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - Business\nflat_files:\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=1cG0jd84OPeWftWNxAeHezXAs1f-zyEOY\n  sync_mode: full_refresh_append\n  table: Attributes\n- format: csv\n  path: https://drive.google.com/uc?export=download&id=1Gn3fzHt8Hf4fSgyKKGIurhrhi5zxS9Dx\n  sync_mode: full_refresh_append\n  table: Compliments\n- format: parquet\n  path: https://drive.google.com/uc?export=download&id=1JvJJQH2djOWbwASAJ-2hQQ-3r9IJxB5v\n  sync_mode: full_refresh_append\n  table: Years\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: public_review_platform\n    sync_mode: full_refresh_append\n    tables:\n    - Business_Attributes\n    - Business_Hours\n    - Users\n    - Users_Compliments\n    - Reviews\npostgres:\n  config:\n    database: public_review_platform\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - business_categories\n    - elite\n    - tips\n    user: postgres\nsnowflake:\n  config:\n    database: public_review_platform\n    password: Snowflake@123\n    role: AIRBYTE_ROLE\n    schema: AIRBYTE_SCHEMA\n    username: AIRBYTE_USER\n    warehouse: AIRBYTE_WAREHOUSE\n",
+  "case_id": "B14-elt-0264",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "public_review_platform__users",
+        "columns": [
+          "user_id",
+          "user_yelping_since_year",
+          "user_fans",
+          "num_5_star_reviews",
+          "num_business_reviewed",
+          "received_funny_type_of_compliments",
+          "is_an_elite_user_for_5_years_or_more",
+          "received_less_than_5_low_compliments_from_other_users"
+        ]
+      },
+      {
+        "name": "public_review_platform__businesses",
+        "columns": [
+          "business_id",
+          "active",
+          "city",
+          "num_long_reviews",
+          "is_under_the_category_of_Food_are_good_for_kids",
+          "average_review_star",
+          "has_more_than_10_attributes",
+          "received_the_review_of_4_star_and_above_by_65_per_of_user"
+        ]
+      }
+    ]
+  }
+}

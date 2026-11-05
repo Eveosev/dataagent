@@ -1,0 +1,28 @@
+[package]
+name = "dataagent/preset-s0"
+version = "0.1.0"
+kind = "preset"
+description = "DataAgent S0 组合预设：把数据层、应用层、评测治理层三个 bundle 装配为一个可用工作区，并附判定族、计算族两条端到端 Skill（访问判定 → 接入 → 抽取或规整 → 规则或指标 → 执行 → 验收 → 报告）"
+license = "Apache-2.0"
+keywords = ["dataagent", "preset", "s0", "end-to-end"]
+
+[requires]
+api = "^0.1"
+
+[provides]
+presets = ["dataagent-s0"]
+skills = ["dataagent-s0-judgment", "dataagent-s0-compute"]
+
+[dependencies]
+"dataagent/data-layer" = { path = "../dataagent-data/packaging/bundle" }
+"dataagent/application-layer" = { path = "../dataagent-application/packaging/bundle" }
+"dataagent/governance-layer" = { path = "../dataagent-governance/packaging/bundle" }
+# 统一 CLI 分发器（12 §5.1）：无构建步骤的静态包，path 直接指向包根。
+"dataagent/cli" = { path = "../dataagent-cli" }
+
+# 08 §4.3（S0 验收以 enforce 运行）不由 preset 声明：`[packages]` 只在项目清单
+# （kind = agent）里合法。enforce 经各 bundle 自己的 `.mcp.json` env 注入
+# （Mint 清空子进程环境后这是唯一注入通道）：治理层与数据层都以
+# DATAAGENT_ENFORCEMENT_MODE=enforce 拉起 MCP。见 README「执行模式」。
+# 依赖用 path 指向同仓三个 bundle：三个包尚未发布到仓库（hub 404），版本约束
+# `^0.1.0` 无法离线解析；发布时改为版本约束即可（见 README「安装」）。

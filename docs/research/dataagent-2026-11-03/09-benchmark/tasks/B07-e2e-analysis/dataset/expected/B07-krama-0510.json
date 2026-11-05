@@ -1,0 +1,36 @@
+{
+  "source": "mitdbg/KramaBench",
+  "file": "dr-input/wildfire/wildfire_random.json",
+  "raw": {
+    "id": "wildfire-hard-12",
+    "query": "Has fire start distribution around the year shifted earlier or later over time? Answer with **only** 'Yes' or 'No'. No explanation needed.",
+    "answer": "No",
+    "answer_type": "string_approximate",
+    "data_sources": [
+      "Fire_Weather_Data_2002-2014_2016.csv"
+    ],
+    "runtime": 10,
+    "input_files_to_dr": [
+      "nifc_human_caused_acres.csv",
+      "ZHVI.parquet",
+      "nifc_suppression_costs.csv",
+      "nifc_human_caused_wildfires.csv",
+      "annual_aqi_by_county_2024.csv",
+      "NST-EST2024-POP.xlsx",
+      "WeatherEvents_Jan2016-Dec2022_part_3.csv",
+      "Fire_Weather_Data_2002-2014_2016.csv",
+      "noaa_wildfires.csv",
+      "state_abbreviation_to_state.json"
+    ]
+  },
+  "case_id": "B07-krama-0510",
+  "expected": {
+    "kind": "answer",
+    "answer": "No",
+    "answer_type": "string_approximate",
+    "runtime_s": 10,
+    "data_sources": [
+      "Fire_Weather_Data_2002-2014_2016.csv"
+    ]
+  }
+}

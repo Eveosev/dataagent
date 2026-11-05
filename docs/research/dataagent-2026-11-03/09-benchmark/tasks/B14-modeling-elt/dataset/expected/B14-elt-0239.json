@@ -1,0 +1,67 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "snowflake",
+  "pipeline": "ice_hockey_draft",
+  "data_model": {
+    "models": [
+      {
+        "name": "players",
+        "description": "Each record represents a player",
+        "columns": [
+          {
+            "name": "elite_id",
+            "description": "Unique identifier for the player"
+          },
+          {
+            "name": "player_name",
+            "description": "Name of the player"
+          },
+          {
+            "name": "player_height_in_cm",
+            "description": "Height of the player in cm"
+          },
+          {
+            "name": "num_games_played",
+            "description": "Number of games played by the player, replace NULL values with 0."
+          },
+          {
+            "name": "diff_goals_bewteen_Rs_and_Pf",
+            "description": "The difference in the number of goals the player scored during the regular season versus the playoffs, calculated as regular season minus playoffs. Leave it as NULL if any data is missing."
+          },
+          {
+            "name": "total_penalty_minutes_season_1997_1998",
+            "description": "Total penalty minutes for the player during the 1997-1998 season, replace NULL values with 0."
+          },
+          {
+            "name": "num_goals_for_Rimouski_Oceanic_in_playoff",
+            "description": "Number of goals scored by the player for the Rimouski Oceanic during the playoffs, replace NULL values with 0."
+          },
+          {
+            "name": "player_BMI",
+            "description": "Body Mass Index of the player"
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    snowflake_definition_id: 424892c4-daac-4491-b35d-c6688ba547ba\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://ice-hockey-draft-bucket/weight_info.csv\n    sync_mode: full_refresh_append\n    table: weight_info\nflat_files:\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=1gi1cqJg3N199ZGnHpFNG-EpMA0XxfS76\n  sync_mode: full_refresh_append\n  table: height_info\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: ice_hockey_draft\n    sync_mode: full_refresh_append\n    tables:\n    - PlayerInfo\npostgres:\n  config:\n    database: ice_hockey_draft\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - seasonstatus\n    user: postgres\nsnowflake:\n  config:\n    database: ice_hockey_draft\n    password: Snowflake@123\n    role: AIRBYTE_ROLE\n    schema: AIRBYTE_SCHEMA\n    username: AIRBYTE_USER\n    warehouse: AIRBYTE_WAREHOUSE\n",
+  "case_id": "B14-elt-0239",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "players",
+        "columns": [
+          "elite_id",
+          "player_name",
+          "player_height_in_cm",
+          "num_games_played",
+          "diff_goals_bewteen_Rs_and_Pf",
+          "total_penalty_minutes_season_1997_1998",
+          "num_goals_for_Rimouski_Oceanic_in_playoff",
+          "player_BMI"
+        ]
+      }
+    ]
+  }
+}

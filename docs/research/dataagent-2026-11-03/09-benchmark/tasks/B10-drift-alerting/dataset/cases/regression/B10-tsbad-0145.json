@@ -1,0 +1,34 @@
+{
+  "case_id": "B10-tsbad-0145",
+  "task_id": "B10",
+  "split_role": "regression",
+  "inputs": [
+    {
+      "kind": "series",
+      "ref": "bench://tsb-ad-u/TSB-AD-U/268_IOPS_id_9_WebService_tr_6216_1st_6316.csv",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B10-tsbad-0145.json"
+  },
+  "evidence": [
+    "bench://tsb-ad-u/TSB-AD-U/268_IOPS_id_9_WebService_tr_6216_1st_6316.csv"
+  ],
+  "tags": [
+    "tsb-ad",
+    "u",
+    "Web Service"
+  ],
+  "source": "tsbad",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

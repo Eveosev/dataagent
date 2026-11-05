@@ -1,0 +1,22 @@
+{
+  "source": "KAKA22/SpreadsheetBench",
+  "raw": {
+    "id": "470-22",
+    "instruction": "I need to amend my code to extract account numbers from the 'Acc Numbers' sheet to the 'Extract Acc Non Zero' sheet, specifically only copying those account numbers whose corresponding values in Column B are not zero. My current macro clears the 'Extract Acc Non Zero' sheet, copies the entire range of account numbers from the 'Acc Numbers' sheet starting at A2 to the last row, and pastes the values in the 'Extract Acc Non Zero' sheet starting at cell A1. However, it does not filter out the account numbers where the value in Column B is zero, which is a capability I require.",
+    "spreadsheet_path": "spreadsheet/470-22",
+    "instruction_type": "Sheet-Level Manipulation",
+    "answer_position": "'Extract Acc Non Zero'!A1:B28",
+    "answer_sheet": "Extract Acc Non Zero",
+    "data_position": "Acc Numbers!'A1:B30'"
+  },
+  "case_id": "B09-ssb-0261",
+  "expected": {
+    "kind": "sheet_answer",
+    "instruction": "I need to amend my code to extract account numbers from the 'Acc Numbers' sheet to the 'Extract Acc Non Zero' sheet, specifically only copying those account numbers whose corresponding values in Column B are not zero. My current macro clears the 'Extract Acc Non Zero' sheet, copies the entire range of account numbers from the 'Acc Numbers' sheet starting at A2 to the last row, and pastes the values in the 'Extract Acc Non Zero' sheet starting at cell A1. However, it does not filter out the account numbers where the value in Column B is zero, which is a capability I require.",
+    "answer": null,
+    "answer_sheet": "Extract Acc Non Zero",
+    "answer_position": "'Extract Acc Non Zero'!A1:B28",
+    "data_position": "Acc Numbers!'A1:B30'",
+    "instruction_type": "Sheet-Level Manipulation"
+  }
+}

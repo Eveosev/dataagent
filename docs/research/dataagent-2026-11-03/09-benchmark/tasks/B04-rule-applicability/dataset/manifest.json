@@ -1,0 +1,79 @@
+{
+  "dataset_id": "B04.dataset",
+  "task_id": "B04",
+  "revision": "v0.3",
+  "status": "collecting",
+  "unit": "clause_set",
+  "sources": [
+    {
+      "name": "deonticbench",
+      "locator": "gydou/DeonticBench",
+      "license": "未声明",
+      "digest": "sha256:98828d6614fb43cc33c5351264a5eea7d123dc4b70afec69480389f5e9e90ac9",
+      "revision": "805fb0529d7ae295679c5c1730765ec07d2c20ac",
+      "files": 39,
+      "mb": 31.0,
+      "fetched_at": "2026-11-04T17:33:03+08:00"
+    }
+  ],
+  "splits": {
+    "development": {
+      "count": 120,
+      "frozen": false
+    },
+    "regression": {
+      "count": 60,
+      "frozen": false
+    },
+    "unseen_acceptance": {
+      "count": 60,
+      "frozen": false
+    }
+  },
+  "exposure": {
+    "ledger_ref": "exposure.jsonl",
+    "entries": 0
+  },
+  "fixtures": {
+    "storage": "local",
+    "path": "fixtures/",
+    "limits": "单文件 <= 2 MB；超出走对象存储并在 digest 记录"
+  },
+  "updated": "2026-11-05",
+  "notes": "由 build_cases.py 从 workspace/benchmark-data 构建；原始数据不入库",
+  "build": {
+    "version": 3,
+    "script": "tools/build_cases.py",
+    "built_at": "2026-11-05",
+    "policy": "只取二分类域（housing / sara_binary / uscis-aao）的 whole 集，hard 作为标签复用不重复入库；label 统一归一到 yes/no（原始值记在 gold.raw_label）；split 按行 id 哈希 60/20/20。statutes 与事实合并为单份 fixtures 文档。",
+    "available": {
+      "development": 3494,
+      "regression": 1203,
+      "unseen_acceptance": 1135
+    },
+    "selected": {
+      "development": 120,
+      "regression": 60,
+      "unseen_acceptance": 60
+    },
+    "caps": {
+      "development": 120,
+      "regression": 60,
+      "unseen_acceptance": 60
+    },
+    "coverage": {
+      "covered_metrics": [
+        "rule_selection_accuracy"
+      ],
+      "missing_metrics": [
+        "condition_direction_consistency",
+        "decidability_accuracy",
+        "unknown_retention"
+      ],
+      "note": "airline 与 sara_numeric 的 label 是数值答案，不适用于分类指标，未入库；二分类域没有 unknown 标签，unknown_retention 需自建歧义用例；方向一致性与三分类需自建配对/标注。"
+    },
+    "counts": {
+      "deonticbench": 5832
+    }
+  }
+}

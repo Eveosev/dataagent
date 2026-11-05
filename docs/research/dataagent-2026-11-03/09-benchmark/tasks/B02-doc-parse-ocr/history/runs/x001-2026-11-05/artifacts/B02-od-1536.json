@@ -1,0 +1,201 @@
+{
+  "text": "as desired.\nRemark: The use of Cesaro's lemma above is the special case $b_n = n$ of the Cesaro-Stolz theorem: if $a_n, b_n$\nare sequences such that $b_n$ is positive, strictly increasing, and unbounded, and\n$$\n\\lim_{n \\to \\infty} \\frac{a_{n+1} - a_n}{b_{n+1} - b_n} = L,\n$$\nthen\n$$ \\lim_{n \\to \\infty} \\frac{a_n}{b_n} = L. $$\nSecond solution: In this solution, rather than applying Taylor's theorem with remainder to $(1+x)^m$ for $1 < m < 2$ and $x > 0$, we only apply convexity to deduce that $(1+x)^m \\ge 1+mx$. This gives\n$$\na_{n+1}^{(k+1)/k} - a_n^{(k+1)/k} \\geq \\frac{k+1}{k},\n$$\nand so\n$$\na_{n}^{(k+1)/k} \\geq \\frac{k+1}{k} n+c\n$$\nfor some $c \\in \\mathbb{R}$. In particular,\n$$\n\\liminf_{n \\to \\infty} \\frac{a_n^{(k+1)/k}}{n} \\geq \\frac{k+1}{k}\n$$\nand so\n$$\n\\liminf_{n \\to \\infty} \\frac{a_n}{n^{k/(k+1)}} \\geq \\left(\\frac{k+1}{k}\\right)^{k/(k+1)}.\n$$\nBut turning this around, the fact that\n$$\n\\begin{array}{l}\na_{n+1} - a_n \\\\\n= a_n^{-1/k} \\\\\n\\leq \\left( \\frac{k+1}{k} \\right)^{-1/(k+1)} n^{-1/(k+1)} (1+o(1)),\n\\end{array}\n$$\nwhere $o(1)$ denotes a function tending to 0 as $n \\to \\infty$,\nyields\n$$\n\\begin{array}{l}a_{n} \\\\ \\leq\\left(\\frac{k+1}{k}\\right)^{-1 /(k+1)} \\sum_{i=1}^{n} i^{-1 /(k+1)}(1+o(1)) \\\\ =\\frac{k+1}{k}\\left(\\frac{k+1}{k}\\right)^{-1 /(k+1)} n^{k /(k+1)}(1+o(1)) \\\\ =\\left(\\frac{k+1}{k}\\right)^{k /(k+1)} n^{k /(k+1)}(1+o(1)),\\end{array}\n$$\nso\n$$\n\\limsup_{n \\to \\infty} \\frac{a_n}{n^{k/(k+1)}} \\leq \\left( \\frac{k+1}{k} \\right)^{k/(k+1)}\n$$\nand this completes the proof.\nThird solution: We argue that $a_{n} \\to \\infty$ as in the first\nsolution. Write $b_{n} = a_{n} - L n^{k/(k+1)}$, for a value of $L$ to\nbe determined later. We have\n$$\n\\begin{array}{l}\nb_{n+1} \\\\\n=b_{n}+a_{n}^{-1 / k}-L\\left((n+1)^{k /(k+1)}-n^{k /(k+1)}\\right) \\\\\n=e_{1}+e_{2},\n\\end{array}\n$$\nwhere\n$$\n\\begin{array}{c}e_1 = b_n + a_n^{-1/k} - L^{-1/k}n^{-1/(k+1)} \\\\e_2 = L((n+1)^{k/(k+1)} - n^{k/(k+1)}) \\\\ -L^{-1/k}n^{-1/(k+1)}.\\end{array}\n$$\nWe first estimate $e_1$. For $-1 < m < 0$, by the convexity of $(1+x)^m$ and $(1+x)^{1-m}$, we have\n$$\n\\begin{array}{c}\n1+m x \\leq(1+x)^{m} \\\\\n\\leq 1+m x(1+x)^{m-1}.\n\\end{array}\n$$\nHence\n$$\n\\begin{array}{rl}\n-\\frac{1}{k} L^{-(k+1)/k} n^{-1} b_n & \\le e_1 - b_n \\\\\n& \\le -\\frac{1}{k} b_n a_n^{-(k+1)/k}.\n\\end{array}\n$$\nNote that both bounds have sign opposite to $b_n$; moreover, by the bound $a_n = \\Omega(n^{(k-1)/k})$, both bounds have\nabsolutely value strictly less than that of $b_n$ for $n$ sufficiently large. Consequently, for $n$ large,\n$$|e_1| \\leq |b_n|.$$\nWe now work on $e_{2}$. By Taylor’s theorem with remainder applied to $(1 + x)^{m}$ for $x > 0$ and $0 < m < 1$,\n$$\n\\begin{align*}\n1+m x & \\geq(1+x)^{m} \\\\\n      & \\geq 1+m x+\\frac{m(m-1)}{2} x^{2}.\n\\end{align*}\n$$\nThe “main term” of $L((n+1)^{k/(k+1)} - n^{k/(k+1)})$\nis $L\\frac{k}{k+1}n^{-1/(k+1)}$. To make this coincide with\n$L^{-1/k}n^{-1/(k+1)}$, we take\n$$\nL = \\left( \\frac { k + 1 } { k } \\right) ^ { k / ( k + 1 ) } .\n$$\nWe then find that\n$$\n|e_2| = O(n^{-2}),\n$$\nand because $b_{n+1} = e_{1} + e_{2}$, we have $|b_{n+1}| \\leq |b_{n}| + |e_{2}|$. Hence\n$$\n|b_n| = O\\left(\\sum_{i=1}^{n} i^{-2}\\right) = O(1),\n$$\n7",
+  "blocks": [
+    {
+      "category": "text_block",
+      "order": 1,
+      "text": "as desired."
+    },
+    {
+      "category": "text_block",
+      "order": 2,
+      "text": "Remark: The use of Cesaro's lemma above is the special case $b_n = n$ of the Cesaro-Stolz theorem: if $a_n, b_n$\nare sequences such that $b_n$ is positive, strictly increasing, and unbounded, and"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 3,
+      "latex": "$$\n\\lim_{n \\to \\infty} \\frac{a_{n+1} - a_n}{b_{n+1} - b_n} = L,\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 4,
+      "text": "then"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 5,
+      "latex": "$$ \\lim_{n \\to \\infty} \\frac{a_n}{b_n} = L. $$"
+    },
+    {
+      "category": "text_block",
+      "order": 6,
+      "text": "Second solution: In this solution, rather than applying Taylor's theorem with remainder to $(1+x)^m$ for $1 < m < 2$ and $x > 0$, we only apply convexity to deduce that $(1+x)^m \\ge 1+mx$. This gives"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 7,
+      "latex": "$$\na_{n+1}^{(k+1)/k} - a_n^{(k+1)/k} \\geq \\frac{k+1}{k},\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 8,
+      "text": "and so"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 9,
+      "latex": "$$\na_{n}^{(k+1)/k} \\geq \\frac{k+1}{k} n+c\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 10,
+      "text": "for some $c \\in \\mathbb{R}$. In particular,"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 11,
+      "latex": "$$\n\\liminf_{n \\to \\infty} \\frac{a_n^{(k+1)/k}}{n} \\geq \\frac{k+1}{k}\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 12,
+      "text": "and so"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 13,
+      "latex": "$$\n\\liminf_{n \\to \\infty} \\frac{a_n}{n^{k/(k+1)}} \\geq \\left(\\frac{k+1}{k}\\right)^{k/(k+1)}.\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 14,
+      "text": "But turning this around, the fact that"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 15,
+      "latex": "$$\n\\begin{array}{l}\na_{n+1} - a_n \\\\\n= a_n^{-1/k} \\\\\n\\leq \\left( \\frac{k+1}{k} \\right)^{-1/(k+1)} n^{-1/(k+1)} (1+o(1)),\n\\end{array}\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 16,
+      "text": "where $o(1)$ denotes a function tending to 0 as $n \\to \\infty$,\nyields"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 17,
+      "latex": "$$\n\\begin{array}{l}a_{n} \\\\ \\leq\\left(\\frac{k+1}{k}\\right)^{-1 /(k+1)} \\sum_{i=1}^{n} i^{-1 /(k+1)}(1+o(1)) \\\\ =\\frac{k+1}{k}\\left(\\frac{k+1}{k}\\right)^{-1 /(k+1)} n^{k /(k+1)}(1+o(1)) \\\\ =\\left(\\frac{k+1}{k}\\right)^{k /(k+1)} n^{k /(k+1)}(1+o(1)),\\end{array}\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 18,
+      "text": "so"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 19,
+      "latex": "$$\n\\limsup_{n \\to \\infty} \\frac{a_n}{n^{k/(k+1)}} \\leq \\left( \\frac{k+1}{k} \\right)^{k/(k+1)}\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 20,
+      "text": "and this completes the proof."
+    },
+    {
+      "category": "text_block",
+      "order": 21,
+      "text": "Third solution: We argue that $a_{n} \\to \\infty$ as in the first\nsolution. Write $b_{n} = a_{n} - L n^{k/(k+1)}$, for a value of $L$ to\nbe determined later. We have"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 22,
+      "latex": "$$\n\\begin{array}{l}\nb_{n+1} \\\\\n=b_{n}+a_{n}^{-1 / k}-L\\left((n+1)^{k /(k+1)}-n^{k /(k+1)}\\right) \\\\\n=e_{1}+e_{2},\n\\end{array}\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 23,
+      "text": "where"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 24,
+      "latex": "$$\n\\begin{array}{c}e_1 = b_n + a_n^{-1/k} - L^{-1/k}n^{-1/(k+1)} \\\\e_2 = L((n+1)^{k/(k+1)} - n^{k/(k+1)}) \\\\ -L^{-1/k}n^{-1/(k+1)}.\\end{array}\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 25,
+      "text": "We first estimate $e_1$. For $-1 < m < 0$, by the convexity of $(1+x)^m$ and $(1+x)^{1-m}$, we have"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 26,
+      "latex": "$$\n\\begin{array}{c}\n1+m x \\leq(1+x)^{m} \\\\\n\\leq 1+m x(1+x)^{m-1}.\n\\end{array}\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 27,
+      "text": "Hence"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 28,
+      "latex": "$$\n\\begin{array}{rl}\n-\\frac{1}{k} L^{-(k+1)/k} n^{-1} b_n & \\le e_1 - b_n \\\\\n& \\le -\\frac{1}{k} b_n a_n^{-(k+1)/k}.\n\\end{array}\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 29,
+      "text": "Note that both bounds have sign opposite to $b_n$; moreover, by the bound $a_n = \\Omega(n^{(k-1)/k})$, both bounds have\nabsolutely value strictly less than that of $b_n$ for $n$ sufficiently large. Consequently, for $n$ large,"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 30,
+      "latex": "$$|e_1| \\leq |b_n|.$$"
+    },
+    {
+      "category": "text_block",
+      "order": 31,
+      "text": "We now work on $e_{2}$. By Taylor’s theorem with remainder applied to $(1 + x)^{m}$ for $x > 0$ and $0 < m < 1$,"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 32,
+      "latex": "$$\n\\begin{align*}\n1+m x & \\geq(1+x)^{m} \\\\\n      & \\geq 1+m x+\\frac{m(m-1)}{2} x^{2}.\n\\end{align*}\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 33,
+      "text": "The “main term” of $L((n+1)^{k/(k+1)} - n^{k/(k+1)})$\nis $L\\frac{k}{k+1}n^{-1/(k+1)}$. To make this coincide with\n$L^{-1/k}n^{-1/(k+1)}$, we take"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 34,
+      "latex": "$$\nL = \\left( \\frac { k + 1 } { k } \\right) ^ { k / ( k + 1 ) } .\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 35,
+      "text": "We then find that"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 36,
+      "latex": "$$\n|e_2| = O(n^{-2}),\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 37,
+      "text": "and because $b_{n+1} = e_{1} + e_{2}$, we have $|b_{n+1}| \\leq |b_{n}| + |e_{2}|$. Hence"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 38,
+      "latex": "$$\n|b_n| = O\\left(\\sum_{i=1}^{n} i^{-2}\\right) = O(1),\n$$"
+    },
+    {
+      "category": "page_number",
+      "order": null,
+      "text": "7"
+    }
+  ],
+  "tables": []
+}

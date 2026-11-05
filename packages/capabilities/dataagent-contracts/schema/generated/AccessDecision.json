@@ -1,0 +1,136 @@
+{
+  "$comment": "generated from dataagent_contracts.core:AccessDecision; do not edit",
+  "$defs": {
+    "AccessOutcome": {
+      "enum": [
+        "allow",
+        "deny",
+        "indeterminate"
+      ],
+      "title": "AccessOutcome",
+      "type": "string"
+    },
+    "VersionedRef": {
+      "description": "Versioned reference serialized as '<id>@<revision>'.",
+      "pattern": "^[^@\\s]+@[^@\\s]+$",
+      "type": "string"
+    }
+  },
+  "$id": "dataagent-contracts/0.1/core/AccessDecision",
+  "additionalProperties": false,
+  "properties": {
+    "action": {
+      "const": "read",
+      "default": "read",
+      "title": "Action",
+      "type": "string"
+    },
+    "decision": {
+      "$ref": "#/$defs/AccessOutcome"
+    },
+    "decision_id": {
+      "minLength": 1,
+      "title": "Decision Id",
+      "type": "string"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "field_constraints": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Field Constraints"
+    },
+    "masking_obligations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Masking Obligations",
+      "type": "array"
+    },
+    "policy_ref": {
+      "$ref": "#/$defs/VersionedRef"
+    },
+    "purpose": {
+      "minLength": 1,
+      "title": "Purpose",
+      "type": "string"
+    },
+    "reasons": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Reasons",
+      "type": "array"
+    },
+    "requester_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Requester Ref"
+    },
+    "resource_ref": {
+      "$ref": "#/$defs/VersionedRef"
+    },
+    "row_constraints": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Row Constraints"
+    },
+    "subject_ref": {
+      "minLength": 1,
+      "title": "Subject Ref",
+      "type": "string"
+    },
+    "valid_until": {
+      "format": "date-time",
+      "title": "Valid Until",
+      "type": "string"
+    }
+  },
+  "required": [
+    "decision_id",
+    "policy_ref",
+    "subject_ref",
+    "resource_ref",
+    "purpose",
+    "decision",
+    "valid_until"
+  ],
+  "title": "AccessDecision",
+  "type": "object"
+}

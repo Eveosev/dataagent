@@ -1,0 +1,32 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_2b34cdc0",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "state",
+    "focus_year",
+    "term",
+    "meaning",
+    "statute_ma_ch281_s3_no_revival_of_previously_repealed_law",
+    "statute_ma_ch281_s3_no_revival_of_previously_abolished_office",
+    "statute_mentions_term",
+    "statute_defines_term_as_meaning",
+    "scenario_state",
+    "scenario_year",
+    "scenario_term",
+    "scenario_meaning",
+    "legal_term_used_for_meaning",
+    "nonvar",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: Massachusetts\n    Focus year: 2021\n\n    Question:\n    \"Is the term 'Writ of restitution' used to refer to the order from the court\n     to the authorities to remove a tenant?\"\n\n    Statutes provided (only):\n    [1] MA Gen L ch 281  3 (2021)\n*/\n\n% ---------------------------\n% Basic domain vocabulary\n% ---------------------------\n\nstate(massachusetts).\nfocus_year(2021).\n\n% Represent the queried term and meaning as atoms.\nterm(writ_of_restitution).\nmeaning(order_from_court_to_authorities_to_remove_tenant).\n\n% ---------------------------\n% Statute translation\n% ---------------------------\n\n/*\n  MA Gen L ch 281  3 (2021)\n  \"The repeal of a law by this act shall not revive a law heretofore repealed or\n   superseded, nor an office heretofore abolished.\"\n*/\n\n% Encodes the legal effect: repeal does not revive previously repealed/superseded law.\n% (MA Gen L ch 281  3 (2021))\nstatute_ma_ch281_s3_no_revival_of_previously_repealed_law(massachusetts, 2021).\n\n% Encodes the legal effect: repeal does not revive previously abolished offices.\n% (MA Gen L ch 281  3 (2021))\nstatute_ma_ch281_s3_no_revival_of_previously_abolished_office(massachusetts, 2021).\n\n% For reasoning about \"term used to refer to meaning\", we must model what the provided\n% statutes define or use. The provided statute does not mention \"writ of restitution\"\n% (or eviction orders), so we encode an empty \"mention/definition\" set for this statute.\n\n% statute_mentions_term(+State,+Year,+StatuteId,+Term)\n% No clauses are provided that would succeed for writ_of_restitution under the given statute.\n% (Intentionally left without any facts to reflect the statute text.)\nstatute_mentions_term(_State, _Year, _StatuteId, _Term) :-\n    fail.\n\n% statute_defines_term_as_meaning(+State,+Year,+Term,+Meaning)\n% No term definitions are present in the provided statute text.\nstatute_defines_term_as_meaning(_State, _Year, _Term, _Meaning) :-\n    fail.\n\n% ---------------------------\n% Scenario (question statement) translation\n% ---------------------------\n\n% The scenario is simply the inquiry about whether a term is used to refer to a meaning,\n% under Massachusetts law in 2021, based ONLY on the provided statutes.\nscenario_state(massachusetts).\nscenario_year(2021).\nscenario_term(writ_of_restitution).\nscenario_meaning(order_from_court_to_authorities_to_remove_tenant).\n\n% Helper predicate that succeeds when the factual statement of the scenario is satisfied.\nscenario_statement :-\n    scenario_state(State),\n    scenario_year(Year),\n    scenario_term(Term),\n    scenario_meaning(Meaning),\n    state(State),\n    focus_year(Year),\n    term(Term),\n    meaning(Meaning).\n\n% ---------------------------\n% Legal reasoning\n% ---------------------------\n\n% A term is \"used to refer to\" a meaning if, in the provided statutory material for that\n% jurisdiction/year, the term is defined as that meaning.\nlegal_term_used_for_meaning(State, Year, Term, Meaning) :-\n    statute_defines_term_as_meaning(State, Year, Term, Meaning),\n    !.\n\n% Fallback: even if not explicitly defined, one could infer usage if a statute mentions the term\n% in connection with the meaning. The provided statute does not mention the term at all.\nlegal_term_used_for_meaning(State, Year, Term, Meaning) :-\n    statute_mentions_term(State, Year, _StatuteId, Term),\n    nonvar(Meaning),\n    fail.\n\n% ---------------------------\n% Answer predicate (deterministic)\n% ---------------------------\n\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_state(State),\n    scenario_year(Year),\n    scenario_term(Term),\n    scenario_meaning(Meaning),\n    legal_term_used_for_meaning(State, Year, Term, Meaning),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n% ---------------------------\n% Main entrypoint\n% ---------------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-4390",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is the term 'Writ of restitution' used to refer to the order from the court to the authorities to remove a tenant?"
+  }
+}

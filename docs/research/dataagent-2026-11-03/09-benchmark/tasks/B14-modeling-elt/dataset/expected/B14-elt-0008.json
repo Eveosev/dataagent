@@ -1,0 +1,118 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "databricks",
+  "pipeline": "beer_factory",
+  "data_model": {
+    "models": [
+      {
+        "name": "beer_factory__customers",
+        "description": "Each record represents a customer.",
+        "columns": [
+          {
+            "name": "customer_id",
+            "description": "Unique identifier for the customer."
+          },
+          {
+            "name": "name",
+            "description": "Name of the customer. Concatenate the first name and last name with a space separating them."
+          },
+          {
+            "name": "address",
+            "description": "Address of the customer. Concatenate the street address, city and state with a space separating them."
+          },
+          {
+            "name": "num_reviews",
+            "description": "Number of reviews the customer has written, replace NULL values with 0."
+          },
+          {
+            "name": "purchased_beer_by_ASB",
+            "description": "set to 1 if the customer has purchased at least one root beer produced by AJ Stephans Beverages, otherwise, set to 0"
+          },
+          {
+            "name": "date_first_bought",
+            "description": "Date the customer first bought a root beer."
+          },
+          {
+            "name": "num_non_sweetened",
+            "description": "Number of non-sweetened root beers the customer has purchased, replace NULL values with 0. Non-sweetened root beers are defined as root beers that do not contain artificial sweetener and honey."
+          },
+          {
+            "name": "bought_beers_contain_artificial_sweetener",
+            "description": "set to 1 if the customer has purchased at least one root beer that contains artificial sweetener, otherwise, set to 0"
+          }
+        ]
+      },
+      {
+        "name": "brands",
+        "description": "Each record represents a brand of root beer.",
+        "columns": [
+          {
+            "name": "brand_id",
+            "description": "Unique identifier for the brand."
+          },
+          {
+            "name": "brandname",
+            "description": "Name of the brand."
+          },
+          {
+            "name": "address",
+            "description": "Address of the brand. Concatenate the city, state, and country with a space separating them."
+          },
+          {
+            "name": "num_5_stars",
+            "description": "Number of 5-star ratings the brand has received, replace NULL values with 0."
+          },
+          {
+            "name": "not_advertise_on_Facebook_and_Twitter",
+            "description": "set to 1 if the brand does not advertise on Facebook and Twitter, otherwise, set to 0"
+          },
+          {
+            "name": "unit_profit",
+            "description": "the unit profit of the brand available to wholesalers"
+          },
+          {
+            "name": "avg_rating_star",
+            "description": "Average rating star of the brand."
+          },
+          {
+            "name": "latitude_consumed_most",
+            "description": "Latitude where the brand is consumed the most with ties broken by the descending order of the latitude"
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    databricks_definition_id: 072d5540-f236-4294-ba7c-ade8fd918496\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://beer-factory-bucket/geolocation.csv\n    sync_mode: full_refresh_append\n    table: geolocation\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - rootbeerbrand\n    - rootbeerreview\nflat_files:\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=1Jg-0HtzU9fzFl8SG9L6dJ4Qi4eOwhZkk\n  sync_mode: full_refresh_append\n  table: location\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: beer_factory\n    sync_mode: full_refresh_append\n    tables:\n    - customers\npostgres:\n  config:\n    database: beer_factory\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - rootbeer\n    - transaction\n    user: postgres\ndatabricks:\n  config:\n    database: <db_database>\n    hostname: <db_hostname>\n    client_id: <db_client_id>\n    secret: <db_secret>\n    schema: beer_factory\n    http_path: <db_path>\n",
+  "case_id": "B14-elt-0008",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "beer_factory__customers",
+        "columns": [
+          "customer_id",
+          "name",
+          "address",
+          "num_reviews",
+          "purchased_beer_by_ASB",
+          "date_first_bought",
+          "num_non_sweetened",
+          "bought_beers_contain_artificial_sweetener"
+        ]
+      },
+      {
+        "name": "brands",
+        "columns": [
+          "brand_id",
+          "brandname",
+          "address",
+          "num_5_stars",
+          "not_advertise_on_Facebook_and_Twitter",
+          "unit_profit",
+          "avg_rating_star",
+          "latitude_consumed_most"
+        ]
+      }
+    ]
+  }
+}

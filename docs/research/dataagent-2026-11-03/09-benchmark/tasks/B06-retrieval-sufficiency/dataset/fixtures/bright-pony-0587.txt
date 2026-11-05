@@ -1,0 +1,31 @@
+## Identifying the Essential Problem:
+
+The essential problem is to determine whether a given lowercase English string `sentence` contains all 26 letters of the English alphabet at least once. This is known as checking if the string is a pangram.
+
+## Relevant Information and Approach:
+
+1. **Character Set:** We need a way to efficiently track the occurrence of each letter. A set is ideal for this purpose, as it allows for constant-time lookups and insertions.
+
+2. **Iteration:** We can iterate through each character in the `sentence` string.
+
+3. **Case Conversion:** Since we only care about the presence of letters, regardless of case, we should convert each character to lowercase before checking.
+
+4. **Set Manipulation:** For each lowercase character, we add it to the set. If the set's size reaches 26, it means we have encountered all letters, and the sentence is a pangram.
+
+## Draft Answer:
+
+```pony
+fun checkIfPangram(s: String): Bool =>
+    var seen = Set[Char]()
+
+    for c in s.chars {
+        seen.insert(c.toLower())
+        if seen.size == 26 {
+            return true
+        }
+    }
+
+    return false
+```
+
+This code first initializes an empty set called `seen`. Then, it iterates through each character `c` in the `sentence` string. For each character, it converts it to lowercase using `toLower()` and inserts it into the `seen` set. If the size of the `seen` set reaches 26, it means all letters have been encountered, and the function returns `true`. Otherwise, after iterating through all characters, the function returns `false`. 

@@ -1,0 +1,52 @@
+{
+  "case_id": "B03-eb-0368",
+  "task_id": "B03",
+  "split_role": "unseen_acceptance",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://extractbench/docs/long/sec_13f_0026_brown_brothers_harriman.pdf",
+      "digest": null
+    },
+    {
+      "kind": "schema",
+      "ref": "fixtures/eb-long-sec_13f_0026_brown_brothers_harriman-schema.json",
+      "digest": null
+    },
+    {
+      "kind": "rules",
+      "ref": "fixtures/eb-long-sec_13f_0026_brown_brothers_harriman-rules.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-eb-0368.json"
+  },
+  "evidence": [
+    "bench://extractbench/docs/long/sec_13f_0026_brown_brothers_harriman.pdf",
+    "fixtures/eb-long-sec_13f_0026_brown_brothers_harriman-schema.json",
+    "fixtures/eb-long-sec_13f_0026_brown_brothers_harriman-rules.md"
+  ],
+  "tags": [
+    "extractbench",
+    "long",
+    "tag:source:real",
+    "tag:challenge:T1.a",
+    "tag:structure:S4",
+    "tag:delivery:G1",
+    "tag:length:long",
+    "tag:domain:D1",
+    "fields:2"
+  ],
+  "source": "eb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "case_id": "B03-eb-0284",
+  "task_id": "B03",
+  "split_role": "unseen_acceptance",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://extractbench/docs/medium/ccc_online_0011_infinity_toyota_tacoma_corrupted.pdf",
+      "digest": null
+    },
+    {
+      "kind": "schema",
+      "ref": "fixtures/eb-medium-ccc_online_0011_infinity_toyota_tacoma_corrupted-schema.json",
+      "digest": null
+    },
+    {
+      "kind": "rules",
+      "ref": "fixtures/eb-medium-ccc_online_0011_infinity_toyota_tacoma_corrupted-rules.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-eb-0284.json"
+  },
+  "evidence": [
+    "bench://extractbench/docs/medium/ccc_online_0011_infinity_toyota_tacoma_corrupted.pdf",
+    "fixtures/eb-medium-ccc_online_0011_infinity_toyota_tacoma_corrupted-schema.json",
+    "fixtures/eb-medium-ccc_online_0011_infinity_toyota_tacoma_corrupted-rules.md"
+  ],
+  "tags": [
+    "extractbench",
+    "medium",
+    "tag:source:real",
+    "tag:challenge:T1.d",
+    "tag:challenge:T1.a",
+    "tag:challenge:T1.b",
+    "tag:structure:S2",
+    "tag:structure:S3",
+    "tag:delivery:G2",
+    "tag:delivery:G4",
+    "tag:length:medium",
+    "tag:domain:D4",
+    "tag:perception:P1",
+    "fields:48"
+  ],
+  "source": "eb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

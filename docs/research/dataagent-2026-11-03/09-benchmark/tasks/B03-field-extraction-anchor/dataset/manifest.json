@@ -1,0 +1,106 @@
+{
+  "dataset_id": "B03.dataset",
+  "task_id": "B03",
+  "revision": "v0.5",
+  "status": "collecting",
+  "unit": "document",
+  "sources": [
+    {
+      "name": "extractbench",
+      "locator": "llamaindex/ExtractBench",
+      "license": "Apache-2.0",
+      "digest": "sha256:21204b50a4a2cc87232c0fdeac7e05dd28acecf74c452a552f17616092a5e87a",
+      "revision": "f9b910906cd7e73cc9eb5379a8d5d935c67b92c4",
+      "files": 18,
+      "mb": 258.8,
+      "fetched_at": "2026-11-04T17:44:51+08:00"
+    },
+    {
+      "name": "cord-v2",
+      "locator": "naver-clova-ix/cord-v2",
+      "license": "CC BY 4.0",
+      "digest": "sha256:26e917f7f30ab8c98968ac60527b4a39252c9c1b409d6d4fb2e4cb0f5a84b5c3",
+      "revision": "7f0115a4b758a71d6473b8d085751692da2fef98",
+      "files": 24,
+      "mb": 2307.3,
+      "fetched_at": "2026-11-04T20:57:21+08:00"
+    },
+    {
+      "name": "funsd",
+      "locator": "nielsr/funsd",
+      "license": "CC BY 4.0",
+      "digest": "sha256:243d41548710f90f8dbd2c272d9c266db73735897acf5fa504ed721d9f1fd1d2",
+      "revision": "7e7eeeedd84ce86540eb83cbbf7c75a3fcc7c7a5",
+      "files": 12,
+      "mb": 16.6,
+      "fetched_at": "2026-11-04T20:58:07+08:00"
+    }
+  ],
+  "splits": {
+    "development": {
+      "count": 120,
+      "frozen": false
+    },
+    "regression": {
+      "count": 60,
+      "frozen": false
+    },
+    "unseen_acceptance": {
+      "count": 60,
+      "frozen": false
+    }
+  },
+  "exposure": {
+    "ledger_ref": "exposure.jsonl",
+    "entries": 0
+  },
+  "fixtures": {
+    "storage": "local",
+    "path": "fixtures/",
+    "limits": "单文件 <= 2 MB；超出走对象存储并在 digest 记录"
+  },
+  "updated": "2026-11-05",
+  "notes": "由 build_cases.py 从 workspace/benchmark-data 构建；原始数据不入库",
+  "build": {
+    "version": 5,
+    "script": "tools/build_cases.py",
+    "built_at": "2026-11-05",
+    "policy": "ExtractBench 三档全量 + CORD-v2 按 25% 抽样 + FUNSD 全量；PDF/图片走 bench://，Schema/规则/指令落 fixtures。split 按文档 id 哈希。",
+    "available": {
+      "development": 520,
+      "regression": 132,
+      "unseen_acceptance": 150
+    },
+    "selected": {
+      "development": 120,
+      "regression": 60,
+      "unseen_acceptance": 60
+    },
+    "caps": {
+      "development": 120,
+      "regression": 60,
+      "unseen_acceptance": 60
+    },
+    "coverage": {
+      "covered_metrics": [
+        "value_f1",
+        "record_completeness",
+        "hallucination_rate",
+        "evidence_span_f1",
+        "evidence_page_f1"
+      ],
+      "partial_metrics": [
+        "no_anchor_recall"
+      ],
+      "missing_metrics": [
+        "table_row_alignment"
+      ],
+      "note": "证据金标为派生：CORD 用 OCR 词序列把字段值对齐成词级 span（单页，page=1）；ExtractBench 从 schema description 的 'page N' 提取字段页码（约 14% 字段带页码提示，其余字段不进 page 分母）；FUNSD 只有 bbox，未产出 span/page。DocILE 因 gated 已用 CORD-v2 + FUNSD 替代。"
+    },
+    "counts": {
+      "short.jsonl": 252,
+      "medium.jsonl": 98,
+      "long.jsonl": 20
+    }
+  }
+}

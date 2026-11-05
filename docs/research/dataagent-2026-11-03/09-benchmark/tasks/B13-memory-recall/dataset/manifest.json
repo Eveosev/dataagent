@@ -1,0 +1,92 @@
+{
+  "dataset_id": "B13.dataset",
+  "task_id": "B13",
+  "revision": "v0.2",
+  "status": "collecting",
+  "unit": "question",
+  "sources": [
+    {
+      "name": "memoryagentbench",
+      "locator": "ai-hyz/MemoryAgentBench",
+      "license": "未声明",
+      "digest": "sha256:9b55aa6b07b8fc95fac3c186b888d8822603ea19b7494d4495e21c1e1df580f1",
+      "revision": null,
+      "files": 24,
+      "mb": 76.6,
+      "fetched_at": "2026-11-04T17:39:25+08:00"
+    },
+    {
+      "name": "longmemeval-cleaned",
+      "locator": "xiaowu0162/longmemeval-cleaned",
+      "license": "MIT",
+      "digest": null,
+      "revision": null,
+      "files": null,
+      "mb": null,
+      "fetched_at": null
+    }
+  ],
+  "splits": {
+    "development": {
+      "count": 120,
+      "frozen": false
+    },
+    "regression": {
+      "count": 60,
+      "frozen": false
+    },
+    "unseen_acceptance": {
+      "count": 60,
+      "frozen": false
+    }
+  },
+  "exposure": {
+    "ledger_ref": "exposure.jsonl",
+    "entries": 0
+  },
+  "fixtures": {
+    "storage": "local",
+    "path": "fixtures/",
+    "limits": "单文件 <= 2 MB；超出走对象存储并在 digest 记录"
+  },
+  "updated": "2026-11-04",
+  "notes": "由 build_cases.py 从 workspace/benchmark-data 构建；原始数据不入库",
+  "build": {
+    "version": 2,
+    "script": "tools/build_cases.py",
+    "built_at": "2026-11-04",
+    "policy": "MemoryAgentBench 全量（按 context 行）；LongMemEval 用 cleaned 版，取 oracle + s 两档。split 按行哈希。",
+    "available": {
+      "development": 659,
+      "regression": 224,
+      "unseen_acceptance": 263
+    },
+    "selected": {
+      "development": 120,
+      "regression": 60,
+      "unseen_acceptance": 60
+    },
+    "caps": {
+      "development": 120,
+      "regression": 60,
+      "unseen_acceptance": 60
+    },
+    "coverage": {
+      "covered_metrics": [
+        "answer_recall",
+        "conflict_detection"
+      ],
+      "missing_metrics": [
+        "provenance_accuracy",
+        "clarification_rate"
+      ],
+      "note": "溯源与澄清率需要 harness 记录引用片段与追问动作"
+    },
+    "counts": {
+      "accurate_retrieval": 22,
+      "long_range": 110,
+      "conflict_resolution": 8,
+      "test_time_learning": 6
+    }
+  }
+}

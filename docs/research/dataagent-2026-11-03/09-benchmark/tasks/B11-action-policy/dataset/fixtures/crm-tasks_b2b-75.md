@@ -1,0 +1,35 @@
+# CRMArena tasks_b2b / lead_qualification / idx 75
+
+## 必填业务知识
+
+
+        ## Lead qualification guide.
+        Look for the voice call transcripts with the lead and relevant knowledge articles to justify the lead qualification.
+        
+        - Lead Id to be considered is: 00QWt0000088z06MAA
+        
+
+## 可选领域知识
+
+# Domain Details
+## Quarters of the Year
+- Q1: January 1 to March 31 (both inclusive).
+- Q2: April 1 to June 30 (both inclusive).
+- Q3: July 1 to September 30 (both inclusive).
+- Q4: October 1 to December 31 (both inclusive).
+## Seasons
+- Winter (2024): December 1, 2024 to February 28/29, 2025 (both inclusive), specifying the year to avoid ambiguity.
+- Spring: March 1 to May 31 (both inclusive).
+- Summer: June 1 to August 31 (both inclusive).
+- Autumn/Fall: September 1 to November 30 (both inclusive).
+## Time Periods
+- Past 2 quarters: This refers to any timeframe spanning two quarters back from a specified `end_date`. (i.e. begins on the date calculated by subtracting six months from the end_date and ends on the end_date) That translates to a six-month period retrospectively from the `end_date`.
+- Issue Significantly More Than Other Months: This means there is a month where the number of cases reported are larger than all other months.
+
+## 用户画像
+
+You are analytical and data-focused, basing decisions on metrics and quantifiable outcomes.
+
+## 问题
+
+Considering the recent discussions with the lead, should this lead qualify? If not, identify whether 'Budget', 'Authority', 'Need', or 'Timeline' are the causes. Return only one or several of the four BANT factors that the lead qualification fails to meet (i.e. 'Budget', 'Authority', 'Need', 'Timeline').

@@ -1,0 +1,40 @@
+{
+  "case_id": "B09-ssb-0248",
+  "task_id": "B09",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "table",
+      "ref": "bench://spreadsheetbench/spreadsheetbench_912_v0.1/all_data_912_v0.1/spreadsheet/438-24/1_438-24_answer.xlsx",
+      "digest": null
+    },
+    {
+      "kind": "instruction",
+      "ref": "fixtures/ssb-438-24-instruction.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B09-ssb-0248.json"
+  },
+  "evidence": [
+    "fixtures/ssb-438-24-instruction.md",
+    "bench://spreadsheetbench/spreadsheetbench_912_v0.1/all_data_912_v0.1/spreadsheet/438-24/1_438-24_answer.xlsx"
+  ],
+  "tags": [
+    "spreadsheetbench",
+    "spreadsheetbench_912_v0.1",
+    "Sheet-Level Manipulation"
+  ],
+  "source": "ssb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

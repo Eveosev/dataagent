@@ -1,0 +1,38 @@
+## Identifying the problem:
+
+The problem is to determine whether it is possible to form a square using all the given matchsticks without breaking any of them. Each matchstick can be used only once.
+
+## Analyzing the problem:
+
+To form a square, the sum of all the matchstick lengths must be divisible by 4. This is because each side of the square will have the same length, and the sum of the lengths of the four sides must be equal.
+
+Furthermore, if we divide the matchsticks into four groups, each group must have the same sum. This is because each group will form one side of the square.
+
+## Relevant information:
+
+* The sum of all the matchstick lengths.
+* The number of matchsticks.
+* The length of each matchstick.
+
+## Detailed steps to solve the problem:
+
+1. Calculate the sum of all the matchstick lengths.
+2. Check if the sum is divisible by 4. If not, it is not possible to form a square.
+3. If the sum is divisible by 4, divide the matchsticks into four groups, each with the same sum.
+4. Check if each group contains a valid combination of matchsticks that can form a side of the square. This can be done by sorting the matchsticks in each group and checking if there are two pairs of matchsticks with the same length.
+5. If all four groups contain a valid combination of matchsticks, then it is possible to form a square. Otherwise, it is not possible.
+
+## Draft answer:
+
+Here is a step-by-step algorithm to determine whether it is possible to form a square using all the given matchsticks:
+
+1. Calculate the sum of all the matchstick lengths.
+2. If the sum is not divisible by 4, return `false`.
+3. Divide the matchsticks into four groups, each with the same sum.
+4. For each group:
+    * Sort the matchsticks in the group.
+    * If there are two pairs of matchsticks with the same length, continue to the next group.
+    * Otherwise, return `false`.
+5. If all four groups have a valid combination of matchsticks, return `true`. Otherwise, return `false`.
+
+This algorithm iterates through the matchsticks once and performs basic arithmetic operations. Therefore, its time complexity is O(n), where n is the number of matchsticks. The space complexity is O(1) because we only use a constant amount of extra space.

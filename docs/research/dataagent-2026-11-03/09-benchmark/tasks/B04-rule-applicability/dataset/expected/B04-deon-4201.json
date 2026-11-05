@@ -1,0 +1,28 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_4defd54f",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_year",
+    "scenario_asked_term",
+    "statute_sc_27_37_40_term",
+    "statute_sc_27_37_40_defines_court_order_to_remove_tenant",
+    "statute_sc_27_37_100_term",
+    "statute_sc_27_37_100_defines_court_order_to_remove_tenant",
+    "statute_sc_27_40_710_term",
+    "statute_term_used",
+    "term_refers_to_court_order_to_authorities_to_remove_tenant",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    State: South Carolina\n    Focus year: 2021\n    Question: Is the term 'Writ of possession' used to refer to the order from the court\n              to the authorities to remove a tenant?\n*/\n\n% -----------------------------\n% Scenario facts (question translation)\n% -----------------------------\n\nscenario_state(south_carolina).\nscenario_year(2021).\n\n% The term the question asks about (normalized atom form).\nscenario_asked_term(writ_of_possession).\n\n% Helper predicate that succeeds when the scenario is fully specified.\nscenario_statement :-\n    scenario_state(south_carolina),\n    scenario_year(2021),\n    scenario_asked_term(writ_of_possession).\n\n% -----------------------------\n% Statute translations (relevant terms + meaning)\n% -----------------------------\n\n/* SC Code  27-37-40 (2021)\n   If tenant fails to appear and show cause within ten days, magistrate shall issue\n   a warrant of ejectment; tenant shall be ejected by constable or sheriff.\n*/\nstatute_sc_27_37_40_term(south_carolina, 2021, warrant_of_ejectment).\nstatute_sc_27_37_40_defines_court_order_to_remove_tenant(south_carolina, 2021, warrant_of_ejectment) :-\n    % Issued by magistrate and executed by constable/sheriff to eject tenant.\n    true.\n\n/* SC Code  27-37-100 (2021)\n   If verdict for plaintiff, magistrate shall within five days issue a writ of ejectment;\n   tenant shall be ejected by constable or sheriff.\n*/\nstatute_sc_27_37_100_term(south_carolina, 2021, writ_of_ejectment).\nstatute_sc_27_37_100_defines_court_order_to_remove_tenant(south_carolina, 2021, writ_of_ejectment) :-\n    % Issued by magistrate and executed by constable/sheriff to eject tenant.\n    true.\n\n/* SC Code  27-40-710 (2021)\n   Mentions a \"form writ of eviction\" in the context of commencing eviction proceedings,\n   but does not state (in the provided text) that it is the court's order to authorities\n   to physically remove the tenant.\n*/\nstatute_sc_27_40_710_term(south_carolina, 2021, writ_of_eviction).\n\n% -----------------------------\n% Legal reasoning helpers\n% -----------------------------\n\n% A term is \"used in the statutes\" if any encoded statute mentions it as a term.\nstatute_term_used(State, Year, Term) :-\n    statute_sc_27_37_40_term(State, Year, Term).\nstatute_term_used(State, Year, Term) :-\n    statute_sc_27_37_100_term(State, Year, Term).\nstatute_term_used(State, Year, Term) :-\n    statute_sc_27_40_710_term(State, Year, Term).\n\n% A term refers to \"the order from the court to the authorities to remove a tenant\"\n% when the statute defines it as issued by the court and executed by constable/sheriff to eject.\nterm_refers_to_court_order_to_authorities_to_remove_tenant(State, Year, Term) :-\n    statute_sc_27_37_40_defines_court_order_to_remove_tenant(State, Year, Term).\nterm_refers_to_court_order_to_authorities_to_remove_tenant(State, Year, Term) :-\n    statute_sc_27_37_100_defines_court_order_to_remove_tenant(State, Year, Term).\n\n% The question is answered \"yes\" only if the asked term is used by the statutes\n% AND that used term refers to the relevant court order to authorities to remove the tenant.\nasked_term_is_used_for_removal_order :-\n    scenario_statement,\n    scenario_state(State),\n    scenario_year(Year),\n    scenario_asked_term(Term),\n    statute_term_used(State, Year, Term),\n    term_refers_to_court_order_to_authorities_to_remove_tenant(State, Year, Term).\n\n% -----------------------------\n% Final answer predicate (deterministic)\n% -----------------------------\n\nhousing_answer(yes) :-\n    asked_term_is_used_for_removal_order,\n    !.\nhousing_answer(no) :-\n    !.\n\n% -----------------------------\n% Main entrypoint\n% -----------------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-4201",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is the term 'Writ of possession' used to refer to the order from the court to the authorities to remove a tenant?"
+  }
+}

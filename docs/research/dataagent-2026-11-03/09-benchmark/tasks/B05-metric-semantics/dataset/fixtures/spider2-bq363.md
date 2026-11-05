@@ -1,0 +1,1 @@
+For taxi trips with a duration rounded to the nearest minute, and between 1 and 50 minutes, if the trip durations are divided into 10 quantiles, what are the total number of trips and the average fare for each quantile?

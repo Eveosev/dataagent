@@ -1,0 +1,32 @@
+## Essential Problem
+
+The essential problem is to find the perimeter of an island within a rectangular grid. The island is a connected group of land cells (represented by 1s) surrounded by water cells (represented by 0s). The grid has no "lakes" (enclosed areas of water within the landmass).
+
+## Relevant Information and Reasoning
+
+**1. Identifying Land Cells:** We need to find land cells that are part of the island. This can be done by iterating through the grid and checking each cell.
+
+**2. Checking Neighbors:** For each land cell, we need to check its four neighbors (top, bottom, left, right). If a neighbor is water, it contributes to the perimeter.
+
+**3. Avoiding Double Counting:** We need to be careful not to count a perimeter segment twice. This can be done by checking if a neighboring land cell has already been visited.
+
+**4. Handling Edge Cases:** We need to handle edge cases like the first and last row/column, where there are no neighbors on one side.
+
+## Draft Answer
+
+Here are some thoughts on how to solve this problem:
+
+1. **Iterate through the grid:** Use nested loops to iterate through each cell in the grid.
+2. **Check if the cell is land:** If the current cell has a value of 1, it's land.
+3. **Check neighbors:** For each land cell, iterate through its four neighbors. 
+4. **Count perimeter segments:** If a neighbor is water, increment a counter that keeps track of the perimeter.
+5. **Avoid double counting:** Mark visited land cells to avoid counting the same perimeter segment twice.
+6. **Handle edge cases:** For cells on the edge of the grid, adjust the neighbor checking logic accordingly.
+
+This approach should give us the correct perimeter of the island. Additionally, we can consider optimizing the solution by using techniques like Depth-First Search (DFS) to explore the land cells efficiently.
+
+## Further Considerations:
+
+*   This problem can be solved using different algorithms like Breadth-First Search (BFS) or Union-Find.
+*   The time complexity of the solution will depend on the chosen algorithm and the size of the grid.
+*   The space complexity will also depend on the chosen algorithm and the size of the island. 

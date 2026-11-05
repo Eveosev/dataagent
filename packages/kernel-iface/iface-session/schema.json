@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "agentcpm/iface-session",
+  "version": "0.1.0",
+  "description": "AgentCPM §4.2 iface-session（含 lease.rs 推进权/围栏 D56、handoff.rs §6.8 跨 loop 交接） 的机器可读形状：类型、trait 方法、错误码、消费方。只定义形状，不含实现。",
+  "lineage": "kernel/iface/src/session（verbatim 复制到本包 src/）",
+  "spec": {
+    "KERNEL-MECHANISMS-AND-ABI": "§4.2 iface-session（session/ 生命周期 + lease.rs 推进权/围栏 + handoff.rs §6.8 交接契约）",
+    "decision": [
+      "D55",
+      "D56",
+      "D79",
+      "D83"
+    ]
+  },
+  "iface": {
+    "name": "session",
+    "layer": "L-A",
+    "shared_types_dep": "agentcpm/iface-types",
+    "errors": {
+      "common": {
+        "ERR_INVALID_PARAMS": -32602
+      },
+      "note": "错误统一用 agentcpm_iface::types::Error { category, code, message }；参数错误用 ERR_INVALID_PARAMS"
+    }
+  },
+  "types": [
+    "SessionHeader",
+    "SessionLease",
+    "SessionIdentity",
+    "Epoch",
+    "NodeId",
+    "PlacementMode",
+    "SessionSeq",
+    "LogOffset",
+    "TenantId",
+    "EffectLevel",
+    "OP_EFFECT_MAP",
+    "LOCAL_NODE",
+    "MAX_NODE_ID_LEN",
+    "Lease",
+    "LeaseStatus",
+    "LeaseError",
+    "ERR_LEASE_*",
+    "KernelError",
+    "AuthzRequest",
+    "BlockedKind",
+    "BlockedOnItem",
+    "SessionStatus",
+    "WatchRequest",
+    "WatchEvent",
+    "WatchTerminal",
+    "WatchPage",
+    "DeliverRequest",
+    "DeliverResult",
+    "CloseRequest",
+    "CloseResult",
+    "KernelTaskState",
+    "TaskSnapshot"
+  ],
+  "traits": {
+    "SessionContract": "create/attach/detach/drain_inbox/…",
+    "LeaseStore": "acquire/renew/release/status（epoch 围栏；时间由调用方注入）",
+    "HandoffAuthorizer": "authorize（fail-closed 鉴权端口）",
+    "HandoffKernel": "session.create/get/watch/close/deliver + operation.get/list/cancel（L-C 1:1 镜像）"
+  },
+  "consumers": [
+    "kernel/host/src/transport/session*",
+    "kernel/core",
+    "kernel/runtime/src/session.rs"
+  ],
+  "source": {
+    "files": [
+      "effect.rs",
+      "epoch.rs",
+      "handoff.rs",
+      "header.rs",
+      "identity.rs",
+      "lease.rs",
+      "mod.rs",
+      "node.rs",
+      "placement.rs",
+      "seq.rs",
+      "tenant.rs",
+      "view.rs"
+    ],
+    "lines": 1571
+  },
+  "contract_deps": [
+    "agentcpm/iface-types",
+    "agentcpm/iface-store"
+  ]
+}

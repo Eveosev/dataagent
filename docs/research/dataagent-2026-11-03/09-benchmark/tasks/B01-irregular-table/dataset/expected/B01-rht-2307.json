@@ -1,0 +1,23 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 671,
+  "table": "economy-table56",
+  "structure": "ColumnHeaderMerge",
+  "question_type": "Fact Checking",
+  "sub_type": "Inference-based Fact Checking",
+  "answer": "False",
+  "cot": [
+    {
+      "step": "First, we need to extract the actual value for Product 4 in February and the budgeted value for March from the table."
+    },
+    {
+      "step": "We need to calculate 10% of the March budgeted value and compare it to the February actual value to determine if it is exceeded."
+    }
+  ],
+  "case_id": "B01-rht-2307",
+  "expected": {
+    "kind": "answer",
+    "question": "For Product 4, check whether the actual value in February exceeds 10% of the budgeted value for March.",
+    "answer": "False"
+  }
+}

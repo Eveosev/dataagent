@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 242,
+  "question": "Which driver won the most recorded races? Give their first name, last name, nationality, and highest recorded driver-standings points total.",
+  "evidence": "",
+  "gold_sql": "WITH wins AS (SELECT driverId, COUNT(*) AS win_count FROM results WHERE positionOrder = 1 GROUP BY driverId), winner AS (SELECT driverId FROM wins ORDER BY win_count DESC, driverId LIMIT 1) SELECT d.forename, d.surname, d.nationality, (SELECT MAX(s.points) FROM driverStandings AS s WHERE s.driverId = d.driverId) FROM winner AS w JOIN drivers AS d ON d.driverId = w.driverId",
+  "db_id": "formula_1",
+  "case_id": "B05-bird-0243",
+  "expected": {
+    "kind": "sql",
+    "sql": "WITH wins AS (SELECT driverId, COUNT(*) AS win_count FROM results WHERE positionOrder = 1 GROUP BY driverId), winner AS (SELECT driverId FROM wins ORDER BY win_count DESC, driverId LIMIT 1) SELECT d.forename, d.surname, d.nationality, (SELECT MAX(s.points) FROM driverStandings AS s WHERE s.driverId = d.driverId) FROM winner AS w JOIN drivers AS d ON d.driverId = w.driverId",
+    "db_id": "formula_1",
+    "evidence": ""
+  }
+}

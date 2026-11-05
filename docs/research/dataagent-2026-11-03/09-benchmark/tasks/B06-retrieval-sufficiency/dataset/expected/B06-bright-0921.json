@@ -1,0 +1,28 @@
+{
+  "source": "xlangai/BRIGHT",
+  "query_id": "31",
+  "query": "## Disabling Swagger UI in FastAPI for Production\n\nThere are several ways to disable Swagger UI in FastAPI for a production server. Here are three common approaches:\n\n**1. Using `openapi_url` and `redoc_url` arguments:**\n\nThis is the simplest method and involves setting both `openapi_url` and `redoc_url` to `None` when creating your FastAPI application instance. \n\n```python\nfrom fastapi import FastAPI\n\napp = FastAPI(\n    openapi_url=None,\n    redoc_url=None,\n)\n```\n\n**2. Using the `--no-docs` flag with `uvicorn`:**\n\nWhen starting your application with `uvicorn`, you can use the `--no-docs` flag to disable the automatic generation of Swagger UI documentation.\n\n```bash\nuvicorn main:app --host 0.0.0.0 --port 8000 --no-docs\n```\n\n**3. Using a custom startup event:**\n\nThis method allows for more granular control over the disabling of Swagger UI. You can define a custom startup event that removes the `/docs` and `/redoc` endpoints from the application.\n\n```python\nfrom fastapi import FastAPI\nfrom fastapi.openapi.docs import get_swagger_ui_html\nfrom fastapi.openapi.utils import get_openapi\n\napp = FastAPI()\n\n@app.on_event(\"startup\")\nasync def remove_docs():\n    app.openapi_url = None\n    app.redoc_url = None\n\n    # Remove the docs and redoc endpoints\n    app.router.routes = [\n        route for route in app.router.routes if route.path not in [\"/docs\", \"/redoc\"]\n    ]\n\n```\n\n**Additional Considerations:**\n\n* Remember to remove any references to Swagger UI in your application code, such as links or buttons.\n* If you are using a deployment tool like Docker, you can configure it to disable Swagger UI by setting environment variables or using command-line arguments.\n* Make sure to back up your application code before making any changes.\n\nBy following these steps, you can effectively disable Swagger UI in your FastAPI application for production, ensuring a cleaner and more secure deployment.",
+  "gold_ids": [
+    "fastapi_security_advanced_user_guide/fastapi_security_5_3.txt",
+    "fastapi_security_advanced_user_guide/fastapi_security_5_5.txt",
+    "fastapi_security_advanced_user_guide/fastapi_security_5_4.txt"
+  ],
+  "gold_answer": "[ Construct your app with ` docs_url=None ` and ` redoc_url=None `\n](https://fastapi.tiangolo.com/tutorial/metadata/#docs-urls) and FastAPI won't\nmount those endpoints.\n\n    \n    \n    app = FastAPI(docs_url=None, redoc_url=None)",
+  "corpus": "documents/stackoverflow-00000-of-00001.parquet",
+  "case_id": "B06-bright-0921",
+  "expected": {
+    "kind": "retrieval",
+    "gold_ids": [
+      "fastapi_security_advanced_user_guide/fastapi_security_5_3.txt",
+      "fastapi_security_advanced_user_guide/fastapi_security_5_5.txt",
+      "fastapi_security_advanced_user_guide/fastapi_security_5_4.txt"
+    ],
+    "gold_ids_long": [
+      "fastapi_security_advanced_user_guide/fastapi_security.txt"
+    ],
+    "gold_answer": "[ Construct your app with ` docs_url=None ` and ` redoc_url=None `\n](https://fastapi.tiangolo.com/tutorial/metadata/#docs-urls) and FastAPI won't\nmount those endpoints.\n\n    \n    \n    app = FastAPI(docs_url=None, redoc_url=None)",
+    "excluded_ids": [
+      "N/A"
+    ]
+  }
+}

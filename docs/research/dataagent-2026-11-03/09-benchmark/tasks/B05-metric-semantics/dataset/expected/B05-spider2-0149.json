@@ -1,0 +1,16 @@
+{
+  "source": "xlangai/spider2-lite",
+  "raw": {
+    "instance_id": "bq161",
+    "db": "pancancer_atlas_2",
+    "question": "Calculate the net difference between the number of pancreatic adenocarcinoma (PAAD) patients in TCGA's dataset who are confirmed to have mutations in both KRAS and TP53 genes, and those without mutations in either gene. Utilize patient clinical and follow-up data alongside genomic mutation details from TCGA’s cancer genomics database, focusing specifically on PAAD studies where the mutations have passed quality filters.",
+    "external_knowledge": null
+  },
+  "case_id": "B05-spider2-0149",
+  "expected": {
+    "kind": "sql",
+    "instance_id": "bq161",
+    "sql": null,
+    "db": "pancancer_atlas_2"
+  }
+}

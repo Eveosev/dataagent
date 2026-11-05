@@ -1,0 +1,40 @@
+{
+  "case_id": "B11-tau2-0132",
+  "task_id": "B11",
+  "split_role": "regression",
+  "inputs": [
+    {
+      "kind": "scenario",
+      "ref": "fixtures/tau2-airline-17.md",
+      "digest": null
+    },
+    {
+      "kind": "doc",
+      "ref": "fixtures/tau2-airline-policy.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B11-tau2-0132.json"
+  },
+  "evidence": [
+    "fixtures/tau2-airline-17.md#任务指令",
+    "fixtures/tau2-airline-policy.md#政策"
+  ],
+  "tags": [
+    "tau2",
+    "airline",
+    "reward:['DB', 'COMMUNICATE']"
+  ],
+  "source": "tau2",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 428,
+  "question": "Among the laboratory tests whose AST glutamic oxaloacetic transaminase (GOT) index was above the normal range (60 or higher), I want to find the test with the highest anti-ribonuclear protein reading. Please give me the patient's identification, the date of the laboratory test, and the anti-ribonuclear protein reading for that test. If several tests tie for the highest anti-ribonuclear protein reading, list every one of them. The date should be the date the laboratory test was performed.",
+  "evidence": "AST glutamic oxaloacetic transaminase (GOT) index: a liver enzyme measurement; values of 60 or higher are considered above the normal range.",
+  "gold_sql": "SELECT ID, Date, RNP FROM Laboratory WHERE GOT >= 60 AND CAST(RNP AS REAL) = (SELECT MAX(CAST(RNP AS REAL)) FROM Laboratory WHERE GOT >= 60)",
+  "db_id": "thrombosis_prediction",
+  "case_id": "B05-bird-0429",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT ID, Date, RNP FROM Laboratory WHERE GOT >= 60 AND CAST(RNP AS REAL) = (SELECT MAX(CAST(RNP AS REAL)) FROM Laboratory WHERE GOT >= 60)",
+    "db_id": "thrombosis_prediction",
+    "evidence": "AST glutamic oxaloacetic transaminase (GOT) index: a liver enzyme measurement; values of 60 or higher are considered above the normal range."
+  }
+}

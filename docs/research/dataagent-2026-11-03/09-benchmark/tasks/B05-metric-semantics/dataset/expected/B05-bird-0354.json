@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 353,
+  "question": "Hey, following up on my count of the God / Eternal heroes – among those who are male, what's the average number of superpowers per hero? Just give me the average rounded to two decimal places.",
+  "evidence": "A superpower is any power linked to a hero.",
+  "gold_sql": "WITH power_counts AS (SELECT s.id, (SELECT COUNT(*) FROM hero_power AS hp WHERE hp.hero_id = s.id) AS power_count FROM superhero AS s INNER JOIN race AS r ON s.race_id = r.id INNER JOIN gender AS g ON s.gender_id = g.id WHERE r.race = 'God / Eternal' AND g.gender = 'Male') SELECT ROUND(AVG(power_count), 2) AS average_superpowers FROM power_counts",
+  "db_id": "superhero",
+  "case_id": "B05-bird-0354",
+  "expected": {
+    "kind": "sql",
+    "sql": "WITH power_counts AS (SELECT s.id, (SELECT COUNT(*) FROM hero_power AS hp WHERE hp.hero_id = s.id) AS power_count FROM superhero AS s INNER JOIN race AS r ON s.race_id = r.id INNER JOIN gender AS g ON s.gender_id = g.id WHERE r.race = 'God / Eternal' AND g.gender = 'Male') SELECT ROUND(AVG(power_count), 2) AS average_superpowers FROM power_counts",
+    "db_id": "superhero",
+    "evidence": "A superpower is any power linked to a hero."
+  }
+}

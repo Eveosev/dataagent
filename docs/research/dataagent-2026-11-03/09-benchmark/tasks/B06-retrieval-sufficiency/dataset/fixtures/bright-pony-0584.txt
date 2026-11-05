@@ -1,0 +1,42 @@
+## Essential Problem 
+
+The essential problem is to write a function called `truncateSentence` that takes two arguments:
+
+* `s`: A string representing a sentence.
+* `k`: An integer representing the desired number of words in the truncated sentence.
+
+The function should return a new string containing only the first `k` words of the original sentence, separated by spaces. 
+
+## Relevant Information
+
+To solve this problem, we need to consider the following information:
+
+* **String manipulation**: We need to be able to split the sentence string into individual words and then select the first `k` words. 
+* **Word boundaries**: We need to identify the spaces that separate words, but not spaces within words.
+* **Edge cases**: We need to handle cases where the sentence is shorter than `k` words, or where `k` is negative.
+
+## Draft Answer
+
+Here is a draft answer for the `truncateSentence` function in Pony:
+
+```pony
+fun truncateSentence(s: String, k: I32): String =>
+  let words = s.split(" ")
+  if words.len < k then
+    return s
+  else if k <= 0 then
+    return ""
+  else
+    return words.take(k).join(" ")
+```
+
+This code first splits the sentence string into a list of words using the `split` function with a space as the delimiter. 
+
+Then, it checks for edge cases:
+
+* If the number of words in the sentence is less than `k`, the original sentence is returned.
+* If `k` is less than or equal to 0, an empty string is returned.
+
+Otherwise, the code takes the first `k` words from the list using the `take` function and joins them back into a string using the `join` function with a space as the delimiter.
+
+This solution considers the essential problem, relevant information, and edge cases to provide a correct and efficient implementation of the `truncateSentence` function. 

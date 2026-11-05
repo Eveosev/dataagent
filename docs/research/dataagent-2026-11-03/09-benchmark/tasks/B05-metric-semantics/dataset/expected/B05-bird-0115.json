@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 114,
+  "question": "I'm auditing how thoroughly the Coldsnap expansion was localized into Italian. How many printings in the Coldsnap set have Italian rules text? I just need that single count.",
+  "evidence": "By 'printing' I mean an individual card entry of a set, and by 'Italian rules text' I mean the Italian-language rules wording recorded for that printing. Coldsnap means the set named Coldsnap.",
+  "gold_sql": "SELECT COUNT(DISTINCT c.uuid) AS printings_with_italian_rules_text FROM foreign_data AS f JOIN cards AS c ON c.uuid = f.uuid JOIN sets AS s ON s.code = c.setCode WHERE s.name = 'Coldsnap' AND f.language = 'Italian' AND TRIM(f.text) <> ''",
+  "db_id": "card_games",
+  "case_id": "B05-bird-0115",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT COUNT(DISTINCT c.uuid) AS printings_with_italian_rules_text FROM foreign_data AS f JOIN cards AS c ON c.uuid = f.uuid JOIN sets AS s ON s.code = c.setCode WHERE s.name = 'Coldsnap' AND f.language = 'Italian' AND TRIM(f.text) <> ''",
+    "db_id": "card_games",
+    "evidence": "By 'printing' I mean an individual card entry of a set, and by 'Italian rules text' I mean the Italian-language rules wording recorded for that printing. Coldsnap means the set named Coldsnap."
+  }
+}

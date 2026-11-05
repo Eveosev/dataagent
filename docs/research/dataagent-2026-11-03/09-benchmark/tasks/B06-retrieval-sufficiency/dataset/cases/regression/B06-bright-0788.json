@@ -1,0 +1,33 @@
+{
+  "case_id": "B06-bright-0788",
+  "task_id": "B06",
+  "split_role": "regression",
+  "inputs": [
+    {
+      "kind": "query",
+      "ref": "fixtures/bright-psychology-0788.txt",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B06-bright-0788.json"
+  },
+  "evidence": [
+    "bench://bright/documents/psychology-00000-of-00001.parquet"
+  ],
+  "tags": [
+    "bright",
+    "psychology"
+  ],
+  "source": "bright",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

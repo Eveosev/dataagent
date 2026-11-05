@@ -1,0 +1,22 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "s151_b_pos",
+  "expect_label": "yes",
+  "raw_label": "1",
+  "rule_predicates": [
+    "spouse_exemption_allowed",
+    "marital_status",
+    "not_joint_return",
+    "no_gross_income",
+    "not_dependent_of_another",
+    "married_to"
+  ],
+  "reference_prolog": "/* ---------- Statutory rules (excerpts) ---------- */\n\n/* Rule for exemption for spouse under section 151(b) */\nspouse_exemption_allowed(Taxpayer, Spouse) :-\n    marital_status(Taxpayer, married),\n    not_joint_return(Taxpayer, Spouse),\n    no_gross_income(Spouse),\n    not_dependent_of_another(Spouse).\n\n/* ---------- Facts for the case ---------- */\n\nmarital_status(alice, married).\nmarried_to(alice, bob).\nno_gross_income(bob).\nnot_joint_return(alice, bob).\nnot_dependent_of_another(bob).\n\n/* ---------- Derivation of Alice's eligibility for Bob's exemption ---------- */\n\nalice_eligibility_for_bob_exemption :-\n    married_to(alice, bob),\n    spouse_exemption_allowed(alice, bob).\n\n/* ---------- Verification of the claim ---------- */\n\n:- (  alice_eligibility_for_bob_exemption\n   -> format('Result: Entailment~n')\n   ;  format('Result: Contradiction~n')\n   ).\n:- halt.",
+  "case_id": "B04-deon-5318",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "1",
+    "question": "Alice can receive an exemption for Bob under section 151(b) for the year 2015."
+  }
+}

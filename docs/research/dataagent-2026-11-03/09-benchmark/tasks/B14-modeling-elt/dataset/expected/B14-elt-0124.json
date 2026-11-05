@@ -1,0 +1,169 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "redshift",
+  "pipeline": "cs_semester",
+  "data_model": {
+    "models": [
+      {
+        "name": "students",
+        "description": "Each record represents a student.",
+        "columns": [
+          {
+            "name": "student_id",
+            "description": "Unique identifier for the student."
+          },
+          {
+            "name": "first_name",
+            "description": "First name of the student."
+          },
+          {
+            "name": "last_name",
+            "description": "Last name of the student."
+          },
+          {
+            "name": "got_B_in_MLT_and_gpa_over3",
+            "description": "Set to 1 if the student got a B in the course 'Machine Learning Theory' and has a gpa of over 3, otherwise, set to 0"
+          },
+          {
+            "name": "has_the_highest_intelligence_UG",
+            "description": "Set to 1 if the student is taking a bachelor's degree and has the highest intelligence among all students; otherwise, set to 0."
+          },
+          {
+            "name": "is_under_supervision_of_most_popular_professor",
+            "description": "Set to 1 if the student is under the supervision of the most popular professor, otherwise, set to 0"
+          },
+          {
+            "name": "GPA_based_on_registration",
+            "description": "The GPA of the student on a 4.0 scale based on the courses the student registered"
+          },
+          {
+            "name": "num_courses_taken",
+            "description": "The number of courses the student has taken, replace NULL values with 0."
+          }
+        ]
+      },
+      {
+        "name": "professors",
+        "description": "Each record represents a professor.",
+        "columns": [
+          {
+            "name": "prof_id",
+            "description": "Unique identifier for the professor."
+          },
+          {
+            "name": "first_name",
+            "description": "First name of the professor."
+          },
+          {
+            "name": "last_name",
+            "description": "Last name of the professor."
+          },
+          {
+            "name": "num_RA",
+            "description": "The number of research assistants the professor has, replace NULL values with 0."
+          },
+          {
+            "name": "percentage_of_RA_tpg",
+            "description": "The percentage of the professor's research assistants that are taught postgraduate students"
+          },
+          {
+            "name": "num_students_with_the_highest_research_ability",
+            "description": "The number of students with the highest research ability that the professor has supervised; replace NULL values with 0. Highest research ability refers to the maximum capability value in the entire dataset."
+          },
+          {
+            "name": "has_more_than_average_teaching_ability_and_1_student",
+            "description": "Set to 1 if the professor has more than the average teaching ability and has more than 1 student, otherwise, set to 0"
+          },
+          {
+            "name": "num_of_students_high_salary",
+            "description": "The number of students that have a high salary that the professor has supervised, replace NULL values with 0."
+          }
+        ]
+      },
+      {
+        "name": "courses",
+        "description": "Each record represents a course.",
+        "columns": [
+          {
+            "name": "course_id",
+            "description": "Unique identifier for the course."
+          },
+          {
+            "name": "name",
+            "description": "Name of the course."
+          },
+          {
+            "name": "credit",
+            "description": "The credit of the course."
+          },
+          {
+            "name": "num_students_got_A",
+            "description": "The number of students that got an A in the course, replace NULL values with 0."
+          },
+          {
+            "name": "per_of_students_highest_satisfaction_score_for_the_course",
+            "description": "The percentage of students that have the highest satisfaction score for the course."
+          },
+          {
+            "name": "number_of_students_fail",
+            "description": "The number of students that failed the course, replace NULL values with 0."
+          },
+          {
+            "name": "percentage_of_UG",
+            "description": "The percentage of undergraduate students that took the course."
+          },
+          {
+            "name": "average_satisfying_degree",
+            "description": "The average satisfying degree of the course."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    redshift_definition_id: f7a7d195-377f-cf5b-70a5-be6b819019dc\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://cs-semester-bucket/RA.csv\n    sync_mode: full_refresh_append\n    table: RA\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - course\nflat_files:\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=1_Kc63R9VPVe2jOI4DaPRI6bVcWWTkaNU\n  sync_mode: full_refresh_append\n  table: student\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: cs_semester\n    sync_mode: full_refresh_append\n    tables:\n    - prof\npostgres:\n  config:\n    database: cs_semester\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - registration\n    user: postgres\nredshift:\n  config:\n    host: <redshift_hostname>\n    port: <redshift_port>\n    database: <redshift_db>\n    username: <redshift_username>\n    password: <redshift_pwd>\n    schema: cs_semester\n    s3_bucket_name: <redshift_s3_bucket>\n    s3_bucket_region: <redshift_s3_region>\n    access_key_id: <redshift_s3_access_key>\n    secret_access_key: <redshift_s3_secret_key>\n",
+  "case_id": "B14-elt-0124",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "students",
+        "columns": [
+          "student_id",
+          "first_name",
+          "last_name",
+          "got_B_in_MLT_and_gpa_over3",
+          "has_the_highest_intelligence_UG",
+          "is_under_supervision_of_most_popular_professor",
+          "GPA_based_on_registration",
+          "num_courses_taken"
+        ]
+      },
+      {
+        "name": "professors",
+        "columns": [
+          "prof_id",
+          "first_name",
+          "last_name",
+          "num_RA",
+          "percentage_of_RA_tpg",
+          "num_students_with_the_highest_research_ability",
+          "has_more_than_average_teaching_ability_and_1_student",
+          "num_of_students_high_salary"
+        ]
+      },
+      {
+        "name": "courses",
+        "columns": [
+          "course_id",
+          "name",
+          "credit",
+          "num_students_got_A",
+          "per_of_students_highest_satisfaction_score_for_the_course",
+          "number_of_students_fail",
+          "percentage_of_UG",
+          "average_satisfying_degree"
+        ]
+      }
+    ]
+  }
+}

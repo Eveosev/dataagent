@@ -1,0 +1,21 @@
+{
+  "source": "datadotworld/cwd-benchmark-data",
+  "inquiry_id": "IQ_a8f3cd24b58a0e3dc8a30c45d315b195",
+  "prompt": "How many policies have agents sold by agent id?",
+  "sql": [
+    "select  party_identifier as agentid, count(policy.policy_number) as NoOfPolicies\nfrom agreement_party_role\njoin policy on agreement_party_role.agreement_identifier = policy.policy_identifier\nwhere agreement_party_role.party_role_code = 'AG'\ngroup by party_identifier"
+  ],
+  "sparql": [
+    "PREFIX : <https://myinsurancecompany.linked.data.world/d/chat-with-the-data-benchmark/>\nPREFIX in: <http://data.world/schema/insurance/>\n\nSELECT  ?agentId (count(?policy) as ?NoOfPolicies)\nWHERE {\nSERVICE :mapped {\n        ?policy rdf:type in:Policy;\n            in:soldByAgent [ in:agentId ?agentId].\n\n    }\n}\ngroup by ?agentId"
+  ],
+  "case_id": "B05-cwd-0013",
+  "expected": {
+    "kind": "query",
+    "question": "How many policies have agents sold by agent id?",
+    "sql": "select  party_identifier as agentid, count(policy.policy_number) as NoOfPolicies\nfrom agreement_party_role\njoin policy on agreement_party_role.agreement_identifier = policy.policy_identifier\nwhere agreement_party_role.party_role_code = 'AG'\ngroup by party_identifier",
+    "alternate_sql": [],
+    "sparql": [
+      "PREFIX : <https://myinsurancecompany.linked.data.world/d/chat-with-the-data-benchmark/>\nPREFIX in: <http://data.world/schema/insurance/>\n\nSELECT  ?agentId (count(?policy) as ?NoOfPolicies)\nWHERE {\nSERVICE :mapped {\n        ?policy rdf:type in:Policy;\n            in:soldByAgent [ in:agentId ?agentId].\n\n    }\n}\ngroup by ?agentId"
+    ]
+  }
+}

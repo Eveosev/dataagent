@@ -1,0 +1,35 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 607,
+  "table": "labor-table02",
+  "structure": "ExternalSupply",
+  "question_type": "Numerical Reasoning",
+  "sub_type": "Ranking",
+  "answer": "Installation of JL1's Pre Heating Pump in JL4, Maintenance of Club House, Absorption Hot Water Pump 1 & 2 maintenance, Centrifugal Chiller No 4 PMS.",
+  "cot": [
+    {
+      "step": "First, we need to filter the tasks where the \"Status\" is marked as \"Completed.\""
+    },
+    {
+      "step": "Then, we extract the \"Expected Time to Complete\" column for these tasks."
+    },
+    {
+      "step": "Convert the time descriptions into comparable numerical values (e.g., \"2 hours\" to 2, \"1 day\" to 24 hours)."
+    },
+    {
+      "step": "Rank the tasks based on these numerical values in ascending order."
+    },
+    {
+      "step": "Retrieve the corresponding \"Job Description\" for each ranked task."
+    },
+    {
+      "step": "Output the ranked job descriptions as the final answer."
+    }
+  ],
+  "case_id": "B01-rht-2243",
+  "expected": {
+    "kind": "answer",
+    "question": "Among the completed tasks, rank the tasks by their \"Expected Time to Complete\" in ascending order.",
+    "answer": "Installation of JL1's Pre Heating Pump in JL4, Maintenance of Club House, Absorption Hot Water Pump 1 & 2 maintenance, Centrifugal Chiller No 4 PMS."
+  }
+}

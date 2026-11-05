@@ -1,0 +1,18 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "s63_c_6_B_pos",
+  "expect_label": "yes",
+  "raw_label": "1",
+  "rule_predicates": [
+    "section63c6b_applies",
+    "nonresident_alien"
+  ],
+  "reference_prolog": "/* Statutory rule\n   Section 63(c)(6)(B) applies to any individual who is a nonresident alien\n   for the taxable year.\n*/\nsection63c6b_applies(Person,Year) :-\n    nonresident_alien(Person,Year).\n\n/* Case facts */\nnonresident_alien(alice,2017).\n\n/* Verification goal */\n:- (  section63c6b_applies(alice,2017)\n   -> format('Result: Entailment~n')\n   ;  format('Result: Contradiction~n')\n   ).\n:- halt.",
+  "case_id": "B04-deon-5546",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "1",
+    "question": "Section 63(c)(6)(B) applies to Alice for 2017."
+  }
+}

@@ -1,0 +1,118 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "databricks",
+  "pipeline": "shipping",
+  "data_model": {
+    "models": [
+      {
+        "name": "trucks",
+        "description": "Each record represents a truck.",
+        "columns": [
+          {
+            "name": "truck_id",
+            "description": "Unique identifier for the truck."
+          },
+          {
+            "name": "make",
+            "description": "The make of the truck."
+          },
+          {
+            "name": "model_year",
+            "description": "The model year of the truck."
+          },
+          {
+            "name": "headquarter",
+            "description": "Set to 'Texas (TX)' if the make is 'Peterbilt', set to 'North Carolina (NC)' if the make is Mack, set to 'Washington (WA)' if the make is 'Kenworth'"
+          },
+          {
+            "name": "num_shipments",
+            "description": "The number of shipment delivered by the truck model, replace NULL values with 0."
+          },
+          {
+            "name": "person_receive_heaviest_shipment",
+            "description": "The person who received the heaviest shipment delivered by the truck model, with ties broken by the ascending order of the customer name"
+          },
+          {
+            "name": "per_weight_exceed_10000",
+            "description": "The percentage of shipments that exceed 10,000 pounds among all shipments delivered by the truck model."
+          },
+          {
+            "name": "num_shipments_change_from_2016_to_2017",
+            "description": "The number of shipments change from 2016 to 2017 delivered by the truck model, replace NULL values with 0."
+          }
+        ]
+      },
+      {
+        "name": "drivers",
+        "description": "Each record represents a driver.",
+        "columns": [
+          {
+            "name": "driver_id",
+            "description": "Unique identifier for the driver."
+          },
+          {
+            "name": "first_name",
+            "description": "The first name of the driver."
+          },
+          {
+            "name": "last_name",
+            "description": "The last name of the driver."
+          },
+          {
+            "name": "num_shipments_2017",
+            "description": "The number of shipments the driver delivered in 2017, replace NULL values with 0."
+          },
+          {
+            "name": "num_shipment_to_least_populated_city",
+            "description": "The number of shipments to the least populated city delivered by the driver, replace NULL values with 0."
+          },
+          {
+            "name": "per_shipment_placed_by_Autoware_Inc",
+            "description": "The percentage of shipments placed by Autoware Inc among all shipments delivered by the driver."
+          },
+          {
+            "name": "has_a_shipment_weight_greater_95_per_avg_across_all_shipments",
+            "description": "Set to 1 if the driver has a shipment with a weight greater than 95% of the average weight of all shipments, 0 otherwise."
+          },
+          {
+            "name": "weight_first_shipment",
+            "description": "The weight the driver transported during his/her first shipment, with ties broken by the descending order of the weight."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    databricks_definition_id: 072d5540-f236-4294-ba7c-ade8fd918496\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://shipping-bucket/city.csv\n    sync_mode: full_refresh_append\n    table: city\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - truck\nflat_files:\n- format: parquet\n  path: https://drive.google.com/uc?export=download&id=1XK_eYSqVlQiiY9GjainO2Lg6sm0QCWMa\n  sync_mode: full_refresh_append\n  table: driver\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: shipping\n    sync_mode: full_refresh_append\n    tables:\n    - customer\npostgres:\n  config:\n    database: shipping\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - shipment\n    user: postgres\ndatabricks:\n  config:\n    database: <db_database>\n    hostname: <db_hostname>\n    client_id: <db_client_id>\n    secret: <db_secret>\n    schema: shipping\n    http_path: <db_path>\n",
+  "case_id": "B14-elt-0075",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "trucks",
+        "columns": [
+          "truck_id",
+          "make",
+          "model_year",
+          "headquarter",
+          "num_shipments",
+          "person_receive_heaviest_shipment",
+          "per_weight_exceed_10000",
+          "num_shipments_change_from_2016_to_2017"
+        ]
+      },
+      {
+        "name": "drivers",
+        "columns": [
+          "driver_id",
+          "first_name",
+          "last_name",
+          "num_shipments_2017",
+          "num_shipment_to_least_populated_city",
+          "per_shipment_placed_by_Autoware_Inc",
+          "has_a_shipment_weight_greater_95_per_avg_across_all_shipments",
+          "weight_first_shipment"
+        ]
+      }
+    ]
+  }
+}

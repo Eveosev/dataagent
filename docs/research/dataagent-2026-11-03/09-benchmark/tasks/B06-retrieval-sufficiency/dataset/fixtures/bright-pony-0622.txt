@@ -1,0 +1,44 @@
+## Identifying the Problem
+
+The problem aims to find the first longest string within a given list of strings. This means we need to consider two aspects:
+
+1. **Finding the longest string:** We need to iterate through the list and compare the lengths of each string to find the longest one.
+2. **Finding the first occurrence:** If multiple strings share the maximum length, we need to identify and return the first occurrence of such a string in the list.
+
+## Step-by-step Reasoning
+
+1. **Initialization:**
+    - Initialize a variable `longest_string` to store the current longest string found. Start with an empty string.
+    - Initialize a variable `longest_length` to track the length of the longest string. Start with 0.
+2. **Iteration:**
+    - Iterate through each string (`s`) in the provided list (`s_list`).
+    - Calculate the length of the current string (`s_length`).
+    - Compare `s_length` with `longest_length`:
+        - If `s_length` is greater than `longest_length`:
+            - Update `longest_string` with the current string `s`.
+            - Update `longest_length` with the new maximum length `s_length`.
+        - If `s_length` is equal to `longest_length`:
+            - This indicates a tie for the longest string. Since we need the first occurrence, we don't update `longest_string` or `longest_length`.
+3. **Return:**
+    - After iterating through all strings, return the value of `longest_string`. This will be the first longest string found in the list.
+
+## Draft Answer
+
+```pony
+fun longestString(s_list: Array[String]): String =>
+  var longest_string = ""
+  var longest_length = 0
+
+  for s in s_list {
+    let s_length = s.len
+
+    if s_length > longest_length {
+      longest_string = s
+      longest_length = s_length
+    }
+  }
+
+  return longest_string
+```
+
+This code snippet implements the steps described above. It iterates through the list, compares string lengths, and updates the `longest_string` and `longest_length` variables accordingly. Finally, it returns the first longest string found. 

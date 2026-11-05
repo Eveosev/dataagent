@@ -1,0 +1,45 @@
+## Identifying the problem:
+
+The issue you're facing is that the `System.getProperty()` method is not retrieving the value of your user-defined environment variable `MY_VAR` in your Spring Boot application running on Cloud Foundry.
+
+## Reasons and potential solutions:
+
+There are several reasons why this might be happening:
+
+**1. Incorrect environment variable name:**
+
+* Double-check that you're using the exact name of the environment variable you defined. Remember, environment variable names are case-sensitive.
+* Ensure there are no typos or extra spaces in the name.
+
+**2. Accessing the environment variable within the Spring context:**
+
+* While `System.getProperty()` can access some environment variables, it might not work for user-defined ones within the Spring application context.
+* Try using Spring's `@Value` annotation to inject the environment variable directly into your Spring bean:
+
+```java
+@Value("${MY_VAR}")
+private String myVar;
+```
+
+**3. Cloud Foundry specific considerations:**
+
+* User-defined environment variables in Cloud Foundry are typically prefixed with `VCAP_APPLICATION_` followed by the variable name in uppercase.
+* Try accessing the variable using the prefixed name:
+
+```java
+String myVar = System.getenv("VCAP_APPLICATION_MY_VAR");
+```
+
+**4. Restarting the application:**
+
+* Make sure to restart your application after making any changes to the environment variables. Cloud Foundry might not automatically pick up the changes.
+
+## Additional troubleshooting tips:
+
+* Print out the entire `System.getenv()` map to see all available environment variables and their values. This can help you identify if the variable is being set correctly.
+* Check the Cloud Foundry logs for any errors or warnings related to environment variables.
+* Consult the Cloud Foundry documentation for specific instructions on managing environment variables.
+
+## Summary:
+
+By systematically examining the potential causes and trying different approaches, you should be able to successfully access your user-defined environment variable in your Cloud Foundry-hosted Spring Boot application. Remember to restart your application after making any changes and consult the Cloud Foundry documentation for further guidance.

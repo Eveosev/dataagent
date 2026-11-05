@@ -1,0 +1,10180 @@
+[
+ {
+  "编号": "DA01.1.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "数据库连接",
+  "源码文件": "src/dataagent_data/ingestion/connections.py",
+  "FDE": false,
+  "能力组": "DA01.1 来源连接",
+  "切片": [
+   "按需"
+  ],
+  "说明": "建立到关系库的连接并复用",
+  "模块": [
+   "DA01 数据接入"
+  ],
+  "operation": "connect_database",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA01.1.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "API 连接",
+  "源码文件": "src/dataagent_data/ingestion/connections.py",
+  "FDE": false,
+  "能力组": "DA01.1 来源连接",
+  "切片": [
+   "按需"
+  ],
+  "说明": "建立带鉴权的 HTTP 会话",
+  "模块": [
+   "DA01 数据接入"
+  ],
+  "operation": "connect_api",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA01.1.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "MCP 连接",
+  "源码文件": "src/dataagent_data/ingestion/connections.py",
+  "FDE": false,
+  "能力组": "DA01.1 来源连接",
+  "切片": [
+   "按需"
+  ],
+  "说明": "挂载 MCP 服务并列出工具",
+  "模块": [
+   "DA01 数据接入"
+  ],
+  "operation": "connect_mcp",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA01.2.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "数据库 Schema 读取",
+  "源码文件": "src/dataagent_data/ingestion/schemas.py",
+  "FDE": false,
+  "能力组": "DA01.2 结构读取",
+  "切片": [
+   "按需"
+  ],
+  "说明": "取表、列、类型、键",
+  "模块": [
+   "DA01 数据接入"
+  ],
+  "operation": "read_database_schema",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA01.2.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "API 返回结构读取",
+  "源码文件": "src/dataagent_data/ingestion/schemas.py",
+  "FDE": false,
+  "能力组": "DA01.2 结构读取",
+  "切片": [
+   "按需"
+  ],
+  "说明": "获取返回对象的字段、类型及嵌套结构",
+  "模块": [
+   "DA01 数据接入"
+  ],
+  "operation": "read_api_response_schema",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA01.2.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "MCP 返回结构读取",
+  "源码文件": "src/dataagent_data/ingestion/schemas.py",
+  "FDE": false,
+  "能力组": "DA01.2 结构读取",
+  "切片": [
+   "按需"
+  ],
+  "说明": "获取工具返回的数据结构；动作探测复用 DA01.9",
+  "模块": [
+   "DA01 数据接入"
+  ],
+  "operation": "read_mcp_response_schema",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA01.3.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "条件读取",
+  "源码文件": "src/dataagent_data/ingestion/reads.py",
+  "FDE": false,
+  "能力组": "DA01.3 数据读取",
+  "切片": [
+   "按需"
+  ],
+  "说明": "按过滤条件取行",
+  "模块": [
+   "DA01 数据接入"
+  ],
+  "operation": "read_filtered_data",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA01.3.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "分页读取",
+  "源码文件": "src/dataagent_data/ingestion/reads.py",
+  "FDE": false,
+  "能力组": "DA01.3 数据读取",
+  "切片": [
+   "按需"
+  ],
+  "说明": "按页取全量",
+  "模块": [
+   "DA01 数据接入"
+  ],
+  "operation": "read_data_page",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA01.3.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "采样读取",
+  "源码文件": "src/dataagent_data/ingestion/reads.py",
+  "FDE": false,
+  "能力组": "DA01.3 数据读取",
+  "切片": [
+   "按需"
+  ],
+  "说明": "按比例取样",
+  "模块": [
+   "DA01 数据接入"
+  ],
+  "operation": "sample_data",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA01.4.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "规整 Excel 解析：提取明确表头的单表或多 sheet 表",
+  "源码文件": "src/dataagent_data/ingestion/files.py",
+  "FDE": false,
+  "能力组": "DA01.4 文件解析",
+  "切片": [
+   "S0"
+  ],
+  "说明": "取单表或多 sheet 的规整表",
+  "模块": [
+   "DA01 数据接入"
+  ],
+  "operation": "parse_regular_excel",
+  "S0 闭环族": [
+   "骨干"
+  ],
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA01.4.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "不规则 Excel 提取：从混合布局中恢复逻辑表",
+  "源码文件": "src/dataagent_data/ingestion/files.py",
+  "FDE": false,
+  "能力组": "DA01.4 文件解析",
+  "切片": [
+   "S0"
+  ],
+  "说明": "从混合布局恢复逻辑表",
+  "模块": [
+   "DA01 数据接入"
+  ],
+  "operation": "extract_irregular_excel",
+  "S0 闭环族": [
+   "计算族"
+  ],
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA01.4.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "CSV/TSV 解析：处理分隔符与编码",
+  "源码文件": "src/dataagent_data/ingestion/files.py",
+  "FDE": false,
+  "能力组": "DA01.4 文件解析",
+  "切片": [
+   "S0"
+  ],
+  "说明": "按分隔符与编码解析",
+  "模块": [
+   "DA01 数据接入"
+  ],
+  "operation": "parse_delimited_file",
+  "S0 闭环族": [
+   "骨干"
+  ],
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA01.4.4",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "JSON/JSONL 解析：保留嵌套记录",
+  "源码文件": "src/dataagent_data/ingestion/files.py",
+  "FDE": false,
+  "能力组": "DA01.4 文件解析",
+  "切片": [
+   "S0"
+  ],
+  "说明": "保留嵌套的记录解析",
+  "模块": [
+   "DA01 数据接入"
+  ],
+  "operation": "parse_json_records",
+  "S0 闭环族": [
+   "骨干"
+  ],
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA01.4.5",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "文本型 PDF 解析：读取文字与版面位置",
+  "源码文件": "src/dataagent_data/ingestion/files.py",
+  "FDE": false,
+  "能力组": "DA01.4 文件解析",
+  "切片": [
+   "S0"
+  ],
+  "说明": "取文字与版面位置",
+  "模块": [
+   "DA01 数据接入"
+  ],
+  "operation": "parse_text_pdf",
+  "S0 闭环族": [
+   "骨干"
+  ],
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA01.4.6",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "工作簿日期系统与公式缓存识别",
+  "源码文件": "src/dataagent_data/ingestion/files.py",
+  "FDE": false,
+  "能力组": "DA01.4 文件解析",
+  "切片": [
+   "S0"
+  ],
+  "说明": "识别 1900/1904 日期系统、公式缓存值与最后计算状态，标出需重算的单元",
+  "模块": [
+   "DA01 数据接入"
+  ],
+  "operation": "inspect_workbook_calc_state",
+  "S0 闭环族": [
+   "计算族"
+  ],
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA01.5.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "扫描 PDF OCR",
+  "源码文件": "src/dataagent_data/ingestion/ocr.py",
+  "FDE": false,
+  "能力组": "DA01.5 OCR",
+  "切片": [
+   "S0"
+  ],
+  "说明": "把扫描页转成文本",
+  "模块": [
+   "DA01 数据接入"
+  ],
+  "operation": "ocr_pdf",
+  "S0 闭环族": [
+   "骨干"
+  ],
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA01.5.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "图片 OCR",
+  "源码文件": "src/dataagent_data/ingestion/ocr.py",
+  "FDE": false,
+  "能力组": "DA01.5 OCR",
+  "切片": [
+   "S0"
+  ],
+  "说明": "把图片转成文本",
+  "模块": [
+   "DA01 数据接入"
+  ],
+  "operation": "ocr_image",
+  "S0 闭环族": [
+   "骨干"
+  ],
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA01.6.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "资产目录登记",
+  "源码文件": "src/dataagent_data/ingestion/catalog.py",
+  "FDE": false,
+  "能力组": "DA01.6 资产目录登记",
+  "切片": [
+   "按需"
+  ],
+  "说明": "登记资产名与位置",
+  "模块": [
+   "DA01 数据接入"
+  ],
+  "operation": "register_asset",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA01.6.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "维护者与使用条件登记",
+  "源码文件": "src/dataagent_data/ingestion/catalog.py",
+  "FDE": false,
+  "能力组": "DA01.6 资产目录登记",
+  "切片": [
+   "按需"
+  ],
+  "说明": "记录谁维护、谁能用",
+  "模块": [
+   "DA01 数据接入"
+  ],
+  "operation": "register_asset_stewardship",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA01.6.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "更新承诺与新鲜度登记",
+  "源码文件": "src/dataagent_data/ingestion/catalog.py",
+  "FDE": false,
+  "能力组": "DA01.6 资产目录登记",
+  "切片": [
+   "按需"
+  ],
+  "说明": "记录刷新周期承诺",
+  "模块": [
+   "DA01 数据接入"
+  ],
+  "operation": "register_refresh_commitment",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA01.7.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "游标/水位增量读取",
+  "源码文件": "src/dataagent_data/ingestion/changes.py",
+  "FDE": false,
+  "能力组": "DA01.7 增量与事件接入",
+  "切片": [
+   "按需"
+  ],
+  "说明": "从上次水位继续取",
+  "模块": [
+   "DA01 数据接入"
+  ],
+  "operation": "read_incremental_cursor",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA01.7.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "CDC/事件接入",
+  "源码文件": "src/dataagent_data/ingestion/changes.py",
+  "FDE": false,
+  "能力组": "DA01.7 增量与事件接入",
+  "切片": [
+   "按需"
+  ],
+  "说明": "订阅变更流",
+  "模块": [
+   "DA01 数据接入"
+  ],
+  "operation": "subscribe_change_events",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA01.7.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "迟到与重复事件处理",
+  "源码文件": "src/dataagent_data/ingestion/changes.py",
+  "FDE": false,
+  "能力组": "DA01.7 增量与事件接入",
+  "切片": [
+   "按需"
+  ],
+  "说明": "对迟到与重复事件去重补序",
+  "模块": [
+   "DA01 数据接入"
+  ],
+  "operation": "reconcile_change_events",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA01.8.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "资源枚举",
+  "源码文件": "src/dataagent_data/ingestion/resources.py",
+  "FDE": true,
+  "能力组": "DA01.8 环境资源接入",
+  "切片": [
+   "按需"
+  ],
+  "说明": "列出环境中可访问的对象（文件、记录、工单等）",
+  "模块": [
+   "DA01 数据接入"
+  ],
+  "operation": "enumerate_resources",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA01.8.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "资源读取",
+  "源码文件": "src/dataagent_data/ingestion/resources.py",
+  "FDE": true,
+  "能力组": "DA01.8 环境资源接入",
+  "切片": [
+   "按需"
+  ],
+  "说明": "按引用取对象内容与元数据",
+  "模块": [
+   "DA01 数据接入"
+  ],
+  "operation": "read_resource",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA01.8.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "资源引用与元数据归一",
+  "源码文件": "src/dataagent_data/ingestion/resources.py",
+  "FDE": true,
+  "能力组": "DA01.8 环境资源接入",
+  "切片": [
+   "按需"
+  ],
+  "说明": "统一寻址和内容类型描述，保留原结构与来源语义",
+  "模块": [
+   "DA01 数据接入"
+  ],
+  "operation": "normalize_resource_metadata",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA01.9.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "动作能力枚举",
+  "源码文件": "src/dataagent_data/ingestion/capabilities.py",
+  "FDE": true,
+  "能力组": "DA01.9 能力探测",
+  "切片": [
+   "按需"
+  ],
+  "说明": "列出该源可执行的动作",
+  "模块": [
+   "DA01 数据接入"
+  ],
+  "operation": "enumerate_action_capabilities",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA01.9.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "参数与约束探测",
+  "源码文件": "src/dataagent_data/ingestion/capabilities.py",
+  "FDE": true,
+  "能力组": "DA01.9 能力探测",
+  "切片": [
+   "按需"
+  ],
+  "说明": "探明入参与业务限制",
+  "模块": [
+   "DA01 数据接入"
+  ],
+  "operation": "inspect_action_constraints",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA01.9.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "限流与配额探测",
+  "源码文件": "src/dataagent_data/ingestion/capabilities.py",
+  "FDE": true,
+  "能力组": "DA01.9 能力探测",
+  "切片": [
+   "按需"
+  ],
+  "说明": "探明速率与额度",
+  "模块": [
+   "DA01 数据接入"
+  ],
+  "operation": "inspect_rate_limits",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA01.10.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "凭据代理与不落地",
+  "源码文件": "src/dataagent_data/ingestion/credentials.py",
+  "FDE": true,
+  "能力组": "DA01.10 凭据代理与归属",
+  "切片": [
+   "按需"
+  ],
+  "说明": "代理调用且不交出密钥",
+  "模块": [
+   "DA01 数据接入"
+  ],
+  "operation": "bind_credential_proxy",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA01.10.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "资源归属登记",
+  "源码文件": "src/dataagent_data/ingestion/credentials.py",
+  "FDE": true,
+  "能力组": "DA01.10 凭据代理与归属",
+  "切片": [
+   "按需"
+  ],
+  "说明": "记录资源归属主体",
+  "模块": [
+   "DA01 数据接入"
+  ],
+  "operation": "register_resource_owner",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA01.10.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "轮换与失效",
+  "源码文件": "src/dataagent_data/ingestion/credentials.py",
+  "FDE": true,
+  "能力组": "DA01.10 凭据代理与归属",
+  "切片": [
+   "按需"
+  ],
+  "说明": "轮换密钥并作废旧值",
+  "模块": [
+   "DA01 数据接入"
+  ],
+  "operation": "rotate_or_revoke_credential",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA02.1.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "工作簿表块检测",
+  "源码文件": "src/dataagent_data/preparation/regions.py",
+  "FDE": false,
+  "能力组": "DA02.1 表格区域识别",
+  "切片": [
+   "S0"
+  ],
+  "说明": "在工作表里定位表区域",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "detect_workbook_regions",
+  "S0 闭环族": [
+   "计算族"
+  ],
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA02.1.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "文档页面表格检测",
+  "源码文件": "src/dataagent_data/preparation/regions.py",
+  "FDE": false,
+  "能力组": "DA02.1 表格区域识别",
+  "切片": [
+   "按需"
+  ],
+  "说明": "在页面里定位表格",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "detect_page_tables",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA02.2.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "多行表头恢复",
+  "源码文件": "src/dataagent_data/preparation/structure.py",
+  "FDE": false,
+  "能力组": "DA02.2 表格结构恢复",
+  "切片": [
+   "S0"
+  ],
+  "说明": "多行表头合并为一行",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "recover_headers",
+  "S0 闭环族": [
+   "计算族"
+  ],
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA02.2.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "合并单元格展开",
+  "源码文件": "src/dataagent_data/preparation/structure.py",
+  "FDE": false,
+  "能力组": "DA02.2 表格结构恢复",
+  "切片": [
+   "S0"
+  ],
+  "说明": "填充合并单元格",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "expand_merged_cells",
+  "S0 闭环族": [
+   "计算族"
+  ],
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA02.2.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "明细/合计行识别",
+  "源码文件": "src/dataagent_data/preparation/structure.py",
+  "FDE": false,
+  "能力组": "DA02.2 表格结构恢复",
+  "切片": [
+   "S0"
+  ],
+  "说明": "区分明细行与合计行",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "classify_table_rows",
+  "S0 闭环族": [
+   "计算族"
+  ],
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA02.2.4",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "跨页续表拼接",
+  "源码文件": "src/dataagent_data/preparation/structure.py",
+  "FDE": false,
+  "能力组": "DA02.2 表格结构恢复",
+  "切片": [
+   "按需"
+  ],
+  "说明": "拼合跨页续表",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "stitch_continued_tables",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA02.3.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "表格转置",
+  "源码文件": "src/dataagent_data/preparation/reshape.py",
+  "FDE": false,
+  "能力组": "DA02.3 数据结构转换",
+  "切片": [
+   "按需"
+  ],
+  "说明": "行列互换",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "transpose_table",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.3.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "宽长表转换",
+  "源码文件": "src/dataagent_data/preparation/reshape.py",
+  "FDE": false,
+  "能力组": "DA02.3 数据结构转换",
+  "切片": [
+   "按需"
+  ],
+  "说明": "宽表转长表",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "reshape_table",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.3.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "嵌套字段展开",
+  "源码文件": "src/dataagent_data/preparation/reshape.py",
+  "FDE": false,
+  "能力组": "DA02.3 数据结构转换",
+  "切片": [
+   "按需"
+  ],
+  "说明": "展开嵌套为列",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "flatten_nested_records",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.3.4",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "同结构表追加",
+  "源码文件": "src/dataagent_data/preparation/reshape.py",
+  "FDE": false,
+  "能力组": "DA02.3 数据结构转换",
+  "切片": [
+   "按需"
+  ],
+  "说明": "合并同构表",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "append_compatible_tables",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.4.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "表结构画像",
+  "源码文件": "src/dataagent_data/preparation/profiles.py",
+  "FDE": false,
+  "能力组": "DA02.4 数据画像",
+  "切片": [
+   "S0"
+  ],
+  "说明": "统计列类型与形态",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "profile_table_structure",
+  "S0 闭环族": [
+   "计算族"
+  ],
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.4.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "字段取值画像",
+  "源码文件": "src/dataagent_data/preparation/profiles.py",
+  "FDE": false,
+  "能力组": "DA02.4 数据画像",
+  "切片": [
+   "按需"
+  ],
+  "说明": "统计取值与空值",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "profile_field_values",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.4.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "字段类型推断",
+  "源码文件": "src/dataagent_data/preparation/profiles.py",
+  "FDE": false,
+  "能力组": "DA02.4 数据画像",
+  "切片": [
+   "S0"
+  ],
+  "说明": "推断列的语义类型",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "infer_field_types",
+  "S0 闭环族": [
+   "计算族"
+  ],
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.4.4",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "时间角色识别",
+  "源码文件": "src/dataagent_data/preparation/profiles.py",
+  "FDE": false,
+  "能力组": "DA02.4 数据画像",
+  "切片": [
+   "按需"
+  ],
+  "说明": "识别时间列角色",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "infer_time_roles",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.4.5",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "记录粒度识别",
+  "源码文件": "src/dataagent_data/preparation/profiles.py",
+  "FDE": false,
+  "能力组": "DA02.4 数据画像",
+  "切片": [
+   "按需"
+  ],
+  "说明": "判定一行代表什么",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "infer_record_grain",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.5.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "键关系发现",
+  "源码文件": "src/dataagent_data/preparation/joins.py",
+  "FDE": false,
+  "能力组": "DA02.5 Join 关系发现",
+  "切片": [
+   "按需"
+  ],
+  "说明": "找出候选主外键",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "discover_key_candidates",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.5.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "取值覆盖匹配",
+  "源码文件": "src/dataagent_data/preparation/joins.py",
+  "FDE": false,
+  "能力组": "DA02.5 Join 关系发现",
+  "切片": [
+   "按需"
+  ],
+  "说明": "按取值交叠验证关系",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "compare_value_coverage",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.5.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "Join 基数探查",
+  "源码文件": "src/dataagent_data/preparation/joins.py",
+  "FDE": false,
+  "能力组": "DA02.5 Join 关系发现",
+  "切片": [
+   "按需"
+  ],
+  "说明": "判定一对一或一对多",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "profile_join_cardinality",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.6.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "重复记录处理",
+  "源码文件": "src/dataagent_data/preparation/cleaning.py",
+  "FDE": false,
+  "能力组": "DA02.6 数据清洗",
+  "切片": [
+   "按需"
+  ],
+  "说明": "识别并合并重复记录",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "deduplicate_records",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.6.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "类型转换",
+  "源码文件": "src/dataagent_data/preparation/cleaning.py",
+  "FDE": false,
+  "能力组": "DA02.6 数据清洗",
+  "切片": [
+   "按需"
+  ],
+  "说明": "统一列类型",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "cast_field_types",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.6.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "取值标准化",
+  "源码文件": "src/dataagent_data/preparation/cleaning.py",
+  "FDE": false,
+  "能力组": "DA02.6 数据清洗",
+  "切片": [
+   "按需"
+  ],
+  "说明": "统一枚举与写法",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "normalize_field_values",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.6.4",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "缺失值处理",
+  "源码文件": "src/dataagent_data/preparation/cleaning.py",
+  "FDE": false,
+  "能力组": "DA02.6 数据清洗",
+  "切片": [
+   "按需"
+  ],
+  "说明": "标记或填补缺失",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "handle_missing_values",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.7.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "源端血缘导入：接入数据目录、ETL 或数据库已有血缘",
+  "源码文件": "src/dataagent_data/preparation/lineage.py",
+  "FDE": false,
+  "能力组": "DA02.7 数据血缘",
+  "切片": [
+   "按需"
+  ],
+  "说明": "接入目录或 ETL 已有血缘",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "import_source_lineage",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.7.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "SQL 血缘提取：解析表、视图和列的读取与派生关系",
+  "源码文件": "src/dataagent_data/preparation/lineage.py",
+  "FDE": false,
+  "能力组": "DA02.7 数据血缘",
+  "切片": [
+   "按需"
+  ],
+  "说明": "解析 SQL 的读取与派生",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "extract_sql_lineage",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.7.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "转换血缘采集：记录文件处理、代码和数据转换的来源及去向",
+  "源码文件": "src/dataagent_data/preparation/lineage.py",
+  "FDE": false,
+  "能力组": "DA02.7 数据血缘",
+  "切片": [
+   "按需"
+  ],
+  "说明": "记录处理链的来源与去向",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "collect_transformation_lineage",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.7.4",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "数据血缘维护：保存和更新带版本的表级、列级依赖",
+  "源码文件": "src/dataagent_data/preparation/lineage.py",
+  "FDE": false,
+  "能力组": "DA02.7 数据血缘",
+  "切片": [
+   "按需"
+  ],
+  "说明": "保存版本化依赖",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "upsert_data_lineage",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.8.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "章节/表格切分",
+  "源码文件": "src/dataagent_data/preparation/documents.py",
+  "FDE": false,
+  "能力组": "DA02.8 文档加工",
+  "切片": [
+   "S0"
+  ],
+  "说明": "按章节与表格切块",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "segment_document",
+  "S0 闭环族": [
+   "判定族"
+  ],
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.8.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "原文引用锚点维护",
+  "源码文件": "src/dataagent_data/preparation/documents.py",
+  "FDE": false,
+  "能力组": "DA02.8 文档加工",
+  "切片": [
+   "S0"
+  ],
+  "说明": "维护可回指的原文位置",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "maintain_source_anchors",
+  "S0 闭环族": [
+   "判定族"
+  ],
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.9.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "Schema 差异检测",
+  "源码文件": "src/dataagent_data/preparation/schema_changes.py",
+  "FDE": false,
+  "能力组": "DA02.9 结构变化适配",
+  "切片": [
+   "按需"
+  ],
+  "说明": "比对新旧结构",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "diff_schemas",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.9.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "接口兼容检查",
+  "源码文件": "src/dataagent_data/preparation/schema_changes.py",
+  "FDE": false,
+  "能力组": "DA02.9 结构变化适配",
+  "切片": [
+   "按需"
+  ],
+  "说明": "判定是否破坏兼容",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "check_interface_compatibility",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.9.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "字段映射修订建议",
+  "源码文件": "src/dataagent_data/preparation/schema_changes.py",
+  "FDE": false,
+  "能力组": "DA02.9 结构变化适配",
+  "切片": [
+   "按需"
+  ],
+  "说明": "给出字段映射改法",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "propose_field_remapping",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.10.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "修复方案生成",
+  "源码文件": "src/dataagent_data/preparation/repairs.py",
+  "FDE": false,
+  "能力组": "DA02.10 修复建议与复核",
+  "切片": [
+   "按需"
+  ],
+  "说明": "给出可执行修复方案",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "propose_data_repairs",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.10.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "修复前后验证",
+  "源码文件": "src/dataagent_data/preparation/repairs.py",
+  "FDE": false,
+  "能力组": "DA02.10 修复建议与复核",
+  "切片": [
+   "按需"
+  ],
+  "说明": "比对修复前后结果",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "compare_repair_results",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.10.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "复核反馈转修复规则",
+  "源码文件": "src/dataagent_data/preparation/repairs.py",
+  "FDE": false,
+  "能力组": "DA02.10 修复建议与复核",
+  "切片": [
+   "按需"
+  ],
+  "说明": "把人工复核沉淀为规则",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "derive_repair_rule",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.11.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "文件/查询结果快照保存",
+  "源码文件": "src/dataagent_data/preparation/snapshots.py",
+  "FDE": false,
+  "能力组": "DA02.11 历史数据保留",
+  "切片": [
+   "按需"
+  ],
+  "说明": "保存文件或查询结果快照",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "save_data_snapshot",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA02.11.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "源端 as-of/快照引用",
+  "源码文件": "src/dataagent_data/preparation/snapshots.py",
+  "FDE": false,
+  "能力组": "DA02.11 历史数据保留",
+  "切片": [
+   "按需"
+  ],
+  "说明": "指向源端历史版本",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "bind_source_snapshot",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA02.12.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "按目标结构抽取字段",
+  "源码文件": "src/dataagent_data/preparation/extraction.py",
+  "FDE": false,
+  "能力组": "DA02.12 文档信息抽取",
+  "切片": [
+   "S0"
+  ],
+  "说明": "按目标结构取值",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "extract_fields_to_schema",
+  "S0 闭环族": [
+   "判定族"
+  ],
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.12.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "表单/单据键值抽取",
+  "源码文件": "src/dataagent_data/preparation/extraction.py",
+  "FDE": false,
+  "能力组": "DA02.12 文档信息抽取",
+  "切片": [
+   "按需"
+  ],
+  "说明": "抽表单键值对",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "extract_form_key_values",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.12.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "抽取结果原文锚定",
+  "源码文件": "src/dataagent_data/preparation/extraction.py",
+  "FDE": false,
+  "能力组": "DA02.12 文档信息抽取",
+  "切片": [
+   "S0"
+  ],
+  "说明": "回指原文位置",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "anchor_extracted_values",
+  "S0 闭环族": [
+   "判定族"
+  ],
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.12.4",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "抽取标签体系版本化",
+  "源码文件": "src/dataagent_data/preparation/extraction.py",
+  "FDE": false,
+  "能力组": "DA02.12 文档信息抽取",
+  "切片": [
+   "S0"
+  ],
+  "说明": "为抽取目标结构和标签体系登记版本，抽取结果绑定该版本",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "register_extraction_schema_version",
+  "S0 闭环族": [
+   "判定族"
+  ],
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.13.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "步骤与触发条件提取",
+  "源码文件": "src/dataagent_data/preparation/processes.py",
+  "FDE": true,
+  "能力组": "DA02.13 流程勘查",
+  "切片": [
+   "按需"
+  ],
+  "说明": "抽步骤与触发条件",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "extract_process_steps",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.13.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "分支与例外路径记录",
+  "源码文件": "src/dataagent_data/preparation/processes.py",
+  "FDE": true,
+  "能力组": "DA02.13 流程勘查",
+  "切片": [
+   "按需"
+  ],
+  "说明": "记录分支与例外",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "record_process_exceptions",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.13.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "人工步骤识别",
+  "源码文件": "src/dataagent_data/preparation/processes.py",
+  "FDE": true,
+  "能力组": "DA02.13 流程勘查",
+  "切片": [
+   "按需"
+  ],
+  "说明": "标出人工环节",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "identify_manual_steps",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.14.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "角色与权限现状",
+  "源码文件": "src/dataagent_data/preparation/roles.py",
+  "FDE": true,
+  "能力组": "DA02.14 角色与审批链还原",
+  "切片": [
+   "按需"
+  ],
+  "说明": "记录现有角色与权限",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "describe_current_roles",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.14.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "事实上的决定者识别",
+  "源码文件": "src/dataagent_data/preparation/roles.py",
+  "FDE": true,
+  "能力组": "DA02.14 角色与审批链还原",
+  "切片": [
+   "按需"
+  ],
+  "说明": "找出真实决策人",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "identify_actual_deciders",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.14.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "审批链还原",
+  "源码文件": "src/dataagent_data/preparation/roles.py",
+  "FDE": true,
+  "能力组": "DA02.14 角色与审批链还原",
+  "切片": [
+   "按需"
+  ],
+  "说明": "还原审批路径",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "reconstruct_approval_chain",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.15.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "人工耗时与频次",
+  "源码文件": "src/dataagent_data/preparation/baselines.py",
+  "FDE": true,
+  "能力组": "DA02.15 现状基线",
+  "切片": [
+   "按需"
+  ],
+  "说明": "测量人工投入",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "measure_manual_effort",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.15.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "错误率与返工率",
+  "源码文件": "src/dataagent_data/preparation/baselines.py",
+  "FDE": true,
+  "能力组": "DA02.15 现状基线",
+  "切片": [
+   "按需"
+  ],
+  "说明": "测量质量成本",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "measure_rework_baseline",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA02.15.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "成本基线",
+  "源码文件": "src/dataagent_data/preparation/baselines.py",
+  "FDE": true,
+  "能力组": "DA02.15 现状基线",
+  "切片": [
+   "按需"
+  ],
+  "说明": "形成成本基线",
+  "模块": [
+   "DA02 数据准备与探查"
+  ],
+  "operation": "measure_cost_baseline",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.1.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "实体类型定义",
+  "源码文件": "src/dataagent_data/semantics/entities.py",
+  "FDE": false,
+  "能力组": "DA03.1 实体建模",
+  "切片": [
+   "按需"
+  ],
+  "说明": "定义实体类别",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "define_entity_types",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.1.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "实体属性定义",
+  "源码文件": "src/dataagent_data/semantics/entities.py",
+  "FDE": false,
+  "能力组": "DA03.1 实体建模",
+  "切片": [
+   "按需"
+  ],
+  "说明": "定义属性与类型",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "define_entity_attributes",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.1.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "对象状态定义",
+  "源码文件": "src/dataagent_data/semantics/entities.py",
+  "FDE": false,
+  "能力组": "DA03.1 实体建模",
+  "切片": [
+   "按需"
+  ],
+  "说明": "定义对象状态集合",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "define_entity_state_vocabulary",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.2.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "编码映射",
+  "源码文件": "src/dataagent_data/semantics/identity.py",
+  "FDE": false,
+  "能力组": "DA03.2 身份对齐",
+  "切片": [
+   "按需"
+  ],
+  "说明": "建立编码对照",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "build_code_mapping",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.2.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "别名匹配",
+  "源码文件": "src/dataagent_data/semantics/identity.py",
+  "FDE": false,
+  "能力组": "DA03.2 身份对齐",
+  "切片": [
+   "按需"
+  ],
+  "说明": "合并同义名称",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "match_entity_aliases",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.2.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "跨源实体匹配",
+  "源码文件": "src/dataagent_data/semantics/identity.py",
+  "FDE": false,
+  "能力组": "DA03.2 身份对齐",
+  "切片": [
+   "按需"
+  ],
+  "说明": "跨源判定同一实体",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "match_cross_source_entities",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.3.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "实体关系定义",
+  "源码文件": "src/dataagent_data/semantics/relationships.py",
+  "FDE": false,
+  "能力组": "DA03.3 关系建模",
+  "切片": [
+   "按需"
+  ],
+  "说明": "定义关系类型",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "define_entity_relationships",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.3.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "Join 规则定义",
+  "源码文件": "src/dataagent_data/semantics/relationships.py",
+  "FDE": false,
+  "能力组": "DA03.3 关系建模",
+  "切片": [
+   "按需"
+  ],
+  "说明": "定义连接条件",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "define_join_rules",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.3.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "时态关系定义",
+  "源码文件": "src/dataagent_data/semantics/relationships.py",
+  "FDE": false,
+  "能力组": "DA03.3 关系建模",
+  "切片": [
+   "按需"
+  ],
+  "说明": "定义随时间变化的关系",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "define_temporal_relationships",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.3.4",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "键类型与复合键定义",
+  "源码文件": "src/dataagent_data/semantics/relationships.py",
+  "FDE": false,
+  "能力组": "DA03.3 关系建模",
+  "切片": [
+   "按需"
+  ],
+  "说明": "定义主键、外键、自然键与复合键，复合键保留全部组成列",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "define_key_structures",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.3.5",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "SCD 有效期与粒度规则定义",
+  "源码文件": "src/dataagent_data/semantics/relationships.py",
+  "FDE": false,
+  "能力组": "DA03.3 关系建模",
+  "切片": [
+   "按需"
+  ],
+  "说明": "定义缓慢变化维的有效期，以及按粗时间粒度取值的规则",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "define_scd_rules",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.4.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "指标公式定义",
+  "源码文件": "src/dataagent_data/semantics/metrics_rules.py",
+  "FDE": false,
+  "能力组": "DA03.4 指标与规则定义",
+  "切片": [
+   "S0"
+  ],
+  "说明": "定义指标算法",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "define_metric_formula",
+  "S0 闭环族": [
+   "计算族"
+  ],
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.4.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "维度层级定义",
+  "源码文件": "src/dataagent_data/semantics/metrics_rules.py",
+  "FDE": false,
+  "能力组": "DA03.4 指标与规则定义",
+  "切片": [
+   "按需"
+  ],
+  "说明": "定义维度与层级",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "define_dimension_hierarchy",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.4.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "业务规则定义",
+  "源码文件": "src/dataagent_data/semantics/metrics_rules.py",
+  "FDE": false,
+  "能力组": "DA03.4 指标与规则定义",
+  "切片": [
+   "S0"
+  ],
+  "说明": "定义约束与判定规则",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "define_business_rules",
+  "S0 闭环族": [
+   "判定族"
+  ],
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.5.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "业务时间定义",
+  "源码文件": "src/dataagent_data/semantics/time_units.py",
+  "FDE": false,
+  "能力组": "DA03.5 时间与单位定义",
+  "切片": [
+   "按需"
+  ],
+  "说明": "定义业务日与期间",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "define_business_time",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.5.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "财务日历定义",
+  "源码文件": "src/dataagent_data/semantics/time_units.py",
+  "FDE": false,
+  "能力组": "DA03.5 时间与单位定义",
+  "切片": [
+   "按需"
+  ],
+  "说明": "定义财年与期间",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "define_fiscal_calendar",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.5.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "单位换算定义",
+  "源码文件": "src/dataagent_data/semantics/time_units.py",
+  "FDE": false,
+  "能力组": "DA03.5 时间与单位定义",
+  "切片": [
+   "按需"
+  ],
+  "说明": "定义单位与换算",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "define_unit_conversions",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.6.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "业务语义存储",
+  "源码文件": "src/dataagent_data/semantics/mappings.py",
+  "FDE": false,
+  "能力组": "DA03.6 语义映射与存储",
+  "切片": [
+   "按需"
+  ],
+  "说明": "存储语义对象",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "save_semantic_objects",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA03.6.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "语义与表列映射",
+  "源码文件": "src/dataagent_data/semantics/mappings.py",
+  "FDE": false,
+  "能力组": "DA03.6 语义映射与存储",
+  "切片": [
+   "按需"
+  ],
+  "说明": "语义到物理列",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "map_semantics_to_columns",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA03.6.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "语义与 API/文档映射",
+  "源码文件": "src/dataagent_data/semantics/mappings.py",
+  "FDE": false,
+  "能力组": "DA03.6 语义映射与存储",
+  "切片": [
+   "按需"
+  ],
+  "说明": "语义到接口与文档",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "map_semantics_to_resources",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA03.7.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "指标依赖提取：识别派生指标对基础指标、维度和时间口径的引用",
+  "源码文件": "src/dataagent_data/semantics/lineage.py",
+  "FDE": false,
+  "能力组": "DA03.7 业务语义血缘",
+  "切片": [
+   "按需"
+  ],
+  "说明": "抽取指标引用关系",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "extract_metric_dependencies",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.7.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "规则依赖提取：识别指标、规则对其他规则及例外定义的引用",
+  "源码文件": "src/dataagent_data/semantics/lineage.py",
+  "FDE": false,
+  "能力组": "DA03.7 业务语义血缘",
+  "切片": [
+   "按需"
+  ],
+  "说明": "抽取规则引用关系",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "extract_rule_dependencies",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.7.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "语义血缘维护：按定义版本保存和更新依赖",
+  "源码文件": "src/dataagent_data/semantics/lineage.py",
+  "FDE": false,
+  "能力组": "DA03.7 业务语义血缘",
+  "切片": [
+   "按需"
+  ],
+  "说明": "保存版本化依赖",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "upsert_semantic_lineage",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.8.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "业务生效时间解析",
+  "源码文件": "src/dataagent_data/semantics/history.py",
+  "FDE": false,
+  "能力组": "DA03.8 历史口径解析",
+  "切片": [
+   "按需"
+  ],
+  "说明": "解析条款生效时点",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "parse_business_effective_time",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.8.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "指定时点语义版本解析",
+  "源码文件": "src/dataagent_data/semantics/history.py",
+  "FDE": false,
+  "能力组": "DA03.8 历史口径解析",
+  "切片": [
+   "按需"
+  ],
+  "说明": "取该时点的语义版本",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "resolve_semantic_as_of",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.9.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "外部语义层导入：读取 dbt、MetricFlow、Cube、BI 数据集等已有定义",
+  "源码文件": "src/dataagent_data/semantics/bootstrap.py",
+  "FDE": false,
+  "能力组": "DA03.9 语义导入与冷启动",
+  "切片": [
+   "按需"
+  ],
+  "说明": "读取 dbt/MetricFlow/Cube 等定义；已认证指标优先经 DA06.8 委托编译，导入副本仅用于检索与解释",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "import_external_semantics",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.9.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "历史口径挖掘：从历史 SQL、报表、Excel 模板和公式中反推指标、过滤与 Join",
+  "源码文件": "src/dataagent_data/semantics/bootstrap.py",
+  "FDE": false,
+  "能力组": "DA03.9 语义导入与冷启动",
+  "切片": [
+   "按需"
+  ],
+  "说明": "从历史 SQL 与报表反推口径",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "mine_historical_definitions",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.9.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "语义草案生成：结合结构、画像、文档和领域模板生成实体、指标与关系草案",
+  "源码文件": "src/dataagent_data/semantics/bootstrap.py",
+  "FDE": false,
+  "能力组": "DA03.9 语义导入与冷启动",
+  "切片": [
+   "按需"
+  ],
+  "说明": "生成实体与指标草案",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "generate_semantic_drafts",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.9.4",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "待确认项排序：按影响范围和不确定性列出需要业务确认的定义",
+  "源码文件": "src/dataagent_data/semantics/bootstrap.py",
+  "FDE": false,
+  "能力组": "DA03.9 语义导入与冷启动",
+  "切片": [
+   "按需"
+  ],
+  "说明": "按影响与不确定性排序",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "rank_semantic_questions",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.9.5",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "语义导出与损失报告",
+  "源码文件": "src/dataagent_data/semantics/bootstrap.py",
+  "FDE": false,
+  "能力组": "DA03.9 语义导入与冷启动",
+  "切片": [
+   "按需"
+  ],
+  "说明": "导出为外部格式，同时给出支持矩阵和逐项损失报告",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "export_semantics_with_loss_report",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.10.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "定义冲突检测：同名异义、异名同义、口径重叠",
+  "源码文件": "src/dataagent_data/semantics/conflicts.py",
+  "FDE": false,
+  "能力组": "DA03.10 语义冲突识别",
+  "切片": [
+   "按需"
+  ],
+  "说明": "找出同名异义、异名同义",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "detect_semantic_conflicts",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.10.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "冲突说明与协调方案：并存、按作用域区分或合并",
+  "源码文件": "src/dataagent_data/semantics/conflicts.py",
+  "FDE": false,
+  "能力组": "DA03.10 语义冲突识别",
+  "切片": [
+   "按需"
+  ],
+  "说明": "给出并存/分域/合并方案",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "propose_semantic_resolution",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.11.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "动作类型定义（Action Type）",
+  "源码文件": "src/dataagent_data/semantics/actions.py",
+  "FDE": true,
+  "能力组": "DA03.11 动作语义",
+  "切片": [
+   "按需"
+  ],
+  "说明": "定义业务动作类型",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "define_action_types",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.11.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "业务参数定义",
+  "源码文件": "src/dataagent_data/semantics/actions.py",
+  "FDE": true,
+  "能力组": "DA03.11 动作语义",
+  "切片": [
+   "按需"
+  ],
+  "说明": "定义参数的业务含义、单位及对象范围",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "define_action_business_parameters",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.11.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "业务前后状态定义",
+  "源码文件": "src/dataagent_data/semantics/actions.py",
+  "FDE": true,
+  "能力组": "DA03.11 动作语义",
+  "切片": [
+   "按需"
+  ],
+  "说明": "描述动作前提及预期业务状态",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "define_action_business_states",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.11.4",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "业务影响描述",
+  "源码文件": "src/dataagent_data/semantics/actions.py",
+  "FDE": true,
+  "能力组": "DA03.11 动作语义",
+  "切片": [
+   "按需"
+  ],
+  "说明": "描述影响的对象及业务上的可逆条件",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "describe_action_business_impact",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.12.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "读/提议/执行三档",
+  "源码文件": "src/dataagent_data/semantics/authority.py",
+  "FDE": true,
+  "能力组": "DA03.12 权属模型",
+  "切片": [
+   "按需"
+  ],
+  "说明": "定义 A0/A1/A2",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "define_action_authority_tiers",
+  "S0 闭环族": null,
+  "形态": [
+   "软·定"
+  ]
+ },
+ {
+  "编号": "DA03.12.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "委托关系",
+  "源码文件": "src/dataagent_data/semantics/authority.py",
+  "FDE": true,
+  "能力组": "DA03.12 权属模型",
+  "切片": [
+   "按需"
+  ],
+  "说明": "定义谁可代谁",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "define_delegation_relationships",
+  "S0 闭环族": null,
+  "形态": [
+   "软·定"
+  ]
+ },
+ {
+  "编号": "DA03.12.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "审批策略",
+  "源码文件": "src/dataagent_data/semantics/authority.py",
+  "FDE": true,
+  "能力组": "DA03.12 权属模型",
+  "切片": [
+   "按需"
+  ],
+  "说明": "定义何时必须审批",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "define_approval_policy",
+  "S0 闭环族": null,
+  "形态": [
+   "软·定"
+  ]
+ },
+ {
+  "编号": "DA03.13.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "证据类型定义",
+  "源码文件": "src/dataagent_data/semantics/evidence.py",
+  "FDE": true,
+  "能力组": "DA03.13 证据模型",
+  "切片": [
+   "按需"
+  ],
+  "说明": "定义证据种类",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "define_evidence_types",
+  "S0 闭环族": null,
+  "形态": [
+   "软·定"
+  ]
+ },
+ {
+  "编号": "DA03.13.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "充分性判据定义〔定〕",
+  "源码文件": "src/dataagent_data/semantics/evidence.py",
+  "FDE": true,
+  "能力组": "DA03.13 证据模型",
+  "切片": [
+   "按需"
+  ],
+  "说明": "定义正式的证据要求；Agent 可提出修订建议",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "define_evidence_sufficiency",
+  "S0 闭环族": null,
+  "形态": [
+   "软·定"
+  ]
+ },
+ {
+  "编号": "DA03.13.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "证据与结论绑定",
+  "源码文件": "src/dataagent_data/semantics/evidence.py",
+  "FDE": true,
+  "能力组": "DA03.13 证据模型",
+  "切片": [
+   "按需"
+  ],
+  "说明": "把结论挂到证据",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "bind_conclusion_evidence",
+  "S0 闭环族": null,
+  "形态": [
+   "软·定"
+  ]
+ },
+ {
+  "编号": "DA03.14.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "业务对象状态定义",
+  "源码文件": "src/dataagent_data/semantics/lifecycle.py",
+  "FDE": false,
+  "能力组": "DA03.14 状态与生命周期",
+  "切片": [
+   "按需"
+  ],
+  "说明": "定义业务状态",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "define_business_states",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.14.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "状态迁移与回退",
+  "源码文件": "src/dataagent_data/semantics/lifecycle.py",
+  "FDE": false,
+  "能力组": "DA03.14 状态与生命周期",
+  "切片": [
+   "按需"
+  ],
+  "说明": "定义迁移与回退",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "define_state_transitions",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.14.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "与执行状态机的对应登记",
+  "源码文件": "src/dataagent_data/semantics/lifecycle.py",
+  "FDE": false,
+  "能力组": "DA03.14 状态与生命周期",
+  "切片": [
+   "按需"
+  ],
+  "说明": "记录业务状态与执行观测的对应关系，不改变任何一方语义",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "map_business_to_execution_states",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.15.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "自动判断能力评估",
+  "源码文件": "src/dataagent_data/semantics/decidability.py",
+  "FDE": false,
+  "能力组": "DA03.15 可判定性评估",
+  "切片": [
+   "S0"
+  ],
+  "说明": "检查可用数据与方法能否满足判定要求，不限表达式编译",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "assess_automatic_decidability",
+  "S0 闭环族": [
+   "判定族"
+  ],
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.15.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "补证与人工需求识别",
+  "源码文件": "src/dataagent_data/semantics/decidability.py",
+  "FDE": false,
+  "能力组": "DA03.15 可判定性评估",
+  "切片": [
+   "S0"
+  ],
+  "说明": "区分可通过补数或附件分析解决的缺口与必须人工裁量的事项",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "identify_evidence_or_human_gaps",
+  "S0 闭环族": [
+   "判定族"
+  ],
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.15.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "自动处理范围标注",
+  "源码文件": "src/dataagent_data/semantics/decidability.py",
+  "FDE": false,
+  "能力组": "DA03.15 可判定性评估",
+  "切片": [
+   "S0"
+  ],
+  "说明": "记录当前无法自动覆盖的要求及原因，保留到业务验收范围中",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "mark_automation_coverage",
+  "S0 闭环族": [
+   "判定族"
+  ],
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.15.4",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "判定缓存与依赖失效",
+  "源码文件": "src/dataagent_data/semantics/decidability.py",
+  "FDE": false,
+  "能力组": "DA03.15 可判定性评估",
+  "切片": [
+   "S0"
+  ],
+  "说明": "原文、字段映射、语义、工具或模型等依赖变化时重评",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "resolve_decidability_cache",
+  "S0 闭环族": [
+   "判定族"
+  ],
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.16.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "适用范围表达：本条管哪些单据与场景",
+  "源码文件": "src/dataagent_data/semantics/applicability.py",
+  "FDE": false,
+  "能力组": "DA03.16 适用范围建模",
+  "切片": [
+   "S0"
+  ],
+  "说明": "定义管哪些单据与场景",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "define_rule_applicability",
+  "S0 闭环族": [
+   "判定族"
+  ],
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.16.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "生效前提表达：前置条件及其组合",
+  "源码文件": "src/dataagent_data/semantics/applicability.py",
+  "FDE": false,
+  "能力组": "DA03.16 适用范围建模",
+  "切片": [
+   "S0"
+  ],
+  "说明": "定义前置条件及组合",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "define_rule_preconditions",
+  "S0 闭环族": [
+   "判定族"
+  ],
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.16.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "前置引用与去重：同义前置只留一条",
+  "源码文件": "src/dataagent_data/semantics/applicability.py",
+  "FDE": false,
+  "能力组": "DA03.16 适用范围建模",
+  "切片": [
+   "S0"
+  ],
+  "说明": "同义前置合并",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "normalize_precondition_references",
+  "S0 闭环族": [
+   "判定族"
+  ],
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA03.16.4",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "适用性未知处置",
+  "源码文件": "src/dataagent_data/semantics/applicability.py",
+  "FDE": false,
+  "能力组": "DA03.16 适用范围建模",
+  "切片": [
+   "S0"
+  ],
+  "说明": "UNKNOWN 时保留待判定并补证或转人工，不直接跳过",
+  "模块": [
+   "DA03 业务语义与关系"
+  ],
+  "operation": "resolve_unknown_applicability",
+  "S0 闭环族": [
+   "判定族"
+  ],
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA04.1.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "任务事件记录",
+  "源码文件": "src/dataagent_data/memory/traces.py",
+  "FDE": false,
+  "能力组": "DA04.1 任务轨迹存储",
+  "切片": [
+   "S0"
+  ],
+  "说明": "记录任务状态变化",
+  "模块": [
+   "DA04 任务轨迹与记忆"
+  ],
+  "operation": "append_task_event",
+  "S0 闭环族": [
+   "骨干"
+  ],
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA04.1.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "查询/工具调用记录",
+  "源码文件": "src/dataagent_data/memory/traces.py",
+  "FDE": false,
+  "能力组": "DA04.1 任务轨迹存储",
+  "切片": [
+   "S0"
+  ],
+  "说明": "记录每次调用与结果",
+  "模块": [
+   "DA04 任务轨迹与记忆"
+  ],
+  "operation": "append_invocation_record",
+  "S0 闭环族": [
+   "骨干"
+  ],
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA04.1.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "用户纠正记录",
+  "源码文件": "src/dataagent_data/memory/traces.py",
+  "FDE": false,
+  "能力组": "DA04.1 任务轨迹存储",
+  "切片": [
+   "S0"
+  ],
+  "说明": "记录用户改了什么",
+  "模块": [
+   "DA04 任务轨迹与记忆"
+  ],
+  "operation": "append_user_correction",
+  "S0 闭环族": [
+   "骨干"
+  ],
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA04.2.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "成功查询提炼",
+  "源码文件": "src/dataagent_data/memory/distillation.py",
+  "FDE": false,
+  "能力组": "DA04.2 任务经验提炼",
+  "切片": [
+   "按需"
+  ],
+  "说明": "从成功问数抽可复用查询",
+  "模块": [
+   "DA04 任务轨迹与记忆"
+  ],
+  "operation": "distill_successful_queries",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA04.2.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "分析方法提炼",
+  "源码文件": "src/dataagent_data/memory/distillation.py",
+  "FDE": false,
+  "能力组": "DA04.2 任务经验提炼",
+  "切片": [
+   "按需"
+  ],
+  "说明": "从成功分析抽方法",
+  "模块": [
+   "DA04 任务轨迹与记忆"
+  ],
+  "operation": "distill_analysis_methods",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA04.2.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "失败经验提炼",
+  "源码文件": "src/dataagent_data/memory/distillation.py",
+  "FDE": false,
+  "能力组": "DA04.2 任务经验提炼",
+  "切片": [
+   "按需"
+  ],
+  "说明": "从失败抽避坑经验",
+  "模块": [
+   "DA04 任务轨迹与记忆"
+  ],
+  "operation": "distill_failure_lessons",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA04.2.4",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "组合与 Skill 修订提炼",
+  "源码文件": "src/dataagent_data/memory/distillation.py",
+  "FDE": false,
+  "能力组": "DA04.2 任务经验提炼",
+  "切片": [
+   "按需"
+  ],
+  "说明": "从有效轨迹提炼组件组合、代码、方法指导和适用条件候选",
+  "模块": [
+   "DA04 任务轨迹与记忆"
+  ],
+  "operation": "distill_component_combinations",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA04.3.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "个人记忆存储",
+  "源码文件": "src/dataagent_data/memory/memories.py",
+  "FDE": false,
+  "能力组": "DA04.3 记忆存储",
+  "切片": [
+   "按需"
+  ],
+  "说明": "存个人偏好",
+  "模块": [
+   "DA04 任务轨迹与记忆"
+  ],
+  "operation": "save_personal_memory",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA04.3.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "任务共享记忆存储",
+  "源码文件": "src/dataagent_data/memory/memories.py",
+  "FDE": false,
+  "能力组": "DA04.3 记忆存储",
+  "切片": [
+   "按需"
+  ],
+  "说明": "存任务内共享记忆",
+  "模块": [
+   "DA04 任务轨迹与记忆"
+  ],
+  "operation": "save_task_memory",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA04.3.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "企业经验存储",
+  "源码文件": "src/dataagent_data/memory/memories.py",
+  "FDE": false,
+  "能力组": "DA04.3 记忆存储",
+  "切片": [
+   "按需"
+  ],
+  "说明": "存企业级经验",
+  "模块": [
+   "DA04 任务轨迹与记忆"
+  ],
+  "operation": "save_enterprise_memory",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA04.4.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "查询/代码资产保存",
+  "源码文件": "src/dataagent_data/memory/artifacts.py",
+  "FDE": false,
+  "能力组": "DA04.4 程序与分析资产存储",
+  "切片": [
+   "按需"
+  ],
+  "说明": "保存查询与代码",
+  "模块": [
+   "DA04 任务轨迹与记忆"
+  ],
+  "operation": "save_query_code_asset",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA04.4.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "模型资产保存",
+  "源码文件": "src/dataagent_data/memory/artifacts.py",
+  "FDE": false,
+  "能力组": "DA04.4 程序与分析资产存储",
+  "切片": [
+   "按需"
+  ],
+  "说明": "保存模型与参数",
+  "模块": [
+   "DA04 任务轨迹与记忆"
+  ],
+  "operation": "save_model_asset",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA04.4.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "模板与组合资产保存",
+  "源码文件": "src/dataagent_data/memory/artifacts.py",
+  "FDE": false,
+  "能力组": "DA04.4 程序与分析资产存储",
+  "切片": [
+   "按需"
+  ],
+  "说明": "保存报表模板、有效组件组合和 Skill/Preset 修订及适用条件",
+  "模块": [
+   "DA04 任务轨迹与记忆"
+  ],
+  "operation": "save_template_combination_asset",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA04.4.4",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "产物来源关联：记录结果、模型和报表使用的数据、语义、代码与参数",
+  "源码文件": "src/dataagent_data/memory/artifacts.py",
+  "FDE": false,
+  "能力组": "DA04.4 程序与分析资产存储",
+  "切片": [
+   "按需"
+  ],
+  "说明": "记录用了哪些数据、语义、代码与参数",
+  "模块": [
+   "DA04 任务轨迹与记忆"
+  ],
+  "operation": "link_artifact_provenance",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA04.5.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "任务上下文创建：固定数据与语义版本、已选经验和权限范围",
+  "源码文件": "src/dataagent_data/memory/contexts.py",
+  "FDE": false,
+  "能力组": "DA04.5 任务上下文",
+  "切片": [
+   "按需"
+  ],
+  "说明": "固定版本、已选经验与权限范围",
+  "模块": [
+   "DA04 任务轨迹与记忆"
+  ],
+  "operation": "create_task_context",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA04.5.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "子任务上下文引用维护",
+  "源码文件": "src/dataagent_data/memory/contexts.py",
+  "FDE": false,
+  "能力组": "DA04.5 任务上下文",
+  "切片": [
+   "按需"
+  ],
+  "说明": "关联子任务使用的任务修订；裁剪装配复用 DA17.3",
+  "模块": [
+   "DA04 任务轨迹与记忆"
+  ],
+  "operation": "bind_subtask_context",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA04.5.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "任务修订同步：口径或数据变化时生成新修订，并使旧结果失效",
+  "源码文件": "src/dataagent_data/memory/contexts.py",
+  "FDE": false,
+  "能力组": "DA04.5 任务上下文",
+  "切片": [
+   "按需"
+  ],
+  "说明": "口径变化时生成新修订并使旧结果失效",
+  "模块": [
+   "DA04 任务轨迹与记忆"
+  ],
+  "operation": "revise_task_context",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA04.6.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "候选经验验证：在相关样本上回放比较",
+  "源码文件": "src/dataagent_data/memory/promotion.py",
+  "FDE": false,
+  "能力组": "DA04.6 经验验证与晋升",
+  "切片": [
+   "按需"
+  ],
+  "说明": "在相关样本上回放比较",
+  "模块": [
+   "DA04 任务轨迹与记忆"
+  ],
+  "operation": "validate_memory_candidate",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA04.6.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "作用域晋升：个人、团队、企业逐级生效",
+  "源码文件": "src/dataagent_data/memory/promotion.py",
+  "FDE": false,
+  "能力组": "DA04.6 经验验证与晋升",
+  "切片": [
+   "按需"
+  ],
+  "说明": "个人→团队→企业逐级生效",
+  "模块": [
+   "DA04 任务轨迹与记忆"
+  ],
+  "operation": "promote_memory_scope",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA04.6.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "冲突与污染检查：与认证语义、已有经验及其他用户纠正比对",
+  "源码文件": "src/dataagent_data/memory/promotion.py",
+  "FDE": false,
+  "能力组": "DA04.6 经验验证与晋升",
+  "切片": [
+   "按需"
+  ],
+  "说明": "与认证语义、已有经验、反例比对",
+  "模块": [
+   "DA04 任务轨迹与记忆"
+  ],
+  "operation": "check_memory_conflicts",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA04.6.4",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "经验失效与淘汰：数据或语义变更、出现反例或长期未用时降级",
+  "源码文件": "src/dataagent_data/memory/promotion.py",
+  "FDE": false,
+  "能力组": "DA04.6 经验验证与晋升",
+  "切片": [
+   "按需"
+  ],
+  "说明": "过时或长期未用的降级淘汰",
+  "模块": [
+   "DA04 任务轨迹与记忆"
+  ],
+  "operation": "retire_or_demote_memory",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA04.7.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "契约与 Runbook 版本",
+  "源码文件": "src/dataagent_data/memory/deliveries.py",
+  "FDE": true,
+  "能力组": "DA04.7 交付物记忆",
+  "切片": [
+   "按需"
+  ],
+  "说明": "记录契约与 Runbook 版本",
+  "模块": [
+   "DA04 任务轨迹与记忆"
+  ],
+  "operation": "record_delivery_versions",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA04.7.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "交接材料归属",
+  "源码文件": "src/dataagent_data/memory/deliveries.py",
+  "FDE": true,
+  "能力组": "DA04.7 交付物记忆",
+  "切片": [
+   "按需"
+  ],
+  "说明": "记录交接材料归属",
+  "模块": [
+   "DA04 任务轨迹与记忆"
+  ],
+  "operation": "record_handover_ownership",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA04.7.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "业务环境范围记忆",
+  "源码文件": "src/dataagent_data/memory/deliveries.py",
+  "FDE": true,
+  "能力组": "DA04.7 交付物记忆",
+  "切片": [
+   "按需"
+  ],
+  "说明": "记录交付物适用的业务环境及限制",
+  "模块": [
+   "DA04 任务轨迹与记忆"
+  ],
+  "operation": "record_delivery_environment_scope",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA05.1.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "表/数据集召回",
+  "源码文件": "src/dataagent_application/retrieval/tables.py",
+  "FDE": false,
+  "能力组": "DA05.1 表格/数据库检索",
+  "切片": [
+   "按需"
+  ],
+  "说明": "召回相关表与数据集",
+  "模块": [
+   "DA05 召回检索"
+  ],
+  "operation": "retrieve_tables",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA05.1.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "字段召回",
+  "源码文件": "src/dataagent_application/retrieval/tables.py",
+  "FDE": false,
+  "能力组": "DA05.1 表格/数据库检索",
+  "切片": [
+   "按需"
+  ],
+  "说明": "召回相关字段",
+  "模块": [
+   "DA05 召回检索"
+  ],
+  "operation": "retrieve_fields",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA05.1.3",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "取值召回与反查",
+  "源码文件": "src/dataagent_application/retrieval/tables.py",
+  "FDE": false,
+  "能力组": "DA05.1 表格/数据库检索",
+  "切片": [
+   "按需"
+  ],
+  "说明": "按取值反查所在表列",
+  "模块": [
+   "DA05 召回检索"
+  ],
+  "operation": "retrieve_values_and_locations",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA05.2.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "实体召回",
+  "源码文件": "src/dataagent_application/retrieval/semantics.py",
+  "FDE": false,
+  "能力组": "DA05.2 业务语义检索",
+  "切片": [
+   "按需"
+  ],
+  "说明": "召回实体",
+  "模块": [
+   "DA05 召回检索"
+  ],
+  "operation": "retrieve_entities",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA05.2.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "指标召回",
+  "源码文件": "src/dataagent_application/retrieval/semantics.py",
+  "FDE": false,
+  "能力组": "DA05.2 业务语义检索",
+  "切片": [
+   "按需"
+  ],
+  "说明": "召回指标",
+  "模块": [
+   "DA05 召回检索"
+  ],
+  "operation": "retrieve_metrics",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA05.2.3",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "业务规则召回",
+  "源码文件": "src/dataagent_application/retrieval/semantics.py",
+  "FDE": false,
+  "能力组": "DA05.2 业务语义检索",
+  "切片": [
+   "按需"
+  ],
+  "说明": "召回业务规则",
+  "模块": [
+   "DA05 召回检索"
+  ],
+  "operation": "retrieve_rules",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA05.2.4",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "关系与映射召回",
+  "源码文件": "src/dataagent_application/retrieval/semantics.py",
+  "FDE": false,
+  "能力组": "DA05.2 业务语义检索",
+  "切片": [
+   "按需"
+  ],
+  "说明": "召回关系与映射",
+  "模块": [
+   "DA05 召回检索"
+  ],
+  "operation": "retrieve_relationships_and_mappings",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA05.3.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "历史任务召回",
+  "源码文件": "src/dataagent_application/retrieval/memories.py",
+  "FDE": false,
+  "能力组": "DA05.3 记忆检索",
+  "切片": [
+   "按需"
+  ],
+  "说明": "召回相似历史任务",
+  "模块": [
+   "DA05 召回检索"
+  ],
+  "operation": "retrieve_historical_tasks",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA05.3.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "经验召回",
+  "源码文件": "src/dataagent_application/retrieval/memories.py",
+  "FDE": false,
+  "能力组": "DA05.3 记忆检索",
+  "切片": [
+   "按需"
+  ],
+  "说明": "召回相关经验",
+  "模块": [
+   "DA05 召回检索"
+  ],
+  "operation": "retrieve_experiences",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA05.3.3",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "用户纠正召回",
+  "源码文件": "src/dataagent_application/retrieval/memories.py",
+  "FDE": false,
+  "能力组": "DA05.3 记忆检索",
+  "切片": [
+   "按需"
+  ],
+  "说明": "召回用户纠正",
+  "模块": [
+   "DA05 召回检索"
+  ],
+  "operation": "retrieve_user_corrections",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA05.3.4",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "已验证查询召回",
+  "源码文件": "src/dataagent_application/retrieval/memories.py",
+  "FDE": false,
+  "能力组": "DA05.3 记忆检索",
+  "切片": [
+   "按需"
+  ],
+  "说明": "召回已验证查询",
+  "模块": [
+   "DA05 召回检索"
+  ],
+  "operation": "retrieve_validated_queries",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA05.4.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "文档关键词检索",
+  "源码文件": "src/dataagent_application/retrieval/documents.py",
+  "FDE": false,
+  "能力组": "DA05.4 文档检索",
+  "切片": [
+   "按需"
+  ],
+  "说明": "关键词检索",
+  "模块": [
+   "DA05 召回检索"
+  ],
+  "operation": "search_document_keywords",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA05.4.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "文档语义检索",
+  "源码文件": "src/dataagent_application/retrieval/documents.py",
+  "FDE": false,
+  "能力组": "DA05.4 文档检索",
+  "切片": [
+   "按需"
+  ],
+  "说明": "语义检索",
+  "模块": [
+   "DA05 召回检索"
+  ],
+  "operation": "search_document_semantics",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA05.5.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "分析代码/函数召回",
+  "源码文件": "src/dataagent_application/retrieval/analysis_assets.py",
+  "FDE": false,
+  "能力组": "DA05.5 分析资产检索",
+  "切片": [
+   "按需"
+  ],
+  "说明": "召回分析代码与函数",
+  "模块": [
+   "DA05 召回检索"
+  ],
+  "operation": "retrieve_analysis_programs",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA05.5.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "模型召回",
+  "源码文件": "src/dataagent_application/retrieval/analysis_assets.py",
+  "FDE": false,
+  "能力组": "DA05.5 分析资产检索",
+  "切片": [
+   "按需"
+  ],
+  "说明": "召回模型",
+  "模块": [
+   "DA05 召回检索"
+  ],
+  "operation": "retrieve_models",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA05.5.3",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "报表/模板召回",
+  "源码文件": "src/dataagent_application/retrieval/analysis_assets.py",
+  "FDE": false,
+  "能力组": "DA05.5 分析资产检索",
+  "切片": [
+   "按需"
+  ],
+  "说明": "召回报表与模板",
+  "模块": [
+   "DA05 召回检索"
+  ],
+  "operation": "retrieve_reports_and_templates",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA05.6.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "候选去重",
+  "源码文件": "src/dataagent_application/retrieval/ranking.py",
+  "FDE": false,
+  "能力组": "DA05.6 检索重排",
+  "切片": [
+   "按需"
+  ],
+  "说明": "候选去重",
+  "模块": [
+   "DA05 召回检索"
+  ],
+  "operation": "deduplicate_candidates",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA05.6.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "相关性重排",
+  "源码文件": "src/dataagent_application/retrieval/ranking.py",
+  "FDE": false,
+  "能力组": "DA05.6 检索重排",
+  "切片": [
+   "按需"
+  ],
+  "说明": "按相关性重排",
+  "模块": [
+   "DA05 召回检索"
+  ],
+  "operation": "rerank_candidates",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA05.7.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "上游来源追溯",
+  "源码文件": "src/dataagent_application/retrieval/lineage.py",
+  "FDE": false,
+  "能力组": "DA05.7 血缘查询",
+  "切片": [
+   "按需"
+  ],
+  "说明": "追溯上游来源",
+  "模块": [
+   "DA05 召回检索"
+  ],
+  "operation": "trace_upstream_dependencies",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA05.7.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "下游依赖查找",
+  "源码文件": "src/dataagent_application/retrieval/lineage.py",
+  "FDE": false,
+  "能力组": "DA05.7 血缘查询",
+  "切片": [
+   "按需"
+  ],
+  "说明": "查找下游依赖",
+  "模块": [
+   "DA05 召回检索"
+  ],
+  "operation": "find_downstream_dependencies",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA05.7.3",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "语义到物理实现追溯",
+  "源码文件": "src/dataagent_application/retrieval/lineage.py",
+  "FDE": false,
+  "能力组": "DA05.7 血缘查询",
+  "切片": [
+   "按需"
+  ],
+  "说明": "从语义追到物理实现",
+  "模块": [
+   "DA05 召回检索"
+  ],
+  "operation": "trace_semantic_implementations",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA05.8.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "组件与实现召回",
+  "源码文件": "src/dataagent_application/retrieval/components.py",
+  "FDE": false,
+  "能力组": "DA05.8 组件与 Skill/Preset 检索",
+  "切片": [
+   "S1"
+  ],
+  "说明": "查找候选组件、动作契约及其可替换实现",
+  "模块": [
+   "DA05 召回检索"
+  ],
+  "operation": "retrieve_components_and_implementations",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA05.8.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "Skill/Preset 召回",
+  "源码文件": "src/dataagent_application/retrieval/components.py",
+  "FDE": false,
+  "能力组": "DA05.8 组件与 Skill/Preset 检索",
+  "切片": [
+   "S1"
+  ],
+  "说明": "查找相似业务的方法指导和可用组合",
+  "模块": [
+   "DA05 召回检索"
+  ],
+  "operation": "retrieve_skills_and_presets",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA05.8.3",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "适用条件筛选",
+  "源码文件": "src/dataagent_application/retrieval/components.py",
+  "FDE": false,
+  "能力组": "DA05.8 组件与 Skill/Preset 检索",
+  "切片": [
+   "S1"
+  ],
+  "说明": "按来源、运行环境、依赖和权限需求筛选候选",
+  "模块": [
+   "DA05 召回检索"
+  ],
+  "operation": "filter_component_applicability",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA05.8.4",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "许可与分发约束筛选",
+  "源码文件": "src/dataagent_application/retrieval/components.py",
+  "FDE": false,
+  "能力组": "DA05.8 组件与 Skill/Preset 检索",
+  "切片": [
+   "S1"
+  ],
+  "说明": "按许可证、权重或数据许可，以及分发场景筛选候选",
+  "模块": [
+   "DA05 召回检索"
+  ],
+  "operation": "filter_component_licensing",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA05.9.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "题内角色绑定",
+  "源码文件": "src/dataagent_application/retrieval/sufficiency.py",
+  "FDE": false,
+  "能力组": "DA05.9 检索充分性与停止",
+  "切片": [
+   "按需"
+  ],
+  "说明": "把召回对象绑定为本题的度量、维度、过滤、时间或连接角色",
+  "模块": [
+   "DA05 召回检索"
+  ],
+  "operation": "bind_candidate_roles",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA05.9.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "必要依赖闭包检查",
+  "源码文件": "src/dataagent_application/retrieval/sufficiency.py",
+  "FDE": false,
+  "能力组": "DA05.9 检索充分性与停止",
+  "切片": [
+   "按需"
+  ],
+  "说明": "检查桥表、租户键、时间键、单位等必要依赖是否齐全",
+  "模块": [
+   "DA05 召回检索"
+  ],
+  "operation": "check_dependency_closure",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA05.9.3",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "空结果与失败分类",
+  "源码文件": "src/dataagent_application/retrieval/sufficiency.py",
+  "FDE": false,
+  "能力组": "DA05.9 检索充分性与停止",
+  "切片": [
+   "按需"
+  ],
+  "说明": "区分未命中、覆盖不足、索引过期、权限截断与预算截断",
+  "模块": [
+   "DA05 召回检索"
+  ],
+  "operation": "classify_retrieval_gaps",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA05.9.4",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "检索停止判定",
+  "源码文件": "src/dataagent_application/retrieval/sufficiency.py",
+  "FDE": false,
+  "能力组": "DA05.9 检索充分性与停止",
+  "切片": [
+   "按需"
+  ],
+  "说明": "依据充分性、预算与边际收益给出停止、继续或转澄清",
+  "模块": [
+   "DA05 召回检索"
+  ],
+  "operation": "decide_retrieval_stop",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA06.1.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "指标与维度绑定",
+  "源码文件": "src/dataagent_application/planning/requirements.py",
+  "FDE": false,
+  "能力组": "DA06.1 计算需求解析",
+  "切片": [
+   "S0"
+  ],
+  "说明": "把问题绑定到指标与维度",
+  "模块": [
+   "DA06 语义查询与计算计划"
+  ],
+  "operation": "bind_metrics_and_dimensions",
+  "S0 闭环族": [
+   "计算族"
+  ],
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA06.1.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "时间与过滤解析",
+  "源码文件": "src/dataagent_application/planning/requirements.py",
+  "FDE": false,
+  "能力组": "DA06.1 计算需求解析",
+  "切片": [
+   "S0"
+  ],
+  "说明": "解析时间范围与过滤",
+  "模块": [
+   "DA06 语义查询与计算计划"
+  ],
+  "operation": "parse_time_and_filters",
+  "S0 闭环族": [
+   "计算族"
+  ],
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA06.1.3",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "计算歧义识别",
+  "源码文件": "src/dataagent_application/planning/requirements.py",
+  "FDE": false,
+  "能力组": "DA06.1 计算需求解析",
+  "切片": [
+   "S0"
+  ],
+  "说明": "识别影响结果的歧义",
+  "模块": [
+   "DA06 语义查询与计算计划"
+  ],
+  "operation": "identify_calculation_ambiguities",
+  "S0 闭环族": [
+   "计算族"
+  ],
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA06.1.4",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "澄清问题生成",
+  "源码文件": "src/dataagent_application/planning/requirements.py",
+  "FDE": false,
+  "能力组": "DA06.1 计算需求解析",
+  "切片": [
+   "S0"
+  ],
+  "说明": "针对关键歧义给出候选与依据，允许自由补充和开放澄清",
+  "模块": [
+   "DA06 语义查询与计算计划"
+  ],
+  "operation": "generate_clarification_questions",
+  "S0 闭环族": [
+   "计算族"
+  ],
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA06.2.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "指标计算展开",
+  "源码文件": "src/dataagent_application/planning/semantic_compilation.py",
+  "FDE": false,
+  "能力组": "DA06.2 业务语义编译",
+  "切片": [
+   "按需"
+  ],
+  "说明": "把指标展开为基础计算",
+  "模块": [
+   "DA06 语义查询与计算计划"
+  ],
+  "operation": "expand_metric_calculation",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA06.2.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "关系与约束展开",
+  "源码文件": "src/dataagent_application/planning/semantic_compilation.py",
+  "FDE": false,
+  "能力组": "DA06.2 业务语义编译",
+  "切片": [
+   "按需"
+  ],
+  "说明": "展开关系与约束",
+  "模块": [
+   "DA06 语义查询与计算计划"
+  ],
+  "operation": "expand_relationships_and_constraints",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA06.2.3",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "多事实对齐与倍增度量展开",
+  "源码文件": "src/dataagent_application/planning/semantic_compilation.py",
+  "FDE": false,
+  "能力组": "DA06.2 业务语义编译",
+  "切片": [
+   "按需"
+  ],
+  "说明": "多事实先各自聚合再按合法公共粒度对齐；倍增度量走分支聚合",
+  "模块": [
+   "DA06 语义查询与计算计划"
+  ],
+  "operation": "expand_multi_fact_alignment",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA06.3.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "单表 SQL 生成",
+  "源码文件": "src/dataagent_application/planning/expressions.py",
+  "FDE": false,
+  "能力组": "DA06.3 执行表达生成",
+  "切片": [
+   "S0"
+  ],
+  "说明": "生成单表 SQL",
+  "模块": [
+   "DA06 语义查询与计算计划"
+  ],
+  "operation": "generate_single_table_sql",
+  "S0 闭环族": [
+   "计算族"
+  ],
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA06.3.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "多表 SQL 生成",
+  "源码文件": "src/dataagent_application/planning/expressions.py",
+  "FDE": false,
+  "能力组": "DA06.3 执行表达生成",
+  "切片": [
+   "按需"
+  ],
+  "说明": "生成多表 SQL",
+  "模块": [
+   "DA06 语义查询与计算计划"
+  ],
+  "operation": "generate_multi_table_sql",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA06.3.3",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "SQL 方言转换",
+  "源码文件": "src/dataagent_application/planning/expressions.py",
+  "FDE": false,
+  "能力组": "DA06.3 执行表达生成",
+  "切片": [
+   "按需"
+  ],
+  "说明": "转换 SQL 方言",
+  "模块": [
+   "DA06 语义查询与计算计划"
+  ],
+  "operation": "translate_sql_dialect",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA06.3.4",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "API/MCP 调用生成",
+  "源码文件": "src/dataagent_application/planning/expressions.py",
+  "FDE": false,
+  "能力组": "DA06.3 执行表达生成",
+  "切片": [
+   "按需"
+  ],
+  "说明": "生成 API/MCP 调用",
+  "模块": [
+   "DA06 语义查询与计算计划"
+  ],
+  "operation": "generate_api_mcp_calls",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA06.3.5",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "函数调用与表达式生成",
+  "源码文件": "src/dataagent_application/planning/expressions.py",
+  "FDE": false,
+  "能力组": "DA06.3 执行表达生成",
+  "切片": [
+   "S0"
+  ],
+  "说明": "生成函数调用与表达式",
+  "模块": [
+   "DA06 语义查询与计算计划"
+  ],
+  "operation": "generate_function_expressions",
+  "S0 闭环族": [
+   "骨干"
+  ],
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA06.4.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "语法与参数修正",
+  "源码文件": "src/dataagent_application/planning/revision.py",
+  "FDE": false,
+  "能力组": "DA06.4 计划修正与重组",
+  "切片": [
+   "按需"
+  ],
+  "说明": "修正语法与参数",
+  "模块": [
+   "DA06 语义查询与计算计划"
+  ],
+  "operation": "repair_syntax_and_parameters",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA06.4.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "执行错误修正",
+  "源码文件": "src/dataagent_application/planning/revision.py",
+  "FDE": false,
+  "能力组": "DA06.4 计划修正与重组",
+  "切片": [
+   "按需"
+  ],
+  "说明": "修正执行错误",
+  "模块": [
+   "DA06 语义查询与计算计划"
+  ],
+  "operation": "repair_execution_errors",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA06.4.3",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "计算逻辑修正",
+  "源码文件": "src/dataagent_application/planning/revision.py",
+  "FDE": false,
+  "能力组": "DA06.4 计划修正与重组",
+  "切片": [
+   "按需"
+  ],
+  "说明": "修正计算逻辑",
+  "模块": [
+   "DA06 语义查询与计算计划"
+  ],
+  "operation": "repair_calculation_logic",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA06.4.4",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "方法替换",
+  "源码文件": "src/dataagent_application/planning/revision.py",
+  "FDE": false,
+  "能力组": "DA06.4 计划修正与重组",
+  "切片": [
+   "按需"
+  ],
+  "说明": "根据效果与适用条件选择替代方法",
+  "模块": [
+   "DA06 语义查询与计算计划"
+  ],
+  "operation": "replace_analysis_method",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA06.4.5",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "组件重选",
+  "源码文件": "src/dataagent_application/planning/revision.py",
+  "FDE": false,
+  "能力组": "DA06.4 计划修正与重组",
+  "切片": [
+   "按需"
+  ],
+  "说明": "更换不适用的组件或实现并检查依赖",
+  "模块": [
+   "DA06 语义查询与计算计划"
+  ],
+  "operation": "reselect_components",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA06.4.6",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "子任务重组",
+  "源码文件": "src/dataagent_application/planning/revision.py",
+  "FDE": false,
+  "能力组": "DA06.4 计划修正与重组",
+  "切片": [
+   "按需"
+  ],
+  "说明": "按新发现调整分解、依赖和执行次序",
+  "模块": [
+   "DA06 语义查询与计算计划"
+  ],
+  "operation": "reorganize_subtasks",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA06.5.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "执行目标匹配",
+  "源码文件": "src/dataagent_application/planning/composition.py",
+  "FDE": false,
+  "能力组": "DA06.5 计算计划组合",
+  "切片": [
+   "按需"
+  ],
+  "说明": "把步骤匹配到可用执行目标",
+  "模块": [
+   "DA06 语义查询与计算计划"
+  ],
+  "operation": "match_execution_targets",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA06.5.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "多步计算依赖编排",
+  "源码文件": "src/dataagent_application/planning/composition.py",
+  "FDE": false,
+  "能力组": "DA06.5 计算计划组合",
+  "切片": [
+   "按需"
+  ],
+  "说明": "编排多步依赖",
+  "模块": [
+   "DA06 语义查询与计算计划"
+  ],
+  "operation": "compose_calculation_dependencies",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA06.6.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "多步动作序列",
+  "源码文件": "src/dataagent_application/planning/actions.py",
+  "FDE": true,
+  "能力组": "DA06.6 动作计划生成",
+  "切片": [
+   "按需"
+  ],
+  "说明": "生成多步动作序列",
+  "模块": [
+   "DA06 语义查询与计算计划"
+  ],
+  "operation": "plan_action_sequence",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA06.6.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "人工步骤与等待点插入",
+  "源码文件": "src/dataagent_application/planning/actions.py",
+  "FDE": true,
+  "能力组": "DA06.6 动作计划生成",
+  "切片": [
+   "按需"
+  ],
+  "说明": "插入人工步骤与等待点",
+  "模块": [
+   "DA06 语义查询与计算计划"
+  ],
+  "operation": "insert_human_wait_points",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA06.6.3",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "分支与异常路径",
+  "源码文件": "src/dataagent_application/planning/actions.py",
+  "FDE": true,
+  "能力组": "DA06.6 动作计划生成",
+  "切片": [
+   "按需"
+  ],
+  "说明": "生成分支与异常路径",
+  "模块": [
+   "DA06 语义查询与计算计划"
+  ],
+  "operation": "plan_action_branches",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA06.7.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "目标转状态机草案",
+  "源码文件": "src/dataagent_application/planning/contracts.py",
+  "FDE": true,
+  "能力组": "DA06.7 契约编译",
+  "切片": [
+   "按需"
+  ],
+  "说明": "把交付目标转成状态机草案",
+  "模块": [
+   "DA06 语义查询与计算计划"
+  ],
+  "operation": "draft_goal_state_machine",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA06.7.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "审批点建议",
+  "源码文件": "src/dataagent_application/planning/contracts.py",
+  "FDE": true,
+  "能力组": "DA06.7 契约编译",
+  "切片": [
+   "按需"
+  ],
+  "说明": "建议审批点位置",
+  "模块": [
+   "DA06 语义查询与计算计划"
+  ],
+  "operation": "suggest_approval_points",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA06.7.3",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "成功判据与回滚草案",
+  "源码文件": "src/dataagent_application/planning/contracts.py",
+  "FDE": true,
+  "能力组": "DA06.7 契约编译",
+  "切片": [
+   "按需"
+  ],
+  "说明": "起草成功判据与回滚方案",
+  "模块": [
+   "DA06 语义查询与计算计划"
+  ],
+  "operation": "draft_success_and_rollback_criteria",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA06.8.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "认证定义绑定",
+  "源码文件": "src/dataagent_application/planning/certified_compile.py",
+  "FDE": false,
+  "能力组": "DA06.8 认证指标委托编译",
+  "切片": [
+   "按需"
+  ],
+  "说明": "把请求中的指标绑定到已发布的认证定义及其版本",
+  "模块": [
+   "DA06 语义查询与计算计划"
+  ],
+  "operation": "bind_certified_definitions",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA06.8.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "外部语义编译调用",
+  "源码文件": "src/dataagent_application/planning/certified_compile.py",
+  "FDE": false,
+  "能力组": "DA06.8 认证指标委托编译",
+  "切片": [
+   "按需"
+  ],
+  "说明": "调用外部语义层编译或解释接口，取回计划与 SQL",
+  "模块": [
+   "DA06 语义查询与计算计划"
+  ],
+  "operation": "compile_via_semantic_layer",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA06.8.3",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "降级标注",
+  "源码文件": "src/dataagent_application/planning/certified_compile.py",
+  "FDE": false,
+  "能力组": "DA06.8 认证指标委托编译",
+  "切片": [
+   "按需"
+  ],
+  "说明": "外部编译不可用时记录原因，并把结果标为非认证路径",
+  "模块": [
+   "DA06 语义查询与计算计划"
+  ],
+  "operation": "mark_noncertified_fallback",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA07.1.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "企业 SQL MCP/API 执行适配",
+  "源码文件": "src/dataagent_application/execution/sql.py",
+  "FDE": false,
+  "能力组": "DA07.1 sql_execute",
+  "切片": [
+   "按需"
+  ],
+  "说明": "经 MCP/API 执行 SQL",
+  "模块": [
+   "DA07 计算执行"
+  ],
+  "operation": "execute_enterprise_sql",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA07.1.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "数据库驱动执行适配",
+  "源码文件": "src/dataagent_application/execution/sql.py",
+  "FDE": false,
+  "能力组": "DA07.1 sql_execute",
+  "切片": [
+   "按需"
+  ],
+  "说明": "经数据库驱动执行",
+  "模块": [
+   "DA07 计算执行"
+  ],
+  "operation": "execute_database_sql",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA07.1.3",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "本地 DuckDB 执行适配",
+  "源码文件": "src/dataagent_application/execution/sql.py",
+  "FDE": false,
+  "能力组": "DA07.1 sql_execute",
+  "切片": [
+   "S0"
+  ],
+  "说明": "在本地 DuckDB 执行",
+  "模块": [
+   "DA07 计算执行"
+  ],
+  "operation": "execute_duckdb_sql",
+  "S0 闭环族": [
+   "计算族"
+  ],
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA07.2.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "本地 Python 执行",
+  "源码文件": "src/dataagent_application/execution/code.py",
+  "FDE": false,
+  "能力组": "DA07.2 code_execute",
+  "切片": [
+   "按需"
+  ],
+  "说明": "在本地跑 Python",
+  "模块": [
+   "DA07 计算执行"
+  ],
+  "operation": "execute_local_python",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA07.2.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "远程沙盒代码执行",
+  "源码文件": "src/dataagent_application/execution/code.py",
+  "FDE": false,
+  "能力组": "DA07.2 code_execute",
+  "切片": [
+   "按需"
+  ],
+  "说明": "在远程沙盒跑代码",
+  "模块": [
+   "DA07 计算执行"
+  ],
+  "operation": "execute_remote_code",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA07.3.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "本地函数调用",
+  "源码文件": "src/dataagent_application/execution/functions.py",
+  "FDE": false,
+  "能力组": "DA07.3 function_call",
+  "切片": [
+   "按需"
+  ],
+  "说明": "调用本地函数",
+  "模块": [
+   "DA07 计算执行"
+  ],
+  "operation": "call_local_function",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA07.3.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "远程领域函数调用",
+  "源码文件": "src/dataagent_application/execution/functions.py",
+  "FDE": false,
+  "能力组": "DA07.3 function_call",
+  "切片": [
+   "按需"
+  ],
+  "说明": "调用远程领域函数",
+  "模块": [
+   "DA07 计算执行"
+  ],
+  "operation": "call_remote_domain_function",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA07.3.3",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "业务 API/MCP 调用",
+  "源码文件": "src/dataagent_application/execution/functions.py",
+  "FDE": false,
+  "能力组": "DA07.3 function_call",
+  "切片": [
+   "按需"
+  ],
+  "说明": "调用业务 API/MCP",
+  "模块": [
+   "DA07 计算执行"
+  ],
+  "operation": "call_business_api_mcp",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA07.4.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "本地文件/数据集变更应用",
+  "源码文件": "src/dataagent_application/execution/mutations.py",
+  "FDE": false,
+  "能力组": "DA07.4 变更写入",
+  "切片": [
+   "按需"
+  ],
+  "说明": "应用本地文件或数据集变更",
+  "模块": [
+   "DA07 计算执行"
+  ],
+  "operation": "apply_local_changes",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA07.4.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "企业 API/MCP 写回",
+  "源码文件": "src/dataagent_application/execution/mutations.py",
+  "FDE": false,
+  "能力组": "DA07.4 变更写入",
+  "切片": [
+   "按需"
+  ],
+  "说明": "经 API/MCP 写回业务系统",
+  "模块": [
+   "DA07 计算执行"
+  ],
+  "operation": "write_business_system",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA07.4.3",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "写入回执与状态核对",
+  "源码文件": "src/dataagent_application/execution/mutations.py",
+  "FDE": false,
+  "能力组": "DA07.4 变更写入",
+  "切片": [
+   "按需"
+  ],
+  "说明": "核对写入回执与状态",
+  "模块": [
+   "DA07 计算执行"
+  ],
+  "operation": "verify_mutation_receipts",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA07.5.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "标量表达式计算",
+  "源码文件": "src/dataagent_application/execution/expressions.py",
+  "FDE": false,
+  "能力组": "DA07.5 expression_execute",
+  "切片": [
+   "S0"
+  ],
+  "说明": "计算标量表达式",
+  "模块": [
+   "DA07 计算执行"
+  ],
+  "operation": "evaluate_scalar_expression",
+  "S0 闭环族": [
+   "骨干"
+  ],
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA07.5.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "表数据表达式计算",
+  "源码文件": "src/dataagent_application/execution/expressions.py",
+  "FDE": false,
+  "能力组": "DA07.5 expression_execute",
+  "切片": [
+   "S0"
+  ],
+  "说明": "在表数据上计算表达式",
+  "模块": [
+   "DA07 计算执行"
+  ],
+  "operation": "evaluate_table_expression",
+  "S0 闭环族": [
+   "骨干"
+  ],
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA07.6.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "多步计算执行",
+  "源码文件": "src/dataagent_application/execution/plans.py",
+  "FDE": false,
+  "能力组": "DA07.6 plan_execute",
+  "切片": [
+   "按需"
+  ],
+  "说明": "按依赖顺序执行多步",
+  "模块": [
+   "DA07 计算执行"
+  ],
+  "operation": "execute_calculation_plan",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA07.6.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "中间结果衔接",
+  "源码文件": "src/dataagent_application/execution/plans.py",
+  "FDE": false,
+  "能力组": "DA07.6 plan_execute",
+  "切片": [
+   "按需"
+  ],
+  "说明": "衔接中间结果",
+  "模块": [
+   "DA07 计算执行"
+  ],
+  "operation": "connect_intermediate_results",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA07.7.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "分档执行（A0/A1/A2）",
+  "源码文件": "src/dataagent_application/execution/action_gateway.py",
+  "FDE": true,
+  "能力组": "DA07.7 动作网关",
+  "切片": [
+   "S1"
+  ],
+  "说明": "按 A0/A1/A2 分档执行",
+  "模块": [
+   "DA07 计算执行"
+  ],
+  "operation": "execute_graded_action",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA07.7.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "幂等键与去重",
+  "源码文件": "src/dataagent_application/execution/action_gateway.py",
+  "FDE": true,
+  "能力组": "DA07.7 动作网关",
+  "切片": [
+   "S1"
+  ],
+  "说明": "幂等键与去重",
+  "模块": [
+   "DA07 计算执行"
+  ],
+  "operation": "reserve_idempotent_request",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA07.7.3",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "dry-run 预演",
+  "源码文件": "src/dataagent_application/execution/action_gateway.py",
+  "FDE": true,
+  "能力组": "DA07.7 动作网关",
+  "切片": [
+   "S1"
+  ],
+  "说明": "dry-run 预演",
+  "模块": [
+   "DA07 计算执行"
+  ],
+  "operation": "dry_run_action",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA07.7.4",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "后置状态校验",
+  "源码文件": "src/dataagent_application/execution/action_gateway.py",
+  "FDE": true,
+  "能力组": "DA07.7 动作网关",
+  "切片": [
+   "S1"
+  ],
+  "说明": "执行后校验目标状态",
+  "模块": [
+   "DA07 计算执行"
+  ],
+  "operation": "validate_post_action_state",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA07.8.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "反向/补偿动作",
+  "源码文件": "src/dataagent_application/execution/reconciliation.py",
+  "FDE": true,
+  "能力组": "DA07.8 补偿与对账",
+  "切片": [
+   "S1"
+  ],
+  "说明": "执行反向或补偿动作",
+  "模块": [
+   "DA07 计算执行"
+  ],
+  "operation": "execute_compensation",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA07.8.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "副作用未知的对账",
+  "源码文件": "src/dataagent_application/execution/reconciliation.py",
+  "FDE": true,
+  "能力组": "DA07.8 补偿与对账",
+  "切片": [
+   "S1"
+  ],
+  "说明": "副作用未知时对账",
+  "模块": [
+   "DA07 计算执行"
+  ],
+  "operation": "reconcile_unknown_effects",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA07.8.3",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "部分失败逐项说明",
+  "源码文件": "src/dataagent_application/execution/reconciliation.py",
+  "FDE": true,
+  "能力组": "DA07.8 补偿与对账",
+  "切片": [
+   "S1"
+  ],
+  "说明": "逐项说明部分失败",
+  "模块": [
+   "DA07 计算执行"
+  ],
+  "operation": "describe_partial_failures",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA07.9.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "受理与作业号：长任务先受理再推进",
+  "源码文件": "src/dataagent_application/execution/jobs.py",
+  "FDE": true,
+  "能力组": "DA07.9 作业化执行",
+  "切片": [
+   "按需"
+  ],
+  "说明": "先受理再推进并给作业号",
+  "模块": [
+   "DA07 计算执行"
+  ],
+  "operation": "submit_long_running_job",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA07.9.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "进度与部分结果",
+  "源码文件": "src/dataagent_application/execution/jobs.py",
+  "FDE": true,
+  "能力组": "DA07.9 作业化执行",
+  "切片": [
+   "按需"
+  ],
+  "说明": "输出进度与部分结果",
+  "模块": [
+   "DA07 计算执行"
+  ],
+  "operation": "read_job_progress",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA07.9.3",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "未知状态不重放：只查询与对账",
+  "源码文件": "src/dataagent_application/execution/jobs.py",
+  "FDE": true,
+  "能力组": "DA07.9 作业化执行",
+  "切片": [
+   "按需"
+  ],
+  "说明": "未知状态只查询不重放",
+  "模块": [
+   "DA07 计算执行"
+  ],
+  "operation": "query_unknown_job_state",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA07.10.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "引擎获取与版本对齐：坐标、版本、离线包与校验和",
+  "源码文件": "src/dataagent_application/execution/engines.py",
+  "FDE": false,
+  "能力组": "DA07.10 引擎接入与一致性验证",
+  "切片": [
+   "S0"
+  ],
+  "说明": "按坐标取引擎并对齐版本",
+  "模块": [
+   "DA07 计算执行"
+  ],
+  "operation": "acquire_and_align_engine",
+  "S0 闭环族": [
+   "骨干"
+  ],
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA07.10.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "双引擎一致性校验：同输入 diff，差异分类",
+  "源码文件": "src/dataagent_application/execution/engines.py",
+  "FDE": false,
+  "能力组": "DA07.10 引擎接入与一致性验证",
+  "切片": [
+   "按需"
+  ],
+  "说明": "同输入双引擎 diff 并分类差异",
+  "模块": [
+   "DA07 计算执行"
+  ],
+  "operation": "compare_engine_consistency",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA07.10.3",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "降级留证：降级理由、覆盖范围、已知差异",
+  "源码文件": "src/dataagent_application/execution/engines.py",
+  "FDE": false,
+  "能力组": "DA07.10 引擎接入与一致性验证",
+  "切片": [
+   "按需"
+  ],
+  "说明": "记录降级理由、覆盖面与已知差异",
+  "模块": [
+   "DA07 计算执行"
+  ],
+  "operation": "record_engine_degradation",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA08.1.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "问题分解",
+  "源码文件": "src/dataagent_application/analysis/planning.py",
+  "FDE": false,
+  "能力组": "DA08.1 分析规划",
+  "切片": [
+   "按需"
+  ],
+  "说明": "拆成可算的子问题",
+  "模块": [
+   "DA08 分析"
+  ],
+  "operation": "decompose_analysis_question",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA08.1.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "分析方法选择",
+  "源码文件": "src/dataagent_application/analysis/planning.py",
+  "FDE": false,
+  "能力组": "DA08.1 分析规划",
+  "切片": [
+   "按需"
+  ],
+  "说明": "选择适用方法",
+  "模块": [
+   "DA08 分析"
+  ],
+  "operation": "select_analysis_methods",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA08.2.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "同比/环比分析",
+  "源码文件": "src/dataagent_application/analysis/descriptive.py",
+  "FDE": false,
+  "能力组": "DA08.2 描述分析",
+  "切片": [
+   "按需"
+  ],
+  "说明": "计算同比与环比",
+  "模块": [
+   "DA08 分析"
+  ],
+  "operation": "analyze_period_changes",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA08.2.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "贡献度分析",
+  "源码文件": "src/dataagent_application/analysis/descriptive.py",
+  "FDE": false,
+  "能力组": "DA08.2 描述分析",
+  "切片": [
+   "按需"
+  ],
+  "说明": "计算各因子贡献度",
+  "模块": [
+   "DA08 分析"
+  ],
+  "operation": "analyze_contributions",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA08.2.3",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "漏斗分析",
+  "源码文件": "src/dataagent_application/analysis/descriptive.py",
+  "FDE": false,
+  "能力组": "DA08.2 描述分析",
+  "切片": [
+   "按需"
+  ],
+  "说明": "计算各步转化率",
+  "模块": [
+   "DA08 分析"
+  ],
+  "operation": "analyze_funnel",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA08.2.4",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "留存/Cohort 分析",
+  "源码文件": "src/dataagent_application/analysis/descriptive.py",
+  "FDE": false,
+  "能力组": "DA08.2 描述分析",
+  "切片": [
+   "按需"
+  ],
+  "说明": "计算分群留存",
+  "模块": [
+   "DA08 分析"
+  ],
+  "operation": "analyze_retention_cohorts",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA08.3.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "分布与区间估计",
+  "源码文件": "src/dataagent_application/analysis/statistics.py",
+  "FDE": false,
+  "能力组": "DA08.3 统计分析",
+  "切片": [
+   "按需"
+  ],
+  "说明": "估计分布与置信区间",
+  "模块": [
+   "DA08 分析"
+  ],
+  "operation": "estimate_distributions_intervals",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA08.3.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "假设检验",
+  "源码文件": "src/dataagent_application/analysis/statistics.py",
+  "FDE": false,
+  "能力组": "DA08.3 统计分析",
+  "切片": [
+   "按需"
+  ],
+  "说明": "检验差异显著性",
+  "模块": [
+   "DA08 分析"
+  ],
+  "operation": "test_hypotheses",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA08.3.3",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "回归分析",
+  "源码文件": "src/dataagent_application/analysis/statistics.py",
+  "FDE": false,
+  "能力组": "DA08.3 统计分析",
+  "切片": [
+   "按需"
+  ],
+  "说明": "拟合回归关系",
+  "模块": [
+   "DA08 分析"
+  ],
+  "operation": "fit_regression",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA08.4.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "关系路径分析",
+  "源码文件": "src/dataagent_application/analysis/relationships.py",
+  "FDE": false,
+  "能力组": "DA08.4 关系分析",
+  "切片": [
+   "按需"
+  ],
+  "说明": "追踪关系路径",
+  "模块": [
+   "DA08 分析"
+  ],
+  "operation": "analyze_relationship_paths",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA08.4.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "群组/聚集分析",
+  "源码文件": "src/dataagent_application/analysis/relationships.py",
+  "FDE": false,
+  "能力组": "DA08.4 关系分析",
+  "切片": [
+   "按需"
+  ],
+  "说明": "找出群组与聚集",
+  "模块": [
+   "DA08 分析"
+  ],
+  "operation": "analyze_relationship_clusters",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA08.4.3",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "异常关系识别",
+  "源码文件": "src/dataagent_application/analysis/relationships.py",
+  "FDE": false,
+  "能力组": "DA08.4 关系分析",
+  "切片": [
+   "按需"
+  ],
+  "说明": "识别异常关系",
+  "模块": [
+   "DA08 分析"
+  ],
+  "operation": "detect_anomalous_relationships",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA08.5.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "查询答案解释",
+  "源码文件": "src/dataagent_application/analysis/explanations.py",
+  "FDE": false,
+  "能力组": "DA08.5 结果解释",
+  "切片": [
+   "按需"
+  ],
+  "说明": "解释答案怎么算出来的",
+  "模块": [
+   "DA08 分析"
+  ],
+  "operation": "explain_query_answer",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA08.5.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "变化原因假设生成",
+  "源码文件": "src/dataagent_application/analysis/explanations.py",
+  "FDE": false,
+  "能力组": "DA08.5 结果解释",
+  "切片": [
+   "按需"
+  ],
+  "说明": "提出可能原因",
+  "模块": [
+   "DA08 分析"
+  ],
+  "operation": "generate_change_hypotheses",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA08.6.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "通用任务代码生成",
+  "源码文件": "src/dataagent_application/analysis/programs.py",
+  "FDE": false,
+  "能力组": "DA08.6 程序生成与修复",
+  "切片": [
+   "按需"
+  ],
+  "说明": "生成分析、数据适配或组件组合程序",
+  "模块": [
+   "DA08 分析"
+  ],
+  "operation": "generate_task_program",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA08.6.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "表格公式生成",
+  "源码文件": "src/dataagent_application/analysis/programs.py",
+  "FDE": false,
+  "能力组": "DA08.6 程序生成与修复",
+  "切片": [
+   "按需"
+  ],
+  "说明": "生成表格公式",
+  "模块": [
+   "DA08 分析"
+  ],
+  "operation": "generate_spreadsheet_formulas",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA08.6.3",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "反馈驱动程序修复",
+  "源码文件": "src/dataagent_application/analysis/programs.py",
+  "FDE": false,
+  "能力组": "DA08.6 程序生成与修复",
+  "切片": [
+   "按需"
+  ],
+  "说明": "按执行错误和验证差异修复程序",
+  "模块": [
+   "DA08 分析"
+  ],
+  "operation": "repair_task_program",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA08.6.4",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "验证程序生成",
+  "源码文件": "src/dataagent_application/analysis/programs.py",
+  "FDE": false,
+  "能力组": "DA08.6 程序生成与修复",
+  "切片": [
+   "按需"
+  ],
+  "说明": "将既定验收要求转为可执行检查，独立样本仍由 DA11 管理",
+  "模块": [
+   "DA08 分析"
+  ],
+  "operation": "generate_validation_program",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA09.1.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "时间序列预测",
+  "源码文件": "src/dataagent_application/prediction/forecasting.py",
+  "FDE": false,
+  "能力组": "DA09.1 预测",
+  "切片": [
+   "按需"
+  ],
+  "说明": "预测未来值",
+  "模块": [
+   "DA09 预测、仿真与优化"
+  ],
+  "operation": "forecast_time_series",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA09.1.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "带外生变量预测",
+  "源码文件": "src/dataagent_application/prediction/forecasting.py",
+  "FDE": false,
+  "能力组": "DA09.1 预测",
+  "切片": [
+   "按需"
+  ],
+  "说明": "引入外生变量预测",
+  "模块": [
+   "DA09 预测、仿真与优化"
+  ],
+  "operation": "forecast_with_exogenous_variables",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA09.1.3",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "概率预测",
+  "源码文件": "src/dataagent_application/prediction/forecasting.py",
+  "FDE": false,
+  "能力组": "DA09.1 预测",
+  "切片": [
+   "按需"
+  ],
+  "说明": "给出概率区间",
+  "模块": [
+   "DA09 预测、仿真与优化"
+  ],
+  "operation": "forecast_probabilities",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA09.2.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "参数敏感性分析",
+  "源码文件": "src/dataagent_application/prediction/simulation.py",
+  "FDE": false,
+  "能力组": "DA09.2 情景仿真",
+  "切片": [
+   "按需"
+  ],
+  "说明": "测参数变化的影响",
+  "模块": [
+   "DA09 预测、仿真与优化"
+  ],
+  "operation": "analyze_parameter_sensitivity",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA09.2.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "业务情景模拟",
+  "源码文件": "src/dataagent_application/prediction/simulation.py",
+  "FDE": false,
+  "能力组": "DA09.2 情景仿真",
+  "切片": [
+   "按需"
+  ],
+  "说明": "模拟业务情景",
+  "模块": [
+   "DA09 预测、仿真与优化"
+  ],
+  "operation": "simulate_business_scenarios",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA09.3.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "线性/整数规划求解",
+  "源码文件": "src/dataagent_application/prediction/solvers.py",
+  "FDE": false,
+  "能力组": "DA09.3 约束求解",
+  "切片": [
+   "按需"
+  ],
+  "说明": "求解线性或整数规划",
+  "模块": [
+   "DA09 预测、仿真与优化"
+  ],
+  "operation": "solve_linear_integer_program",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA09.3.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "排程与资源约束求解",
+  "源码文件": "src/dataagent_application/prediction/solvers.py",
+  "FDE": false,
+  "能力组": "DA09.3 约束求解",
+  "切片": [
+   "按需"
+  ],
+  "说明": "求解排程与资源分配",
+  "模块": [
+   "DA09 预测、仿真与优化"
+  ],
+  "operation": "solve_resource_schedule",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA09.4.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "目标指标比较",
+  "源码文件": "src/dataagent_application/prediction/comparison.py",
+  "FDE": false,
+  "能力组": "DA09.4 方案比较",
+  "切片": [
+   "按需"
+  ],
+  "说明": "比较目标指标",
+  "模块": [
+   "DA09 预测、仿真与优化"
+  ],
+  "operation": "compare_scenario_metrics",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA09.4.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "多目标权衡分析",
+  "源码文件": "src/dataagent_application/prediction/comparison.py",
+  "FDE": false,
+  "能力组": "DA09.4 方案比较",
+  "切片": [
+   "按需"
+  ],
+  "说明": "分析多目标权衡",
+  "模块": [
+   "DA09 预测、仿真与优化"
+  ],
+  "operation": "analyze_multiobjective_tradeoffs",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA10.1.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "结果工作簿生成",
+  "源码文件": "src/dataagent_application/presentation/workbooks.py",
+  "FDE": false,
+  "能力组": "DA10.1 表格计算",
+  "切片": [
+   "S0"
+  ],
+  "说明": "生成结果工作簿",
+  "模块": [
+   "DA10 表格、可视化与交互"
+  ],
+  "operation": "build_result_workbook",
+  "S0 闭环族": [
+   "计算族"
+  ],
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA10.1.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "透视计算",
+  "源码文件": "src/dataagent_application/presentation/workbooks.py",
+  "FDE": false,
+  "能力组": "DA10.1 表格计算",
+  "切片": [
+   "按需"
+  ],
+  "说明": "做透视计算",
+  "模块": [
+   "DA10 表格、可视化与交互"
+  ],
+  "operation": "compute_pivot_table",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA10.1.3",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "表格公式计算",
+  "源码文件": "src/dataagent_application/presentation/workbooks.py",
+  "FDE": false,
+  "能力组": "DA10.1 表格计算",
+  "切片": [
+   "按需"
+  ],
+  "说明": "做表格公式计算",
+  "模块": [
+   "DA10 表格、可视化与交互"
+  ],
+  "operation": "calculate_spreadsheet_formulas",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA10.1.4",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "既有工作簿受限编辑",
+  "源码文件": "src/dataagent_application/presentation/workbooks.py",
+  "FDE": false,
+  "能力组": "DA10.1 表格计算",
+  "切片": [
+   "按需"
+  ],
+  "说明": "只改指定区域，输出结构 diff，并用固定引擎重算",
+  "模块": [
+   "DA10 表格、可视化与交互"
+  ],
+  "operation": "edit_existing_workbook",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA10.2.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "静态图表生成",
+  "源码文件": "src/dataagent_application/presentation/charts.py",
+  "FDE": false,
+  "能力组": "DA10.2 图表生成",
+  "切片": [
+   "按需"
+  ],
+  "说明": "生成静态图",
+  "模块": [
+   "DA10 表格、可视化与交互"
+  ],
+  "operation": "render_static_chart",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA10.2.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "交互图表生成",
+  "源码文件": "src/dataagent_application/presentation/charts.py",
+  "FDE": false,
+  "能力组": "DA10.2 图表生成",
+  "切片": [
+   "按需"
+  ],
+  "说明": "生成交互图",
+  "模块": [
+   "DA10 表格、可视化与交互"
+  ],
+  "operation": "build_interactive_chart",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA10.3.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "文档报告生成",
+  "源码文件": "src/dataagent_application/presentation/reports.py",
+  "FDE": false,
+  "能力组": "DA10.3 报告生成",
+  "切片": [
+   "S0"
+  ],
+  "说明": "生成文档报告",
+  "模块": [
+   "DA10 表格、可视化与交互"
+  ],
+  "operation": "compose_document_report",
+  "S0 闭环族": [
+   "骨干"
+  ],
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA10.3.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "Dashboard 生成",
+  "源码文件": "src/dataagent_application/presentation/reports.py",
+  "FDE": false,
+  "能力组": "DA10.3 报告生成",
+  "切片": [
+   "按需"
+  ],
+  "说明": "生成 Dashboard",
+  "模块": [
+   "DA10 表格、可视化与交互"
+  ],
+  "operation": "compose_dashboard",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA10.3.3",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "报告格式导出",
+  "源码文件": "src/dataagent_application/presentation/reports.py",
+  "FDE": false,
+  "能力组": "DA10.3 报告生成",
+  "切片": [
+   "S0"
+  ],
+  "说明": "导出目标格式",
+  "模块": [
+   "DA10 表格、可视化与交互"
+  ],
+  "operation": "export_report_format",
+  "S0 闭环族": [
+   "骨干"
+  ],
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA10.4.1",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "纠正意图识别",
+  "源码文件": "src/dataagent_application/presentation/corrections.py",
+  "FDE": false,
+  "能力组": "DA10.4 对话即时修正",
+  "切片": [
+   "按需"
+  ],
+  "说明": "识别用户要改什么",
+  "模块": [
+   "DA10 表格、可视化与交互"
+  ],
+  "operation": "identify_correction_intent",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA10.4.2",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "修正对象与范围定位",
+  "源码文件": "src/dataagent_application/presentation/corrections.py",
+  "FDE": false,
+  "能力组": "DA10.4 对话即时修正",
+  "切片": [
+   "按需"
+  ],
+  "说明": "定位修正对象与范围",
+  "模块": [
+   "DA10 表格、可视化与交互"
+  ],
+  "operation": "locate_correction_targets",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA10.4.3",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "当前任务状态更新",
+  "源码文件": "src/dataagent_application/presentation/corrections.py",
+  "FDE": false,
+  "能力组": "DA10.4 对话即时修正",
+  "切片": [
+   "按需"
+  ],
+  "说明": "更新当前任务状态",
+  "模块": [
+   "DA10 表格、可视化与交互"
+  ],
+  "operation": "apply_task_correction",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA10.4.4",
+  "所在层": [
+   "执行应用层"
+  ],
+  "名称": "修正后续算与刷新",
+  "源码文件": "src/dataagent_application/presentation/corrections.py",
+  "FDE": false,
+  "能力组": "DA10.4 对话即时修正",
+  "切片": [
+   "按需"
+  ],
+  "说明": "重算并刷新结果",
+  "模块": [
+   "DA10 表格、可视化与交互"
+  ],
+  "operation": "recompute_and_refresh_after_correction",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA11.1.1",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "字段约束检查",
+  "源码文件": "src/dataagent_governance/evaluation/data_quality.py",
+  "FDE": false,
+  "能力组": "DA11.1 数据质量检查",
+  "切片": [
+   "按需"
+  ],
+  "说明": "检查字段约束",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "check_field_constraints",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA11.1.2",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "重复/缺失检查",
+  "源码文件": "src/dataagent_governance/evaluation/data_quality.py",
+  "FDE": false,
+  "能力组": "DA11.1 数据质量检查",
+  "切片": [
+   "按需"
+  ],
+  "说明": "检查重复与缺失",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "check_duplicates_and_missing",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA11.1.3",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "跨源对账",
+  "源码文件": "src/dataagent_governance/evaluation/data_quality.py",
+  "FDE": false,
+  "能力组": "DA11.1 数据质量检查",
+  "切片": [
+   "按需"
+  ],
+  "说明": "跨源核对数字",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "reconcile_sources",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA11.2.1",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "执行表达检查",
+  "源码文件": "src/dataagent_governance/evaluation/computation.py",
+  "FDE": false,
+  "能力组": "DA11.2 计算计划与结果验证",
+  "切片": [
+   "按需"
+  ],
+  "说明": "检查执行表达有效性",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "check_execution_expression",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA11.2.2",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "业务口径检查",
+  "源码文件": "src/dataagent_governance/evaluation/computation.py",
+  "FDE": false,
+  "能力组": "DA11.2 计算计划与结果验证",
+  "切片": [
+   "按需"
+  ],
+  "说明": "检查业务口径",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "check_business_definition",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA11.2.3",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "结果粒度与合并检查",
+  "源码文件": "src/dataagent_governance/evaluation/computation.py",
+  "FDE": false,
+  "能力组": "DA11.2 计算计划与结果验证",
+  "切片": [
+   "S0"
+  ],
+  "说明": "检查粒度与合并方式",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "check_result_grain_and_merge",
+  "S0 闭环族": [
+   "计算族"
+  ],
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA11.2.4",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "结果对照验证",
+  "源码文件": "src/dataagent_governance/evaluation/computation.py",
+  "FDE": false,
+  "能力组": "DA11.2 计算计划与结果验证",
+  "切片": [
+   "按需"
+  ],
+  "说明": "与其他来源结果对照",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "validate_against_reference",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA11.2.5",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "语义陷阱反例检查",
+  "源码文件": "src/dataagent_governance/evaluation/computation.py",
+  "FDE": false,
+  "能力组": "DA11.2 计算计划与结果验证",
+  "切片": [
+   "按需"
+  ],
+  "说明": "用跨租户同 ID、复合键缺列、迟到退款、join 膨胀等反例验证计划与结果",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "check_semantic_counterexamples",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA11.3.1",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "统计方法适用性检查",
+  "源码文件": "src/dataagent_governance/evaluation/methods.py",
+  "FDE": false,
+  "能力组": "DA11.3 方法效果评估",
+  "切片": [
+   "按需"
+  ],
+  "说明": "检查统计方法是否适用",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "assess_statistical_method",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA11.3.2",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "预测回测",
+  "源码文件": "src/dataagent_governance/evaluation/methods.py",
+  "FDE": false,
+  "能力组": "DA11.3 方法效果评估",
+  "切片": [
+   "按需"
+  ],
+  "说明": "回测预测",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "backtest_forecast",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA11.3.3",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "仿真校准检查",
+  "源码文件": "src/dataagent_governance/evaluation/methods.py",
+  "FDE": false,
+  "能力组": "DA11.3 方法效果评估",
+  "切片": [
+   "按需"
+  ],
+  "说明": "检查仿真校准",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "check_simulation_calibration",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA11.3.4",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "方案可行性检查",
+  "源码文件": "src/dataagent_governance/evaluation/methods.py",
+  "FDE": false,
+  "能力组": "DA11.3 方法效果评估",
+  "切片": [
+   "按需"
+  ],
+  "说明": "检查方案可行性",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "check_solution_feasibility",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA11.4.1",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "检索回归评测",
+  "源码文件": "src/dataagent_governance/evaluation/regression.py",
+  "FDE": false,
+  "能力组": "DA11.4 回归评测",
+  "切片": [
+   "按需"
+  ],
+  "说明": "评估必要集合全召回、误选后恢复与停止，不只看 TopK",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "evaluate_retrieval_regression",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA11.4.2",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "问数回归评测",
+  "源码文件": "src/dataagent_governance/evaluation/regression.py",
+  "FDE": false,
+  "能力组": "DA11.4 回归评测",
+  "切片": [
+   "按需"
+  ],
+  "说明": "问数结果回归",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "evaluate_question_answering_regression",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA11.4.3",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "分析任务回放评测",
+  "源码文件": "src/dataagent_governance/evaluation/regression.py",
+  "FDE": false,
+  "能力组": "DA11.4 回归评测",
+  "切片": [
+   "按需"
+  ],
+  "说明": "回放分析任务",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "replay_analysis_tasks",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA11.4.4",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "规则库回归：改规则或改提示后重跑历史报文",
+  "源码文件": "src/dataagent_governance/evaluation/regression.py",
+  "FDE": false,
+  "能力组": "DA11.4 回归评测",
+  "切片": [
+   "按需"
+  ],
+  "说明": "改规则或提示后重跑历史报文",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "evaluate_rule_library_regression",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA11.4.5",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "引擎一致性回归编排",
+  "源码文件": "src/dataagent_governance/evaluation/regression.py",
+  "FDE": false,
+  "能力组": "DA11.4 回归评测",
+  "切片": [
+   "按需"
+  ],
+  "说明": "在固定样本集上调用 DA07.10.2 并纳入回归结论，不另算一份",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "orchestrate_engine_consistency_regression",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA11.5.1",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "业务验收判据定义",
+  "源码文件": "src/dataagent_governance/evaluation/criteria_samples.py",
+  "FDE": false,
+  "能力组": "DA11.5 评测判据与样本",
+  "切片": [
+   "S0"
+  ],
+  "说明": "定义业务验收判据",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "draft_acceptance_criteria",
+  "S0 闭环族": [
+   "骨干"
+  ],
+  "形态": [
+   "软·定"
+  ]
+ },
+ {
+  "编号": "DA11.5.2",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "人工纠正转评测样本",
+  "源码文件": "src/dataagent_governance/evaluation/criteria_samples.py",
+  "FDE": false,
+  "能力组": "DA11.5 评测判据与样本",
+  "切片": [
+   "按需"
+  ],
+  "说明": "把人工纠正变成样本",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "convert_corrections_to_cases",
+  "S0 闭环族": null,
+  "形态": [
+   "软·定"
+  ]
+ },
+ {
+  "编号": "DA11.5.3",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "边界与反例构建",
+  "源码文件": "src/dataagent_governance/evaluation/criteria_samples.py",
+  "FDE": false,
+  "能力组": "DA11.5 评测判据与样本",
+  "切片": [
+   "按需"
+  ],
+  "说明": "构造边界与反例",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "build_boundary_and_counterexamples",
+  "S0 闭环族": null,
+  "形态": [
+   "软·定"
+  ]
+ },
+ {
+  "编号": "DA11.5.4",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "接入基线构建：将伙伴提供的历史问答、报表数字整理为初始评测集",
+  "源码文件": "src/dataagent_governance/evaluation/criteria_samples.py",
+  "FDE": false,
+  "能力组": "DA11.5 评测判据与样本",
+  "切片": [
+   "按需"
+  ],
+  "说明": "整理历史问答为初始评测集",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "build_onboarding_baseline",
+  "S0 闭环族": null,
+  "形态": [
+   "软·定"
+  ]
+ },
+ {
+  "编号": "DA11.5.5",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "端到端业务验收〔定〕",
+  "源码文件": "src/dataagent_governance/evaluation/criteria_samples.py",
+  "FDE": false,
+  "能力组": "DA11.5 评测判据与样本",
+  "切片": [
+   "S0"
+  ],
+  "说明": "按约定业务结果验收；可分层定位差异，不要求中间代码或流程相同",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "evaluate_business_acceptance",
+  "S0 闭环族": [
+   "骨干"
+  ],
+  "形态": [
+   "软·定"
+  ]
+ },
+ {
+  "编号": "DA11.5.6",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "验收样本隔离",
+  "源码文件": "src/dataagent_governance/evaluation/criteria_samples.py",
+  "FDE": false,
+  "能力组": "DA11.5 评测判据与样本",
+  "切片": [
+   "S0"
+  ],
+  "说明": "区分开发、回归与未见验收样本，记录样本暴露",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "isolate_acceptance_samples",
+  "S0 闭环族": [
+   "骨干"
+  ],
+  "形态": [
+   "软·定"
+  ]
+ },
+ {
+  "编号": "DA11.5.7",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "多角色越权用例构建",
+  "源码文件": "src/dataagent_governance/evaluation/criteria_samples.py",
+  "FDE": false,
+  "能力组": "DA11.5 评测判据与样本",
+  "切片": [
+   "按需"
+  ],
+  "说明": "构造不同权限角色提同一问题的用例，验证可见范围随身份变化",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "build_cross_role_cases",
+  "S0 闭环族": null,
+  "形态": [
+   "软·定"
+  ]
+ },
+ {
+  "编号": "DA11.6.1",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "使用效果趋势：同类问题首答正确率、澄清次数、纠正率随时间的变化",
+  "源码文件": "src/dataagent_governance/evaluation/improvement.py",
+  "FDE": false,
+  "能力组": "DA11.6 持续改进度量",
+  "切片": [
+   "按需"
+  ],
+  "说明": "看首答正确率与纠正率随时间变化",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "measure_usage_trends",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA11.6.2",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "经验贡献评估：启用与不启用某类经验或配置的对照",
+  "源码文件": "src/dataagent_governance/evaluation/improvement.py",
+  "FDE": false,
+  "能力组": "DA11.6 持续改进度量",
+  "切片": [
+   "按需"
+  ],
+  "说明": "对照启用与不启用某经验的差异",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "assess_experience_contribution",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA11.6.3",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "覆盖与交付成本度量",
+  "源码文件": "src/dataagent_governance/evaluation/improvement.py",
+  "FDE": false,
+  "能力组": "DA11.6 持续改进度量",
+  "切片": [
+   "按需"
+  ],
+  "说明": "同时报出质量、覆盖率、UNKNOWN、人工量、成本和时延，防止仅优化命中样本",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "measure_coverage_and_delivery_cost",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA11.6.4",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "接入与维护成本度量",
+  "源码文件": "src/dataagent_governance/evaluation/improvement.py",
+  "FDE": false,
+  "能力组": "DA11.6 持续改进度量",
+  "切片": [
+   "按需"
+  ],
+  "说明": "首个可信答案耗时、首次接入工时、每次变更修复工时与专家处理比例",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "measure_onboarding_and_maintenance_cost",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA11.7.1",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "旁路执行",
+  "源码文件": "src/dataagent_governance/evaluation/shadow.py",
+  "FDE": true,
+  "能力组": "DA11.7 影子运行",
+  "切片": [
+   "S2"
+  ],
+  "说明": "旁路跑一遍不影响生产",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "run_shadow_execution",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA11.7.2",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "与人工结果比对",
+  "源码文件": "src/dataagent_governance/evaluation/shadow.py",
+  "FDE": true,
+  "能力组": "DA11.7 影子运行",
+  "切片": [
+   "S2"
+  ],
+  "说明": "与人工结果逐条比对",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "compare_with_human_results",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA11.7.3",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "差异归因",
+  "源码文件": "src/dataagent_governance/evaluation/shadow.py",
+  "FDE": true,
+  "能力组": "DA11.7 影子运行",
+  "切片": [
+   "S2"
+  ],
+  "说明": "解释差异来自哪里",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "attribute_shadow_differences",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA11.8.1",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "结果正确性",
+  "源码文件": "src/dataagent_governance/evaluation/dual_track.py",
+  "FDE": true,
+  "能力组": "DA11.8 双轨评测",
+  "切片": [
+   "按需"
+  ],
+  "说明": "比对结果正确性",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "evaluate_result_correctness",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA11.8.2",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "过程合规性：越权、审批纪律、工具正确性",
+  "源码文件": "src/dataagent_governance/evaluation/dual_track.py",
+  "FDE": true,
+  "能力组": "DA11.8 双轨评测",
+  "切片": [
+   "按需"
+  ],
+  "说明": "比对越权、审批纪律、工具选择",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "evaluate_process_compliance",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA11.8.3",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "轨迹级回归",
+  "源码文件": "src/dataagent_governance/evaluation/dual_track.py",
+  "FDE": true,
+  "能力组": "DA11.8 双轨评测",
+  "切片": [
+   "按需"
+  ],
+  "说明": "按轨迹做回归",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "evaluate_trace_regression",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA11.9.1",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "按环节分档的自主度：沟通 / 修改 / 审核 / 测试 / 发布 / 观测，每环节四档（人工 → 人工确认 → 自动+抽检 → 自动）",
+  "源码文件": "src/dataagent_governance/evaluation/gates.py",
+  "FDE": true,
+  "能力组": "DA11.9 上线门禁",
+  "切片": [
+   "S2"
+  ],
+  "说明": "按环节给出自主度档位",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "assess_stage_autonomy",
+  "S0 闭环族": null,
+  "形态": [
+   "软·定"
+  ]
+ },
+ {
+  "编号": "DA11.9.2",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "契约与模型变更回归",
+  "源码文件": "src/dataagent_governance/evaluation/gates.py",
+  "FDE": true,
+  "能力组": "DA11.9 上线门禁",
+  "切片": [
+   "S2"
+  ],
+  "说明": "契约与模型变更时重跑回归",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "evaluate_contract_model_change",
+  "S0 闭环族": null,
+  "形态": [
+   "软·定"
+  ]
+ },
+ {
+  "编号": "DA11.9.3",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "失败率熔断",
+  "源码文件": "src/dataagent_governance/evaluation/gates.py",
+  "FDE": true,
+  "能力组": "DA11.9 上线门禁",
+  "切片": [
+   "S2"
+  ],
+  "说明": "失败率超阈值即熔断",
+  "模块": [
+   "DA11 评测与验证"
+  ],
+  "operation": "apply_failure_circuit_breaker",
+  "S0 闭环族": null,
+  "形态": [
+   "软·定"
+  ]
+ },
+ {
+  "编号": "DA12.1.1",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "访问范围检查",
+  "源码文件": "src/dataagent_governance/governance/access.py",
+  "FDE": false,
+  "能力组": "DA12.1 权限与敏感信息管理",
+  "切片": [
+   "S0"
+  ],
+  "说明": "检查当前身份能否访问",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "check_access_scope",
+  "S0 闭环族": [
+   "骨干"
+  ],
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA12.1.2",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "敏感信息识别",
+  "源码文件": "src/dataagent_governance/governance/access.py",
+  "FDE": false,
+  "能力组": "DA12.1 权限与敏感信息管理",
+  "切片": [
+   "按需"
+  ],
+  "说明": "识别敏感字段与取值",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "identify_sensitive_information",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA12.1.3",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "数据脱敏",
+  "源码文件": "src/dataagent_governance/governance/access.py",
+  "FDE": false,
+  "能力组": "DA12.1 权限与敏感信息管理",
+  "切片": [
+   "按需"
+  ],
+  "说明": "按规则脱敏后输出",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "mask_sensitive_data",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA12.1.4",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "模型上下文可见性与外发控制",
+  "源码文件": "src/dataagent_governance/governance/access.py",
+  "FDE": false,
+  "能力组": "DA12.1 权限与敏感信息管理",
+  "切片": [
+   "S0"
+  ],
+  "说明": "判定哪些数据可进入模型上下文或发往外部模型服务",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "check_model_context_egress",
+  "S0 闭环族": [
+   "骨干"
+  ],
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA12.2.1",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "数据版本引用管理",
+  "源码文件": "src/dataagent_governance/governance/versions.py",
+  "FDE": false,
+  "能力组": "DA12.2 资产版本管理",
+  "切片": [
+   "按需"
+  ],
+  "说明": "管理数据版本引用",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "govern_data_version_references",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA12.2.2",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "语义版本管理",
+  "源码文件": "src/dataagent_governance/governance/versions.py",
+  "FDE": false,
+  "能力组": "DA12.2 资产版本管理",
+  "切片": [
+   "按需"
+  ],
+  "说明": "管理语义版本",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "govern_semantic_versions",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA12.2.3",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "记忆/分析资产版本管理",
+  "源码文件": "src/dataagent_governance/governance/versions.py",
+  "FDE": false,
+  "能力组": "DA12.2 资产版本管理",
+  "切片": [
+   "按需"
+  ],
+  "说明": "管理记忆与分析资产版本",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "govern_memory_and_analysis_versions",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA12.2.4",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "决策缓存版本化：判定缓存、预筛规则、模板等沉积物的版本",
+  "源码文件": "src/dataagent_governance/governance/versions.py",
+  "FDE": false,
+  "能力组": "DA12.2 资产版本管理",
+  "切片": [
+   "按需"
+  ],
+  "说明": "给判定缓存、预筛规则、模板打版本",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "version_decision_residue",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA12.2.5",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "沉积物回滚：撤回错误沉积并重放受影响样本",
+  "源码文件": "src/dataagent_governance/governance/versions.py",
+  "FDE": false,
+  "能力组": "DA12.2 资产版本管理",
+  "切片": [
+   "按需"
+  ],
+  "说明": "撤回错误沉积并重放受影响样本",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "rollback_decision_residue",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA12.2.6",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "规范与转换器版本登记",
+  "源码文件": "src/dataagent_governance/governance/versions.py",
+  "FDE": false,
+  "能力组": "DA12.2 资产版本管理",
+  "切片": [
+   "按需"
+  ],
+  "说明": "外部规范与转换器版本与本方语义发布版本分开登记",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "register_spec_and_converter_versions",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA12.3.1",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "用户反馈归集",
+  "源码文件": "src/dataagent_governance/governance/feedback.py",
+  "FDE": false,
+  "能力组": "DA12.3 反馈与更新建议",
+  "切片": [
+   "按需"
+  ],
+  "说明": "归集用户反馈",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "collect_user_feedback",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA12.3.2",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "任务错误归因",
+  "源码文件": "src/dataagent_governance/governance/feedback.py",
+  "FDE": false,
+  "能力组": "DA12.3 反馈与更新建议",
+  "切片": [
+   "按需"
+  ],
+  "说明": "归因任务错误",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "attribute_task_errors",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA12.3.3",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "资产失效检测",
+  "源码文件": "src/dataagent_governance/governance/feedback.py",
+  "FDE": false,
+  "能力组": "DA12.3 反馈与更新建议",
+  "切片": [
+   "按需"
+  ],
+  "说明": "检测资产是否失效",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "detect_asset_invalidation",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA12.3.4",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "更新建议生成",
+  "源码文件": "src/dataagent_governance/governance/feedback.py",
+  "FDE": false,
+  "能力组": "DA12.3 反馈与更新建议",
+  "切片": [
+   "按需"
+  ],
+  "说明": "生成更新建议",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "propose_asset_updates",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA12.4.1",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "数据变更影响分析",
+  "源码文件": "src/dataagent_governance/governance/impact.py",
+  "FDE": false,
+  "能力组": "DA12.4 变更影响分析",
+  "切片": [
+   "按需"
+  ],
+  "说明": "分析数据变更的影响",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "assess_data_change_impact",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA12.4.2",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "业务口径变更影响分析",
+  "源码文件": "src/dataagent_governance/governance/impact.py",
+  "FDE": false,
+  "能力组": "DA12.4 变更影响分析",
+  "切片": [
+   "按需"
+  ],
+  "说明": "分析口径变更的影响",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "assess_semantic_change_impact",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA12.4.3",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "权限变更影响分析",
+  "源码文件": "src/dataagent_governance/governance/impact.py",
+  "FDE": false,
+  "能力组": "DA12.4 变更影响分析",
+  "切片": [
+   "按需"
+  ],
+  "说明": "分析权限变更的影响",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "assess_permission_change_impact",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA12.5.1",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "写入授权与冲突检查",
+  "源码文件": "src/dataagent_governance/governance/change_control.py",
+  "FDE": false,
+  "能力组": "DA12.5 交互变更控制",
+  "切片": [
+   "按需"
+  ],
+  "说明": "检查写入授权与冲突",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "check_write_authorization_and_conflicts",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA12.5.2",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "共享修订生效控制",
+  "源码文件": "src/dataagent_governance/governance/change_control.py",
+  "FDE": false,
+  "能力组": "DA12.5 交互变更控制",
+  "切片": [
+   "按需"
+  ],
+  "说明": "控制共享修订何时生效",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "control_shared_revision_activation",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA12.5.3",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "变更撤销与补偿计划",
+  "源码文件": "src/dataagent_governance/governance/change_control.py",
+  "FDE": false,
+  "能力组": "DA12.5 交互变更控制",
+  "切片": [
+   "按需"
+  ],
+  "说明": "撤销变更并给出补偿",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "plan_revocation_and_compensation",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA12.6.1",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "数据/语义/程序版本绑定",
+  "源码文件": "src/dataagent_governance/governance/reproduction.py",
+  "FDE": false,
+  "能力组": "DA12.6 重现条件管理",
+  "切片": [
+   "按需"
+  ],
+  "说明": "绑定数据/语义/程序版本",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "bind_reproduction_versions",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA12.6.2",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "历史重跑条件检查",
+  "源码文件": "src/dataagent_governance/governance/reproduction.py",
+  "FDE": false,
+  "能力组": "DA12.6 重现条件管理",
+  "切片": [
+   "按需"
+  ],
+  "说明": "检查历史重跑条件是否满足",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "check_historical_replay_conditions",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA12.7.1",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "变更计划生成：目标与版本、变更类型、是否破坏性、受影响资产、回填区间与成本、回退方式",
+  "源码文件": "src/dataagent_governance/governance/change_plans.py",
+  "FDE": false,
+  "能力组": "DA12.7 变更计划",
+  "切片": [
+   "按需"
+  ],
+  "说明": "生成变更计划（类型/破坏性/回填/回退）",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "draft_change_plan",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA12.7.2",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "试运行与差异预览",
+  "源码文件": "src/dataagent_governance/governance/change_plans.py",
+  "FDE": false,
+  "能力组": "DA12.7 变更计划",
+  "切片": [
+   "按需"
+  ],
+  "说明": "试运行并预览差异",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "preview_change_diff",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA12.8.1",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "Preset 配置对比评测：适配实现、阈值、检索参数等",
+  "源码文件": "src/dataagent_governance/governance/tuning.py",
+  "FDE": false,
+  "能力组": "DA12.8 配置调优",
+  "切片": [
+   "按需"
+  ],
+  "说明": "对比不同配置的评测结果",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "compare_preset_configurations",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA12.8.2",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "调优建议与灰度生效",
+  "源码文件": "src/dataagent_governance/governance/tuning.py",
+  "FDE": false,
+  "能力组": "DA12.8 配置调优",
+  "切片": [
+   "按需"
+  ],
+  "说明": "给调优建议并按灰度生效",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "propose_and_activate_tuning",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA12.9.1",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "可共享经验筛选与脱敏",
+  "源码文件": "src/dataagent_governance/governance/cross_tenant.py",
+  "FDE": true,
+  "能力组": "DA12.9 跨租户经验沉淀",
+  "切片": [
+   "按需"
+  ],
+  "说明": "筛选可共享经验并脱敏",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "select_and_sanitize_shared_experience",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA12.9.2",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "领域包更新提案",
+  "源码文件": "src/dataagent_governance/governance/cross_tenant.py",
+  "FDE": true,
+  "能力组": "DA12.9 跨租户经验沉淀",
+  "切片": [
+   "按需"
+  ],
+  "说明": "提出领域包更新提案",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "propose_domain_package_update",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA12.10.1",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "证据到结果的全链追踪",
+  "源码文件": "src/dataagent_governance/governance/audit.py",
+  "FDE": true,
+  "能力组": "DA12.10 证据链与审计",
+  "切片": [
+   "按需"
+  ],
+  "说明": "追踪证据到结果的全链",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "trace_evidence_to_results",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA12.10.2",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "不可篡改与保留期",
+  "源码文件": "src/dataagent_governance/governance/audit.py",
+  "FDE": true,
+  "能力组": "DA12.10 证据链与审计",
+  "切片": [
+   "按需"
+  ],
+  "说明": "保证不可篡改与保留期",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "enforce_audit_retention",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA12.10.3",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "合规报告导出",
+  "源码文件": "src/dataagent_governance/governance/audit.py",
+  "FDE": true,
+  "能力组": "DA12.10 证据链与审计",
+  "切片": [
+   "按需"
+  ],
+  "说明": "导出合规报告",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "export_compliance_report",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA12.10.4",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "判定依据关联",
+  "源码文件": "src/dataagent_governance/governance/audit.py",
+  "FDE": true,
+  "能力组": "DA12.10 证据链与审计",
+  "切片": [
+   "按需"
+  ],
+  "说明": "关联后端提供的规则、子条件、字段或其他依据，注明缺失与可追踪粒度",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "link_decision_basis",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA12.10.5",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "请求者与执行身份双记录",
+  "源码文件": "src/dataagent_governance/governance/audit.py",
+  "FDE": true,
+  "能力组": "DA12.10 证据链与审计",
+  "切片": [
+   "按需"
+  ],
+  "说明": "每次访问和动作同时记录请求者与 Agent 执行身份",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "record_requester_and_executor",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA12.11.1",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "影响面分级",
+  "源码文件": "src/dataagent_governance/governance/blast_radius.py",
+  "FDE": true,
+  "能力组": "DA12.11 爆炸半径评估",
+  "切片": [
+   "按需"
+  ],
+  "说明": "给影响面分级",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "classify_blast_radius",
+  "S0 闭环族": null,
+  "形态": [
+   "软·定"
+  ]
+ },
+ {
+  "编号": "DA12.11.2",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "可逆性判定",
+  "源码文件": "src/dataagent_governance/governance/blast_radius.py",
+  "FDE": true,
+  "能力组": "DA12.11 爆炸半径评估",
+  "切片": [
+   "按需"
+  ],
+  "说明": "判定能否撤销",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "assess_action_reversibility",
+  "S0 闭环族": null,
+  "形态": [
+   "软·定"
+  ]
+ },
+ {
+  "编号": "DA12.11.3",
+  "所在层": [
+   "评测与治理层"
+  ],
+  "名称": "分级授权阈值",
+  "源码文件": "src/dataagent_governance/governance/blast_radius.py",
+  "FDE": true,
+  "能力组": "DA12.11 爆炸半径评估",
+  "切片": [
+   "按需"
+  ],
+  "说明": "提供分级阈值，供 DA03.12.3 正式审批策略引用",
+  "模块": [
+   "DA12 治理与资产维护"
+  ],
+  "operation": "draft_risk_authorization_thresholds",
+  "S0 闭环族": null,
+  "形态": [
+   "软·定"
+  ]
+ },
+ {
+  "编号": "DA13.1.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "主题/维度模型设计",
+  "源码文件": "src/dataagent_data/modeling/models.py",
+  "FDE": false,
+  "能力组": "DA13.1 目标模型设计",
+  "切片": [
+   "按需"
+  ],
+  "说明": "设计主题与维度模型",
+  "模块": [
+   "DA13 数据建模与物化"
+  ],
+  "operation": "design_analytical_model",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA13.1.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "数据契约定义：字段、约束、粒度、新鲜度承诺",
+  "源码文件": "src/dataagent_data/modeling/models.py",
+  "FDE": false,
+  "能力组": "DA13.1 目标模型设计",
+  "切片": [
+   "按需"
+  ],
+  "说明": "定义字段、约束、粒度与新鲜度承诺",
+  "模块": [
+   "DA13 数据建模与物化"
+  ],
+  "operation": "define_data_contract",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA13.2.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "转换逻辑生成",
+  "源码文件": "src/dataagent_data/modeling/transformations.py",
+  "FDE": false,
+  "能力组": "DA13.2 转换构建",
+  "切片": [
+   "按需"
+  ],
+  "说明": "生成转换逻辑",
+  "模块": [
+   "DA13 数据建模与物化"
+  ],
+  "operation": "generate_transformations",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA13.2.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "转换依赖维护",
+  "源码文件": "src/dataagent_data/modeling/transformations.py",
+  "FDE": false,
+  "能力组": "DA13.2 转换构建",
+  "切片": [
+   "按需"
+  ],
+  "说明": "维护转换间依赖",
+  "模块": [
+   "DA13 数据建模与物化"
+  ],
+  "operation": "maintain_transform_dependencies",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA13.3.1",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "增量物化",
+  "源码文件": "src/dataagent_data/modeling/materialization.py",
+  "FDE": false,
+  "能力组": "DA13.3 物化与回填",
+  "切片": [
+   "按需"
+  ],
+  "说明": "做增量物化",
+  "模块": [
+   "DA13 数据建模与物化"
+  ],
+  "operation": "materialize_increment",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA13.3.2",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "历史回填",
+  "源码文件": "src/dataagent_data/modeling/materialization.py",
+  "FDE": false,
+  "能力组": "DA13.3 物化与回填",
+  "切片": [
+   "按需"
+  ],
+  "说明": "回填历史分区",
+  "模块": [
+   "DA13 数据建模与物化"
+  ],
+  "operation": "backfill_history",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA13.3.3",
+  "所在层": [
+   "数据层"
+  ],
+  "名称": "物化结果校验",
+  "源码文件": "src/dataagent_data/modeling/materialization.py",
+  "FDE": false,
+  "能力组": "DA13.3 物化与回填",
+  "切片": [
+   "按需"
+  ],
+  "说明": "校验物化结果",
+  "模块": [
+   "DA13 数据建模与物化"
+  ],
+  "operation": "validate_materialization",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA14.1.1",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "定时刷新定义",
+  "源码文件": "src/dataagent_operations/continuity/triggers.py",
+  "FDE": false,
+  "能力组": "DA14.1 运行触发",
+  "切片": [
+   "按需"
+  ],
+  "说明": "定义定时刷新",
+  "模块": [
+   "DA14 持续运行与监控"
+  ],
+  "operation": "define_refresh_schedule",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA14.1.2",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "数据到达/事件触发",
+  "源码文件": "src/dataagent_operations/continuity/triggers.py",
+  "FDE": false,
+  "能力组": "DA14.1 运行触发",
+  "切片": [
+   "按需"
+  ],
+  "说明": "按数据到达或事件触发",
+  "模块": [
+   "DA14 持续运行与监控"
+  ],
+  "operation": "evaluate_arrival_trigger",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA14.2.1",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "新鲜度监控：对照 DA01.6.3 的更新承诺",
+  "源码文件": "src/dataagent_operations/continuity/data_monitors.py",
+  "FDE": false,
+  "能力组": "DA14.2 数据监控",
+  "切片": [
+   "S2"
+  ],
+  "说明": "对照更新承诺检查新鲜度",
+  "模块": [
+   "DA14 持续运行与监控"
+  ],
+  "operation": "monitor_freshness",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA14.2.2",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "质量规则持续检查",
+  "源码文件": "src/dataagent_operations/continuity/data_monitors.py",
+  "FDE": false,
+  "能力组": "DA14.2 数据监控",
+  "切片": [
+   "S2"
+  ],
+  "说明": "持续跑质量规则",
+  "模块": [
+   "DA14 持续运行与监控"
+  ],
+  "operation": "monitor_quality_rules",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA14.2.3",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "结构漂移监控",
+  "源码文件": "src/dataagent_operations/continuity/data_monitors.py",
+  "FDE": false,
+  "能力组": "DA14.2 数据监控",
+  "切片": [
+   "S2"
+  ],
+  "说明": "监控结构漂移",
+  "模块": [
+   "DA14 持续运行与监控"
+  ],
+  "operation": "monitor_schema_drift",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA14.2.4",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "抽取标签漂移监控",
+  "源码文件": "src/dataagent_operations/continuity/data_monitors.py",
+  "FDE": false,
+  "能力组": "DA14.2 数据监控",
+  "切片": [
+   "S2"
+  ],
+  "说明": "监控抽取标签分布与置信度的漂移",
+  "模块": [
+   "DA14 持续运行与监控"
+  ],
+  "operation": "monitor_extraction_drift",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA14.3.1",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "指标阈值与异常检测",
+  "源码文件": "src/dataagent_operations/continuity/metric_monitors.py",
+  "FDE": false,
+  "能力组": "DA14.3 业务指标监控",
+  "切片": [
+   "按需"
+  ],
+  "说明": "检测指标是否越阈值",
+  "模块": [
+   "DA14 持续运行与监控"
+  ],
+  "operation": "detect_metric_anomaly",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA14.3.2",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "异常分析触发",
+  "源码文件": "src/dataagent_operations/continuity/metric_monitors.py",
+  "FDE": false,
+  "能力组": "DA14.3 业务指标监控",
+  "切片": [
+   "按需"
+  ],
+  "说明": "触发异常分析",
+  "模块": [
+   "DA14 持续运行与监控"
+  ],
+  "operation": "request_anomaly_analysis",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA14.4.1",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "结果订阅与推送",
+  "源码文件": "src/dataagent_operations/continuity/notifications.py",
+  "FDE": false,
+  "能力组": "DA14.4 订阅与告警",
+  "切片": [
+   "按需"
+  ],
+  "说明": "订阅并推送结果",
+  "模块": [
+   "DA14 持续运行与监控"
+  ],
+  "operation": "manage_result_subscription",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA14.4.2",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "告警合并与升级",
+  "源码文件": "src/dataagent_operations/continuity/notifications.py",
+  "FDE": false,
+  "能力组": "DA14.4 订阅与告警",
+  "切片": [
+   "按需"
+  ],
+  "说明": "合并告警并升级",
+  "模块": [
+   "DA14 持续运行与监控"
+  ],
+  "operation": "coalesce_and_escalate_alerts",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA14.5.1",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "运行成本记录与预算",
+  "源码文件": "src/dataagent_operations/continuity/budgets.py",
+  "FDE": false,
+  "能力组": "DA14.5 运行预算与降级",
+  "切片": [
+   "按需"
+  ],
+  "说明": "记录运行成本并控预算",
+  "模块": [
+   "DA14 持续运行与监控"
+  ],
+  "operation": "record_run_cost_and_budget",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA14.5.2",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "失败降级与暂停",
+  "源码文件": "src/dataagent_operations/continuity/budgets.py",
+  "FDE": false,
+  "能力组": "DA14.5 运行预算与降级",
+  "切片": [
+   "按需"
+  ],
+  "说明": "失败时降级或暂停",
+  "模块": [
+   "DA14 持续运行与监控"
+  ],
+  "operation": "decide_degradation_or_pause",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA14.6.1",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "等人：审批与回复",
+  "源码文件": "src/dataagent_operations/continuity/waits.py",
+  "FDE": true,
+  "能力组": "DA14.6 等待与恢复",
+  "切片": [
+   "S1"
+  ],
+  "说明": "等人审批或回复",
+  "模块": [
+   "DA14 持续运行与监控"
+  ],
+  "operation": "wait_for_human_response",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA14.6.2",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "等系统：外部回执",
+  "源码文件": "src/dataagent_operations/continuity/waits.py",
+  "FDE": true,
+  "能力组": "DA14.6 等待与恢复",
+  "切片": [
+   "S1"
+  ],
+  "说明": "等外部系统回执",
+  "模块": [
+   "DA14 持续运行与监控"
+  ],
+  "operation": "wait_for_external_receipt",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA14.6.3",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "断点恢复",
+  "源码文件": "src/dataagent_operations/continuity/waits.py",
+  "FDE": true,
+  "能力组": "DA14.6 等待与恢复",
+  "切片": [
+   "S1"
+  ],
+  "说明": "恢复任务状态并续跑；重放控制复用 DA07 的幂等和对账能力",
+  "模块": [
+   "DA14 持续运行与监控"
+  ],
+  "operation": "resume_from_checkpoint",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA14.7.1",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "角色与子目标划分",
+  "源码文件": "src/dataagent_operations/continuity/teams.py",
+  "FDE": true,
+  "能力组": "DA14.7 多 Agent 编队与接管",
+  "切片": [
+   "按需"
+  ],
+  "说明": "划分角色与子目标",
+  "模块": [
+   "DA14 持续运行与监控"
+  ],
+  "operation": "partition_roles_and_goals",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA14.7.2",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "上下文派发，走 DA17",
+  "源码文件": "src/dataagent_operations/continuity/teams.py",
+  "FDE": true,
+  "能力组": "DA14.7 多 Agent 编队与接管",
+  "切片": [
+   "按需"
+  ],
+  "说明": "向子 Agent 派发上下文",
+  "模块": [
+   "DA14 持续运行与监控"
+  ],
+  "operation": "dispatch_collaboration_context",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA14.7.3",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "人工接管与终止",
+  "源码文件": "src/dataagent_operations/continuity/teams.py",
+  "FDE": true,
+  "能力组": "DA14.7 多 Agent 编队与接管",
+  "切片": [
+   "按需"
+  ],
+  "说明": "支持人工接管与终止",
+  "模块": [
+   "DA14 持续运行与监控"
+  ],
+  "operation": "request_human_takeover_or_stop",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA14.8.1",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "系统版本与 UI 变化",
+  "源码文件": "src/dataagent_operations/continuity/drift.py",
+  "FDE": true,
+  "能力组": "DA14.8 环境漂移监控",
+  "切片": [
+   "S2"
+  ],
+  "说明": "监控系统版本与 UI 变化",
+  "模块": [
+   "DA14 持续运行与监控"
+  ],
+  "operation": "monitor_system_and_ui_drift",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA14.8.2",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "权限与角色变化",
+  "源码文件": "src/dataagent_operations/continuity/drift.py",
+  "FDE": true,
+  "能力组": "DA14.8 环境漂移监控",
+  "切片": [
+   "S2"
+  ],
+  "说明": "监控权限与角色变化",
+  "模块": [
+   "DA14 持续运行与监控"
+  ],
+  "operation": "monitor_authority_drift",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA14.8.3",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "流程与制度变化",
+  "源码文件": "src/dataagent_operations/continuity/drift.py",
+  "FDE": true,
+  "能力组": "DA14.8 环境漂移监控",
+  "切片": [
+   "S2"
+  ],
+  "说明": "监控流程与制度变化",
+  "模块": [
+   "DA14 持续运行与监控"
+  ],
+  "operation": "monitor_process_and_policy_drift",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA15.1.1",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "A0/A1/A2 判定",
+  "源码文件": "src/dataagent_operations/action_contracts/tiers.py",
+  "FDE": true,
+  "能力组": "DA15.1 动作分档",
+  "切片": [
+   "S1"
+  ],
+  "说明": "判定动作是读、提议还是执行",
+  "模块": [
+   "DA15 动作契约"
+  ],
+  "operation": "classify_action_tier",
+  "S0 闭环族": null,
+  "形态": [
+   "软·定"
+  ]
+ },
+ {
+  "编号": "DA15.1.2",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "档位与审批策略映射",
+  "源码文件": "src/dataagent_operations/action_contracts/tiers.py",
+  "FDE": true,
+  "能力组": "DA15.1 动作分档",
+  "切片": [
+   "S1"
+  ],
+  "说明": "把档位映射到 DA03.12.3 正式策略的引用",
+  "模块": [
+   "DA15 动作契约"
+  ],
+  "operation": "map_tier_to_approval_policy",
+  "S0 闭环族": null,
+  "形态": [
+   "软·定"
+  ]
+ },
+ {
+  "编号": "DA15.1.3",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "越权拒绝",
+  "源码文件": "src/dataagent_operations/action_contracts/tiers.py",
+  "FDE": true,
+  "能力组": "DA15.1 动作分档",
+  "切片": [
+   "S1"
+  ],
+  "说明": "越权请求直接拒绝",
+  "模块": [
+   "DA15 动作契约"
+  ],
+  "operation": "reject_out_of_contract_request",
+  "S0 闭环族": null,
+  "形态": [
+   "软·定"
+  ]
+ },
+ {
+  "编号": "DA15.2.1",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "参数 schema",
+  "源码文件": "src/dataagent_operations/action_contracts/declarations.py",
+  "FDE": true,
+  "能力组": "DA15.2 契约声明与发布",
+  "切片": [
+   "S1"
+  ],
+  "说明": "定义动作入参",
+  "模块": [
+   "DA15 动作契约"
+  ],
+  "operation": "define_action_parameter_schema",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA15.2.2",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "前置/后置条件",
+  "源码文件": "src/dataagent_operations/action_contracts/declarations.py",
+  "FDE": true,
+  "能力组": "DA15.2 契约声明与发布",
+  "切片": [
+   "S1"
+  ],
+  "说明": "定义执行前后条件",
+  "模块": [
+   "DA15 动作契约"
+  ],
+  "operation": "define_action_conditions",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA15.2.3",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "影响面与可逆性",
+  "源码文件": "src/dataagent_operations/action_contracts/declarations.py",
+  "FDE": true,
+  "能力组": "DA15.2 契约声明与发布",
+  "切片": [
+   "S1"
+  ],
+  "说明": "声明影响面与可逆性",
+  "模块": [
+   "DA15 动作契约"
+  ],
+  "operation": "declare_action_impact_and_reversibility",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA15.2.4",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "契约评审与版本发布",
+  "源码文件": "src/dataagent_operations/action_contracts/declarations.py",
+  "FDE": true,
+  "能力组": "DA15.2 契约声明与发布",
+  "切片": [
+   "S1"
+  ],
+  "说明": "评审并发布契约版本",
+  "模块": [
+   "DA15 动作契约"
+  ],
+  "operation": "review_and_publish_action_contract",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA15.3.1",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "幂等键",
+  "源码文件": "src/dataagent_operations/action_contracts/execution_requirements.py",
+  "FDE": true,
+  "能力组": "DA15.3 安全执行要求声明",
+  "切片": [
+   "S1"
+  ],
+  "说明": "声明幂等键",
+  "模块": [
+   "DA15 动作契约"
+  ],
+  "operation": "declare_idempotency_requirements",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA15.3.2",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "dry-run",
+  "源码文件": "src/dataagent_operations/action_contracts/execution_requirements.py",
+  "FDE": true,
+  "能力组": "DA15.3 安全执行要求声明",
+  "切片": [
+   "S1"
+  ],
+  "说明": "声明可预演",
+  "模块": [
+   "DA15 动作契约"
+  ],
+  "operation": "declare_dry_run_requirements",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA15.3.3",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "影响面评估要求声明",
+  "源码文件": "src/dataagent_operations/action_contracts/execution_requirements.py",
+  "FDE": true,
+  "能力组": "DA15.3 安全执行要求声明",
+  "切片": [
+   "S1"
+  ],
+  "说明": "声明执行前须由 DA12.11 评估的影响维度与上界要求",
+  "模块": [
+   "DA15 动作契约"
+  ],
+  "operation": "declare_impact_assessment_requirements",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA15.3.4",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "补偿动作声明",
+  "源码文件": "src/dataagent_operations/action_contracts/execution_requirements.py",
+  "FDE": true,
+  "能力组": "DA15.3 安全执行要求声明",
+  "切片": [
+   "S1"
+  ],
+  "说明": "声明补偿动作",
+  "模块": [
+   "DA15 动作契约"
+  ],
+  "operation": "declare_compensation_action",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA15.4.1",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "动作目录索引",
+  "源码文件": "src/dataagent_operations/action_contracts/catalog.py",
+  "FDE": true,
+  "能力组": "DA15.4 能力目录",
+  "切片": [
+   "S1"
+  ],
+  "说明": "登记动作及实现引用，检索复用 DA05.8",
+  "模块": [
+   "DA15 动作契约"
+  ],
+  "operation": "index_action_contract",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA15.4.2",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "适用范围与限制",
+  "源码文件": "src/dataagent_operations/action_contracts/catalog.py",
+  "FDE": true,
+  "能力组": "DA15.4 能力目录",
+  "切片": [
+   "S1"
+  ],
+  "说明": "查询适用范围与限制",
+  "模块": [
+   "DA15 动作契约"
+  ],
+  "operation": "resolve_action_applicability",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA15.4.3",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "弃用与替代",
+  "源码文件": "src/dataagent_operations/action_contracts/catalog.py",
+  "FDE": true,
+  "能力组": "DA15.4 能力目录",
+  "切片": [
+   "S1"
+  ],
+  "说明": "标注弃用与替代动作",
+  "模块": [
+   "DA15 动作契约"
+  ],
+  "operation": "deprecate_or_replace_action",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA16.1.1",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "Agent 身份",
+  "源码文件": "src/dataagent_operations/delegation/identities.py",
+  "FDE": true,
+  "能力组": "DA16.1 身份与委托",
+  "切片": [
+   "按需"
+  ],
+  "说明": "标识 Agent 身份",
+  "模块": [
+   "DA16 委托、审批与人在环"
+  ],
+  "operation": "register_agent_identity",
+  "S0 闭环族": null,
+  "形态": [
+   "软·定"
+  ]
+ },
+ {
+  "编号": "DA16.1.2",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "委托范围与时限",
+  "源码文件": "src/dataagent_operations/delegation/identities.py",
+  "FDE": true,
+  "能力组": "DA16.1 身份与委托",
+  "切片": [
+   "按需"
+  ],
+  "说明": "定义委托范围与时限；有效权限为请求者权限与 Agent 权限的交集，不得超出请求者",
+  "模块": [
+   "DA16 委托、审批与人在环"
+  ],
+  "operation": "define_scoped_delegation",
+  "S0 闭环族": null,
+  "形态": [
+   "软·定"
+  ]
+ },
+ {
+  "编号": "DA16.1.3",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "转委托限制",
+  "源码文件": "src/dataagent_operations/delegation/identities.py",
+  "FDE": true,
+  "能力组": "DA16.1 身份与委托",
+  "切片": [
+   "按需"
+  ],
+  "说明": "限制能否再转委托",
+  "模块": [
+   "DA16 委托、审批与人在环"
+  ],
+  "operation": "check_redelegation_constraints",
+  "S0 闭环族": null,
+  "形态": [
+   "软·定"
+  ]
+ },
+ {
+  "编号": "DA16.1.4",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "请求者身份传播",
+  "源码文件": "src/dataagent_operations/delegation/identities.py",
+  "FDE": true,
+  "能力组": "DA16.1 身份与委托",
+  "切片": [
+   "按需"
+  ],
+  "说明": "把请求者身份沿调用链传到取数与执行点，供权限取交集",
+  "模块": [
+   "DA16 委托、审批与人在环"
+  ],
+  "operation": "propagate_requester_identity",
+  "S0 闭环族": null,
+  "形态": [
+   "软·定"
+  ]
+ },
+ {
+  "编号": "DA16.2.1",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "触发判据",
+  "源码文件": "src/dataagent_operations/delegation/approvals.py",
+  "FDE": true,
+  "能力组": "DA16.2 审批",
+  "切片": [
+   "S1"
+  ],
+  "说明": "按 DA03.12.3 正式策略在运行时判定是否触发审批",
+  "模块": [
+   "DA16 委托、审批与人在环"
+  ],
+  "operation": "evaluate_approval_requirement",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA16.2.2",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "证据包组装",
+  "源码文件": "src/dataagent_operations/delegation/approvals.py",
+  "FDE": true,
+  "能力组": "DA16.2 审批",
+  "切片": [
+   "S1"
+  ],
+  "说明": "组装审批所需证据",
+  "模块": [
+   "DA16 委托、审批与人在环"
+  ],
+  "operation": "assemble_approval_evidence",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA16.2.3",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "超时升级与拒绝处理",
+  "源码文件": "src/dataagent_operations/delegation/approvals.py",
+  "FDE": true,
+  "能力组": "DA16.2 审批",
+  "切片": [
+   "S1"
+  ],
+  "说明": "超时升级或按拒绝处理",
+  "模块": [
+   "DA16 委托、审批与人在环"
+  ],
+  "operation": "handle_approval_timeout_or_rejection",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA16.2.4",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "批量与抽样审批",
+  "源码文件": "src/dataagent_operations/delegation/approvals.py",
+  "FDE": true,
+  "能力组": "DA16.2 审批",
+  "切片": [
+   "S1"
+  ],
+  "说明": "支持批量与抽样审批",
+  "模块": [
+   "DA16 委托、审批与人在环"
+  ],
+  "operation": "apply_batch_or_sample_approval",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA16.2.5",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "免审判据〔定〕",
+  "源码文件": "src/dataagent_operations/delegation/approvals.py",
+  "FDE": true,
+  "能力组": "DA16.2 审批",
+  "切片": [
+   "S1"
+  ],
+  "说明": "在授权策略允许且证据达标时免审，正式条件由有权主体确定",
+  "模块": [
+   "DA16 委托、审批与人在环"
+  ],
+  "operation": "evaluate_approval_exemption",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA16.3.1",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "执行前预览",
+  "源码文件": "src/dataagent_operations/delegation/supervision.py",
+  "FDE": true,
+  "能力组": "DA16.3 监督界面",
+  "切片": [
+   "按需"
+  ],
+  "说明": "执行前给预览",
+  "模块": [
+   "DA16 委托、审批与人在环"
+  ],
+  "operation": "build_pre_execution_preview",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA16.3.2",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "执行中监控",
+  "源码文件": "src/dataagent_operations/delegation/supervision.py",
+  "FDE": true,
+  "能力组": "DA16.3 监督界面",
+  "切片": [
+   "按需"
+  ],
+  "说明": "执行中给监控",
+  "模块": [
+   "DA16 委托、审批与人在环"
+  ],
+  "operation": "build_execution_monitor_view",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA16.3.3",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "执行后复核与撤销",
+  "源码文件": "src/dataagent_operations/delegation/supervision.py",
+  "FDE": true,
+  "能力组": "DA16.3 监督界面",
+  "切片": [
+   "按需"
+  ],
+  "说明": "执行后复核与撤销",
+  "模块": [
+   "DA16 委托、审批与人在环"
+  ],
+  "operation": "review_execution_and_request_reversal",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA16.3.4",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "差异裁定入口",
+  "源码文件": "src/dataagent_operations/delegation/supervision.py",
+  "FDE": true,
+  "能力组": "DA16.3 监督界面",
+  "切片": [
+   "按需"
+  ],
+  "说明": "呈现差异、候选与依据，接收选择、纠正或补充说明",
+  "模块": [
+   "DA16 委托、审批与人在环"
+  ],
+  "operation": "capture_difference_adjudication",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA16.4.1",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "审批权与执行权分离",
+  "源码文件": "src/dataagent_operations/delegation/separation.py",
+  "FDE": true,
+  "能力组": "DA16.4 权责分离",
+  "切片": [
+   "按需"
+  ],
+  "说明": "审批权与执行权分给不同主体",
+  "模块": [
+   "DA16 委托、审批与人在环"
+  ],
+  "operation": "assign_separated_authority",
+  "S0 闭环族": null,
+  "形态": [
+   "软·定"
+  ]
+ },
+ {
+  "编号": "DA16.4.2",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "双人复核",
+  "源码文件": "src/dataagent_operations/delegation/separation.py",
+  "FDE": true,
+  "能力组": "DA16.4 权责分离",
+  "切片": [
+   "按需"
+  ],
+  "说明": "高危动作双人复核",
+  "模块": [
+   "DA16 委托、审批与人在环"
+  ],
+  "operation": "validate_two_person_review",
+  "S0 闭环族": null,
+  "形态": [
+   "软·定"
+  ]
+ },
+ {
+  "编号": "DA16.4.3",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "紧急豁免与留痕",
+  "源码文件": "src/dataagent_operations/delegation/separation.py",
+  "FDE": true,
+  "能力组": "DA16.4 权责分离",
+  "切片": [
+   "按需"
+  ],
+  "说明": "紧急豁免并留痕",
+  "模块": [
+   "DA16 委托、审批与人在环"
+  ],
+  "operation": "record_emergency_exception",
+  "S0 闭环族": null,
+  "形态": [
+   "软·定"
+  ]
+ },
+ {
+  "编号": "DA16.5.1",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "审批量与耗时",
+  "源码文件": "src/dataagent_operations/delegation/burden.py",
+  "FDE": true,
+  "能力组": "DA16.5 审批负担度量",
+  "切片": [
+   "按需"
+  ],
+  "说明": "度量审批量与耗时",
+  "模块": [
+   "DA16 委托、审批与人在环"
+  ],
+  "operation": "measure_approval_volume_and_latency",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA16.5.2",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "通过率与改写率",
+  "源码文件": "src/dataagent_operations/delegation/burden.py",
+  "FDE": true,
+  "能力组": "DA16.5 审批负担度量",
+  "切片": [
+   "按需"
+  ],
+  "说明": "度量通过率与改写率",
+  "模块": [
+   "DA16 委托、审批与人在环"
+  ],
+  "operation": "measure_approval_outcomes",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA17.1.1",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "业务环境标识",
+  "源码文件": "src/dataagent_operations/environments/registry.py",
+  "FDE": true,
+  "能力组": "DA17.1 业务环境注册",
+  "切片": [
+   "按需"
+  ],
+  "说明": "标识业务环境并关联所属租户",
+  "模块": [
+   "DA17 业务环境配置与协作上下文"
+  ],
+  "operation": "register_business_environment",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA17.1.2",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "环境绑定",
+  "源码文件": "src/dataagent_operations/environments/registry.py",
+  "FDE": true,
+  "能力组": "DA17.1 业务环境注册",
+  "切片": [
+   "按需"
+  ],
+  "说明": "绑定环境地址与资源",
+  "模块": [
+   "DA17 业务环境配置与协作上下文"
+  ],
+  "operation": "bind_environment_resources",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA17.1.3",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "责任人与联系人",
+  "源码文件": "src/dataagent_operations/environments/registry.py",
+  "FDE": true,
+  "能力组": "DA17.1 业务环境注册",
+  "切片": [
+   "按需"
+  ],
+  "说明": "记录责任人与联系人",
+  "模块": [
+   "DA17 业务环境配置与协作上下文"
+  ],
+  "operation": "maintain_environment_contacts",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA17.2.1",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "数据快照引用",
+  "源码文件": "src/dataagent_operations/environments/defaults.py",
+  "FDE": true,
+  "能力组": "DA17.2 环境版本配置",
+  "切片": [
+   "S2"
+  ],
+  "说明": "登记默认数据快照",
+  "模块": [
+   "DA17 业务环境配置与协作上下文"
+  ],
+  "operation": "configure_default_data_snapshot",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA17.2.2",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "本体与契约版本",
+  "源码文件": "src/dataagent_operations/environments/defaults.py",
+  "FDE": true,
+  "能力组": "DA17.2 环境版本配置",
+  "切片": [
+   "S2"
+  ],
+  "说明": "登记默认本体与契约版本",
+  "模块": [
+   "DA17 业务环境配置与协作上下文"
+  ],
+  "operation": "configure_default_semantic_and_contract_versions",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA17.2.3",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "权限策略版本",
+  "源码文件": "src/dataagent_operations/environments/defaults.py",
+  "FDE": true,
+  "能力组": "DA17.2 环境版本配置",
+  "切片": [
+   "S2"
+  ],
+  "说明": "登记默认权限策略版本",
+  "模块": [
+   "DA17 业务环境配置与协作上下文"
+  ],
+  "operation": "configure_default_policy_versions",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA17.2.4",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "评测集与预算版本",
+  "源码文件": "src/dataagent_operations/environments/defaults.py",
+  "FDE": true,
+  "能力组": "DA17.2 环境版本配置",
+  "切片": [
+   "S2"
+  ],
+  "说明": "登记默认评测集与预算版本",
+  "模块": [
+   "DA17 业务环境配置与协作上下文"
+  ],
+  "operation": "configure_default_evaluation_and_budget_versions",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA17.3.1",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "子任务裁剪",
+  "源码文件": "src/dataagent_operations/environments/contexts.py",
+  "FDE": true,
+  "能力组": "DA17.3 上下文派发",
+  "切片": [
+   "按需"
+  ],
+  "说明": "按子任务裁剪上下文",
+  "模块": [
+   "DA17 业务环境配置与协作上下文"
+  ],
+  "operation": "slice_subtask_context",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA17.3.2",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "引用解析与上下文装配",
+  "源码文件": "src/dataagent_operations/environments/contexts.py",
+  "FDE": true,
+  "能力组": "DA17.3 上下文派发",
+  "切片": [
+   "按需"
+  ],
+  "说明": "按权限解析引用，按需加载内容并保留来源版本",
+  "模块": [
+   "DA17 业务环境配置与协作上下文"
+  ],
+  "operation": "resolve_and_assemble_context",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA17.3.3",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "摘要与预算",
+  "源码文件": "src/dataagent_operations/environments/contexts.py",
+  "FDE": true,
+  "能力组": "DA17.3 上下文派发",
+  "切片": [
+   "按需"
+  ],
+  "说明": "生成摘要并控预算",
+  "模块": [
+   "DA17 业务环境配置与协作上下文"
+  ],
+  "operation": "summarize_context_with_budget",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA17.4.1",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "冲突检测",
+  "源码文件": "src/dataagent_operations/environments/arbitration.py",
+  "FDE": true,
+  "能力组": "DA17.4 口径仲裁",
+  "切片": [
+   "按需"
+  ],
+  "说明": "检测口径冲突",
+  "模块": [
+   "DA17 业务环境配置与协作上下文"
+  ],
+  "operation": "detect_collaboration_semantic_conflict",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA17.4.2",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "仲裁记录",
+  "源码文件": "src/dataagent_operations/environments/arbitration.py",
+  "FDE": true,
+  "能力组": "DA17.4 口径仲裁",
+  "切片": [
+   "按需"
+  ],
+  "说明": "记录谁在何时怎么裁的",
+  "模块": [
+   "DA17 业务环境配置与协作上下文"
+  ],
+  "operation": "record_semantic_arbitration",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA17.4.3",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "修订传播与旧结果失效",
+  "源码文件": "src/dataagent_operations/environments/arbitration.py",
+  "FDE": true,
+  "能力组": "DA17.4 口径仲裁",
+  "切片": [
+   "按需"
+  ],
+  "说明": "传播修订并使旧结果失效",
+  "模块": [
+   "DA17 业务环境配置与协作上下文"
+  ],
+  "operation": "propagate_arbitrated_revision",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA17.5.1",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "部署包构建",
+  "源码文件": "src/dataagent_operations/environments/deployment.py",
+  "FDE": true,
+  "能力组": "DA17.5 能力部署与运行环境",
+  "切片": [
+   "S2"
+  ],
+  "说明": "打出含依赖与校验和的离线包",
+  "模块": [
+   "DA17 业务环境配置与协作上下文"
+  ],
+  "operation": "build_deployment_bundle",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA17.5.2",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "环境预检",
+  "源码文件": "src/dataagent_operations/environments/deployment.py",
+  "FDE": true,
+  "能力组": "DA17.5 能力部署与运行环境",
+  "切片": [
+   "S2"
+  ],
+  "说明": "检查目标环境的网络、权限与资源是否满足",
+  "模块": [
+   "DA17 业务环境配置与协作上下文"
+  ],
+  "operation": "preflight_target_environment",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA17.5.3",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "实例部署",
+  "源码文件": "src/dataagent_operations/environments/deployment.py",
+  "FDE": true,
+  "能力组": "DA17.5 能力部署与运行环境",
+  "切片": [
+   "S2"
+  ],
+  "说明": "在目标环境安装并启动指定版本",
+  "模块": [
+   "DA17 业务环境配置与协作上下文"
+  ],
+  "operation": "deploy_capability_instance",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA17.5.4",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "健康检查",
+  "源码文件": "src/dataagent_operations/environments/deployment.py",
+  "FDE": true,
+  "能力组": "DA17.5 能力部署与运行环境",
+  "切片": [
+   "S2"
+  ],
+  "说明": "确认实例可用，且实际版本与默认版本或任务固定版本一致",
+  "模块": [
+   "DA17 业务环境配置与协作上下文"
+  ],
+  "operation": "check_instance_health",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA17.5.5",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "版本回退",
+  "源码文件": "src/dataagent_operations/environments/deployment.py",
+  "FDE": true,
+  "能力组": "DA17.5 能力部署与运行环境",
+  "切片": [
+   "S2"
+  ],
+  "说明": "回到上一个可用版本",
+  "模块": [
+   "DA17 业务环境配置与协作上下文"
+  ],
+  "operation": "rollback_capability_instance",
+  "S0 闭环族": null,
+  "形态": [
+   "硬"
+  ]
+ },
+ {
+  "编号": "DA18.1.1",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "日常操作手册",
+  "源码文件": "src/dataagent_operations/delivery/runbooks.py",
+  "FDE": true,
+  "能力组": "DA18.1 Runbook",
+  "切片": [
+   "S2"
+  ],
+  "说明": "写日常操作手册",
+  "模块": [
+   "DA18 交付与交接"
+  ],
+  "operation": "draft_daily_runbook",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA18.1.2",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "异常处置流程",
+  "源码文件": "src/dataagent_operations/delivery/runbooks.py",
+  "FDE": true,
+  "能力组": "DA18.1 Runbook",
+  "切片": [
+   "S2"
+  ],
+  "说明": "写异常处置流程",
+  "模块": [
+   "DA18 交付与交接"
+  ],
+  "operation": "draft_exception_runbook",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA18.1.3",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "责任矩阵",
+  "源码文件": "src/dataagent_operations/delivery/runbooks.py",
+  "FDE": true,
+  "能力组": "DA18.1 Runbook",
+  "切片": [
+   "S2"
+  ],
+  "说明": "定义责任矩阵",
+  "模块": [
+   "DA18 交付与交接"
+  ],
+  "operation": "draft_delivery_responsibility_matrix",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA18.2.1",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "任务发起与查看",
+  "源码文件": "src/dataagent_operations/delivery/self_service.py",
+  "FDE": true,
+  "能力组": "DA18.2 自助界面",
+  "切片": [
+   "S2"
+  ],
+  "说明": "提供任务发起与查看入口",
+  "模块": [
+   "DA18 交付与交接"
+  ],
+  "operation": "provide_task_self_service",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA18.2.2",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "审批与例外申请",
+  "源码文件": "src/dataagent_operations/delivery/self_service.py",
+  "FDE": true,
+  "能力组": "DA18.2 自助界面",
+  "切片": [
+   "S2"
+  ],
+  "说明": "提供审批与例外申请入口",
+  "模块": [
+   "DA18 交付与交接"
+  ],
+  "operation": "provide_approval_and_exception_entry",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA18.2.3",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "指标与报表",
+  "源码文件": "src/dataagent_operations/delivery/self_service.py",
+  "FDE": true,
+  "能力组": "DA18.2 自助界面",
+  "切片": [
+   "S2"
+  ],
+  "说明": "提供指标与报表入口",
+  "模块": [
+   "DA18 交付与交接"
+  ],
+  "operation": "provide_metrics_and_reports_entry",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA18.3.1",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "契约与本体说明",
+  "源码文件": "src/dataagent_operations/delivery/knowledge_transfer.py",
+  "FDE": true,
+  "能力组": "DA18.3 知识移交",
+  "切片": [
+   "S2"
+  ],
+  "说明": "交付契约与本体说明",
+  "模块": [
+   "DA18 交付与交接"
+  ],
+  "operation": "prepare_contract_and_ontology_handover",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA18.3.2",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "评测集移交",
+  "源码文件": "src/dataagent_operations/delivery/knowledge_transfer.py",
+  "FDE": true,
+  "能力组": "DA18.3 知识移交",
+  "切片": [
+   "S2"
+  ],
+  "说明": "移交评测集",
+  "模块": [
+   "DA18 交付与交接"
+  ],
+  "operation": "prepare_evaluation_set_handover",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA18.3.3",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "培训材料",
+  "源码文件": "src/dataagent_operations/delivery/knowledge_transfer.py",
+  "FDE": true,
+  "能力组": "DA18.3 知识移交",
+  "切片": [
+   "S2"
+  ],
+  "说明": "交付培训材料",
+  "模块": [
+   "DA18 交付与交接"
+  ],
+  "operation": "prepare_training_materials",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA18.4.1",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "SLA 定义",
+  "源码文件": "src/dataagent_operations/delivery/operating_agreements.py",
+  "FDE": true,
+  "能力组": "DA18.4 运营协议",
+  "切片": [
+   "S2"
+  ],
+  "说明": "定义 SLA",
+  "模块": [
+   "DA18 交付与交接"
+  ],
+  "operation": "draft_service_level_agreement",
+  "S0 闭环族": null,
+  "形态": [
+   "软·定"
+  ]
+ },
+ {
+  "编号": "DA18.4.2",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "值班与升级",
+  "源码文件": "src/dataagent_operations/delivery/operating_agreements.py",
+  "FDE": true,
+  "能力组": "DA18.4 运营协议",
+  "切片": [
+   "S2"
+  ],
+  "说明": "定义值班与升级",
+  "模块": [
+   "DA18 交付与交接"
+  ],
+  "operation": "draft_oncall_and_escalation",
+  "S0 闭环族": null,
+  "形态": [
+   "软·定"
+  ]
+ },
+ {
+  "编号": "DA18.4.3",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "变更窗口与退出",
+  "源码文件": "src/dataagent_operations/delivery/operating_agreements.py",
+  "FDE": true,
+  "能力组": "DA18.4 运营协议",
+  "切片": [
+   "S2"
+  ],
+  "说明": "定义变更窗口与退出方式",
+  "模块": [
+   "DA18 交付与交接"
+  ],
+  "operation": "draft_change_window_and_exit",
+  "S0 闭环族": null,
+  "形态": [
+   "软·定"
+  ]
+ },
+ {
+  "编号": "DA18.4.4",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "自主度移交：从我们代跑到客户自跑的分级",
+  "源码文件": "src/dataagent_operations/delivery/operating_agreements.py",
+  "FDE": true,
+  "能力组": "DA18.4 运营协议",
+  "切片": [
+   "S2"
+  ],
+  "说明": "按环节分级移交自主度",
+  "模块": [
+   "DA18 交付与交接"
+  ],
+  "operation": "plan_autonomy_handover",
+  "S0 闭环族": null,
+  "形态": [
+   "软·定"
+  ]
+ },
+ {
+  "编号": "DA18.5.1",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "上线后指标采集",
+  "源码文件": "src/dataagent_operations/delivery/outcomes.py",
+  "FDE": true,
+  "能力组": "DA18.5 交付效果度量",
+  "切片": [
+   "S2"
+  ],
+  "说明": "按基线同口径采集工时、错误率与成本",
+  "模块": [
+   "DA18 交付与交接"
+  ],
+  "operation": "collect_post_launch_business_metrics",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA18.5.2",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "基线对比",
+  "源码文件": "src/dataagent_operations/delivery/outcomes.py",
+  "FDE": true,
+  "能力组": "DA18.5 交付效果度量",
+  "切片": [
+   "S2"
+  ],
+  "说明": "计算相对基线的变化幅度",
+  "模块": [
+   "DA18 交付与交接"
+  ],
+  "operation": "compare_business_outcome_baseline",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA18.5.3",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "不可归因部分标注",
+  "源码文件": "src/dataagent_operations/delivery/outcomes.py",
+  "FDE": true,
+  "能力组": "DA18.5 交付效果度量",
+  "切片": [
+   "S2"
+  ],
+  "说明": "标出混杂因素与无法归因的变化",
+  "模块": [
+   "DA18 交付与交接"
+  ],
+  "operation": "annotate_outcome_attribution_limits",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA18.6.1",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "业务问题与交付要求组织",
+  "源码文件": "src/dataagent_operations/delivery/skills.py",
+  "FDE": false,
+  "能力组": "DA18.6 业务 Skill 构建",
+  "切片": [
+   "S1"
+  ],
+  "说明": "明确任务范围、输出形式与业务验收要求",
+  "模块": [
+   "DA18 交付与交接"
+  ],
+  "operation": "organize_business_skill_requirements",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA18.6.2",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "方法指导与能力引用",
+  "源码文件": "src/dataagent_operations/delivery/skills.py",
+  "FDE": false,
+  "能力组": "DA18.6 业务 Skill 构建",
+  "切片": [
+   "S1"
+  ],
+  "说明": "编写可调整的求解指导并引用可用能力",
+  "模块": [
+   "DA18 交付与交接"
+  ],
+  "operation": "compose_skill_guidance_and_capabilities",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA18.6.3",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "Skill 修订生成",
+  "源码文件": "src/dataagent_operations/delivery/skills.py",
+  "FDE": false,
+  "能力组": "DA18.6 业务 Skill 构建",
+  "切片": [
+   "S1"
+  ],
+  "说明": "结合探索及验证反馈修改指导或组合，资产保存复用 DA04.4",
+  "模块": [
+   "DA18 交付与交接"
+  ],
+  "operation": "propose_business_skill_revision",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA18.7.1",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "组件依赖装配",
+  "源码文件": "src/dataagent_operations/delivery/bundles.py",
+  "FDE": false,
+  "能力组": "DA18.7 Preset/Bundle 组装",
+  "切片": [
+   "S1"
+  ],
+  "说明": "选择实现、检查依赖并生成组合配置",
+  "模块": [
+   "DA18 交付与交接"
+  ],
+  "operation": "assemble_component_dependencies",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA18.7.2",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "业务环境参数绑定",
+  "源码文件": "src/dataagent_operations/delivery/bundles.py",
+  "FDE": false,
+  "能力组": "DA18.7 Preset/Bundle 组装",
+  "切片": [
+   "S1"
+  ],
+  "说明": "绑定数据、工具与权限引用并保留可替换点",
+  "模块": [
+   "DA18 交付与交接"
+  ],
+  "operation": "bind_bundle_environment_parameters",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA18.7.3",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "组合试运行与交付封装",
+  "源码文件": "src/dataagent_operations/delivery/bundles.py",
+  "FDE": false,
+  "能力组": "DA18.7 Preset/Bundle 组装",
+  "切片": [
+   "S1"
+  ],
+  "说明": "调用执行和验证能力，将通过验收的组合封装为可复用包；包元数据含 `license` 与 `[capabilities]` 声明",
+  "模块": [
+   "DA18 交付与交接"
+  ],
+  "operation": "trial_validate_and_package_delivery",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ },
+ {
+  "编号": "DA18.7.4",
+  "所在层": [
+   "持续运行与 FDE 交付"
+  ],
+  "名称": "组合许可清单生成",
+  "源码文件": "src/dataagent_operations/delivery/bundles.py",
+  "FDE": false,
+  "能力组": "DA18.7 Preset/Bundle 组装",
+  "切片": [
+   "S1"
+  ],
+  "说明": "生成依赖许可清单，并检查与分发场景是否兼容",
+  "模块": [
+   "DA18 交付与交接"
+  ],
+  "operation": "generate_bundle_license_manifest",
+  "S0 闭环族": null,
+  "形态": [
+   "软"
+  ]
+ }
+]

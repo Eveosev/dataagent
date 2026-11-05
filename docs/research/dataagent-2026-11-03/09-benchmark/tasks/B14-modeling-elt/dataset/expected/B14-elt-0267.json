@@ -1,0 +1,108 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "snowflake",
+  "pipeline": "regional_sales",
+  "data_model": {
+    "models": [
+      {
+        "name": "regional_sales__customers",
+        "description": "Each record represents a customer.",
+        "columns": [
+          {
+            "name": "customer_id",
+            "description": "Unique identifier for the customer."
+          },
+          {
+            "name": "customer_name",
+            "description": "The name of the customer."
+          },
+          {
+            "name": "most_expensive_order",
+            "description": "The most expensive order before discount applied the customer has made, with ties broken by the ascending order of the order number."
+          },
+          {
+            "name": "has_made_orders_online",
+            "description": "Set to 1 if the customer has made orders online, 0 otherwise."
+          },
+          {
+            "name": "highest_net_profiit_for_order",
+            "description": "The highest net profit before discount applied for an order the customer has made."
+          },
+          {
+            "name": "avg_price_of_order_after_discount",
+            "description": "The average price of an order after discount the customer has made."
+          },
+          {
+            "name": "quantity_of_orders_in_2018",
+            "description": "The quantity of orders the customer has made in 2018, replace NULL values with 0."
+          }
+        ]
+      },
+      {
+        "name": "regional_sales__products",
+        "description": "Each record represents a product.",
+        "columns": [
+          {
+            "name": "product_id",
+            "description": "Unique identifier for the product."
+          },
+          {
+            "name": "product_name",
+            "description": "The name of the product."
+          },
+          {
+            "name": "has_been_applied_10per_discount",
+            "description": "Set to 1 if the product has been applied a 10% discount, 0 otherwise."
+          },
+          {
+            "name": "percent_of_units_ordered_from_burbank_stores",
+            "description": "Of all units of this product ordered, the percent whose store is in Burbank."
+          },
+          {
+            "name": "total_net_profit",
+            "description": "The total net profit of the product before discount applied , replace NULL values with 0."
+          },
+          {
+            "name": "number_of_orders",
+            "description": "The number of orders the product has, replace NULL values with 0."
+          },
+          {
+            "name": "highest_net_profit_in_2019",
+            "description": "The highest net profit of the product before discount applied in 2019."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    snowflake_definition_id: 424892c4-daac-4491-b35d-c6688ba547ba\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://regional-sales-bucket/Regions.jsonl\n    sync_mode: full_refresh_append\n    table: Regions\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - Products\nflat_files:\n- format: csv\n  path: https://drive.google.com/uc?export=download&id=1zNo7paEsCdTqDP3cks7K8N3r1zdVNcgW\n  sync_mode: full_refresh_append\n  table: Store_Locations\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: regional_sales\n    sync_mode: full_refresh_append\n    tables:\n    - Customers\n    - Sales_Team\npostgres:\n  config:\n    database: regional_sales\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - sales_orders\n    user: postgres\nsnowflake:\n  config:\n    database: regional_sales\n    password: Snowflake@123\n    role: AIRBYTE_ROLE\n    schema: AIRBYTE_SCHEMA\n    username: AIRBYTE_USER\n    warehouse: AIRBYTE_WAREHOUSE\n",
+  "case_id": "B14-elt-0267",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "regional_sales__customers",
+        "columns": [
+          "customer_id",
+          "customer_name",
+          "most_expensive_order",
+          "has_made_orders_online",
+          "highest_net_profiit_for_order",
+          "avg_price_of_order_after_discount",
+          "quantity_of_orders_in_2018"
+        ]
+      },
+      {
+        "name": "regional_sales__products",
+        "columns": [
+          "product_id",
+          "product_name",
+          "has_been_applied_10per_discount",
+          "percent_of_units_ordered_from_burbank_stores",
+          "total_net_profit",
+          "number_of_orders",
+          "highest_net_profit_in_2019"
+        ]
+      }
+    ]
+  }
+}

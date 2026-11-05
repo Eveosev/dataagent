@@ -1,0 +1,41 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_ef22c1df",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "list_member",
+    "max",
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_entity",
+    "entity_type",
+    "scenario_writ",
+    "writ_type",
+    "writ_is_execution_described_in_1923_13",
+    "statute_orc_1923_14_a_execution_deadline_days",
+    "statute_orc_1923_14_a_executor_role",
+    "statute_orc_1923_14_a_stay_conditions",
+    "statute_orc_1923_14_a_restore_defendant_if_already_restored",
+    "statute_orc_1923_14_b_value_threshold_dollars",
+    "statute_orc_1923_14_b3_sale_commence_within_days",
+    "statute_orc_1923_14_b4_title_transfer_within_days",
+    "statute_orc_1923_14_b_action_for_value",
+    "statute_orc_1923_14_b2_costs_create_lien",
+    "statute_orc_1923_14_b2_park_operator_liability_standard",
+    "statute_orc_1923_14_b3_distribution_priority",
+    "entity_role",
+    "legal_empowered_to_execute_writ",
+    "legal_not_empowered_to_execute_writ",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    State: Ohio\n    Focus year: 2021\n\n    Question: Is a private company an entity empowered by law to execute a writ of eviction?\n\n    Primary statute encoded:\n    - Ohio Rev. Code  1923.14 (2021), esp. division (A): only specified officers execute writ.\n*/\n\n% ---------------------------\n% Basic utilities (no modules)\n% ---------------------------\n\nlist_member(X, [X|_]) :- !.\nlist_member(X, [_|T]) :- list_member(X, T).\n\nmax(A, B, A) :- A >= B, !.\nmax(_, B, B).\n\n% ---------------------------\n% Scenario facts (the statement)\n% ---------------------------\n\nscenario_state(ohio).\nscenario_focus_year(2021).\n\n% The actor whose authority is being asked about\nscenario_entity(private_company_1).\nentity_type(private_company_1, private_company).\n\n% The relevant writ\nscenario_writ(writ_1).\nwrit_type(writ_1, eviction).  % eviction writ in common usage\n\n% For ORC 1923.14(A), the writ is a \"writ of execution described in 1923.13(A) or (B)\".\n% Eviction is commonly carried out by \"writ of restitution\" (an execution restoring possession).\nwrit_is_execution_described_in_1923_13(Writ) :-\n    writ_type(Writ, eviction),\n    !.\n\n% Helper predicate summarizing the entire scenario in logic form.\nscenario_statement :-\n    scenario_state(ohio),\n    scenario_focus_year(2021),\n    scenario_entity(private_company_1),\n    entity_type(private_company_1, private_company),\n    scenario_writ(writ_1),\n    writ_is_execution_described_in_1923_13(writ_1),\n    !.\n\n% ---------------------------\n% Statute translation: ORC 1923.14 (2021)\n% ---------------------------\n\n/* ORC 1923.14(A) (2021):\n   \"within ten days after receiving a writ of execution described in ... 1923.13 ...\n    the sheriff, police officer, constable, or bailiff shall execute it ...\"\n*/\nstatute_orc_1923_14_a_execution_deadline_days(10).\n\nstatute_orc_1923_14_a_executor_role(sheriff) :- !.\nstatute_orc_1923_14_a_executor_role(police_officer) :- !.\nstatute_orc_1923_14_a_executor_role(constable) :- !.\nstatute_orc_1923_14_a_executor_role(bailiff) :- !.\n\n% ORC 1923.14(A): If appeal + stay obtained + bond filed => judge issues order delaying execution.\nstatute_orc_1923_14_a_stay_conditions(appeal_filed, stay_obtained, bond_filed) :- !.\n\n% ORC 1923.14(A): If premises already restored and then stay/appeal order applies, officer places defendant back.\nstatute_orc_1923_14_a_restore_defendant_if_already_restored(true) :- !.\n\n/* ORC 1923.14(B)(3)-(4) value thresholds and timing for manufactured home/mobile home/RV:\n   - value > 3000 => within 60 days commence sale proceedings\n   - value =< 3000 => within 30 days present writ for title transfer\n*/\nstatute_orc_1923_14_b_value_threshold_dollars(3000).\n\nstatute_orc_1923_14_b3_sale_commence_within_days(60).\nstatute_orc_1923_14_b4_title_transfer_within_days(30).\n\nstatute_orc_1923_14_b_action_for_value(ValueDollars, commence_sale_proceedings, Days) :-\n    statute_orc_1923_14_b_value_threshold_dollars(T),\n    ValueDollars > T,\n    statute_orc_1923_14_b3_sale_commence_within_days(Days),\n    !.\nstatute_orc_1923_14_b_action_for_value(ValueDollars, present_for_title_transfer, Days) :-\n    statute_orc_1923_14_b_value_threshold_dollars(T),\n    ValueDollars =< T,\n    statute_orc_1923_14_b4_title_transfer_within_days(Days),\n    !.\n\n% ORC 1923.14(B)(2): reasonable costs of removal/storage constitute a lien upon home/vehicle payable by titled owner.\nstatute_orc_1923_14_b2_costs_create_lien(true) :- !.\n\n% ORC 1923.14(B)(2): park operator limited liability absent malicious/bad faith/wanton/reckless.\nstatute_orc_1923_14_b2_park_operator_liability_standard(malicious_or_bad_faith_or_wanton_or_reckless) :- !.\n\n% ORC 1923.14(B)(3): distribution order of sale proceeds (encoded as an ordered list).\nstatute_orc_1923_14_b3_distribution_priority([\n    pay_costs_and_sale_expenses_and_unpaid_court_costs,\n    pay_outstanding_tax_liens,\n    pay_other_liens_by_priority,\n    pay_plaintiff_money_judgments_and_related_costs,\n    remainder_to_unclaimed_funds\n]) :- !.\n\n% ---------------------------\n% Legal reasoning: who is empowered to execute the writ?\n% ---------------------------\n\n% Map an entity to a \"role\" that could be authorized by ORC 1923.14(A).\n% In this scenario, a private company is not a sheriff/police officer/constable/bailiff.\nentity_role(Entity, private_company) :-\n    entity_type(Entity, private_company),\n    !.\n\n% If an entity had an authorized officer role, we'd encode it like this (not present in scenario):\n% entity_role(Entity, sheriff) :- entity_type(Entity, county_sheriff), !.\n% etc.\n\n% ORC 1923.14(A) empowerment rule (focused on the enumerated executors).\nlegal_empowered_to_execute_writ(Entity, Writ, ohio, 2021) :-\n    writ_is_execution_described_in_1923_13(Writ),\n    entity_role(Entity, Role),\n    statute_orc_1923_14_a_executor_role(Role),\n    !.\n\n% If the above cannot be proven, the entity is not \"empowered by law\" under this statute.\nlegal_not_empowered_to_execute_writ(Entity, Writ, ohio, 2021) :-\n    \\+ legal_empowered_to_execute_writ(Entity, Writ, ohio, 2021),\n    !.\n\n% ---------------------------\n% Answer\n% ---------------------------\n\nhousing_answer(yes) :-\n    scenario_statement,\n    legal_empowered_to_execute_writ(private_company_1, writ_1, ohio, 2021),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    legal_not_empowered_to_execute_writ(private_company_1, writ_1, ohio, 2021),\n    !.\n\n% ---------------------------\n% Main entrypoint\n% ---------------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-3286",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is a private company an entity empowered by law to execute a writ of eviction?"
+  }
+}

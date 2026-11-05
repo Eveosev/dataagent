@@ -1,0 +1,34 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_db4de0ef",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "scenario_case",
+    "case_type",
+    "premises_in_case",
+    "premises_situated_in_hawaii",
+    "premises_in_hawaii_circuit",
+    "plaintiff_entitled_to_possession",
+    "statute_666_6_required_forum",
+    "statute_604_5a_district_has_jurisdiction",
+    "jury_demanded_in_case",
+    "triable_of_right_by_jury",
+    "amount_in_controversy",
+    "jury_demanded_in_complaint",
+    "statute_604_5b_transfer_to_circuit",
+    "statute_604_5b_may_commence_in_circuit",
+    "legal_original_forum",
+    "legal_first_heard_in_circuit",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction / forum for Hawaii eviction (summary possession) cases (focus year: 2021).\n\n    Question: \"Are eviction cases first heard in circuit court?\"\n    Interpreting \"eviction cases\" as Hawaii \"summary possession proceedings\" under HRS ch. 666.\n*/\n\n% -------------------------\n% Scenario facts (question's factual statement encoded)\n% -------------------------\n\n% The question is general; we encode a representative eviction case as a \"summary possession\" case.\nscenario_case(case1).\n\n% Eviction in Hawaii is typically a \"summary possession proceeding\".\ncase_type(case1, summary_possession).\n\n% Lands/premises location: required by HRS 666-6 (\"district court of the circuit wherein ... situated\").\npremises_in_case(case1, premises1).\npremises_situated_in_hawaii(premises1).\npremises_in_hawaii_circuit(premises1, first_circuit).\n\n% The plaintiff is entitled to possession (element referenced by 666-6).\nplaintiff_entitled_to_possession(case1).\n\n% Helper: succeeds when the entire encoded scenario holds.\nscenario_statement :-\n    scenario_case(Case),\n    case_type(Case, summary_possession),\n    premises_in_case(Case, Premises),\n    premises_situated_in_hawaii(Premises),\n    premises_in_hawaii_circuit(Premises, _Circuit),\n    plaintiff_entitled_to_possession(Case).\n\n% -------------------------\n% Statute translations (deterministic predicates encoding relevant rules)\n% -------------------------\n\n/* HI Rev Stat  666-6 (2021)\n   \"In the case of summary possession proceedings, the person entitled to the possession of the\n    premises shall bring and prosecute the person's action in the district court of the circuit\n    wherein the lands and premises in question are situated.\"\n*/\nstatute_666_6_required_forum(Case, district_court, Circuit) :-\n    case_type(Case, summary_possession),\n    plaintiff_entitled_to_possession(Case),\n    premises_in_case(Case, Premises),\n    premises_situated_in_hawaii(Premises),\n    premises_in_hawaii_circuit(Premises, Circuit),\n    !.\n\n/* HI Rev Stat  604-5(a) (2021) (partial, relevant portion)\n   District courts have jurisdiction in civil actions with certain limits, and specifically references\n   summary possession/ejectment as within district court civil jurisdiction context.\n\n   For this question, we encode the relevant point: district court has original jurisdiction over\n   summary possession proceedings.\n*/\nstatute_604_5a_district_has_jurisdiction(Case) :-\n    case_type(Case, summary_possession),\n    !.\n\n/* HI Rev Stat  604-5(b) (2021) (transfer / commencement rule, general civil rule)\n   - District courts try actions without jury, subject to appeal.\n   - If a matter is triable of right by jury and jury is demanded timely, case transferred to circuit court.\n   - If demand is made in the complaint and matter triable of right by jury, action may be commenced\n     in circuit court if amount in controversy exceeds $5,000.\n\n   We encode these as general rules, but they do not override the specific mandatory forum in 666-6\n   for summary possession.\n*/\n\n% Facts that might exist in some cases (not present in this scenario).\n% These remain undefined for case1, so they fail safely.\njury_demanded_in_case(_Case) :- fail.\ntriable_of_right_by_jury(_Case) :- fail.\namount_in_controversy(_Case, _Amount) :- fail.\njury_demanded_in_complaint(_Case) :- fail.\n\nstatute_604_5b_transfer_to_circuit(Case) :-\n    triable_of_right_by_jury(Case),\n    jury_demanded_in_case(Case),\n    !.\n\nstatute_604_5b_may_commence_in_circuit(Case) :-\n    triable_of_right_by_jury(Case),\n    jury_demanded_in_complaint(Case),\n    amount_in_controversy(Case, Amount),\n    Amount > 5000,\n    !.\n\n% -------------------------\n% Legal reasoning helpers\n% -------------------------\n\n% Determine the legally required original forum (first-filed / first-heard forum).\n% Specific statute (666-6) controls for summary possession, so we apply it first.\nlegal_original_forum(Case, district_court) :-\n    statute_666_6_required_forum(Case, district_court, _Circuit),\n    !.\nlegal_original_forum(Case, circuit_court) :-\n    % General commencement-in-circuit option (not applicable to summary possession due to 666-6).\n    statute_604_5b_may_commence_in_circuit(Case),\n    \\+ case_type(Case, summary_possession),\n    !.\nlegal_original_forum(_Case, district_court) :-\n    % Default fallback for civil actions in district court when no special commencement rule applies.\n    !.\n\n% \"First heard in circuit court\" means the original forum is circuit court.\nlegal_first_heard_in_circuit(Case) :-\n    legal_original_forum(Case, circuit_court),\n    !.\n\n% -------------------------\n% Answer predicate (must be deterministic)\n% -------------------------\n\nhousing_answer(yes) :-\n    scenario_statement,\n    legal_first_heard_in_circuit(case1),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    \\+ legal_first_heard_in_circuit(case1),\n    !.\n\n% -------------------------\n% Main / entrypoint\n% -------------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-2542",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Are eviction cases first heard in circuit court?"
+  }
+}

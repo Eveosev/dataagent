@@ -1,0 +1,21 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "uscis_ad0624ad",
+  "expect_label": "yes",
+  "raw_label": "Accepted",
+  "rule_predicates": [
+    "decision",
+    "catch",
+    "writeln",
+    "error",
+    "handle_undefined"
+  ],
+  "reference_prolog": "% Facts (case-specific)\npetitioner_native_and_citizen_of_mexico.\nu1_status_from_june_2019_to_june_2023.\nfiled_i485_in_february_2023.\n\n% RFE and responses\nrfe1_requested_continuous_physical_presence_statement_passports_and_part8_explanations.\nresponded_rfe1_with_continuous_physical_presence_evidence.\nresponded_rfe1_with_statement_of_continuous_presence.\nresponded_rfe1_with_passport_documentation.\ndid_not_provide_part8_explanations_initially.\nrfe2_issued_by_service_center.\nresponded_rfe2_with_justice_center_court_document.\n\n% Adjudication and appeal\ni485_denied_by_service_center.\nappeal_filed_to_aa0.\nappeal_included_cover_letter.\nappeal_included_written_explanations_for_part8_yes_answers.\nappeal_included_two_letters_related_to_criminal_records.\n\n% Legal rule (section 245(m)): adjustment available if U nonimmigrant has been physically present for a continuous period of 3 years since admission\n% and establishes that continued presence is justified on humanitarian grounds, to ensure family unity, or is otherwise in the public interest.\n\n% Derived facts / legal predicates (all are zero-arity booleans where appropriate)\n\n% The petitioner was admitted as a U-1 nonimmigrant in June 2019 and remained in that status through at least February 2023,\n% and therefore has the requisite continuous physical presence of at least three years at the time of filing.\ncontinuous_physical_presence_three_years :-\n    u1_status_from_june_2019_to_june_2023,\n    filed_i485_in_february_2023.\n\n% Evidence on the record showing physical presence was submitted in response to the first RFE.\nthere_is_evidence_of_continuous_physical_presence :-\n    responded_rfe1_with_continuous_physical_presence_evidence.\n\n% The initial procedural deficiency (missing Part 8 explanations) was later addressed on appeal by providing written explanations.\nthere_are_explanatory_answers_for_part8_on_appeal :-\n    appeal_included_written_explanations_for_part8_yes_answers.\n\n% The appeal included documentation related to criminal records which is relevant to assessing whether continued presence is justified.\nthere_are_documents_addressing_criminal_records_on_appeal :-\n    appeal_included_two_letters_related_to_criminal_records.\n\n% For purposes of this case file, continued presence is treated as justified when the record contains explanatory answers\n% for the Part 8 questions and supporting documents addressing criminal-record issues (as submitted on appeal),\n% together with the fact of U-1 status and the evidentiary showing of continuous presence.\ncontinued_presence_justified :-\n    u1_status_from_june_2019_to_june_2023,\n    there_is_evidence_of_continuous_physical_presence,\n    there_are_explanatory_answers_for_part8_on_appeal,\n    there_are_documents_addressing_criminal_records_on_appeal.\n\n% Timely filing of the adjustment application (filed while in valid U-1 status)\ntimely_filed_i485 :-\n    filed_i485_in_february_2023,\n    u1_status_from_june_2019_to_june_2023.\n\n% Eligibility: all necessary conditions to Accept the case (per instruction)\neligibility_met :-\n    continuous_physical_presence_three_years,\n    continued_presence_justified,\n    timely_filed_i485.\n\n% Decision and runtime entrypoint (do not modify)\ndecision(Result) :-\n    (   eligibility_met\n    ->  Result = 'Accepted'\n    ;   Result = 'Dismissed'\n    ).\n\nrun :-\n    catch(\n        (   decision(Result),\n            writeln(Result)\n        ),\n        error(existence_error(procedure, PI), _),\n        handle_undefined(PI)\n    ).\n\nhandle_undefined(Name/Arity) :-\n    (   current_predicate(Name/OtherArity),\n        OtherArity \\= Arity\n    ->  format('Programming error: called ~w/~w, but only ~w/~w is defined.~n',\n               [Name, Arity, Name, OtherArity])\n    ;   format('Lack of information: predicate ~w/~w is not defined.~n',\n               [Name, Arity])\n    ).",
+  "case_id": "B04-deon-5799",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "Accepted",
+    "question": "Should this case be accepted or dismissed?"
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "redshift",
+  "pipeline": "college_completion",
+  "data_model": {
+    "models": [
+      {
+        "name": "states",
+        "description": "Each record represents a state.",
+        "columns": [
+          {
+            "name": "state",
+            "description": "Institution state"
+          },
+          {
+            "name": "institute_with_most_number_of_American_Indian",
+            "description": "Institution with most number of American Indian students in the state, with ties broken by the ascending order of the institute name"
+          },
+          {
+            "name": "average_median_SAT_value_for_institutes",
+            "description": "Average median SAT value for institutes in the state"
+          },
+          {
+            "name": "num_graduate_cohort_in_2012_from_private_institute_for_profit",
+            "description": "Number of graduate cohort in 2012 from private institute for profit in the state, replace NULL values with 0."
+          },
+          {
+            "name": "per_of_4_year_public_schools",
+            "description": "Percentage of 4 year public schools in the state"
+          },
+          {
+            "name": "institution_with_the_highest_freshman_retention_percentage",
+            "description": "Institution with the highest freshman retention percentage in the state, with ties broken by the ascending order of the institute name"
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    redshift_definition_id: f7a7d195-377f-cf5b-70a5-be6b819019dc\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: college_completion\n    sync_mode: full_refresh_append\n    tables:\n    - institution_details\npostgres:\n  config:\n    database: college_completion\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - institution_grads\n    user: postgres\nredshift:\n  config:\n    host: <redshift_hostname>\n    port: <redshift_port>\n    database: <redshift_db>\n    username: <redshift_username>\n    password: <redshift_pwd>\n    schema: college_completion\n    s3_bucket_name: <redshift_s3_bucket>\n    s3_bucket_region: <redshift_s3_region>\n    access_key_id: <redshift_s3_access_key>\n    secret_access_key: <redshift_s3_secret_key>\n",
+  "case_id": "B14-elt-0121",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "states",
+        "columns": [
+          "state",
+          "institute_with_most_number_of_American_Indian",
+          "average_median_SAT_value_for_institutes",
+          "num_graduate_cohort_in_2012_from_private_institute_for_profit",
+          "per_of_4_year_public_schools",
+          "institution_with_the_highest_freshman_retention_percentage"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 23,
+  "question": "I'm looking at the schools that the State Board of Education directly runs or charters. Which individual school among them had the most students score at least 1500 on the SAT? Please give me that school's name and its administrator's email address. If two schools tie on that count, list both.",
+  "evidence": "Schools run or chartered by the State Board of Education are identified by their district ownership type.",
+  "gold_sql": "SELECT T2.School, T2.AdmEmail1 FROM satscores AS T1 INNER JOIN schools AS T2 ON T1.cds = T2.CDSCode WHERE T2.DOCType = 'State Board of Education' AND T1.rtype = 'S' AND T1.NumGE1500 = (SELECT MAX(T3.NumGE1500) FROM satscores AS T3 INNER JOIN schools AS T4 ON T3.cds = T4.CDSCode WHERE T4.DOCType = 'State Board of Education' AND T3.rtype = 'S')",
+  "db_id": "california_schools",
+  "case_id": "B05-bird-0024",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT T2.School, T2.AdmEmail1 FROM satscores AS T1 INNER JOIN schools AS T2 ON T1.cds = T2.CDSCode WHERE T2.DOCType = 'State Board of Education' AND T1.rtype = 'S' AND T1.NumGE1500 = (SELECT MAX(T3.NumGE1500) FROM satscores AS T3 INNER JOIN schools AS T4 ON T3.cds = T4.CDSCode WHERE T4.DOCType = 'State Board of Education' AND T3.rtype = 'S')",
+    "db_id": "california_schools",
+    "evidence": "Schools run or chartered by the State Board of Education are identified by their district ownership type."
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 665,
+  "table": "economy-table55",
+  "structure": "SingleRowClassified",
+  "question_type": "Fact Checking",
+  "sub_type": "Inference-based Fact Checking",
+  "answer": "578 Eclaire",
+  "cot": [
+    {
+      "step": "First, we need to extract the setup and exchange charges for 1000 units of \"373 Diamo\" and \"578 Eclaire\" from the table."
+    },
+    {
+      "step": "We need to calculate the total charges by summing setup and exchange charges for each product."
+    },
+    {
+      "step": "Finally, we compare the totals to determine which product has the higher charges."
+    }
+  ],
+  "case_id": "B01-rht-2301",
+  "expected": {
+    "kind": "answer",
+    "question": "Based on the data, infer which product (\"373 Diamo\" or \"578 Eclaire\") has the higher total setup and exchange charges for 1000 units.",
+    "answer": "578 Eclaire"
+  }
+}

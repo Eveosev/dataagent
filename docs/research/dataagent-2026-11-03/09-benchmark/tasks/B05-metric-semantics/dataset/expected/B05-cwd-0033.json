@@ -1,0 +1,21 @@
+{
+  "source": "datadotworld/cwd-benchmark-data",
+  "inquiry_id": "IQ_205ac9d7d19a5142bec840952e9f6646",
+  "prompt": null,
+  "sql": [
+    "\n\nSELECT\n    party_identifier as AgentID, \n    policy_number,\n    company_claim_number,\n    claim_amount.claim_amount as Expense_Payment_Amount\nFROM\n    Claim\n    inner join claim_amount  on claim.claim_identifier = claim_amount.claim_identifier\n    inner JOIN expense_payment ON claim_amount.claim_amount_identifier = expense_payment.claim_amount_identifier\n    inner join claim_coverage on claim.claim_identifier = claim_coverage.claim_identifier\n    inner join policy_coverage_detail on claim_coverage.policy_coverage_detail_identifier = policy_coverage_detail.policy_coverage_detail_identifier\n    inner join policy on policy.policy_identifier = policy_coverage_detail.policy_identifier\n    inner join  agreement_party_role  on agreement_party_role.agreement_identifier = policy.policy_identifier\n \nwhere agreement_party_role.party_role_code = 'AG'"
+  ],
+  "sparql": [
+    "PREFIX : <https://myinsurancecompany.linked.data.world/d/chat-with-the-data-benchmark/>\nPREFIX in: <http://data.world/schema/insurance/>\n\nSELECT ?agentId ?policyNumber ?claimNumber ?expensePaymentAmount\nWHERE {\nSERVICE :mapped {\n    ?p a in:Policy.\n    ?p in:policyNumber ?policyNumber.\n    ?p in:hasPolicyHolder ?ph.\n    ?p in:soldByAgent [ in:agentId ?agentId].\n    ?pcd in:hasPolicy ?p.\n    ?c in:against ?pcd.\n    ?c in:claimNumber ?claimNumber.\n    ?c in:hasExpensePayment [ in:expensePaymentAmount ?expensePaymentAmount].\n    }\n}"
+  ],
+  "case_id": "B05-cwd-0033",
+  "expected": {
+    "kind": "query",
+    "question": null,
+    "sql": "\n\nSELECT\n    party_identifier as AgentID, \n    policy_number,\n    company_claim_number,\n    claim_amount.claim_amount as Expense_Payment_Amount\nFROM\n    Claim\n    inner join claim_amount  on claim.claim_identifier = claim_amount.claim_identifier\n    inner JOIN expense_payment ON claim_amount.claim_amount_identifier = expense_payment.claim_amount_identifier\n    inner join claim_coverage on claim.claim_identifier = claim_coverage.claim_identifier\n    inner join policy_coverage_detail on claim_coverage.policy_coverage_detail_identifier = policy_coverage_detail.policy_coverage_detail_identifier\n    inner join policy on policy.policy_identifier = policy_coverage_detail.policy_identifier\n    inner join  agreement_party_role  on agreement_party_role.agreement_identifier = policy.policy_identifier\n \nwhere agreement_party_role.party_role_code = 'AG'",
+    "alternate_sql": [],
+    "sparql": [
+      "PREFIX : <https://myinsurancecompany.linked.data.world/d/chat-with-the-data-benchmark/>\nPREFIX in: <http://data.world/schema/insurance/>\n\nSELECT ?agentId ?policyNumber ?claimNumber ?expensePaymentAmount\nWHERE {\nSERVICE :mapped {\n    ?p a in:Policy.\n    ?p in:policyNumber ?policyNumber.\n    ?p in:hasPolicyHolder ?ph.\n    ?p in:soldByAgent [ in:agentId ?agentId].\n    ?pcd in:hasPolicy ?p.\n    ?c in:against ?pcd.\n    ?c in:claimNumber ?claimNumber.\n    ?c in:hasExpensePayment [ in:expensePaymentAmount ?expensePaymentAmount].\n    }\n}"
+    ]
+  }
+}

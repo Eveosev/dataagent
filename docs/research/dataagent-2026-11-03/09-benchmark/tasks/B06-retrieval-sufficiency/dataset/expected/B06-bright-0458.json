@@ -1,0 +1,61 @@
+{
+  "source": "xlangai/BRIGHT",
+  "query_id": "24",
+  "query": "## Identifying the Problem\n\nThe problem we are trying to solve is to determine whether Player 1 can win a game given an array of integers `nums`. In this game, players take turns picking a number from either end of the array and adding it to their score. The player with the highest score at the end wins. We need to analyze the given array and determine if Player 1 has a winning strategy, assuming both players play optimally.\n\n## Relevant Information\n\nTo determine if Player 1 can win, we need to consider several factors:\n\n* **The sum of all elements in the array:** This tells us the maximum possible score a player can achieve.\n* **The parity of the array sum:** If the sum is even, then Player 1 can always win by choosing the first element. This is because Player 2 will always have to choose an element with a different parity, leaving Player 1 with the last element, which will have the same parity as the first.\n* **The distribution of elements:** If there are significantly more elements with one parity than the other, then Player 1 can potentially win by choosing elements with the same parity as the majority. This is because Player 2 will be forced to choose elements with the opposite parity, giving Player 1 an advantage.\n\n## Draft Answer\n\nHere's an approach to determine if Player 1 can win:\n\n1. **Calculate the sum of all elements in the array.**\n2. **Check the parity of the sum.**\n    - If the sum is even, Player 1 can always win by choosing the first element.\n    - If the sum is odd, we need to analyze the distribution of elements.\n3. **Calculate the difference between the number of elements with even parity and the number of elements with odd parity.**\n4. **If the absolute value of the difference is greater than 1, then Player 1 can win.** This is because Player 1 can choose elements with the same parity as the majority, forcing Player 2 to choose elements with the opposite parity.\n5. **If the absolute value of the difference is 1, then Player 2 can win by choosing the element with the opposite parity as the first element chosen by Player 1.**\n6. **If the absolute value of the difference is 0, then both players will have the same score at the end, and Player 1 wins by default.**\n\nThis approach provides a way to determine if Player 1 can win the game for any given array of integers. However, it is important to note that this is not the only possible solution and other approaches may be more efficient or accurate depending on the specific characteristics of the input array.\n",
+  "gold_ids": [
+    "leetcode/leetcode_464.txt"
+  ],
+  "gold_answer": "N/A",
+  "corpus": "documents/leetcode-00000-of-00001.parquet",
+  "case_id": "B06-bright-0458",
+  "expected": {
+    "kind": "retrieval",
+    "gold_ids": [
+      "leetcode/leetcode_464.txt"
+    ],
+    "gold_ids_long": [
+      "N/A"
+    ],
+    "gold_answer": "N/A",
+    "excluded_ids": [
+      "leetcode/leetcode_313.txt",
+      "leetcode/leetcode_1728.txt",
+      "leetcode/leetcode_1510.txt",
+      "leetcode/leetcode_375.txt",
+      "leetcode/leetcode_2019.txt",
+      "leetcode/leetcode_2110.txt",
+      "leetcode/leetcode_368.txt",
+      "leetcode/leetcode_1643.txt",
+      "leetcode/leetcode_1563.txt",
+      "leetcode/leetcode_996.txt",
+      "leetcode/leetcode_1406.txt",
+      "leetcode/leetcode_1823.txt",
+      "leetcode/leetcode_1799.txt",
+      "leetcode/leetcode_396.txt",
+      "leetcode/leetcode_902.txt",
+      "leetcode/leetcode_1478.txt",
+      "leetcode/leetcode_2572.txt",
+      "leetcode/leetcode_1994.txt",
+      "leetcode/leetcode_1569.txt",
+      "leetcode/leetcode_2029.txt",
+      "leetcode/leetcode_1561.txt",
+      "leetcode/leetcode_1467.txt",
+      "leetcode/leetcode_1686.txt",
+      "leetcode/leetcode_1140.txt",
+      "leetcode/leetcode_553.txt",
+      "leetcode/leetcode_805.txt",
+      "leetcode/leetcode_241.txt",
+      "leetcode/leetcode_1735.txt",
+      "leetcode/leetcode_1872.txt",
+      "leetcode/leetcode_233.txt",
+      "leetcode/leetcode_913.txt",
+      "leetcode/leetcode_810.txt",
+      "leetcode/leetcode_1690.txt",
+      "leetcode/leetcode_509.txt",
+      "leetcode/leetcode_877.txt",
+      "leetcode/leetcode_1524.txt",
+      "leetcode/leetcode_486.txt",
+      "leetcode/leetcode_1025.txt"
+    ]
+  }
+}

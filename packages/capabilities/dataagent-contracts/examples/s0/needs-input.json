@@ -1,0 +1,18 @@
+{
+  "status": "needs_input",
+  "data": null,
+  "issues": [{
+    "code": "da02.inference_required",
+    "severity": "info",
+    "message": "需要 Agent 依据候选片段给出字段抽取结果",
+    "retryable": false,
+    "suggested_action": "按 dataagent-judgment Skill 生成 proposal 后重试",
+    "inference_request": {
+      "kind": "field_extraction",
+      "target_schema_ref": "xschema:record@v3",
+      "candidate_spans": [{"page": 1, "char_start": 0, "char_end": 18, "text": "报销金额：5800 元"}]
+    }
+  }],
+  "provenance": ["doc:r-0042@r1"],
+  "completeness": {"extent": "complete_in_declared_scope", "declared_scope": "候选片段准备"}
+}

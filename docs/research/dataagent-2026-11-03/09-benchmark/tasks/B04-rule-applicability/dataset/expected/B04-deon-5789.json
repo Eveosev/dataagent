@@ -1,0 +1,21 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "uscis_5cf74d9d",
+  "expect_label": "no",
+  "raw_label": "Dismissed",
+  "rule_predicates": [
+    "decision",
+    "catch",
+    "writeln",
+    "error",
+    "handle_undefined"
+  ],
+  "reference_prolog": "% Facts from the record (true/false predicates use arity 0)\neb2_advanced_degree.\nevidence_submitted.\nbusiness_consulting.                 % proposed endeavor: engineering/process consulting\nbusiness_targets_multiple_states.     % plan lists AZ, NV, CO, SC, AK\nprojects_four_employees.              % projects hiring petitioner + 3 engineers = 4 employees\naddress_matches_residence.            % corporate address matches petitioner's private residence in FL\nrfe_added_new_mexico_but_plan_omitted.% petitioner later stated will recruit from NM though plan did not list NM\nunclear_employee_work_locations.      % record does not clarify where employees will work\ncontracts_present.                    % commercial contract and corporate filings in record\nletters_of_support_present.           % letters of recommendation and support submitted\nopinion_letters_present.              % expert opinion letters describing endeavor\nevidence_of_qualifications.           % academic and work experience evidence submitted\ndirector_denied.\nappeal_filed.\n\n% Dhanasar prongs and logical evaluation\n\n% Prong 1: substantial merit and national importance\n% Substantial merit: the endeavor is in a field (business/technology/engineering) where merit is recognized\nproposed_endeavor_has_substantial_merit :-\n    business_consulting,\n    evidence_submitted,\n    (contracts_present; opinion_letters_present; letters_of_support_present).\n\n% Insufficient clarity or indicia that undercut national reach\ninsufficient_clarity_for_national_importance :-\n    address_matches_residence,\n    rfe_added_new_mexico_but_plan_omitted,\n    unclear_employee_work_locations.\n\n% National importance requires prospective impact or clear national reach; fail if record shows insufficient clarity\nproposed_endeavor_has_national_importance :-\n    proposed_endeavor_has_substantial_merit,\n    business_targets_multiple_states,\n    \\+ insufficient_clarity_for_national_importance.\n\n% Prong 2: well positioned to advance the endeavor\nwell_positioned_to_advance :-\n    evidence_of_qualifications,\n    (contracts_present; letters_of_support_present; opinion_letters_present).\n\n% Prong 3: on balance, beneficial to waive job offer/labor certification\n% Requires prongs 1 and 2 and absence of negative balancing factors (small scale, home-based, lacks clear national reach)\nnegative_balancing_factors :-\n    projects_four_employees,\n    address_matches_residence,\n    unclear_employee_work_locations.\n\nbeneficial_to_waive :-\n    proposed_endeavor_has_national_importance,\n    well_positioned_to_advance,\n    \\+ negative_balancing_factors.\n\n% Eligibility: EB-2 classification + all three Dhanasar prongs\neligibility_met :-\n    eb2_advanced_degree,\n    proposed_endeavor_has_national_importance,\n    well_positioned_to_advance,\n    beneficial_to_waive.\n\n% Decision entrypoint (must be included as provided)\ndecision(Result) :-\n    (   eligibility_met\n    ->  Result = 'Accepted'\n    ;   Result = 'Dismissed'\n    ).\n\nrun :-\n    catch(\n        (   decision(Result),\n            writeln(Result)\n        ),\n        error(existence_error(procedure, PI), _),\n        handle_undefined(PI)\n    ).\n\nhandle_undefined(Name/Arity) :-\n    (   current_predicate(Name/OtherArity),\n        OtherArity \\= Arity\n    ->  format('Programming error: called ~w/~w, but only ~w/~w is defined.~n',\n               [Name, Arity, Name, OtherArity])\n    ;   format('Lack of information: predicate ~w/~w is not defined.~n',\n               [Name, Arity])\n    ).",
+  "case_id": "B04-deon-5789",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "Dismissed",
+    "question": "Should this case be accepted or dismissed?"
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "databricks",
+  "pipeline": "card_games",
+  "data_model": {
+    "models": [
+      {
+        "name": "card_games__sets",
+        "description": "Each record represents a set.",
+        "columns": [
+          {
+            "name": "id",
+            "description": "Unique identifier for the set."
+          },
+          {
+            "name": "name",
+            "description": "The name of the set."
+          },
+          {
+            "name": "setCode",
+            "description": "The set code of the set."
+          },
+          {
+            "name": "num_cards",
+            "description": "The number of cards in the set, replace NULL values with 0."
+          },
+          {
+            "name": "num_translations",
+            "description": "The number of translations of the card set, replace NULL values with 0."
+          },
+          {
+            "name": "has_Japanese_translation_and_only_available_in_non_foil",
+            "description": "Set to 1 if the card set has Japanses translation and is only available non-foil."
+          },
+          {
+            "name": "per_cards_with_a_converted_mana_cost_10",
+            "description": "The percentage of the cards with a converted Mana Cost of 10 in the set."
+          },
+          {
+            "name": "card_has_highest_converted_mana_cost",
+            "description": "The name of card in the set with the highest converted mana cost, with ties broken by the ascending order of the card name"
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    databricks_definition_id: 072d5540-f236-4294-ba7c-ade8fd918496\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://card-games-bucket/card_sets.jsonl\n    sync_mode: full_refresh_append\n    table: card_sets\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - foreign_data\nflat_files:\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=1W370_K25Y655UOz2meeLsfpX2AcxU-bB\n  sync_mode: full_refresh_append\n  table: set_translations\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: card_games\n    sync_mode: full_refresh_append\n    tables:\n    - cards\n    - rulings\npostgres:\n  config:\n    database: card_games\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - legalities\n    user: postgres\ndatabricks:\n  config:\n    database: <db_database>\n    hostname: <db_hostname>\n    client_id: <db_client_id>\n    secret: <db_secret>\n    schema: card_games\n    http_path: <db_path>\n",
+  "case_id": "B14-elt-0014",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "card_games__sets",
+        "columns": [
+          "id",
+          "name",
+          "setCode",
+          "num_cards",
+          "num_translations",
+          "has_Japanese_translation_and_only_available_in_non_foil",
+          "per_cards_with_a_converted_mana_cost_10",
+          "card_has_highest_converted_mana_cost"
+        ]
+      }
+    ]
+  }
+}

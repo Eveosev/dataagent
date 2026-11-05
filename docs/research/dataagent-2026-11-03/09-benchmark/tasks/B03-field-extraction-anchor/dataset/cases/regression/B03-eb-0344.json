@@ -1,0 +1,51 @@
+{
+  "case_id": "B03-eb-0344",
+  "task_id": "B03",
+  "split_role": "regression",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://extractbench/docs/medium/smfg-kessan-tanshin-2024-ja.pdf",
+      "digest": null
+    },
+    {
+      "kind": "schema",
+      "ref": "fixtures/eb-medium-smfg-kessan-tanshin-2024-ja-schema.json",
+      "digest": null
+    },
+    {
+      "kind": "rules",
+      "ref": "fixtures/eb-medium-smfg-kessan-tanshin-2024-ja-rules.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-eb-0344.json"
+  },
+  "evidence": [
+    "bench://extractbench/docs/medium/smfg-kessan-tanshin-2024-ja.pdf",
+    "fixtures/eb-medium-smfg-kessan-tanshin-2024-ja-schema.json",
+    "fixtures/eb-medium-smfg-kessan-tanshin-2024-ja-rules.md"
+  ],
+  "tags": [
+    "extractbench",
+    "medium",
+    "tag:source:real",
+    "tag:challenge:T2.b",
+    "tag:challenge:T2.d",
+    "tag:length:medium",
+    "tag:domain:D1",
+    "fields:15"
+  ],
+  "source": "eb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

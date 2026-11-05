@@ -1,0 +1,56 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1022,
+  "table": "labor-table31",
+  "structure": "ColumnHeaderMerge",
+  "question_type": "Numerical Reasoning",
+  "sub_type": "Calculation",
+  "answer": "1191428.57",
+  "cot": [
+    {
+      "step": "Locate the row labeled “Cases Pending with CA” in the table."
+    },
+    {
+      "step": "Identify the “Value” column for the first week of March (March 1 to March 7)."
+    },
+    {
+      "step": "The values for the first week are:"
+    },
+    {
+      "step": "• March 1: $0 (blank or missing treated as 0)"
+    },
+    {
+      "step": "• March 2: $3,530,000"
+    },
+    {
+      "step": "• March 3: $1,700,000"
+    },
+    {
+      "step": "• March 4: $0 (blank or missing treated as 0)"
+    },
+    {
+      "step": "• March 5: $0 (blank or missing treated as 0)"
+    },
+    {
+      "step": "• March 6: $1,750,000"
+    },
+    {
+      "step": "• March 7: $1,360,000"
+    },
+    {
+      "step": "Sum all values, including zeros: $0 + $3,530,000 + $1,700,000 + $0 + $0 + $1,750,000 + $1,360,000 = $8,340,000."
+    },
+    {
+      "step": "Divide the total by 7 (the total number of days in the first week)."
+    },
+    {
+      "step": "Compute the average value."
+    }
+  ],
+  "case_id": "B01-rht-2658",
+  "expected": {
+    "kind": "answer",
+    "question": "Calculate the average value of cases pending with CA over the first week of March.",
+    "answer": "1191428.57"
+  }
+}

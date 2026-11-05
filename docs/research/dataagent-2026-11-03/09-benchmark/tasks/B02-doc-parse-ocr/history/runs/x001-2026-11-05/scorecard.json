@@ -1,0 +1,125 @@
+{
+  "run_id": "x001-2026-11-05",
+  "task_id": "B02",
+  "baseline_run": null,
+  "split_scores": {
+    "development": {
+      "count": 120,
+      "metrics": {
+        "text_ned": {
+          "value": 0.0,
+          "numerator": 0.0,
+          "denominator": 120,
+          "judgeable": 120,
+          "missing": 0,
+          "notes": null
+        },
+        "table_teds": {
+          "value": 1.0,
+          "numerator": 32.0,
+          "denominator": 32,
+          "judgeable": 32,
+          "missing": 88,
+          "notes": null
+        },
+        "reading_order_accuracy": {
+          "value": 1.0,
+          "numerator": 120.0,
+          "denominator": 120,
+          "judgeable": 120,
+          "missing": 0,
+          "notes": null
+        },
+        "assertion_pass_rate": {
+          "value": null,
+          "numerator": null,
+          "denominator": 0,
+          "judgeable": 0,
+          "missing": 120,
+          "notes": "金标无 assertions 字段，待自建断言集"
+        }
+      }
+    },
+    "regression": {
+      "count": 60,
+      "metrics": {
+        "text_ned": {
+          "value": 0.0,
+          "numerator": 0.0,
+          "denominator": 60,
+          "judgeable": 60,
+          "missing": 0,
+          "notes": null
+        },
+        "table_teds": {
+          "value": 1.0,
+          "numerator": 15.0,
+          "denominator": 15,
+          "judgeable": 15,
+          "missing": 45,
+          "notes": null
+        },
+        "reading_order_accuracy": {
+          "value": 1.0,
+          "numerator": 57.0,
+          "denominator": 57,
+          "judgeable": 57,
+          "missing": 3,
+          "notes": null
+        },
+        "assertion_pass_rate": {
+          "value": null,
+          "numerator": null,
+          "denominator": 0,
+          "judgeable": 0,
+          "missing": 60,
+          "notes": "金标无 assertions 字段，待自建断言集"
+        }
+      }
+    },
+    "unseen_acceptance": {
+      "count": 60,
+      "metrics": {
+        "text_ned": {
+          "value": 0.0,
+          "numerator": 0.0,
+          "denominator": 60,
+          "judgeable": 60,
+          "missing": 0,
+          "notes": null
+        },
+        "table_teds": {
+          "value": 1.0,
+          "numerator": 16.0,
+          "denominator": 16,
+          "judgeable": 16,
+          "missing": 44,
+          "notes": null
+        },
+        "reading_order_accuracy": {
+          "value": 1.0,
+          "numerator": 58.0,
+          "denominator": 58,
+          "judgeable": 58,
+          "missing": 2,
+          "notes": null
+        },
+        "assertion_pass_rate": {
+          "value": null,
+          "numerator": null,
+          "denominator": 0,
+          "judgeable": 0,
+          "missing": 60,
+          "notes": "金标无 assertions 字段，待自建断言集"
+        }
+      }
+    }
+  },
+  "deltas": {},
+  "verdict": "pending",
+  "gate": {
+    "tier": "block",
+    "decision": "pending",
+    "blockers": []
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "source": "xlangai/BRIGHT",
+  "query_id": "36",
+  "query": "## Problem Identification:\n\nThe problem is to write a Pony program called `doubleEven` that takes an array of numbers (`nums`) as input and returns a new array containing only the even numbers from the input array, each doubled.\n\n## Step-by-Step Reasoning:\n\n1. **Iterate through the input array:** We need to process each element in the input array to determine if it's even. We can use a `for` loop to iterate through the array.\n2. **Check for even numbers:** Inside the loop, we check if the current element is even using the modulo operator (`%`). If the remainder of the division by 2 is 0, the number is even.\n3. **Double even numbers:** If the number is even, we double its value.\n4. **Add to the new array:** We add the doubled even number to a new array.\n5. **Return the new array:** After processing all elements, we return the new array containing only the doubled even numbers.\n\n## Draft Answer:\n\n```pony\nfun doubleEven(nums: Array[USize]): Array[USize] =>\n  var evens: Array[USize] = []\n  for num in nums {\n    if num % 2 == 0 {\n      evens = evens + [num * 2]\n    }\n  }\n  return evens\n```\n\nThis program defines a function `doubleEven` that takes an array of `USize` (unsigned integers) as input. It initializes an empty array `evens` to store the doubled even numbers. Then, it iterates through the input array using a `for` loop. Inside the loop, it checks if the current number is even using the modulo operator. If it is, it doubles the number and adds it to the `evens` array. Finally, the function returns the `evens` array containing only the doubled even numbers. \n",
+  "gold_ids": [
+    "Pony/2_ops_2.txt",
+    "Pony/2_ops_9.txt",
+    "Pony/2_ops_1.txt",
+    "Pony/4_control-structures_15.txt",
+    "Pony/2_ops_11.txt",
+    "Pony/1_variables_1.txt",
+    "Pony/4_control-structures_3.txt",
+    "Pony/4_control-structures_17.txt",
+    "Pony/4_control-structures_1.txt",
+    "Pony/4_control-structures_16.txt",
+    "Pony/4_control-structures_12.txt",
+    "Pony/2_ops_10.txt",
+    "Pony/4_control-structures_13.txt",
+    "Pony/4_control-structures_14.txt",
+    "Pony/5_methods_1.txt",
+    "Pony/2_primitives_3.txt",
+    "Pony/4_control-structures_19.txt",
+    "Pony/4_control-structures_2.txt",
+    "Pony/4_control-structures_18.txt",
+    "Pony/4_control-structures_11.txt",
+    "Pony/1_variables_2.txt"
+  ],
+  "gold_answer": "N/A",
+  "corpus": "documents/pony-00000-of-00001.parquet",
+  "case_id": "B06-bright-0612",
+  "expected": {
+    "kind": "retrieval",
+    "gold_ids": [
+      "Pony/2_ops_2.txt",
+      "Pony/2_ops_9.txt",
+      "Pony/2_ops_1.txt",
+      "Pony/4_control-structures_15.txt",
+      "Pony/2_ops_11.txt",
+      "Pony/1_variables_1.txt",
+      "Pony/4_control-structures_3.txt",
+      "Pony/4_control-structures_17.txt",
+      "Pony/4_control-structures_1.txt",
+      "Pony/4_control-structures_16.txt",
+      "Pony/4_control-structures_12.txt",
+      "Pony/2_ops_10.txt",
+      "Pony/4_control-structures_13.txt",
+      "Pony/4_control-structures_14.txt",
+      "Pony/5_methods_1.txt",
+      "Pony/2_primitives_3.txt",
+      "Pony/4_control-structures_19.txt",
+      "Pony/4_control-structures_2.txt",
+      "Pony/4_control-structures_18.txt",
+      "Pony/4_control-structures_11.txt",
+      "Pony/1_variables_2.txt"
+    ],
+    "gold_ids_long": [
+      "Pony/4_control-structures.txt",
+      "Pony/5_methods.txt",
+      "Pony/1_variables.txt",
+      "Pony/2_primitives.txt",
+      "Pony/2_ops.txt"
+    ],
+    "gold_answer": "N/A",
+    "excluded_ids": [
+      "N/A"
+    ]
+  }
+}

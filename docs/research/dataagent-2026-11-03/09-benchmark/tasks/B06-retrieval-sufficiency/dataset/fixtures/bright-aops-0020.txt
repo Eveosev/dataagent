@@ -1,0 +1,34 @@
+## Essential Problem
+
+The essential problem is to find the probability that a circle of radius 1 randomly placed inside a 15-by-36 rectangle will not touch the diagonal $AC$. We need to find the ratio of the area where the circle can be placed without touching the diagonal to the total area of the rectangle.
+
+## Relevant Information
+
+* The dimensions of the rectangle are 15 by 36.
+* The radius of the circle is 1.
+* The circle must be placed entirely within the rectangle and cannot touch the diagonal $AC$.
+
+## Step-by-Step Reasoning
+
+1. **Draw a diagram:** Draw the 15-by-36 rectangle and diagonal $AC$. Mark the region where the center of the circle cannot be placed due to the "no touch" condition. This region consists of two right triangles with legs of length 1 and 14, and a sector of a circle with radius 15 and central angle $\theta$.
+2. **Calculate the area of the excluded region:**
+    * Area of each triangle: $\frac{1}{2} \cdot 1 \cdot 14 = 7$
+    * Area of the sector: $\frac{\theta}{2 \pi} \cdot \pi \cdot 15^2 = \frac{225}{2} \cdot \theta$
+    * Total excluded area: $2 \cdot 7 + \frac{225}{2} \cdot \theta$
+3. **Calculate the total area of the rectangle:** $15 \cdot 36 = 540$
+4. **Calculate the area where the circle can be placed:** $540 - (2 \cdot 7 + \frac{225}{2} \cdot \theta)$
+5. **Find the angle $\theta$:** Draw a perpendicular from the center of the circle to the diagonal $AC$. This creates two right triangles with legs of length 1 and 14, and a hypotenuse of 15. Using the Pythagorean theorem, we find $\sin \theta = \frac{14}{15}$. Since the circle cannot touch the diagonal, the angle $\theta$ must be less than $\sin^{-1} \frac{14}{15}$.
+6. **Calculate the probability:** $\frac{540 - (2 \cdot 7 + \frac{225}{2} \cdot \theta)}{540} = \frac{m}{n}$
+7. **Find $m + n$:** Substitute $\theta = \sin^{-1} \frac{14}{15}$ and simplify the expression.
+
+## Draft Answer
+
+The probability that the circle will not touch diagonal $AC$ is:
+
+$$\frac{540 - \left( 2 \cdot 7 + \frac{225}{2} \cdot \sin^{-1} \frac{14}{15} \right)}{540}$$
+
+Simplifying the expression, we get:
+
+$$\frac{540 - \left( 14 + \frac{225}{2} \cdot \sin^{-1} \frac{14}{15} \right)}{540}$$
+
+Therefore, $m + n = 540 - 14 - \frac{225}{2} \cdot \sin^{-1} \frac{14}{15}$.

@@ -1,0 +1,94 @@
+{
+  "dataset_id": "B12.dataset",
+  "task_id": "B12",
+  "revision": "v0.1",
+  "status": "collecting",
+  "unit": "case",
+  "sources": [
+    {
+      "name": "agentdojo",
+      "locator": "https://github.com/ethz-spylab/agentdojo",
+      "license": "MIT",
+      "digest": "sha256:87c58d467ead25ea6c912630f9c19181e8ff0b716539a80fa677cdb2e3064a7e",
+      "revision": "089ed468cf3ed0322acc66b0211f26d9d90dbf60",
+      "files": 36887,
+      "mb": 465.5,
+      "fetched_at": "2026-11-04T17:37:25+08:00"
+    }
+  ],
+  "splits": {
+    "development": {
+      "count": 73,
+      "frozen": false
+    },
+    "regression": {
+      "count": 17,
+      "frozen": false
+    },
+    "unseen_acceptance": {
+      "count": 23,
+      "frozen": false
+    }
+  },
+  "exposure": {
+    "ledger_ref": "exposure.jsonl",
+    "entries": 0
+  },
+  "fixtures": {
+    "storage": "local",
+    "path": "fixtures/",
+    "limits": "单文件 <= 2 MB；超出走对象存储并在 digest 记录"
+  },
+  "updated": "2026-11-04",
+  "notes": "由 build_cases.py 从 workspace/benchmark-data 构建；原始数据不入库",
+  "build": {
+    "version": 1,
+    "script": "tools/build_cases.py",
+    "built_at": "2026-11-04",
+    "policy": "user_tasks 与 injection_tasks 分开建；split 按套件 + 类名哈希。注入载荷（attacks）未入，见 NOTES 待办。",
+    "available": {
+      "development": 73,
+      "regression": 17,
+      "unseen_acceptance": 23
+    },
+    "selected": {
+      "development": 73,
+      "regression": 17,
+      "unseen_acceptance": 23
+    },
+    "caps": {
+      "development": 120,
+      "regression": 60,
+      "unseen_acceptance": 60
+    },
+    "coverage": {
+      "covered_metrics": [
+        "injection_resistance",
+        "task_completion"
+      ],
+      "partial_metrics": [
+        "sensitive_leak_rate",
+        "privilege_escalation_rate"
+      ],
+      "note": "泄漏与越权需要工具调用日志里的参数快照；agentdojo 环境在 harness 侧起"
+    },
+    "counts": {
+      "banking": {
+        "user": 16,
+        "injection": 9
+      },
+      "slack": {
+        "user": 17,
+        "injection": 5
+      },
+      "travel": {
+        "user": 20,
+        "injection": 7
+      },
+      "workspace": {
+        "user": 33,
+        "injection": 6
+      }
+    }
+  }
+}

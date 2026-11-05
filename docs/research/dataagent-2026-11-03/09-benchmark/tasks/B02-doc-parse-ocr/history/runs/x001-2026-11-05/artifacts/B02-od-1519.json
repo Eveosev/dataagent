@@ -1,0 +1,191 @@
+{
+  "text": "Solutions to the 58th William Lowell Putnam Mathematical Competition\nSaturday, December 6, 1997\nManjul Bhargava, Kiran Kedlaya, and Lenny Ng\nA-1 The centroid $G$ of the triangle is collinear with $H$ and $O$ (Euler line), and the centroid lies two-thirds of the way from $A$ to $M$. Therefore $H$ is also two-thirds of the way from $A$ to $F$, so $AF = 15$. Since the triangles $BFH$ and $ AFC$ are similar (they're right triangles and\n$$\\angle HBC = \\pi/2 - \\angle C = \\angle CAF),$$\nwe have\n$$BF/FH = AF/FC$$\nor\n$$BF \\cdot FC = FH \\cdot AF = 75.$$\nNow\n$$BC^{2} = (BF + FC)^{2} = (BF - FC)^{2} + 4BF \\cdot FC,$$\nbut\n$$BF - FC = BM + MF - (MC - MF) = 2MF = 22,$$\nso\n$$BC = \\sqrt{22^2 + 4 \\cdot 75} = \\sqrt{784} = 28.$$\nA-2 We show more precisely that the game terminates with one player holding all of the pennies if and only if $n = 2^{m}+1$ or $n=2^{m}+2$ for some $m$. First suppose we are in the following situation for some $k \\geq 2$. (Note: for us, a “move” consists of two turns, starting with a one-penny pass.)\n- Except for the player to move, each player has $k$\n  pennies;\n-  The player to move has at least $k$  pennies.\nWe claim then that the game terminates if and only if\nthe number of players is a power of 2. First suppose\nthe number of players is even; then after $m$ complete\nrounds, every other player, starting with the player who\nmoved first, will have $m$ more pennies than initially, and\nthe others will all have 0. Thus we are reduced to the\nsituation with half as many players; by this process, we\neventually reduce to the case where the number of players is odd. However, if there is more than one player,\nafter two complete rounds everyone has as many pennies as they did before (here we need $m \\geq 2$), so the\ngame fails to terminate. This verifies the claim.\nReturning to the original game, note that after one complete round, $\\lfloor \\frac{n-1}{2} \\rfloor$ players remain, each with 2 pennies\nexcept for the player to move, who has either 3 or 4 pennies. Thus by the above argument, the game terminates\nif and only if $\\lfloor \\frac{n-1}{2} \\rfloor$ is a power of 2, that is, if and only\nif $n = 2^{m} + 1$ or $n = 2^{m} + 2$ for some $m$.\nA-3 Note that the series on the left is simply $x\\exp(-x^2/2)$.\nBy integration by parts,\n$$\\int_{0}^{\\infty}x^{2n+1}e^{-x^{2}/2}dx = 2n \\int_{0}^{\\infty}x^{2n-1}e^{-x^{2}/2}dx$$\nand so by induction,\n$$\n\\int_{0}^{\\infty} x^{2n+1}e^{-x^2/2}dx = 2 \\times 4 \\times \\cdots \\times 2n.\n$$\nThus the desired integral is simply\n$$ \\sum_{n=0}^{\\infty} \\frac{1}{2^n n!} = \\sqrt{e}. $$\nA-4 In order to have $ \\psi ( x ) = a \\phi ( x ) $ for all $x$, we must in particular have this for $x = e$, and so we take $ a = \\phi ( e )^ { - 1 }. $\nWe first note that\n$$\n\\phi(g)\\phi(e)\\phi(g^{-1}) = \\phi(e)\\phi(g)\\phi(g^{-1})\n$$\nand so $\\phi(g)$ commutes with $\\phi(e)$ for all $g$. Next, we note that\n$$ \\phi(x)\\phi(y)\\phi(y^{-1}x^{-1}) = \\phi(e)\\phi(xy)\\phi(y^{-1}x^{-1}) $$\nand using the commutativity of $\\phi(e)$, we deduce\n$$\n\\phi(e)^{-1}\\phi(x)\\phi(e)^{-1}\\phi(y) = \\phi(e)^{-1}\\phi(xy)\n$$\nor $\\psi(xy) = \\psi(x)\\psi(y)$, as desired.\nA-5 We may discard any solutions for which $a_1 \\neq a_2$, since\nthose come in pairs; so assume $a_1 = a_2$. Similarly, we\nmay assume that $a_3 = a_4$, $a_5 = a_6$, $a_7 = a_8$, $a_9 = a_{10}$.\nThus we get the equation\n$$2/a_{1} + 2/a_{3} + 2/a_{5} + 2/a_{7} + 2/a_{9} = 1.$$\nAgain, we may assume $a_{1} = a_{3}$ and $a_{5} = a_{7}$, so we get\n$4/a_{1} + 4/a_{5} + 2/a_{9} = 1$; and $a_{1} = a_{5}$, so $8/a_{1} + 2/a_{9} =1$. This implies that $(a_{1} - 8)(a_{9} - 2) = 16$, which by\ncounting has 5 solutions. Thus $N_{10}$ is odd.\nA-6  Clearly $x_{n+1}$ is a polynomial in $c$ of degree $n$, so it suffices to identify $n$ values of $c$ for which $x_{n+1} = 0$. We\nclaim these are $c = n - 1 - 2r$ for $r = 0, 1, \\dots, n-1$;\nin this case, $x_k$ is the coefficient of $t^{k-1}$ in the polynomial $f(t) = (1-t)^r(1+t)^{n-1-r}$. This can be verified\nby noticing that $f$ satisfies the differential equation\n$$\n\\frac{f^{\\prime}(t)}{f(t)} = \\frac{n-1-r}{1+t} - \\frac{r}{1-t}\n$$",
+  "blocks": [
+    {
+      "category": "title",
+      "order": 1,
+      "text": "Solutions to the 58th William Lowell Putnam Mathematical Competition"
+    },
+    {
+      "category": "title",
+      "order": 2,
+      "text": "Saturday, December 6, 1997"
+    },
+    {
+      "category": "text_block",
+      "order": 3,
+      "text": "Manjul Bhargava, Kiran Kedlaya, and Lenny Ng"
+    },
+    {
+      "category": "text_block",
+      "order": 4,
+      "text": "A-1 The centroid $G$ of the triangle is collinear with $H$ and $O$ (Euler line), and the centroid lies two-thirds of the way from $A$ to $M$. Therefore $H$ is also two-thirds of the way from $A$ to $F$, so $AF = 15$. Since the triangles $BFH$ and $ AFC$ are similar (they're right triangles and"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 5,
+      "latex": "$$\\angle HBC = \\pi/2 - \\angle C = \\angle CAF),$$"
+    },
+    {
+      "category": "text_block",
+      "order": 6,
+      "text": "we have"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 7,
+      "latex": "$$BF/FH = AF/FC$$"
+    },
+    {
+      "category": "text_block",
+      "order": 8,
+      "text": "or"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 9,
+      "latex": "$$BF \\cdot FC = FH \\cdot AF = 75.$$"
+    },
+    {
+      "category": "text_block",
+      "order": 10,
+      "text": "Now"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 11,
+      "latex": "$$BC^{2} = (BF + FC)^{2} = (BF - FC)^{2} + 4BF \\cdot FC,$$"
+    },
+    {
+      "category": "text_block",
+      "order": 12,
+      "text": "but"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 13,
+      "latex": "$$BF - FC = BM + MF - (MC - MF) = 2MF = 22,$$"
+    },
+    {
+      "category": "text_block",
+      "order": 14,
+      "text": "so"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 15,
+      "latex": "$$BC = \\sqrt{22^2 + 4 \\cdot 75} = \\sqrt{784} = 28.$$"
+    },
+    {
+      "category": "text_block",
+      "order": 16,
+      "text": "A-2 We show more precisely that the game terminates with one player holding all of the pennies if and only if $n = 2^{m}+1$ or $n=2^{m}+2$ for some $m$. First suppose we are in the following situation for some $k \\geq 2$. (Note: for us, a “move” consists of two turns, starting with a one-penny pass.)"
+    },
+    {
+      "category": "text_block",
+      "order": 17,
+      "text": "- Except for the player to move, each player has $k$\n  pennies;\n-  The player to move has at least $k$  pennies."
+    },
+    {
+      "category": "text_block",
+      "order": 18,
+      "text": "We claim then that the game terminates if and only if\nthe number of players is a power of 2. First suppose\nthe number of players is even; then after $m$ complete\nrounds, every other player, starting with the player who\nmoved first, will have $m$ more pennies than initially, and\nthe others will all have 0. Thus we are reduced to the\nsituation with half as many players; by this process, we\neventually reduce to the case where the number of players is odd. However, if there is more than one player,\nafter two complete rounds everyone has as many pennies as they did before (here we need $m \\geq 2$), so the\ngame fails to terminate. This verifies the claim."
+    },
+    {
+      "category": "text_block",
+      "order": 19,
+      "text": "Returning to the original game, note that after one complete round, $\\lfloor \\frac{n-1}{2} \\rfloor$ players remain, each with 2 pennies\nexcept for the player to move, who has either 3 or 4 pennies. Thus by the above argument, the game terminates\nif and only if $\\lfloor \\frac{n-1}{2} \\rfloor$ is a power of 2, that is, if and only\nif $n = 2^{m} + 1$ or $n = 2^{m} + 2$ for some $m$."
+    },
+    {
+      "category": "text_block",
+      "order": 20,
+      "text": "A-3 Note that the series on the left is simply $x\\exp(-x^2/2)$.\nBy integration by parts,"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 21,
+      "latex": "$$\\int_{0}^{\\infty}x^{2n+1}e^{-x^{2}/2}dx = 2n \\int_{0}^{\\infty}x^{2n-1}e^{-x^{2}/2}dx$$"
+    },
+    {
+      "category": "text_block",
+      "order": 22,
+      "text": "and so by induction,"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 23,
+      "latex": "$$\n\\int_{0}^{\\infty} x^{2n+1}e^{-x^2/2}dx = 2 \\times 4 \\times \\cdots \\times 2n.\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 24,
+      "text": "Thus the desired integral is simply"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 25,
+      "latex": "$$ \\sum_{n=0}^{\\infty} \\frac{1}{2^n n!} = \\sqrt{e}. $$"
+    },
+    {
+      "category": "text_block",
+      "order": 26,
+      "text": "A-4 In order to have $ \\psi ( x ) = a \\phi ( x ) $ for all $x$, we must in particular have this for $x = e$, and so we take $ a = \\phi ( e )^ { - 1 }. $\nWe first note that"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 27,
+      "latex": "$$\n\\phi(g)\\phi(e)\\phi(g^{-1}) = \\phi(e)\\phi(g)\\phi(g^{-1})\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 28,
+      "text": "and so $\\phi(g)$ commutes with $\\phi(e)$ for all $g$. Next, we note that"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 29,
+      "latex": "$$ \\phi(x)\\phi(y)\\phi(y^{-1}x^{-1}) = \\phi(e)\\phi(xy)\\phi(y^{-1}x^{-1}) $$"
+    },
+    {
+      "category": "text_block",
+      "order": 30,
+      "text": "and using the commutativity of $\\phi(e)$, we deduce"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 31,
+      "latex": "$$\n\\phi(e)^{-1}\\phi(x)\\phi(e)^{-1}\\phi(y) = \\phi(e)^{-1}\\phi(xy)\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 32,
+      "text": "or $\\psi(xy) = \\psi(x)\\psi(y)$, as desired."
+    },
+    {
+      "category": "text_block",
+      "order": 33,
+      "text": "A-5 We may discard any solutions for which $a_1 \\neq a_2$, since\nthose come in pairs; so assume $a_1 = a_2$. Similarly, we\nmay assume that $a_3 = a_4$, $a_5 = a_6$, $a_7 = a_8$, $a_9 = a_{10}$.\nThus we get the equation"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 34,
+      "latex": "$$2/a_{1} + 2/a_{3} + 2/a_{5} + 2/a_{7} + 2/a_{9} = 1.$$"
+    },
+    {
+      "category": "text_block",
+      "order": 35,
+      "text": "Again, we may assume $a_{1} = a_{3}$ and $a_{5} = a_{7}$, so we get\n$4/a_{1} + 4/a_{5} + 2/a_{9} = 1$; and $a_{1} = a_{5}$, so $8/a_{1} + 2/a_{9} =1$. This implies that $(a_{1} - 8)(a_{9} - 2) = 16$, which by\ncounting has 5 solutions. Thus $N_{10}$ is odd."
+    },
+    {
+      "category": "text_block",
+      "order": 36,
+      "text": "A-6  Clearly $x_{n+1}$ is a polynomial in $c$ of degree $n$, so it suffices to identify $n$ values of $c$ for which $x_{n+1} = 0$. We\nclaim these are $c = n - 1 - 2r$ for $r = 0, 1, \\dots, n-1$;\nin this case, $x_k$ is the coefficient of $t^{k-1}$ in the polynomial $f(t) = (1-t)^r(1+t)^{n-1-r}$. This can be verified\nby noticing that $f$ satisfies the differential equation"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 37,
+      "latex": "$$\n\\frac{f^{\\prime}(t)}{f(t)} = \\frac{n-1-r}{1+t} - \\frac{r}{1-t}\n$$"
+    }
+  ],
+  "tables": []
+}

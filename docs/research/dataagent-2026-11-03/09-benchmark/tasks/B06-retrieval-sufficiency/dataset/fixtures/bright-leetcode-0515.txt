@@ -1,0 +1,47 @@
+## Identifying the Essential Problem
+
+The essential problem is to determine the time at which each car collides with the car ahead of it, or if it doesn't collide at all. This involves analyzing the relative speeds and positions of the cars.
+
+## Relevant Information and Reasoning
+
+* **Relative Speeds:** The time it takes for a car to catch up to the car ahead depends on their relative speed. 
+* **Positions:** The distance between the cars determines how long it will take for the faster car to catch up.
+* **Collision:** A collision occurs when the faster car reaches the position of the slower car.
+
+## Steps to Solve the Problem
+
+1. **Sort the cars by their positions:** This allows us to analyze collisions in order of increasing distance.
+2. **Iterate through the sorted cars:** 
+    * For each car, calculate the relative speed between it and the car ahead.
+    * Calculate the time it takes for the faster car to reach the position of the slower car (collision time).
+    * If the collision time is positive, add it to the output array.
+    * If the collision time is negative or zero, the car doesn't collide and we add -1 to the output array.
+
+## Draft Answer
+
+Here's an algorithm to solve the problem:
+
+```python
+def get_collision_times(cars):
+  cars.sort(key=lambda x: x[0]) # Sort by position
+  output = []
+  for i in range(len(cars)-1):
+    # Calculate relative speed
+    rel_speed = cars[i+1][1] - cars[i][1]
+    if rel_speed <= 0: # No collision
+      output.append(-1)
+    else:
+      # Calculate time to collision
+      collision_time = (cars[i+1][0] - cars[i][0]) / rel_speed
+      output.append(collision_time)
+  output.append(-1) # Last car doesn't collide
+  return output
+```
+
+This algorithm iterates through the sorted cars, calculates the relative speed and collision time for each pair of consecutive cars, and adds the collision time to the output array. If there's no collision, -1 is added. 
+
+## Additional Notes
+
+* This solution assumes that the cars can instantly reach their maximum speed.
+* The solution has a time complexity of O(n log n) due to the sorting step. 
+* The solution has a space complexity of O(n) for storing the output array.

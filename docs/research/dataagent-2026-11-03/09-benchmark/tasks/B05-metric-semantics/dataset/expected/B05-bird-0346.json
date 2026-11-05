@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 345,
+  "question": "I'm setting a typical weight for a green-skinned creature class. Can you tell me the average weight in kg of the heroes with green skin? Count only heroes whose weight is known, and give me one number rounded to one decimal place.",
+  "evidence": "Green skin means the hero's skin colour is green.",
+  "gold_sql": "SELECT ROUND(AVG(T1.weight_kg), 1) AS average_weight_kg FROM superhero AS T1 INNER JOIN colour AS T2 ON T1.skin_colour_id = T2.id WHERE T2.colour = 'Green' AND T1.weight_kg > 0",
+  "db_id": "superhero",
+  "case_id": "B05-bird-0346",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT ROUND(AVG(T1.weight_kg), 1) AS average_weight_kg FROM superhero AS T1 INNER JOIN colour AS T2 ON T1.skin_colour_id = T2.id WHERE T2.colour = 'Green' AND T1.weight_kg > 0",
+    "db_id": "superhero",
+    "evidence": "Green skin means the hero's skin colour is green."
+  }
+}

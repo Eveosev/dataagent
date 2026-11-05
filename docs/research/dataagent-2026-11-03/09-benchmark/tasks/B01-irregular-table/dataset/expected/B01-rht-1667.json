@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 31,
+  "table": "employment-table05",
+  "structure": "ContentCompound",
+  "question_type": "Fact Checking",
+  "sub_type": "Value-Matching",
+  "answer": "164287",
+  "cot": [
+    {
+      "planning": "First, we need to identify the row labeled 'Civilian labor force' in the dataset."
+    },
+    {
+      "planning": "Then, we locate the column corresponding to the year 2022 and extract the value for the total civilian labor force."
+    },
+    {
+      "planning": "Finally, we output this total value as the final answer."
+    }
+  ],
+  "case_id": "B01-rht-1667",
+  "expected": {
+    "kind": "answer",
+    "question": "What is the total civilian labor force for the year 2022, combining all demographic categories?",
+    "answer": "164287"
+  }
+}

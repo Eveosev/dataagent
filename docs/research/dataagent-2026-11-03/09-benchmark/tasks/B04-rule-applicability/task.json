@@ -1,0 +1,108 @@
+{
+  "id": "B04",
+  "slug": "rule-applicability",
+  "title": "制度 → 规则 → 可判定性与适用范围",
+  "plan_row": 4,
+  "plan_ref": "../../../09-benchmark-plan.md",
+  "catalog_atoms": [
+    "DA02.8.1",
+    "DA02.8.2",
+    "DA03.4.3",
+    "DA03.15.1",
+    "DA03.15.2",
+    "DA03.15.3",
+    "DA03.15.4",
+    "DA03.16.1",
+    "DA03.16.2",
+    "DA03.16.3",
+    "DA03.16.4"
+  ],
+  "slice": "S0",
+  "unit": "clause_set",
+  "why_not_unit_tested": "规则选错、条件方向写反、unknown 被当作确定结论；方向性错误需要成对反例才能暴露",
+  "reference_benchmarks": [
+    {
+      "name": "RuleArena",
+      "url": "https://arxiv.org/abs/2412.08972",
+      "scale_note": "95 条真实规则 / 816 题；规则选择与应用指标"
+    },
+    {
+      "name": "DeonticBench",
+      "url": null,
+      "scale_note": "道义逻辑方向性用例，待核实可用性"
+    }
+  ],
+  "dataset": {
+    "sources": [
+      "RuleArena",
+      "自建制度集（令才式规则审核文本）"
+    ],
+    "composition": "外部参照最少，以自建集为主；每条规则配正反成对用例与 unknown 用例",
+    "manifest_ref": "dataset/manifest.json",
+    "refresh": {
+      "unseen_acceptance_every_rounds": 6,
+      "replace_ratio": 0.25,
+      "rule": "样本一经暴露即降级为 regression；unseen_acceptance 不得参与调参"
+    }
+  },
+  "graders": [
+    "decidability_classification",
+    "direction_symmetry",
+    "rule_choice_match",
+    "unknown_preservation"
+  ],
+  "metrics": [
+    {
+      "id": "rule_selection_accuracy",
+      "label": "规则选择与应用准确率",
+      "direction": "higher",
+      "primary": true,
+      "unit": "ratio",
+      "aggregation": "mean_over_cases",
+      "grader": "rule_choice_match",
+      "threshold_status": "pending_baseline"
+    },
+    {
+      "id": "condition_direction_consistency",
+      "label": "条件方向一致率",
+      "direction": "higher",
+      "primary": false,
+      "unit": "ratio",
+      "aggregation": "mean_over_cases",
+      "grader": "direction_symmetry",
+      "threshold_status": "pending_baseline"
+    },
+    {
+      "id": "decidability_accuracy",
+      "label": "可判定性三分类准确率",
+      "direction": "higher",
+      "primary": false,
+      "unit": "ratio",
+      "aggregation": "mean_over_cases",
+      "grader": "decidability_classification",
+      "threshold_status": "pending_baseline"
+    },
+    {
+      "id": "unknown_retention",
+      "label": "unknown 保持率",
+      "direction": "higher",
+      "primary": false,
+      "unit": "ratio",
+      "aggregation": "mean_over_cases",
+      "grader": "unknown_preservation",
+      "threshold_status": "pending_baseline"
+    }
+  ],
+  "gate": {
+    "tier": "block",
+    "in_ci": true,
+    "blocking_metrics": [
+      "rule_selection_accuracy"
+    ],
+    "ref": "../../monitor/thresholds.json"
+  },
+  "status": "collecting",
+  "owner": "TBD",
+  "notes_ref": "NOTES.md",
+  "created": "2026-11-04"
+}

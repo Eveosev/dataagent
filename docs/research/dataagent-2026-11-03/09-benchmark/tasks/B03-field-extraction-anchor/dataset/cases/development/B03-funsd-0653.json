@@ -1,0 +1,41 @@
+{
+  "case_id": "B03-funsd-0653",
+  "task_id": "B03",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "image",
+      "ref": "bench://funsd/images/test-49.png",
+      "digest": null
+    },
+    {
+      "kind": "instruction",
+      "ref": "fixtures/funsd-test-49-task.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-funsd-0653.json"
+  },
+  "evidence": [
+    "bench://funsd/images/test-49.png",
+    "fixtures/funsd-test-49-task.md"
+  ],
+  "tags": [
+    "funsd",
+    "test",
+    "doc:form",
+    "answers:10"
+  ],
+  "source": "funsd",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

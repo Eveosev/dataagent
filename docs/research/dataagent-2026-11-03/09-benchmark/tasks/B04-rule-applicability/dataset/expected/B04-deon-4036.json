@@ -1,0 +1,30 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_d53668cf",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "scenario_state",
+    "focus_year",
+    "scenario_case_type",
+    "scenario_court",
+    "scenario_person",
+    "scenario_role",
+    "scenario_action",
+    "statute_1_21_1014_bond_required_for_stay_on_appeal",
+    "statute_1_21_1015_additional_rent_deposit_required_for_perfecting_appeal",
+    "statute_1_21_1007_bond_required_for_long_continuance",
+    "law_specifies_bond_requirement_for_appeal_context",
+    "scenario_has_specified_bond_requirement_answered",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: Wyoming\n    Focus year: 2021\n\n    Question:\n    \"Is it specified whether the law requires a tenant to pay a bond in order to appeal an eviction judgment?\"\n*/\n\n% -------------------------\n% Scenario facts (question statement encoded)\n% -------------------------\n\nscenario_state(wyoming).\nfocus_year(2021).\n\nscenario_case_type(eviction_judgment).   % eviction judgment / writ of restitution context\nscenario_court(circuit_court).\n\nscenario_person(tenant1).\nscenario_role(tenant1, defendant).       % tenant is the defendant in the eviction case\nscenario_action(tenant1, appeals_eviction_judgment).\n\n/* Helper predicate that succeeds when the factual statement is satisfied.\n   It captures the whole scenario in one reusable logical check. */\nscenario_statement :-\n    scenario_state(wyoming),\n    focus_year(2021),\n    scenario_case_type(eviction_judgment),\n    scenario_court(circuit_court),\n    scenario_person(Tenant),\n    scenario_role(Tenant, defendant),\n    scenario_action(Tenant, appeals_eviction_judgment).\n\n% -------------------------\n% Statute translations (deterministic predicates)\n% -------------------------\n\n/* WY Stat  1-21-1014(b) (2021) - \"bond required\" for stay on appeal\n   Rule: A defendant's appeal does NOT stay proceedings on the judgment unless,\n   within 48 hours after judgment (Sundays excepted), the appellant executes and\n   files a bond to plaintiff with sufficient sureties, etc.\n*/\nstatute_1_21_1014_bond_required_for_stay_on_appeal(wyoming, 2021, defendant, eviction_judgment).\n\n/* WY Stat  1-21-1015(a) (2021) - rents to be deposited on appeal\n   Rule: For appeals from circuit court judgments for rents due/payable,\n   in addition to the bond required by W.S. 1-21-1014, appellant must deposit\n   rent specified in the judgment; otherwise the appeal is not perfected.\n*/\nstatute_1_21_1015_additional_rent_deposit_required_for_perfecting_appeal(wyoming, 2021, rents_due_judgment) :-\n    % Explicitly depends on existence of bond requirement in  1-21-1014.\n    statute_1_21_1014_bond_required_for_stay_on_appeal(wyoming, 2021, defendant, eviction_judgment).\n\n/* WY Stat  1-21-1007 (2021) - bond on granting continuance\n   Rule: No continuance > 2 days unless defendant gives a bond conditioned for rent and costs, etc.\n   (Not directly about appeal; included because provided in statutes.)\n*/\nstatute_1_21_1007_bond_required_for_long_continuance(wyoming, 2021, defendant).\n\n% -------------------------\n% Reasoning helpers (apply statutes to scenario)\n% -------------------------\n\n/* The law \"specifies\" a bond requirement in the appeal context for an eviction judgment\n   if it states that a bond is required to obtain a stay of proceedings pending appeal. */\nlaw_specifies_bond_requirement_for_appeal_context(State, Year, eviction_judgment) :-\n    statute_1_21_1014_bond_required_for_stay_on_appeal(State, Year, defendant, eviction_judgment).\n\n/* More general: law specifies a bond requirement connected to an appeal if either:\n   - bond is required for stay on appeal (eviction judgment), or\n   - bond (and deposits) are required to perfect an appeal (rents due judgment).\n*/\nlaw_specifies_bond_requirement_for_appeal_context(State, Year, CaseType) :-\n    CaseType = rents_due_judgment,\n    statute_1_21_1015_additional_rent_deposit_required_for_perfecting_appeal(State, Year, CaseType).\n\n/* Connect scenario to the legal question:\n   We interpret the question as asking whether Wyoming law explicitly addresses/sets a bond\n   requirement tied to taking an appeal from an eviction judgment (at least for staying enforcement). */\nscenario_has_specified_bond_requirement_answered(yes) :-\n    scenario_statement,\n    scenario_state(State),\n    focus_year(Year),\n    scenario_case_type(CaseType),\n    law_specifies_bond_requirement_for_appeal_context(State, Year, CaseType),\n    !.\nscenario_has_specified_bond_requirement_answered(no) :-\n    scenario_statement,\n    !.\n\n% -------------------------\n% Final answer predicate (must be deterministic)\n% -------------------------\n\nhousing_answer(Result) :-\n    scenario_has_specified_bond_requirement_answered(Result),\n    !.\n\n% -------------------------\n% Main entrypoint (required)\n% -------------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-4036",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Is it specified whether the law requires a tenant to pay a bond in order to appeal an eviction judgment?"
+  }
+}

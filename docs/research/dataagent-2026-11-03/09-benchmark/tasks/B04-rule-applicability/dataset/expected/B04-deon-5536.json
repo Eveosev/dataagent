@@ -1,0 +1,20 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "s63_c_2_B_pos",
+  "expect_label": "yes",
+  "raw_label": "1",
+  "rule_predicates": [
+    "basic_standard_deduction",
+    "head_of_household",
+    "person",
+    "paid_wages"
+  ],
+  "reference_prolog": "% ---------- Statutory rules relevant to the claim ----------\n% Basic standard deduction for heads of household\n% 2018-2025 special rule\nbasic_standard_deduction(Year, Person, 18000) :-\n    head_of_household(Year, Person),\n    Year >= 2018,\n    Year =< 2025.\n\n% Otherwise (pre-2018 or post-2025)\nbasic_standard_deduction(Year, Person, 4400) :-\n    head_of_household(Year, Person),\n    (Year < 2018 ; Year > 2025).\n\n% ---------- Facts from the case ----------\nperson(alice).\nhead_of_household(2017, alice).\npaid_wages(2017, alice, 33200).\n\n% ---------- Verification goal ----------\n:- (  basic_standard_deduction(2017, alice, 4400)\n   -> format('Result: Entailment~n')\n   ;  format('Result: Contradiction~n')\n   ).\n:- halt.",
+  "case_id": "B04-deon-5536",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "1",
+    "question": "Under section 63(c)(2)(B), Alice's basic standard deduction in 2017 is equal to $4400."
+  }
+}

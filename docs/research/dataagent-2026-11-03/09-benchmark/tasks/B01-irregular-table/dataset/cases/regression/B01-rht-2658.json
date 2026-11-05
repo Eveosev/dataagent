@@ -1,0 +1,35 @@
+{
+  "case_id": "B01-rht-2658",
+  "task_id": "B01",
+  "split_role": "regression",
+  "inputs": [
+    {
+      "kind": "table",
+      "ref": "bench://realthitbench-data/csv/labor-table31.csv",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B01-rht-2658.json"
+  },
+  "evidence": [
+    "bench://realthitbench-data/csv/labor-table31.csv"
+  ],
+  "tags": [
+    "realthitbench",
+    "ColumnHeaderMerge",
+    "Numerical Reasoning",
+    "ExcelGuru"
+  ],
+  "source": "rht",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

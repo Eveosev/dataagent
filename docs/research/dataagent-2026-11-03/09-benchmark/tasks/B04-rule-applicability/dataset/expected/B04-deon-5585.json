@@ -1,0 +1,23 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "s7703_b_1_neg",
+  "expect_label": "no",
+  "raw_label": "0",
+  "rule_predicates": [
+    "applies_7703b1",
+    "married",
+    "file_return",
+    "maintains_home_more_half",
+    "deduction_for",
+    "furnishes_over_half_cost",
+    "spouse_not_member_last6"
+  ],
+  "reference_prolog": "/* ---------- Statutory rule we need ---------- */\napplies_7703b1(Person,Year) :-\n    % married at end of the year\n    married(Person,Year),\n    % filed a separate return (7703(b) requires a separate return)\n    file_return(Person,Year,separate),\n    % maintained the household for a qualifying child > 1/2 of the year\n    maintains_home_more_half(Person,Child,Year),\n    deduction_for(Person,Child,Year),   % sec. 151 deduction for the child\n    % furnished > 1/2 of the cost of maintaining the household\n    furnishes_over_half_cost(Person,Year),\n    % spouse not a member of the household during the last 6 months\n    spouse_not_member_last6(Person,Year).\n\n/* ---------- Facts from the case ---------- */\nmarried(alice,2018).\n\n/* Alice and Bob filed a JOINT return for 2018 */\nfile_return(alice,2018,joint).\n\n/* Charlie lived with Alice for all of 2018, and Alice is entitled to the\n   dependency deduction for him. */\nmaintains_home_more_half(alice,charlie,2018).\ndeduction_for(alice,charlie,2018).\n\n/* Alice furnished over half of the cost of the household. */\nfurnishes_over_half_cost(alice,2018).\n\n/* No fact is provided that Bob was absent from the household for the\n   last 6 months, so we do NOT assert spouse_not_member_last6(alice,2018). */\n\n\n/* ---------- Verification goal ---------- */\n:- (  applies_7703b1(alice,2018)\n   -> format('Result: Entailment~n')\n   ;  format('Result: Contradiction~n')\n   ).\n:- halt.",
+  "case_id": "B04-deon-5585",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "0",
+    "question": "Section 7703(b)(1) applies to Alice for the year 2018."
+  }
+}

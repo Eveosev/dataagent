@@ -1,0 +1,26 @@
+{
+  "source": "Salesforce/CRMArenaPro",
+  "raw": {
+    "idx": 1661,
+    "answer": [
+      "005Ws000005RHGPIA4"
+    ],
+    "task": "lead_routing",
+    "persona": "You are accountability-driven, taking ownership of tasks and following through on commitments.",
+    "metadata": {
+      "required": "\n        ## Lead Routing Policy\n        The lead routing policy determines the best agent to assign the given new lead based on the following criteria:\n        - Territory Match: First, find the territory that matches the lead's region by comparing with the territory description (comma-separated list of states/regions).\n        - Quote Success: Among agents associated with the matching territory, select those with the highest number of quotes with status \"Accepted\" (find the agent ID through the associated opportunity ID).\n        - Workload Balance: If there's still a tie, select the agent with the fewest unconverted (open) leads.\n        \n        ## Lead's region: ND\n        ",
+      "optional": "# Domain Details\n## Quarters of the Year\n- Q1: January 1 to March 31 (both inclusive).\n- Q2: April 1 to June 30 (both inclusive).\n- Q3: July 1 to September 30 (both inclusive).\n- Q4: October 1 to December 31 (both inclusive).\n## Seasons\n- Winter (2024): December 1, 2024 to February 28/29, 2025 (both inclusive), specifying the year to avoid ambiguity.\n- Spring: March 1 to May 31 (both inclusive).\n- Summer: June 1 to August 31 (both inclusive).\n- Autumn/Fall: September 1 to November 30 (both inclusive).\n## Time Periods\n- Past 2 quarters: This refers to any timeframe spanning two quarters back from a specified `end_date`. (i.e. begins on the date calculated by subtracting six months from the end_date and ends on the end_date) That translates to a six-month period retrospectively from the `end_date`.\n- Issue Significantly More Than Other Months: This means there is a month where the number of cases reported are larger than all other months."
+    },
+    "reward_metric": "exact_match",
+    "query": "Who should be assigned to handle this lead? Return only the Id of the agent."
+  },
+  "case_id": "B11-crm-1662",
+  "expected": {
+    "kind": "answer",
+    "answer": [
+      "005Ws000005RHGPIA4"
+    ],
+    "reward_metric": "exact_match",
+    "task": "lead_routing"
+  }
+}

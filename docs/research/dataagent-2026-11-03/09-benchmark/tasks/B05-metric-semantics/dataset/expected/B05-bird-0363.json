@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 362,
+  "question": "Which race is the most common among the superheroes published by the same publisher as the superhero whose full name is Charles Chandler? I'd like, for that publisher's superheroes only, the name of the most common race and the count of that publisher's superheroes of that race. Ignore any superhero with no race recorded. If several races tie for most common, list every tied race with its count.",
+  "evidence": "Race: the superhero's species or type, e.g. Human, Mutant, Alien.",
+  "gold_sql": "WITH counts AS (SELECT r.race AS race, COUNT(*) AS hero_count FROM superhero AS s INNER JOIN race AS r ON s.race_id = r.id WHERE s.publisher_id = (SELECT publisher_id FROM superhero WHERE full_name = 'Charles Chandler') AND r.race <> '-' GROUP BY r.id, r.race) SELECT race, hero_count FROM counts WHERE hero_count = (SELECT MAX(hero_count) FROM counts)",
+  "db_id": "superhero",
+  "case_id": "B05-bird-0363",
+  "expected": {
+    "kind": "sql",
+    "sql": "WITH counts AS (SELECT r.race AS race, COUNT(*) AS hero_count FROM superhero AS s INNER JOIN race AS r ON s.race_id = r.id WHERE s.publisher_id = (SELECT publisher_id FROM superhero WHERE full_name = 'Charles Chandler') AND r.race <> '-' GROUP BY r.id, r.race) SELECT race, hero_count FROM counts WHERE hero_count = (SELECT MAX(hero_count) FROM counts)",
+    "db_id": "superhero",
+    "evidence": "Race: the superhero's species or type, e.g. Human, Mutant, Alien."
+  }
+}

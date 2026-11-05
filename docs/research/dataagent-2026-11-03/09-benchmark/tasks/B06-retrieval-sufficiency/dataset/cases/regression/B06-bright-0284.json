@@ -1,0 +1,33 @@
+{
+  "case_id": "B06-bright-0284",
+  "task_id": "B06",
+  "split_role": "regression",
+  "inputs": [
+    {
+      "kind": "query",
+      "ref": "fixtures/bright-earth_science-0284.txt",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B06-bright-0284.json"
+  },
+  "evidence": [
+    "bench://bright/documents/earth_science-00000-of-00001.parquet"
+  ],
+  "tags": [
+    "bright",
+    "earth_science"
+  ],
+  "source": "bright",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

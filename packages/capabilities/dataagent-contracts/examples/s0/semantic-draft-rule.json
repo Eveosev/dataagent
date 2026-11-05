@@ -1,0 +1,21 @@
+{
+  "draft_id": "draft:rule-12",
+  "revision": "r1",
+  "kind": "rule",
+  "definition": {
+    "statement": "单笔报销金额超过 5000 元须由部门负责人审批。",
+    "conditions": [
+      {"condition_id": "c1", "text": "单笔报销金额 > 5000 元", "referenced_fields": ["amount"],
+       "anchors": [{"source_ref": "file:policy", "source_revision": "sha256:aa11",
+                    "selector": {"kind": "pdf_text_span", "page": 3, "char_start": 120, "char_end": 139}}]}
+    ],
+    "combination": "all(c1)",
+    "exceptions": [],
+    "precondition_refs": []
+  },
+  "scope_ref": "tenant:demo/project:p1",
+  "sources": [{"source_ref": "file:policy", "source_revision": "sha256:aa11",
+               "selector": {"kind": "pdf_bbox", "page": 3, "bbox": [72, 600, 523, 640], "unit": "pt"}}],
+  "status": "draft",
+  "unresolved": []
+}

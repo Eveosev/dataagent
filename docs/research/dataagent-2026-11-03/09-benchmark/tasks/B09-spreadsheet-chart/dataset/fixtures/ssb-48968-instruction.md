@@ -1,0 +1,1 @@
+I am struggling to remove the text 'Garments manufactured For Winnerforce' from a cell only when it appears in isolation within that cell. How can I accomplish this in Excel? I have provided my Excel file for reference.

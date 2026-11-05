@@ -1,0 +1,50 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1023,
+  "table": "labor-table31",
+  "structure": "ColumnHeaderMerge",
+  "question_type": "Data Analysis",
+  "sub_type": "Summary Analysis",
+  "answer": "The table tracks daily metrics for RCU MIS - March, including cases received, reviewed, pending, and flagged, along with quality assurance checks. Key trends show mid-March activity peaks, declining pending cases, consistent Hunter Checks, and occasional anomalies in flagged cases.",
+  "cot": [
+    {
+      "step": "First, examine the rows to understand the key metrics tracked in the table, such as “Total Cases Received,” “Total Cases Reviewed,” “Cases Pending,” “Cases Pending with CA,” “Hunter Check,” “Red Flag,” and “Cases Rejected.”"
+    },
+    {
+      "step": "Analyze the columns representing dates from March 1 to March 31 to identify how these metrics vary daily."
+    },
+    {
+      "step": "Understand the significance of each row:"
+    },
+    {
+      "step": "• “Total Cases Received” shows the daily volume and monetary value of incoming cases."
+    },
+    {
+      "step": "• “Total Cases Reviewed” tracks the number and value of cases processed daily."
+    },
+    {
+      "step": "• “Cases Pending” and “Cases Pending with CA” represent unresolved cases requiring further action."
+    },
+    {
+      "step": "• “Hunter Check” records daily quality assurance checks."
+    },
+    {
+      "step": "• “Red Flag” highlights flagged cases indicating potential issues."
+    },
+    {
+      "step": "• “Cases Rejected” indicates cases deemed invalid or unprocessable."
+    },
+    {
+      "step": "Observe patterns in the data, such as activity spikes, decreasing trends in pending cases, and anomalies in flagged cases or rejected cases."
+    },
+    {
+      "step": "Consolidate these observations into a concise summary to capture the table's purpose and insights."
+    }
+  ],
+  "case_id": "B01-rht-2659",
+  "expected": {
+    "kind": "answer",
+    "question": "Provide a concise summary of the table, including the key columns, their significance, and any observable trends in case numbers or values.",
+    "answer": "The table tracks daily metrics for RCU MIS - March, including cases received, reviewed, pending, and flagged, along with quality assurance checks. Key trends show mid-March activity peaks, declining pending cases, consistent Hunter Checks, and occasional anomalies in flagged cases."
+  }
+}

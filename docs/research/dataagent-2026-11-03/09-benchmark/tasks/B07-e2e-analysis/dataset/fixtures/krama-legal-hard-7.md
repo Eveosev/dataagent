@@ -1,0 +1,1 @@
+Which fraud category was growing the fastest between 2020 and 2024 in relative terms?

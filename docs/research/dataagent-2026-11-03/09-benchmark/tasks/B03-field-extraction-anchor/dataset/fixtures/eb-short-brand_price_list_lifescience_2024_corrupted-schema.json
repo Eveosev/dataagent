@@ -1,0 +1,88 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "WholesaleCatalogPriceList",
+  "description": "One wholesale/catalog PRICE LIST document (catalog SKU -> unit/pack price). Covers plumbing-fitting catalogs (e.g. Viega ProPress) and lab-consumables catalogs (e.g. BRAND Life Science). Extract EVERY genuine catalog line item plus the document-level scalars.",
+  "type": "object",
+  "$defs": {
+    "Item": {
+      "type": "object",
+      "description": "ONE catalog line item = ONE priced row in a price-list table. A row is identified by its catalog/part number in the leftmost number column. Do NOT emit a row for a section/group banner (e.g. 'Elbows', 'Tees', 'Adapters', 'Flanges' in Viega; bold product-family headings like 'Microcentrifuge tubes, PP ...' or 'Cap inserts, PP' in BRAND) -- those have NO catalog number and are NOT items; capture them in 'product_group' of the rows beneath them instead.",
+      "properties": {
+        "sku": {
+          "type": "string",
+          "description": "Catalog/part number = the UNIQUE identifier of this line item. Aliases: 'Part No.' (Viega), 'Cat. No.' (BRAND), 'Catalog No.', 'Item No.', 'Article No.', 'Order No.'. It is the value in the dedicated part/catalog-number column (e.g. Viega '77317', '20623'; BRAND '780760', '114830'). Format: copy the digits/characters VERBATIM, no leading zeros added or removed, no spaces. Do NOT confuse with: Viega 'DG' column (a small constant like 8), Viega 'Page No.' column (catalog page reference like 20/21/22), the page footer number, the 'Pack of' quantity, or any price. Location: leftmost numeric column of each price table, one per data row."
+        },
+        "description": {
+          "type": "string",
+          "description": "The product description text of THIS row, copied VERBATIM from the row's 'Product Description'/'Full Description' cell ONLY. Aliases: 'Full Description' (Viega), 'Product Description' (BRAND). Examples: Viega 'Viega ProPress 90° elbow, copper, P1: ½; P2: ½'; BRAND '0,5 ml, with base', 'white', 'PC-Membrane, Pore size 0,4 µm'. Format: exact row text only. Preserve original units, fractions, symbols, and the EXACT spacing/punctuation as printed (keep the spaces around fractions, e.g. 'P: ½; FPT: ⅜' NOT 'P:½;FPT:⅜'; keep registered/trademark marks like the ® and the ™; keep decimal commas like '0,5 ml'; keep 'µm'). RULE 1 (group header): DO NOT prepend or merge the group/family header into this field -- the family header belongs in 'product_group'. Many BRAND rows are non-self-describing on their own (e.g. 'white', 'blue', '2 ml, without base'); that is expected -- keep them verbatim here and rely on 'product_group' for context. RULE 2 (BRAND inner pack-config column -- TOP TRAP): some BRAND tables have an EXTRA middle column between the description and 'Pack of' that states the pack make-up, e.g. '1 pack = 50 piece(s)', '1 pack=48 pc(s) (48x1)', '1 pack=36 pc(s) (4x9)'. This text is NOT part of description -- DO NOT append it here. The description must STOP at the end of the product-description cell (e.g. 'PC-Membrane, Pore size 0,4 µm', NOT 'PC-Membrane, Pore size 0,4 µm 1 pack=48 pc(s) (48x1)'). The '... piece(s)' make-up text is ignored for this schema. Do NOT confuse with: the section banner, the catalog number, the inner pack-config column, or the price columns. Location: the wide free-text column immediately to the right of the catalog number."
+        },
+        "product_group": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The product family / section header that THIS row falls under, copied verbatim from the nearest grouping banner ABOVE the row. Examples: Viega section banners 'Elbows', 'Tees', 'Adapters', 'Flanges'; BRAND bold family headings 'Microcentrifuge tubes, PP, without cap, suitable for tamper-evident cover, PP, transparent, ungraduated, BIO-CERT® PCR QUALITY', 'Cap inserts, PP', 'Screw cap, PP, with silicone seal, BIO-CERT® PCR QUALITY'. Format: verbatim header text, copied EXACTLY as printed including registered/trademark marks -- keep the ® and the ™ symbols (e.g. 'BIO-CERT® PCR QUALITY', NOT 'BIO-CERT PCR QUALITY'); keep commas and capitalization. Use null only if the row has no enclosing group header. Do NOT confuse with: the per-row 'description' (this is the shared heading above several rows, NOT the row's own text). Location: the most recent bold/banner heading row above this data row."
+        },
+        "pack_qty": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Number of units contained in one bag/pack/box for this line. Aliases: 'Bag/Pkg Qty.' (Viega), 'Pack of' (BRAND). Examples: Viega '100', '10', '5', '1'; BRAND '1000', '500', '100', '1'. Format: integer as a plain string, no separators. Do NOT confuse with: the price columns, the BRAND inner 'piece(s)' descriptor column (e.g. '1 pack = 50 piece(s)') which is part of the description not the count -- the actual pack count for BRAND is the dedicated 'Pack of' column (often 1). Use null if no pack-quantity column exists for the row. Location: a small right-side quantity column."
+        },
+        "unit_price": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Price for ONE single unit/each (NOT for the whole bag/pack). Aliases: 'List Price Each' (Viega). Example: in the Viega row with each $7.30 / bag $730.00 / qty 100, unit_price = '7.30' (the each value), and '730.00' goes in pack_price. Format: numeric only -- STRIP the currency symbol ($, ₹) and STRIP thousands separators, normalize the decimal point to '.' (e.g. '$7.30' -> '7.30', '$1,177.00' -> '1177.00'). The document currency is captured once in top-level 'currency'. Do NOT confuse with: 'pack_price' (the per-bag price). RULE: if the catalog only gives a per-pack price and no per-each price (e.g. BRAND 'Price/Pack ₹' with no 'each' column), set unit_price = null and put the value in 'pack_price'. Location: the 'List Price Each' column where present."
+        },
+        "pack_price": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Price for ONE full bag/pack/box (the bundle), NOT per single unit. Aliases: 'Bag/Pkg Price' (Viega), 'Price/Pack ₹' (BRAND). Examples: Viega '730.00' (the bag price for pack_qty 100), BRAND '14194' (price per pack of 1000, shown as '14,194' in the European thousands format = fourteen-thousand). Format: numeric only -- STRIP the currency symbol ($, ₹), STRIP thousands separators (so BRAND '14,194' -> '14194', Viega '$1,177.00' -> '1177.00'), normalize decimal to '.'. Do NOT confuse with: 'unit_price' (per-each). Note the comma in BRAND prices is a THOUSANDS separator (14,194 = 14194), whereas a comma in BRAND descriptions like '0,5 ml' is a decimal -- only strip separators in this PRICE field. Use null if no pack price column exists. Location: the 'Bag/Pkg Price' (Viega) or 'Price/Pack' (BRAND) column."
+        }
+      },
+      "required": [
+        "sku",
+        "description"
+      ]
+    }
+  },
+  "properties": {
+    "publisher": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The brand/company/publisher that issued this price list. Aliases: 'brand', 'manufacturer', 'company'. Examples: 'Viega', 'BRAND'. Format: the company name as shown in the logo/header/footer. Do NOT confuse with: a product family name or a sub-brand like 'ProPress' or 'BIO-CERT' (those are product lines, not the publisher). Location: masthead logo, page header, or footer/website (e.g. 'www.brand.co.in' -> BRAND)."
+    },
+    "published_date": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The publication / effective date of the price list. Aliases: 'Published', 'Effective date', 'Valid from', 'Edition'. Example: Viega 'Published: March 1, 2026' -> '2026-03-01'. Format: ISO 8601 'YYYY-MM-DD' when a full date is given; if only a year is available (e.g. BRAND filename '2024' with no printed date), use the year alone 'YYYY', else null. Do NOT confuse with: catalog page numbers, the 'DG' value, or a product spec date. Location: directly under the title/masthead, or the catalog edition line."
+    },
+    "currency": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The single currency that ALL price values in this document are denominated in. Format: ISO 4217 3-letter code. Map symbols: '$' on a US plumbing catalog -> 'USD'; '₹' (and footer 'www.brand.co.in') -> 'INR'. Examples: Viega -> 'USD', BRAND -> 'INR'. Do NOT confuse with: the per-row price magnitude. RULE: prices in unit_price/pack_price are stored as bare numbers WITHOUT symbols; the symbol's meaning is recorded ONLY here. Location: the currency symbol next to price column headers or price cells."
+    },
+    "items": {
+      "type": "array",
+      "description": "Every genuine catalog line item (priced row) across all price tables in the document, in reading order. EXCLUDE section/family banner rows that carry no catalog number. Each element is one Item.",
+      "items": {
+        "$ref": "#/$defs/Item"
+      }
+    }
+  },
+  "required": [
+    "items",
+    "currency"
+  ]
+}

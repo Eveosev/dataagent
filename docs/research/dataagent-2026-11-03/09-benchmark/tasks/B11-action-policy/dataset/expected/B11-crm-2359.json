@@ -1,0 +1,26 @@
+{
+  "source": "Salesforce/CRMArenaPro",
+  "raw": {
+    "idx": 218,
+    "answer": [
+      null
+    ],
+    "task": "activity_priority",
+    "persona": "You are strategic and long-term focused, considering the broader implications of decisions.",
+    "metadata": {
+      "required": "\n        ## Activity priority guide.\n        Each stage of the opportunity has a list of tasks that are prioritized. Below are the lists of tasks for each stage.\n        Examples of task for each stage:\n\n        Qualification: The goal is to determine if the prospect has the potential to become a customer based on certain criteria.\n            - Researching prospects to gather background information.\n            - Sending introductory emails or making initial contact calls.\n            - Scheduling discovery meetings to understand customer needs.\n            - Conducting initial prospecting meetings or calls.\n            - Attending networking events or trade shows for lead generation.\n            - etc\n            \n        Discovery: The goal is to develop a detailed, nuanced view of the prospect's situation to tailor solutions effectively.\n            - Researching the prospect's industry, company, and competitors to tailor the approach.\n            - Gathering insights about the prospect's pain points and business objectives.\n            - Engaging in conversations to learn more about the prospect's specific needs.\n            - Identifying possible solution alignments and preparing for value proposition development.\n            - etc\n        \n        Quote:\n            - Following up on initial contact and setting up more detailed discussions.\n            - Preparing tailored proposals or solutions based on customer needs.\n            - Conducting needs analysis meetings and presentations.\n            - Organizing product demos or trials to showcase offerings.\n            - Sending targeted case studies or testimonials to reinforce value propositions.\n            \n        Negotiation: \n            - Holding negotiation meetings to finalize terms and pricing.\n            - Following up on proposals and addressing any objections.\n            - Coordinating with internal teams to finalize terms or customize solutions.\n            - Preparing contracts for review and approval.\n            - etc\n        \n        Closed:\n            - Completing any post-sale follow-ups, such as onboarding or hand-offs to account teams.\n            - For closed-lost deals, conducting win/loss analysis to gather insights.\n            - Recording finalized contract details and ensuring accurate records.\n            - Holding internal review meetings to discuss key learnings from closed deals.\n            - If won, organizing customer kick-off meetings or implementations.\n            - Retargeting customers with upsell or cross-sell opportunities.\n            - Engaging lost leads with nurturing campaigns for future opportunities.\n            - etc\n            \n        - Opportunity Id to be considered is: 006Wt000007B8CnIAK\n        ",
+      "optional": "# Domain Details\n## Quarters of the Year\n- Q1: January 1 to March 31 (both inclusive).\n- Q2: April 1 to June 30 (both inclusive).\n- Q3: July 1 to September 30 (both inclusive).\n- Q4: October 1 to December 31 (both inclusive).\n## Seasons\n- Winter (2024): December 1, 2024 to February 28/29, 2025 (both inclusive), specifying the year to avoid ambiguity.\n- Spring: March 1 to May 31 (both inclusive).\n- Summer: June 1 to August 31 (both inclusive).\n- Autumn/Fall: September 1 to November 30 (both inclusive).\n## Time Periods\n- Past 2 quarters: This refers to any timeframe spanning two quarters back from a specified `end_date`. (i.e. begins on the date calculated by subtracting six months from the end_date and ends on the end_date) That translates to a six-month period retrospectively from the `end_date`.\n- Issue Significantly More Than Other Months: This means there is a month where the number of cases reported are larger than all other months."
+    },
+    "reward_metric": "exact_match",
+    "query": "Choose tasks marked as 'Not Started' that do not correspond with the opportunity's stage. Return only the Id of the tasks."
+  },
+  "case_id": "B11-crm-2359",
+  "expected": {
+    "kind": "answer",
+    "answer": [
+      null
+    ],
+    "reward_metric": "exact_match",
+    "task": "activity_priority"
+  }
+}

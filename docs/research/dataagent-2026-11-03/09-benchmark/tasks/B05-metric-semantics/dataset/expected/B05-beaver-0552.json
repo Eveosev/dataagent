@@ -1,0 +1,27 @@
+{
+  "source": "beaverbench/beaver-query",
+  "id": "nova_574",
+  "db": "nova",
+  "question": "For each instance display name, return the coefficient of variation (using STDDEV only and never STDDEV_POP) of the instance’s migration memory remaining (MEMORY_REMAINING) across its migrations, considering only migrations with STATUS = 'completed' and only instances whose display name matches the regular expression 'prime'. Do not return any rounded answers.",
+  "sql": "SELECT i.display_name, STDDEV(m.memory_remaining) / NULLIF(AVG(m.memory_remaining), 0) AS coefficient_of_variation FROM migrations AS m JOIN instances AS i ON m.instance_uuid = i.uuid JOIN instance_extra AS ie ON i.uuid = ie.instance_uuid WHERE m.status = 'completed' AND i.display_name REGEXP 'prime' GROUP BY i.display_name HAVING AVG(m.memory_remaining) > 0 ORDER BY coefficient_of_variation DESC;",
+  "tables": "[\"MIGRATIONS\", \"INSTANCES\", \"INSTANCE_EXTRA\"]",
+  "join_keys": "[[\"MIGRATIONS.INSTANCE_UUID\", \"INSTANCES.UUID\"], [\"INSTANCES.UUID\", \"INSTANCE_EXTRA.INSTANCE_UUID\"]]",
+  "column_mapping": "{\"instance display name\": [\"INSTANCES.DISPLAY_NAME\"], \"migration memory remaining (MEMORY_REMAINING)\": [\"MIGRATIONS.MEMORY_REMAINING\"], \"migrations\": [\"MIGRATIONS.INSTANCE_UUID\"], \"completed migrations (STATUS = 'completed')\": [\"MIGRATIONS.STATUS\"]}",
+  "domain_knowledge": "[\"\\\"Display 'prime'\\\" is predicated by \\\"instances.display_name REGEXP 'prime'\\\"\"]",
+  "sub_questions": "[]",
+  "sub_sqls": "[]",
+  "category": "domain-specific query",
+  "detailed_category": "base",
+  "case_id": "B05-beaver-0552",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT i.display_name, STDDEV(m.memory_remaining) / NULLIF(AVG(m.memory_remaining), 0) AS coefficient_of_variation FROM migrations AS m JOIN instances AS i ON m.instance_uuid = i.uuid JOIN instance_extra AS ie ON i.uuid = ie.instance_uuid WHERE m.status = 'completed' AND i.display_name REGEXP 'prime' GROUP BY i.display_name HAVING AVG(m.memory_remaining) > 0 ORDER BY coefficient_of_variation DESC;",
+    "sub_sqls": "[]",
+    "db": "nova",
+    "tables": "[\"MIGRATIONS\", \"INSTANCES\", \"INSTANCE_EXTRA\"]",
+    "join_keys": "[[\"MIGRATIONS.INSTANCE_UUID\", \"INSTANCES.UUID\"], [\"INSTANCES.UUID\", \"INSTANCE_EXTRA.INSTANCE_UUID\"]]",
+    "column_mapping": "{\"instance display name\": [\"INSTANCES.DISPLAY_NAME\"], \"migration memory remaining (MEMORY_REMAINING)\": [\"MIGRATIONS.MEMORY_REMAINING\"], \"migrations\": [\"MIGRATIONS.INSTANCE_UUID\"], \"completed migrations (STATUS = 'completed')\": [\"MIGRATIONS.STATUS\"]}",
+    "category": "domain-specific query",
+    "db_archive": "bench://beaver-table/beaver_db.zip"
+  }
+}

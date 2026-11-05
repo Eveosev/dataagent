@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 355,
+  "question": "What is the average weight in kilograms of the DC Comics heroes whose eye colour is also shared by at least one Marvel Comics hero? Leave out any heroes whose weight is unknown, round the result to the nearest kilogram, and treat 'No Colour' as an eye colour like any other when matching between publishers. I just want that single number.",
+  "evidence": "",
+  "gold_sql": "SELECT ROUND(AVG(CASE WHEN s.weight_kg > 0 THEN s.weight_kg END)) AS average_weight_kg FROM superhero AS s JOIN publisher AS p ON s.publisher_id = p.id WHERE p.publisher_name = 'DC Comics' AND s.eye_colour_id IN (SELECT s2.eye_colour_id FROM superhero AS s2 JOIN publisher AS p2 ON s2.publisher_id = p2.id WHERE p2.publisher_name = 'Marvel Comics')",
+  "db_id": "superhero",
+  "case_id": "B05-bird-0356",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT ROUND(AVG(CASE WHEN s.weight_kg > 0 THEN s.weight_kg END)) AS average_weight_kg FROM superhero AS s JOIN publisher AS p ON s.publisher_id = p.id WHERE p.publisher_name = 'DC Comics' AND s.eye_colour_id IN (SELECT s2.eye_colour_id FROM superhero AS s2 JOIN publisher AS p2 ON s2.publisher_id = p2.id WHERE p2.publisher_name = 'Marvel Comics')",
+    "db_id": "superhero",
+    "evidence": ""
+  }
+}

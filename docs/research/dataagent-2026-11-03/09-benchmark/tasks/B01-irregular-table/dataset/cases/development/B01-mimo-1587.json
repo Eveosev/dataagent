@@ -1,0 +1,47 @@
+{
+  "case_id": "B01-mimo-1587",
+  "task_id": "B01",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "table",
+      "ref": "bench://mimotable/unzipped/data/chinese/spreadsheet/应收应付账款分析表1.xlsx",
+      "digest": null
+    },
+    {
+      "kind": "table",
+      "ref": "bench://mimotable/unzipped/data/chinese/spreadsheet/电商运营数据分析表1.xlsx",
+      "digest": null
+    },
+    {
+      "kind": "table",
+      "ref": "bench://mimotable/unzipped/data/chinese/spreadsheet/库存盘点统计分析表自动红字填充1.xlsx",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B01-mimo-1587.json"
+  },
+  "evidence": [
+    "bench://mimotable/unzipped/data/chinese/spreadsheet/应收应付账款分析表1.xlsx#workbook"
+  ],
+  "tags": [
+    "chinese",
+    "multiple files, complicate header",
+    "hard table",
+    "op:Lookup",
+    "op:Calculate",
+    "op:Compare"
+  ],
+  "source": "mimo",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

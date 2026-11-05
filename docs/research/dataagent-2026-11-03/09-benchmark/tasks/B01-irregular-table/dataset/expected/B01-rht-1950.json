@@ -1,0 +1,29 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 314,
+  "table": "economy-table04",
+  "structure": "ExternalSupply",
+  "question_type": "Data Analysis",
+  "sub_type": "Summary Analysis",
+  "answer": "The table summarizes employee travel expenses for the period January 1 to September 30, 2023, with columns for “Name” and “Total” expenses. Most expenses range between $4,000 and $7,000, with a few outliers below $1,500 or exceeding $7,000. Notable trends include a concentration of employees with expenses around $4,356 and a significant clustering above $5,000, indicating frequent business travel among certain groups. ",
+  "cot": [
+    {
+      "planning": "First, we need to understand the table structure, which includes the employee names in the “Name” column and their corresponding travel expenses in the “Total” column."
+    },
+    {
+      "planning": "The table appears to provide travel expense data for employees during a specific period (January 1 to September 30, 2023)."
+    },
+    {
+      "planning": "We need to identify any significant patterns or trends in the “Total” column, such as common ranges of expenses or outliers."
+    },
+    {
+      "planning": "Finally, we summarize the main features, columns, and trends in the table."
+    }
+  ],
+  "case_id": "B01-rht-1950",
+  "expected": {
+    "kind": "answer",
+    "question": "Summarize the table by describing its content, the main columns, and highlighting any notable trends in the travel expense data.",
+    "answer": "The table summarizes employee travel expenses for the period January 1 to September 30, 2023, with columns for “Name” and “Total” expenses. Most expenses range between $4,000 and $7,000, with a few outliers below $1,500 or exceeding $7,000. Notable trends include a concentration of employees with expenses around $4,356 and a significant clustering above $5,000, indicating frequent business travel among certain groups. "
+  }
+}

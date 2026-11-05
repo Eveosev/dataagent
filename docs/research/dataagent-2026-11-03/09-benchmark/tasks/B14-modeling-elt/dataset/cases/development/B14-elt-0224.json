@@ -1,0 +1,35 @@
+{
+  "case_id": "B14-elt-0224",
+  "task_id": "B14",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "config",
+      "ref": "fixtures/elt-snowflake-cs_semester-config.yaml",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B14-elt-0224.json"
+  },
+  "evidence": [
+    "bench://elt-bench/elt-bench/snowflake/cs_semester/data_model.yaml"
+  ],
+  "tags": [
+    "elt-bench",
+    "snowflake",
+    "cs_semester",
+    "models:3"
+  ],
+  "source": "elt",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

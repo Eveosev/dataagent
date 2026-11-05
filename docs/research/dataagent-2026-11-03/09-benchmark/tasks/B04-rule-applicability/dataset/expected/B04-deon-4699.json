@@ -1,0 +1,29 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_555881cd",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_action",
+    "scenario_document",
+    "scenario_served_to",
+    "statute_12_1148_4_required_element",
+    "statute_12_1148_4_trial_date_ok",
+    "integer",
+    "statute_12_1148_16_form_element",
+    "legal_required_summons_element",
+    "legal_services_information_required",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program (Oklahoma, focus year 2021)\n    Question: Must an eviction (forcible entry and detainer) summons mention legal services info?\n*/\n\n/* =========================\n   Scenario (facts)\n   ========================= */\n\n% The question context\nscenario_state(oklahoma).\nscenario_focus_year(2021).\nscenario_action(forcible_entry_and_detainer).\nscenario_document(eviction_summons).\nscenario_served_to(tenant).\n\n% Helper predicate that succeeds when the scenario is established.\nscenario_statement :-\n    scenario_state(oklahoma),\n    scenario_focus_year(2021),\n    scenario_action(forcible_entry_and_detainer),\n    scenario_document(eviction_summons),\n    scenario_served_to(tenant).\n\n/* =========================\n   Statutes translated to predicates\n   ========================= */\n\n/* --- 12 OK Stat  12-1148.4 (2021)\n   Summons requirements in forcible entry and detainer actions:\n   - command service to summon defendant to appear for trial at specified time/place\n   - time: not less than 5 days nor more than 10 days from date issued\n   - apprise defendant of nature of claim\n   - endorse relief sought and amount plaintiff will take judgment for if defendant fails to appear\n*/\nstatute_12_1148_4_required_element(command_to_appear_for_trial).\nstatute_12_1148_4_required_element(time_and_place_specified).\nstatute_12_1148_4_required_element(nature_of_claim_apprised).\nstatute_12_1148_4_required_element(relief_sought_endorsed).\nstatute_12_1148_4_required_element(default_judgment_amount_endorsed).\n\n% Encodes the statutory timing constraint (5 to 10 days after issuance).\n% This is included for completeness, though not needed to answer the legal-services question.\nstatute_12_1148_4_trial_date_ok(DaysFromIssue) :-\n    integer(DaysFromIssue),\n    DaysFromIssue >= 5,\n    DaysFromIssue =< 10.\n\n/* --- 12 OK Stat  12-1148.16 (2021)\n   Provides a required \"form\" of summons for forcible entry and detainer, including the notices.\n   We encode the substantive informational items appearing in the statutory form.\n*/\nstatute_12_1148_16_form_element(direct_to_relinquish_or_appear_show_cause).\nstatute_12_1148_16_form_element(property_description).\nstatute_12_1148_16_form_element(hearing_building_name_or_address).\nstatute_12_1148_16_form_element(hearing_county).\nstatute_12_1148_16_form_element(hearing_time).\nstatute_12_1148_16_form_element(hearing_date).\nstatute_12_1148_16_form_element(alternate_hearing_three_days_after_service_if_later).\nstatute_12_1148_16_form_element(minimum_five_days_from_issuance_notice).\nstatute_12_1148_16_form_element(default_judgment_notice_possession_and_money).\nstatute_12_1148_16_form_element(writ_of_assistance_notice).\nstatute_12_1148_16_form_element(costs_and_attorney_fees_may_be_awarded_notice).\nstatute_12_1148_16_form_element(date_line).\nstatute_12_1148_16_form_element(clerk_or_judge_signature_line).\nstatute_12_1148_16_form_element(plaintiff_or_attorney_signature_line).\nstatute_12_1148_16_form_element(plaintiff_or_attorney_address_line).\nstatute_12_1148_16_form_element(plaintiff_or_attorney_telephone_number_line).\n\n/* =========================\n   Legal reasoning helpers\n   ========================= */\n\n% For Oklahoma (2021) forcible entry and detainer summonses, collect all required elements\n% that are explicitly stated by the provided statutes.\nlegal_required_summons_element(oklahoma, 2021, forcible_entry_and_detainer, Element) :-\n    statute_12_1148_4_required_element(Element).\nlegal_required_summons_element(oklahoma, 2021, forcible_entry_and_detainer, Element) :-\n    statute_12_1148_16_form_element(Element).\n\n% The specific issue: does the summons have to include legal-services / legal-aid information?\n% This succeeds only if \"legal_services_information\" is among required elements.\nlegal_services_information_required(State, Year, Action) :-\n    legal_required_summons_element(State, Year, Action, legal_services_information).\n\n/* =========================\n   Answer predicate\n   ========================= */\n\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_state(State),\n    scenario_focus_year(Year),\n    scenario_action(Action),\n    legal_services_information_required(State, Year, Action),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n/* =========================\n   Main entrypoint\n   ========================= */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-4699",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is it required that the evictions summons served to tenants mention information on legal services the tenant could leverage (e.g., legal aid or legal services that a tenant could contact to request assistance)?"
+  }
+}

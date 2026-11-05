@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1426,
+  "table": "society-table37",
+  "structure": "MultiColumnClassified",
+  "question_type": "Fact Checking",
+  "sub_type": "Inference-based Fact Checking",
+  "answer": "TT - Tetanus toxoid vaccination",
+  "cot": [
+    {
+      "planning": "First, we need to identify all the interventions listed under the 'Antenatal Care' category."
+    },
+    {
+      "planning": "Then, we compare the 'Newborn Lives Saved' column values for these interventions."
+    },
+    {
+      "planning": "Finally, we determine which intervention has the highest number of newborn lives saved."
+    }
+  ],
+  "case_id": "B01-rht-3062",
+  "expected": {
+    "kind": "answer",
+    "question": "Which type of Antenatal Care intervention contributed to the most Newborn Lives Saved?",
+    "answer": "TT - Tetanus toxoid vaccination"
+  }
+}

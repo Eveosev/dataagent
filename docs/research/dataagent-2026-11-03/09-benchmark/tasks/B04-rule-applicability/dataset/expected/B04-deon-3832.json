@@ -1,0 +1,31 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_7c692d27",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "statute_2a42_10_1_order_term",
+    "statute_2a42_10_1_action_type",
+    "statute_2a42_10_1_term_refers_to_removal_instrument",
+    "statute_2a42_10_6_order_term",
+    "statute_2a42_10_6_term_refers_to_removal_instrument",
+    "statute_2a18_59_3_enforcement_instrument",
+    "statute_2a18_59_3_term_refers_to_removal_instrument",
+    "referent",
+    "statute_term_used_for_referent",
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_term",
+    "scenario_referent",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: New Jersey\n    Focus year: 2021\n\n    Question:\n    \"Is the term 'Restitution of premises' used to refer to the order from the court\n     to the authorities to remove a tenant?\"\n*/\n\n% -----------------------------\n% Statute translations (NJ 2021)\n% -----------------------------\n\n/* NJ Rev Stat  2A:42-10.1 (2021)\n   - In landlord vs. tenant actions to recover possession of dwelling premises,\n     the judge uses discretion in issuing:\n       (i) a warrant or writ for removal; or\n       (ii) a writ of possession.\n   - The judge may stay issuance up to 6 months after judgment of possession,\n     but cannot continue a stay if certain tenant conditions occur.\n*/\nstatute_2a42_10_1_order_term(warrant_for_removal).\nstatute_2a42_10_1_order_term(writ_for_removal).\nstatute_2a42_10_1_order_term(writ_of_possession).\n\nstatute_2a42_10_1_action_type(summary_dispossess).\nstatute_2a42_10_1_action_type(civil_action_for_possession_of_land).\nstatute_2a42_10_1_action_type(other_action_to_recover_possession).\n\n% Core concept: these are court-issued instruments used to cause removal/possession.\nstatute_2a42_10_1_term_refers_to_removal_instrument(warrant_for_removal).\nstatute_2a42_10_1_term_refers_to_removal_instrument(writ_for_removal).\nstatute_2a42_10_1_term_refers_to_removal_instrument(writ_of_possession).\n\n/* NJ Rev Stat  2A:42-10.6 (2021)\n   - Same operative language (sound discretion; warrant/writ for removal or writ of possession;\n     hardship stay up to 6 months; stay limitations).\n*/\nstatute_2a42_10_6_order_term(warrant_for_removal).\nstatute_2a42_10_6_order_term(writ_for_removal).\nstatute_2a42_10_6_order_term(writ_of_possession).\n\nstatute_2a42_10_6_term_refers_to_removal_instrument(warrant_for_removal).\nstatute_2a42_10_6_term_refers_to_removal_instrument(writ_for_removal).\nstatute_2a42_10_6_term_refers_to_removal_instrument(writ_of_possession).\n\n/* NJ Rev Stat  2A:18-59.3 (2021)\n   - During certain COVID-19 emergency circumstances, the Governor may prohibit removals.\n   - Proceedings may continue, but enforcement of judgments for possession, warrants of removal,\n     and writs of possession shall be stayed during the period of such an executive order\n     unless the court finds enforcement necessary in the interest of justice.\n   - Sheriffs/court officers/agents shall refrain from acting to remove individuals during\n     the period of such an executive order unless the court finds removal necessary.\n*/\nstatute_2a18_59_3_enforcement_instrument(judgment_for_possession).\nstatute_2a18_59_3_enforcement_instrument(warrant_of_removal).\nstatute_2a18_59_3_enforcement_instrument(writ_of_possession).\n\n% This statute also uses terms for the same enforcement/removal concepts.\nstatute_2a18_59_3_term_refers_to_removal_instrument(judgment_for_possession).\nstatute_2a18_59_3_term_refers_to_removal_instrument(warrant_of_removal).\nstatute_2a18_59_3_term_refers_to_removal_instrument(writ_of_possession).\n\n% -----------------------------------------\n% Unifying legal meaning used for reasoning\n% -----------------------------------------\n\n% The referent we care about in the question:\n% \"the order from the court to the authorities to remove a tenant\"\nreferent(order_from_court_to_authorities_to_remove_tenant).\n\n% A statutory term is used to refer to that referent if the term is one of the\n% court-issued removal/possession enforcement instruments named in these statutes.\nstatute_term_used_for_referent(Term, order_from_court_to_authorities_to_remove_tenant) :-\n    (   statute_2a42_10_1_term_refers_to_removal_instrument(Term)\n    ;   statute_2a42_10_6_term_refers_to_removal_instrument(Term)\n    ;   statute_2a18_59_3_term_refers_to_removal_instrument(Term)\n    ),\n    !.\n\n% For completeness, make explicit that if the term is not among those statutory\n% terms, the statutes (as encoded here) do not use it for that referent.\nstatute_term_used_for_referent(_OtherTerm, _OtherReferent) :-\n    fail.\n\n% -----------------------------\n% Scenario (question) as facts\n% -----------------------------\n\nscenario_state(new_jersey).\nscenario_focus_year(2021).\n\n% The term being asked about:\nscenario_term(restitution_of_premises).\n\n% The meaning being asked about:\nscenario_referent(order_from_court_to_authorities_to_remove_tenant).\n\n% Helper that succeeds when the scenario is fully set up.\nscenario_statement :-\n    scenario_state(new_jersey),\n    scenario_focus_year(2021),\n    scenario_term(restitution_of_premises),\n    scenario_referent(order_from_court_to_authorities_to_remove_tenant),\n    !.\n\n% -----------------------------\n% Question answering\n% -----------------------------\n\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_term(Term),\n    scenario_referent(Ref),\n    statute_term_used_for_referent(Term, Ref),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n% -----------------------------\n% Main / entrypoint\n% -----------------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-3832",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is the term 'Restitution of premises' used to refer to the order from the court to the authorities to remove a tenant?"
+  }
+}

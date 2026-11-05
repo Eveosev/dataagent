@@ -1,0 +1,221 @@
+pandasai-docker sandbox raises an 403 Client Error · Issue #1801 · sinaptik-ai/pandas-ai · GitHub
+Skip to content
+Navigation Menu
+Sign in
+Products
+Platform
+GitHubRepository hosting, code review, and collaboration
+CopilotAI coding agent for tasks, projects and automated work
+Build & Ship
+ActionsCI/CD and automation
+Code QualityQuality analysis, fixes, and enforcement
+CodespacesCloud development environments
+Secure
+Code SecurityVulnerability detection and remediation
+Secret ProtectionSecret scanning and leak prevention
+All Features
+Developers
+Learn
+Documentation
+Training
+Certifications
+Build
+Build with Copilot
+Customize Copilot
+Integrations
+Explore
+Trending repos
+GitHub Sponsors
+Events
+Changelog
+ChangelogYour source for the latest features, improvements, and fixes across GitHub products, all in one place.
+Businesses
+By Stage
+Enterprises
+Team
+Startups
+Nonprofits
+By Industry
+Healthcare
+Financial services
+Manufacturing
+Government
+See all industries
+Evaluate GitHub
+Why GitHub
+Customer Stories
+Business insights
+Trust Center
+Add-ons
+GitHub Advanced SecurityEnterprise-grade code security
+Copilot for businessEnterprise-grade AI features
+Premium SupportEnterprise-grade 24/7 support
+Resources
+Learn & Connect
+Documentation
+Resource center
+Blog
+Events & webinars
+Community Forum
+Customer Stories
+Integrations
+Support
+Customer support
+Training
+GitHub Status
+Company
+About
+Partners
+Changelog
+GitHub Universe
+GitHub UniverseThe event for developers, by developers — talks, workshops, and what’s next for GitHub.
+Pricing
+Search/
+Sign inSign up
+Appearance settings
+You signed in with another tab or window. Reload to refresh your session.
+You signed out in another tab or window. Reload to refresh your session.
+You switched accounts on another tab or window. Reload to refresh your session.
+Dismiss alert
+{{ message }}
+sinaptik-ai
+pandas-ai
+Repository navigation
+Code
+Issues6 (6)
+Pull requests17 (17)
+Discussions
+Actions
+Projects
+Security and quality
+Insights
+More items
+pandasai-docker sandbox raises an 403 Client Error #1801
+New issueCopy link
+New issueCopy link
+Closed as not planned
+Closed as not planned
+pandasai-docker sandbox raises an 403 Client Error#1801
+Copy link
+Description
+elisabethloiperdinger
+opened on Aug 12, 2025
+Issue body actions
+System Info
+The code below where we set Docker host to use Podman socket returns two errors, one Image Not Found Access Denied When Pulling Image. The image pandasai-sandbox can not be found on Docker Hub.
+OS Name & Version: Red Hat Enterprise Linux & 9.6
+Python version: 3.10.18
+Current version of pandasai being used: 3.0.0b19
+Current version of pandasai-docker being used: 0.1.4
+🐛 Describe the bug
+Code:
+import pandasai as pai
+from pandasai_docker import DockerSandbox
+import os
+os.environ['DOCKER_HOST'] = 'unix:///run/user/1009/podman/podman.sock'
+pai.api_key.set("MY-KEY")
+sandbox = DockerSandbox()
+sandbox.start()
+Error:
+Traceback (most recent call last):
+File "/var/home/eloiperd/op_data_innovate/pandasai_docker_proj/.pai-docker-env/lib/python3.10/site-packages/docker/api/client.py", line 275, in _raise_for_status
+response.raise_for_status()
+File "/var/home/eloiperd/op_data_innovate/pandasai_docker_proj/.pai-docker-env/lib/python3.10/site-packages/requests/models.py", line 1026, in raise_for_status
+raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 404 Client Error: Not Found for url: http+docker://localhost/v1.41/containers/create
+The above exception was the direct cause of the following exception:
+Traceback (most recent call last):
+File "/var/home/eloiperd/op_data_innovate/pandasai_docker_proj/.pai-docker-env/lib/python3.10/site-packages/docker/models/containers.py", line 876, in run
+container = self.create(image=image, command=command,
+File "/var/home/eloiperd/op_data_innovate/pandasai_docker_proj/.pai-docker-env/lib/python3.10/site-packages/docker/models/containers.py", line 935, in create
+resp = self.client.api.create_container(**create_kwargs)
+File "/var/home/eloiperd/op_data_innovate/pandasai_docker_proj/.pai-docker-env/lib/python3.10/site-packages/docker/api/container.py", line 440, in create_container
+return self.create_container_from_config(config, name, platform)
+File "/var/home/eloiperd/op_data_innovate/pandasai_docker_proj/.pai-docker-env/lib/python3.10/site-packages/docker/api/container.py", line 457, in create_container_from_config
+return self._result(res, True)
+File "/var/home/eloiperd/op_data_innovate/pandasai_docker_proj/.pai-docker-env/lib/python3.10/site-packages/docker/api/client.py", line 281, in _result
+self._raise_for_status(response)
+File "/var/home/eloiperd/op_data_innovate/pandasai_docker_proj/.pai-docker-env/lib/python3.10/site-packages/docker/api/client.py", line 277, in _raise_for_status
+raise create_api_error_from_http_exception(e) from e
+File "/var/home/eloiperd/op_data_innovate/pandasai_docker_proj/.pai-docker-env/lib/python3.10/site-packages/docker/errors.py", line 39, in create_api_error_from_http_exception
+raise cls(e, response=response, explanation=explanation) from e
+docker.errors.ImageNotFound: 404 Client Error for http+docker://localhost/v1.41/containers/create: Not Found ("no such image: docker.io/library/pandasai-sandbox: image not known")
+During handling of the above exception, another exception occurred:
+Traceback (most recent call last):
+File "/var/home/eloiperd/op_data_innovate/pandasai_docker_proj/.pai-docker-env/lib/python3.10/site-packages/docker/api/client.py", line 275, in _raise_for_status
+response.raise_for_status()
+File "/var/home/eloiperd/op_data_innovate/pandasai_docker_proj/.pai-docker-env/lib/python3.10/site-packages/requests/models.py", line 1026, in raise_for_status
+raise HTTPError(http_error_msg, response=self)
+requests.exceptions.HTTPError: 403 Client Error: Forbidden for url: http+docker://localhost/v1.41/images/create?tag=latest&fromImage=pandasai-sandbox
+The above exception was the direct cause of the following exception:
+Traceback (most recent call last):
+File "/var/home/eloiperd/op_data_innovate/pandasai_docker_proj/operational_data_synthetic_docker.py", line 23, in <module>
+sandbox.start()
+File "/var/home/eloiperd/op_data_innovate/pandasai_docker_proj/.pai-docker-env/lib/python3.10/site-packages/pandasai_docker/docker_sandbox.py", line 74, in start
+self._container = self._client.containers.run(
+File "/var/home/eloiperd/op_data_innovate/pandasai_docker_proj/.pai-docker-env/lib/python3.10/site-packages/docker/models/containers.py", line 879, in run
+self.client.images.pull(image, platform=platform)
+File "/var/home/eloiperd/op_data_innovate/pandasai_docker_proj/.pai-docker-env/lib/python3.10/site-packages/docker/models/images.py", line 464, in pull
+pull_log = self.client.api.pull(
+File "/var/home/eloiperd/op_data_innovate/pandasai_docker_proj/.pai-docker-env/lib/python3.10/site-packages/docker/api/image.py", line 429, in pull
+self._raise_for_status(response)
+File "/var/home/eloiperd/op_data_innovate/pandasai_docker_proj/.pai-docker-env/lib/python3.10/site-packages/docker/api/client.py", line 277, in _raise_for_status
+raise create_api_error_from_http_exception(e) from e
+File "/var/home/eloiperd/op_data_innovate/pandasai_docker_proj/.pai-docker-env/lib/python3.10/site-packages/docker/errors.py", line 39, in create_api_error_from_http_exception
+raise cls(e, response=response, explanation=explanation) from e
+docker.errors.APIError: 403 Client Error for http+docker://localhost/v1.41/images/create?tag=latest&fromImage=pandasai-sandbox: Forbidden ("denied: requested access to the resource is denied")
+Activity
+ArslanSaleem commented on Oct 1, 2025
+ArslanSaleem
+on Oct 1, 2025
+Contributor
+More actions
+@elisabethloiperdinger There is no Docker Hub repository available for pandasai, so the image is built directly from the provided Dockerfile. It’s possible that the issue is related to the connection with the Docker or podman.
+Also, you can pass the Dockerfile path to the sandbox from outside, but you should check the example Dockerfile here for reference:
+https://github.com/sinaptik-ai/pandas-ai/blob/main/extensions/sandbox/docker/pandasai_docker/Dockerfile
+dosubot commented on Dec 31, 2025
+dosubotBot
+on Dec 31, 2025 – with DosuBot
+More actions
+Hi, @elisabethloiperdinger. I'm Dosu (https://dosu.dev), and I'm helping the pandas-ai team manage their backlog and am marking this issue as stale.
+Issue Summary:
+You encountered a 403 Client Error using the pandasai-docker sandbox with Podman on RHEL 9.6.
+The error was due to the pandasai-sandbox image not being found on Docker Hub.
+A maintainer clarified there is no prebuilt image on Docker Hub; the image must be built locally from the provided Dockerfile.
+The 403 error likely resulted from attempting to pull a non-existent image.
+The recommended solution was to build the image locally and pass the Dockerfile path to the sandbox as shown in the repository example.
+Next Steps:
+Please confirm if this issue is still relevant with the latest version of pandas-ai.
+If it is, feel free to keep the discussion open by commenting; otherwise, I will automatically close this issue in 7 days.
+Thanks for your understanding and contribution!
+dosubotadded
+staleIssue has not had recent activity or appears to be solved. Stale issues will be automatically closedIssue has not had recent activity or appears to be solved. Stale issues will be automatically closed on Dec 31, 2025
+dosubotclosed this as not plannedon Jan 7, 2026
+dosubotremoved
+staleIssue has not had recent activity or appears to be solved. Stale issues will be automatically closedIssue has not had recent activity or appears to be solved. Stale issues will be automatically closed on Jan 7, 2026
+Sign up for free to join this conversation on GitHub. Already have an account? Sign in to comment
+Metadata
+Metadata
+AssigneesNo one assigned
+LabelsNo labels
+No labels
+TypeNo type
+ProjectsNo projects
+MilestoneNo milestone
+RelationshipsNone yet
+DevelopmentNo branches or pull requests
+Issue actions
+Open in GitHub Copilot app
+Footer
+© 2026 GitHub, Inc.
+Footer navigation
+Terms
+Privacy
+Security
+Status
+Community
+Docs
+Contact
+Manage cookies
+Do not share my personal information
+You can’t perform that action at this time.

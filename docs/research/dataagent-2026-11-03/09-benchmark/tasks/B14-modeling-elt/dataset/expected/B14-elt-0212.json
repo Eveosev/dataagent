@@ -1,0 +1,67 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "snowflake",
+  "pipeline": "california_schools",
+  "data_model": {
+    "models": [
+      {
+        "name": "ca__schools",
+        "description": "Each record represents a school.",
+        "columns": [
+          {
+            "name": "cdscode",
+            "description": "Unique identifier for the school."
+          },
+          {
+            "name": "county",
+            "description": "The county of the school."
+          },
+          {
+            "name": "school_name",
+            "description": "The name of the school."
+          },
+          {
+            "name": "percent_eligible_free_meals_for_k_12",
+            "description": "The percentage of eligible free meals for k-12 of the school"
+          },
+          {
+            "name": "percent_eligible_free_meals_for_ages_5_17",
+            "description": "The percentage of eligible free meals for ages 5 to 17 of the school"
+          },
+          {
+            "name": "SAT_excellence_rate",
+            "description": "Percentage of test takers whose total SAT scores are greater than or equal to 1500 among all test takers of the school"
+          },
+          {
+            "name": "has_more_than_30_difference_in_enrollments_between_K_12_and_ages_5_17",
+            "description": "Set to 1 if the school has more than 30 differences in enrollments between K-12 and ages 5-17, otherwise, set to 0"
+          },
+          {
+            "name": "sum_of_average_score_for_all_subjects",
+            "description": "The sum of average score for all subjects of the school, replace NULL values with 0."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    snowflake_definition_id: 424892c4-daac-4491-b35d-c6688ba547ba\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - schools\nflat_files:\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=1QdqQCzH2E3HXHF-KYAQbQO8oOzJltFUE\n  sync_mode: full_refresh_append\n  table: satscores\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: california_schools\n    sync_mode: full_refresh_append\n    tables:\n    - frpm\nsnowflake:\n  config:\n    database: california_schools\n    password: Snowflake@123\n    role: AIRBYTE_ROLE\n    schema: AIRBYTE_SCHEMA\n    username: AIRBYTE_USER\n    warehouse: AIRBYTE_WAREHOUSE\n",
+  "case_id": "B14-elt-0212",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "ca__schools",
+        "columns": [
+          "cdscode",
+          "county",
+          "school_name",
+          "percent_eligible_free_meals_for_k_12",
+          "percent_eligible_free_meals_for_ages_5_17",
+          "SAT_excellence_rate",
+          "has_more_than_30_difference_in_enrollments_between_K_12_and_ages_5_17",
+          "sum_of_average_score_for_all_subjects"
+        ]
+      }
+    ]
+  }
+}

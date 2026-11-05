@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 150,
+  "table": "injuries-table01",
+  "structure": "ContentCompound",
+  "question_type": "Fact Checking",
+  "sub_type": "Multi-hop Fact Checking",
+  "answer": "1025",
+  "cot": [
+    {
+      "planning": "First, we need to filter the table for the states Alabama and Florida."
+    },
+    {
+      "planning": "We need to extract the data for the years 1998 and 2001."
+    },
+    {
+      "planning": "Then, we sum up the fatalities for both states for these years."
+    }
+  ],
+  "case_id": "B01-rht-1786",
+  "expected": {
+    "kind": "answer",
+    "question": "What is the total number of fatal occupational injuries recorded in Alabama and Florida combined for the years 1998 and 2001?",
+    "answer": "1025"
+  }
+}

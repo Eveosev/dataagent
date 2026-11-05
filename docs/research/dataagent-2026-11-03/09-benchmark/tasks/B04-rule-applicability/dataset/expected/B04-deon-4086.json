@@ -1,0 +1,28 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_8c9683bc",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_summons_issued_pursuant_to",
+    "statute_summons_must_include",
+    "statute_no_default_possession_before_close_of_business_on_appearance_due_date",
+    "statute_service_requires_copy_of_complaint_with_summons",
+    "statute_complaint_must_include",
+    "statute_specifies_summons_inclusions",
+    "findall",
+    "sort",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    State: Colorado\n    Focus year: 2021\n    Question: \"Is it specified what must be included on the summons?\"\n*/\n\n/* =========================\n   Scenario (question facts)\n   ========================= */\n\n% The user is asking about Colorado law in 2021.\nscenario_state(colorado).\nscenario_focus_year(2021).\n\n% The question concerns a summons issued in an eviction / FED action under the article.\n% We model that the summons is \"issued pursuant to  13-40-111\".\nscenario_summons_issued_pursuant_to(co_rev_stat_13_40_111).\n\n% Helper predicate that succeeds when the factual statement we encoded is satisfied.\nscenario_statement :-\n    scenario_state(colorado),\n    scenario_focus_year(2021),\n    scenario_summons_issued_pursuant_to(co_rev_stat_13_40_111).\n\n/* ==========================================\n   Statute translations (deterministic rules)\n   ========================================== */\n\n% --- CO Code  13-40-111 (2021): Summons issuance and required contents ---\n\n% statute_summons_must_include/3 enumerates required inclusions for a summons\n% issued pursuant to CO Rev Stat  13-40-111 (2021).\n%\n% We encode the statute as a set of required \"content items\" that must be included\n% on the summons (command + notices + attached forms/resources).\nstatute_summons_must_include(colorado, 2021, command_to_appear(place_named_in_summons, time_and_day_specified)).\nstatute_summons_must_include(colorado, 2021, appearance_date_constraints(not_less_than_7_days_not_more_than_14_days_from_issuance)).\nstatute_summons_must_include(colorado, 2021, statement_to_defendant_about_default_judgment_and_answering_requirements).\nstatute_summons_must_include(colorado, 2021, boldface_notice(records_suppressed_until_possession_order_and_may_remain_private_by_agreement)).\nstatute_summons_must_include(colorado, 2021, list_of_resources_with(website_link, phone_number, for(residential_tenants_civil_legal_aid_and_rental_assistance))).\nstatute_summons_must_include(colorado, 2021, copy_of_blank_answer_form_required_by(co_rev_stat_13_40_113)).\nstatute_summons_must_include(colorado, 2021, form_to_request_documents_in_possession_of_both_parties_relevant_to_action).\n\n% Also from  13-40-111(2021): the court cannot enter default judgment for possession\n% before close of business on the appearance due date. (Not \"included on summons\", but\n% part of the statute and potentially relevant background.)\nstatute_no_default_possession_before_close_of_business_on_appearance_due_date(colorado, 2021).\n\n% --- CO Code  13-40-112 (2021): Service requirements (not asked, but encoded) ---\n\n% Service rules: copy of the complaint must be served with the summons.\nstatute_service_requires_copy_of_complaint_with_summons(colorado, 2021).\n\n% --- CO Code  13-40-110 (2021): Complaint contents (not asked, but encoded) ---\n\n% Complaint must describe property, grounds, name of occupant, prayer for possession, etc.\nstatute_complaint_must_include(colorado, 2021, property_description_reasonably_certain).\nstatute_complaint_must_include(colorado, 2021, grounds_for_recovery).\nstatute_complaint_must_include(colorado, 2021, name_of_person_in_possession_or_occupancy).\nstatute_complaint_must_include(colorado, 2021, prayer_for_recovery_of_possession).\n\n/* ==================================\n   Reasoning helpers (no hardcoding)\n   ================================== */\n\n% statute_specifies_summons_inclusions/4 gathers all required inclusions.\n% Deterministic: returns a sorted list of items.\nstatute_specifies_summons_inclusions(State, Year, Authority, ItemsSorted) :-\n    Authority = co_rev_stat_13_40_111,\n    findall(Item, statute_summons_must_include(State, Year, Item), Items),\n    sort(Items, ItemsSorted).\n\n% specified_what_must_be_included_on_summons/0 succeeds if, under the scenario,\n% the statute provides at least one required inclusion.\nspecified_what_must_be_included_on_summons :-\n    scenario_statement,\n    scenario_state(State),\n    scenario_focus_year(Year),\n    scenario_summons_issued_pursuant_to(Authority),\n    statute_specifies_summons_inclusions(State, Year, Authority, Items),\n    Items \\= [].\n\n/* =========================\n   Answer predicate\n   ========================= */\n\nhousing_answer(yes) :-\n    specified_what_must_be_included_on_summons,\n    !.\nhousing_answer(no) :-\n    !.\n\n/* =========================\n   Main entrypoint\n   ========================= */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-4086",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Is it specified what must be included on the summons?"
+  }
+}

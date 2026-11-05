@@ -1,0 +1,51 @@
+{
+  "case_id": "B03-eb-0172",
+  "task_id": "B03",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://extractbench/docs/short/golden_corral_receipt_refugio_county_auditor.pdf",
+      "digest": null
+    },
+    {
+      "kind": "schema",
+      "ref": "fixtures/eb-short-golden_corral_receipt_refugio_county_auditor-schema.json",
+      "digest": null
+    },
+    {
+      "kind": "rules",
+      "ref": "fixtures/eb-short-golden_corral_receipt_refugio_county_auditor-rules.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-eb-0172.json"
+  },
+  "evidence": [
+    "bench://extractbench/docs/short/golden_corral_receipt_refugio_county_auditor.pdf",
+    "fixtures/eb-short-golden_corral_receipt_refugio_county_auditor-schema.json",
+    "fixtures/eb-short-golden_corral_receipt_refugio_county_auditor-rules.md"
+  ],
+  "tags": [
+    "extractbench",
+    "short",
+    "tag:source:real",
+    "tag:challenge:T3.b",
+    "tag:perception:P2",
+    "tag:length:short",
+    "tag:domain:D1",
+    "fields:32"
+  ],
+  "source": "eb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "databricks",
+  "pipeline": "citeseer",
+  "data_model": {
+    "models": [
+      {
+        "name": "citeseer_paper",
+        "description": "Each record represents a paper.",
+        "columns": [
+          {
+            "name": "paper_id",
+            "description": "Unique identifier for the paper."
+          },
+          {
+            "name": "class_label",
+            "description": "Class label of the paper."
+          },
+          {
+            "name": "num_cited_word",
+            "description": "Number of cited words in the paper, replace NULL values with 0."
+          },
+          {
+            "name": "cited_word_class",
+            "description": "Set to '>50' if the paper contains more than 50 cited words, '20~50' if it contains between 20 and 50 cited words, or '<20' if it contains fewer than 20 cited words."
+          },
+          {
+            "name": "under_agents_classification",
+            "description": "Set to 1 if the paper is classified under the 'Agents' category; otherwise, set to 0."
+          },
+          {
+            "name": "cited_word1002",
+            "description": "Set to 1 if the paper has cited word1002; otherwise, set to 0."
+          },
+          {
+            "name": "ML_and_cited_butz01algorithmic",
+            "description": "Set to 1 if the paper is classified as ML and cited butz01algorithmic; otherwise, set to 0."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    databricks_definition_id: 072d5540-f236-4294-ba7c-ade8fd918496\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - cites\nflat_files:\n- format: csv\n  path: https://drive.google.com/uc?export=download&id=1nJCXt-4dIbctfdk-X0b9pj1DTL3-YkDV\n  sync_mode: full_refresh_append\n  table: paper\npostgres:\n  config:\n    database: citeseer\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - content\n    user: postgres\ndatabricks:\n  config:\n    database: <db_database>\n    hostname: <db_hostname>\n    client_id: <db_client_id>\n    secret: <db_secret>\n    schema: citeseer\n    http_path: <db_path>\n",
+  "case_id": "B14-elt-0017",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "citeseer_paper",
+        "columns": [
+          "paper_id",
+          "class_label",
+          "num_cited_word",
+          "cited_word_class",
+          "under_agents_classification",
+          "cited_word1002",
+          "ML_and_cited_butz01algorithmic"
+        ]
+      }
+    ]
+  }
+}

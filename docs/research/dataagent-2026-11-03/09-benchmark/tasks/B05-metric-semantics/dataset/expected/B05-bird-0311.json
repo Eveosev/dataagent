@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 310,
+  "question": "For every budget review event the club has held, can you give me the event name, its location, and the number of members who attended? I need this for the year-end report.",
+  "evidence": "'Budget' is the club's event type for its budget review events, such as the Fall Budget Review and the Spring Budget Review.",
+  "gold_sql": "SELECT e.event_name, e.location, COUNT(a.link_to_member) AS attended FROM event e LEFT JOIN attendance a ON e.event_id = a.link_to_event WHERE e.type = 'Budget' GROUP BY e.event_id, e.event_name, e.location",
+  "db_id": "student_club",
+  "case_id": "B05-bird-0311",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT e.event_name, e.location, COUNT(a.link_to_member) AS attended FROM event e LEFT JOIN attendance a ON e.event_id = a.link_to_event WHERE e.type = 'Budget' GROUP BY e.event_id, e.event_name, e.location",
+    "db_id": "student_club",
+    "evidence": "'Budget' is the club's event type for its budget review events, such as the Fall Budget Review and the Spring Budget Review."
+  }
+}

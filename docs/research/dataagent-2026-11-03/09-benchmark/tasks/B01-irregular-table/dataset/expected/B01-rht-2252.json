@@ -1,0 +1,29 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 616,
+  "table": "sport-table01",
+  "structure": "ColumnHeaderMerge",
+  "question_type": "Data Analysis",
+  "sub_type": "Rudimentary Analysis",
+  "answer": "9.50, 5.34",
+  "cot": [
+    {
+      "step": "First, we need to clean and standardize the data to ensure the \"Points\" column is numeric."
+    },
+    {
+      "step": "We extract the \"Points\" column and remove any missing values."
+    },
+    {
+      "step": "We calculate the average of the \"Points\" column."
+    },
+    {
+      "step": "We compute the standard deviation for the \"Points\" column."
+    }
+  ],
+  "case_id": "B01-rht-2252",
+  "expected": {
+    "kind": "answer",
+    "question": "What is the average and standard deviation of the \"Points\" column for all teams?",
+    "answer": "9.50, 5.34"
+  }
+}

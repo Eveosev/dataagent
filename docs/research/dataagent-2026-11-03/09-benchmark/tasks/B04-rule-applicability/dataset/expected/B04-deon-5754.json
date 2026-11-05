@@ -1,0 +1,21 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "uscis_f375faf5",
+  "expect_label": "yes",
+  "raw_label": "Accepted",
+  "rule_predicates": [
+    "decision",
+    "catch",
+    "writeln",
+    "error",
+    "handle_undefined"
+  ],
+  "reference_prolog": "petitioner_is_auditor.\nfiled_form_i140.\nseeking_eb2_advanced_degree.\nhas_advanced_degree.\n\nsubmitted_multiple_articles.\nsubmitted_studies_reports.\nsubmitted_peer_reviewed_articles.\nsubmitted_documentation_reviewed_manuscripts.\nsubmitted_expert_opinion.\nsubmitted_letters_of_support.\nsubmitted_letter_of_interest_from_employer.\n\ndirector_denied.\nappealed_reason_inadequate_explanation.\nappealed_reason_unaddressed_evidence.\n\n% Evidence predicates derived from submitted materials\nevidence_substantial_merit :-\n    (   submitted_multiple_articles\n    ;   submitted_peer_reviewed_articles\n    ;   submitted_studies_reports\n    ).\n\nevidence_national_importance :-\n    (   submitted_studies_reports\n    ;   submitted_peer_reviewed_articles\n    ;   submitted_multiple_articles\n    ).\n\nwell_positioned_individual :-\n    submitted_letters_of_support,\n    submitted_expert_opinion,\n    submitted_documentation_reviewed_manuscripts.\n\nbenefit_on_balance :-\n    (   submitted_letter_of_interest_from_employer,\n        submitted_studies_reports\n    )\n    ;\n    submitted_expert_opinion.\n\n% Dhanasar framework prongs\nprong1_met :-\n    evidence_substantial_merit,\n    evidence_national_importance.\n\nprong2_met :-\n    well_positioned_individual.\n\nprong3_met :-\n    benefit_on_balance.\n\n% Underlying EB-2 eligibility (petitioner filed as advanced-degree professional)\nunderlying_eb2_eligibility :-\n    has_advanced_degree.\n\n% Final eligibility: all necessary conditions to Accept the case\neligibility_met :-\n    underlying_eb2_eligibility,\n    prong1_met,\n    prong2_met,\n    prong3_met.\n\ndecision(Result) :-\n    (   eligibility_met\n    ->  Result = 'Accepted'\n    ;   Result = 'Dismissed'\n    ).\n\nrun :-\n    catch(\n        (   decision(Result),\n            writeln(Result)\n        ),\n        error(existence_error(procedure, PI), _),\n        handle_undefined(PI)\n    ).\n\nhandle_undefined(Name/Arity) :-\n    (   current_predicate(Name/OtherArity),\n        OtherArity \\= Arity\n    ->  format('Programming error: called ~w/~w, but only ~w/~w is defined.~n',\n               [Name, Arity, Name, OtherArity])\n    ;   format('Lack of information: predicate ~w/~w is not defined.~n',\n               [Name, Arity])\n    ).",
+  "case_id": "B04-deon-5754",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "Accepted",
+    "question": "Should this case be accepted or dismissed?"
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "text": "<table><thead><tr><td>5</td><td>3</td><td>4</td><td>6</td><td>7</td><td>8</td><td>9</td><td>1</td><td>2</td></tr></thead><tbody><tr><td>6</td><td>7</td><td>2</td><td>1</td><td>9</td><td>5</td><td>3</td><td>4</td><td>8</td></tr><tr><td>1</td><td>9</td><td>8</td><td>3</td><td>4</td><td>2</td><td>5</td><td>6</td><td>7</td></tr><tr><td>8</td><td>5</td><td>9</td><td>7</td><td>6</td><td>1</td><td>4</td><td>2</td><td>3</td></tr><tr><td>4</td><td>2</td><td>6</td><td>8</td><td>5</td><td>3</td><td>7</td><td>9</td><td>1</td></tr><tr><td>7</td><td>1</td><td>3</td><td>9</td><td>2</td><td>4</td><td>8</td><td>5</td><td>6</td></tr><tr><td>9</td><td>6</td><td>1</td><td>5</td><td>3</td><td>7</td><td>2</td><td>8</td><td>4</td></tr><tr><td>2</td><td>8</td><td>7</td><td>4</td><td>1</td><td>9</td><td>6</td><td>3</td><td>5</td></tr><tr><td>3</td><td>4</td><td>5</td><td>2</td><td>8</td><td>6</td><td>1</td><td>7</td><td>9</td></tr></tbody></table>\nFig.10.3 Solved sudoku puzzle.\n10.4 Hybrid Optimization\nHybrid methods may be required to solve particularly difficult real-world optimization problems. Implementation of hybrid methods typically requires non-trivial scripting because hybrids generally require a custom optimization workflow process. To illustrate this point, we describe a hybrid optimization method to solve a parameter estimation problem arising in the context of a model for childhood infectious disease transmission.\nThis parameter estimation model is a difficult nonconvex, nonlinear program for which no efficient solution algorithm exists to find global optima. To facilitate solution, the problem is reformulated using a MIP under-estimator and an NLP over-estimator. Information is exchanged between the two formulations, and the process is iterated until the two solutions converge.\nExample 10.A.14 provides a Pyomo script that implements the hybrid search. Note that some initialization code is omitted from this example for clarity. In this example, user-defined Python functions are used to organize and modularize the optimization workflow. For example, the optimization model in this application is constructed viaa function, disease_mdl. Example 10.A.14 includesa sketch of this function.\nBeyond the standard Pyomo model constructs, we observe the ability to dynamically augment Pyomo models with arbitrary data,e.g., the definition of the pts_LS and pts_LI attributes; these are not model components, but rather raw Python data types. Pyomo itself is unaware of of these attributes, but other components of a user-defined script can access and manipulate these attributes. Such a mechanism is invaluable when information is being propagated across disparate components of a\n10.4 Hybrid Optimization\n177",
+  "blocks": [
+    {
+      "category": "table",
+      "order": 1,
+      "html": "<table><thead><tr><td>5</td><td>3</td><td>4</td><td>6</td><td>7</td><td>8</td><td>9</td><td>1</td><td>2</td></tr></thead><tbody><tr><td>6</td><td>7</td><td>2</td><td>1</td><td>9</td><td>5</td><td>3</t"
+    },
+    {
+      "category": "text_block",
+      "order": 2,
+      "text": "Fig.10.3 Solved sudoku puzzle."
+    },
+    {
+      "category": "title",
+      "order": 3,
+      "text": "10.4 Hybrid Optimization"
+    },
+    {
+      "category": "text_block",
+      "order": 4,
+      "text": "Hybrid methods may be required to solve particularly difficult real-world optimization problems. Implementation of hybrid methods typically requires non-trivial scripting because hybrids generally require a custom optimization workflow process. To illustrate this point, we describe a hybrid optimization method to solve a parameter estimation problem arising in the context of a model for childhood infectious disease transmission."
+    },
+    {
+      "category": "text_block",
+      "order": 5,
+      "text": "This parameter estimation model is a difficult nonconvex, nonlinear program for which no efficient solution algorithm exists to find global optima. To facilitate solution, the problem is reformulated using a MIP under-estimator and an NLP over-estimator. Information is exchanged between the two formulations, and the process is iterated until the two solutions converge."
+    },
+    {
+      "category": "text_block",
+      "order": 6,
+      "text": "Example 10.A.14 provides a Pyomo script that implements the hybrid search. Note that some initialization code is omitted from this example for clarity. In this example, user-defined Python functions are used to organize and modularize the optimization workflow. For example, the optimization model in this application is constructed viaa function, disease_mdl. Example 10.A.14 includesa sketch of this function."
+    },
+    {
+      "category": "text_block",
+      "order": 7,
+      "text": "Beyond the standard Pyomo model constructs, we observe the ability to dynamically augment Pyomo models with arbitrary data,e.g., the definition of the pts_LS and pts_LI attributes; these are not model components, but rather raw Python data types. Pyomo itself is unaware of of these attributes, but other components of a user-defined script can access and manipulate these attributes. Such a mechanism is invaluable when information is being propagated across disparate components of a"
+    },
+    {
+      "category": "header",
+      "order": null,
+      "text": "10.4 Hybrid Optimization"
+    },
+    {
+      "category": "page_number",
+      "order": null,
+      "text": "177"
+    }
+  ],
+  "tables": [
+    {
+      "html": "<table><thead><tr><td>5</td><td>3</td><td>4</td><td>6</td><td>7</td><td>8</td><td>9</td><td>1</td><td>2</td></tr></thead><tbody><tr><td>6</td><td>7</td><td>2</td><td>1</td><td>9</td><td>5</td><td>3</td><td>4</td><td>8</td></tr><tr><td>1</td><td>9</td><td>8</td><td>3</td><td>4</td><td>2</td><td>5</td><td>6</td><td>7</td></tr><tr><td>8</td><td>5</td><td>9</td><td>7</td><td>6</td><td>1</td><td>4</td><td>2</td><td>3</td></tr><tr><td>4</td><td>2</td><td>6</td><td>8</td><td>5</td><td>3</td><td>7</td><td>9</td><td>1</td></tr><tr><td>7</td><td>1</td><td>3</td><td>9</td><td>2</td><td>4</td><td>8</td><td>5</td><td>6</td></tr><tr><td>9</td><td>6</td><td>1</td><td>5</td><td>3</td><td>7</td><td>2</td><td>8</td><td>4</td></tr><tr><td>2</td><td>8</td><td>7</td><td>4</td><td>1</td><td>9</td><td>6</td><td>3</td><td>5</td></tr><tr><td>3</td><td>4</td><td>5</td><td>2</td><td>8</td><td>6</td><td>1</td><td>7</td><td>9</td></tr></tbody></table>",
+      "order": 1
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "source": "xlangai/BRIGHT",
+  "query_id": "49",
+  "query": "## Essential Problem:\nThe problem is to find the length of the last word in a given string. A word is defined as a sequence of non-space characters. We can assume that the last character of the string is not a space.\n\n## Relevant Information:\n* The input is a string `s` consisting of words and spaces.\n* We need to find the length of the last word in the string.\n* A word is a sequence of non-space characters.\n* We can assume that the last character of the string is not a space.\n\n## Reasoning:\n1. We can iterate through the string from the end to the beginning.\n2. If we encounter a non-space character, we start counting the word length.\n3. If we encounter a space character before the beginning of the string, we have found the last word and can return the word length.\n4. If we reach the beginning of the string without encountering a space, the entire string is the last word, and we can return the string length.\n\n## Draft Answer:\n```pony\nfun last_word_length(s: String): I32\n  var word_length = 0\n  for i in (s.len - 1).downto(0)\n    if s[i] != ' '\n      word_length += 1\n    else if word_length > 0\n      break\n  return word_length\n```\n\nThis code iterates through the string from the end to the beginning. If it encounters a non-space character, it starts counting the word length. If it encounters a space character before the beginning of the string, it returns the word length. If it reaches the beginning of the string without encountering a space, it returns the string length.\n\n## Additional Thoughts:\n* This solution has a time complexity of O(n), where n is the length of the string.\n* This solution has a space complexity of O(1), as it only uses a constant amount of extra space.\n* We could also solve this problem using regular expressions, but the solution would be more complex and less efficient.\n",
+  "gold_ids": [
+    "Pony/2_ops_10.txt",
+    "Pony/2_ops_11.txt",
+    "Pony/6_errors_3.txt",
+    "Pony/2_ops_2.txt",
+    "Pony/2_ops_1.txt",
+    "Pony/3_arithmetic_5.txt",
+    "Pony/6_errors_1.txt",
+    "Pony/1_variables_2.txt",
+    "Pony/4_control-structures_19.txt",
+    "Pony/4_control-structures_15.txt",
+    "Pony/4_control-structures_14.txt",
+    "Pony/4_control-structures_11.txt",
+    "Pony/6_errors_2.txt",
+    "Pony/1_variables_1.txt",
+    "Pony/4_control-structures_13.txt",
+    "Pony/2_ops_9.txt",
+    "Pony/4_control-structures_18.txt",
+    "Pony/4_control-structures_12.txt",
+    "Pony/2_primitives_3.txt",
+    "Pony/4_control-structures_17.txt",
+    "Pony/5_methods_1.txt",
+    "Pony/4_control-structures_16.txt"
+  ],
+  "gold_answer": "N/A",
+  "corpus": "documents/pony-00000-of-00001.parquet",
+  "case_id": "B06-bright-0625",
+  "expected": {
+    "kind": "retrieval",
+    "gold_ids": [
+      "Pony/2_ops_10.txt",
+      "Pony/2_ops_11.txt",
+      "Pony/6_errors_3.txt",
+      "Pony/2_ops_2.txt",
+      "Pony/2_ops_1.txt",
+      "Pony/3_arithmetic_5.txt",
+      "Pony/6_errors_1.txt",
+      "Pony/1_variables_2.txt",
+      "Pony/4_control-structures_19.txt",
+      "Pony/4_control-structures_15.txt",
+      "Pony/4_control-structures_14.txt",
+      "Pony/4_control-structures_11.txt",
+      "Pony/6_errors_2.txt",
+      "Pony/1_variables_1.txt",
+      "Pony/4_control-structures_13.txt",
+      "Pony/2_ops_9.txt",
+      "Pony/4_control-structures_18.txt",
+      "Pony/4_control-structures_12.txt",
+      "Pony/2_primitives_3.txt",
+      "Pony/4_control-structures_17.txt",
+      "Pony/5_methods_1.txt",
+      "Pony/4_control-structures_16.txt"
+    ],
+    "gold_ids_long": [
+      "Pony/4_control-structures.txt",
+      "Pony/builtin-String-.txt",
+      "Pony/6_errors.txt",
+      "Pony/5_methods.txt",
+      "Pony/1_variables.txt",
+      "Pony/2_primitives.txt",
+      "Pony/2_ops.txt",
+      "Pony/3_arithmetic.txt"
+    ],
+    "gold_answer": "N/A",
+    "excluded_ids": [
+      "N/A"
+    ]
+  }
+}

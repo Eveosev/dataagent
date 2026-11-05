@@ -1,0 +1,150 @@
+{
+  "title": "Real-content county fixed-width check register extraction schema",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "report_title": {
+      "type": "string"
+    },
+    "program": {
+      "type": "string",
+      "description": "Report program id, e.g. 'CHK100'"
+    },
+    "organization": {
+      "type": "string"
+    },
+    "date_run": {
+      "type": "string"
+    },
+    "time_run": {
+      "type": "string"
+    },
+    "period_start": {
+      "type": "string"
+    },
+    "period_end": {
+      "type": "string"
+    },
+    "check_filter": {
+      "type": "string"
+    },
+    "bank_account": {
+      "type": "string"
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "check_number": {
+            "type": "string",
+            "description": "Six-digit check number printed on the CHK# line"
+          },
+          "vendor_name": {
+            "type": "string"
+          },
+          "void_date": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Void date if the check is marked *VOID*, else null"
+          },
+          "check_total": {
+            "type": "string",
+            "description": "Amount as printed, no currency symbol; credits carry a trailing minus (e.g. '1,092.71' or '88.00-')"
+          },
+          "line_items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "pp": {
+                  "type": "string",
+                  "description": "Pay period and year, e.g. '06 2024'"
+                },
+                "account_number": {
+                  "type": "string",
+                  "description": "Account code, e.g. '001-409-420'"
+                },
+                "account_name": {
+                  "type": "string"
+                },
+                "item_reason": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "date": {
+                  "type": "string",
+                  "description": "MM/DD/YYYY"
+                },
+                "po_no": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Six-digit PO number or null"
+                },
+                "amount": {
+                  "type": "string",
+                  "description": "Amount as printed, no currency symbol; credits carry a trailing minus (e.g. '1,092.71' or '88.00-')"
+                },
+                "batch_code": {
+                  "type": "string",
+                  "description": "'PO' or '--'"
+                }
+              },
+              "required": [
+                "pp",
+                "account_number",
+                "account_name",
+                "item_reason",
+                "date",
+                "po_no",
+                "amount",
+                "batch_code"
+              ]
+            }
+          },
+          "source_page": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "check_number",
+          "vendor_name",
+          "void_date",
+          "check_total",
+          "line_items"
+        ]
+      }
+    },
+    "total_checks_written": {
+      "type": "string",
+      "description": "Amount as printed, no currency symbol; credits carry a trailing minus (e.g. '1,092.71' or '88.00-')"
+    },
+    "total_void_checks": {
+      "type": "string",
+      "description": "Amount as printed, no currency symbol; credits carry a trailing minus (e.g. '1,092.71' or '88.00-')"
+    },
+    "total_check_amount": {
+      "type": "string",
+      "description": "Amount as printed, no currency symbol; credits carry a trailing minus (e.g. '1,092.71' or '88.00-')"
+    }
+  },
+  "required": [
+    "report_title",
+    "program",
+    "checks",
+    "total_checks_written",
+    "total_void_checks",
+    "total_check_amount"
+  ]
+}

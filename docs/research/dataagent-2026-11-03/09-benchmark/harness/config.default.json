@@ -1,0 +1,31 @@
+{
+  "version": "v0.1",
+  "adapters": {
+    "default": "dataagent-cli",
+    "available": [
+      "dataagent-cli",
+      "mcp",
+      "http"
+    ]
+  },
+  "run": {
+    "timeout_s": 1800,
+    "concurrency": 2,
+    "retries": 0,
+    "seed": 0
+  },
+  "budget": {
+    "max_usd_per_round": null,
+    "max_tokens_per_case": null
+  },
+  "env": {
+    "model": null,
+    "agent_kernel": null,
+    "dataagent": null,
+    "harness": "09-benchmark@v0.1"
+  },
+  "artifacts": {
+    "keep_prompts": true,
+    "keep_traces": true
+  }
+}

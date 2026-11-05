@@ -1,0 +1,22 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "s7703_b_2_pos",
+  "expect_label": "yes",
+  "raw_label": "1",
+  "rule_predicates": [
+    "furnishes_over_half",
+    "sec7703b2_applies",
+    "home_maintained_by",
+    "person",
+    "deduction_151",
+    "filed_joint_return"
+  ],
+  "reference_prolog": "/*  ---------  Statutory rules (excerpt)  ---------  */\n\n/*  7703(b)(2) applies in a year Y to a taxpayer P\n    if P furnishes over one-half of the cost of maintaining the household\n    that is P's home during year Y.\n    We represent that factual predicate directly as\n        furnishes_over_half(P,Y)\n*/\n\nsec7703b2_applies(P,Y) :-\n    furnishes_over_half(P,Y).\n\n/*  Furnishing over one-half of the cost is inferred from the statement\n    that the home was \"maintained by\" the taxpayer for the year.           */\n\nfurnishes_over_half(P,Y) :-\n    home_maintained_by(P,Y).\n\n\n\n/*  ---------  Facts from the case  ---------  */\n\nperson(alice).\nperson(bob).\nperson(charlie).\n\n/*  Alice has maintained the home (and therefore furnished > 1/2 of its cost)\n    from 2017 forward.                                                      */\nhome_maintained_by(alice,2017).\nhome_maintained_by(alice,2018).\nhome_maintained_by(alice,2019).\n\n/*  Alice is entitled to a 151 deduction for Charlie for 2017-2019.        */\ndeduction_151(alice,charlie,2017).\ndeduction_151(alice,charlie,2018).\ndeduction_151(alice,charlie,2019).\n\n/*  Alice and Bob filed joint returns for 2017-2019.                        */\nfiled_joint_return(alice,bob,2017).\nfiled_joint_return(alice,bob,2018).\nfiled_joint_return(alice,bob,2019).\n\n\n\n/*  ---------  Verification of the claim  ---------  */\n\n:- (  sec7703b2_applies(alice,2018)\n   -> format('Result: Entailment~n')\n   ;  format('Result: Contradiction~n')\n   ).\n:- halt.",
+  "case_id": "B04-deon-5588",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "1",
+    "question": "Section 7703(b)(2) applies to Alice maintaining her home for the year 2018."
+  }
+}

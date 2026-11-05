@@ -1,0 +1,159 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "redshift",
+  "pipeline": "olympics",
+  "data_model": {
+    "models": [
+      {
+        "name": "regions",
+        "description": "Each record represents a region.",
+        "columns": [
+          {
+            "name": "region_id",
+            "description": "Unique identifier for the region."
+          },
+          {
+            "name": "noc",
+            "description": "The NOC code of the region"
+          },
+          {
+            "name": "region_name",
+            "description": "The name of the region."
+          },
+          {
+            "name": "tallest_competitor",
+            "description": "The name of the tallest competitor in the region, with ties broken by the ascending order of the competitor full name."
+          },
+          {
+            "name": "per_from_region_1994",
+            "description": "The percentage of competitors of the 1994 Winter Olympic Game who come from the region"
+          },
+          {
+            "name": "num_athletes",
+            "description": "The number of athletes from the region, replace NULL values with 0."
+          },
+          {
+            "name": "num_medals",
+            "description": "The number of medals won by athletes from the region, replace NULL values with 0."
+          },
+          {
+            "name": "per_athlete_taller_175",
+            "description": "The percentage of athletes from the region that are taller than 175cm"
+          }
+        ]
+      },
+      {
+        "name": "sports",
+        "description": "Each record represents a sport.",
+        "columns": [
+          {
+            "name": "sport_id",
+            "description": "Unique identifier for the sport."
+          },
+          {
+            "name": "sport_name",
+            "description": "The name of the sport."
+          },
+          {
+            "name": "num_events",
+            "description": "The number of events in the sport, replace NULL values with 0."
+          },
+          {
+            "name": "avg_male_height",
+            "description": "The average height of male athletes participating in the sport. Exclude athletes with invalid height when calculating the average height."
+          },
+          {
+            "name": "num_athletes_overweight_2008",
+            "description": "The number of distinct athletes playing in the sport fall into overweight BMI category in the 2008 Summer games, replace NULL values with 0. Overweight BMI category refers to BMI greater than or equal to 25 and less than 30."
+          },
+          {
+            "name": "heaviest_athlete",
+            "description": "The name of the heaviest athlete in the sport, with ties broken by the ascending order of the athlete full name."
+          }
+        ]
+      },
+      {
+        "name": "athletes",
+        "description": "Each record represents an athlete.",
+        "columns": [
+          {
+            "name": "person_id",
+            "description": "Unique identifier for the athlete."
+          },
+          {
+            "name": "full_name",
+            "description": "The full name of the athlete."
+          },
+          {
+            "name": "gender",
+            "description": "The gender of the athlete."
+          },
+          {
+            "name": "num_Olympic_games",
+            "description": "The number of Olympic games the athlete has participated in, replace NULL values with 0."
+          },
+          {
+            "name": "per_won_a_gold_medal",
+            "description": "The percentage of the events where the athlete won a gold medal"
+          },
+          {
+            "name": "num_medals",
+            "description": "The number of medals won by the athlete, replace NULL values with 0."
+          },
+          {
+            "name": "BMI",
+            "description": "The BMI of the athlete"
+          },
+          {
+            "name": "height_over_170_participate_1988",
+            "description": "Set to 1 if the athlete's height is over 170 and participated in the game in 1988, otherwise, set to 0"
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    redshift_definition_id: f7a7d195-377f-cf5b-70a5-be6b819019dc\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://olympics-bucket/games.parquet\n    sync_mode: full_refresh_append\n    table: games\n  - path: s3://olympics-bucket/noc_region.csv\n    sync_mode: full_refresh_append\n    table: noc_region\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - event\n    - games_city\n    - person_region\nflat_files:\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=1ECpLkX3JYY9vnbFDw5ngf9_T6uTFUnCP\n  sync_mode: full_refresh_append\n  table: medal\n- format: csv\n  path: https://drive.google.com/uc?export=download&id=1RsLEwrmbIChEXWc_DzGaaZA0oBDUNUGm\n  sync_mode: full_refresh_append\n  table: city\n- format: parquet\n  path: https://drive.google.com/uc?export=download&id=1g_GwKeBIBPwQrDpAdeP7OkGp1Nrv3Khp\n  sync_mode: full_refresh_append\n  table: sport\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: olympics\n    sync_mode: full_refresh_append\n    tables:\n    - person\npostgres:\n  config:\n    database: olympics\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - competitor_event\n    - games_competitor\n    user: postgres\nredshift:\n  config:\n    host: <redshift_hostname>\n    port: <redshift_port>\n    database: <redshift_db>\n    username: <redshift_username>\n    password: <redshift_pwd>\n    schema: olympics\n    s3_bucket_name: <redshift_s3_bucket>\n    s3_bucket_region: <redshift_s3_region>\n    access_key_id: <redshift_s3_access_key>\n    secret_access_key: <redshift_s3_secret_key>\n",
+  "case_id": "B14-elt-0160",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "regions",
+        "columns": [
+          "region_id",
+          "noc",
+          "region_name",
+          "tallest_competitor",
+          "per_from_region_1994",
+          "num_athletes",
+          "num_medals",
+          "per_athlete_taller_175"
+        ]
+      },
+      {
+        "name": "sports",
+        "columns": [
+          "sport_id",
+          "sport_name",
+          "num_events",
+          "avg_male_height",
+          "num_athletes_overweight_2008",
+          "heaviest_athlete"
+        ]
+      },
+      {
+        "name": "athletes",
+        "columns": [
+          "person_id",
+          "full_name",
+          "gender",
+          "num_Olympic_games",
+          "per_won_a_gold_medal",
+          "num_medals",
+          "BMI",
+          "height_over_170_participate_1988"
+        ]
+      }
+    ]
+  }
+}

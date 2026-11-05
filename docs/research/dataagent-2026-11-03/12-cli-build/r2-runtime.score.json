@@ -1,0 +1,530 @@
+{
+  "scope": "dataagent-runtime（统一 CLI 内核 + 三层接入 + dataagent/cli 分发器 + preset 依赖）",
+  "profile": "runtime",
+  "date": "2026-11-06",
+  "round": "r2",
+  "facts_ref": "dataagent-runtime@sha256:ae8b738b6379901126e0c4de409e1ee422df5213f79c3aa930db9a31d8cbdd94",
+  "snapshot": {
+    "dataagent-runtime": "sha256:ae8b738b6379901126e0c4de409e1ee422df5213f79c3aa930db9a31d8cbdd94"
+  },
+  "rubric_version": "2.1",
+  "rules": {
+    "A1.1": {
+      "score": 1,
+      "evidence": "quality_run 重复率 2.21%（53/2399 行，包内 20、跨包 33；同级包 5 个）；例：packages/capabilities/dataagent-runtime/src/dataagent_runtime/invoke.py:300, packages/capabilities/dataagent-data/src/dataagent_data/invoke.py:24, packages/capabilities/dataagent-scenarios/src/dataagent_scenarios/gate.py:127 | packages/capabilities/dataagent-runtime/src/dataagent_runtime/adapters/sqlite.py:101, packages/capabilities/dataagent-data/src/dataagent_data/adapters/storage/sqlite.py:140",
+      "measured_by": "quality_run"
+    },
+    "A1.2": {
+      "score": 1,
+      "evidence": "无整文件/>200 行逐字复制；vendored 副本（packaging/bundle/src）有同步门禁：dataagent-runtime/tests/test_bundle_sync.py（runtime+contracts byte-match），dataagent-application/tests/test_bundle_sync.py 同规则，data/governance 经 scripts/build_bundle.py 重建，本轮实测通过"
+    },
+    "A2.1": {
+      "score": 1,
+      "evidence": "pyproject 依赖仅 dataagent-contracts + pydantic（packages/capabilities/dataagent-runtime/pyproject.toml:13-17）；unified.py 只 import dataagent_contracts 与本包（packages/capabilities/dataagent-runtime/src/dataagent_runtime/interfaces/unified.py:34-37）；无反向 import"
+    },
+    "A2.2": {
+      "score": 1,
+      "evidence": "包级依赖图 dataagent-runtime → dataagent-contracts 单向，无环（pyproject [tool.uv.sources] 唯一路径依赖）"
+    },
+    "A2.3": {
+      "score": 1,
+      "evidence": "运行时内核不 import 任何层包：unified.py 的 FileRef 构造经 LayerHooks.make_file_ref 由层注入（packages/capabilities/dataagent-runtime/src/dataagent_runtime/interfaces/unified.py:91-95,435-437），不直接依赖 dataagent-data"
+    },
+    "A3.1": {
+      "score": 1,
+      "evidence": "公开面经 __init__ 显式导出（packages/capabilities/dataagent-runtime/src/dataagent_runtime/__init__.py:14 re-export 清单）；unified.py 以 _ 前缀隐藏内部函数，公开 main/LayerHooks/Parsed 供层包使用"
+    },
+    "A4.1": {
+      "score": 1,
+      "evidence": "unified.py 单一职责（CLI 内核）；quality_run ast：无 >300 行函数、无 >1500 行模块"
+    },
+    "A5.1": {
+      "score": 0,
+      "evidence": "ast（radon 计数规则；radon 未安装）：CC>10 LOC 占比 25.68%（阈 7.3%）；最高：packages/capabilities/dataagent-runtime/src/dataagent_runtime/enforcement.py:255 CC=25（84 行代码） | packages/capabilities/dataagent-runtime/src/dataagent_runtime/invoke.py:299 CC=24（109 行代码）",
+      "measured_by": "quality_run"
+    },
+    "A5.2": {
+      "score": 1,
+      "evidence": "ast（radon 计数规则；radon 未安装）：CC>25 LOC 占比 0.0%（阈 1.1%）；最高：packages/capabilities/dataagent-runtime/src/dataagent_runtime/enforcement.py:255 CC=25（84 行代码） | packages/capabilities/dataagent-runtime/src/dataagent_runtime/invoke.py:299 CC=24（109 行代码）",
+      "measured_by": "quality_run"
+    },
+    "A5.3": {
+      "score": 1,
+      "evidence": "quality_run ast：无 >300 行函数、无 >1500 行模块",
+      "measured_by": "quality_run"
+    },
+    "A6.1": {
+      "score": 1,
+      "evidence": "可执行用法即测试本体：dataagent-runtime/tests/test_unified_cli.py 以真实 LayerHooks+Runtime 跑 list/run/--file/--ref/--authorize 全流程（:196-260）；层包 fixtures 经 run_cli 子进程被引用（dataagent-data/tests/test_interfaces.py:289-311）"
+    },
+    "A6.2": {
+      "score": 1,
+      "evidence": "README 记录 uv run --project . pytest（dataagent-runtime/README.md 统一 CLI 内核段）；实跑：cd packages/capabilities/dataagent-runtime && .venv/bin/python -m pytest -q → 99 passed（含新增 test_unified_cli.py 22 项、test_bundle_sync.py 2 项）"
+    },
+    "A7.1": {
+      "score": 1,
+      "evidence": "__all__ 27 名（含 __version__），19 个生产文件；__init__ 显式导出；weight 0 仅报事实"
+    },
+    "A8.1": {
+      "score": 1,
+      "evidence": "端口抽象齐全：ports/（tabular/decisions/inference/versioned）；决策存取经 DecisionStore 端口（packages/capabilities/dataagent-runtime/src/dataagent_runtime/ports/decisions.py:28）"
+    },
+    "A8.2": {
+      "score": 1,
+      "evidence": "wire/golden 测试：tests/test_interfaces.py 锁 MCP/CLI wire 形状；tests/test_unified_cli.py:247-258 锁摘要 JSON 结构与 results 落盘文件"
+    },
+    "A9.1": {
+      "score": 1,
+      "evidence": "uv lock 已解析（uv.lock 存在且 uv build 成功）；packaging/bundle/mint.toml 随 build_bundle 校验"
+    },
+    "A9.2": {
+      "score": 1,
+      "evidence": "真实构建成功：uv build -o /tmp/da-runtime-dist 产出 dataagent_runtime-0.1.0-py3-none-any.whl（22 文件）"
+    },
+    "A9.3": {
+      "score": 1,
+      "evidence": "解包比对：wheel 含 interfaces/unified.py、adapters/sqlite.py，无 .pyc/__pycache__；与 [tool.hatch.build.targets.wheel] packages 声明一致"
+    },
+    "A10.1": {
+      "score": 1,
+      "evidence": "quality_run hygiene：裸 except 0、吞错 0（r1 的 4 处全部消除：unified.py 的结果记录解析失败改为 stderr 提示、ValidationError 过滤改为 _validated_candidate 返回 None；adapters/sqlite.py latest_allow 的行解码改为 _decode_access 返回 None；adapters/gold_ledger.py 读钩子 OSError 记录 last_error 不再静默）"
+    },
+    "A10.2": {
+      "score": null,
+      "na_reason": "na_reason: 共享运行时未声明错误码登记源（错误码属各层 da* 命名空间）；A10.2 允许 na（profile runtime）"
+    },
+    "A11.1": {
+      "score": 1,
+      "evidence": "版本单一事实源：pyproject 0.1.0 = registry.IMPLEMENTATION_REF 'dataagent-runtime/0.1.0'（registry.py:14）= packaging/bundle/mint.toml 0.1.0"
+    },
+    "A11.2": {
+      "score": 1,
+      "evidence": "三个层包 pyproject 均依赖 dataagent-runtime（dataagent-data/pyproject.toml:15,27 等），门禁为各层 test_bundle_sync/validate_registry"
+    },
+    "A12.1": {
+      "score": 1,
+      "evidence": "契约 vendored 有门禁：dataagent-runtime/tests/test_bundle_sync.py 校验 packaging/bundle 内 dataagent_contracts 与 live 源 byte-match，本轮通过；层包 bundle 内的 runtime 副本被各层 sync 测试覆盖"
+    },
+    "A12.2": {
+      "score": 1,
+      "evidence": "无契约影子实现：unified.py 不复刻 CallContext/FileRef 结构，只引用 dataagent_contracts.core 类型"
+    },
+    "L1.1": {
+      "score": null,
+      "na_reason": "na_reason: 共享运行时不注册 operation（registry.py 文档串 'ships zero operations'）；profile runtime 允许 na"
+    },
+    "L1.2": {
+      "score": null,
+      "na_reason": "na_reason: 无 catalog snapshot（packaging/source-ref.toml: 'no catalog snapshot applies'）"
+    },
+    "L1.3": {
+      "score": null,
+      "na_reason": "na_reason: 无 operation 即无桩面；profile runtime 允许 na"
+    },
+    "L2.1": {
+      "score": 1,
+      "evidence": "方案 21 项清单：done 17 / na 4，无 partial/not_done（r1 的 #99a1de、#7cf8d0 两项 partial 已修复，见 r2-fixes.md 与下述证据）；checklist 由 plan_checklist.py --into 生成，逐条 verdict 有证据"
+    },
+    "L2.2": {
+      "score": 1,
+      "evidence": "对抗负例 10 类全拒：context 走私（exit 2，tests/test_unified_cli.py:217-222）、未知字段（:188-191）、类型错误（:184-187）、未知 op（:347-353）、未知句柄（:271-274）、缺输入（_parse_params:103-104）、--authorize 无决策（exit 3，:327-331）、坏/缺 JSON 文件（gov cli _read_json_file）、link 拒覆盖外来文件（dispatcher 测试）、env 凭据清洗（MINT_MODEL_API_KEY 不达层进程，tests/test_dispatcher.py:81-88）"
+    },
+    "L2.3": {
+      "score": 1,
+      "evidence": "校验对象=交付对象：摘要打印与 <data_root>/results/<invocation_id>.json 来自同一 result dump（unified.py:539-555 先落盘后打印）"
+    },
+    "L2.4": {
+      "score": 1,
+      "evidence": "边界显式：无输入→usage error、--detail 非法值（unified.py:139-140）、布尔/整数/浮点非法值（:125-137）、句柄无 results 目录（:258-262）均有显式分支与测试"
+    },
+    "L2.5": {
+      "score": null,
+      "na_reason": "na_reason: 执行侧复检由 invoke 的 access recheck 承担（enforcement.py:117），CLI 层无独立复检面；profile runtime 允许 na"
+    },
+    "L3.1": {
+      "score": 1,
+      "evidence": "CLI 入口四类路径均拒：绝对路径 /tmp/tester-ws/sales.csv → invalid_input；../outside/secret.csv → 'path traversal is not allowed'；工作区内指向 /tmp/outside 的符号链接 → 'path escapes the workspace'（均 exit 1）；数据层 tests/test_interfaces.py test_cli_rejects_path_traversal 通过（16 passed）"
+    },
+    "L3.2": {
+      "score": 1,
+      "evidence": "读取型 operation 声明 resource_fields 且 invoke 复检（invoke.py:378 起）；CLI 侧 --authorize 从共享 decisions store 取 allow 决策填 authorization_ref（unified.py:330-346），无决策退 3"
+    },
+    "L3.3": {
+      "score": 1,
+      "evidence": "enforce 模式下无 egress 决策引用的 inference_request 内容键在两条 stdout 通道一致剥离：摘要与 --detail full 都经过 unified.py 的 _egress_scrub（--detail full 分支 unified.py:623-629）；探针 r1-repro/probe_detail_egress.py 复跑：summary 与 full 的 stdout 均无 statement/fields，full 460 B；回归测试 test_egress_scrub_applies_to_detail_full 通过"
+    },
+    "L3.4": {
+      "score": 1,
+      "evidence": "决策不可自证：subject/purpose 只取宿主环境（unified.py:330-336；runtime.py:100-109），--input-file 携带 context 直接拒绝（unified.py:437-441）"
+    },
+    "L3.5": {
+      "score": null,
+      "na_reason": "na_reason: SQL/表达式白名单属应用层 execute_duckdb_sql；profile runtime 允许 na"
+    },
+    "L4.1": {
+      "score": null,
+      "na_reason": "na_reason: 文件/页/行预算属数据/应用层 ops；profile runtime 允许 na"
+    },
+    "L4.2": {
+      "score": 0,
+      "evidence": "D3 保持 open：invoke.py 仍无默认 deadline（只拒绝已过期 deadline），在途工作不可取消；W1 方案未含超时项，留待后续轮"
+    },
+    "L4.3": {
+      "score": 1,
+      "evidence": "共享存储并发安全：SqliteVersionedRepository.save 以 BEGIN IMMEDIATE + 计数（adapters/sqlite.py:96-121）、WAL 模式（:59-61）；tests/test_adapters.py 覆盖"
+    },
+    "L5.1": {
+      "score": 1,
+      "evidence": "每个入口有拒绝断言：usage 2（test_unified_cli.py:183-191,347-353）、failed 1（:223-231）、环境 3（:332-340,343-347）、gov confirm/policy 文件错误 2"
+    },
+    "L5.2": {
+      "score": 1,
+      "evidence": "主链路断言值而非仅 status：摘要字段值（:168-172）、句柄（:205-208）、next_command（:251-259）、截断标志（:276-281）、决策 ref（:342-346）"
+    },
+    "L5.3": {
+      "score": 1,
+      "evidence": "真实格式样本 + 入口级子进程：dataagent-data/tests/test_interfaces.py 用 subprocess 跑 CSV（16 passed）；runtime tests/test_unified_cli.py 22 passed；本评审另用真实 CLI 跑 parse_delimited_file --file sales.csv → ok + handle，profile_table_structure --ref <handle> → ok"
+    },
+    "L6.1": {
+      "score": 1,
+      "evidence": "packaging/source-ref.toml 记录 kernel=agent-kernel@f0fa521 与双包版本；本轮快照 sha256:9240f8…（result.snapshot）；源码快照 /tmp/agentos-snapshots/pre-cli-20261106-013324.tar.gz"
+    },
+    "L6.2": {
+      "score": 1,
+      "evidence": "文档与代码一致抽查 5 条：32 KiB 上限（unified.py:42 ↔ SKILL.md）、退出码 0/1/2/3（unified.py:37-40 ↔ README/SKILL）、mint.lock 优先（bin/dataagent pinned_version ↔ SKILL）、DATAAGENT_CONFIRMERS（gov cli:131-136 ↔ 12 §5.3）、env 白名单（bin/dataagent scrub_env ↔ mint.toml metadata.env）"
+    }
+  },
+  "hard_rules": {
+    "R01": {
+      "light": "green",
+      "evidence": "pyproject 依赖仅 dataagent-contracts/pydantic；unified.py 无层包 import（证据同 A2.1）"
+    },
+    "R03": {
+      "light": "green",
+      "evidence": "依赖图无环：runtime → contracts；三层 → runtime+contracts（各 pyproject [tool.uv.sources]）"
+    },
+    "D1": {
+      "light": "green",
+      "evidence": "quality_run 重复率 2.21%（53/2399 行，包内 20、跨包 33；同级包 5 个）；例：packages/capabilities/dataagent-runtime/src/dataagent_runtime/invoke.py:300, packages/capabilities/dataagent-data/src/dataagent_data/invoke.py:24, packages/capabilities/dataagent-scenarios/src/dataagent_scenarios/gate.py:127 | packages/capabilities/dataagent-runtime/src/dataagent_runtime/adapters/sqlite.py:101, packages/capabilities/dataagent-data/src/dataagent_data/adapters/storage/sqlite.py:140",
+      "measured_by": "quality_run"
+    },
+    "V1": {
+      "light": "green",
+      "evidence": "版本单一事实源：pyproject = IMPLEMENTATION_REF（registry.py:14）= packaging/bundle/mint.toml 均 0.1.0"
+    },
+    "E1": {
+      "light": "na",
+      "evidence": "共享运行时未声明错误码登记源；错误码属各层（da* 命名空间 Issue.code 校验在各层契约与门禁）"
+    },
+    "R13": {
+      "light": "na",
+      "evidence": "R13 前置条件不成立：无已发布基线（AgentOS 非 git 仓库；dataagent-runtime 版本 0.1.0 从未发布，Mint Hub 发布在方案范围外 Q3，见 12-unified-cli-research.md），破坏性变更对比无从进行"
+    },
+    "R14": {
+      "light": "green",
+      "evidence": "vendored 契约/运行时副本均有同步门禁并通过：runtime tests/test_bundle_sync.py（本轮新增）、application tests/test_bundle_sync.py、data/governance scripts/build_bundle.py 重建"
+    }
+  },
+  "checklist": {
+    "source": "docs/research/dataagent-2026-11-03/12-unified-cli-build-plan.md",
+    "plan_version": "",
+    "items": [
+      {
+        "id": "统一CLI实现计划（r1）#7b941d",
+        "section": "统一 CLI 实现计划（r1）",
+        "text": "版本：r1（2026-11-06）",
+        "line": 3,
+        "verdict": "na",
+        "evidence": "版本行，非要求"
+      },
+      {
+        "id": "统一CLI实现计划（r1）#88abdd",
+        "section": "统一 CLI 实现计划（r1）",
+        "text": "依据：[12-unified-cli-research.md](12-unified-cli-research.md) v0.3 §5（W0 契约以本文冻结的 r1 范围为准：stdin 旧模式保留，`--list` 旧 JSON 输出保留，`list` 为新格式）",
+        "line": 4,
+        "verdict": "na",
+        "evidence": "依据行，非要求"
+      },
+      {
+        "id": "统一CLI实现计划（r1）#707495",
+        "section": "统一 CLI 实现计划（r1）",
+        "text": "目标包：`dataagent-runtime`（内核）、三层 `interfaces/cli.py`（接入）、`dataagent-cli`（新分发器包）、`dataagent-s0`（依赖）",
+        "line": 5,
+        "verdict": "na",
+        "evidence": "目标包声明行，非要求"
+      },
+      {
+        "id": "统一CLI实现计划（r1）#4c3282",
+        "section": "统一 CLI 实现计划（r1）",
+        "text": "范围外：MCP schema 压缩（§5.2 已定后续单列）、Mint Hub 发布（Q3）、治理/应用依赖对齐（Q5）",
+        "line": 6,
+        "verdict": "na",
+        "evidence": "范围外声明行，非要求"
+      },
+      {
+        "id": "W1共享内核实现（dataage#ceedd2",
+        "section": "W1 共享内核实现（dataagent-runtime）",
+        "text": "内核按 inputSchema 解析 argv 参数：`--input-file`、`--set k=v`（按 schema 转换类型）、`--set-json k=<json>`（优先于 `--input-file`）、`--file <path>`（由文件字节生成 FileRef 填入文件入参）、`--ref <field>=<id@revision>`（从 data_root 的 results 解析为完整对象）、`--proposal-file`（两段式第二阶段提案）、`--authorize`（先取 AccessDecision 填入 `authorization_ref`）。",
+        "line": 10,
+        "verdict": "done",
+        "evidence": "dataagent-runtime/src/dataagent_runtime/interfaces/unified.py:108-157（--input-file/--set/--set-json/--file/--ref/--proposal-file/--authorize 解析）、:252-328（句柄经 results 解析、按字段类型取包装对象）、:330-357（--authorize 取 allow 决策填 authorization_ref）、:435-437（--file 经层钩子生成 FileRef）；tests/test_unified_cli.py 全参数覆盖"
+      },
+      {
+        "id": "W1共享内核实现（dataage#319aaa",
+        "section": "W1 共享内核实现（dataagent-runtime）",
+        "text": "`<op> --help` 输出扁平参数表（由 inputSchema 生成，不输出 `$defs`）。",
+        "line": 11,
+        "verdict": "done",
+        "evidence": "unified.py:383-419 _op_help：由 inputSchema 生成扁平表，$ref 只取名不展开（无 $defs 输出；test_op_help_flat_without_defs）"
+      },
+      {
+        "id": "W1共享内核实现（dataage#14f03f",
+        "section": "W1 共享内核实现（dataagent-runtime）",
+        "text": "`list` 每个 op 一行：名称、能力编号、是否复检（resource_fields）、是否两段式。",
+        "line": 12,
+        "verdict": "done",
+        "evidence": "unified.py:421-428 _list_lines：每 op 一行 名称/能力编号/recheck/two_phase；三层实测（data 32、app 13、gov 6 行）"
+      },
+      {
+        "id": "W1共享内核实现（dataage#99a1de",
+        "section": "W1 共享内核实现（dataagent-runtime）",
+        "text": "stdout 摘要 JSON：`status`、`issues`、关键输出字段、新产生对象句柄（`id@revision`）、`result_path`；控制在 32 KiB 内；全文写 `.dataagent/results/<invocation_id>.json`；`--detail full` 直接输出全文。",
+        "line": 13,
+        "verdict": "done",
+        "evidence": "needs_input 路径同样受 32 KiB 上限：unified.py _fit_summary 按序裁剪（丢弃 data → 截断 issues 至 20 → 裁剪各 issue 的 inference_request 内容值），完整请求仍写 <data_root>/results/<id>.inference_request.json；探针 r1-repro/probe_overflow2.py 复跑：stdout 1,524 B ≤ 32,768 B（r1 为 42,680 B），inference_request 保留（裁剪后）且落盘完整 80 条 samples；回归测试 test_needs_input_summary_clipped_under_limit"
+      },
+      {
+        "id": "W1共享内核实现（dataage#cd48f2",
+        "section": "W1 共享内核实现（dataagent-runtime）",
+        "text": "`needs_input` 时输出 `inference_request`（另存 `.dataagent/results/<invocation_id>.inference_request.json`）与建议的下一条命令。",
+        "line": 14,
+        "verdict": "done",
+        "evidence": "unified.py:582-596：needs_input 时落盘 <id>.inference_request.json 并输出 next_command；test_needs_input_emits_request_and_next_command"
+      },
+      {
+        "id": "W1共享内核实现（dataage#7cf8d0",
+        "section": "W1 共享内核实现（dataagent-runtime）",
+        "text": "输出前做外发检查（W0 §5：enforce 模式下无 egress 决策引用时剥离 `inference_request` 内容键，与 MCP 通道一致）。",
+        "line": 15,
+        "verdict": "done",
+        "evidence": "输出前外发检查覆盖两条 stdout 通道：摘要与 --detail full 均先过 _egress_scrub（unified.py:623-629）；探针 r1-repro/probe_detail_egress.py 复跑：两条通道均无 statement/fields；回归测试 test_egress_scrub_applies_to_detail_full"
+      },
+      {
+        "id": "W1共享内核实现（dataage#1d1550",
+        "section": "W1 共享内核实现（dataagent-runtime）",
+        "text": "退出码 0 = ok/partial/needs_input；1 = failed；2 = 用法或 schema 错误；3 = 环境缺失（registry/catalog 校验失败）。",
+        "line": 16,
+        "verdict": "done",
+        "evidence": "unified.py:37-40 退出码；failed→1（:612）、usage/schema→2（:466-472,523-527）、环境缺失→3（:618-622 与各层 validate 路径）；数据层黑盒测试断言改为 2/3（dataagent-data/tests/test_interfaces.py:77-79,250-252）"
+      },
+      {
+        "id": "W1共享内核实现（dataage#e0d221",
+        "section": "W1 共享内核实现（dataagent-runtime）",
+        "text": "身份与用途只取 `DATAAGENT_HOST_SUBJECT_REF` / `DATAAGENT_HOST_PURPOSE`（§5.4），不接受参数覆盖。",
+        "line": 17,
+        "verdict": "done",
+        "evidence": "unified.py:330-336 主体/用途只取 runtime.host_* 或 DATAAGENT_HOST_*；--input-file 携带 context 拒绝（:437-441）；数据层 runtime 补 env 读取（dataagent-data/src/dataagent_data/runtime.py:80-84）"
+      },
+      {
+        "id": "W2三层接入实现#6ad74a",
+        "section": "W2 三层接入实现",
+        "text": "数据层、应用层、治理层 `interfaces/cli.py` 接入内核：`list`、`run <op>`、`<op> --help` 与旧 stdin 模式并存；改完重建 bundle，`test_bundle_sync` 通过。",
+        "line": 21,
+        "verdict": "done",
+        "evidence": "三层 interfaces/cli.py 接入 unified.main（data:34 / application:32 / governance:175）；旧 stdin 模式保留（unified.py:653-656 回退、--list 旧 JSON :642-644）；三层 bundle 重建且 sync 通过（app test_bundle_sync 3 passed；data/gov build_bundle 后全绿）"
+      },
+      {
+        "id": "W2三层接入实现#eb62aa",
+        "section": "W2 三层接入实现",
+        "text": "治理层增加 `confirm <file>`（判据确认，确认人仍来自 `DATAAGENT_CONFIRMERS`）与 `policy apply <file>`（写入访问策略到版本库）。",
+        "line": 22,
+        "verdict": "done",
+        "evidence": "governance/interfaces/cli.py:112-141 confirm <file>（确认人仍取 DATAAGENT_CONFIRMERS）、:143-158 policy apply <file> 经 rt.policy.save 写版本库；测试 test_cli_confirm_accepts_file / test_cli_policy_apply"
+      },
+      {
+        "id": "W3分发器包实现#b9b374",
+        "section": "W3 分发器包实现",
+        "text": "新增 `packages/capabilities/dataagent-cli`（`kind=bundle`）：`bin/dataagent` POSIX sh 分发器，按层定位 `.mint/packages/dataagent/<layer>-layer@<ver>/`（mint.lock 优先，缺省取最高版本），exec `<包>/.venv/bin/python -m dataagent_<layer>.interfaces.cli`；启动时按白名单清洗环境变量后 exec（§5.4）。",
+        "line": 26,
+        "verdict": "done",
+        "evidence": "dataagent-cli/bin/dataagent：pinned_version 按 mint.lock、resolve_dir 缺省最高版本、dispatch 按层 exec <包>/.venv/bin/python -m dataagent_<layer>.interfaces.cli、scrub_env 白名单清洗；mint.toml kind=bundle + [artifacts] bin、无 .mcp.json、无 Python 依赖；tests/test_dispatcher.py 12 项（含 doctor 全通过路径）"
+      },
+      {
+        "id": "W3分发器包实现#61fb67",
+        "section": "W3 分发器包实现",
+        "text": "`dataagent link` 在项目根生成 `./dataagent`；`dataagent setup` 对三层执行 `uv sync --frozen`；`dataagent doctor` 检查三层包、`.venv`、策略、data_root、执行模式（缺失退 3）。",
+        "line": 27,
+        "verdict": "done",
+        "evidence": "bin/dataagent：link_cmd（生成 ./dataagent，拒外来文件）、setup_cmd（uv sync --frozen 三层）、doctor_cmd（三层包/.venv/策略/data_root/执行模式，缺失退 3）；测试 test_dispatcher.py:118-146,169-176"
+      },
+      {
+        "id": "W3分发器包实现#c9ab0b",
+        "section": "W3 分发器包实现",
+        "text": "`skills/dataagent-cli/SKILL.md` 用法文档；mint.toml 声明 `[artifacts] bin = \"dataagent\"`，无 Python 依赖、无 `.mcp.json`。",
+        "line": 28,
+        "verdict": "done",
+        "evidence": "skills/dataagent-cli/SKILL.md（命令/参数/输出/退出码/典型链路）；mint.toml [artifacts] bin=\"dataagent\"、[provides] skills"
+      },
+      {
+        "id": "W3分发器包实现#916584",
+        "section": "W3 分发器包实现",
+        "text": "`dataagent-s0` mint.toml 增加 `dataagent/cli` 依赖（path 指向包根，无构建步骤）。",
+        "line": 29,
+        "verdict": "done",
+        "evidence": "dataagent-s0/mint.toml:21 增加 \"dataagent/cli\" = { path = \"../dataagent-cli\" }"
+      },
+      {
+        "id": "W4测试与交付#0d77f1",
+        "section": "W4 测试与交付",
+        "text": "内核单测（参数解析、类型转换、句柄解析、摘要上限、退出码、needs_input 建议、外发剥离）。",
+        "line": 33,
+        "verdict": "done",
+        "evidence": "dataagent-runtime/tests/test_unified_cli.py 22 项（参数/类型转换/句柄解析/摘要 32KiB/退出码/needs_input 建议/外发剥离）"
+      },
+      {
+        "id": "W4测试与交付#8a5297",
+        "section": "W4 测试与交付",
+        "text": "三层 CLI 冒烟测试与既有套件全绿；分发器脚本在临时 mint 布局下的功能测试。",
+        "line": 34,
+        "verdict": "done",
+        "evidence": "三层冒烟：data 5 项、app 2 项、gov 4 项 unified 用例；全量 data / app 179 / gov 121 / runtime 99 全绿；分发器 unittest 12 项"
+      },
+      {
+        "id": "W4测试与交付#979e1a",
+        "section": "W4 测试与交付",
+        "text": "源码快照 + rubric 评分（code-landing-quality r1）。",
+        "line": 35,
+        "verdict": "done",
+        "evidence": "快照 /tmp/agentos-snapshots/pre-cli-20261106-013324.tar.gz；rubric 结果即本文件（code-landing-quality r1）"
+      }
+    ]
+  },
+  "defects": [
+    {
+      "id": "D1",
+      "severity": "P2",
+      "status": "fixed",
+      "first_seen": "r1",
+      "title": "包间架构性重复 13.84% > 3%（D1/A1.1 red；基线 19.26%）",
+      "location": "packages/capabilities/dataagent-runtime/src/dataagent_runtime/adapters/sqlite.py:90 等 171 组",
+      "rules": [
+        "A1.1",
+        "D1"
+      ],
+      "repro": {
+        "input": "python3 skills/code-landing-quality/scripts/quality_run.py --repo . --package packages/capabilities/dataagent-runtime",
+        "expected": "重复率 ≤ 3.0%",
+        "actual": "13.84%（319/2305；跨包 299、包内 20）。基线 19.26%（338/1755）；-5.42pp 中约 2.51pp 来自删除数据层 CLI 副本，约 2.91pp 来自新增 525 行分母"
+      },
+      "fix_evidence": "重复率 13.84%→2.21%（quality_run 复测）：数据层 5 个复制文件改为复用/继承 runtime（interfaces/mcp_server.py 99 行→薄封装 serve()、adapters/storage/local_content.py 64 行→再导出、ports/versioned+content 24 行→继承共享协议、adapters/storage/sqlite.py 48 行→继承 SqliteDatabase/SqliteVersionedRepository 并把连接生命周期修复上收到 runtime、runtime.py 27 行→委托 Runtime.create+resolve_roots）；application helpers 的 EGRESS_CONTENT_KEYS、governance runtime/errors.py 同步单一来源；全量测试通过（runtime 101 / data 654 / app 203 / gov 121 / cli 12），四包 bundle 重建无漂移；详见 r2-fixes.md",
+      "waiver": ""
+    },
+    {
+      "id": "D2",
+      "severity": "P2",
+      "status": "partial",
+      "first_seen": "r1",
+      "title": "_parse_params/_run 圈复杂度 26/23（_emit 实为 14；A5.1/A5.2 超阈）",
+      "location": "packages/capabilities/dataagent-runtime/src/dataagent_runtime/interfaces/unified.py:108,462",
+      "rules": [
+        "A5.1",
+        "A5.2"
+      ],
+      "repro": {
+        "input": "quality_run（ast CC，radon 未安装）",
+        "expected": "CC>10 LOC ≤7.3%、CC>25 ≤1.1%",
+        "actual": "29.2% / 4.9%（基线 26.95% / 3.87%）；最高 tabular.py:118 CC=31、unified.py:108 _parse_params CC=26、enforcement.py:234 CC=25、invoke.py:299 CC=24、unified.py:462 _run CC=23"
+      },
+      "fix_evidence": "本轮新增代码的复杂度已消除（unified.py _parse_params CC 26→16、_run 23→16），且把唯一 CC>25 的 decode_table_payload（CC=31，68 行）拆为 _decode_columns/_decode_rows/_decode_row_meta；CC>25 LOC 占比 4.9%→0.0%（A5.2 达标）；CC>10 占比 29.2%→25.68% 仍 >7.3%（既有 enforcement/invoke/tabular 组合，A5.1 未达标，留待后续轮）；见 r2-fixes.md",
+      "waiver": ""
+    },
+    {
+      "id": "D3",
+      "severity": "P2",
+      "status": "open",
+      "first_seen": "r1",
+      "title": "CLI 内核无默认超时（L4.2）",
+      "location": "packages/capabilities/dataagent-runtime/src/dataagent_runtime/interfaces/unified.py:330-354,462-537",
+      "rules": [
+        "L4.2"
+      ],
+      "repro": {
+        "input": "长时间运行的 op 经 dataagent <layer> run 调用（无 timeout 参数/环境变量）",
+        "expected": "非空默认超时且超时取消工作",
+        "actual": "_build_context 不设 deadline；invoke.py:353 只拒绝已过期的 deadline，不取消在途工作；grep 'deadline|timeout' unified.py 为 0 处"
+      },
+      "fix_evidence": "r2 未实现默认超时与在途取消（W1 方案范围外，12-unified-cli-build-plan.md 无该项）；保持 open 留待后续轮",
+      "waiver": ""
+    },
+    {
+      "id": "D4",
+      "severity": "P2",
+      "status": "fixed",
+      "first_seen": "r1",
+      "title": "跳过式异常处理被 A10.1 计为吞错（4 处：2 处 ValidationError:continue + 1 处 OSError/JSON:continue + 1 处 best-effort pass）",
+      "location": "adapters/gold_ledger.py:136（预存）、adapters/sqlite.py:194、interfaces/unified.py:272、interfaces/unified.py:287",
+      "rules": [
+        "A10.1"
+      ],
+      "repro": {
+        "input": "quality_run AST 吞错扫描",
+        "expected": "0 处",
+        "actual": "4 处（质量门禁 hygiene.swallow）；3 处为坏记录/候选校验跳过，1 处预存 gold 台账 best-effort"
+      },
+      "fix_evidence": "quality_run 吞错 0：unified.py:280-284（不可读结果记录→stderr 提示）、unified.py:297-307（_validated_candidate 返回 None）、adapters/sqlite.py:_decode_access（返回 None）、adapters/gold_ledger.py:135-141（记录 last_error）",
+      "waiver": ""
+    },
+    {
+      "id": "D5",
+      "severity": "P2",
+      "status": "fixed",
+      "first_seen": "r1",
+      "title": "stdout 摘要不保证 ≤32 KiB：issues/inference_request 不按体积裁剪（W1 摘要上限）",
+      "location": "packages/capabilities/dataagent-runtime/src/dataagent_runtime/interfaces/unified.py:593-601",
+      "rules": [
+        "L2.1"
+      ],
+      "repro": {
+        "input": "探针 /tmp/probe_overflow2.py：needs_input 结果，1 条 issue，inference_request.samples = 80 条（每条 500B）；DATAAGENT_ENFORCEMENT_MODE 未设（默认 warn）",
+        "expected": "stdout ≤ 32,768 B",
+        "actual": "stdout 42,680 B（data 已替换为 truncated 标记，issues 仍带完整 inference_request）；enforce 且有 egress 决策时同样保留内容键"
+      },
+      "fix_evidence": "unified.py _fit_summary：探针 probe_overflow2.py 复跑 1,524 B ≤ 32 KiB（r1 42,680 B），完整 inference_request 落盘；回归测试 test_needs_input_summary_clipped_under_limit",
+      "waiver": ""
+    },
+    {
+      "id": "D6",
+      "severity": "P2",
+      "status": "fixed",
+      "first_seen": "r1",
+      "title": "usage 文本写成 `dataagent <layer> gov policy apply <file>`（实现与 SKILL.md 均为 `dataagent gov policy apply <file>`）",
+      "location": "packages/capabilities/dataagent-cli/bin/dataagent:188-189",
+      "rules": [],
+      "repro": {
+        "input": "dataagent doctor 或任意非法调用触发的 usage 文本",
+        "expected": "与 SKILL.md/实现一致的 `dataagent gov policy apply <file>`",
+        "actual": "打印 `dataagent <layer> gov policy apply <file>`；不影响评分，建议 r2 修正"
+      },
+      "fix_evidence": "dataagent-cli/bin/dataagent:188-189 usage 文本改为 `dataagent gov policy apply <file>` / `dataagent gov confirm <file>`；分发器 12 项测试通过",
+      "waiver": ""
+    },
+    {
+      "id": "D7",
+      "severity": "P2",
+      "status": "fixed",
+      "first_seen": "r1",
+      "title": "`--detail full` 在 egress 剥离之前输出全文：enforce 下无 egress 决策仍打印 inference_request 内容键",
+      "location": "packages/capabilities/dataagent-runtime/src/dataagent_runtime/interfaces/unified.py:557-560（对照 :360-380 摘要路径）",
+      "rules": [
+        "L3.3"
+      ],
+      "repro": {
+        "input": "探针 /tmp/probe_detail_egress.py：T.9.3 needs_input，inference_request 含 statement/fields 且 egress_decision_ref=None，enforcement=enforce",
+        "expected": "两条输出路径一致：全文也不输出未获批内容键（或文档明确 full 为宿主调试通道）",
+        "actual": "摘要 stdout 无 statement/fields；`--detail full` stdout 含 sum(secret_col) 与 fields"
+      },
+      "fix_evidence": "unified.py --detail full 分支在输出前过 _egress_scrub；探针 probe_detail_egress.py 复跑两条通道均无 statement/fields；回归测试 test_egress_scrub_applies_to_detail_full",
+      "waiver": ""
+    }
+  ]
+}

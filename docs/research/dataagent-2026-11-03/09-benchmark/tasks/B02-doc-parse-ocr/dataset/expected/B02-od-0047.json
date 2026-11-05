@@ -1,0 +1,344 @@
+{
+  "source": "opendatalab/OmniDocBench",
+  "page_no": 0,
+  "image": "page-60d560a3-cd92-4b7d-b6c5-f0d6ce6dc3f1.png",
+  "attribute": {
+    "data_source": "academic_literature",
+    "language": "english",
+    "layout": "single_column",
+    "special_issue": [],
+    "subset": "equation_hard"
+  },
+  "reading_order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    6,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    null,
+    null,
+    null
+  ],
+  "blocks": [
+    {
+      "category": "page_number",
+      "order": 0,
+      "text": "40"
+    },
+    {
+      "category": "header",
+      "order": 1,
+      "text": "ROMAN SHVYDKOY"
+    },
+    {
+      "category": "text_block",
+      "order": 2,
+      "text": "Since $ E > 4\\bar{n} $ , we have $ \\mathrm{x} + \\mathrm{v} \\geqslant E/4 $ , and hence, from the above,"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 3,
+      "latex": "$$\\left| I\\right| E \\lesssim  {\\int }_{I}\\left( {\\mathrm{x} + \\mathrm{v}}\\right) \\mathrm{d}t \\lesssim  \\mathop{\\sum }\\limits_{i}{\\left| I\\right| }^{{\\delta }_{i}^{\\prime }}{E}^{{\\delta }_{i}^{\\prime \\prime }},$$"
+    },
+    {
+      "category": "text_block",
+      "order": 4,
+      "text": "which finishes the proof."
+    },
+    {
+      "category": "text_block",
+      "order": 6,
+      "text": "This finishes the proof of Theorem 5.1."
+    },
+    {
+      "category": "title",
+      "order": 8,
+      "text": "# 6. APPENDIX: INTERPOLATION IN WEIGHTED SOBOLEV SPACES"
+    },
+    {
+      "category": "text_block",
+      "order": 9,
+      "text": "For any any $ p \\in \\mathbb{N} $ we denote for short $ {\\partial }_{x}^{p}f = \\left( {{\\partial }_{{x}_{1}}^{p}f,\\ldots ,{\\partial }_{{x}_{n}}^{p}f}\\right) $ , and $ {\\left| {\\partial }_{x}^{p}f\\right| }^{2} = \\mathop{\\sum }\\nolimits_{i}{\\left| {\\partial }_{{x}_{i}}^{p}f\\right| }^{2} $ . Similar notation will be used in $ v $ -variable. It is clear that $ {\\left| {\\partial }_{x}^{p}f\\right| }^{2} $ represents a linear combination of $ p $th order derivatives."
+    },
+    {
+      "category": "text_block",
+      "order": 10,
+      "text": "Let us first note the following simple interpolation inequality: for $ k,l \\geqslant 0 $ and $ K,L > 0 $ such that $ \\frac{k}{K} + \\frac{l}{L} < 1 $ and any $ \\left| \\mathbf{k}\\right| = k,\\left| \\mathbf{l}\\right| = l $, we have"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 11,
+      "latex": "$${\\int }_{\\Omega  \\times  {\\mathbb{R}}^{n}}{\\left| {\\partial }_{x}^{\\mathbf{k}}{\\partial }_{v}^{\\mathbf{l}}f\\right| }^{2}\\mathrm{\\;d}v\\mathrm{\\;d}x \\leqslant  {\\left( {\\int }_{\\Omega  \\times  {\\mathbb{R}}^{n}}{\\left| {\\partial }_{x}^{K}f\\right| }^{2}\\mathrm{\\;d}v\\mathrm{\\;d}x\\right) }^{\\frac{k}{K}}{\\left( {\\int }_{\\Omega  \\times  {\\mathbb{R}}^{n}}{\\left| {\\partial }_{v}^{L}f\\right| }^{2}\\mathrm{\\;d}v\\mathrm{\\;d}x\\right) }^{\\frac{l}{L}}{\\left( {\\int }_{\\Omega  \\times  {\\mathbb{R}}^{n}}{\\left| f\\right| }^{2}\\mathrm{\\;d}v\\mathrm{\\;d}x\\right) }^{1 - \\frac{k}{K} - \\frac{l}{L}}.\\tag{131}$$"
+    },
+    {
+      "category": "text_block",
+      "order": 12,
+      "text": "Indeed, denoting by $ \\mathrm{d}\\xi $ the counting measure over $ {\\mathbb{Z}}^{n} $ ,"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 13,
+      "latex": "$$\\int_{\\Omega\\times\\mathbb{R}^{n}}|\\partial_{x}^{\\mathbf{k}}\\partial_{v}^{\\mathbf{l}}f|^{2}\\mathrm{d}v\\mathrm{d}x=\\int_{\\mathbb{Z}^{n}\\times\\mathbb{R}^{n}}\\Pi_{i=1}^{n}|\\xi_{i}|^{2k_{i}}|\\eta_{i}|^{2l_{i}}|\\hat{f}|^{2}\\mathrm{d}\\eta\\mathrm{d}\\xi\\leqslant\\int_{\\mathbb{Z}^{n}\\times\\mathbb{R}^{n}}|\\xi|^{2k}|\\eta|^{2l}|\\hat{f}|^{2}\\mathrm{d}\\eta\\mathrm{d}\\xi$$"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 14,
+      "latex": "$$\\leqslant\\int_{\\mathbb{Z}^{n}\\times\\mathbb{R}^{n}}|\\xi|^{2k}|\\hat{f}|^{2k/K}|\\eta|^{2l}|\\hat{f}|^{2l/L}|\\hat{f}|^{2(1-k/K-l/K)}\\mathrm{d}\\eta\\mathrm{d}\\xi$$"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 15,
+      "latex": "$$\\leqslant\\left(\\int_{\\mathbb{Z}^{n}\\times\\mathbb{R}^{n}}|\\xi|^{2K}|\\hat{f}|^{2}\\mathrm{d}\\eta\\mathrm{d}\\xi\\right)^{\\frac{k}{K}}\\left(\\int_{\\mathbb{Z}^{n}\\times\\mathbb{R}^{n}}|\\eta|^{2L}|\\hat{f}|^{2}\\mathrm{d}\\eta\\mathrm{d}\\xi\\right)^{\\frac{1}{L}}\\left(\\int_{\\mathbb{Z}^{n}\\times\\mathbb{R}^{n}}|f|^{2}\\mathrm{d}\\eta\\mathrm{d}\\xi\\right)^{1-\\frac{k}{K}-\\frac{l}{L}}$$"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 16,
+      "latex": "$$\\lesssim\\left(\\sum_{i}\\int_{\\mathbb{Z}^{n}\\times\\mathbb{R}^{n}}|\\xi_{i}|^{2K}|\\hat{f}|^{2}\\mathrm{d}\\eta\\mathrm{d}\\xi\\right)^{\\frac{k}{K}}\\left(\\sum_{i}\\int_{\\mathbb{Z}^{n}\\times\\mathbb{R}^{n}}|\\eta_{i}|^{2L}|\\hat{f}|^{2}\\mathrm{d}\\eta\\mathrm{d}\\xi\\right)^{\\frac{l}{L}}$$"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 17,
+      "latex": "$$\\times\\left(\\int_{\\mathbb{Z}^{n}\\times\\mathbb{R}^{n}}|f|^{2}\\mathrm{d}\\eta\\mathrm{d}\\xi\\right)^{1-\\frac{k}{K}-\\frac{l}{L}}$$"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 18,
+      "latex": "$$=\\left(\\int_{\\Omega\\times\\mathbb{R}^{n}}|\\partial_{x}^{K}f|^{2}\\mathrm{d}v\\mathrm{d}x\\right)^{\\frac{k}{K}}\\left(\\int_{\\Omega\\times\\mathbb{R}^{n}}|\\partial_{v}^{L}f|^{2}\\mathrm{d}v\\mathrm{d}x\\right)^{\\frac{l}{L}}\\left(\\int_{\\Omega\\times\\mathbb{R}^{n}}|f|^{2}\\mathrm{d}v\\mathrm{d}x\\right)^{1-\\frac{k}{K}-\\frac{l}{L}}.$$"
+    },
+    {
+      "category": "text_block",
+      "order": 19,
+      "text": "When a weight is involved that depends only on $ v,\\omega = \\omega \\left( v\\right) $ , then the above interpolation extends trivially in the case when $ \\mathbf{k} = 0 $ by application of (131) in $ x $-variable only, and the Hölder inequality in $ v $:"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 20,
+      "latex": "$$\\int_{\\Omega\\times\\mathbb{R}^{n}}|\\partial_{x}^{\\mathbf{k}}f|^{2}\\omega\\mathrm{d}v\\mathrm{d}x\\leqslant\\int_{\\mathbb{R}^{n}}\\left(\\int_{\\Omega}|\\partial_{x}^{K}f|^{2}\\mathrm{d}x\\right)^{\\frac{k}{K}}\\left(\\int_{\\Omega}|f|^{2}\\mathrm{d}x\\right)^{1-\\frac{k}{K}}\\omega\\mathrm{d}v\\tag{132}$$"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 21,
+      "latex": "$$\\leqslant\\left(\\int_{\\Omega\\times\\mathbb{R}^{n}}|\\partial_{x}^{K}f|^{2}\\omega\\mathrm{d}v\\mathrm{d}x\\right)^{\\frac{k}{K}}\\left(\\int_{\\Omega\\times\\mathbb{R}^{n}}|f|^{2}\\omega\\mathrm{d}v\\mathrm{d}x\\right)^{1-\\frac{k}{K}}.$$"
+    },
+    {
+      "category": "text_block",
+      "order": 22,
+      "text": "It is clear that the above inequalities extend to any fractional $k$, $K$ as well if we replace the derivatives with Fourier multipliers $ {D}_{x}^{k}f $ with symbol $ {\\left| \\xi \\right| }^{k} $. In fact the computations above already use that symbol even for integer order derivatives. It is important to keep in mind though that if $ k $ is integer,then since $ \\omega $ is not involved in Fourier transform, we have"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 23,
+      "latex": "$${\\int }_{\\Omega  \\times  {\\mathbb{R}}^{n}}{\\left| {D}_{x}^{k}f\\right| }^{2}\\omega \\mathrm{d}v\\mathrm{\\;d}x \\sim  {\\int }_{\\Omega  \\times  {\\mathbb{R}}^{n}}{\\left| {\\partial }_{x}^{k}f\\right| }^{2}\\omega \\mathrm{d}v\\mathrm{\\;d}x.$$"
+    },
+    {
+      "category": "text_block",
+      "order": 24,
+      "text": "In other words we can go back to the classical derivatives."
+    },
+    {
+      "category": "text_block",
+      "order": 25,
+      "text": "Lemma 6.1. *Suppose $ \\omega $ is a doubling weight,*"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 26,
+      "latex": "$$c \\leqslant\\frac{\\omega \\left( {v}^{\\prime }\\right) }{\\omega \\left( {v}^{\\prime \\prime }\\right) } \\leqslant C,\\;\\frac{1}{2} \\leqslant  \\frac{\\left| {v}^{\\prime }\\right| }{\\left| {v}^{\\prime \\prime }\\right| } \\leqslant  2\\tag{133}$$"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 27,
+      "latex": "$$\\omega(v)\\sim1,\\quad|v|\\leqslant1.$$"
+    },
+    {
+      "category": "equation_semantic",
+      "order": null,
+      "latex": ""
+    },
+    {
+      "category": "equation_semantic",
+      "order": null,
+      "latex": ""
+    },
+    {
+      "category": "equation_semantic",
+      "order": null,
+      "latex": ""
+    }
+  ],
+  "tables": [],
+  "case_id": "B02-od-0047",
+  "expected": {
+    "kind": "document",
+    "text": "40\nROMAN SHVYDKOY\nSince $ E > 4\\bar{n} $ , we have $ \\mathrm{x} + \\mathrm{v} \\geqslant E/4 $ , and hence, from the above,\n$$\\left| I\\right| E \\lesssim  {\\int }_{I}\\left( {\\mathrm{x} + \\mathrm{v}}\\right) \\mathrm{d}t \\lesssim  \\mathop{\\sum }\\limits_{i}{\\left| I\\right| }^{{\\delta }_{i}^{\\prime }}{E}^{{\\delta }_{i}^{\\prime \\prime }},$$\nwhich finishes the proof.\nThis finishes the proof of Theorem 5.1.\n# 6. APPENDIX: INTERPOLATION IN WEIGHTED SOBOLEV SPACES\nFor any any $ p \\in \\mathbb{N} $ we denote for short $ {\\partial }_{x}^{p}f = \\left( {{\\partial }_{{x}_{1}}^{p}f,\\ldots ,{\\partial }_{{x}_{n}}^{p}f}\\right) $ , and $ {\\left| {\\partial }_{x}^{p}f\\right| }^{2} = \\mathop{\\sum }\\nolimits_{i}{\\left| {\\partial }_{{x}_{i}}^{p}f\\right| }^{2} $ . Similar notation will be used in $ v $ -variable. It is clear that $ {\\left| {\\partial }_{x}^{p}f\\right| }^{2} $ represents a linear combination of $ p $th order derivatives.\nLet us first note the following simple interpolation inequality: for $ k,l \\geqslant 0 $ and $ K,L > 0 $ such that $ \\frac{k}{K} + \\frac{l}{L} < 1 $ and any $ \\left| \\mathbf{k}\\right| = k,\\left| \\mathbf{l}\\right| = l $, we have\n$${\\int }_{\\Omega  \\times  {\\mathbb{R}}^{n}}{\\left| {\\partial }_{x}^{\\mathbf{k}}{\\partial }_{v}^{\\mathbf{l}}f\\right| }^{2}\\mathrm{\\;d}v\\mathrm{\\;d}x \\leqslant  {\\left( {\\int }_{\\Omega  \\times  {\\mathbb{R}}^{n}}{\\left| {\\partial }_{x}^{K}f\\right| }^{2}\\mathrm{\\;d}v\\mathrm{\\;d}x\\right) }^{\\frac{k}{K}}{\\left( {\\int }_{\\Omega  \\times  {\\mathbb{R}}^{n}}{\\left| {\\partial }_{v}^{L}f\\right| }^{2}\\mathrm{\\;d}v\\mathrm{\\;d}x\\right) }^{\\frac{l}{L}}{\\left( {\\int }_{\\Omega  \\times  {\\mathbb{R}}^{n}}{\\left| f\\right| }^{2}\\mathrm{\\;d}v\\mathrm{\\;d}x\\right) }^{1 - \\frac{k}{K} - \\frac{l}{L}}.\\tag{131}$$\nIndeed, denoting by $ \\mathrm{d}\\xi $ the counting measure over $ {\\mathbb{Z}}^{n} $ ,\n$$\\int_{\\Omega\\times\\mathbb{R}^{n}}|\\partial_{x}^{\\mathbf{k}}\\partial_{v}^{\\mathbf{l}}f|^{2}\\mathrm{d}v\\mathrm{d}x=\\int_{\\mathbb{Z}^{n}\\times\\mathbb{R}^{n}}\\Pi_{i=1}^{n}|\\xi_{i}|^{2k_{i}}|\\eta_{i}|^{2l_{i}}|\\hat{f}|^{2}\\mathrm{d}\\eta\\mathrm{d}\\xi\\leqslant\\int_{\\mathbb{Z}^{n}\\times\\mathbb{R}^{n}}|\\xi|^{2k}|\\eta|^{2l}|\\hat{f}|^{2}\\mathrm{d}\\eta\\mathrm{d}\\xi$$\n$$\\leqslant\\int_{\\mathbb{Z}^{n}\\times\\mathbb{R}^{n}}|\\xi|^{2k}|\\hat{f}|^{2k/K}|\\eta|^{2l}|\\hat{f}|^{2l/L}|\\hat{f}|^{2(1-k/K-l/K)}\\mathrm{d}\\eta\\mathrm{d}\\xi$$\n$$\\leqslant\\left(\\int_{\\mathbb{Z}^{n}\\times\\mathbb{R}^{n}}|\\xi|^{2K}|\\hat{f}|^{2}\\mathrm{d}\\eta\\mathrm{d}\\xi\\right)^{\\frac{k}{K}}\\left(\\int_{\\mathbb{Z}^{n}\\times\\mathbb{R}^{n}}|\\eta|^{2L}|\\hat{f}|^{2}\\mathrm{d}\\eta\\mathrm{d}\\xi\\right)^{\\frac{1}{L}}\\left(\\int_{\\mathbb{Z}^{n}\\times\\mathbb{R}^{n}}|f|^{2}\\mathrm{d}\\eta\\mathrm{d}\\xi\\right)^{1-\\frac{k}{K}-\\frac{l}{L}}$$\n$$\\lesssim\\left(\\sum_{i}\\int_{\\mathbb{Z}^{n}\\times\\mathbb{R}^{n}}|\\xi_{i}|^{2K}|\\hat{f}|^{2}\\mathrm{d}\\eta\\mathrm{d}\\xi\\right)^{\\frac{k}{K}}\\left(\\sum_{i}\\int_{\\mathbb{Z}^{n}\\times\\mathbb{R}^{n}}|\\eta_{i}|^{2L}|\\hat{f}|^{2}\\mathrm{d}\\eta\\mathrm{d}\\xi\\right)^{\\frac{l}{L}}$$\n$$\\times\\left(\\int_{\\mathbb{Z}^{n}\\times\\mathbb{R}^{n}}|f|^{2}\\mathrm{d}\\eta\\mathrm{d}\\xi\\right)^{1-\\frac{k}{K}-\\frac{l}{L}}$$\n$$=\\left(\\int_{\\Omega\\times\\mathbb{R}^{n}}|\\partial_{x}^{K}f|^{2}\\mathrm{d}v\\mathrm{d}x\\right)^{\\frac{k}{K}}\\left(\\int_{\\Omega\\times\\mathbb{R}^{n}}|\\partial_{v}^{L}f|^{2}\\mathrm{d}v\\mathrm{d}x\\right)^{\\frac{l}{L}}\\left(\\int_{\\Omega\\times\\mathbb{R}^{n}}|f|^{2}\\mathrm{d}v\\mathrm{d}x\\right)^{1-\\frac{k}{K}-\\frac{l}{L}}.$$\nWhen a weight is involved that depends only on $ v,\\omega = \\omega \\left( v\\right) $ , then the above interpolation extends trivially in the case when $ \\mathbf{k} = 0 $ by application of (131) in $ x $-variable only, and the Hölder inequality in $ v $:\n$$\\int_{\\Omega\\times\\mathbb{R}^{n}}|\\partial_{x}^{\\mathbf{k}}f|^{2}\\omega\\mathrm{d}v\\mathrm{d}x\\leqslant\\int_{\\mathbb{R}^{n}}\\left(\\int_{\\Omega}|\\partial_{x}^{K}f|^{2}\\mathrm{d}x\\right)^{\\frac{k}{K}}\\left(\\int_{\\Omega}|f|^{2}\\mathrm{d}x\\right)^{1-\\frac{k}{K}}\\omega\\mathrm{d}v\\tag{132}$$\n$$\\leqslant\\left(\\int_{\\Omega\\times\\mathbb{R}^{n}}|\\partial_{x}^{K}f|^{2}\\omega\\mathrm{d}v\\mathrm{d}x\\right)^{\\frac{k}{K}}\\left(\\int_{\\Omega\\times\\mathbb{R}^{n}}|f|^{2}\\omega\\mathrm{d}v\\mathrm{d}x\\right)^{1-\\frac{k}{K}}.$$\nIt is clear that the above inequalities extend to any fractional $k$, $K$ as well if we replace the derivatives with Fourier multipliers $ {D}_{x}^{k}f $ with symbol $ {\\left| \\xi \\right| }^{k} $. In fact the computations above already use that symbol even for integer order derivatives. It is important to keep in mind though that if $ k $ is integer,then since $ \\omega $ is not involved in Fourier transform, we have\n$${\\int }_{\\Omega  \\times  {\\mathbb{R}}^{n}}{\\left| {D}_{x}^{k}f\\right| }^{2}\\omega \\mathrm{d}v\\mathrm{\\;d}x \\sim  {\\int }_{\\Omega  \\times  {\\mathbb{R}}^{n}}{\\left| {\\partial }_{x}^{k}f\\right| }^{2}\\omega \\mathrm{d}v\\mathrm{\\;d}x.$$\nIn other words we can go back to the classical derivatives.\nLemma 6.1. *Suppose $ \\omega $ is a doubling weight,*\n$$c \\leqslant\\frac{\\omega \\left( {v}^{\\prime }\\right) }{\\omega \\left( {v}^{\\prime \\prime }\\right) } \\leqslant C,\\;\\frac{1}{2} \\leqslant  \\frac{\\left| {v}^{\\prime }\\right| }{\\left| {v}^{\\prime \\prime }\\right| } \\leqslant  2\\tag{133}$$\n$$\\omega(v)\\sim1,\\quad|v|\\leqslant1.$$",
+    "tables": [],
+    "blocks": [
+      {
+        "category": "page_number",
+        "order": 0,
+        "text": "40"
+      },
+      {
+        "category": "header",
+        "order": 1,
+        "text": "ROMAN SHVYDKOY"
+      },
+      {
+        "category": "text_block",
+        "order": 2,
+        "text": "Since $ E > 4\\bar{n} $ , we have $ \\mathrm{x} + \\mathrm{v} \\geqslant E/4 $ , and hence, from the above,"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 3,
+        "latex": "$$\\left| I\\right| E \\lesssim  {\\int }_{I}\\left( {\\mathrm{x} + \\mathrm{v}}\\right) \\mathrm{d}t \\lesssim  \\mathop{\\sum }\\limits_{i}{\\left| I\\right| }^{{\\delta }_{i}^{\\prime }}{E}^{{\\delta }_{i}^{\\prime \\prime }},$$"
+      },
+      {
+        "category": "text_block",
+        "order": 4,
+        "text": "which finishes the proof."
+      },
+      {
+        "category": "text_block",
+        "order": 6,
+        "text": "This finishes the proof of Theorem 5.1."
+      },
+      {
+        "category": "title",
+        "order": 8,
+        "text": "# 6. APPENDIX: INTERPOLATION IN WEIGHTED SOBOLEV SPACES"
+      },
+      {
+        "category": "text_block",
+        "order": 9,
+        "text": "For any any $ p \\in \\mathbb{N} $ we denote for short $ {\\partial }_{x}^{p}f = \\left( {{\\partial }_{{x}_{1}}^{p}f,\\ldots ,{\\partial }_{{x}_{n}}^{p}f}\\right) $ , and $ {\\left| {\\partial }_{x}^{p}f\\right| }^{2} = \\mathop{\\sum }\\nolimits_{i}{\\left| {\\partial }_{{x}_{i}}^{p}f\\right| }^{2} $ . Similar notation will be used in $ v $ -variable. It is clear that $ {\\left| {\\partial }_{x}^{p}f\\right| }^{2} $ represents a linear combination of $ p $th order derivatives."
+      },
+      {
+        "category": "text_block",
+        "order": 10,
+        "text": "Let us first note the following simple interpolation inequality: for $ k,l \\geqslant 0 $ and $ K,L > 0 $ such that $ \\frac{k}{K} + \\frac{l}{L} < 1 $ and any $ \\left| \\mathbf{k}\\right| = k,\\left| \\mathbf{l}\\right| = l $, we have"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 11,
+        "latex": "$${\\int }_{\\Omega  \\times  {\\mathbb{R}}^{n}}{\\left| {\\partial }_{x}^{\\mathbf{k}}{\\partial }_{v}^{\\mathbf{l}}f\\right| }^{2}\\mathrm{\\;d}v\\mathrm{\\;d}x \\leqslant  {\\left( {\\int }_{\\Omega  \\times  {\\mathbb{R}}^{n}}{\\left| {\\partial }_{x}^{K}f\\right| }^{2}\\mathrm{\\;d}v\\mathrm{\\;d}x\\right) }^{\\frac{k}{K}}{\\left( {\\int }_{\\Omega  \\times  {\\mathbb{R}}^{n}}{\\left| {\\partial }_{v}^{L}f\\right| }^{2}\\mathrm{\\;d}v\\mathrm{\\;d}x\\right) }^{\\frac{l}{L}}{\\left( {\\int }_{\\Omega  \\times  {\\mathbb{R}}^{n}}{\\left| f\\right| }^{2}\\mathrm{\\;d}v\\mathrm{\\;d}x\\right) }^{1 - \\frac{k}{K} - \\frac{l}{L}}.\\tag{131}$$"
+      },
+      {
+        "category": "text_block",
+        "order": 12,
+        "text": "Indeed, denoting by $ \\mathrm{d}\\xi $ the counting measure over $ {\\mathbb{Z}}^{n} $ ,"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 13,
+        "latex": "$$\\int_{\\Omega\\times\\mathbb{R}^{n}}|\\partial_{x}^{\\mathbf{k}}\\partial_{v}^{\\mathbf{l}}f|^{2}\\mathrm{d}v\\mathrm{d}x=\\int_{\\mathbb{Z}^{n}\\times\\mathbb{R}^{n}}\\Pi_{i=1}^{n}|\\xi_{i}|^{2k_{i}}|\\eta_{i}|^{2l_{i}}|\\hat{f}|^{2}\\mathrm{d}\\eta\\mathrm{d}\\xi\\leqslant\\int_{\\mathbb{Z}^{n}\\times\\mathbb{R}^{n}}|\\xi|^{2k}|\\eta|^{2l}|\\hat{f}|^{2}\\mathrm{d}\\eta\\mathrm{d}\\xi$$"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 14,
+        "latex": "$$\\leqslant\\int_{\\mathbb{Z}^{n}\\times\\mathbb{R}^{n}}|\\xi|^{2k}|\\hat{f}|^{2k/K}|\\eta|^{2l}|\\hat{f}|^{2l/L}|\\hat{f}|^{2(1-k/K-l/K)}\\mathrm{d}\\eta\\mathrm{d}\\xi$$"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 15,
+        "latex": "$$\\leqslant\\left(\\int_{\\mathbb{Z}^{n}\\times\\mathbb{R}^{n}}|\\xi|^{2K}|\\hat{f}|^{2}\\mathrm{d}\\eta\\mathrm{d}\\xi\\right)^{\\frac{k}{K}}\\left(\\int_{\\mathbb{Z}^{n}\\times\\mathbb{R}^{n}}|\\eta|^{2L}|\\hat{f}|^{2}\\mathrm{d}\\eta\\mathrm{d}\\xi\\right)^{\\frac{1}{L}}\\left(\\int_{\\mathbb{Z}^{n}\\times\\mathbb{R}^{n}}|f|^{2}\\mathrm{d}\\eta\\mathrm{d}\\xi\\right)^{1-\\frac{k}{K}-\\frac{l}{L}}$$"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 16,
+        "latex": "$$\\lesssim\\left(\\sum_{i}\\int_{\\mathbb{Z}^{n}\\times\\mathbb{R}^{n}}|\\xi_{i}|^{2K}|\\hat{f}|^{2}\\mathrm{d}\\eta\\mathrm{d}\\xi\\right)^{\\frac{k}{K}}\\left(\\sum_{i}\\int_{\\mathbb{Z}^{n}\\times\\mathbb{R}^{n}}|\\eta_{i}|^{2L}|\\hat{f}|^{2}\\mathrm{d}\\eta\\mathrm{d}\\xi\\right)^{\\frac{l}{L}}$$"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 17,
+        "latex": "$$\\times\\left(\\int_{\\mathbb{Z}^{n}\\times\\mathbb{R}^{n}}|f|^{2}\\mathrm{d}\\eta\\mathrm{d}\\xi\\right)^{1-\\frac{k}{K}-\\frac{l}{L}}$$"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 18,
+        "latex": "$$=\\left(\\int_{\\Omega\\times\\mathbb{R}^{n}}|\\partial_{x}^{K}f|^{2}\\mathrm{d}v\\mathrm{d}x\\right)^{\\frac{k}{K}}\\left(\\int_{\\Omega\\times\\mathbb{R}^{n}}|\\partial_{v}^{L}f|^{2}\\mathrm{d}v\\mathrm{d}x\\right)^{\\frac{l}{L}}\\left(\\int_{\\Omega\\times\\mathbb{R}^{n}}|f|^{2}\\mathrm{d}v\\mathrm{d}x\\right)^{1-\\frac{k}{K}-\\frac{l}{L}}.$$"
+      },
+      {
+        "category": "text_block",
+        "order": 19,
+        "text": "When a weight is involved that depends only on $ v,\\omega = \\omega \\left( v\\right) $ , then the above interpolation extends trivially in the case when $ \\mathbf{k} = 0 $ by application of (131) in $ x $-variable only, and the Hölder inequality in $ v $:"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 20,
+        "latex": "$$\\int_{\\Omega\\times\\mathbb{R}^{n}}|\\partial_{x}^{\\mathbf{k}}f|^{2}\\omega\\mathrm{d}v\\mathrm{d}x\\leqslant\\int_{\\mathbb{R}^{n}}\\left(\\int_{\\Omega}|\\partial_{x}^{K}f|^{2}\\mathrm{d}x\\right)^{\\frac{k}{K}}\\left(\\int_{\\Omega}|f|^{2}\\mathrm{d}x\\right)^{1-\\frac{k}{K}}\\omega\\mathrm{d}v\\tag{132}$$"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 21,
+        "latex": "$$\\leqslant\\left(\\int_{\\Omega\\times\\mathbb{R}^{n}}|\\partial_{x}^{K}f|^{2}\\omega\\mathrm{d}v\\mathrm{d}x\\right)^{\\frac{k}{K}}\\left(\\int_{\\Omega\\times\\mathbb{R}^{n}}|f|^{2}\\omega\\mathrm{d}v\\mathrm{d}x\\right)^{1-\\frac{k}{K}}.$$"
+      },
+      {
+        "category": "text_block",
+        "order": 22,
+        "text": "It is clear that the above inequalities extend to any fractional $k$, $K$ as well if we replace the derivatives with Fourier multipliers $ {D}_{x}^{k}f $ with symbol $ {\\left| \\xi \\right| }^{k} $. In fact the computations above already use that symbol even for integer order derivatives. It is important to keep in mind though that if $ k $ is integer,then since $ \\omega $ is not involved in Fourier transform, we have"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 23,
+        "latex": "$${\\int }_{\\Omega  \\times  {\\mathbb{R}}^{n}}{\\left| {D}_{x}^{k}f\\right| }^{2}\\omega \\mathrm{d}v\\mathrm{\\;d}x \\sim  {\\int }_{\\Omega  \\times  {\\mathbb{R}}^{n}}{\\left| {\\partial }_{x}^{k}f\\right| }^{2}\\omega \\mathrm{d}v\\mathrm{\\;d}x.$$"
+      },
+      {
+        "category": "text_block",
+        "order": 24,
+        "text": "In other words we can go back to the classical derivatives."
+      },
+      {
+        "category": "text_block",
+        "order": 25,
+        "text": "Lemma 6.1. *Suppose $ \\omega $ is a doubling weight,*"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 26,
+        "latex": "$$c \\leqslant\\frac{\\omega \\left( {v}^{\\prime }\\right) }{\\omega \\left( {v}^{\\prime \\prime }\\right) } \\leqslant C,\\;\\frac{1}{2} \\leqslant  \\frac{\\left| {v}^{\\prime }\\right| }{\\left| {v}^{\\prime \\prime }\\right| } \\leqslant  2\\tag{133}$$"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 27,
+        "latex": "$$\\omega(v)\\sim1,\\quad|v|\\leqslant1.$$"
+      },
+      {
+        "category": "equation_semantic",
+        "order": null,
+        "latex": ""
+      },
+      {
+        "category": "equation_semantic",
+        "order": null,
+        "latex": ""
+      },
+      {
+        "category": "equation_semantic",
+        "order": null,
+        "latex": ""
+      }
+    ]
+  }
+}

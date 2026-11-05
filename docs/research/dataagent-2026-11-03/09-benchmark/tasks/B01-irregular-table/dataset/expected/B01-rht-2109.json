@@ -1,0 +1,29 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 473,
+  "table": "military-table07",
+  "structure": "SingleRowClassified",
+  "question_type": "Data Analysis",
+  "sub_type": "Anomaly Analysis",
+  "answer": "No anomalies are detected in the table",
+  "cot": [
+    {
+      "planning": "Locate the row corresponding to “Unknown” personnel in the table."
+    },
+    {
+      "planning": "Extract the intake values for all recorded years from the relevant columns"
+    },
+    {
+      "planning": "Analyze the values for irregularities such as missing data, non-numeric entries, or extreme deviations."
+    },
+    {
+      "planning": "No anomalies were detected in the data."
+    }
+  ],
+  "case_id": "B01-rht-2109",
+  "expected": {
+    "kind": "answer",
+    "question": "Identify any anomalies in the intake numbers for “Unknown” personnel across all recorded years. Briefly describe them.",
+    "answer": "No anomalies are detected in the table"
+  }
+}

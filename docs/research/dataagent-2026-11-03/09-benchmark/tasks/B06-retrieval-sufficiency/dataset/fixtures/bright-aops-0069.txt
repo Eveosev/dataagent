@@ -1,0 +1,31 @@
+## Essential Problem: 
+
+The problem asks us to find the ratio of $AC$ to $AP$ in parallelogram $ABCD$, given that $M$ and $N$ are points on $\overline{AB}$ and $\overline{AD}$ respectively, with specific ratios of $\frac {AM}{AB}$ and $\frac {AN}{AD}$.
+
+## Reasoning:
+
+1. **Similar Triangles:** Since $ABCD$ is a parallelogram, we know that $\overline{AB}\parallel\overline{CD}$ and $\overline{AD}\parallel\overline{BC}$. This implies that $\angle ABC = \angle ACD$ and $\angle BAD = \angle BCD$.
+
+2. **Proportional Sides:** In similar triangles, corresponding sides are proportional. We can use this property to relate the sides of triangles $ABP$ and $CDP$.
+
+3. **Expressing Ratios:** We are given the ratios $\frac {AM}{AB} = \frac {17}{1000}$ and $\frac {AN}{AD} = \frac {17}{2009}$. We can use these ratios to express the lengths of segments $AM$, $AN$, $MB$, and $ND$ in terms of $AB$ and $AD$.
+
+4. **Applying Similar Triangles:** Using the identified similar triangles and the proportional sides property, we can set up proportions relating the sides of triangles $ABP$ and $CDP$.
+
+5. **Solving for $\frac {AC}{AP}$:** By solving the proportions obtained in step 4, we can find the ratio of $AC$ to $AP$.
+
+## Draft Answer:
+
+1. Since $ABCD$ is a parallelogram, we have $\overline{AB}\parallel\overline{CD}$ and $\angle ABC = \angle ACD$. Therefore, triangles $ABP$ and $CDP$ are similar.
+
+2. Using the given ratios, we have $AM = \frac{17}{1000}AB$ and $AN = \frac{17}{2009}AD$. Since $M$ and $N$ are on $\overline{AB}$ and $\overline{AD}$ respectively, we have $MB = AB - AM$ and $ND = AD - AN$. Substituting the expressions for $AM$ and $AN$, we get $MB = \frac{983}{1000}AB$ and $ND = \frac{2002}{2009}AD$.
+
+3. In triangles $ABP$ and $CDP$, we have $\frac{AP}{BP} = \frac{AC}{CD}$ and $\frac{CP}{DP} = \frac{AC}{CD}$ (corresponding sides of similar triangles are proportional). Since $BP = MB$ and $DP = ND$, we can substitute these expressions to get $\frac{AP}{MB} = \frac{AC}{CD}$ and $\frac{CP}{ND} = \frac{AC}{CD}$.
+
+4. Combining these two equations, we get $\frac{AP}{MB} = \frac{CP}{ND}$. Substituting the expressions for $MB$ and $ND$, we get $\frac{AP}{\frac{983}{1000}AB} = \frac{CP}{\frac{2002}{2009}AD}$. Simplifying, we get $\frac{AP}{AB} = \frac{17}{983} \cdot \frac{2009}{2002} \cdot \frac{CP}{AD}$.
+
+5. Since $\frac{CP}{AD} = \frac{AC - AP}{AD}$, we can substitute this expression into the equation above to get $\frac{AP}{AB} = \frac{17}{983} \cdot \frac{2009}{2002} \cdot (\frac{AC}{AD} - \frac{AP}{AD})$. Solving for $\frac{AC}{AP}$, we get:
+
+$$\frac{AC}{AP} = \frac{1 + \frac{17}{983} \cdot \frac{2009}{2002}}{1 - \frac{17}{983} \cdot \frac{2009}{2002}} = \boxed{\frac{2026}{1985}}$$
+
+This is the final answer.

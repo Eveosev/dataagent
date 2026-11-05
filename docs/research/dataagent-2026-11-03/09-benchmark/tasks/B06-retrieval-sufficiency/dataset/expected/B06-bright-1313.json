@@ -1,0 +1,24 @@
+{
+  "source": "xlangai/BRIGHT",
+  "query_id": "TheoremQA_wenhuchen/definite_matrix1.json",
+  "query": "## Building Safety Evaluation\n\n### 1. Identifying the Essential Problem:\n\nThe essential problem is determining whether the building represented by the 2x2 matrix is **positive definite**, which indicates structural safety. \n\n### 2. Information Gathering and Reasoning:\n\nTo determine positive definiteness, we need to analyze the eigenvalues of the matrix. A matrix is positive definite if all its eigenvalues are positive.\n\n**Relevant Information:**\n\n* The matrix representing the building:\n\n```\n[[1, 4]\n [4, 1]]\n```\n\n* Definition of positive definiteness: A matrix is positive definite if and only if all its eigenvalues are positive.\n\n**Steps:**\n\n1. Calculate the eigenvalues of the matrix.\n2. Check if all eigenvalues are positive.\n3. If all eigenvalues are positive, the building is safe; otherwise, it is not.\n\n### 3. Draft Answer:\n\nThe building's safety depends on whether the matrix representing its structure is positive definite. To determine positive definiteness, we need to analyze the eigenvalues of the matrix.\n\nThe eigenvalues of the given matrix are 5 and -3. Since one eigenvalue is negative (-3), the matrix is not positive definite. \n\n**Therefore, based on this simplified model, the building is not safe.** \n\n**Further Considerations:**\n\n* This is a simplified model, and a more thorough analysis of the building's structure might be needed for a definitive safety assessment.\n* Other factors, such as material properties and environmental conditions, could also influence the building's safety. \n",
+  "gold_ids": [
+    "20341",
+    "5725"
+  ],
+  "gold_answer": "N/A",
+  "corpus": "documents/theoremqa_theorems-00000-of-00001.parquet",
+  "case_id": "B06-bright-1313",
+  "expected": {
+    "kind": "retrieval",
+    "gold_ids": [
+      "20341",
+      "5725"
+    ],
+    "gold_ids_long": [
+      "N/A"
+    ],
+    "gold_answer": "N/A",
+    "excluded_ids": []
+  }
+}

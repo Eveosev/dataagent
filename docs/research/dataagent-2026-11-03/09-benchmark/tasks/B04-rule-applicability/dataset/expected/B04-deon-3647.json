@@ -1,0 +1,28 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_b5e1d5eb",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "scenario_context",
+    "scenario_term_under_question",
+    "scenario_meaning_under_question",
+    "statute_47a_35_stay_period_days",
+    "statute_47a_35_appeal_period_days",
+    "statute_47a_35_execution_stayed_on_timely_appeal",
+    "statute_47a_41a_execution_limit_months",
+    "statute_term_used",
+    "term_means_in_summary_process",
+    "legal_term_used_to_refer_to",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: Connecticut\n    Focus year: 2021\n    Question: Is the term 'Warrant for possession' used to refer to the order from the court\n              to the authorities to remove a tenant?\n*/\n\n/* =========================\n   Scenario (facts + helper)\n   ========================= */\n\nscenario_context(connecticut, 2021).\n\n% The question asks about terminology: whether the term is used to refer to a court order to authorities.\nscenario_term_under_question(warrant_for_possession).\nscenario_meaning_under_question(order_from_court_to_authorities_to_remove_tenant).\n\n% Helper predicate that succeeds when the encoded scenario statement holds.\nscenario_statement :-\n    scenario_context(connecticut, 2021),\n    scenario_term_under_question(warrant_for_possession),\n    scenario_meaning_under_question(order_from_court_to_authorities_to_remove_tenant).\n\n/* ==========================================\n   Statute translations (deterministic rules)\n   ========================================== */\n\n% --- CT Gen Stat  47a-35 (2020) ---\n% (a) Execution stayed for five days from date judgment rendered (excluding Sundays/legal holidays).\nstatute_47a_35_stay_period_days(5).\n\n% (b) No appeal except within such five-day period.\nstatute_47a_35_appeal_period_days(5).\n\n% (b) If an appeal is taken within such period, execution is stayed until final determination,\n% unless judge finds appeal solely for delay or defendant fails to give bond (47a-35a).\n% We encode the core conditional logic at a high level (without modeling bond details).\nstatute_47a_35_execution_stayed_on_timely_appeal(yes).\n\n% --- CT Gen Stat  47a-41a (2020) ---\n% Execution to enforce a summary process judgment shall not be issued after six months from judgment,\n% excluding any period during which execution was stayed.\nstatute_47a_41a_execution_limit_months(6).\n\n/* ==========================================================\n   Statutory vocabulary: which terms are used in these statutes\n   ========================================================== */\n\n% We model \"term is used in the provided statute texts\" as a closed set, so absence implies \"not used\".\n% (The supplied statutes use \"execution\" and do not use \"warrant for possession\".)\n\nstatute_term_used(execution).\n\n/* ======================================================\n   Legal meaning mapping (conceptual meaning in eviction)\n   ====================================================== */\n\n% In Connecticut summary process practice, an \"execution\" enforces the judgment for possession and is\n% the court's process directing an officer to carry out the removal/possession transfer.\n% (This is a conceptual mapping for reasoning; it does NOT add the missing term to the statute text.)\nterm_means_in_summary_process(execution, order_from_court_to_authorities_to_remove_tenant).\n\n/* ===================================================\n   Reasoning helpers applying statute + scenario facts\n   =================================================== */\n\n% True when the relevant statutory materials use Term to refer to Meaning.\n% This requires: (1) the term appears in the statute text set we encoded, AND\n%               (2) the term is mapped to the meaning in the eviction context.\nlegal_term_used_to_refer_to(Term, Meaning) :-\n    statute_term_used(Term),\n    term_means_in_summary_process(Term, Meaning).\n\n/* =====================\n   Final answer predicate\n   ===================== */\n\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_term_under_question(Term),\n    scenario_meaning_under_question(Meaning),\n    legal_term_used_to_refer_to(Term, Meaning),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n/* ==============\n   Main entrypoint\n   ============== */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-3647",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is the term 'Warrant for possession' used to refer to the order from the court to the authorities to remove a tenant?"
+  }
+}

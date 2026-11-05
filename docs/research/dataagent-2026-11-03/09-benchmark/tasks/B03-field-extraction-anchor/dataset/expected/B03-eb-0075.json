@@ -1,0 +1,1060 @@
+{
+  "source": "llamaindex/ExtractBench",
+  "id": "short/P18-28-21_77",
+  "pdf": "docs/short/P18-28-21_77.pdf",
+  "schema": {
+    "$defs": {
+      "GathererEntry": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Name of the gatherer (or BS&W collector) on one printed row of the SECTION V – GATHERER DATA grid, taken from the long blank line at the left of rows 1–4 under the heading 'Name(s) of gatherer(s) of liquid hydrocarbons sold OR the collector of (BS&W)'. Transcribe the entity/person name verbatim as written (preserve casing, '&', commas, 'INC'/'LLC', etc.); null if the row is blank. Do NOT confuse with the 'amt' cell (the dollar/volume amount on the same row, after 'Amt.') or with the 'rrc_id_no' cell (the RRC ID No. on the same row); also do NOT confuse with the Operator name at the top of the form or with Section II's disposal-well lease name.",
+            "title": "Name"
+          },
+          "amt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Amount associated with this gatherer row, printed in the short blank after the label 'Amt.' in the middle of the SECTION V – GATHERER DATA row (the quantity of liquid hydrocarbons sold to / BS&W collected by this gatherer). Capture verbatim as written including any decimal point, comma grouping, or unit if the filer wrote one; do NOT add or strip units. null if blank. Do NOT confuse with the 'name' cell (gatherer name, to the left) or the 'rrc_id_no' cell (RRC ID No., to the right) on the same row, and do NOT confuse with the Section III/IV NET BARRELS line totals.",
+            "title": "Amt"
+          },
+          "rrc_id_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "RRC ID No. for this gatherer row, printed in the blank after the label 'RRC ID No.' at the right end of the SECTION V – GATHERER DATA row (the Railroad Commission identification number of the gatherer/collector). Capture the identifier verbatim as a string, preserving any leading zeros, dashes, or letters exactly as written; null if blank. Do NOT confuse with the 'amt' cell (the amount, to the left) or the 'name' cell on the same row; also do NOT confuse with the top-of-form 'District & Lease. No.', 'System Serial No.', 'Operator No.', or Section I 'RRC District No.'.",
+            "title": "RRC ID No"
+          }
+        },
+        "title": "GathererEntry",
+        "type": "object"
+      }
+    },
+    "properties": {
+      "reporting_period": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Reporting Period printed at the TOP-RIGHT of the form, on the line directly above the 'Purpose of Filing' header (right of and below the 'Form P-18 / (Rev. 08/23)' title), as two short blanks in the pattern '____ / ____' (typically month / year of the report). Capture verbatim exactly as written including the slash and any leading zeros (e.g. '01 / 2024'); null if blank. (Note: it is in the header, NOT in the certificate/footer block, even if document text-extraction reorders it near the bottom.) Do NOT confuse with the Certificate 'Date' (the signing date in the bottom signature block) or with any Section III/IV line value.",
+        "title": "Reporting Period"
+      },
+      "operator": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Operator name, printed in the 'Operator' box in the first row of the top header table (left column). This is the name of the operator filing the report. Capture verbatim as written (preserve casing, punctuation, 'LLC'/'INC'). null if blank. Do NOT confuse with 'Operator No.' (the numeric operator code directly below it), with the Section I 'Name of Gathering System of Facility', or with the Section V gatherer names.",
+        "title": "Operator"
+      },
+      "operator_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Operator No., printed in the 'Operator No.' box directly below 'Operator' in the top header table (left column). The RRC-assigned operator number. Capture verbatim as a string, preserving leading zeros and exact digits; null if blank. Do NOT confuse with 'System Serial No.' or 'District & Lease. No.' (right side of the header), with the Section I 'RRC District No.', or with a Section V 'RRC ID No.'.",
+        "title": "Operator No"
+      },
+      "address_street_or_box": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Street or Box line of the operator's mailing address, printed on the 'Address' row of the top header table in the cell labelled 'Street or Box' (the wide upper line of the address block). Capture verbatim including 'P.O. BOX', 'STE', 'STREET' abbreviations as written; null if blank. Do NOT confuse with the 'City', 'State', or 'Zip code' subfields printed on the line just below it.",
+        "title": "Street Or Box"
+      },
+      "address_city": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "City of the operator's mailing address, printed in the 'City' subfield (leftmost of the three lower address cells: City | State | Zip code) on the 'Address' row of the top header table. Capture the city name verbatim; null if blank. Do NOT confuse with 'State' or 'Zip code' (the two cells to its right) or with the Section I 'County' / 'Nearest Town'.",
+        "title": "City"
+      },
+      "address_state": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "State of the operator's mailing address, printed in the 'State' subfield (middle of the City | State | Zip code row) on the 'Address' row of the top header table, usually a two-letter abbreviation (e.g. 'TX'). Capture verbatim; null if blank. Do NOT confuse with 'City' (to its left) or 'Zip code' (to its right), nor with any Section I location field.",
+        "title": "State"
+      },
+      "address_zip_code": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Zip code of the operator's mailing address, printed in the 'Zip code' subfield (rightmost of the City | State | Zip code row) on the 'Address' row of the top header table. Capture the postal code verbatim as a string, including any ZIP+4 dash; null if blank. Do NOT confuse with 'City' or 'State', with 'System Serial No.' / 'District & Lease. No.' on the right of the header, or with a Section V 'RRC ID No.'.",
+        "title": "Zip Code"
+      },
+      "purpose_monthly_report": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Checkbox in the 'Purpose of Filing' panel (upper-right of the header), labelled 'Monthly report' (top-left of the four purpose checkboxes). True if this box is marked/checked on the scan, false if left blank. Do NOT confuse with the sibling purpose boxes 'Corrected report', 'Initial Report', or 'Final report', nor with the 'Is this is a consolidated P-18?' Yes/No boxes just below.",
+        "title": "Monthly Report"
+      },
+      "purpose_corrected_report": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Checkbox in the 'Purpose of Filing' panel, labelled 'Corrected report' (top-right of the four purpose checkboxes). True if marked/checked, false if blank. Do NOT confuse with the sibling 'Monthly report' (to its left), 'Initial Report' / 'Final report' (the row below), or the consolidated-P-18 Yes/No boxes.",
+        "title": "Corrected Report"
+      },
+      "purpose_initial_report": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Checkbox in the 'Purpose of Filing' panel, labelled 'Initial Report' (bottom-left of the four purpose checkboxes). True if marked/checked, false if blank. Do NOT confuse with the sibling 'Final report' (to its right), 'Monthly report' / 'Corrected report' (the row above), or the consolidated-P-18 Yes/No boxes.",
+        "title": "Initial Report"
+      },
+      "purpose_final_report": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Checkbox in the 'Purpose of Filing' panel, labelled 'Final report' (bottom-right of the four purpose checkboxes). True if marked/checked, false if blank. Do NOT confuse with the sibling 'Initial Report' (to its left), 'Monthly report' / 'Corrected report' (the row above), or the consolidated-P-18 Yes/No boxes.",
+        "title": "Final Report"
+      },
+      "consolidated_p18_yes": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'Yes' checkbox for the question 'Is this is a consolidated P-18?' located in the right portion of the header below the Purpose-of-Filing boxes. True if the 'Yes' box is marked/checked, false otherwise. Do NOT confuse with its paired 'No' checkbox immediately to the right, nor with the four 'Purpose of Filing' checkboxes above.",
+        "title": "Yes"
+      },
+      "consolidated_p18_no": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "The 'No' checkbox for the question 'Is this is a consolidated P-18?' located in the right portion of the header, immediately right of the 'Yes' box. True if the 'No' box is marked/checked, false otherwise. Do NOT confuse with its paired 'Yes' checkbox to its left, nor with the four 'Purpose of Filing' checkboxes above.",
+        "title": "No"
+      },
+      "system_serial_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "System Serial No., printed in the right portion of the header (labelled 'System Serial No.', above 'District & Lease. No.'). Capture verbatim as a string, preserving leading zeros and exact characters; null if blank. Do NOT confuse with 'District & Lease. No.' directly below it, with 'Operator No.' (left side of the header), or with a Section V 'RRC ID No.'.",
+        "title": "System Serial No"
+      },
+      "district_and_lease_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "District & Lease. No., printed in the right portion of the header just below 'System Serial No.' (label reads 'District & Lease. No.'). Capture verbatim as a string (it may combine a district code and a lease number); preserve any separators and leading zeros; null if blank. Do NOT confuse with 'System Serial No.' above it, with the Section I 'RRC District No.', or with a Section V 'RRC ID No.'.",
+        "title": "District Lease No"
+      },
+      "gathering_system_facility_name": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Name of Gathering System of Facility, the first labelled blank in SECTION I – LOCATION DETAILS ('Name of Gathering System of Facility ____'). Capture the system/facility name verbatim; null if blank. Do NOT confuse with the top-header 'Operator' name, with 'County' (the next Section I field), or with the Section V gatherer names.",
+        "title": "Name Of Gathering System Of Facility"
+      },
+      "county": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "County, printed in SECTION I after the label 'County' (left side of the line that also carries 'RRC District No.'). The Texas county where the facility/system is located. Capture verbatim; null if blank. Do NOT confuse with 'RRC District No.' on the same line (to its right), with 'Nearest Town', or with the header address 'City'.",
+        "title": "County"
+      },
+      "rrc_district_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "RRC District No., printed in SECTION I after the label 'RRC District No.' (right side of the line that begins with 'County'). The Railroad Commission district number for the location. Capture verbatim as a string preserving leading zeros; null if blank. Do NOT confuse with 'County' (same line, to its left), with the header 'District & Lease. No.' or 'System Serial No.', or with a Section V 'RRC ID No.'.",
+        "title": "RRC District No"
+      },
+      "distance_from_nearest_town": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Distance from Nearest town, printed in SECTION I after the label 'Distance from Nearest town' (left of the line that also has 'Direction from nearest town' and 'Nearest Town'). The distance value as written (may include a unit such as 'mi'); capture verbatim; null if blank. Do NOT confuse with 'Direction from nearest town' (the compass direction next to it) or 'Nearest Town' (the town name) on the same line.",
+        "title": "Distance From Nearest Town"
+      },
+      "direction_from_nearest_town": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Direction from nearest town, printed in SECTION I after the label 'Direction from nearest town' (middle of the line with 'Distance from Nearest town' and 'Nearest Town'). Usually a compass direction (e.g. 'NW', 'SE'). Capture verbatim; null if blank. Do NOT confuse with 'Distance from Nearest town' (the numeric distance to its left) or 'Nearest Town' (the town name to its right).",
+        "title": "Direction From Nearest Town"
+      },
+      "nearest_town": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Nearest Town, printed in SECTION I after the label 'Nearest Town' (right end of the line that begins 'Distance from Nearest town'). The name of the nearest town. Capture verbatim; null if blank. Do NOT confuse with 'Distance from Nearest town' or 'Direction from nearest town' (to its left on the same line), with the header address 'City', or with 'County'.",
+        "title": "Nearest Town"
+      },
+      "survey": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Survey, the first labelled blank on the SECTION I survey line ('Survey ____  Section ____  Block ____  Abstract #: A- ____'). The survey/abstract name of the tract. Capture verbatim; null if blank. Do NOT confuse with the other cells on the same line ('Section', 'Block', 'Abstract #: A-') or with the subdivision line below it (Township/League/Labor/Porcion/Share/Tract/Lot).",
+        "title": "Survey"
+      },
+      "section": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Section, printed after the label 'Section' on the SECTION I survey line (second cell, between 'Survey' and 'Block'). The survey section identifier (a number/letter). Capture verbatim as a string preserving leading zeros; null if blank. Do NOT confuse with 'Survey', 'Block', or 'Abstract #: A-' on the same line, and do NOT confuse this survey 'Section' field with the form's printed SECTION headings (SECTION I–V).",
+        "title": "Section"
+      },
+      "block": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Block, printed after the label 'Block' on the SECTION I survey line (third cell, between 'Section' and 'Abstract #: A-'). The survey block identifier. Capture verbatim as a string preserving leading zeros; null if blank. Do NOT confuse with 'Section' (to its left) or 'Abstract #: A-' (to its right) on the same line.",
+        "title": "Block"
+      },
+      "abstract_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Abstract number, printed after the printed prefix 'Abstract #: A-' at the right end of the SECTION I survey line. Capture only the value the filer wrote after 'A-' (do not repeat the printed 'A-' prefix), verbatim as a string preserving leading zeros; null if blank. Do NOT confuse with 'Survey', 'Section', or 'Block' on the same line.",
+        "title": "Abstract A"
+      },
+      "township": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Township, the first labelled blank on the SECTION I subdivision line ('Township ____  League ____  Labor ____  Porcion ____  Share ____  Tract ____  Lot ____'). Capture verbatim as a string; null if blank. Do NOT confuse with the other small cells on the same line (League, Labor, Porcion, Share, Tract, Lot) or with the survey line above it (Survey/Section/Block/Abstract).",
+        "title": "Township"
+      },
+      "league": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "League, printed after the label 'League' on the SECTION I subdivision line (second cell, between 'Township' and 'Labor'). A Spanish-grant land measure identifier. Capture verbatim as a string; null if blank. Do NOT confuse with the adjacent 'Township', 'Labor', 'Porcion', 'Share', 'Tract', or 'Lot' cells on the same line.",
+        "title": "League"
+      },
+      "labor": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Labor, printed after the label 'Labor' on the SECTION I subdivision line (third cell, between 'League' and 'Porcion'). A Spanish-grant land measure identifier. Capture verbatim as a string; null if blank. Do NOT confuse with the adjacent 'League', 'Porcion', or other cells on the same subdivision line.",
+        "title": "Labor"
+      },
+      "porcion": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Porcion, printed after the label 'Porcion' on the SECTION I subdivision line (between 'Labor' and 'Share'). A Spanish-grant land subdivision identifier. Capture verbatim as a string; null if blank. Do NOT confuse with the adjacent 'Labor', 'Share', or other cells on the same subdivision line.",
+        "title": "Porcion"
+      },
+      "share": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Share, printed after the label 'Share' on the SECTION I subdivision line (between 'Porcion' and 'Tract'). A subdivision share identifier. Capture verbatim as a string; null if blank. Do NOT confuse with the adjacent 'Porcion', 'Tract', or other cells on the same subdivision line.",
+        "title": "Share"
+      },
+      "tract": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Tract, printed after the label 'Tract' on the SECTION I subdivision line (between 'Share' and 'Lot'). A tract identifier. Capture verbatim as a string; null if blank. Do NOT confuse with the adjacent 'Share', 'Lot', or other cells on the same subdivision line.",
+        "title": "Tract"
+      },
+      "lot": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Lot, the last labelled blank on the SECTION I subdivision line (after 'Tract'). A lot identifier. Capture verbatim as a string preserving leading zeros; null if blank. Do NOT confuse with 'Tract' (immediately to its left) or any other cell on the subdivision line.",
+        "title": "Lot"
+      },
+      "disposal_api_numbers": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "API Number(s), printed in SECTION II – METHOD OF DISPOSAL after the label 'API Number(s):' (upper-right of the section). One or more API well numbers for the associated disposal well. Capture verbatim as a string preserving leading zeros, dashes, and any separators between multiple numbers; null if blank. Do NOT confuse with '1. (A) Lease Name and Well No. of Disposal Well' or '1. (B) ... UIC No.' (to its left/below), or with '2. (B) ... Permit No.'.",
+        "title": "API Number S"
+      },
+      "disposal_well_lease_and_well_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Lease Name and Well No. of Disposal Well, printed in SECTION II after the label '1. (A) Lease Name and Well No. of Disposal Well:' (left side, item 1(A)). Capture verbatim as written, including both the lease name and well number text; null if blank. Do NOT confuse with the 'API Number(s):' field (top-right of the section), with '1. (B) Authorization for Disposal Well(s): UIC No.' (directly to its right), or with the Section V gatherer names.",
+        "title": "A Lease Name And Well No Of Disposal Well"
+      },
+      "disposal_well_uic_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "UIC No. for the disposal well, printed in SECTION II after the label '1. (B) Authorization for Disposal Well(s): UIC No.' (right side, item 1(B)). The Underground Injection Control authorization number. Capture verbatim as a string preserving leading zeros and any prefix; null if blank. Do NOT confuse with '1. (A) Lease Name and Well No. of Disposal Well' (to its left), with 'API Number(s):' (above it), or with '2. (B) Authorization for Disposal Method: Permit No.' (item 2(B), below).",
+        "title": "B Authorization For Disposal Well S UIC No"
+      },
+      "disposal_method_recycling": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Checkbox 'RECYCLING' in the SECTION II line '2. (A) Describe Disposal Method (Choose one):' (leftmost of four method checkboxes: RECYCLING | LAND APPLICATION | DISCHARGE | OTHER). True if this box is marked/checked, false if blank. Do NOT confuse with the sibling method boxes 'LAND APPLICATION', 'DISCHARGE', 'OTHER', with the 'OTHER (text)' write-in field, or with the 'Purpose of Filing' header checkboxes.",
+        "title": "RECYCLING"
+      },
+      "disposal_method_land_application": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Checkbox 'LAND APPLICATION' in the SECTION II line '2. (A) Describe Disposal Method (Choose one):' (second of four method checkboxes). True if marked/checked, false if blank. Do NOT confuse with the sibling 'RECYCLING', 'DISCHARGE', or 'OTHER' boxes, with the 'OTHER (text)' write-in field, or with the Section III 'Out of State Water' OK/LA/NM/OTHER boxes.",
+        "title": "LAND APPLICATION"
+      },
+      "disposal_method_discharge": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Checkbox 'DISCHARGE' in the SECTION II line '2. (A) Describe Disposal Method (Choose one):' (third of four method checkboxes). True if marked/checked, false if blank. Do NOT confuse with the sibling 'RECYCLING', 'LAND APPLICATION', or 'OTHER' boxes, or with the 'OTHER (text)' write-in field.",
+        "title": "DISCHARGE"
+      },
+      "disposal_method_other": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Checkbox 'OTHER' in the SECTION II line '2. (A) Describe Disposal Method (Choose one):' (fourth/rightmost method checkbox, followed by a write-in blank). True if the 'OTHER' box is marked/checked, false if blank. Do NOT confuse with the sibling 'RECYCLING', 'LAND APPLICATION', or 'DISCHARGE' boxes, and do NOT confuse the checkbox itself with the adjacent 'OTHER (text)' write-in value (captured separately in disposal_method_other_text).",
+        "title": "OTHER"
+      },
+      "disposal_method_other_text": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Free-text written on the blank line following the 'OTHER' checkbox in the SECTION II line '2. (A) Describe Disposal Method (Choose one):' (the 'OTHER _____' write-in describing an alternate disposal method). Capture verbatim as written; null if blank. Do NOT confuse with the 'OTHER' checkbox boolean (disposal_method_other) it accompanies, with the Section III line-5 'OTHER (text)' write-in, or with '2. (B) ... Permit No.'.",
+        "title": "OTHER Text"
+      },
+      "disposal_method_permit_no": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Permit No. authorizing the disposal method, printed in SECTION II after the label '2. (B) Authorization for Disposal Method: Permit No.' (right side, item 2(B)). Capture verbatim as a string preserving leading zeros and any prefix; null if blank. Do NOT confuse with the disposal-well 'UIC No.' (item 1(B)), with 'API Number(s):', or with a Section V 'RRC ID No.'.",
+        "title": "B Authorization For Disposal Method Permit No"
+      },
+      "sec3_l1_num_oil_gas_wells": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "SECTION III line 1: the count printed in the right-hand blank for '1. Number of oil leases and/or gas wells that the system gathers from:'. This is a count of leases/wells (NOT a NET BARRELS volume even though it sits in the right-hand value column). Capture verbatim as written; null if blank. Do NOT confuse with the Section III barrel lines 2–10 below it (water/skim volumes), which are quantities in net barrels.",
+        "title": "Number Of Oil Leases And Or Gas Wells That The System Gathers From"
+      },
+      "sec3_l2_water_from_producing": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "SECTION III line 2: net-barrels value printed in the right-hand NET BARRELS column for '2. Water received from producing properties during reporting period'. Capture the amount verbatim as written (preserve decimals/commas); null if blank. Do NOT confuse with line 3 ('non-producing properties') or line 4 ('Total barrels of Texas water = Line 2 + Line 3'); this is specifically the PRODUCING-properties water.",
+        "title": "Water Received From Producing Properties During Reporting Period"
+      },
+      "sec3_l3_water_from_nonproducing": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "SECTION III line 3: net-barrels value printed in the NET BARRELS column for '3. Water received from non-producing properties during reporting period'. Capture verbatim; null if blank. Do NOT confuse with line 2 ('producing properties') or line 4 ('Total barrels of Texas water'); this is specifically the NON-PRODUCING-properties water.",
+        "title": "Water Received From Non Producing Properties During Reporting Period"
+      },
+      "sec3_l4_total_texas_water": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "SECTION III line 4: net-barrels total printed in the NET BARRELS column for '4. Total barrels of Texas water received during reporting period (Line 2 + Line 3)'. The sum of lines 2 and 3. Capture verbatim; null if blank. Do NOT confuse with line 2 or line 3 (its components) or with line 5 ('Out of State Water'); this is the Texas-water TOTAL only.",
+        "title": "Total Barrels Of Texas Water Received During Reporting Period Line 2 Line 3"
+      },
+      "sec3_l5_state_ok": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "SECTION III line 5 ('5. (Out of State Water)'): the 'OK' (Oklahoma) checkbox, first of the inline state boxes 'OK / LA / NM / OTHER'. True if marked/checked, false if blank. Do NOT confuse with the sibling state boxes 'LA', 'NM', 'OTHER', with the 'OTHER (text)' write-in, or with the line-5 NET BARRELS value (sec3_l5_out_of_state_water).",
+        "title": "OK"
+      },
+      "sec3_l5_state_la": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "SECTION III line 5 ('5. (Out of State Water)'): the 'LA' (Louisiana) checkbox, second of the inline state boxes 'OK / LA / NM / OTHER'. True if marked/checked, false if blank. Do NOT confuse with the sibling 'OK', 'NM', or 'OTHER' state boxes, with the 'OTHER (text)' write-in, or with the line-5 NET BARRELS value.",
+        "title": "LA"
+      },
+      "sec3_l5_state_nm": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "SECTION III line 5 ('5. (Out of State Water)'): the 'NM' (New Mexico) checkbox, third of the inline state boxes 'OK / LA / NM / OTHER'. True if marked/checked, false if blank. Do NOT confuse with the sibling 'OK', 'LA', or 'OTHER' state boxes, with the 'OTHER (text)' write-in, or with the line-5 NET BARRELS value.",
+        "title": "NM"
+      },
+      "sec3_l5_state_other": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "SECTION III line 5 ('5. (Out of State Water)'): the 'OTHER' checkbox, fourth of the inline state boxes 'OK / LA / NM / OTHER', followed by a write-in blank for the state. True if the 'OTHER' box is marked/checked, false if blank. Do NOT confuse with the sibling 'OK', 'LA', 'NM' boxes, with the adjacent 'OTHER (text)' write-in value (sec3_l5_state_other_text), or with the Section II disposal-method 'OTHER' checkbox.",
+        "title": "OTHER"
+      },
+      "sec3_l5_state_other_text": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "SECTION III line 5: free-text written on the 'OTHER _____' blank after the OK/LA/NM/OTHER state boxes (the name/abbreviation of an out-of-state source other than OK, LA, or NM). Capture verbatim; null if blank. Do NOT confuse with the 'OTHER' checkbox boolean (sec3_l5_state_other), with the line-5 NET BARRELS value, or with the Section II disposal-method 'OTHER (text)' write-in.",
+        "title": "OTHER Text"
+      },
+      "sec3_l5_out_of_state_water": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "SECTION III line 5: the net-barrels value printed in the right-hand NET BARRELS column for line 5 '(Out of State Water)'. Capture the amount verbatim as written; null if blank. Do NOT confuse with the OK/LA/NM/OTHER checkboxes or the 'OTHER (text)' write-in on the same line, nor with the line-4 Texas-water total above it.",
+        "title": "NET BARRELS"
+      },
+      "sec3_l6_skimmed_total": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "SECTION III line 6: net-barrels value in the NET BARRELS column for '6. Total liquid hydrocarbons skimmed from water or other method during this reporting period'. Capture verbatim; null if blank. Do NOT confuse with line 7 ('Tolerance ...'), line 8 ('Excess ... = Line 6 - Line 7'), or the Section IV line-2 'skimmed ... not allocated' value; this is the TOTAL skimmed for Section III.",
+        "title": "Total Liquid Hydrocarbons Skimmed From Water Or Other Method During This Reporting Period"
+      },
+      "sec3_l7_tolerance": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "SECTION III line 7: net-barrels value in the NET BARRELS column for '7. Tolerance of liquid hydrocarbons not required to be allocated back to leases (Line 2 x .0005)'. The tolerance computed as Line 2 × 0.0005. Capture verbatim; null if blank. Do NOT confuse with line 6 ('Total ... skimmed') or line 8 ('Excess ... = Line 6 - Line 7').",
+        "title": "Tolerance Of Liquid Hydrocarbons Not Required To Be Allocated Back To Leases Line 2 X 0005"
+      },
+      "sec3_l8_excess_to_leases": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "SECTION III line 8: net-barrels value in the NET BARRELS column for '8. Excess skim liquid hydrocarbons to be allocated/credited back to leases served (Line 6 - Line 7)'. The result of Line 6 minus Line 7. Capture verbatim; null if blank. Do NOT confuse with line 6, line 7 (its components), line 9 ('slugs'), or line 10 ('Excess ... not credited = Line 8 - Line 9').",
+        "title": "Excess Skim Liquid Hydrocarbons To Be Allocated Credited Back To Leases Served Line 6 Line 7"
+      },
+      "sec3_l9_slugs_credited": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "SECTION III line 9: net-barrels value in the NET BARRELS column for '9. Liquid hydrocarbons received as identifiable “slugs” credited back to leases and/or gas wells from which they were produced'. Capture verbatim; null if blank. Do NOT confuse with line 8 ('Excess ... = Line 6 - Line 7') or line 10 ('Excess ... not credited on Line 9 = Line 8 - Line 9'); this is specifically the identifiable-slugs amount.",
+        "title": "Liquid Hydrocarbons Received As Identifiable Slugs Credited Back To Leases And Or Gas Wells From Which They Were Produced"
+      },
+      "sec3_l10_excess_not_credited": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "SECTION III line 10: net-barrels value in the NET BARRELS column for '10. Excess skim liquid hydrocarbons not credited on Line 9, but to be allocated back to properties served (Line 8 - Line 9)'. The result of Line 8 minus Line 9. Capture verbatim; null if blank. Do NOT confuse with line 8 or line 9 (its components). (Note: per the form, if any amount is shown on Line 9 or Line 10, Section VI must be completed; Section VI is not on this page.)",
+        "title": "Excess Skim Liquid Hydrocarbons Not Credited On Line 9 But To Be Allocated Back To Properties Served Line 8 Line 9"
+      },
+      "sec4_l1_storage_beginning": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "SECTION IV – STORAGE AND RUN DATA line 1: net-barrels value in the NET BARRELS column for '1. Liquid hydrocarbons in storage beginning of reporting period'. Capture verbatim; null if blank. Do NOT confuse with line 6 ('... end of reporting period') or with any Section III line; this is the BEGINNING storage balance.",
+        "title": "Liquid Hydrocarbons In Storage Beginning Of Reporting Period"
+      },
+      "sec4_l2_skimmed_not_allocated": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "SECTION IV line 2: net-barrels value in the NET BARRELS column for '2. Total liquid hydrocarbons skimmed during reporting period which were not allocated to oil leases/ gas wells'. Capture verbatim; null if blank. Do NOT confuse with the Section III line-6 'Total ... skimmed' value (a different total), or with Section IV lines 3–6.",
+        "title": "Total Liquid Hydrocarbons Skimmed During Reporting Period Which Were Not Allocated To Oil Leases Gas Wells"
+      },
+      "sec4_l3_sold": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "SECTION IV line 3: net-barrels value in the NET BARRELS column for '3. Total liquid hydrocarbons sold during reporting period'. Capture verbatim; null if blank. Do NOT confuse with line 4 ('transferred from one facility to another') or line 5 ('BS&W collected'); this is specifically the SOLD volume.",
+        "title": "Total Liquid Hydrocarbons Sold During Reporting Period"
+      },
+      "sec4_l4_transferred": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "SECTION IV line 4: net-barrels value in the NET BARRELS column for '4. Total liquid hydrocarbons that are transferred from one facility to another'. Capture verbatim; null if blank. Do NOT confuse with line 3 ('sold') or line 5 ('BS&W collected'); this is specifically the inter-facility TRANSFERRED volume.",
+        "title": "Total Liquid Hydrocarbons That Are Transferred From One Facility To Another"
+      },
+      "sec4_l5_bsw_collected": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "SECTION IV line 5: net-barrels value in the NET BARRELS column for '5. Basic Sedimentation and Water (BS&W) collected during reporting period'. Capture verbatim; null if blank. Do NOT confuse with line 3 ('sold') or line 4 ('transferred'); this is specifically the BS&W collected volume.",
+        "title": "Basic Sedimentation And Water BS W Collected During Reporting Period"
+      },
+      "sec4_l6_storage_end": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "SECTION IV line 6: net-barrels value in the NET BARRELS column for '6. Liquid hydrocarbons in storage end of reporting period (Line 1 + Line 2 - Line 3 - Line 4 - Line 5 = Line 6)'. The computed ending storage balance. Capture verbatim; null if blank. Do NOT confuse with line 1 ('... beginning of reporting period') or with the component lines 2–5; this is the ENDING storage balance.",
+        "title": "Liquid Hydrocarbons In Storage End Of Reporting Period Line 1 Line 2 Line 3 Line 4 Line 5 Line 6"
+      },
+      "signature_present": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Whether a handwritten signature/mark is present on the 'Signature' line in the CERTIFICATE block (bottom-right of the form, above 'Date' and to the left of 'Print Name'). True if any signature/mark is present on the scan, false if the line is blank. This is a presence boolean, NOT the signer's name. Do NOT confuse with 'Print Name' (the typed/printed name to its right, captured in print_name) or with 'Title'.",
+        "title": "Signature"
+      },
+      "print_name": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Print Name, printed in the CERTIFICATE block on the line labelled 'Print Name' (to the right of the 'Signature' line). The typed/printed name of the person certifying the report. Capture verbatim; null if blank. Do NOT confuse with the 'Signature' presence boolean (signature_present) to its left, with 'Title' below it, or with the top-header 'Operator' name.",
+        "title": "Print Name"
+      },
+      "certificate_date": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Date, printed in the CERTIFICATE block on the line labelled 'Date' (below 'Signature', left of 'Title'). The date the certification was signed. Capture verbatim exactly as written (preserve the printed date format, e.g. MM/DD/YYYY); null if blank. Do NOT confuse with the top-right 'Reporting Period' (month/year of the report) or with the 'Title' field to its right.",
+        "title": "Date"
+      },
+      "title": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Title, printed in the CERTIFICATE block on the line labelled 'Title' (to the right of 'Date'). The job title of the person certifying the report. Capture verbatim; null if blank. Do NOT confuse with 'Print Name' (above it), 'Date' (to its left), or the form's printed SECTION titles.",
+        "title": "Title"
+      },
+      "telephone_area_code": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Area Code portion of the telephone number in the CERTIFICATE block, printed in the first short blank on the 'Telephone Number' line (the cell sub-labelled 'Area Code', left of 'Number'). Capture the 3-digit area code verbatim as a string preserving leading zeros; null if blank. Do NOT confuse with the 'Number' portion to its right (telephone_number) or with any RRC/serial number elsewhere on the form.",
+        "title": "Area Code"
+      },
+      "telephone_number": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Number portion of the telephone number in the CERTIFICATE block, printed in the second blank on the 'Telephone Number' line (the cell sub-labelled 'Number', right of 'Area Code'). Capture the local number verbatim as a string preserving any dash and leading zeros; null if blank. Do NOT confuse with the 'Area Code' portion to its left (telephone_area_code) or with 'Email (Optional)' below it.",
+        "title": "Number"
+      },
+      "email_optional": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Email (Optional), printed in the CERTIFICATE block on the line labelled 'Email (Optional)' (below the Telephone Number line). The contact email address of the certifier. Capture verbatim as written (preserve casing exactly); null if blank. Do NOT confuse with 'Print Name', 'Title', or the Telephone Number fields above it.",
+        "title": "Email Optional"
+      },
+      "gatherer_entries": {
+        "anyOf": [
+          {
+            "items": {
+              "$ref": "#/$defs/GathererEntry"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "SECTION V – GATHERER DATA table: the list of gatherers of liquid hydrocarbons sold OR collectors of BS&W. The blank form pre-prints 4 numbered rows (1–4), each with a 'Name', an 'Amt.', and an 'RRC ID No.' cell. Emit one object per FILLED row, in printed top-to-bottom order (the printed '1./2./3./4.' are fixed row labels, not extractable values); use null (or an empty array) if no rows are filled. The 'rrc_id_no' cell is the row's stable identifier; the 'name' cell identifies a row when its RRC ID is blank. Do NOT confuse these gatherer rows with the Section III/IV line totals or with the top-header operator fields.",
+        "title": "Gatherer Entries"
+      }
+    },
+    "title": "RRCP18Extraction",
+    "type": "object"
+  },
+  "expected": {
+    "kind": "json",
+    "schema_ref": "fixtures/eb-short-P18-28-21_77-schema.json",
+    "value": {
+      "reporting_period": "JANUARY 2013",
+      "operator": "A&R DISPOSAL OPERATING CO., LLC,",
+      "operator_no": "000129",
+      "address_street_or_box": "P.O. Box 978",
+      "address_city": "Sonora",
+      "address_state": "TX",
+      "address_zip_code": "76950",
+      "purpose_monthly_report": null,
+      "purpose_corrected_report": false,
+      "purpose_initial_report": null,
+      "purpose_final_report": null,
+      "consolidated_p18_yes": null,
+      "consolidated_p18_no": null,
+      "system_serial_no": "7C-0205",
+      "district_and_lease_no": "073210",
+      "gathering_system_facility_name": "A & R Disposal",
+      "county": "Sutton Co",
+      "rrc_district_no": "7C",
+      "distance_from_nearest_town": "12 miles",
+      "direction_from_nearest_town": "East",
+      "nearest_town": "Sonora",
+      "survey": "HE & WT RR Co",
+      "section": "42",
+      "block": "B",
+      "abstract_no": null,
+      "township": null,
+      "league": null,
+      "labor": null,
+      "porcion": null,
+      "share": null,
+      "tract": null,
+      "lot": null,
+      "disposal_api_numbers": null,
+      "disposal_well_lease_and_well_no": null,
+      "disposal_well_uic_no": "00168",
+      "disposal_method_recycling": null,
+      "disposal_method_land_application": null,
+      "disposal_method_discharge": null,
+      "disposal_method_other": null,
+      "disposal_method_other_text": null,
+      "disposal_method_permit_no": null,
+      "sec3_l1_num_oil_gas_wells": "89",
+      "sec3_l2_water_from_producing": "23514",
+      "sec3_l3_water_from_nonproducing": "5197",
+      "sec3_l4_total_texas_water": "28711",
+      "sec3_l5_state_ok": null,
+      "sec3_l5_state_la": null,
+      "sec3_l5_state_nm": null,
+      "sec3_l5_state_other": null,
+      "sec3_l5_state_other_text": null,
+      "sec3_l5_out_of_state_water": null,
+      "sec3_l6_skimmed_total": "111",
+      "sec3_l7_tolerance": "12",
+      "sec3_l8_excess_to_leases": "99",
+      "sec3_l9_slugs_credited": "0",
+      "sec3_l10_excess_not_credited": "99",
+      "sec4_l1_storage_beginning": "136",
+      "sec4_l2_skimmed_not_allocated": "111",
+      "sec4_l3_sold": "205",
+      "sec4_l4_transferred": null,
+      "sec4_l5_bsw_collected": null,
+      "sec4_l6_storage_end": "42",
+      "signature_present": true,
+      "print_name": "Rachel Randall",
+      "certificate_date": "02/10/2013",
+      "title": "Agent",
+      "telephone_area_code": "580",
+      "telephone_number": "318-1195",
+      "email_optional": null,
+      "gatherer_entries": [
+        {
+          "name": "North Concho Reclamati",
+          "amt": "205",
+          "rrc_id_no": "613770 SR-7C-0233"
+        }
+      ]
+    },
+    "anchored_fields": 70,
+    "no_anchor_fields": 0
+  },
+  "field_rules": "{\"reporting_period\": {\"comparator\": \"date\", \"evidence\": [{\"page\": 1, \"bbox\": [0.643, 0.1658, 0.1654, 0.012], \"quote\": \"JANUARY 2013\", \"value\": \"JANUARY 2013\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"operator\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.0954, 0.1634, 0.3117, 0.0184], \"quote\": \"A&R DISPOSAL OPERATING CO., LLC,\", \"value\": \"A&R DISPOSAL OPERATING CO., LLC,\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"verified_by\": \"agent\"}, \"operator_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.84925, 0.21009, 0.05704, 0.01145], \"quote\": \"000129\", \"value\": \"000129\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"address_street_or_box\": {\"comparator\": \"address\", \"evidence\": [{\"page\": 1, \"bbox\": [0.0954, 0.1837, 0.1219, 0.0139], \"quote\": \"P.O. Box 978\", \"value\": \"P.O. Box 978\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"address_city\": {\"comparator\": \"address\", \"evidence\": [{\"page\": 1, \"bbox\": [0.0987, 0.1963, 0.0581, 0.0171], \"quote\": \"Sonora\", \"value\": \"Sonora\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"address_state\": {\"comparator\": \"address\", \"evidence\": [{\"page\": 1, \"bbox\": [0.16399, 0.19614, 0.02352, 0.01111], \"quote\": \"TX\", \"value\": \"TX\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"address_zip_code\": {\"comparator\": \"address\", \"evidence\": [{\"page\": 1, \"bbox\": [0.19901, 0.19663, 0.04722, 0.0107], \"quote\": \"76950\", \"value\": \"76950\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"purpose_monthly_report\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"normalizers\": [\"null_equals_false\"]}, \"purpose_corrected_report\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.6280090646086369, 0.21671872191745037, 0.02002, 0.01426], \"quote\": \"False\", \"value\": false, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"null_equals_false\"]}, \"purpose_initial_report\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"normalizers\": [\"null_equals_false\"]}, \"purpose_final_report\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"normalizers\": [\"null_equals_false\"]}, \"consolidated_p18_yes\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"normalizers\": [\"null_equals_false\"]}, \"consolidated_p18_no\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"normalizers\": [\"null_equals_false\"]}, \"system_serial_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.79166, 0.24034, 0.06499, 0.01201], \"quote\": \"7C-0205\", \"value\": \"7C-0205\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"district_and_lease_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.79942, 0.27149, 0.05601, 0.01216], \"quote\": \"073210\", \"value\": \"073210\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"gathering_system_facility_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.36158, 0.24127, 0.1124, 0.01393], \"quote\": \"A & R Disposal\", \"value\": \"A & R Disposal\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"county\": {\"comparator\": \"address\", \"evidence\": [{\"page\": 1, \"bbox\": [0.46104, 0.27191, 0.0744, 0.01203], \"quote\": \"Sutton Co\", \"value\": \"Sutton Co\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"rrc_district_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.88274, 0.1663, 0.02244, 0.01156], \"quote\": \"7C\", \"value\": \"7C\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"distance_from_nearest_town\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.37184, 0.30445, 0.06258, 0.0117], \"quote\": \"12 miles\", \"value\": \"12 miles\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"direction_from_nearest_town\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.43798, 0.30457, 0.03426, 0.01141], \"quote\": \"East\", \"value\": \"East\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"nearest_town\": {\"comparator\": \"address\", \"evidence\": [{\"page\": 1, \"bbox\": [0.49763, 0.30396, 0.05398, 0.01185], \"quote\": \"Sonora\", \"value\": \"Sonora\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"survey\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.32897, 0.27244, 0.12563, 0.01341], \"quote\": \"HE & WT RR Co\", \"value\": \"HE & WT RR Co\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"section\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.2501, 0.2724, 0.0245, 0.0139], \"quote\": \"42\", \"value\": \"42\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"block\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.30906, 0.27273, 0.01384, 0.01338], \"quote\": \"B\", \"value\": \"B\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"abstract_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"township\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"league\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"labor\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"porcion\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"share\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"tract\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"lot\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"disposal_api_numbers\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"disposal_well_lease_and_well_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"disposal_well_uic_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.77584, 0.40462, 0.04703, 0.01127], \"quote\": \"00168\", \"value\": \"00168\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"disposal_method_recycling\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"normalizers\": [\"null_equals_false\"]}, \"disposal_method_land_application\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"normalizers\": [\"null_equals_false\"]}, \"disposal_method_discharge\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"normalizers\": [\"null_equals_false\"]}, \"disposal_method_other\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"normalizers\": [\"null_equals_false\"]}, \"disposal_method_other_text\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"disposal_method_permit_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"sec3_l1_num_oil_gas_wells\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.68026, 0.48152, 0.01909, 0.01174], \"quote\": \"89\", \"value\": \"89\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"sec3_l2_water_from_producing\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.86368, 0.4991, 0.04684, 0.01097], \"quote\": \"23514\", \"value\": \"23514\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"sec3_l3_water_from_nonproducing\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.8688872005735493, 0.5115614158829677, 0.039061525809716606, 0.0135], \"quote\": \"5197\", \"value\": \"5197\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"sec3_l4_total_texas_water\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.86267, 0.52967, 0.04483, 0.01277], \"quote\": \"28711\", \"value\": \"28711\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"sec3_l5_state_ok\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"normalizers\": [\"null_equals_false\"]}, \"sec3_l5_state_la\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"normalizers\": [\"null_equals_false\"]}, \"sec3_l5_state_nm\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"normalizers\": [\"null_equals_false\"]}, \"sec3_l5_state_other\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false, \"normalizers\": [\"null_equals_false\"]}, \"sec3_l5_state_other_text\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"sec3_l5_out_of_state_water\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"sec3_l6_skimmed_total\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.88106, 0.54344, 0.02336, 0.01018], \"quote\": \"111\", \"value\": \"111\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"sec3_l7_tolerance\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.88913, 0.5536, 0.02016, 0.01533], \"quote\": \"12\", \"value\": \"12\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"sec3_l8_excess_to_leases\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.88885, 0.57402, 0.01876, 0.01064], \"quote\": \"99\", \"value\": \"99\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"sec3_l9_slugs_credited\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.8886998034750336, 0.5876635436259142, 0.025849999999999998, 0.014459999999999999], \"quote\": \"0\", \"value\": \"0\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"sec3_l10_excess_not_credited\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.88672, 0.60499, 0.02324, 0.01258], \"quote\": \"99\", \"value\": \"99\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"sec4_l1_storage_beginning\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.8810898178137652, 0.6619113786572624, 0.02718874156545209, 0.01426], \"quote\": \"136\", \"value\": \"136\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"sec4_l2_skimmed_not_allocated\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.8811392923414305, 0.676949882445141, 0.027497548920377878, 0.0141], \"quote\": \"111\", \"value\": \"111\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"sec4_l3_sold\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.87793, 0.69376, 0.03567, 0.01197], \"quote\": \"205\", \"value\": \"205\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"sec4_l4_transferred\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"sec4_l5_bsw_collected\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"sec4_l6_storage_end\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.88569, 0.70889, 0.02605, 0.01236], \"quote\": \"42\", \"value\": \"42\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"signature_present\": {\"comparator\": \"boolean\", \"evidence\": [{\"page\": 1, \"bbox\": [0.4434, 0.7904, 0.2801, 0.0551], \"quote\": \"True\", \"value\": true, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"print_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.71196, 0.81466, 0.11267, 0.01395], \"quote\": \"Rachel Randall\", \"value\": \"Rachel Randall\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"certificate_date\": {\"comparator\": \"date\", \"evidence\": [{\"page\": 1, \"bbox\": [0.52002, 0.84666, 0.08392, 0.01443], \"quote\": \"02/10/2013\", \"value\": \"02/10/2013\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"title\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.8262530102901484, 0.8472593710815046, 0.05315000000000001, 0.01592], \"quote\": \"Agent\", \"value\": \"Agent\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"agent\"}, \"telephone_area_code\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.55764, 0.88024, 0.02886, 0.01146], \"quote\": \"580\", \"value\": \"580\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"phone_digits\"]}, \"telephone_number\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.70374, 0.87926, 0.07027, 0.01152], \"quote\": \"318-1195\", \"value\": \"318-1195\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\", \"normalizers\": [\"phone_digits\"]}, \"email_optional\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": false}, \"gatherer_entries[0].name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.08752, 0.77366, 0.16879, 0.01284], \"quote\": \"North Concho Reclamati\", \"value\": \"North Concho Reclamati\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"gatherer_entries[0].amt\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.3310471390013495, 0.771896461598746, 0.026404466936572203, 0.012447864420062698], \"quote\": \"205\", \"value\": \"205\", \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"gatherer_entries[0].rrc_id_no\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 1, \"bbox\": [0.43955, 0.77221, 0.05806, 0.01115], \"quote\": \"613770 SR-7C-0233\", \"value\": \"613770 SR-7C-0233\", \"coarse\": false}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"verified_by\": \"human\"}, \"gatherer_entries\": {\"comparator\": {\"name\": \"case_insensitive\", \"amt\": \"case_insensitive\", \"rrc_id_no\": \"case_insensitive\"}, \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": {\"name\": \"North Concho Reclamati\", \"amt\": \"205\", \"rrc_id_no\": \"613770 SR-7C-0233\"}, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"structural\": \"match_by:rrc_id_no\", \"verified_by\": \"human\"}}",
+  "repeated_structure": "{}",
+  "anchored_fields": 70,
+  "no_anchor_fields": 0,
+  "case_id": "B03-eb-0075"
+}

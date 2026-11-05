@@ -1,0 +1,25 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_19e1672d",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_topic",
+    "scenario_relevant_statute",
+    "statute_ks_58_2543_landlord_type",
+    "statute_ks_58_25_103_landlord_type",
+    "statute_landlord_type",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: Kansas\n    Focus year: 2021\n    Question: Does the law regulating residential evictions specify the type(s) of landlord(s) regulated?\n*/\n\n/* =========================\n   Scenario (facts)\n   ========================= */\n\nscenario_state(kansas).\nscenario_focus_year(2021).\nscenario_topic(residential_evictions).\n\n/* For this QA, treat the following Kansas acts/definition sections as the relevant\n   \"law regulating residential evictions\" because eviction regulation in landlord-tenant\n   law depends on who qualifies as a \"landlord\". */\nscenario_relevant_statute(ks_stat_58_2543_2021).     % Kansas Residential Landlord and Tenant Act definitions\nscenario_relevant_statute(ks_stat_58_25_103_2021).   % Mobile home park landlord-tenant act definitions\n\n/* Helper predicate that succeeds when the encoded factual scenario is satisfied. */\nscenario_statement :-\n    scenario_state(kansas),\n    scenario_focus_year(2021),\n    scenario_topic(residential_evictions),\n    scenario_relevant_statute(ks_stat_58_2543_2021),\n    scenario_relevant_statute(ks_stat_58_25_103_2021).\n\n/* =========================\n   Statutes translation\n   (deterministic predicates capturing definitions relevant to \"type(s) of landlord(s)\")\n   ========================= */\n\n/* --- KS Stat  58-2543 (2021), definition of \"Landlord\"\n   \"Landlord\" means:\n     - owner\n     - lessor\n     - sublessor\n     of the dwelling unit (or building of which it is a part),\n   and also:\n     - manager who fails to disclose as required by K.S.A. 58-2551\n*/\nstatute_ks_58_2543_landlord_type(owner).\nstatute_ks_58_2543_landlord_type(lessor).\nstatute_ks_58_2543_landlord_type(sublessor).\nstatute_ks_58_2543_landlord_type(manager_who_fails_to_disclose).\n\n/* --- KS Stat  58-25,103 (2021), definition of \"Landlord\" (mobile home park context)\n   \"Landlord\" means:\n     - owner\n     - lessor\n     - sublessor\n     of a mobile home park,\n   and also:\n     - manager of the mobile home park who fails to disclose as required by K.S.A. 58-25,109\n*/\nstatute_ks_58_25_103_landlord_type(owner).\nstatute_ks_58_25_103_landlord_type(lessor).\nstatute_ks_58_25_103_landlord_type(sublessor).\nstatute_ks_58_25_103_landlord_type(manager_who_fails_to_disclose).\n\n/* Map each relevant statute to its landlord-type predicate. */\nstatute_landlord_type(ks_stat_58_2543_2021, Type) :-\n    statute_ks_58_2543_landlord_type(Type).\nstatute_landlord_type(ks_stat_58_25_103_2021, Type) :-\n    statute_ks_58_25_103_landlord_type(Type).\n\n/* The \"law regulating residential evictions\" specifies landlord types if, among the statutes\n   relevant to the scenario, at least one statute provides one or more landlord categories. */\nlaw_specifies_landlord_types_for_scenario :-\n    scenario_statement,\n    scenario_relevant_statute(Statute),\n    statute_landlord_type(Statute, _Type),\n    !.\n\n/* =========================\n   Answer derivation (deterministic)\n   ========================= */\n\nhousing_answer(yes) :-\n    law_specifies_landlord_types_for_scenario,\n    !.\nhousing_answer(no) :-\n    !.\n\n/* =========================\n   Main entrypoint\n   ========================= */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-5213",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Does the law regulating residential evictions specify the type(s) of landlord(s) regulated?"
+  }
+}

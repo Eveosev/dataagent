@@ -1,0 +1,27 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_a9725ac2",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_queried_term",
+    "scenario_target_concept",
+    "statute_rsa540_14_term_used_for_writ",
+    "statute_rsa540_14_writ_authorizes_sheriff_removal",
+    "statute_rsa540_14_removal_order_type",
+    "term_used_in_statute_for_removal_order",
+    "is_queried_term_used_to_refer_to_target_concept",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    State: New Hampshire\n    Focus year: 2021\n\n    Question: Is the term 'Writ of habere facias possessionem' used to refer to the\n    order from the court to the authorities to remove a tenant?\n*/\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Scenario facts (question context)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nscenario_state(new_hampshire).\nscenario_focus_year(2021).\n\n% The queried term (Latin phrase) as an atom.\nscenario_queried_term(writ_of_habere_facias_possessionem).\n\n% The concept the question asks about:\n% \"order from the court to the authorities to remove a tenant\"\nscenario_target_concept(order_directing_sheriff_to_remove_tenant).\n\n% Helper predicate that succeeds when the scenario as encoded is present.\nscenario_statement :-\n    scenario_state(new_hampshire),\n    scenario_focus_year(2021),\n    scenario_queried_term(writ_of_habere_facias_possessionem),\n    scenario_target_concept(order_directing_sheriff_to_remove_tenant).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Statute encoding: NH Rev Stat  540:14 (2021)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n/*\n  RSA 540:14 (2021) key points encoded:\n\n  - \"judgment shall be rendered ... and a writ of possession shall issue.\"\n  - \"A writ of possession shall authorize the sheriff to remove the defendant\n     from the premises.\"\n  - (Other subsections exist, but the question is about the name/term for the\n    removal order; we encode the term used in the statute and the removal effect.)\n*/\n\n% RSA 540:14(I): the statute uses the term \"writ of possession\".\nstatute_rsa540_14_term_used_for_writ(writ_of_possession).\n\n% RSA 540:14(I): a writ of possession authorizes the sheriff to remove the defendant.\nstatute_rsa540_14_writ_authorizes_sheriff_removal(writ_of_possession).\n\n% A derived concept: the \"order directing the sheriff to remove a tenant\" corresponds\n% to a writ of possession under RSA 540:14(I).\nstatute_rsa540_14_removal_order_type(writ_of_possession) :-\n    statute_rsa540_14_writ_authorizes_sheriff_removal(writ_of_possession).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Legal reasoning helpers\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n% The statute uses a term to refer to the removal order if:\n% (1) the statute uses that term for the relevant writ, and\n% (2) that writ is the removal-order type (authorizes sheriff removal).\nterm_used_in_statute_for_removal_order(Term) :-\n    statute_rsa540_14_term_used_for_writ(Term),\n    statute_rsa540_14_removal_order_type(Term).\n\n% In this program, \"used to refer to\" is evaluated strictly based on the statutory\n% text encoded above (i.e., whether the statute uses that term).\nis_queried_term_used_to_refer_to_target_concept(yes) :-\n    scenario_statement,\n    scenario_queried_term(Term),\n    scenario_target_concept(order_directing_sheriff_to_remove_tenant),\n    term_used_in_statute_for_removal_order(Term),\n    !.\nis_queried_term_used_to_refer_to_target_concept(no) :-\n    scenario_statement,\n    !.\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Required API predicate: housing_answer/1\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nhousing_answer(Result) :-\n    is_queried_term_used_to_refer_to_target_concept(Result),\n    !.\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Main entrypoint (required)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-2106",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is the term 'Writ of habere facias possessionem' used to refer to the order from the court to the authorities to remove a tenant?"
+  }
+}

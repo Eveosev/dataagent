@@ -1,0 +1,90 @@
+{
+  "dataset_id": "B11.dataset",
+  "task_id": "B11",
+  "revision": "v0.1",
+  "status": "collecting",
+  "unit": "scenario",
+  "sources": [
+    {
+      "name": "tau2-bench",
+      "locator": "https://github.com/sierra-research/tau2-bench",
+      "license": "MIT",
+      "digest": "sha256:d80b25f9b016c93b7a92f4a851a26820e98bb9700ce88fecfb248f1acdad8f35",
+      "revision": "19f13ea3f5fba8b4c4d272d1353590f29dc53062",
+      "files": 2243,
+      "mb": 1085.7,
+      "fetched_at": "2026-11-04T17:35:10+08:00"
+    },
+    {
+      "name": "crmarena-pro",
+      "locator": "Salesforce/CRMArenaPro",
+      "license": "未声明",
+      "digest": "sha256:736b05500166b6eca01594aaf7c546303491c4a91cdd976bc14bde241051a84a",
+      "revision": null,
+      "files": 27,
+      "mb": 16.1,
+      "fetched_at": "2026-11-04T17:36:00+08:00"
+    }
+  ],
+  "splits": {
+    "development": {
+      "count": 120,
+      "frozen": false
+    },
+    "regression": {
+      "count": 60,
+      "frozen": false
+    },
+    "unseen_acceptance": {
+      "count": 60,
+      "frozen": false
+    }
+  },
+  "exposure": {
+    "ledger_ref": "exposure.jsonl",
+    "entries": 0
+  },
+  "fixtures": {
+    "storage": "local",
+    "path": "fixtures/",
+    "limits": "单文件 <= 2 MB；超出走对象存储并在 digest 记录"
+  },
+  "updated": "2026-11-04",
+  "notes": "由 build_cases.py 从 workspace/benchmark-data 构建；原始数据不入库",
+  "build": {
+    "version": 1,
+    "script": "tools/build_cases.py",
+    "built_at": "2026-11-04",
+    "policy": "τ² 三域全量；CRMArena 取 b2c/b2b 非交互集，按题号哈希抽样。split 按域 + 题号哈希。",
+    "available": {
+      "development": 4062,
+      "regression": 1361,
+      "unseen_acceptance": 1306
+    },
+    "selected": {
+      "development": 120,
+      "regression": 60,
+      "unseen_acceptance": 60
+    },
+    "caps": {
+      "development": 120,
+      "regression": 60,
+      "unseen_acceptance": 60
+    },
+    "coverage": {
+      "covered_metrics": [
+        "pass_k_stability",
+        "approval_trigger_accuracy"
+      ],
+      "partial_metrics": [
+        "violation_rate",
+        "missed_refusal_rate"
+      ],
+      "note": "违规与漏拒需环境侧动作日志与策略断言；τ² 的 evaluation_criteria 提供断言，CRMArena 只给最终答案"
+    },
+    "counts": {
+      "tau2": 2449,
+      "crmarena": 4280
+    }
+  }
+}

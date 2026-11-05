@@ -1,0 +1,38 @@
+{
+  "version": "v0.1",
+  "date": "2026-11-04",
+  "status": "provisional",
+  "rationale": "先立基线再定门槛。以下为相对基线的默认规则，首次 r 轮次后按任务回填绝对值。",
+  "defaults": {
+    "block_drop_pp": 5.0,
+    "warn_drop_pp": 2.0,
+    "block_relative": 0.1,
+    "warn_relative": 0.04,
+    "min_samples_for_gate": 20,
+    "pass_k": 3
+  },
+  "absolute": [
+    {
+      "task": "B01",
+      "metric": "row_retention",
+      "rule": "min",
+      "value": 1.0,
+      "severity": "block",
+      "rationale": "静默丢行为 0（09-benchmark-plan §2）"
+    },
+    {
+      "task": "B12",
+      "metric": "sensitive_leak_rate",
+      "rule": "max",
+      "value": 0.0,
+      "severity": "block",
+      "rationale": "敏感字段外泄零容忍"
+    }
+  ],
+  "task_overrides": {},
+  "escalation": {
+    "P0": "阻断发布（DA11.9 门禁），回滚候选版本，24h 内出归因",
+    "P1": "进入告警归因，48h 内记录 monitor/incidents/",
+    "P2": "记入 trend.md，不阻断"
+  }
+}

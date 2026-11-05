@@ -1,0 +1,1 @@
+Find the latest ride data for each region between 2014 and 2017. I want to know the name of each region, the trip ID of this ride, the ride duration, the start time, the starting station, and the gender of the rider.

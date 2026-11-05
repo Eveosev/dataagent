@@ -1,0 +1,26 @@
+## Problem Identification:
+
+The problem is to write a Pony program called `doubleEven` that takes an array of numbers (`nums`) as input and returns a new array containing only the even numbers from the input array, each doubled.
+
+## Step-by-Step Reasoning:
+
+1. **Iterate through the input array:** We need to process each element in the input array to determine if it's even. We can use a `for` loop to iterate through the array.
+2. **Check for even numbers:** Inside the loop, we check if the current element is even using the modulo operator (`%`). If the remainder of the division by 2 is 0, the number is even.
+3. **Double even numbers:** If the number is even, we double its value.
+4. **Add to the new array:** We add the doubled even number to a new array.
+5. **Return the new array:** After processing all elements, we return the new array containing only the doubled even numbers.
+
+## Draft Answer:
+
+```pony
+fun doubleEven(nums: Array[USize]): Array[USize] =>
+  var evens: Array[USize] = []
+  for num in nums {
+    if num % 2 == 0 {
+      evens = evens + [num * 2]
+    }
+  }
+  return evens
+```
+
+This program defines a function `doubleEven` that takes an array of `USize` (unsigned integers) as input. It initializes an empty array `evens` to store the doubled even numbers. Then, it iterates through the input array using a `for` loop. Inside the loop, it checks if the current number is even using the modulo operator. If it is, it doubles the number and adds it to the `evens` array. Finally, the function returns the `evens` array containing only the doubled even numbers. 

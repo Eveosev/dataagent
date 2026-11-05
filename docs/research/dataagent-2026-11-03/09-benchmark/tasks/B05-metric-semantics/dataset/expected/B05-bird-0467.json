@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 466,
+  "question": "As part of our clinical audit I'm profiling patients born between 1936 and 1956 inclusive who never had a creatinine phosphokinase (CPK) result above the normal range. A CPK of 250 or higher counts as above the normal range, and patients with no CPK results on record count as never having exceeded it. For that group, please give me the women's percentage of the group's men and women, rounded to one decimal place.",
+  "evidence": "Creatinine phosphokinase (CPK) of 250 or higher is above the normal range.",
+  "gold_sql": "SELECT ROUND(CAST(SUM(CASE WHEN SEX = 'F' THEN 1 ELSE 0 END) AS REAL) * 100 / SUM(CASE WHEN SEX IN ('M','F') THEN 1 ELSE 0 END), 1) AS percentage FROM Patient WHERE STRFTIME('%Y', Birthday) BETWEEN '1936' AND '1956' AND NOT EXISTS (SELECT 1 FROM Laboratory WHERE Laboratory.ID = Patient.ID AND Laboratory.CPK >= 250)",
+  "db_id": "thrombosis_prediction",
+  "case_id": "B05-bird-0467",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT ROUND(CAST(SUM(CASE WHEN SEX = 'F' THEN 1 ELSE 0 END) AS REAL) * 100 / SUM(CASE WHEN SEX IN ('M','F') THEN 1 ELSE 0 END), 1) AS percentage FROM Patient WHERE STRFTIME('%Y', Birthday) BETWEEN '1936' AND '1956' AND NOT EXISTS (SELECT 1 FROM Laboratory WHERE Laboratory.ID = Patient.ID AND Laboratory.CPK >= 250)",
+    "db_id": "thrombosis_prediction",
+    "evidence": "Creatinine phosphokinase (CPK) of 250 or higher is above the normal range."
+  }
+}

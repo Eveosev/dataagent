@@ -1,0 +1,35 @@
+{
+  "case_id": "B14-elt-0148",
+  "task_id": "B14",
+  "split_role": "unseen_acceptance",
+  "inputs": [
+    {
+      "kind": "config",
+      "ref": "fixtures/elt-redshift-marketo-config.yaml",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B14-elt-0148.json"
+  },
+  "evidence": [
+    "bench://elt-bench/elt-bench/redshift/marketo/data_model.yaml"
+  ],
+  "tags": [
+    "elt-bench",
+    "redshift",
+    "marketo",
+    "models:4"
+  ],
+  "source": "elt",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

@@ -1,0 +1,2220 @@
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>FineChatBI 简介- FineBI帮助文档 FineBI帮助文档</title>
+        <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Cache-Control" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="keywords" content="" />
+    <meta name="description" content="1. 概述FineChatBI&amp;nbsp;是帆软新推出的一款利用人工智能技术，可帮助用户通过对话实现可信查数，进一步降低数据分析门槛。2. 功能定位FineChatBI 可「降低数据消费门槛」，服务于一" />
+        <link href="/core/view/default/css/common.css?" rel="stylesheet" type="text/css" media="all"/>
+    <link href="view/finebi70_2025/css/style.css?1031164003" rel="stylesheet" type="text/css" media="all"/>
+  	<link href="view/finebi70_2025/css/style_new.css?1031164003" rel="stylesheet" type="text/css" media="all"/>
+    <link href="view/finebi70_2025/css/bdsearch.css" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" type="text/css" href="/core/js/extjs/css/ext-all.css" />
+    <link rel="stylesheet" type="text/css" href="/core/js/extjs/css/xtheme-gray.css" />
+    <link rel="stylesheet" href="/core/js/clipboard/primer.css">
+    <link rel="stylesheet" href="/core/js/clipboard/github.css">
+    <link rel="stylesheet" href="/core/js/clipboard/main.css">
+    
+   <link rel="preload" href="//at.alicdn.com/t/font_2048535_4hw5fw90seh.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+    <link rel="stylesheet" href="//at.alicdn.com/t/font_2048535_4hw5fw90seh.css">
+
+
+    <link rel="stylesheet" type="text/css" href="/core/js/extjs/docs.css" />
+    <link rel="stylesheet" type="text/css" href="/core/js/extjs/style.css" />
+    <link rel="icon" href="view/finebi70_2025/images/favicon.ico" />
+    <link href="view/finebi70_2025/css/page.css?1031164003" rel="stylesheet" type="text/css" media="all"/>
+
+
+    <!-- GC -->
+    <script type="text/javascript" src="/core/js/extjs/ext-base.js"></script>
+    <script type="text/javascript" src="/core/js/extjs/ext-all.js"></script>
+    <script type="text/javascript" src="/core/js/extjs/TabCloseMenu.js"></script>
+    <script type="text/javascript" src="/core/js/extjs/jquery.js"></script>
+
+
+    <script type="text/javascript" src="/core/js/jquery.nicescroll-master/jquery.nicescroll.js"></script>
+    <script type="text/javascript" src="/core/js/jquery.lazyload.js"></script>
+    <script type="text/javascript" src="view/finebi70_2025/js/jquery.cookie.js"></script>
+    <script type="text/javascript" src="/core/lang/zh/front.js"></script>
+    <script type="text/javascript" src="/core/js/jquery.dialog-0.8.js"></script>
+    <script type="text/javascript" src="view/finebi70_2025/js/tabpage.js"></script>
+
+    <!--  图片放大  -->
+    <link href="/core/js/zoom/zoom.css" rel="stylesheet" type="text/css" media="all"/>
+    <script type="text/javascript" src="/core/js/zoom/zoom.js"></script>
+
+    <!--copy code-->
+    <script src="/core/js/clipboard/highlight.pack.min.js"></script>
+    <script src="/core/js/clipboard/clipboard.min.js"></script>
+    <script src="/core/js/clipboard/tooltips.js"></script>
+
+    <!--全局默认模板钩子-->
+    <!-- 
+	首页全局钩子
+	使用规范：为了方便维护，不能直接在钩子里面书写js功能代码，css样式代码，应该写入单独文件然后引入
+ -->
+
+<!-- 广告调用SDK -->
+<script src="/core/js/axios.min.js"></script>
+<script src="/core/js/advertisementSDK.js?103116400301"></script>
+<script>
+	let getAdEnv = 'prod' == 'prod' ? false : true;
+	window.fineAd.config({debug:getAdEnv,dev:getAdEnv});
+</script>
+    <script type="text/javascript">
+        $.dialog.setConfig('base', 'https://help.fanruan.com/finebi/style/default');
+        var g_isLogin, g_isUcenter=false, g_forward = '',g_api_url='', g_regulars = '', g_uname_minlength, g_uname_maxlength;
+                g_regulars = "";
+        g_isLogin = false;
+                                g_seo_prefix = "";
+        g_seo_suffix = ".html";
+        g_uname_minlength = "3"||3;
+        g_uname_maxlength = "15"||15;
+        const hash = window.location.hash;
+        if ( hash !== '' )
+        {
+            window.location.hash = '';  //防止刷新时，又回到锚点处
+        }
+
+    </script>
+
+    <script type="text/javascript">
+        $.ajax({
+            url:"/core/data/jstree_finebi.json?1031164003",
+            dataType:"json",
+            async:false,
+            success:function(data) {
+                DocsclassData = data;
+            }
+        });
+    </script>
+    <script type="text/javascript">
+        var a=document.location.href;
+        var q=a.substring(a.indexOf("q=")+2);
+        var wwwSStie = 'finebi';
+    </script>
+    <script type="text/javascript" src="/core/js/extjs/docs_notlang.js?1031164003"></script>
+    <script type="text/javascript" src="/core/js/showmenu.js"></script>
+    <script type="text/javascript" src="/core/ajax/ajax_sou.js?version=1.1"></script>
+</head>
+
+
+
+<body scroll="no" id="docs">
+    
+    <!--cas登录-->
+    <script type="text/javascript" src="https://cdn.fanruanclub.com/prod/dist/js/fineClubSDK.js"></script>
+    <script>
+        const app = 'help';
+        const isDev = 'true';
+        function getLoginUid(){
+            return "0";
+        };
+        console.log('pathname', window.location.pathname);
+        function callback(data){
+            console.log('callback_data',data);
+            if(data.uid){
+        	   window.location.replace('/core/cas/casLogin.php?caslogin=login&requesturi='+window.location.pathname);
+            }
+            if(!data.uid){
+        	    console.log('监听到登出');
+        	    window.location.reload();
+            }
+        }
+        window.fineClub.config({app, getLoginUid, monitorUrl:'https://fanruanclub.com/login/cas/monitor', debug:isDev, dev:isDev});
+        window.fineClub.onLoginChange(callback);
+    </script>
+
+<!--顶部导航开始-->
+<link rel="stylesheet" type="text/css" href="/core/js/nav/topnav4.2.css?" />
+<script src="/core/js/nav/topnav4.1.js?"></script>
+<script src="https://src.fanruan.com/2025-website/fanruan/js/global-qrcode-init.js"></script>
+<script>
+    (function () {
+        // 从 URL 获取指定参数
+        function getQueryParam(name) {
+            var params = new URLSearchParams(window.location.search || '');
+            return params.get(name);
+        }
+
+        // 仅针对指定的 WIKI 生效
+        var WIKI_NAME_STR = 'finebi';
+        var isTargetWiki = (WIKI_NAME_STR === 'finecloud_analytics' || WIKI_NAME_STR === 'jiandaoyun');
+
+        // 将 URL 中的 app 和 fx_bind 写入 localStorage（仅当存在且非空）
+        try {
+            if (isTargetWiki) {
+                var appParam = getQueryParam('app');
+                var fxBindParam = getQueryParam('fx_bind');
+                if (appParam) {
+                    localStorage.setItem('app', appParam);
+                }
+                if (fxBindParam) {
+                    localStorage.setItem('fx_bind', fxBindParam);
+                }
+            }
+        } catch (e) {
+            // 忽略 localStorage 不可用的情况
+        }
+
+        // 构建登录跳转链接，按原逻辑基础上附加参数
+        function buildLoginUrl() {
+            var lsFxBind = localStorage.getItem('fx_bind');
+            var base = 'https://fanruanclub.com/login/authorization';
+            var redirect_uri = 'https://help.fanruan.com/core/cas/casLogin.php?redirect=' + encodeURIComponent(window.location.pathname);
+            var service = lsFxBind ? lsFxBind + '?redirect_uri=' + encodeURIComponent(redirect_uri) : redirect_uri;
+            var url = base + '?service=' + encodeURIComponent(service);
+
+            try {
+                var lsApp = localStorage.getItem('app');
+
+                var extra = [];
+                if (lsApp) {
+                    extra.push('app=' + encodeURIComponent(lsApp));
+                }
+                if (lsFxBind) {
+                    extra.push('fx_bind=' + encodeURIComponent(lsFxBind));
+                }
+                if (extra.length > 0) {
+                    url += '&' + extra.join('&');
+                }
+            } catch (e) {
+                // 忽略 localStorage 不可用的情况，直接返回原始 URL
+            }
+            return url;
+        }
+
+        // 绑定登录按钮点击事件（仅在目标 WIKI 生效）
+        function attachLoginHandler() {
+            var btns = document.querySelectorAll('.topnav_loginbtn');
+            if (!btns || btns.length === 0) return;
+            btns.forEach(function (btn) {
+                btn.addEventListener('click', function (ev) {
+                    try {
+                        ev.preventDefault();
+                    } catch (e) {}
+                    window.location.href = buildLoginUrl();
+                }, { passive: false });
+            });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function () {
+                if (isTargetWiki) attachLoginHandler();
+            });
+        } else {
+            if (isTargetWiki) attachLoginHandler();
+        }
+    })();
+</script>
+
+<!--顶部导航开始-->
+<header class="top-nav" id="topheader">
+    <div id="TopNav" class="top-nav-box">
+
+        <!-- start top-nav-lf -->
+        <div class="top-nav-lf">
+
+          <div class="navlf_item">
+            <div class="new-log">
+              <a href="https://home.fanruan.com/"><img src="/core/js/nav/fine_logo_dynamic.gif" width="128"></a>
+            </div>
+            <div class="top-nav-line"></div>
+            <a href="https://home.fanruan.com/" class="top-nav-title">帆软社区</a>
+          </div>
+
+          <div class="navlf_item navlf-item-box">
+            <a href="https://home.fanruan.com/" class="nav-item">首页</a>
+            <a href="https://service.fanruan.com" class="nav-item">服务平台</a>
+            <a href="https://help.fanruan.com/" class="nav-item active">文档</a>
+            <a href="https://edu.fanruan.com/" class="nav-item">学院</a>
+            <a href="https://bbs.fanruan.com/wenda" class="nav-item">问答</a>
+            <a href="https://bbs.fanruan.com/topic" class="nav-item">论坛</a>
+            <a href="https://cert.fanruan.com/" class="nav-item">认证</a>
+            <a href="https://bbs.fanruan.com/jobs" class="nav-item">招聘</a>
+            <a href="https://bbs.fanruan.com/task" class="nav-item">任务</a>
+            <a href="https://market.fanruan.com/" class="nav-item">市场</a>
+          </div>
+
+        </div>
+        <!-- end top-nav-lf -->
+
+        <!-- search -->
+        <div class="top-nav-search">
+             <div id="comsearch_box">
+                                    <div id="comsearch">
+                      <form class="searchform" method="get"  autocomplete="off" action="https://fanruanclub.com/signin/?" >
+                          <ul>
+                              <li class="bdcsMain">
+                                  <input type="hidden" name="app" value="help">
+                                  <input type="hidden" name="protocol" value="cas">
+                                  <input type="hidden" name="referrer" value="https://bbs.fanruan.com/ss/?">
+                                  <input type="hidden" name="mod" value="finebi">
+                                  <input type="text" class="sou_txt" id="search-box" name="kw"  placeholder="登录后搜索">
+                              </li>
+                              <li class="comsearch_search">
+                                  <button type="submit" name="code" id="comsearch_search" value="1"><i class="iconfont icon-icon_icon-53 topanv_ssico"></i></button>
+                              </li>
+                          </ul>
+                      </form>
+
+                  </div>
+                               </div>
+        </div>
+      <!-- end search -->
+
+        <!-- start top-nav-rt -->
+        <div class="top-nav-rt">
+            <!-- start user -->
+            <div clss="nav_user">
+                               <div class="Quater_user">
+                    <ul>
+                        <li class="lf">
+                            <a class="topnav_loginbtn" href="javascript:window.location.href='https://fanruanclub.com/cas/login?service=https://help.fanruan.com/core/cas/casLogin.php?redirect='+window.location.pathname;"><i></i>登录</a>
+                        </li>
+                    </ul>
+                </div>
+
+                            </div>
+            <!-- end user -->
+
+        </div>
+        <!-- end top-nav-rt -->
+    </div>
+</header>
+
+    <div id="api-tree">
+        <div class="x-panel-header x-unselectable">
+            <div class="help_site clr">
+                <a class="help_name lf" href="https://help.fanruan.com/finebi"></a>
+                <div class="help_cata rt">
+                    <i class="iconfont icon-catalog help_name_ico"></i>
+                    <ul id="stielist" class="stie_list">
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+      
+    <div id="fankui_frame" class="fb_box" style="display:none;"><div class="fb_box_con" id="fb_box_con_div" style="left:0;right:0;margin:auto;">
+    <img src="view/finebi70_2025/images/fb_close.png" class="fb_img_close" style="width:32px;float:right;" onclick="close_fb_con()" />
+  
+  	<div class="pb_con_title">
+      	<span id="ctitle">文档反馈</span>
+  	</div>
+  
+  	<div id="mark_content_div" style="background-color:#EEF3FA;height:36px;/* width:552px; */border-radius:5px;margin-right: 32px;margin-bottom: 24px;padding-left: 10px;white-space: nowrap;overflow:hidden;text-overflow:ellipsis;padding-right: 10px;display:none;">
+    	<span style="color:#272727;font-size:14px;line-height: 36px;">划词内容：</span>
+      	<span style="color:#8C8C8C;font-size:14px;line-height: 36px;" id="mark_content"></span>
+  	</div>
+  
+  	<div style="margin-bottom:24px;">
+      	<div class="pbt">
+          	<span>问题类型</span><span style="color:red;">*</span><span>：</span>
+      	</div>
+      	<div style="padding-top:8px;">
+          	<label>
+              	<div class="options" id="opdiv5">
+                    <img src="view/finebi70_2025/images/big_checked.png" style="width:15px;height:15px;position:absolute;left:7px;bottom:13px;display:none;" class="option_checked" id="op5" />
+              		<input class="options_input" type="radio" value="1" name="problem" id="ip5" />
+                  	<span class="options_span">内容看不懂</span>
+              	</div>
+          	</label>
+            <label>
+              	<div class="options" id="opdiv6">
+                    <img src="view/finebi70_2025/images/big_checked.png" style="width:15px;height:15px;position:absolute;left:7px;bottom:13px;display:none;" class="option_checked" id="op6" />
+              		<input class="options_input" type="radio" value="2" name="problem" id="ip6" />
+                  	<span class="options_span">内容有错误</span>
+              	</div>
+          	</label>
+            <label>
+              	<div class="options" id="opdiv7">
+                    <img src="view/finebi70_2025/images/big_checked.png" style="width:15px;height:15px;position:absolute;left:7px;bottom:13px;display:none;" class="option_checked" id="op7" />
+              		<input class="options_input" type="radio" value="3" name="problem" id="ip7" />
+                  	<span class="options_span">步骤不完整</span>
+              	</div>
+          	</label>
+            <label>
+              	<div class="options" id="opdiv8">
+                    <img src="view/finebi70_2025/images/big_checked.png" style="width:15px;height:15px;position:absolute;left:7px;bottom:13px;display:none;" class="option_checked" id="op8" />
+              		<input class="options_input" type="radio" value="4" name="problem" id="ip8" />
+                  	<span class="options_span">其他</span>
+              	</div>
+          	</label>
+      	</div>
+      	<div style="clear:both;"></div>
+  	</div>
+  	
+  	<div>
+      	<div class="pbt">
+          	<span>问题描述</span><span id="pbt_need" style="color:red;display:none;">*</span><span>：</span>
+      	</div>
+      	<div style="margin-top:8px;margin-right:30px;">
+          	<textarea class="pb_desc" id="feedback_detail" placeholder="请输入你的问题描述"></textarea>
+          	<div id="viewBox" style="float:right;padding-top:5px;">0/1000</div>
+      	</div>
+  	</div>
+  
+  	<div style="margin-right:32px;">
+      <div class="btn_div">
+          <button class="fb_btn_close" onclick="close_fb_con()">取消</button>
+          <button class="fb_btn_submit" onclick="doc_feedback_insert()">提交</button>
+      </div>
+  	</div>
+  
+</div>
+
+<script>
+LimitedNnumber("#feedback_detail", "#viewBox", 1000)//调用函数需要传入三个参数，分别为，输入框、显示框、限制的长度（这里是9）
+ 
+  function LimitedNnumber(eventBox, viewBox, textLength) {//调用函数需要传入三个参数，分别为，输入框、显示框、限制的长度
+    $(document).on('input propertychange paste keyup', eventBox, function(event) {
+      this.value = this.value.replace(this.value.slice(textLength), "")//超出长度的部分替换为空
+      $(viewBox).html(this.value.length + "/" + textLength)
+    })
+  }
+</script></div>
+  	<div id="fankui_res_ok" class="fb_res" style="left:45.3%;top:40%;">
+  		<div class="res_div">
+            <img src="view/finebi70_2025/images/feedbackok.png" style="width: 28px;" />
+            <p>反馈已提交</p>
+        </div>
+  	</div>
+    <div id="fankui_res_error" class="fb_res" style="left:45.3%;top:40%;">
+  		<div class="res_div">
+            <img src="view/finebi70_2025/images/feedbackerror.png" style="width: 28px;" />
+            <p>网络繁忙</p>
+        </div>
+  	</div>
+
+    <script type="text/javascript">
+      	var tipInterval;
+        var tipTimeout;
+        setTimeout(function() {
+            $('.help_cata').hover(function() {
+                $('.stie_list').fadeIn();
+                $('.help_name_ico').addClass('cur');
+            }, function() {
+                $('.stie_list').hide();
+                $('.help_name_ico').removeClass('cur');
+            });
+        }, 500);
+        
+        $.ajax({
+            url: 'https://cid.fanruan.com/api/nav/helpnav',
+            type: 'GET',
+            dataType: 'jsonp',
+            success: function (data) {
+                var helpurl = 'https://help.fanruan.com/finebi';
+                var navhtml='';
+                $.each(data.data, function (i, item) {
+                    _blank = item.blank==1 ? 'target="_blank"' : '';
+                    if(helpurl==item.url){
+                        $('.help_name').html(item.name);
+                    }
+                    if(item.isbar==1){
+                        navhtml += '<a href="'+item.url+'" '+_blank+'><span>' + item.name + '</span>';
+                        if(helpurl==item.url){
+                            $('.help_name').html(item.name);
+                            navhtml += '<i class="iconfont icon-duihao1 help_cur_ico"></i>';
+                        }
+                        navhtml += '</a>';
+                    }
+                });
+                $("#stielist").html(navhtml);
+            },
+            error:function() {
+                $("#stielist").html('加载失败，请尝试刷新页面')
+            }
+        })
+    </script>
+    
+    <div id="doc-body">
+        <div id="mybody">
+           <!-- 给ext提供动态文档标题和高亮文档 -->
+           <input id="doc_did" type="hidden" title="FineBI帮助文档" value="2572">
+<style>
+    table .firstRow {
+        position: sticky;
+        z-index: 10;
+        top: -1px;
+    }
+    .fold-box .firstRow {
+        z-index: 0;
+    }
+</style>
+
+<div style="width:auto;height:40px;background-color:#fffbe6;color: black;padding: 8px 15px;box-sizing: border-box;border-radius: 2px;border: 1px solid #ffe58f;margin-left: 45px;margin-top: 20px;min-width: 800px;margin-right: 300px;">
+    <img style="width:16px;height:16px;float: left;margin-top: 4px;margin-right: 10px;" src="./view/finebi70_2025/images/info_fill.png">
+    <span style="float:left;color: #000000d9;line-height: 25px;">您正在浏览的是 FineBI7.X 帮助文档，点击跳转至： <a href="https://help.fanruan.com/finebi6.X/">FineBI6.X帮助文档</a></span>
+</div>
+
+<div class="doctiltop clr">
+
+    <div class="lf">
+        <h1 id='doctitle'>FineChatBI 简介</h1>
+        <label id='auditmsg'></label>
+        <label id='lockimage'></label>
+    </div>
+
+    <div class="myedit lf">
+         <a href="doc-edit-2572.html"  ><i class="tooltipped tooltipped-n"  aria-label="编辑" ></i></a>
+    </div>
+
+    
+
+</div>
+
+<div id="fankui" style="float:left;visibility:hidden; width: 90px;opacity: 1;border: 1px solid #0082fc;border-radius: 9px;position:absolute;text-align:center;vertical-align:middle;top:0px;left:0px;z-index:999;cursor:pointer;background-color:#0082FC;color: white;"><span style="line-height:32px;font-size: 12px;font-family: PingFangSC, PingFangSC-Regular;font-weight: 400;">对此内容反馈</span></div>
+
+<div class="main">
+
+
+    <!--左侧开始-->
+
+    <div valign="top" class="nei_left">
+        <div class="nei_top clr">
+
+            <div class="tiltolico clr">
+
+                <div class="docinfo lf">
+                    <li id="guan"><i class="guanfang cptb" style="display:none;" id="myadmin_gfwd"><div class="myadmin lf" style="margin-left:6px;"><i style="background:none;height:0;"></i><ul class="opencz mypop1" id="opencz_gfwd"><li style="width: 298px;white-space: normal;color:#333333;line-height:18px;font-size:11px;" class="tp_txt xz_txt">使用此篇文档遇到问题，可寻求帆软技术支持协助定位原因，若为帆软产品本身缺陷则对应给出解决方案。<br>详情：<a href="https://bbs.fanruan.com/thread-135893-1-1.html" target="_blank">《帆软技术支持基础服务范围》</a></li></ul></div><span class="sp_txt">产品级协助</span></i></i></li>
+                    <li id="shouji"></li>
+                    <li>文档创建者：<em><a href="user-space-1900999.html" rel="nofollow" >TW</a></em></li>
+                    <li>历史版本：<a href="edition-list-2572.html"  rel="nofollow">9</a></li>
+                                        <li>最近更新：<span><a href="user-space-337243.html"  rel="nofollow">Lily.Wang</a>&nbsp;于&nbsp;2025-11-27 </span></li>
+                                    </div>
+                <div class="topico">
+                    <a id="fuzhi" class="tooltipped tooltipped-s" aria-label="复制链接" href="javascript:;" onclick="copy()" data-clipboard-text="FineChatBI 简介 https://help.fanruan.com/finebi/doc-view-2572.html" data-clipboard-demo></a>
+                    <a id="doc_favorite" class="shoucang tooltipped tooltipped-s" href="javascript:" aria-label="添加到收藏"  did="2572" ></a>
+                    <a class="xiazai tooltipped tooltipped-s" aria-label="导出为PDF" onclick="downloadPDF()" style="cursor: pointer;"></a>
+                </div>
+            </div>
+
+        </div>
+
+
+                        
+
+
+        <div id="content-body" class="content_1 wordcut">
+                                    <div class="content_topp">  </div>
+                                                <h2 name="1" id="94edc0d8aa0b37f5"><span class="texts">1. 概述</span></h2>
+                                                <div class="content_topp"> <p><span style="background-color: rgb(255, 255, 255);">FineChatBI&nbsp;</span><span style="font-family: &quot;Microsoft YaHei&quot;, PingFangSC-Regular; background-color: rgb(255, 255, 255);">是帆软新推出的一款</span><span style="font-family: &quot;Microsoft YaHei&quot;, PingFangSC-Regular;">利用人工智能技术，</span>可帮助用户通过对话实现可信查数，进一步降低数据分析门槛。</p> </div>
+                                                <h2 name="3" id="e8d20e85013adf30"><span class="texts">2. 功能定位</span></h2>
+                                                <div class="content_topp"> <p>FineChatBI 可「降低数据消费门槛」，服务于一线业务人员：</p><ul style="list-style-type: disc;"><li><p>通过提问的方式获得可信的数据结果。</p></li><li><p>能够利用 FineBI 的数据分析底座完成业务分析闭环。</p></li></ul><p><img class='myimg'   data-original='/fineone/uploads/20250114/1736822506620941.gif' src='/core/style/lod.png'  title="1736822506620941.gif" alt="1(1).gif" height="468" width="800"/></p> </div>
+                                                <h2 name="5" id="31c270275487ce5e"><span class="texts">3. 功能概述</span></h2>
+                                                <div class="content_topp"> <h3 id="025d7c2755a0d492">3.1 使用数据中心准备数据源</h3><p><span style="text-wrap: wrap;"><span style="font-family: &quot;Microsoft YaHei&quot;, PingFangSC-Regular; text-wrap: wrap; background-color: rgb(255, 255, 255);"><span style="text-wrap-mode: wrap;">FineChatBI&nbsp;</span>基于 BI 底座，管理员在 FineBI 中搭建指标（<a  target="_blank"href="https://help.fanruan.com/finebi7.0/doc-view-2646.html" target='_blank'>指标中心简介</a>），用户可基于指标中心进行提问。</span></span></p><p><img class='myimg'   data-original='uploads/20250814/1755161146Wk8K.png' src='/core/style/lod.png'  height="482" width="800"/></p><p>管理员将指标添加到预加载数据列表后，用户即可基于此直接进行提问。</p><h3 id="a19b2bb31efbab25">3.2 意图解析与调整</h3><p><span style="text-wrap-mode: wrap;">FineChatBI&nbsp;</span>支持通过自然语言提问来自动生成相应的业务分析图表。用户可以自定义图表生成规则，以便在问答过程中随时对指标口径进行修改，从而实现即时的过程纠偏。</p><p><img class='myimg'   data-original='/finebi7.0/uploads/20250905/1757044189606227.gif' src='/core/style/lod.png'  title="1757044189606227.gif" alt="26.gif" height="388" width="800"/></p><h3 id="8e9f971e05d1f60d">3.3 问答思路拆解及相似问题推荐</h3><p><span style="text-wrap-mode: wrap;">FineChatBI&nbsp;</span>将意图模糊的问题通过模型与相似问题进行解析，依据可靠性最高的回答<span style="text-wrap: wrap;">生成分析思路</span>与可视化组件进行展示。</p><p>用户可以通过对解析思路进行分析来判断分析结果是否合需求，若不符合需求，可点选生成的推荐问题进行提问。</p><p><img class='myimg'   data-original='uploads/20250905/1757044266q8ME.png' src='/core/style/lod.png'  height="455" width="800"/></p><h3 id="6fb6c70ebdf231c3">3.4 模糊字段联想与匹配</h3><p><span style="text-wrap-mode: wrap;">FineChatBI&nbsp;</span>对所输入的问题进行解析，如果识别到模糊不确定的字段，则会触发联想匹配字段枚举值，并返回给用户进行确认，从而进⼀步提升问答精准度。</p><p><img class='myimg'   data-original='/fineone/uploads/20250114/1736825230980540.gif' src='/core/style/lod.png'  title="1736825230980540.gif" alt="1(5).gif" height="467" width="800"/></p><h3 id="147f4826b0313cdd">3.5 归因分析</h3><p><span style="text-wrap: wrap;"><span style="font-family: &quot;Microsoft YaHei&quot;, PingFangSC-Regular; text-wrap: wrap; background-color: rgb(255, 255, 255);">多维度拆解分析是定位问题原因的有效分析方法之一，而当分析时拆解的维度过多时，分析就失去了焦点，要么找不到出现问题的原因，要么感觉每个维度都可能有问题。</span></span></p><p><span style="font-family: &quot;Microsoft YaHei&quot;, PingFangSC-Regular;"><span style="text-wrap-mode: wrap;">FineChatBI&nbsp;</span>支持对如下问题进行归因分析</span><span style="background-color: rgb(255, 255, 255); font-family: &quot;Microsoft YaHei&quot;, PingFangSC-Regular;">，挖掘关键影响因子，点击指标值，找到影响该指标值的重要因子，针对性拆解维度进行分析，提高分析效率。</span></p><p>1）包含时间及单个指标问题，可以自动检测异常点。例如：2023年每个月的销售额。</p><p>2）<span style="text-wrap: wrap;">包含</span><span style="color: rgb(23, 43, 77); font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Oxygen, Ubuntu, &quot;Fira Sans&quot;, &quot;Droid Sans&quot;, &quot;Helvetica Neue&quot;, sans-serif; text-wrap: wrap; background-color: rgb(255, 255, 255);">单个分组<span style="text-wrap: wrap;">及</span>单个指标的问题，可以通过点击组件上的点进行归因分析。<span style="text-wrap: wrap;">例如：每个城市的销售额。</span></span></p><p>3）可以通过问答，对段状或者点状时间及指标进行归因分析。例如：2023年9月的销售额为什么这么高？&nbsp;</p><p><img class='myimg'   data-original='/fineone/uploads/20250114/1736825920404883.gif' src='/core/style/lod.png'  title="1736825920404883.gif" alt="1(6).gif" height="468" width="800"/></p><h3 id="0daf7c6fe9a58985">3.6 明细下钻</h3><p><span style="text-wrap: wrap;"><span style="text-wrap-mode: wrap;">FineChatBI&nbsp;</span>支持</span>用户在问答的对话中，通过点击图表组件上的数据点，选择对应的维度进行明细下钻，从而进行深入分析。同时支持在归因分析后，可以针对不同的维度进行明细下钻分析。</p><p><img class='myimg'   data-original='/fineone/uploads/20250114/1736826437253310.gif' src='/core/style/lod.png'  title="1736826437253310.gif" alt="1(7).gif" height="467" width="800"/></p><h3 id="5041cfe4d1b3b426">3.7 多轮问答</h3><p><span style="text-wrap-mode: wrap;">FineChatBI&nbsp;</span>支持在问答中不断进行分析，通过问答渐渐明晰数据分析的结果。在业务应用中用户经常携带着模糊但连贯的业务分析思路进行分析，智能问答 BI可以通过逐渐连续的问答，帮助用户逐步获取数据分析思路，渐进地揭示分析结果。</p><p><img class='myimg'   data-original='/fineone/uploads/20250114/1736833266797102.gif' src='/core/style/lod.png'  title="1736833266797102.gif" alt="1(8).gif" height="468" width="800"/></p><h3 id="6fc859b3937c8ef0">3.8&nbsp;预测问法</h3><p>对于复杂数据的进行分析时，<span style="text-wrap-mode: wrap;">FineChatBI&nbsp;</span><span style="text-wrap: wrap;">支持通过折线图对数据进行预算，帮助业务人员对未来的趋势走向进行预测分析。</span></p><p><span class="ed_jinggao">注：历史数据越多预测准确率越高。</span></p><p><span style="text-wrap: wrap;"><img class='myimg'   data-original='/fineone/uploads/20250114/1736833864885574.gif' src='/core/style/lod.png'  title="1736833864885574.gif" alt="1(9).gif" height="468" width="800"/></span></p><h3 id="85a8a90800ea68ab">3.9 生成仪表板</h3><p><span style="text-wrap: wrap;"><span style="text-wrap-mode: wrap;">FineChatBI&nbsp;</span>支持将问答的可视化组件生成仪表板<span style="font-family: &quot;Microsoft YaHei&quot;, PingFangSC-Regular; text-wrap: wrap; background-color: rgb(255, 255, 255);">进行保存，以便于进行后续更深入的分析或将分析内容进行发布展示。</span></span></p><p><span style="text-wrap: wrap;"><span style="font-family: &quot;Microsoft YaHei&quot;, PingFangSC-Regular; text-wrap: wrap; background-color: rgb(255, 255, 255);"><img class='myimg'   data-original='/fineone/uploads/20250114/1736834569269038.gif' src='/core/style/lod.png'  title="1736834569269038.gif" alt="1(10).gif" height="467" width="800"/></span></span></p><p><br/></p><p><span class="ai-cut-block foot-input-foot-input-parent-ai-cut-block UNK  " style="border-width: 0px; border-style: solid; --tw-border-opacity: 1; border-color: rgb(230 233 239 / var(--tw-border-opacity)); --tw-border-spacing-x: 0; --tw-border-spacing-y: 0; --tw-translate-x: 0; --tw-translate-y: 0; --tw-rotate: 0; --tw-skew-x: 0; --tw-skew-y: 0; --tw-scale-x: 1; --tw-scale-y: 1; --tw-pan-x: ; --tw-pan-y: ; --tw-pinch-zoom: ; --tw-scroll-snap-strictness: proximity; --tw-gradient-from-position: ; --tw-gradient-via-position: ; --tw-gradient-to-position: ; --tw-ordinal: ; --tw-slashed-zero: ; --tw-numeric-figure: ; --tw-numeric-spacing: ; --tw-numeric-fraction: ; --tw-ring-inset: ; --tw-ring-offset-width: 0px; --tw-ring-offset-color: #fff; --tw-ring-color: rgb(59 130 246 / .5); --tw-ring-offset-shadow: 0 0 #0000; --tw-ring-shadow: 0 0 #0000; --tw-shadow: 0 0 #0000; --tw-shadow-colored: 0 0 #0000; --tw-blur: ; --tw-brightness: ; --tw-contrast: ; --tw-grayscale: ; --tw-hue-rotate: ; --tw-invert: ; --tw-saturate: ; --tw-sepia: ; --tw-drop-shadow: ; --tw-backdrop-blur: ; --tw-backdrop-brightness: ; --tw-backdrop-contrast: ; --tw-backdrop-grayscale: ; --tw-backdrop-hue-rotate: ; --tw-backdrop-invert: ; --tw-backdrop-opacity: ; --tw-backdrop-saturate: ; --tw-backdrop-sepia: ; border-radius: 4px; display: inline-block; flex-shrink: 0; height: 22px; line-height: 22px; margin: 0px 1px; padding: 0px; transition: margin 0.1s ease-in-out; color: rgb(63, 80, 106); font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, Arial, &quot;Noto Sans&quot;, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;, &quot;Noto Color Emoji&quot;; background-color: rgb(255, 255, 255);"><br/></span></p> </div>
+                                </div>
+
+
+
+        <div class="nav_model">
+                    </div>
+
+        
+
+        <div class="fj_list m-t10"> <h3
+                        style="display:none"
+                        >附件列表
+            </h3>
+            <dl style="display: none;">
+                <dt><img class="fj_img"/><a></a><br/>
+                    <span class="l">
+                    <label> 下载次数：：0</label>
+                    </span></dt>
+                <dd></dd>
+            </dl>
+                                    <input type="hidden" name="coin_hidden" id="coin_hidden" value=""  />
+        </div>
+
+        <div style="padding:10px 0; display:none;">
+            <b>主题：</b> <a href="category-view-763" onClick="addTabPage(href,innerHTML);return false;">FineChatBI智能问答</a>
+        </div>
+        <div class="nei_bottom3">
+            <div class="bottom_left">
+                                <span style="color: #1C85E7;font-weight: normal">已经是第一篇</span>
+                            </div>
+            <div class="bottom_right">
+                                <a href="index.php?doc-view-2872.html" onClick="addTabPage(href,'7.5 更新日志');return false;">下一篇：7.5 更新日志 <img src="/core/style/forward.png" width="12" height="12"> </a>
+                            </div>
+        </div>
+
+
+
+        <!--是否有帮助-->
+        <div class="clr"></div>
+        <div id="dingw"></div>
+
+        
+        <div id="myfdsd" >
+            <div class="yesorno" id="yesorno">
+                <ul>
+                    <li><div class="yes" id="myes">有帮助</div></li>
+                    <li><div class="no" id="myno">没帮助</div></li>
+                    <li><div class="browse" id="liulan">只是浏览</div></li>
+                </ul>
+                <div class="language_box">
+                    <div class="language_sw">
+                        <a href="https://help.fanruan.com/finebi-tw/">中文（繁體）</a>
+                        <a href="https://help.fanruan.com/finebi-en/">English</a>
+                        <a href="https://help.fanruan.com/finebi-jp/">日本語</a>
+                    </div>
+                    <div class="language_btn">
+                        <span class="icon_world"></span>
+                        <span class="lang_df">中文（简体）</span>
+                        <span class="icon_darr"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <input  type="hidden"  id="category" name="category" value="" />
+
+        <div class="noform" id="noform" >
+            <iframe src="comment-viewmi-2572.html?1031164003" width="100%" height="150"  frameborder="0" scrolling="no"></iframe>
+        </div>
+
+
+
+        <div class="nei_bottom5" ><span><iframe  id="ifmain" src="comment-view-2572.html" width="100%" height="100%"  frameborder="0" scrolling="no"></iframe></span></div>
+
+    </div><!-- 左侧结束 -->
+
+
+
+
+
+    <!--右侧-->
+    <div class="doc-aside group2" id="doc-aside">
+        <div id="tool" style="z-index: 0;  position: fixed; top:100px; right: 18px; width: 200px;">
+            
+            <div id="AD-eef963cdda8043a09846053b0f752ac7"></div>
+            <script>window.fineAd.getAdvertisement({adId:'eef963cdda8043a09846053b0f752ac7'});</script>
+            
+            <div class="catalog" style="display: none;">
+                <div class="full-list" style="height:350px;overflow: auto;">
+                    <ul>
+                    </ul>
+                </div>
+                <i class="dot-dot"></i>
+            </div>
+            <a href="javascript:void(0)" id="toTop"></a>
+        </div>
+
+    </div>
+
+
+</div><!-- main end -->
+
+<script>
+    // 表格超出宽度自动调整为当前所能展示的最大宽度
+    function tableAdapt() {
+        var contentBody = document.getElementById('content-body');
+        var tables = contentBody.getElementsByTagName('table');
+        for (var i = 0; i < tables.length; i++) {
+            var table = tables[i];
+            var tableWidth = table.clientWidth;
+            var contentBodyWidth = contentBody.clientWidth;
+            if (tableWidth > contentBodyWidth) {
+                table.style.width = '100%';
+            }
+        }
+    }
+    tableAdapt();
+</script>
+
+<!-- 文档级别标签  -->
+<script type="text/javascript">
+        // 显示设置pop
+        $('#myadmin_id').hover(function(){ $('#opencz_id').stop(true,true).slideToggle(0); });
+        // 显示级别标签tips
+        $('#myadmin_gfwd').hover(function(){ $('#opencz_gfwd').stop(true,true).slideToggle(0); });
+        $(document).ready(function(){
+            $('#old_gf').css('display','none');
+            $('#myadmin_gfwd').css('display','block');
+            console.log('test?');
+        });
+
+        function guanfang(num){
+        $.post(
+            "index.php?doc-guanfang",{did:2572,val:num},
+            function(xml){
+                var message=xml.lastChild.firstChild.nodeValue;
+                if(message=='2'){;
+                    $('#myadmin_gfwd').removeClass('sqtb');
+                    $('#myadmin_gfwd').removeClass('fatb');
+                    $('#myadmin_gfwd').addClass('cptb');
+                    $('#myadmin_gfwd > span').text('产品级协助');
+                    $('#opencz_gfwd').css('left','-47px');
+                    $('#opencz_gfwd').css('top','-90px');
+                    $('#opencz_gfwd').removeClass('mypop2');
+                    $('#opencz_gfwd').addClass('mypop1');
+                    $('#opencz_gfwd > li').css('width','298px');
+                    $('#opencz_gfwd > li').html('使用此篇文档遇到问题，可寻求帆软技术支持协助定位原因，若为帆软产品本身缺陷则对应给出解决方案。<br>详情：<a href="https://bbs.fanruan.com/thread-134069-1-1.html" target="_blank">《帆软技术支持基础服务范围》</a>');
+                    return;
+
+                }else if(message=='3'){
+                    $('#guan').html('<i class="guanfang doc_pt" title="环境搭建"></i>');
+                    return;
+                }else if(message=='4'){
+                    $('#myadmin_gfwd').removeClass('cptb');
+                    $('#myadmin_gfwd').removeClass('sqtb');
+                    $('#myadmin_gfwd').addClass('fatb');
+                    $('#myadmin_gfwd > span').text('方案级协助');
+                    $('#opencz_gfwd').css('left','-47px');
+                    $('#opencz_gfwd').css('top','-90px');
+                    $('#opencz_gfwd').removeClass('mypop2');
+                    $('#opencz_gfwd').addClass('mypop1');
+                    $('#opencz_gfwd > li').css('width','298px');
+                    $('#opencz_gfwd > li').html('使用此篇文档遇到问题，可获得有限技术支持服务（如不包括过于扩展性以及客户系统环境问题）。<br>详情：<a href="https://bbs.fanruan.com/thread-134069-1-1.html" target="_blank">《帆软技术支持基础服务范围》</a>');
+                    return;
+                }else{
+                    $('#myadmin_gfwd').removeClass('cptb');
+                    $('#myadmin_gfwd').removeClass('fatb');
+                    $('#myadmin_gfwd').addClass('sqtb');
+                    $('#myadmin_gfwd > span').text('社区级协助');
+                    $('#opencz_gfwd').css('left','-47px');
+                    $('#opencz_gfwd').css('top','14px');
+                    $('#opencz_gfwd').removeClass('mypop1');
+                    $('#opencz_gfwd').addClass('mypop2');
+                    $('#opencz_gfwd > li').css('width','398px');
+                    $('#opencz_gfwd > li').html('此方案由番薯贡献。<br/>若完全参照文档中场景与步骤操作，出现问题可咨询帆软技术支持团队，提供服务范围内的指导。（注：文档场景可能无法兼容所有客户场景）<br/>其他情况，可到帆软社区提问（问题响应快，解决率超80%），<a href="https://bbs.fanruan.com/wenda" target="_blank">立即提问</a>。<br>详情：<a href="https://bbs.fanruan.com/thread-117166-1-1.html" target="_blank">《关于帆软社区提问的相关说明》</a>');
+                    return;
+                }
+            }
+        )
+    }
+</script>
+
+<script>
+function close_fb_con(){
+	$('#fankui_frame').css('display','none');
+  	$('#mark_content_div').css('display','none');
+    $("input[type='radio']").removeAttr('checked');
+    $("#feedback_detail").val('');
+    feedback_detail = "";
+    mark_content = "";
+    $('.option_checked').css('display','none');
+    $('.options_input').css('opacity',1);
+    $('.options').removeClass('opactive');
+    $('#pbt_need').css('display','none');
+}
+  
+function getCookie(c_name)
+{
+    if (document.cookie.length>0)
+    {
+        c_start=document.cookie.indexOf(c_name + "=");
+        if (c_start!=-1)
+        {
+            c_start=c_start + c_name.length+1;
+            c_end=document.cookie.indexOf(";",c_start);
+            if (c_end==-1){ c_end=document.cookie.length; }
+            return unescape(document.cookie.substring(c_start,c_end));
+         }
+     }
+    return 0;
+}
+</script>
+
+<script>
+  
+    //var tipIntertval;
+    //var tipTimeout;
+    var initial_time = 10;
+  
+    $(document).ready(function() {
+        clearInterval(tipInterval);
+        clearTimeout(tipTimeout);
+        /*for(var i = 1;i<=500;i++){
+            clearInterval(i);
+        }*/
+        if(getCookie('nevertip')!=1){
+            $('#ptip2').css('display','block');
+            tipInterval = setInterval(function(){
+                initial_time = initial_time - 1;
+                $('#tip_int_close').text(initial_time+"s后关闭");
+            }, 1000);
+            tipTimeout = setTimeout(function(){
+                $('#ptip2').remove();
+            },10000);
+        }
+    });
+  
+    $('.options').click(function(){
+        $('.option_checked').css('display','none');
+        $('.options_input').css('opacity',1);
+        $('.options').removeClass('opactive');
+    	var obj = document.getElementsByTagName("input");
+        for(var i=0; i<obj.length; i ++){
+            if(obj[i].checked){
+                var imgidname = "#op"+i;
+                var inputidname = "#ip"+i;
+                var dividname = "#opdiv"+i;
+                $(imgidname).css('display','block');
+                $(inputidname).css('opacity',0);
+                $(dividname).addClass('opactive');
+                $('#pbt_need').css('display','none');
+                if(i==8){
+                	$('#pbt_need').css('display','inline-block');
+                }
+            }
+        }
+    })
+  
+    var feedback_type = 1; //文档反馈类型默认为 1 为直接反馈类型  
+    var mark_content = "";
+  
+	$('#phone').mouseover(function(){
+    	$('#ptip').css('display','block');
+        $('#phone').removeClass('bgp0');
+        $('#phone').addClass('bgp1');
+    });
+  
+    $('#phone').mouseout(function(){
+    	$('#ptip').css('display','none');
+        $('#phone').removeClass('bgp1');
+        $('#phone').addClass('bgp0');
+    })
+  
+    $('#fankui').mouseover(function(){
+    	$('#fankui').css('background-color','#06b');
+    });
+  
+    $('#fankui').mouseout(function(){
+    	$('#fankui').css('background-color','#0082FC');
+    });
+  
+    $('#never_tip').click(function(){
+    	$('#ptip2').css('display','none');
+        clearInterval(tipInterval);
+        setCookie('nevertip',1);
+    });
+  
+  	$('#feedback').mouseover(function(){
+    	$('#feedbackhover').css('display','block');
+    });
+  
+    $('#feedback').mouseout(function(){
+    	$('#feedbackhover').css('display','none');
+    });
+</script>
+
+<script>
+    var aim_box = document.getElementById('content-body') ;
+    var mx, my, ox, oy;  // 定义备用变量
+    function e(event){  // 定义事件对象标准化函数
+        if( ! event){  // 兼容IE浏览器
+            event = window.event;
+            event.target = event.srcElement;
+            event.layerX = event.offsetX;
+            event.layerY = event.offsetY;
+        }
+        event.mx = event.pageX || event.clientX + document.body.scrollLeft;
+        // 计算鼠标指针的x轴距离
+        event.my = event.pageY || event.clientY + document.body.scrollTop;
+        // 计算鼠标指针的y轴距离
+        event.lx = event.layerX;
+        event.ly = event.layerY;
+        return event;  // 返回标准化的事件对象
+    }
+	// 定义鼠标事件处理函数
+    aim_box.onmousedown = function(event){  // 按下鼠标时，初始化处理
+        event = e(event);  // 获取标准事件对象
+        console.log('初始位置:x--'+event.lx+'--y--'+event.ly);
+        o = event.target;  // 获取当前拖放的元素
+        ox = parseInt(o.offsetLeft);  // 拖放元素的x轴坐标
+        oy = parseInt(o.offsetTop);  // 拖放元素的y轴坐标
+        mx = event.mx;  // 按下鼠标指针的x轴坐标
+        my = event.my;  // 按下鼠标指针的y轴坐标
+        document.onmousemove = move;  // 注册鼠标移动事件处理函数
+        document.onmouseup = stop;  // 注册松开鼠标事件处理函数
+    }
+    function move(event){  // 鼠标移动处理函数
+        event = e(event);
+        //o.style.left = ox + event.mx - mx  + "px";  // 定义拖动元素的x轴距离
+        //o.style.top = oy + event.my - my + "px";  // 定义拖动元素的y轴距离
+    }
+    function stop(event){  // 松开鼠标处理函数
+       event = e(event);
+       ox = parseInt(o.offsetLeft);  // 记录拖放元素的x轴坐标
+       oy = parseInt(o.offsetTop);  // 记录拖放元素的y轴坐标
+       mx = event.mx ;  // 记录鼠标指针的x轴坐标
+       my = event.my ;  // 记录鼠标指针的y轴坐标
+       lx = event.lx + 10;
+       ly = event.ly + 5;
+       var selectionObj = window.getSelection();
+       var selCon = selectionObj.toString();
+       var rangeObj = selectionObj.getRangeAt(0);
+       var docFragment = rangeObj.cloneContents();
+       var tempDiv = document.createElement("div");
+       tempDiv.appendChild(docFragment);
+       var selectedHtml = tempDiv.innerHTML;
+       var newHtml = selectedHtml.replace(/<(?!\/?IMG)[^<>]*>/ig,'');
+       newHtml = newHtml.replaceAll('&nbsp;','');
+       newHtml = newHtml.replaceAll('\n;','');
+       newHtml = newHtml.replaceAll(/<img [^>]*src=['"]([^'"]+)[^>]*>/gi,function (match, capture) {return "<img src='https://help.fanruan.com/shukuajing/"+capture+"' />";});
+       //console.log("selCon: "+selCon);
+       console.log("newHtml: "+newHtml);
+       var selLen = selCon.length;
+       if(selLen > 0){
+           $('#fankui').css('visibility','visible');
+       	   $('#fankui').css('top',ly);
+           $('#fankui').css('left',lx);
+           //mark_content = selCon;
+           mark_content = newHtml;
+           $('#mark_content').text(mark_content);
+           $('#delimit_words_input').val(newHtml);
+       } else {
+           if(newHtml.search(/<img /i) >= 0){
+           	   $('#fankui').css('visibility','visible');
+       	       $('#fankui').css('top',ly);
+               $('#fankui').css('left',lx);
+               //mark_content = selCon;
+               mark_content = newHtml;
+               $('#mark_content').text("[图片]");
+           } else {
+               $('#fankui').css('visibility','hidden');
+               $('#mark_content').text("");
+           }
+       }
+       //console.log("局部:"+ox+"-"+oy+"-"+mx+"-"+my+"----滚动:x-"+lx+"-y-"+ly);
+       o = document.onmousemove = document.onmouseup = null;
+       // 释放所有操作对象
+    }
+</script>
+
+<script>
+	$('#fankui').click(function(){
+    	var nowhref = window.location.href;
+        var newhref = "https://id.fanruan.com/signin/?isfridapp=yes&referrer="+encodeURIComponent(nowhref);
+        window.location.href=newhref;
+    });
+    $('#feedbackhover').click(function(){
+    	var nowhref = window.location.href;
+        var newhref = "https://id.fanruan.com/signin/?isfridapp=yes&referrer="+encodeURIComponent(nowhref);
+        window.location.href=newhref;
+    });
+    function doc_feedback_insert() {
+        var nowhref = window.location.href;
+        var newhref = "https://id.fanruan.com/signin/?isfridapp=yes&referrer="+encodeURIComponent(nowhref);
+        window.location.href=newhref;
+    }
+</script>
+
+
+<script type="text/javascript">
+    //相似问法相关操作
+    function title_list() {
+        var titles = document.getElementsByTagName("h2");
+        var select = document.getElementById("secondTitle");
+        for (var i = 0; i < titles.length; i ++) {
+            if (titles[i].className.indexOf("title") === -1) {
+                var new_opt = new Option(titles[i].innerText,titles[i].attributes.name.nodeValue);
+                select.options.add(new_opt);
+                document.getElementById("select_title").value =
+                    document.getElementById("secondTitle").options[0].innerText;
+            }
+        }
+    }
+
+    function add() {
+        var xswfli = document.getElementById("xswf_box");
+        var mydiv = document.createElement("div");
+        var myinput = document.createElement("input");
+        var mybutton = document.createElement("input");
+        myinput.type = "text";
+        myinput.name = "content[]";
+        myinput.id = "xswf";
+        mybutton.type = "button";
+        mybutton.id = "mycut";
+        mybutton.value = "-";
+        mybutton.onclick = function () {
+            cut(this);
+        };
+        xswfli.appendChild(mydiv);
+        mydiv.appendChild(myinput);
+        mydiv.appendChild(mybutton);
+        return myinput;
+    }
+    function cut(Obj) {
+        Obj.parentNode.parentNode.removeChild(Obj.parentNode);
+    }
+    function close_div() {
+        $.dialog.close('similar_question');
+    }
+    function question_list() {
+        $.ajax({
+            url : "search-questionlist",
+            type : "POST",
+            dataType : "json",
+            data : {
+                did : 2572,
+                id : document.getElementById("secondTitle").value
+            },
+            success : function (result) {
+                $("#xswf_box").html("<label>相似问法:</label>" +
+                    " <input type='text' name='content[]' id='xswf' class='first'/>" +
+                    " <input type='button' name='myadd' id='myadd' onclick='add()' value='+'/>"
+                );
+                if (result['state'] === "success") {
+                    for (let i = 0; i < result['list'].length; i ++) {
+                        if (i === 0) {
+                            document.getElementById("xswf").value = result['list'][i]['content'];
+                        } else {
+                            let newInput = add();
+                            newInput.value = result['list'][i]['content'];
+                        }
+                    }
+                }
+            }
+        });
+    }
+    function show_div() {
+        var html = "<div id='myform' class='myform'>" +
+            "            <form name='list' method='POST' action='similar_question-insert'>" +
+            "                <ul>" +
+            "                    <input type='hidden' name='did' value='2572'/>" +
+            "                    <input type='hidden' name='title' id='select_title' value=''/>" +
+            "                    <li><label>一级目录:</label>" +
+            "                        <select name='id' id='secondTitle'>" +
+            "                        </select>" +
+            "                    </li>" +
+            "                    <li id='xswf_box'>" +
+            "                        <label>相似问法:</label>" +
+            "                        <input type='text' name='content[]' id='xswf' class='first'/>" +
+            "                        <input type='button' name='myadd' id='myadd' onclick='add()' value='+'/>" +
+            "                        <!--                    <textarea name='qxswf' id='xswf' style='width: 400px;height: 100px;' placeholder='请输入相似问法，若输入多条以 # 分隔。'></textarea>-->" +
+            "                    </li>" +
+            "                    <input id='submit' name='submit' type='submit' value='添加' onclick=''/>" +
+            "                </ul>" +
+            "            </form>" +
+            "        </div>";
+        $.dialog.box('similar_question','添加相似问法',html);
+        //初始化下拉框
+        title_list();
+        question_list();
+        document.getElementById("secondTitle").onchange = function () {
+            document.getElementById("select_title").value =
+                document.getElementById("secondTitle").selectedOptions[0].innerText;
+            question_list();
+        };
+    }
+</script>
+
+
+
+
+
+
+
+<script>
+
+    //var tool_ht = $(window).height();
+    //$('.full-list').height(tool_ht-250);
+
+
+    $(".cosfm").click(function(){
+        $('.yesorno').slideDown();
+        $('.yesform').slideUp();
+    });
+
+
+    $("#cos0").click(function(){
+        $.cookie('mywiki_cookie2_2572', 'doc2572', { expires:365});
+        $('#myfdsd').removeClass('yyfd');
+        $ ("#doc-body").unbind ('scroll');
+        $(this).hide();
+    })
+
+    $("#myes,#myno,#liulan").on("click",function () {
+        var userSelection;  //用户选择
+        var that = this;
+        if (this.id === "myes") {
+            userSelection = "yes";
+        } else if (this.id === "myno") {
+            userSelection = "no";
+        } else {
+            userSelection = "browse";
+        }
+        $.ajax({
+            url: "doc-youhelp",
+            type: "POST",
+            dataType: "json",
+            data: {
+                did: 2572,
+                username: "",
+                uid: 0,
+                authorid: 1900999,
+                title: "FineChatBI 简介",
+                userSelection: userSelection
+            },
+            success: function (result) {
+                if (result['state'] === "success") {
+                    $(that.parentNode.parentNode).children("li").removeClass("choose");
+                    $(that.parentNode).addClass("choose");
+                    if (result['beans'] !== 0) {
+                        var floatDiv = document.createElement("div");
+                        floatDiv.innerText = "F豆+" + result['beans'];
+                        floatDiv.setAttribute("style", "color: #1C85E7;background: none;position: absolute;top: -10px;left: 0;width: 100%;text-align: center;");
+                        that.parentNode.appendChild(floatDiv);
+                        $(floatDiv).animate({
+                            top: "-30px",
+                            fontSize: "12px"
+                        },500);
+                        $(floatDiv).fadeOut();
+                    }
+                } else {
+                    alert(result['message']);
+                }
+            }
+        })
+
+    });
+
+
+    <!-- 减分操作，mini模板中回调触发 -->
+    function myno(){
+        $.cookie('mywiki_cookie_2572', 'doc2572', { expires:365});
+        $.post("index.php?doc-youhelp",{did:2572,uname:"",uid:0,cjuid:1900999,title:"FineChatBI 简介",jifen:0})
+
+    }
+
+
+
+    // function xiexie(){
+    //   $('#xiexie').slideDown();
+    //   setTimeout(function(){ $('#xiexie').slideUp(); },3600);
+    // }
+    function shuaxin(){
+        document.getElementById('ifmain').contentWindow.location.reload(true);
+        // setTimeout(function(){$('html,body').animate({scrollTop: $('#ifmain').offset().top}, 500);},3800);
+        return false;
+    }
+</script>
+
+
+<!--code & msg-->
+<script type="text/javascript" language="javascript">
+    $('.tihuan div').each(function(){$(this).replaceWith('<textarea class="java" name="code">'+$(this).html()+'</textarea>');});
+    // function reinitIframe() {
+    //     var iframe = document.getElementById("ifmain");
+    //     try {
+    //         var bHeight = iframe.contentWindow.document.body.scrollHeight;
+    //         var dHeight = iframe.contentWindow.document.documentElement.scrollHeight;
+    //         //  var height = Math.max(bHeight, dHeight);
+    //         debugger
+    //         debugger
+    //         iframe.height = bHeight;
+    //     } catch (ex) { }
+    //     }
+
+    window.setInterval(function () {
+        var iframe = document.getElementById("ifmain");
+        try {
+            var bHeight = iframe.contentWindow.document.body.scrollHeight;
+            var dHeight = iframe.contentWindow.document.documentElement.scrollHeight;
+            //  var height = Math.max(bHeight, dHeight);
+            iframe.height = bHeight;
+        } catch (ex) { }
+    }, 200);
+    // reinitIframe();
+
+    var timeout_pop=0;
+    function closepop(name){
+        // console.log("0");
+        $.dialog.close(name);
+    }
+    function doc_rename(){
+        var title=$.trim($('#doctitle').html()).replace(/\s/g,'&nbsp;');
+        var html="<form action='' onsubmit='update_docname();return false;'><textarea class='pop_txt' id='newname' type='text' maxlength='80' height='40'>"+title+"</textarea><br><br>"+
+            "<input class='queding' name='renamesbumit' type='button' onclick='update_docname()' value='提交'>"+
+            "<input class='quxiao' name='cancel' type='button' onclick='closepop(\"rename\")' value='取消'><br><br><label id='updatetitlenotice' style='height:20px;color:red'>&nbsp;</label></form>";
+        $.dialog.box('rename', '重命名', html);
+    }
+
+    function update_docname(){
+        clearTimeout(timeout_pop);
+        if($.trim($('#newname').val())==''){
+            $("#updatetitlenotice").html('文档名称不能为空!');
+            return;
+        }
+        $.post(
+            "index.php?doc-changename",{did:2572,newname:$('#newname').val()},
+        function(xml){
+            var message=xml.lastChild.firstChild.nodeValue;
+            if(message=='1'){
+                $('#doctitle').html($('#newname').val());
+                updadetxt($('#newname').val());
+                $.dialog.close('rename');
+                return;
+            }else if(message=='-2'){
+                $("#updatetitlenotice").html('新名称已存在!请重新命名');
+            }else if(message=='-3'){
+                $("#updatetitlenotice").html('含有危险代码');
+            }else if(message=='-4'){
+                $("#updatetitlenotice").html('文档名称不能为空!');
+            }else{
+                $("#jqd-content-rename").html('您的重命名请求已发送，请等待管理员审核');
+                setTimeout(function () {
+                    window.location.reload();
+                },1000)
+            }
+        }
+    );
+    }
+
+    function remove(){
+        var url="index.php?doc-remove-2572";
+        return confirm("在此处删除后，文档将放入隐藏目录，确定删除吗？")
+    }
+
+    //当点击图片时
+    $(".myimg").click(function () {
+        //获取被点击的图片的src
+        var imgSrc = $(this).attr('src');
+        $("#img_content").html("<img id='original_img' src='"+ imgSrc +"'/>");
+        $("#original_img").load(function () {
+            $("#img_view").show();
+            //初始化、自适应屏幕
+            viewImage.init();
+            //绑定鼠标移动事件
+            var timer = null;
+            $("#original_img").mousemove(function(){
+                $("#img_tool").show();
+                clearTimeout(timer);
+                timer = setTimeout(function () {
+                    $("#img_tool").fadeOut(100);
+                },1500);
+            });
+            $("#img_tool").mouseenter(function () {
+                $("#img_tool").show();
+                clearTimeout(timer);
+            });
+            $("#img_tool").mouseleave(function () {
+                timer = setTimeout(function () {
+                    $("#img_tool").hide();
+                },1500);
+            });
+        });
+    });
+
+</script>
+
+<script>
+    $('.myzip').click(function () {
+        alert("请先登录");
+        return false;
+    });
+    function copy() {
+        document.getElementById("fuzhi").setAttribute("data-clipboard-action","false");
+        alert("请先登录");
+        return false;
+    }
+</script>
+
+<script type="text/javascript">
+    function partsection(){
+        $('#fullsection').css('display','block');
+        $('#partsection').css('display','none');
+        $("#hidesection > li:gt(3)").css('display','none');
+    }
+    function fullsection(){
+        $('#fullsection').css('display','none');
+        $('#partsection').css('display','block');
+        $("#hidesection > li:gt(3)").css('display','block');
+    }
+    function addfav(){
+        var title=$("#doctitle").text();
+        if (window.ActiveXObject){
+            window.external.AddFavorite('https://help.fanruan.com/finebi/index.php?doc-view-2572', title+'-FineBI帮助文档')
+        } else {
+            window.sidebar.addPanel(title+'-FineBI帮助文档', 'https://help.fanruan.com/finebi/index.php?doc-view-2572' , "");
+        }
+    }
+
+
+    function hdunique(arrayName){
+        var newArray=new Array();
+        label:for(var i=0; i<arrayName.length;i++ ){
+            for(var j=0; j<newArray.length;j++ ){
+                if(newArray[j]==arrayName[i])
+                    continue label;
+            }
+            newArray[newArray.length] = arrayName[i];
+        }
+        return newArray;
+    }
+
+
+    $('#mypinglun1').click(function(){
+        $('html,body').animate({scrollTop: $('#mypinglun').offset().top}, 500);
+        return false;
+    });
+
+
+    $(function(){
+        //当滚动条的位置处于距顶部100像素以下时，跳转链接出现，否则消失
+        $(function () {
+            $(window).scroll(function(){
+                if ($(window).scrollTop()>500){
+                    $("#toTop").fadeIn(500);
+                }
+                else
+                {
+                    $("#toTop").fadeOut(500);
+                }
+            });
+            //当点击跳转链接后，回到页面顶部位置
+            $("#toTop").click(function(){
+                $('body,html').animate({scrollTop:0},500);
+                return false;
+            });
+        });
+    });
+
+    /*  $(window).ready(function(){
+            $.dialog({
+                id:'scrolltotop',
+                skin:"noborder",
+                position:'rb',
+                offsetX:-100,
+                move:false,
+                effects:'',
+                fixed:1,
+                height:70,
+                width:50,
+                closeImg:0,
+                minScrollTop:100,
+                overlay:0,
+                content:'<img title="回顶部" style="cursor:pointer" src="https://help.fanruan.com/finebi//core/style/default/up.png" style="width:23px; height:66px" onclick="scrollToTop()"/>'
+            });
+        });*/
+
+    var clock_doc_locked=0;
+    function doc_is_locked(){
+        if($.trim($('#lockimage').html())!=""){
+            $.dialog.box('fobbiden', '禁止编辑', '<b>此文档被禁止编辑!</b>');
+            clearTimeout(clock_doc_locked);
+            clock_doc_locked=setTimeout(function(){
+                $.dialog.close('fobbiden');
+            },1500);
+            return false;
+        }
+    }
+
+    function innerlink(title){
+        location.href='https://help.fanruan.com/finebi/index.php?doc-innerlink-'+encodeURI(title);
+    }
+
+    //内链不存在时的颜色，可以使用突出的红色 red 或和普通文本一样的黑色 #000000，或者其他您喜欢的颜色等等。默认为红色。
+    var innerlink_no_exist_color='red';
+    $("a[href^='javascript:innerlink']").each(function(){
+        var a=$(this), title=a.text();
+        if(title.indexOf('"') > -1){
+            title = title.replace('"', '\\"');
+        }
+        a.attr('title', '文档“'+title+'”不存在，点击可创建')
+            .addClass('link_doc_no').attr('href', 'javascript:innerlink("'+title+'")').removeAttr("target");
+    });
+
+    $(document).ready(function(){
+        $.ajax({
+            url : "doc-checkfavorite",
+            type : "POST",
+            data : {
+                uid : 0,
+                did : 2572            },
+            success : function (result) {
+                if (result !== "0") {
+                    document.getElementById("doc_favorite").style.backgroundImage = "url(view/finebi70_2025/images/collect_hover.png)";
+                }
+            }
+        });
+        $("#doc_favorite").click(function(){
+            if (!0){ alert('登录'); return false;}
+            var did = $(this).attr('did');
+            var result = '';
+            $.post("user-addfavorite.html",  {did:did},function(data){
+                switch (data) {
+                    case '1' :
+                        result = '文档成功被收藏至个人中心！';
+                        document.getElementById("doc_favorite").style.backgroundImage = "url(view/finebi70_2025/images/collect_hover.png)";
+                        break;
+                    case '2' :
+                        result = '文档取消收藏成功！';
+                        document.getElementById("doc_favorite").style.backgroundImage = "url(view/finebi70_2025/images/collect.png)";
+                        break;
+                    case '3' :
+                        result = '指定文档不存在或者已经被删除！';
+                        break;
+                    default :
+                        result = '参数错误!';
+                        break;
+                }
+                $.dialog.box('user_addfavorite', '收藏文档', result);
+            });
+        });
+
+        $(".file_download").click(function(){
+            var coin_down = $(this).attr("coin_down");
+            var attach_id = $(this).attr("attach_id");
+            var uid = $(this).attr("uid");
+            var coin_hidden = $("#coin_hidden").val();
+            coin = coin_hidden - coin_down;
+            if(attach_id != uid && coin < 0) {
+                $.dialog.box('coin_down', '附件下载', '金币不足！');
+                return false;
+            } else {
+                $("#coin_hidden").val(coin);
+            }
+        })
+    })
+
+    function check_coin(coinObj){
+        var coin = coinObj.val();
+        var preg =/^[0-9_]*$/;
+        var coin_down = 0;
+        coin = $.trim(coin);
+        if(preg.test(coin)){
+            if(coin < 0) {
+                coin = 0;
+            }
+            if(coin > coin_down ) {
+                coin = coin_down;
+            }
+        } else {
+            coin = 0;
+        }
+
+        coinObj.val(coin);
+    }
+</script>
+<script type="text/javascript">
+    var Letter = {
+        E:null,
+        did: 0,
+        letters:'',
+        box : function(did, E){
+            this.E = $(E).parent();
+            this.did = did;
+            var html = '<form onsubmit="Letter.send();return false;"><table border="0" width="400" class="send_massage">'
+                +'<tr><td height="40">文档首字母：<input id="first_letter" type="text" class="inp_txt" maxlength="1" size="10"/></td></tr>'
+                +'<tr><td height="40"><input id="letterSubmit" type="submit" value="'+Lang.Submit+'" />'
+                +'<span id="tagTip"></span></td></tr></table></form>';
+            $.dialog.box('firstletter', '设置文档首字母', html);
+            $("#letterSubmit").attr('disabled', false).val(Lang.Submit);
+            letters=$("#fletter").val();
+            document.getElementById("first_letter").value=letters;//document.getElementById("fletter").value;
+            return false;
+        },
+        send: function(){
+            $.post(
+                "index.php?doc-editletter",{did:2572,first_letter:$('#first_letter').val()},
+            function(xml){
+                var message=xml.lastChild.firstChild.nodeValue;
+                if(message=='1'){
+                    alert('设置成功');
+                    newletter=$('#first_letter').val();
+                    document.getElementById("fletter").value = newletter;
+                    $.dialog.close('firstletter');
+                }
+                if(message=='-1'){
+                    alert('您必须输入a-z的英文字母,不区分大小写');
+                }
+            }
+        );
+        }
+    }
+</script>
+
+
+<script type="text/javascript" src="/core/js/viewdoc_fixed_category2.0.js"></script>
+<script type="text/javascript" src="/core/js/viewdoc_category.js"></script>
+<!--<script type="text/javascript" src="/core/js/viewdoc.js"></script>-->
+
+
+
+<!--参考资料设置 结束-->
+<script type="text/javascript" src="/core/js/openremoveimage.js"></script>
+<script type="text/javascript">
+    $(document).ready(function(){
+        //文字内容中有代码模块则加载相关js和css
+        if($('pre.prettyprint').length) {
+            $.getScript("/core/js/prettify.js",function(){
+                if(typeof prettyPrint == 'function') {
+                    $('head').append('<link href="/core/style/default/prettify.css" type="text/css" rel="stylesheet" media="all"/>');
+                    prettyPrint();
+                }
+            });
+        }
+    });
+</script>
+
+
+<script>
+
+    //若窗口过小则不加载右侧目录
+    if (document.body.clientWidth < 1275) {
+        $("#doc-aside").hide();
+    } else {
+        $("#doc-aside").show();
+    }
+    window.addEventListener('resize',function () {
+        if (document.body.clientWidth < 1275) {
+            $("#doc-aside").hide();
+        } else {
+            $("#doc-aside").show();
+        }
+    });
+
+
+    hljs.initHighlightingOnLoad();
+    hljs.configure({useBR: true});
+
+    // 在一级标题后面他添加复制链接按钮
+    $("#content-body").find("h2").each(function() {
+        let h2id = $(this).attr('id');
+        $(this).append('<a class="tooltipped tooltipped-s mycopy" aria-label="复制链接" href="javascript:;" data-clipboard-text="https://help.fanruan.com/finebi/doc-view-2572.html#'+h2id+'" data-clipboard-demo="null"></a>');
+    });
+
+    // 在二级标题后面他添加复制链接按钮
+    $("#content-body").find("h3").each(function() {
+        let h3id = $(this).attr('id');
+        $(this).append('<a class="tooltipped tooltipped-s mycopy" aria-label="复制链接" href="javascript:;" data-clipboard-text="https://help.fanruan.com/finebi/doc-view-2572.html#'+h3id+'" data-clipboard-demo="null" style="padding:0"></a>');
+    });
+
+    var clipboardDemos=new ClipboardJS('[data-clipboard-demo]');
+    clipboardDemos.on('success',function(e){
+        e.clearSelection();
+        e.trigger.setAttribute('aria-label',"复制成功");
+        e.trigger.className += " btn";
+        // showTooltip(e.trigger,'复制成功');
+    });
+    clipboardDemos.on('error',function(e){
+        showTooltip(e.trigger,fallbackMessage(e.action));
+    });
+
+    var snippets = document.querySelectorAll(".snippet");
+    var button = '<button class="btn" data-clipboard-snippet><img class="clippy" src="/core/js/clipboard/clippy.png" alt="Copy to clipboard"></button>';
+    var hiddenButton = '<div class="hidden_button" onclick="hidden_animate(this)">显示代码<div class="expand"></div></div>';
+    [].forEach.call(snippets, function(snippet) {
+        snippet.insertAdjacentHTML("afterBegin", button);
+        if (snippet.scrollHeight > 220) {
+            snippet.insertAdjacentHTML("beforeend", hiddenButton);
+        }
+    });
+
+    function hidden_animate(obj) {
+        var codeDiv = obj.previousElementSibling;
+        if (codeDiv.style.maxHeight === "" || codeDiv.style.maxHeight === "200px") {
+            $(codeDiv).animate({
+                maxHeight: codeDiv.scrollHeight + "px"
+            },500);
+            obj.innerHTML = "隐藏代码<div class='collapse'></div>";
+        } else {
+            var timmer=requestAnimationFrame(function fn(){
+                var s=document.querySelector("#doc-body").scrollTop;
+                if(s > obj.parentNode.offsetTop){
+                    s -= 50;
+                    document.querySelector("#doc-body").scrollTop = s;
+                    timmer=requestAnimationFrame(fn);
+                }
+            });
+            $(codeDiv).animate({
+                maxHeight: "200px"
+            },500);
+            obj.innerHTML = "显示代码<div class='expand'></div>";
+        }
+    }
+
+
+    var clipboardSnippets = new ClipboardJS("[data-clipboard-snippet]", {
+        target:function(trigger) {
+            return trigger.nextElementSibling;
+        }
+    });
+
+    clipboardSnippets.on("success", function(e) {
+        e.clearSelection();
+        showTooltip(e.trigger, "复制成功");
+    });
+
+    clipboardSnippets.on("error", function(e) {
+        showTooltip(e.trigger, fallbackMessage(e.action));
+    });
+</script>
+
+<script type="text/javascript">
+    view_choose = $.cookie('zh_choose');
+    if(view_choose=='t'){ zh_tran('t'); }
+</script>
+
+
+<!-- 懒加载 -->
+<script>
+setTimeout(function() {
+    $(".myimg").lazyload({
+    threshold :800,
+    container: $("#doc-body"),
+    effect: "fadeIn"
+    });
+}, 500);
+</script>
+
+<!-- 导出pdf -->
+<script type="text/javascript" src="/core/js/jquery.jqprint-0.3.js"></script>
+<script type="text/javascript" src="/core/js/jquery-migrate-1.2.1.min.js"></script>
+<script language="javascript">
+function downloadPDF(){
+        $("#content-body").jqprint();
+    }
+</script>
+
+<!-- 反馈 & 获取帮助 -->
+
+
+<div class="service_feddback_box">
+
+	<div id="pp2">
+        <div id="ptip2">
+            <img src="view/finebi70_2025/images/feedbacktip.png" style="float:left;height:32px;margin-right:20px;" />
+            <div style="float:left;width:208px;">
+                <p class="fbd_first">鼠标选中内容，快速反馈问题</p>
+                <p class="fbd_second">鼠标选中存在疑惑的内容，即可快速反馈问题，我们将会跟进处理。</p>
+                <p class="fbd_third" id="never_tip">不再提示</p>
+                <p class="fbd_forth" id="tip_int_close">10s后关闭</p>
+            </div>
+        </div>
+    </div>
+
+		<a href="https://robot.fanruan.com/chat/finebi" target="_blank"><div class="ai-wrapper">文<br/>档<br/>AI<br/>助<br/>手</div></a>
+	
+	<div class="fr_service_tel">
+
+		<div class="dr-feedback">
+		    <div class="dr-feedback-inner">
+		    	<img class="dr-feedback-inner-icon" src="https://hwobs.fanruan.com/ui/digit-fe/feedback/customer.png">
+		        <div>联系我们</div>
+		    </div>
+		</div>
+		
+
+		<div class="tel_txt_box dr-feedback-popover-wrapper">
+			<div class="dr-feedback-popover">
+
+				<div class="dr-feedback-popover-item-click dr-feedback-popover-item" onclick="window.open('https://service.fanruan.com/support')">
+					<div class="dr-feedback-popover-item-logo">
+						<img src="https://fanruanbbs.obs.cn-east-2.myhuaweicloud.com/ui/digit-fe/feedback/support.png">
+					</div>
+					<div>
+						<div class="dr-feedback-popover-item-title-wrapper" style="gap: 8px;">
+							<div class="ant-space-item" style="">
+								<span class="title">在线支持</span>
+							</div>
+							<div class="ant-space-item">
+								<span role="img" aria-label="arrow-right" class="anticon anticon-arrow-right icon">
+									<svg viewBox="64 64 896 896" focusable="false" data-icon="arrow-right" width="12" height="12" fill="currentColor" aria-hidden="true">
+										<path d="M869 487.8L491.2 159.9c-2.9-2.5-6.6-3.9-10.5-3.9h-88.5c-7.4 0-10.8 9.2-5.2 14l350.2 304H152c-4.4 0-8 3.6-8 8v60c0 4.4 3.6 8 8 8h585.1L386.9 854c-5.6 4.9-2.2 14 5.2 14h91.5c1.9 0 3.8-.7 5.2-2L869 536.2a32.07 32.07 0 000-48.4z"></path>
+									</svg>
+								</span>
+							</div>
+						</div>
+						<div class="grey-text">获取专业技术支持，快速帮助您解决问题</div>
+						<div class="dr-feedback-popover-item-info-wrapper">
+							<div class="grey-text">工作日9:00-12:00，13:30-17:30在线</div>
+						</div>
+						<img class="img-recommend" src="https://shequ-oss.obs.cn-east-2.myhuaweicloud.com/digit/ad/feedback/recommend.png">
+					</div>
+				</div>
+
+				<div class="dr-feedback-popover-item-click dr-feedback-popover-item" onclick="pageFeedbackHanlder(true);">
+					<div class="dr-feedback-item">
+						<div class="dr-feedback-popover-item-logo">
+							<img alt="feedback" src="https://hwobs.fanruan.com/ui/digit-fe/feedback/feedback.png">
+						</div>
+						<div>
+							<div class="dr-feedback-popover-item-title-wrapper"  style="gap: 8px;">
+								<span class="title">页面反馈</span>
+								<span role="img" aria-label="arrow-right" class="anticon anticon-arrow-right icon">
+									<svg viewBox="64 64 896 896" focusable="false" data-icon="arrow-right" width="12" height="12" fill="currentColor" aria-hidden="true">
+										<path d="M869 487.8L491.2 159.9c-2.9-2.5-6.6-3.9-10.5-3.9h-88.5c-7.4 0-10.8 9.2-5.2 14l350.2 304H152c-4.4 0-8 3.6-8 8v60c0 4.4 3.6 8 8 8h585.1L386.9 854c-5.6 4.9-2.2 14 5.2 14h91.5c1.9 0 3.8-.7 5.2-2L869 536.2a32.07 32.07 0 000-48.4z"></path>
+									</svg>
+								</span>
+							</div>
+							<div class="grey-text">针对当前网页的建议、问题反馈</div>
+						</div>
+					</div>
+				</div>
+				<div class="dr-feedback-popover-item">
+					<div class="dr-feedback-popover-item-logo">
+						<img src="https://shequ-oss.obs.cn-east-2.myhuaweicloud.com/digit/ad/feedback/message.png">
+					</div>
+					<div>
+						<div class="ant-space css-ph9edi ant-space-horizontal ant-space-align-center dr-feedback-popover-item-title-wrapper" style="gap: 8px;">
+							<div class="ant-space-item">
+								<span class="title">售前咨询</span>
+							</div>
+						</div>
+						<div class="grey-text">采购需求/获取报价/预约演示</div>
+						<div class="dr-feedback-popover-item-info-wrapper">
+							<div class="grey-text">或拨打: 400-811-8890 转1</div>
+						</div>
+					</div>
+					<div>
+						<img alt="qr" src="https://fanruanbbs.obs.cn-east-2.myhuaweicloud.com/ui/digit-fe/feedback/qr.png?v=1711620000" width="80">
+					</div>
+				</div>
+				<div class="dr-feedback-popover-item" style="margin-bottom: 0">
+					<div class="dr-feedback-popover-item-logo">
+						<img src="https://hwobs.fanruan.com/ui/digit-fe/feedback/consult.png">
+					</div>
+					<div>
+						<div class="ant-space css-ph9edi ant-space-horizontal ant-space-align-center dr-feedback-popover-item-title-wrapper" style="gap: 8px;">
+							<div class="ant-space-item">
+								<span class="title">热线电话</span>
+							</div>
+						</div>
+						<div class="grey-text">咨询/故障救援热线：400-811-8890转2</div>
+						<div class="dr-feedback-popover-item-info-wrapper">
+							<div class="grey-text">总裁办24H投诉：17312781526</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+	</div>
+</div>
+
+<div class="dr-feedback-backtop go_backtop backtop-dn">
+	<span role="img" aria-label="up" class="anticon anticon-up">
+		<svg viewBox="64 64 896 896" focusable="false" data-icon="up" width="14" height="14" fill="currentColor" aria-hidden="true">
+			<path d="M890.5 755.3L537.9 269.2c-12.8-17.6-39-17.6-51.7 0L133.5 755.3A8 8 0 00140 768h75c5.1 0 9.9-2.5 12.9-6.6L512 369.8l284.1 391.6c3 4.1 7.8 6.6 12.9 6.6h75c6.5 0 10.3-7.4 6.5-12.7z"></path>
+		</svg>
+	</span>
+</div>
+
+
+<div class="el-overlay" style="z-index: 2011;">
+	<div class="el-dialog foot-dialog-feedback" aria-label="提交页面反馈" style="margin-top: 15vh; width: 800px;">
+		<div class="el-dialog__header">
+			<span class="el-dialog__title">提交页面反馈</span>
+				<div class="el-dialog__close" onclick="close_el_dialog();"><svg t="1685870929156" class="close_icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="5594" width="16" height="16" fill="currentColor"><path d="M839.68 899.072c-13.312 0-26.624-5.12-36.864-15.36l-655.36-675.84c-19.456-20.48-18.944-52.736 1.024-72.192 20.48-19.456 52.736-18.944 72.192 1.024l655.36 675.84c19.456 20.48 18.944 52.736-1.024 72.192-9.728 9.728-22.528 14.336-35.328 14.336z" p-id="5595"></path><path d="M174.08 888.832c-13.312 0-26.624-5.12-36.864-15.36-19.456-20.48-18.944-52.736 1.024-72.192l675.84-655.36c20.48-19.456 52.736-18.944 72.192 1.024 19.456 20.48 18.944 52.736-1.024 72.192l-675.84 655.36c-9.728 9.728-22.528 14.336-35.328 14.336z" p-id="5596"></path></svg>
+				</div>
+		</div>
+		<div class="el-dialog__body">
+			<div class="flex-1 dia-msg-til">
+				<span style="color: rgb(255, 169, 64); margin: 0px 6px 0px 0px;">
+					<svg viewBox="64 64 896 896" focusable="false" data-icon="info-circle" width="1em" height="1em" fill="currentColor" aria-hidden="true">
+						<path d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z"></path>
+						<path d="M464 336a48 48 0 1096 0 48 48 0 10-96 0zm72 112h-48c-4.4 0-8 3.6-8 8v272c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V456c0-4.4-3.6-8-8-8z"></path>
+					</svg>
+				</span>
+				<span> 仅适用于当前网页的意见收集，帆软产品问题请在 <a class="col008" href="https://bbs.fanruan.com/wenda" target="_blank">问答板块提问</a> 或 <a class="col008" href="https://service.fanruan.com/" target="_blank">前往服务平台</a> 获取技术支持 </span>
+			</div>
+			<div id="feedbackIframe" style="width: 800px; height: 500px; overflow: hidden; border-radius: 8px;">
+			</div>
+		</div>
+	</div>
+</div>
+
+<input id="delimit_words_input" type="hidden">
+
+<script type="text/javascript">
+	$('#doc-body').scroll(function() {		
+		if($(this).scrollTop() >= 600){
+			$('.go_backtop').removeClass('backtop-dn');
+			
+		}else{    
+			$('.go_backtop').addClass('backtop-dn');
+		}  
+	});
+	$('.go_backtop').click(function(event) {
+		 $('#doc-body').animate({scrollTop:0},300);
+	});
+	$('#never_tip').click(function(){
+        $('#ptip2').css('display','none');
+        clearInterval(tipInterval);
+        setCookie('nevertip',1);
+    });
+</script>
+
+<script type="text/javascript">
+	$('#delimit_words_input').val("");
+	function pageFeedbackHanlder(display){
+		let isFanruanUser = false;
+		let mobile = null;
+		let ticketToken = null;
+		let uid = "0" || 0;
+		let curPageUrl =  window.location.href;
+		let delimitWords = $('#delimit_words_input').val() || '';
+		let hideDelimitWords = delimitWords ?  '' : ',划词内容';
+		let help_en_name = "finebi";
+		let hiddenFields = '';
+		let get_cate ="FineChatBI智能问答";
+
+		if(uid > 0){
+			axios({
+			    url: 'https://service.fanruan.com/api/feedback/ticket/token?uid=' + uid,
+			    headers: {
+			        'Referer': curPageUrl
+			    },
+			}).then(
+			    function(res){
+			    	data = res.data.data;
+			    	if (data.finer === true) {
+			          isFanruanUser = true;
+			          mobile = data.mobile;
+			        } else {
+			          isFanruanUser = false;
+			          ticketToken = data.ticketToken;
+			        }
+
+			        // console.log(isFanruanUser,mobile,ticketToken);
+					// console.log('delimitWords',delimitWords);
+
+					let splicingFields = '&一级目录='+get_cate+'&反馈人uid='+uid+'&反馈页面URL='+curPageUrl+'&反馈人手机号='+mobile+'&划词内容='+delimitWords+'&文档空间='+help_en_name;
+					let hiddenFields = '&hiddenFields=类型,反馈页面URL,反馈人uid,文档空间,处理人回复,反馈人手机号,一级目录'+hideDelimitWords;
+
+					if (isFanruanUser === true) {
+				        // 内部人员
+				        if (display === false) {
+				          const remIframe = document.getElementById("iframe_shuzhiniao");
+				          document.querySelector("body").removeChild(remIframe);
+				        } else {
+				          const iframe = document.createElement("iframe");
+				          iframe.src = 'https://pe9qbh7c.shuzhiniao.com/web/#/h5/business/brd?embedded=true&modal=true&hideRootMenu=true&spaceId=11629&类型=38011'+splicingFields + hiddenFields;
+				          iframe.style = "width: 100vw; height: 100vh; position: fixed; top: 0px; left: 0px; z-index: 100000; border:none;";
+				          iframe.id = "iframe_shuzhiniao";
+				          document.querySelector("body").appendChild(iframe);
+				        }
+				    } else{
+				        // 已登录用户
+				        showFeedback = true;
+				        setTimeout(function() {
+				          const iframe = document.createElement("iframe");
+				          iframe.src = 'https://pe9qbh7c.shuzhiniao.com/web/#/ticket/59c9448ac4294d0eabbec002ef13fd63/form?embedded=true'+splicingFields+hiddenFields+'&ticketToken='+ticketToken;
+				          iframe.style = "width: 100%; height: 100%; border:none;";
+				          iframe.id = "iframe_shuzhiniao";
+				          let makediv = document.getElementById("feedbackIframe");
+				          makediv.appendChild(iframe);
+				          $('.el-overlay').show();
+				        }, 200);
+				    } 
+				}
+			).catch(function (error) {
+	        	console.log('feedback token error',error);
+	    	});
+
+    	}else{
+			// 未登录
+	        let comLoginUrl = 'https://fanruanclub.com/cas/login?service=https://help.fanruan.com/core/cas/casLogin.php?redirect='+window.location.pathname;
+	        window.location.replace(comLoginUrl);
+    	}
+	}
+
+	// 监听数知鸟iframe中的关闭
+    function receiveMessage(event) {
+      const { data } = event;
+      if (data && data.type === "closeModal" && data.id === "shuzhiniao-create-issue") {
+        // 移除iframe
+        pageFeedbackHanlder(false);
+      }
+    }
+    window.addEventListener("message", receiveMessage, false);
+
+	function close_el_dialog(){
+		$('.el-overlay').hide();
+		$('#feedbackIframe').html("");
+		$('#delimit_words_input').val("");
+	}
+
+	$('.el-overlay').click(function(event) {
+		$(this).hide();
+		$('#feedbackIframe').html("");
+		$('#delimit_words_input').val("");
+	});
+
+</script>
+
+
+<style type="text/css">
+	.img-recommend{
+		position: absolute;
+		width: 38px;
+		right: 0;
+		top: 0;
+	}
+	.service_feddback_box{
+		position: fixed;
+		top: 50%; 
+		transform: translateY(-50%); 
+		right: 10px;
+		z-index: 66;
+	}
+
+	.dr-feedback {
+	  background: linear-gradient(144deg,#00b8fe 16%,#0082fc 87%);
+	  border-radius: 8px;
+	  box-shadow: 0 4px 12px 0 rgba(4,43,79,.12);
+	  height: 84px;
+	  width: 36px;
+	  line-height: 1.5714285714285714;
+	}
+
+	.dr-feedback, .dr-feedback-inner {
+	  align-items: center;
+	  display: flex;
+	  flex-direction: column;
+	  justify-content: center;
+	  position: relative;
+	  z-index: 2;
+	}
+	.dr-feedback-inner {
+	  color: #fff;
+	  cursor: pointer;
+	  font-size: 12px;
+	  line-height: 14px;
+	  text-align: center;
+	  width: 80%;
+	}
+	.dr-feedback-inner-icon {
+	  height: 20px;
+	  margin-bottom: 8px;
+	  width: 20px;
+	}
+	.dr-feedback-popover {
+	  box-sizing: border-box;
+	  padding: 16px;
+	  width: 100%;
+	}
+	.dr-feedback-popover:before {
+	    content: "";
+	    position:absolute; 
+	    right:-20px; 
+	    top:0;
+	    width:20px;
+	    height:100%;
+	}
+	.ant-space {
+	  display: inline-flex;
+	}
+	.ant-space-align-center {
+	  align-items: center;
+	}
+	.dr-feedback-popover-wrapper .dr-feedback-popover-item {
+	position: relative;
+	  align-items: flex-start;
+	  border: 1px solid #d6dfe7;
+	  border-radius: 8px;
+	  box-sizing: border-box;
+	  display: flex;
+	  gap: 12px;
+	  margin-bottom: 16px;
+	  padding: 12px;
+	  font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans',sans-serif,'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji';
+	  font-size: 14px;
+	  line-height: 1.5714285714285714;
+	}
+	.dr-feedback-popover-item-click{
+		cursor: pointer;
+	}
+	.dr-feedback-popover-item-click:hover{
+		background: linear-gradient(180deg,#e4ebff, #ffffff);
+	}
+	.dr-feedback-popover-item-click:hover .dr-feedback-popover-item-title-wrapper{
+		color: #0082fc;
+	}
+	.dr-feedback-popover-wrapper .dr-feedback-popover-item-logo {
+	  width: 48px;
+	}
+	.dr-feedback-popover-wrapper .dr-feedback-popover-item-logo img {
+	  width: 100%;
+	  border: none;
+	}
+	.dr-feedback-popover-item-title-wrapper {
+		display: inline-flex;
+		align-items: center;
+	}
+	.dr-feedback-popover-wrapper .dr-feedback-popover-item-title-wrapper .title {
+	  font-family: PingFangSC,PingFangSC-Semibold;
+	  font-size: 14px;
+	  font-weight: 600;
+	  line-height: 24px;
+	  text-align: left;
+	}
+	.dr-feedback-popover-wrapper .dr-feedback-popover-item .grey-text {
+	  color: #8a9cb0;
+	  font-size: 14px;
+	  margin-top: 5px;
+	}
+	.dr-feedback-popover-wrapper .dr-feedback-popover-item-info-wrapper {
+	  margin-top: 5px;
+	}
+	.dr-feedback-popover-wrapper .dr-feedback-popover-item .blue-text {
+	  color: #0082fc;
+	  font-size: 14px;
+	}
+	.dr-feedback-item {
+	  display: flex;
+	  gap: 10px;
+	}
+
+	.fr_service_tel{
+		display: block;
+		width: 36px;
+		text-align: center;
+		margin: 10px auto 10px auto;
+	}
+
+	.fr_service_tel .tel_txt_box{
+		position: absolute;
+		width: 392px;
+		margin-left: -406px;
+		margin-top: -288px;
+		background: #fff;
+		border-radius: 12px;
+		text-align: left;
+		font-size: 14px;
+		box-shadow: 0 8px 24px 8px #245bdb0a,0 6px 12px #245bdb0a,0 4px 8px -8px #245bdb0f;
+		transition: all .1s;
+		background: linear-gradient(180deg,#f3f6ff, #ffffff);
+	    border: 1px solid #fff;
+	    /*test*/
+	    transform: scale(0.7);
+	    transition: all .1s;
+		opacity: 0;
+		visibility:hidden;
+	}
+
+	.fr_service_tel:hover .tel_txt_box{
+		display: block !important;
+		transition: all .2s;
+		transform: scale(1);
+		margin-left: -406px;
+		opacity: 1;
+		visibility:visible;
+	}
+
+	.fr_service_tel .tel_txt_box::before{
+		width:0px; height:0px; 
+		border:solid 8px; 
+		border-color: transparent transparent transparent  #fff ; 
+		overflow:hidden; z-index:9; 
+		position:absolute;
+		top:50%; margin-top: -6px;
+		right:0; margin-right:-16px;
+		content:" "
+	}
+	.fr_service_tel .tel_txt_box::after{
+		width:0px; height:0px; border:solid 7px; 
+		border-color:  transparent transparent transparent #fff ; 
+		overflow:hidden; z-index:9; position:absolute;
+		top:50%; margin-top: -5px;
+		right:0; margin-right:-14px;
+		content:" "
+	}
+
+	.dr-feedback-backtop {
+	  align-items: center;
+	  background-color: #fff !important;
+	  border-radius: 8px !important;
+	  bottom: 80px  !important;
+	  box-shadow: 0 4px 12px 0 rgba(4,43,79,.12);
+	  cursor: pointer;
+	  display: flex;
+	  height: 36px !important;
+	  justify-content: center !important;
+	  position: fixed;
+	  right: 10px !important;
+	  width: 36px !important;
+	  background-image: none  !important;
+	}
+	.backtop-dn{
+		display: none;
+	}
+	
+
+	/*dialog*/
+	.el-overlay {
+	  display: none;
+	  position: fixed;
+	  top: 0;
+	  right: 0;
+	  bottom: 0;
+	  left: 0;
+	  z-index: 2000;
+	  height: 100%;
+	  background-color: rgba(0,0,0,.5);
+	  overflow: auto;
+	  text-align: center;
+	}
+	.el-dialog {
+	  display: inline-block;
+	  vertical-align: middle;
+	  border-radius: 8px;
+	  margin: 0;
+	  background-color: #fff;
+	}
+	.el-dialog__header{
+		padding: 16px 24px;
+		display: flex;
+		align-items: center;
+	    justify-content: space-between;
+	}
+	.el-dialog__header .el-dialog__title{
+		font-size: 18px;
+		color: #303133;
+	}
+	.flex-1 {
+	  display: flex;
+	  align-items: center;
+	}
+	.dia-msg-til {
+	  background-color: #fefbe6;
+	  padding: 10px 20px;
+	  border: 1px solid #ffe58f;
+	  color: #333;
+	}
+	.el-dialog__body{
+		padding: 0;
+	}
+	.el-dialog__close{
+		cursor: pointer;
+		background-color: #fff;
+		border-radius: 4px;
+		padding: 4px;
+		transition: all .2s;
+		color: #8a8a8a;
+	}
+	.el-dialog__close:hover{
+		color: #000;
+	}
+
+	a:hover {
+		text-decoration: none;
+	}
+
+	.ai-wrapper {
+		width: 50px;
+		height: 148px;
+		background: url(https://hwobs.fanruan.com/ui/help/AI.png);
+		background-size: cover;
+		background-repeat: no-repeat;
+		text-align: center;
+		font-size: 12px;
+		line-height: 14px;
+		font-weight: 500;
+		padding-top: 55px;
+		box-sizing: border-box;
+		background-position: center;
+		color: #1c85e7;
+	}
+
+	#pp2{height: 20px;width: 2px;position: relative;}
+	#ptip2{height:116px;width: 300px;position:absolute;left: -334px;top: 0px;background-color:white;display:none;border-radius:10px;box-shadow:0px 0px 3px #c8cbd0;padding-left:20px;padding-top:20px;cursor:default;}
+	#ptip2::before{cursor:default;width: 10px;height: 10px;-webkit-transform: rotate(-45deg);-ms-transform: rotate(-45deg);transform: rotate(45deg);background: #fff;background-clip: padding-box;border: solid 4px rgba(221,221,221,0);border-width: 4px 4px 0 0;position: absolute;top: 65px;left: 315px;content: " ";border-right:solid 1px #E8E8E8;border-top:solid 1px #E8E8E8;}
+	#ptip2::after{cursor:default;position: absolute;width: 30px;height: 120px;content: "";top: 10px;left: 305px;}
+	#service_robot{width: 50px;height: 50px;}
+	.tiptitle{padding-bottom:5px;}
+	.tipcon{padding-bottom:18px;color:#617288;}
+	.emphasize_tip{color: #1c85e7;}
+	.fbd_first{font-size: 14px;font-family: PingFangSC, PingFangSC-Medium;font-weight: 500;color: #333333;line-height: 22px;}
+	.fbd_second{font-size: 12px;font-family: PingFangSC, PingFangSC-Regular;font-weight: 400;color: #333333;line-height: 20px;margin-top:4px;margin-bottom:8px;}
+	.fbd_third{font-size: 12px;font-family: PingFangSC, PingFangSC-Regular;font-weight: 400;color: #8496ab;line-height: 20px;cursor:pointer;float:left;}
+	.fbd_forth{float:right;font-size: 12px;font-family: PingFangSC, PingFangSC-Regular;font-weight: 400;color: #0082fc;line-height: 20px;}
+	.fb_box{z-index:998;background:#fff;position:fixed;left:50%;top:30%;}
+	.fb_box::after{content:"";position:fixed;left:0;right:0;top:0;bottom:0;background:rgba(0,0,0,0.6);}
+	.fb_box_con{width: 632px;z-index: 999;padding-left:40px;padding-bottom:32px;padding-top:10px;padding-right:10px;background: #fff;position: fixed;top: 10%;left:25%;border-radius:5px;border: 1px solid #e8e8e8;}
+</style><!-- 折叠功能 -->
+<link href="/core/view/default/css/fold.css?103116400303" rel="stylesheet" type="text/css"/>
+<script type="text/javascript">
+	$('.fold-open-btn').click(function() {
+		$(this).next('.flod-content').slideToggle(0);
+		$(this).toggleClass('icon-rotate');
+		$(".myimg").lazyload().update();
+		// viewdoc_cate.init();
+	});
+</script>
+<!-- 占位用docjs找不到id会报错 -->
+<input id="cate_cid" type="hidden" title="0" value="0">
+<!-- 解决竖向表头不需要固定问题 DP-7828 -->
+<script>
+    const trElements = document.querySelectorAll('tr.firstRow');
+    trElements.forEach((tr) => {
+        if (tr.querySelector('td')) {
+            tr.classList.remove('firstRow');
+        }
+    });
+</script>
+</div>
+</div>
+<!--图片放大-->
+<div id="img_view" style="display: none;">
+    <div id="img_header"><button type="button" id="img_close"><img src="/core/js/zoom/close.png" width="24" height="24"/></button></div>
+    <div id="img_content"></div>
+    <div id="img_percentage" style="display: none;"></div>
+    <div id="img_tool" style="display: none;">
+        <button id="zoom_in" type="button"><img src="/core/js/zoom/zoom_in.png" width="24" height="24"/></button>
+        <button id="zoom_out" type="button"><img src="/core/js/zoom/zoom_out.png" width="24" height="24"/></button>
+        <button id="adaptive" type="button"><img src="/core/js/zoom/adaptive.png" width="24" height="24"/></button>
+    </div>
+</div>
+<!-- 生成树缓存 -->
+<script>
+    $(".nav").width(document.body.clientWidth - 700);
+    window.onresize = function () {
+        $(".nav").width(document.body.clientWidth - 700);
+    };
+</script>
+
+<script>
+    myzh_choose = $.cookie('zh_choose');
+    if(myzh_choose=='t'){
+        $('#tran').html("切换为简体");
+        $('#tran').attr('type','2');
+    }else{
+        $('#tran').html("切换为繁体");
+        $('#tran').attr('type','1');
+    }
+    function changeButton(obj) {
+        ftid = $('#'+obj.id);
+        type = ftid.attr('type');
+        console.log(type);
+        if (type == 1) {
+            ftid.attr('type','2');
+            ftid.html("切换为简体");
+            zh_tran('t');
+        } else {
+            ftid.attr('type','1');
+            ftid.html("切换为繁体");
+            zh_tran('s');
+        }
+    }
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function() { 
+    var hm = document.createElement("script"); 
+    hm.src = "https://hm.baidu.com/hm.js?70c2a6ff10e6761d707a949af1ea67e7"; 
+    var s = document.getElementsByTagName("script")[0]; 
+    s.parentNode.insertBefore(hm, s); 
+  })();
+</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-143027142-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-143027142-1');
+</script>
+
+</body></html>

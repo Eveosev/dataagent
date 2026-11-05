@@ -1,0 +1,52 @@
+{
+  "case_id": "B03-eb-0154",
+  "task_id": "B03",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://extractbench/docs/short/ccc_online_0006_esurance_toyota_rav4.pdf",
+      "digest": null
+    },
+    {
+      "kind": "schema",
+      "ref": "fixtures/eb-short-ccc_online_0006_esurance_toyota_rav4-schema.json",
+      "digest": null
+    },
+    {
+      "kind": "rules",
+      "ref": "fixtures/eb-short-ccc_online_0006_esurance_toyota_rav4-rules.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-eb-0154.json"
+  },
+  "evidence": [
+    "bench://extractbench/docs/short/ccc_online_0006_esurance_toyota_rav4.pdf",
+    "fixtures/eb-short-ccc_online_0006_esurance_toyota_rav4-schema.json",
+    "fixtures/eb-short-ccc_online_0006_esurance_toyota_rav4-rules.md"
+  ],
+  "tags": [
+    "extractbench",
+    "short",
+    "tag:source:real",
+    "tag:challenge:T1.a",
+    "tag:delivery:G2",
+    "tag:delivery:G4",
+    "tag:length:short",
+    "tag:domain:D4",
+    "fields:48"
+  ],
+  "source": "eb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

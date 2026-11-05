@@ -1,0 +1,48 @@
+## Essential Problem:
+
+The core issue is that GTK file chooser dialogs lack built-in localization for buttons and titles, unlike system dialogs on other platforms and even GTK message dialogs. This forces developers to either provide their own translations or leave the dialog with empty text, which is undesirable.
+
+## Addressing the Problem:
+
+Here's a step-by-step approach to finding a solution:
+
+**1. Analyze Existing Options:**
+
+* **Gettext:** While not ideal, using gettext with a comprehensive translation database would still offer decent coverage. Explore existing translation efforts for GTK or related projects to minimize manual effort.
+* **Third-party Libraries:** Investigate libraries or tools specifically designed for GTK dialog localization. These might offer pre-built translations or dynamic loading based on the system language.
+* **User-defined Callbacks:** Explore setting custom labels and titles using callbacks triggered by the system language. This requires more coding but offers fine-grained control.
+
+**2. Investigate GTK Internals:**
+
+* **Localization Files:** Check if GTK provides language-specific files containing default button and title text. These could be loaded based on the system language.
+* **Introspection API:** Utilize GTK's introspection capabilities to dynamically retrieve localized strings from the system. This might involve using libraries like `lib-girepository` or `gir`.
+
+**3. Consider Hybrid Approaches:**
+
+Combine strategies like using gettext for common languages and system introspection for less common ones. This balances effort and coverage.
+
+**4. Evaluate Feasibility and Trade-offs:**
+
+Assess the complexity, maintainability, and potential limitations of each approach. Consider factors like development time, code complexity, and reliance on external libraries.
+
+**5. Draft a Solution:**
+
+Based on the analysis, propose a concrete solution. This could involve leveraging existing libraries, creating custom code, or a combination of both. Provide clear instructions and code examples if applicable.
+
+**6. Consider Future Enhancements:**
+
+Think about potential improvements like integrating seamlessly with the system's language settings or contributing translations back to the GTK community.
+
+## Draft Answer:
+
+While GTK file chooser dialogs don't offer built-in localization like message dialogs, several options are available:
+
+1. **Gettext:** Utilize the gettext library with a comprehensive translation database for common languages. Explore existing GTK translation efforts to minimize manual work.
+2. **Third-party Libraries:** Investigate libraries or tools specifically designed for GTK dialog localization. These might offer pre-built translations or dynamic loading based on the system language.
+3. **User-defined Callbacks:** Set custom labels and titles using callbacks triggered by the system language. This requires more coding but offers fine-grained control.
+4. **GTK Introspection:** Explore using GTK's introspection capabilities to dynamically retrieve localized strings from the system. This might involve libraries like `lib-girepository` or `gir`.
+5. **Hybrid Approach:** Combine strategies like using gettext for common languages and system introspection for less common ones. This balances effort and coverage.
+
+Choosing the best approach depends on your project's needs and constraints. Evaluate the complexity, maintainability, and potential limitations of each option. Consider contributing your solution or translations back to the GTK community to benefit other developers.
+
+Remember, providing localized dialogs enhances user experience and makes your application more accessible to a global audience.

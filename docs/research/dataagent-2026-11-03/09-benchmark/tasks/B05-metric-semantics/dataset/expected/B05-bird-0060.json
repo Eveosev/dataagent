@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 59,
+  "question": "Among the sets in the block \"Ice Age\", how many of them have an Italian translation?",
+  "evidence": "",
+  "gold_sql": "SELECT COUNT(DISTINCT T1.id) FROM sets AS T1 INNER JOIN set_translations AS T2 ON T2.setCode = T1.code WHERE T1.block = 'Ice Age' AND T2.language = 'Italian' AND T2.translation IS NOT NULL",
+  "db_id": "card_games",
+  "case_id": "B05-bird-0060",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT COUNT(DISTINCT T1.id) FROM sets AS T1 INNER JOIN set_translations AS T2 ON T2.setCode = T1.code WHERE T1.block = 'Ice Age' AND T2.language = 'Italian' AND T2.translation IS NOT NULL",
+    "db_id": "card_games",
+    "evidence": ""
+  }
+}

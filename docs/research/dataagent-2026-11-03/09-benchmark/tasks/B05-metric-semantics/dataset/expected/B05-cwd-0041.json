@@ -1,0 +1,21 @@
+{
+  "source": "datadotworld/cwd-benchmark-data",
+  "inquiry_id": "IQ_fd57976dc7499200ec8d8f57f2b19ef6",
+  "prompt": "What are the loss payment amount of all claims by claim number?",
+  "sql": [
+    "SELECT\n    company_claim_number,\n    claim_amount as Loss_Payment_Amount\nFROM\n    Claim\n    inner join claim_amount on claim.claim_identifier = claim_amount.claim_identifier\n    inner JOIN loss_payment ON claim_amount.claim_amount_identifier = loss_payment.claim_amount_identifier\n"
+  ],
+  "sparql": [
+    "PREFIX : <https://myinsurancecompany.linked.data.world/d/chat-with-the-data-benchmark/>\nPREFIX ds-omg-pc-database: <https://myinsurancecompany.linked.data.world/d/omg-pc-database/>\nPREFIX in: <http://data.world/schema/insurance/>\n\nselect ?ClaimNumber ?LossPaymentAmount\nwhere{\n    SERVICE ds-omg-pc-database:mapped {\n        ?claim rdf:type in:Claim;\n            in:claimNumber ?ClaimNumber;\n            in:hasLossPayment [\n                in:lossPaymentAmount ?LossPaymentAmount;\n            ];\n        .\n    }\n}\n"
+  ],
+  "case_id": "B05-cwd-0041",
+  "expected": {
+    "kind": "query",
+    "question": "What are the loss payment amount of all claims by claim number?",
+    "sql": "SELECT\n    company_claim_number,\n    claim_amount as Loss_Payment_Amount\nFROM\n    Claim\n    inner join claim_amount on claim.claim_identifier = claim_amount.claim_identifier\n    inner JOIN loss_payment ON claim_amount.claim_amount_identifier = loss_payment.claim_amount_identifier\n",
+    "alternate_sql": [],
+    "sparql": [
+      "PREFIX : <https://myinsurancecompany.linked.data.world/d/chat-with-the-data-benchmark/>\nPREFIX ds-omg-pc-database: <https://myinsurancecompany.linked.data.world/d/omg-pc-database/>\nPREFIX in: <http://data.world/schema/insurance/>\n\nselect ?ClaimNumber ?LossPaymentAmount\nwhere{\n    SERVICE ds-omg-pc-database:mapped {\n        ?claim rdf:type in:Claim;\n            in:claimNumber ?ClaimNumber;\n            in:hasLossPayment [\n                in:lossPaymentAmount ?LossPaymentAmount;\n            ];\n        .\n    }\n}\n"
+    ]
+  }
+}

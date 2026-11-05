@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SEC Form 13F Information Table",
+  "description": "Extraction schema for an SEC Form 13F-HR (or 13F-HR/A) INFORMATION TABLE. The table is rendered by the SEC EDGAR XSL stylesheet and printed to PDF. Each row represents ONE managed-security holding line as reported by the institutional investment manager. Every row in the Information Table must be captured into the 'holdings' array — do NOT collapse rows that share the same CUSIP but have different INVESTMENT DISCRETION, OTHER MANAGER, or PUT/CALL values; those are intentionally separate filing rows. Ignore the boilerplate header text ('The Securities and Exchange Commission has not necessarily reviewed ...', 'UNITED STATES SECURITIES AND EXCHANGE COMMISSION', 'FORM 13F', 'OMB APPROVAL', and the COLUMN-number / field-label header row).",
+  "type": "object",
+  "properties": {
+    "value_unit": {
+      "type": "string",
+      "enum": [
+        "nearest_dollar",
+        "thousands"
+      ],
+      "description": "Reporting unit for COLUMN 5 (VALUE). Inspect the COLUMN 5 sub-header in the rendered table. Use 'nearest_dollar' when the sub-header reads '(to the nearest dollar)' (post-2023 13F amendments). Use 'thousands' when it reads '(x$1000)' or '(in thousands)' (pre-2023 filings). Do NOT confuse with the SHRS OR PRN AMT column (COLUMN 6), which is always raw share/principal count and never expressed in thousands."
+    },
+    "holdings": {
+      "type": "array",
+      "description": "Every row in the Form 13F Information Table, one Holding object per row, in the order they appear in the rendered table (the SEC XSL renders rows alphabetically by issuer but you must preserve the exact rendered order). Do NOT deduplicate across pages or merge rows that look similar — each printed row is a separate holding entry for the purposes of 13F reporting.",
+      "items": {
+        "$ref": "#/$defs/Holding"
+      }
+    }
+  },
+  "required": [
+    "holdings"
+  ],
+  "$defs": {
+    "Holding": {
+      "type": "object",
+      "description": "One row of the Form 13F Information Table.",
+      "properties": {
+        "name_of_issuer": {
+          "type": "string",
+          "description": "COLUMN 1 — NAME OF ISSUER. The company / issuer name exactly as printed in the leftmost column. Preserve uppercase, abbreviations, and SEC-style truncations ('CORP', 'INC', 'LTD', 'SA', 'PLC', 'NEW', 'DEL', etc.). Trim only leading/trailing whitespace; do NOT expand abbreviations and do NOT title-case. If the printed name visually wraps across two lines in the rendered table cell, concatenate the lines with a single space. Do NOT confuse with TITLE OF CLASS (COLUMN 2)."
+        },
+        "title_of_class": {
+          "type": "string",
+          "description": "COLUMN 2 — TITLE OF CLASS. The security's class/title exactly as printed (e.g. 'COM', 'COMMON', 'COMMON STOCK', 'CL A', 'CL A COM', 'CAP STK CL A', 'SHS CLASS A', 'COM NEW', 'COM CL A', 'SHS', 'ORD', 'ORD SHS', 'SPONSORED ADS', 'SPONSORED ADR', 'ADR', 'NOTE 4/0', 'NOTE 1.000% 6/0', 'NOTE 0.375% 5/1', 'NOTE 12/0', '*W EXP 01/23/202', 'CV BND', 'CV PFD', 'SUB VTG SHS', 'SH BEN INT', 'PHYSICAL PALLADM', 'BBRG ALL COMD K1'). Preserve the exact whitespace pattern with a single space between tokens. Do NOT normalize 'COM' to 'COMMON' or vice versa. Do NOT confuse with NAME OF ISSUER (COLUMN 1)."
+        },
+        "cusip": {
+          "type": "string",
+          "description": "COLUMN 3 — CUSIP. The 9-character alphanumeric CUSIP identifier exactly as printed (uppercase). 9 characters, no spaces, no hyphens. CUSIPs that begin with a letter (e.g. 'G1151C101', 'H2927K103', 'N14506104') are valid CINS codes for non-US securities — DO NOT 'correct' them. Do NOT confuse with FIGI (COLUMN 4, which is 12 chars when present). Do NOT pad shorter strings with zeros."
+        },
+        "figi": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "COLUMN 4 — FIGI. The 12-character Bloomberg Financial Instrument Global Identifier, uppercase, no spaces. This column is BLANK in most filings (especially 2024/2025 filings where the FIGI column header exists but cells are empty). When the printed cell is empty / blank / contains only whitespace, return null. Do NOT carry the CUSIP into this field. Do NOT confuse with the CUSIP (COLUMN 3)."
+        },
+        "value": {
+          "type": "integer",
+          "description": "COLUMN 5 — VALUE. The market value of the position, as a PURE INTEGER number of currency units as printed in the cell. Strip all thousands separators (commas) and any currency symbols; do NOT multiply by 1000 even when the column sub-header says '(x$1000)' / '(in thousands)' — record the printed integer verbatim and rely on the top-level 'value_unit' field to indicate the multiplier. Example: a cell printed as '4,594,483' becomes 4594483. Example: a cell printed as '186,562,193' becomes 186562193. Do NOT confuse with SHRS OR PRN AMT (COLUMN 6, the share/principal count) or with the VOTING AUTHORITY columns at the right side of the row."
+        },
+        "shares_or_principal_amount": {
+          "type": "integer",
+          "description": "COLUMN 6 — SHRS OR PRN AMT. The raw count of shares OR the principal amount, as printed, with thousands separators (commas) stripped, as a pure integer. Whether the count is shares or principal is indicated by the sibling 'sh_prn' field. Example: a cell printed as '44,750' becomes 44750. Example for a debt instrument: a cell printed as '209,679,000' becomes 209679000. Do NOT confuse with VALUE (COLUMN 5) and do NOT confuse with the VOTING AUTHORITY sub-columns. Do NOT multiply or scale."
+        },
+        "sh_prn": {
+          "type": "string",
+          "enum": [
+            "SH",
+            "PRN"
+          ],
+          "description": "COLUMN 7 — SH/PRN. Indicates whether the value in shares_or_principal_amount is a share count ('SH') or a principal-amount-of-debt ('PRN'). Always one of exactly 'SH' or 'PRN', uppercase, no other values. The XSL renders this column as a 1-2 character cell to the right of the SHRS OR PRN AMT cell. Do NOT confuse with PUT/CALL (COLUMN 8)."
+        },
+        "put_call": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "PUT",
+            "CALL",
+            null
+          ],
+          "description": "COLUMN 8 — PUT/CALL. For options positions only. Exactly 'PUT' or 'CALL' (uppercase) when the printed cell shows 'Put' / 'PUT' / 'Call' / 'CALL'; normalize the case to uppercase. For long equity / common stock / debt positions where the printed cell is blank, return null. Do NOT confuse with SH/PRN (COLUMN 7) and do NOT confuse with INVESTMENT DISCRETION (COLUMN 9)."
+        },
+        "investment_discretion": {
+          "type": "string",
+          "enum": [
+            "SOLE",
+            "DFND",
+            "OTR"
+          ],
+          "description": "COLUMN 9 — INVESTMENT DISCRETION. The discretion code, exactly one of 'SOLE', 'DFND', or 'OTR' (uppercase, no other values, no period). Preserve the printed casing only if it differs in a non-cosmetic way — but in practice always one of those three uppercase codes. Do NOT confuse with PUT/CALL (COLUMN 8) and do NOT confuse with OTHER MANAGER (COLUMN 10)."
+        },
+        "other_manager": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "COLUMN 10 — OTHER MANAGER. A reference code (a single digit, multi-digit number, or comma-separated list of digits) identifying which OTHER MANAGER(S) from the cover-page list also report this holding. Capture as a STRING preserving the exact printed format (e.g. '1', '2', '0', '1,2', '1,3,4'). If the printed cell is empty / blank / contains only whitespace, return null. Do NOT convert to integer (it may be a list). Note: '0' is a valid printed value in some filings (e.g. Renaissance Technologies prints '0' instead of leaving blank); preserve '0' as the string '0'. Do NOT confuse with INVESTMENT DISCRETION (COLUMN 9)."
+        },
+        "voting_authority": {
+          "type": "object",
+          "description": "COLUMN 11 — VOTING AUTHORITY. The 3-sub-column block at the right end of the row. Each sub-column reports a SHARE count (always a count of shares, never a dollar amount), as a non-negative integer with commas stripped. Sub-columns are labeled SOLE, SHARED, NONE in that left-to-right order. Do NOT confuse with the COLUMN 5 VALUE on the same row.",
+          "properties": {
+            "sole": {
+              "type": "integer",
+              "description": "VOTING AUTHORITY → SOLE sub-column. Non-negative integer share count with thousands separators stripped. Example: a cell printed as '44,750' becomes 44750. Cells printed as '0' become 0. Do NOT confuse with the COLUMN 5 VALUE field on the same row, and do NOT confuse with INVESTMENT DISCRETION ('SOLE')."
+            },
+            "shared": {
+              "type": "integer",
+              "description": "VOTING AUTHORITY → SHARED sub-column. Non-negative integer share count with thousands separators stripped. Cells printed as '0' become 0; non-zero examples occur in jointly-voted positions."
+            },
+            "none": {
+              "type": "integer",
+              "description": "VOTING AUTHORITY → NONE sub-column. Non-negative integer share count of shares for which the filer has NO voting authority. Thousands separators stripped. Cells printed as '0' become 0."
+            }
+          },
+          "required": [
+            "sole",
+            "shared",
+            "none"
+          ]
+        }
+      },
+      "required": [
+        "name_of_issuer",
+        "title_of_class",
+        "cusip",
+        "figi",
+        "value",
+        "shares_or_principal_amount",
+        "sh_prn",
+        "put_call",
+        "investment_discretion",
+        "other_manager",
+        "voting_authority"
+      ]
+    }
+  }
+}

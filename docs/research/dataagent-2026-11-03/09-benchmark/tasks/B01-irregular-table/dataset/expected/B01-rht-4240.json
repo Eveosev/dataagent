@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 2604,
+  "table": "science-table64",
+  "structure": "ColumnHeaderMerge",
+  "question_type": "Fact Checking",
+  "sub_type": "Inference-based Fact Checking",
+  "answer": "Set6",
+  "cot": [
+    {
+      "planning": "First, we need to examine the 'SD' column for all sets."
+    },
+    {
+      "planning": "Then, we compare the SD values across all sets."
+    },
+    {
+      "planning": "Finally, we identify which set has the highest SD value."
+    }
+  ],
+  "case_id": "B01-rht-4240",
+  "expected": {
+    "kind": "answer",
+    "question": "Which set has the highest standard deviation (SD) in LDU values for the spleen?",
+    "answer": "Set6"
+  }
+}

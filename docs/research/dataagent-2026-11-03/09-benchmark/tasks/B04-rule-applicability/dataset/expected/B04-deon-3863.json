@@ -1,0 +1,32 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_2dc7cbb1",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "state",
+    "focus_year",
+    "statute_216_8_protected_basis",
+    "statute_216_8_1a_covered_action_type",
+    "statute_216_8_1b_covered_action_type",
+    "statute_216_8_unfair_housing_practice",
+    "statute_216_8_covered_action_type",
+    "tenant",
+    "owner",
+    "housing_accommodation",
+    "leases",
+    "landlord_action",
+    "because_of",
+    "action_type",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    State: Iowa\n    Focus year: 2021\n\n    Encodes IA Code  216.8 (2021) and the scenario:\n    \"Evict a tenant because of their physical appearance?\"\n*/\n\n% -------------------------\n% Basic jurisdiction facts\n% -------------------------\nstate(iowa).\nfocus_year(2021).\n\n% ---------------------------------------------\n% Statute encoding: IA Code  216.8 (2021)\n% ---------------------------------------------\n\n/* IA Code  216.8(1): Protected bases in housing discrimination. */\nstatute_216_8_protected_basis(race).\nstatute_216_8_protected_basis(color).\nstatute_216_8_protected_basis(creed).\nstatute_216_8_protected_basis(sex).\nstatute_216_8_protected_basis(sexual_orientation).\nstatute_216_8_protected_basis(gender_identity).\nstatute_216_8_protected_basis(religion).\nstatute_216_8_protected_basis(national_origin).\nstatute_216_8_protected_basis(disability).\nstatute_216_8_protected_basis(familial_status).\nstatute_216_8_protected_basis(age).  % appears in 216.8(1)(d)\n\n/* IA Code  216.8(1)(a): Covered ways to \"make unavailable\" or deny housing. */\nstatute_216_8_1a_covered_action_type(refuse_to_sell).\nstatute_216_8_1a_covered_action_type(refuse_to_rent).\nstatute_216_8_1a_covered_action_type(refuse_to_lease).\nstatute_216_8_1a_covered_action_type(refuse_to_assign).\nstatute_216_8_1a_covered_action_type(refuse_to_sublease).\nstatute_216_8_1a_covered_action_type(refuse_to_negotiate).\nstatute_216_8_1a_covered_action_type(make_unavailable).\nstatute_216_8_1a_covered_action_type(deny_housing).\n\n/* IA Code  216.8(1)(b): Discrimination in terms/conditions/privileges/services/facilities. */\nstatute_216_8_1b_covered_action_type(discriminate_terms_conditions_privileges).\nstatute_216_8_1b_covered_action_type(discriminate_services_facilities).\n\n/* Core statutory rule: unfair/discriminatory housing practice occurs when a covered\n   action is taken \"because of\" a protected basis. (Models 216.8(1)(a) and (b)). */\nstatute_216_8_unfair_housing_practice(ActionType, BecauseOf) :-\n    statute_216_8_covered_action_type(ActionType),\n    statute_216_8_protected_basis(BecauseOf).\n\n/* Helper: union of covered action types from (a) and (b). */\nstatute_216_8_covered_action_type(ActionType) :-\n    statute_216_8_1a_covered_action_type(ActionType).\nstatute_216_8_covered_action_type(ActionType) :-\n    statute_216_8_1b_covered_action_type(ActionType).\n\n% ---------------------------------------------\n% Scenario encoding (facts from the question)\n% ---------------------------------------------\n\ntenant(t1).\nowner(o1).\nhousing_accommodation(h1).\n\n% The tenant leases the housing accommodation.\nleases(t1, o1, h1).\n\n% The owner attempts to evict the tenant.\nlandlord_action(eviction_notice(o1, t1, h1)).\n\n% The stated motive: eviction is because of the tenant's physical appearance.\nbecause_of(eviction_notice(o1, t1, h1), physical_appearance).\n\n/* Map concrete scenario actions to statutory \"action types\". */\naction_type(eviction_notice(_Owner, _Tenant, _Housing), make_unavailable).\naction_type(eviction_notice(_Owner, _Tenant, _Housing), discriminate_terms_conditions_privileges).\n\n/* Helper predicate that succeeds when the factual scenario is satisfied. */\nscenario_statement :-\n    tenant(t1),\n    owner(o1),\n    housing_accommodation(h1),\n    leases(t1, o1, h1),\n    landlord_action(eviction_notice(o1, t1, h1)),\n    because_of(eviction_notice(o1, t1, h1), physical_appearance).\n\n% ---------------------------------------------\n% Applying law to the scenario\n% ---------------------------------------------\n\n/* The scenario is unlawful under IA Code  216.8 if the eviction-related action type\n   was taken because of a protected basis. */\nscenario_unlawful_under_ia_216_8 :-\n    scenario_statement,\n    landlord_action(Action),\n    because_of(Action, BecauseOf),\n    action_type(Action, ActionType),\n    statute_216_8_unfair_housing_practice(ActionType, BecauseOf).\n\n% ---------------------------------------------\n% Final answer predicate (deterministic)\n% ---------------------------------------------\nhousing_answer(yes) :-\n    scenario_unlawful_under_ia_216_8,\n    !.\nhousing_answer(no) :-\n    !.\n\n% ---------------------------------------------\n% Main entrypoint (required)\n% ---------------------------------------------\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-3863",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is it unlawful to evict a tenant because of their physical appearance?"
+  }
+}

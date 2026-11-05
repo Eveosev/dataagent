@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 483,
+  "question": "For the carcinogenic molecules in the toxicology database, how many carbon-carbon bonds are there of each bond type (single, double, and triple)? Please give me the bond type and the corresponding count.",
+  "evidence": "A molecule labelled '+' is carcinogenic. Bond types are recorded as follows: a single bond as '-', a double bond as '=', and a triple bond as '#'. A carbon-carbon bond is a bond whose two bonded atoms are both carbon.",
+  "gold_sql": "SELECT b.bond_type, COUNT(DISTINCT c.bond_id) AS bond_count FROM connected c JOIN atom a1 ON a1.atom_id = c.atom_id JOIN atom a2 ON a2.atom_id = c.atom_id2 JOIN bond b ON b.bond_id = c.bond_id JOIN molecule m ON m.molecule_id = b.molecule_id WHERE a1.element = 'c' AND a2.element = 'c' AND m.label = '+' GROUP BY b.bond_type ORDER BY b.bond_type;",
+  "db_id": "toxicology",
+  "case_id": "B05-bird-0484",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT b.bond_type, COUNT(DISTINCT c.bond_id) AS bond_count FROM connected c JOIN atom a1 ON a1.atom_id = c.atom_id JOIN atom a2 ON a2.atom_id = c.atom_id2 JOIN bond b ON b.bond_id = c.bond_id JOIN molecule m ON m.molecule_id = b.molecule_id WHERE a1.element = 'c' AND a2.element = 'c' AND m.label = '+' GROUP BY b.bond_type ORDER BY b.bond_type;",
+    "db_id": "toxicology",
+    "evidence": "A molecule labelled '+' is carcinogenic. Bond types are recorded as follows: a single bond as '-', a double bond as '=', and a triple bond as '#'. A carbon-carbon bond is a bond whose two bonded atoms are both carbon."
+  }
+}

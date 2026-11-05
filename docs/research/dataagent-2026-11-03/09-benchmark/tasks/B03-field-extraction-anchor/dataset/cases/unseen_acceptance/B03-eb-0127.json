@@ -1,0 +1,54 @@
+{
+  "case_id": "B03-eb-0127",
+  "task_id": "B03",
+  "split_role": "unseen_acceptance",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://extractbench/docs/short/WVWJK73C19P047779_professional_valuation_corrupted.pdf",
+      "digest": null
+    },
+    {
+      "kind": "schema",
+      "ref": "fixtures/eb-short-WVWJK73C19P047779_professional_valuation_corrupted-schema.json",
+      "digest": null
+    },
+    {
+      "kind": "rules",
+      "ref": "fixtures/eb-short-WVWJK73C19P047779_professional_valuation_corrupted-rules.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-eb-0127.json"
+  },
+  "evidence": [
+    "bench://extractbench/docs/short/WVWJK73C19P047779_professional_valuation_corrupted.pdf",
+    "fixtures/eb-short-WVWJK73C19P047779_professional_valuation_corrupted-schema.json",
+    "fixtures/eb-short-WVWJK73C19P047779_professional_valuation_corrupted-rules.md"
+  ],
+  "tags": [
+    "extractbench",
+    "short",
+    "tag:source:real",
+    "tag:challenge:T1.a",
+    "tag:challenge:T1.c",
+    "tag:perception:P2",
+    "tag:perception:P1",
+    "tag:delivery:G2",
+    "tag:length:short",
+    "tag:domain:D4",
+    "fields:33"
+  ],
+  "source": "eb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

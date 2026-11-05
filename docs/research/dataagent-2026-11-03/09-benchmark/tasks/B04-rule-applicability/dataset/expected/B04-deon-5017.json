@@ -1,0 +1,29 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_e968d3d7",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "state",
+    "focus_year",
+    "asked_term",
+    "described_concept",
+    "statute_term_used_in_text",
+    "legal_instrument_for_transfer_of_possession",
+    "instrument_directs_authority_action",
+    "removal_of_occupant_is_implied_by_deliver_possession",
+    "statute_provides_order_to_authorities_to_remove_tenant",
+    "term_is_used_by_statute_for_that_concept",
+    "nonvar",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: Puerto Rico\n    Focus year: 2021 (statute text provided is 2020)\n*/\n\n/* =========================\n   Scenario (question facts)\n   ========================= */\n\nstate(puerto_rico).\nfocus_year(2021).\n\n% The user asks about the meaning/usage of a term.\nasked_term(writ_for_removal).\n\n% The concept the user describes: \"the order from the court to the authorities to remove a tenant\".\ndescribed_concept(order_from_court_to_authorities_to_remove_tenant).\n\n% Helper predicate that succeeds when the scenario statement is present.\nscenario_statement :-\n    asked_term(writ_for_removal),\n    described_concept(order_from_court_to_authorities_to_remove_tenant).\n\n/* ==========================================\n   Statute translation: PR Laws tit. 1,  51.3\n   (Modeled as deterministic legal predicates)\n   ========================================== */\n\n% ---  51.3(a): When an order/judgment disposes transfer of possession, the party in whose favor\n% it is recorded has a right to a \"mandamiento de ejecución\" upon request to the clerk/secretary.\n% We model the legal instrument as the atom writ_of_execution (mandamiento_de_ejecucion).\n\n% statute_term_used_in_text(+TermAtom)\n% Captures which named instruments/terms are explicitly used in the statute text provided.\nstatute_term_used_in_text(mandamiento_de_ejecucion).\nstatute_term_used_in_text(mandamiento_de_embargo).\nstatute_term_used_in_text(auto_entrega_fisica_de_posesion).\n\n% legal_instrument_for_transfer_of_possession(+Instrument)\n% Encodes that the statute provides a particular instrument for possession transfer enforcement.\nlegal_instrument_for_transfer_of_possession(writ_of_execution) :-\n    % This corresponds to \"mandamiento de ejecución\" in  51.3(a).\n    statute_term_used_in_text(mandamiento_de_ejecucion),\n    !.\n\n% instrument_directs_authority_action(+Instrument, +Action)\n% Encodes that the instrument is directed to an officer (e.g., sheriff) to carry out an action.\ninstrument_directs_authority_action(writ_of_execution, deliver_possession) :-\n    legal_instrument_for_transfer_of_possession(writ_of_execution),\n    !.\n\n% removal_of_occupant_is_implied_by_deliver_possession(+Boolean)\n% A very narrow logical bridge: delivering possession necessarily implies removing occupants if needed.\n% (We keep it generic and only use it for mapping \"remove tenant\" to \"deliver possession\".)\nremoval_of_occupant_is_implied_by_deliver_possession(yes) :- !.\n\n% statute_provides_order_to_authorities_to_remove_tenant(+Instrument)\n% True if the statute provides an order/instrument that amounts to directing authorities to remove\n% a tenant (conceptually) through delivering possession.\nstatute_provides_order_to_authorities_to_remove_tenant(writ_of_execution) :-\n    instrument_directs_authority_action(writ_of_execution, deliver_possession),\n    removal_of_occupant_is_implied_by_deliver_possession(yes),\n    !.\n\n% term_is_used_by_statute_for_that_concept(+AskedTerm)\n% The question is about whether the specific term is used to refer to that kind of court order.\n% We treat \"used\" as \"appears as a named term in the statute text (or an explicit synonym mapping)\".\n%\n% No synonym mapping is provided in the statute text between \"writ for removal\" and \"mandamiento de ejecución\".\nterm_is_used_by_statute_for_that_concept(AskedTerm) :-\n    nonvar(AskedTerm),\n    % The statute does provide an instrument for transfer of possession (writ_of_execution),\n    statute_provides_order_to_authorities_to_remove_tenant(writ_of_execution),\n    % but the asked term must be one of the terms explicitly used in the statute text.\n    AskedTerm == mandamiento_de_ejecucion,\n    statute_term_used_in_text(mandamiento_de_ejecucion),\n    !.\nterm_is_used_by_statute_for_that_concept(_AskedTerm) :-\n    % Default: not used (deterministic).\n    !,\n    fail.\n\n/* =========================\n   Reasoning and final answer\n   ========================= */\n\n% housing_answer(-Result)\n% Result must be the atom yes or no, derived from the statute model + scenario facts.\nhousing_answer(yes) :-\n    scenario_statement,\n    asked_term(Term),\n    term_is_used_by_statute_for_that_concept(Term),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-5017",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is the term 'Writ for removal' used to refer to the order from the court to the authorities to remove a tenant?"
+  }
+}

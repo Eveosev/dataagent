@@ -1,0 +1,29 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 853,
+  "table": "labor-table19",
+  "structure": "MultiColumnClassified",
+  "question_type": "Fact Checking",
+  "sub_type": "Value-Matching",
+  "answer": "Yes",
+  "cot": [
+    {
+      "step": "Locate the “Data 8” row in the Bay 2 section of the table."
+    },
+    {
+      "step": "Extract the “Data 8” values for all months (January to December)."
+    },
+    {
+      "step": "Compare the values across all months to check for consistency (i.e., if all values are the same)."
+    },
+    {
+      "step": "If all values are identical, the answer is “Yes”; otherwise, it is “No.”"
+    }
+  ],
+  "case_id": "B01-rht-2489",
+  "expected": {
+    "kind": "answer",
+    "question": "Check if the “Data 8” values are consistent across all months in Bay 2.",
+    "answer": "Yes"
+  }
+}

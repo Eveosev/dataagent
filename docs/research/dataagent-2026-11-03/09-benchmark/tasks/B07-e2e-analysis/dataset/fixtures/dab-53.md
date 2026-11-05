@@ -1,0 +1,1 @@
+How many transactions were flagged as fraudulent?

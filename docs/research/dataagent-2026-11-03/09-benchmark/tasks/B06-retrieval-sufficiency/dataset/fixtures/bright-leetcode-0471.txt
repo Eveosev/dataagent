@@ -1,0 +1,37 @@
+## Essential Problem:
+
+The essential problem is to determine the minimum number of moves required to reach a given target position on an infinite number line, starting from position 0. The unique constraint is that the number of steps taken in each move increases by 1, starting from 1 in the first move.
+
+## Reasoning and Information:
+
+1. **Understanding the Pattern:** We need to recognize that the number of steps taken in each move follows a triangular number pattern. The nth triangular number is defined as the sum of the first n natural numbers. For example, the 3rd triangular number is 1 + 2 + 3 = 6. In this problem, the number of steps taken in the ith move is i, which is the ith triangular number.
+
+2. **Approaching the Target:** To reach the target position, we need to accumulate steps that add up to the target value. We can achieve this by taking advantage of the increasing step pattern.
+
+3. **Finding the Minimum Moves:** The key to finding the minimum moves is to identify the largest triangular number less than or equal to the target. This triangular number represents the last complete "jump" we can make towards the target. The remaining distance to the target can then be covered in one or more smaller jumps using the subsequent triangular numbers.
+
+## Draft Answer:
+
+Here's an algorithm to find the minimum number of moves required to reach the target position:
+
+1. **Initialize:**
+    * Set `current_position = 0` (our starting position).
+    * Set `move_count = 0` (the number of moves taken).
+    * Set `triangular_number = 1` (the first triangular number).
+
+2. **Iterate until the target is reached:**
+    * While `current_position < target`:
+        * Check if the next triangular number (`triangular_number + (move_count + 1)`) is less than or equal to the remaining distance to the target (`target - current_position`).
+            * If yes, update `current_position` by adding the next triangular number, increment `move_count`, and update `triangular_number` to the next one in the sequence.
+            * If no, break the loop.
+
+3. **Calculate remaining moves:**
+    * If `current_position != target`, calculate the remaining steps needed by finding the smallest triangular number greater than the remaining distance (`target - current_position`). Add this number to `move_count`.
+
+4. **Return the total move count:** `move_count` represents the minimum number of moves needed to reach the target position.
+
+This algorithm efficiently finds the minimum moves by iteratively adding triangular numbers until we reach the target or get as close as possible. The remaining distance is then covered using the smallest possible triangular number.
+
+## Note:
+
+This draft answer provides a high-level algorithm for solving the problem. It can be further implemented in a specific programming language for execution. 

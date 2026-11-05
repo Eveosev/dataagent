@@ -1,0 +1,14 @@
+## Essential problem:
+
+We need to find the number of ways to distribute $24$ apples among Alice, Becky, and Chris such that each person receives at least two apples. 
+
+## Reasoning Step-by-Step:
+
+1. **Minimum guaranteed**: We know each person should get at least two apples. So, let's first give two apples to each person. This leaves us with $24 - 6 = 18$ apples remaining.
+2. **Distributing remaining apples**: Now, we need to distribute the remaining $18$ apples among the three people. We can think of this as putting $18$ identical balls into $3$ distinct boxes. This is a classic **combinations with repetition** problem.
+3. **Combinations with repetition**: The formula for combinations with repetition is $ \binom{n + r - 1}{r - 1}$, where $n$ is the number of objects (balls) and $r$ is the number of containers (boxes). In our case, $n = 18$ and $r = 3$. 
+4. **Calculating the combinations**: Plugging these values into the formula, we get: $ \binom{18 + 3 - 1}{3 - 1} = \binom{20}{2} = \frac{20 \times 19}{2 \times 1} = 190$
+
+## Answer:
+
+Therefore, there are $\boxed{190}$ ways to distribute the apples such that each person receives at least two apples. 

@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 338,
+  "question": "What known full names belong to superheroes tied for the highest strength attribute value?",
+  "evidence": "",
+  "gold_sql": "SELECT DISTINCT s.full_name FROM superhero AS s JOIN hero_attribute AS ha ON ha.hero_id = s.id JOIN attribute AS a ON a.id = ha.attribute_id WHERE a.attribute_name = 'Strength' AND ha.attribute_value = ( SELECT MAX(ha2.attribute_value) FROM hero_attribute AS ha2 JOIN attribute AS a2 ON a2.id = ha2.attribute_id WHERE a2.attribute_name = 'Strength' ) AND s.full_name IS NOT NULL AND s.full_name <> '-' ORDER BY s.full_name ASC",
+  "db_id": "superhero",
+  "case_id": "B05-bird-0339",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT DISTINCT s.full_name FROM superhero AS s JOIN hero_attribute AS ha ON ha.hero_id = s.id JOIN attribute AS a ON a.id = ha.attribute_id WHERE a.attribute_name = 'Strength' AND ha.attribute_value = ( SELECT MAX(ha2.attribute_value) FROM hero_attribute AS ha2 JOIN attribute AS a2 ON a2.id = ha2.attribute_id WHERE a2.attribute_name = 'Strength' ) AND s.full_name IS NOT NULL AND s.full_name <> '-' ORDER BY s.full_name ASC",
+    "db_id": "superhero",
+    "evidence": ""
+  }
+}

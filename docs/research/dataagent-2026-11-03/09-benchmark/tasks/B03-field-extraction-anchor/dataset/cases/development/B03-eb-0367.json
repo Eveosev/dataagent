@@ -1,0 +1,52 @@
+{
+  "case_id": "B03-eb-0367",
+  "task_id": "B03",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://extractbench/docs/long/sec_13f_0010_renaissance_technologies.pdf",
+      "digest": null
+    },
+    {
+      "kind": "schema",
+      "ref": "fixtures/eb-long-sec_13f_0010_renaissance_technologies-schema.json",
+      "digest": null
+    },
+    {
+      "kind": "rules",
+      "ref": "fixtures/eb-long-sec_13f_0010_renaissance_technologies-rules.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-eb-0367.json"
+  },
+  "evidence": [
+    "bench://extractbench/docs/long/sec_13f_0010_renaissance_technologies.pdf",
+    "fixtures/eb-long-sec_13f_0010_renaissance_technologies-schema.json",
+    "fixtures/eb-long-sec_13f_0010_renaissance_technologies-rules.md"
+  ],
+  "tags": [
+    "extractbench",
+    "long",
+    "tag:source:real",
+    "tag:challenge:T1.a",
+    "tag:structure:S4",
+    "tag:delivery:G1",
+    "tag:length:long",
+    "tag:domain:D1",
+    "fields:2"
+  ],
+  "source": "eb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

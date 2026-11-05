@@ -1,0 +1,16 @@
+{
+  "source": "xlangai/spider2-lite",
+  "raw": {
+    "instance_id": "local010",
+    "db": "Airlines",
+    "question": "Distribute all the unique city pairs into the distance ranges 0, 1000, 2000, 3000, 4000, 5000, and 6000+, based on their average distance of all routes between them. Then how many pairs are there in the distance range with the fewest unique city paires?",
+    "external_knowledge": "haversine_formula.md"
+  },
+  "case_id": "B05-spider2-0194",
+  "expected": {
+    "kind": "sql",
+    "instance_id": "local010",
+    "sql": null,
+    "db": "Airlines"
+  }
+}

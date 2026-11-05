@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 2653,
+  "table": "science-table75",
+  "structure": "SingleRowClassified",
+  "question_type": "Fact Checking",
+  "sub_type": "Multi-hop Fact Checking",
+  "answer": "57",
+  "cot": [
+    {
+      "planning": "First, we need to identify the column for 'No. of intracellular amastigotes' in Experiment 2."
+    },
+    {
+      "planning": "Then, we scan through all fields to find the minimum value present."
+    },
+    {
+      "planning": "Finally, we confirm the minimum value found as our answer."
+    }
+  ],
+  "case_id": "B01-rht-4289",
+  "expected": {
+    "kind": "answer",
+    "question": "In Experiment 2, what is the lowest number of intracellular amastigotes found in any field?",
+    "answer": "57"
+  }
+}

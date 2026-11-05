@@ -1,0 +1,35 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_137ee142",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "member_of",
+    "different",
+    "court_type",
+    "superior_court",
+    "eviction_matter_type",
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_case",
+    "scenario_case_state",
+    "scenario_case_year",
+    "scenario_case_matter",
+    "scenario_case_title_in_dispute",
+    "statute_50_2_1_magistrate_has_jurisdiction",
+    "statute_55_3a_1_allowed_filing_forum",
+    "statute_50_4_8_removal_possible_for_wrongful_occupation",
+    "number",
+    "legal_allowed_initial_forum_for_case",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "% Self-contained SWI-Prolog program for:\n% State: West Virginia\n% Focus year: 2021\n% Question: \"Are eviction cases first heard in superior court?\"\n%\n% Interpretation note:\n% West Virginia does not use the term \"superior court\" in the cited statutes.\n% This program maps \"superior court\" to \"circuit court\" as the higher trial court.\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n% Basic utilities (no external modules)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nmember_of(X, [X|_]).\nmember_of(X, [_|T]) :- member_of(X, T).\n\ndifferent(X, Y) :- X \\= Y.\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n% Domain model\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n% Court types used in the statutes\ncourt_type(magistrate_court).\ncourt_type(circuit_court).\n\n% \"Superior court\" mapping for this question\nsuperior_court(circuit_court).\n\n% Eviction-like matters referenced in the statutes\neviction_matter_type(wrongful_occupation_residential_rental_property).\neviction_matter_type(unlawful_entry_or_detainer).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n% Scenario (facts): encode the question's factual statement\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n% The question is asked for West Virginia in 2021 about \"eviction cases\" generally.\nscenario_state(west_virginia).\nscenario_focus_year(2021).\n\n% Generic eviction case we are reasoning about (no special facts like title dispute provided)\nscenario_case(case1).\nscenario_case_state(case1, west_virginia).\nscenario_case_year(case1, 2021).\n\n% Treat the case as an eviction/wrongful occupation matter.\nscenario_case_matter(case1, wrongful_occupation_residential_rental_property).\n\n% No title dispute is stated; encode the typical eviction assumption used by the statute condition.\nscenario_case_title_in_dispute(case1, no).\n\n% Helper predicate: succeeds when the scenario facts (question context) are satisfied.\nscenario_statement :-\n    scenario_state(west_virginia),\n    scenario_focus_year(2021),\n    scenario_case(Case),\n    scenario_case_state(Case, west_virginia),\n    scenario_case_year(Case, 2021),\n    scenario_case_matter(Case, Matter),\n    eviction_matter_type(Matter),\n    scenario_case_title_in_dispute(Case, no).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n% Statute translations (deterministic predicates with citations)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n% WV Code  50-2-1 (2021): Magistrate court jurisdiction includes:\n% \"all matters involving unlawful entry or detainer ... or involving wrongful occupation ...\n% so long as the title ... is not in dispute.\"\nstatute_50_2_1_magistrate_has_jurisdiction(MatterType, TitleInDispute) :-\n    ( MatterType = unlawful_entry_or_detainer\n    ; MatterType = wrongful_occupation_residential_rental_property\n    ),\n    TitleInDispute = no.\n\n% WV Code  55-3A-1(a) (2021): A person desiring to remove a tenant may apply\n% to magistrate court OR circuit court (of the county where property is located).\nstatute_55_3a_1_allowed_filing_forum(magistrate_court).\nstatute_55_3a_1_allowed_filing_forum(circuit_court).\n\n% WV Code  50-4-8 (2021): Removal to circuit court is possible before trial under thresholds.\n% This statute affects removal/hearing in circuit court, but does not make circuit court\n% the exclusive initial forum for eviction matters.\n%\n% Encoded generally; amounts are not provided in the scenario, so we do not use it to\n% force a particular initial court here.\nstatute_50_4_8_removal_possible_for_wrongful_occupation(AmountInControversy) :-\n    number(AmountInControversy),\n    AmountInControversy >= 2500.\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n% Reasoning helpers: apply statutes to the scenario\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n% A forum is legally allowed as an initial filing forum for the scenario case if:\n% - statute_55_3a_1 allows that forum (magistrate or circuit), AND\n% - if the forum is magistrate court, magistrate jurisdiction condition is satisfied.\nlegal_allowed_initial_forum_for_case(Case, Forum) :-\n    scenario_case(Case),\n    statute_55_3a_1_allowed_filing_forum(Forum),\n    ( Forum = circuit_court ->\n        true\n    ; Forum = magistrate_court ->\n        scenario_case_matter(Case, Matter),\n        scenario_case_title_in_dispute(Case, TitleDispute),\n        statute_50_2_1_magistrate_has_jurisdiction(Matter, TitleDispute)\n    ).\n\n% Determine whether eviction cases (as in the scenario) are required to be first heard\n% in the \"superior court\" (mapped to circuit court):\n% This would be true only if the superior court is the ONLY legally allowed initial forum.\neviction_cases_first_heard_in_superior_court_only :-\n    scenario_statement,\n    superior_court(Superior),\n    scenario_case(Case),\n    legal_allowed_initial_forum_for_case(Case, Superior),\n    % If any other different forum is also allowed, then it is not \"first heard in superior court\" exclusively.\n    \\+ ( legal_allowed_initial_forum_for_case(Case, Other),\n         different(Other, Superior)\n       ).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n% Final answer predicate (must be deterministic and produce yes/no)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nhousing_answer(yes) :-\n    eviction_cases_first_heard_in_superior_court_only,\n    !.\nhousing_answer(no) :-\n    !.\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n% Main entrypoint (required)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-1709",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Are eviction cases first heard in superior court?"
+  }
+}

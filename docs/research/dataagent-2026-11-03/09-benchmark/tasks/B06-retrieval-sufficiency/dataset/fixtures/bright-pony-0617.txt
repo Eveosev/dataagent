@@ -1,0 +1,40 @@
+## Identifying the essential problem:
+
+The essential problem is to calculate the score of a given string. The score is calculated by summing the individual scores of each letter in the string, where the score of a letter is its position in the alphabet (a = 1, b = 2, c = 3, etc.).
+
+## Step-by-step reasoning:
+
+1. **Convert the string to lowercase:** This ensures that all letters are treated equally regardless of their case.
+2. **Iterate through each character in the string:** For each character, calculate its score based on its position in the alphabet.
+3. **Sum the individual scores:** Add the score of each character to a running total to get the overall score of the string.
+
+## Relevant information:
+
+* The Pony programming language provides functions for string manipulation and character access.
+* The `ascii` function can be used to get the ASCII code of a character.
+* Subtracting the ASCII code of 'a' from the ASCII code of a character gives its position in the alphabet.
+
+## Draft answer:
+
+Here is a possible solution to the problem using Pony:
+
+```pony
+fun stringScore(s: String): USize
+  // Convert the string to lowercase
+  var lowercaseStr = s.toLowerCase()
+  
+  // Initialize the score
+  var score = 0
+  
+  // Iterate through each character
+  for char in lowercaseStr {
+    // Calculate the score of the character
+    score += char.ascii() - 'a'.ascii() + 1
+  }
+  
+  // Return the score
+  return score
+end
+```
+
+This code first converts the input string to lowercase. Then, it iterates through each character in the string, calculates its score based on its position in the alphabet, and adds it to the total score. Finally, it returns the total score.

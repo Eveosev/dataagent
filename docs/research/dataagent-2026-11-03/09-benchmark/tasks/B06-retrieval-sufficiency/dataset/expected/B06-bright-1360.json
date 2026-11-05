@@ -1,0 +1,26 @@
+{
+  "source": "xlangai/BRIGHT",
+  "query_id": "TheoremQA_jianyu_xu/Binomial_4.json",
+  "query": "## Essential Problem:\n\nThe teacher needs to choose a team of 3 students from a class of 20. We need to determine the number of different teams possible, considering that the order of selection doesn't matter.\n\n## Relevant Information and Reasoning:\n\n* **Number of students:** 20\n* **Team size:** 3\n* **Order doesn't matter:** We are only interested in the combination of students, not the specific order they are picked.\n\n##  Step-by-Step Approach:\n\n1. **Combinations vs. Permutations:** Since the order of selection doesn't matter, we are dealing with combinations, not permutations. \n2. **Formula for Combinations:** We can use the formula for combinations to calculate the number of possible teams:\n\n```\nC(n, k) = n! / (k! * (n-k)!)\n```\n\nwhere:\n* C(n, k) represents the number of combinations\n* n is the total number of students (20)\n* k is the team size (3)\n* ! denotes the factorial function (e.g., 5! = 5 x 4 x 3 x 2 x 1)\n\n## Answer:\n\nPlugging in the values into the formula:\n\n```\nC(20, 3) = 20! / (3! * (20-3)!) = 20! / (3! * 17!) \n```\n\nWe can simplify this further:\n\n```\nC(20, 3) = (20 x 19 x 18) / (3 x 2 x 1) = 1140\n```\n\nTherefore, the teacher can form 1140 different teams of 3 students from a class of 20. \n",
+  "gold_ids": [
+    "10463",
+    "13011",
+    "17901"
+  ],
+  "gold_answer": "N/A",
+  "corpus": "documents/theoremqa_theorems-00000-of-00001.parquet",
+  "case_id": "B06-bright-1360",
+  "expected": {
+    "kind": "retrieval",
+    "gold_ids": [
+      "10463",
+      "13011",
+      "17901"
+    ],
+    "gold_ids_long": [
+      "N/A"
+    ],
+    "gold_answer": "N/A",
+    "excluded_ids": []
+  }
+}

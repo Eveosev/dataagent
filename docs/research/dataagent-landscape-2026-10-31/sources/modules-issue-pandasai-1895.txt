@@ -1,0 +1,149 @@
+Default code executor runs LLM-generated code with full builtins (no sandbox by default) -> RCE via indirect prompt injection · Issue #1895 · sinaptik-ai/pandas-ai · GitHub
+Skip to content
+Navigation Menu
+Sign in
+Products
+Platform
+GitHubRepository hosting, code review, and collaboration
+CopilotAI coding agent for tasks, projects and automated work
+Build & Ship
+ActionsCI/CD and automation
+Code QualityQuality analysis, fixes, and enforcement
+CodespacesCloud development environments
+Secure
+Code SecurityVulnerability detection and remediation
+Secret ProtectionSecret scanning and leak prevention
+All Features
+Developers
+Learn
+Documentation
+Training
+Certifications
+Build
+Build with Copilot
+Customize Copilot
+Integrations
+Explore
+Trending repos
+GitHub Sponsors
+Events
+Changelog
+ChangelogYour source for the latest features, improvements, and fixes across GitHub products, all in one place.
+Businesses
+By Stage
+Enterprises
+Team
+Startups
+Nonprofits
+By Industry
+Healthcare
+Financial services
+Manufacturing
+Government
+See all industries
+Evaluate GitHub
+Why GitHub
+Customer Stories
+Business insights
+Trust Center
+Add-ons
+GitHub Advanced SecurityEnterprise-grade code security
+Copilot for businessEnterprise-grade AI features
+Premium SupportEnterprise-grade 24/7 support
+Resources
+Learn & Connect
+Documentation
+Resource center
+Blog
+Events & webinars
+Community Forum
+Customer Stories
+Integrations
+Support
+Customer support
+Training
+GitHub Status
+Company
+About
+Partners
+Changelog
+GitHub Universe
+GitHub UniverseThe event for developers, by developers — talks, workshops, and what’s next for GitHub.
+Pricing
+Search/
+Sign inSign up
+Appearance settings
+You signed in with another tab or window. Reload to refresh your session.
+You signed out in another tab or window. Reload to refresh your session.
+You switched accounts on another tab or window. Reload to refresh your session.
+Dismiss alert
+{{ message }}
+sinaptik-ai
+pandas-ai
+Repository navigation
+Code
+Issues6 (6)
+Pull requests17 (17)
+Discussions
+Actions
+Projects
+Security and quality
+Insights
+More items
+Default code executor runs LLM-generated code with full builtins (no sandbox by default) -> RCE via indirect prompt injection #1895
+New issueCopy link
+New issueCopy link
+Open
+Open
+Default code executor runs LLM-generated code with full builtins (no sandbox by default) -> RCE via indirect prompt injection#1895
+Copy link
+Labels
+bugSomething isn't workingSomething isn't working
+Description
+geo-chen
+opened on Jun 12, 2026
+Issue body actions
+System Info
+Summary
+PandasAI executes the Python code the language model generates. By default it does so with a plain exec whose namespace contains only pd, plt, and np and no restriction on __builtins__, so Python auto-injects the full builtins and the generated code can import os and run arbitrary OS commands. The Docker sandbox that would contain this is a separate, opt-in package that is not enabled by default. Because the executed string is model output, attacker-controlled data ingested into a dataframe (malicious column names or cell values) or a prompt-injected natural-language query against a PandasAI-backed service can steer the model into emitting code that runs on the host. This is a secure-defaults gap in a by-design code-execution feature (PandasAI has prior RCE advisories in this area); it is reported as the residual default-no-sandbox exposure. Confirmed against the real executor: the generated code ran os.system and returned whoami output.
+Details
+pandasai/core/code_execution/code_executor.py (~line 29):
+exec(code, self._environment)
+self._environment (environment.py ~lines 28 to 32) is { "pd": pandas, "plt": matplotlib.pyplot, "np": numpy } with no __builtins__ key, so exec injects the full builtins automatically and __import__('os').system(...) works. The default agent runs unsandboxed: agent/base.py (~line 48) sets sandbox: Sandbox = None, and only routes through a sandbox when one is explicitly provided (~lines 132 to 135); the Docker sandbox lives in a separate package (extensions/sandbox/docker/pandasai_docker). There is no security filtering before exec: code_validation.py only requires an execute_sql_query call (no os/subprocess/__import__/eval blocklist), and code_cleaning.py does table-name/chart rewriting only.
+The untrusted input is the model output. The boundary is indirect prompt injection via attacker-controlled data (column names / cell values in an ingested CSV/DB/dataset) or a prompt-injected query from a lower-privileged client of a PandasAI-backed "chat with your data" service.
+PoC
+Impact
+In the default configuration, a PandasAI-backed application that ingests untrusted data or accepts untrusted queries can be driven, via indirect prompt injection, to execute arbitrary OS commands on the host. The reliability depends on steering the model's code generation, which is why this is rated with high attack complexity, but the default execution environment provides no containment at all.
+Remediation
+Make a real sandbox the default rather than opt-in: run generated code with a restricted __builtins__ (an allowlist of safe names) and an AST-level allowlist that rejects import, attribute traversal to dangerous objects, and dunder access, or require the Docker/subprocess sandbox by default and fail closed when no sandbox is configured. Treat all generated code as untrusted (it is influenced by ingested data and queries), and document that running PandasAI without a sandbox on untrusted data/queries is unsafe.
+🐛 Describe the bug
+👍React with 👍1Reacted by dosubot
+Activity
+dosubotadded
+bugSomething isn't workingSomething isn't working on Jun 12, 2026
+Sign up for free to join this conversation on GitHub. Already have an account? Sign in to comment
+Metadata
+Metadata
+AssigneesNo one assigned
+Labels
+bugSomething isn't workingSomething isn't working
+TypeNo type
+ProjectsNo projects
+MilestoneNo milestone
+RelationshipsNone yet
+DevelopmentNo branches or pull requests
+Issue actions
+Open in GitHub Copilot app
+Footer
+© 2026 GitHub, Inc.
+Footer navigation
+Terms
+Privacy
+Security
+Status
+Community
+Docs
+Contact
+Manage cookies
+Do not share my personal information
+You can’t perform that action at this time.

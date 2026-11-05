@@ -1,0 +1,20 @@
+{
+  "source": "KAKA22/SpreadsheetBench",
+  "raw": {
+    "id": 49118,
+    "instruction": "How can I modify my Excel formula to return the minimum value in column C for each matching range in column A, similar to my current formula that ranks those values? My ranking formula is '=RANK(C2,INDEX(C:C,MATCH(A2,A:A,0)):INDEX(C:C,MATCH(A2,A:A,0)+COUNTIF(A:A,A2)-1),1)'. For an example dataset, the expected result would be 26.4 for the range in B2:B5, 25.86 for B6:B12, and 26.84 for B13:B15. My actual spreadsheet contains over 200,000 rows and is regularly updated, so specifying static ranges would be impractical. What changes can I make to the formula to dynamically adapt to the entire columns as my ranking formula does, using A:A and C:C?",
+    "spreadsheet_path": "spreadsheet/49118",
+    "instruction_type": "Cell-Level Manipulation",
+    "answer_position": "B2:B15"
+  },
+  "case_id": "B09-ssb-0452",
+  "expected": {
+    "kind": "sheet_answer",
+    "instruction": "How can I modify my Excel formula to return the minimum value in column C for each matching range in column A, similar to my current formula that ranks those values? My ranking formula is '=RANK(C2,INDEX(C:C,MATCH(A2,A:A,0)):INDEX(C:C,MATCH(A2,A:A,0)+COUNTIF(A:A,A2)-1),1)'. For an example dataset, the expected result would be 26.4 for the range in B2:B5, 25.86 for B6:B12, and 26.84 for B13:B15. My actual spreadsheet contains over 200,000 rows and is regularly updated, so specifying static ranges would be impractical. What changes can I make to the formula to dynamically adapt to the entire columns as my ranking formula does, using A:A and C:C?",
+    "answer": null,
+    "answer_sheet": null,
+    "answer_position": "B2:B15",
+    "data_position": null,
+    "instruction_type": "Cell-Level Manipulation"
+  }
+}

@@ -1,0 +1,124 @@
+{
+  "$comment": "generated from dataagent_contracts.core:TraceEventRef; do not edit",
+  "$defs": {
+    "TraceEventType": {
+      "enum": [
+        "task_state",
+        "invocation",
+        "correction",
+        "decision",
+        "note"
+      ],
+      "title": "TraceEventType",
+      "type": "string"
+    },
+    "VersionedRef": {
+      "description": "Versioned reference serialized as '<id>@<revision>'.",
+      "pattern": "^[^@\\s]+@[^@\\s]+$",
+      "type": "string"
+    }
+  },
+  "$id": "dataagent-contracts/0.1/core/TraceEventRef",
+  "additionalProperties": false,
+  "properties": {
+    "actor_ref": {
+      "minLength": 1,
+      "title": "Actor Ref",
+      "type": "string"
+    },
+    "event_id": {
+      "minLength": 1,
+      "title": "Event Id",
+      "type": "string"
+    },
+    "event_type": {
+      "$ref": "#/$defs/TraceEventType"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "invocation_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Invocation Ref"
+    },
+    "kernel_call_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Kernel Call Id"
+    },
+    "kernel_cursor": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Kernel Cursor"
+    },
+    "kernel_session_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Kernel Session Id"
+    },
+    "payload_ref": {
+      "minLength": 1,
+      "title": "Payload Ref",
+      "type": "string"
+    },
+    "task_ref": {
+      "$ref": "#/$defs/VersionedRef"
+    },
+    "timestamp": {
+      "format": "date-time",
+      "title": "Timestamp",
+      "type": "string"
+    }
+  },
+  "required": [
+    "event_id",
+    "task_ref",
+    "event_type",
+    "timestamp",
+    "actor_ref",
+    "payload_ref"
+  ],
+  "title": "TraceEventRef",
+  "type": "object"
+}

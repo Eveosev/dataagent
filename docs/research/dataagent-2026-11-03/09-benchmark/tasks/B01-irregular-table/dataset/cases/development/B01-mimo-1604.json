@@ -1,0 +1,42 @@
+{
+  "case_id": "B01-mimo-1604",
+  "task_id": "B01",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "table",
+      "ref": "bench://mimotable/unzipped/data/chinese/spreadsheet/1706798903536.xlsx",
+      "digest": null
+    },
+    {
+      "kind": "table",
+      "ref": "bench://mimotable/unzipped/data/chinese/spreadsheet/建筑安装工程附件一(1).xlsx",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B01-mimo-1604.json"
+  },
+  "evidence": [
+    "bench://mimotable/unzipped/data/chinese/spreadsheet/1706798903536.xlsx#workbook"
+  ],
+  "tags": [
+    "chinese",
+    "multiple files, simple header",
+    "medium table",
+    "op:Lookup",
+    "op:Calculate",
+    "op:Compare"
+  ],
+  "source": "mimo",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

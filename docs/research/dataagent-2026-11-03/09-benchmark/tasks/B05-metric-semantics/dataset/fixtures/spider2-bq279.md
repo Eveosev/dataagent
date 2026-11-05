@@ -1,0 +1,1 @@
+Can you provide the number of distinct active and closed bike share stations for each year 2013 and 2014?

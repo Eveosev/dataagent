@@ -1,0 +1,37 @@
+{
+  "case_id": "B02-od-1080",
+  "task_id": "B02",
+  "split_role": "regression",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://omnidocbench/images/newspaper_a105e3b0ddb10be6a596f76407c79180_1.jpg",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B02-od-1080.json"
+  },
+  "evidence": [
+    "bench://omnidocbench/images/newspaper_a105e3b0ddb10be6a596f76407c79180_1.jpg"
+  ],
+  "tags": [
+    "omnidocbench",
+    "newspaper",
+    "simplified_chinese",
+    "other_layout",
+    "v1.5",
+    "no_table"
+  ],
+  "source": "od",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

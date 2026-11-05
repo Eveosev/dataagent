@@ -1,0 +1,32 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_83f760b3",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_entity",
+    "entity_role",
+    "entity_jurisdiction",
+    "property",
+    "property_location",
+    "writ",
+    "court_issues_writ",
+    "writ_delivered_to",
+    "statute_5715a_proper_recipient_for_writ_of_possession",
+    "statute_5715b_officer_has_duty_to_execute",
+    "eviction_writ_type",
+    "legal_empowered_to_execute_writ_of_eviction",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: Delaware\n    Focus year: 2021\n\n    Question: Is the county sheriff's office an entity empowered by law to execute a writ of eviction?\n    Statute encoded: 25 Del. C.  5715 (2021)\n*/\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Scenario facts (question's factual statement)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n% The question is asked for Delaware, focus year 2021.\nscenario_state(delaware).\nscenario_focus_year(2021).\n\n% Entity in question.\nscenario_entity(county_sheriffs_office).\n\n% Interpret \"county sheriff's office\" as the sheriff (county officer) for a county.\nentity_role(county_sheriffs_office, sheriff).\nentity_jurisdiction(county_sheriffs_office, sample_county).\n\n% A representative property located in that county (needed because 5715 ties the sheriff\n% to \"the county in which the property is located\").\nproperty(property_1).\nproperty_location(property_1, sample_county).\n\n% A representative eviction writ (Delaware summary possession uses a \"writ of possession\").\nwrit(writ_1, writ_of_possession, property_1).\ncourt_issues_writ(writ_1).\n\n% The writ is delivered to the county sheriff's office (relevant to 5715(b)).\nwrit_delivered_to(writ_1, county_sheriffs_office).\n\n% Helper: the factual statement summarized as a reusable predicate.\nscenario_statement :-\n    scenario_state(delaware),\n    scenario_focus_year(2021),\n    scenario_entity(E),\n    entity_role(E, sheriff),\n    entity_jurisdiction(E, County),\n    property(P),\n    property_location(P, County),\n    writ(W, writ_of_possession, P),\n    court_issues_writ(W),\n    writ_delivered_to(W, E).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Statute translation (deterministic helpers encoding 25 Del. C. 5715)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n/*\n  25 Del. C.  5715(a) (2021):\n  \"the court shall issue a writ of possession directed to the constable or the sheriff\n   of the county in which the property is located...\"\n*/\nstatute_5715a_proper_recipient_for_writ_of_possession(Entity, Writ) :-\n    writ(Writ, writ_of_possession, Property),\n    property_location(Property, County),\n    court_issues_writ(Writ),\n    entity_jurisdiction(Entity, County),\n    (   entity_role(Entity, sheriff)\n    ;   entity_role(Entity, constable)\n    ).\n\n/*\n  25 Del. C.  5715(b) (2021):\n  \"The officer to whom the writ of possession is directed and delivered shall ... execute it...\"\n  We model \"directed and delivered\" as: (a) the entity is a proper statutory recipient and\n  (b) the writ is delivered to the entity.\n*/\nstatute_5715b_officer_has_duty_to_execute(Entity, Writ) :-\n    statute_5715a_proper_recipient_for_writ_of_possession(Entity, Writ),\n    writ_delivered_to(Writ, Entity).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Legal reasoning helpers\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n% Mapping: treat \"writ of eviction\" in the question as Delaware's \"writ of possession\" used to remove occupants.\neviction_writ_type(writ_of_possession).\n\n% An entity is \"empowered by law to execute a writ of eviction\" if Delaware law places execution\n% of the relevant eviction writ on that entity when it is the proper recipient and the writ is delivered.\nlegal_empowered_to_execute_writ_of_eviction(Entity) :-\n    eviction_writ_type(Type),\n    writ(Writ, Type, _Property),\n    statute_5715b_officer_has_duty_to_execute(Entity, Writ).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Answer predicate (must be deterministic yes/no)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nhousing_answer(Result) :-\n    (   scenario_statement,\n        scenario_entity(Entity),\n        legal_empowered_to_execute_writ_of_eviction(Entity)\n    ->  Result = yes\n    ;   Result = no\n    ),\n    !.\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Main entrypoint\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-3099",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Is the county sheriff’s office an entity empowered by law to execute a writ of eviction?"
+  }
+}

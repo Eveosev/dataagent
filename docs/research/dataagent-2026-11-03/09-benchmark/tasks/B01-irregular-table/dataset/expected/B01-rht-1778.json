@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 142,
+  "table": "economy-table136",
+  "structure": "ContentCompound",
+  "question_type": "Fact Checking",
+  "sub_type": "Inference-based Fact Checking",
+  "answer": "Airline fares",
+  "cot": [
+    {
+      "planning": "First, we need to identify the \"Unadjusted percent change\" values for each category between September 2024 and October 2024."
+    },
+    {
+      "planning": "We need to calculate the absolute value of these changes to evaluate the highest change."
+    },
+    {
+      "planning": "Finally, we locate the category corresponding to the highest absolute change value."
+    }
+  ],
+  "case_id": "B01-rht-1778",
+  "expected": {
+    "kind": "answer",
+    "question": "Considering all categories, infer which category experienced a highest change (absolute value) in the “Unadjusted percent change” between September 2024 and October 2024.",
+    "answer": "Airline fares"
+  }
+}

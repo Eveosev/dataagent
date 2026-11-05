@@ -1,0 +1,35 @@
+{
+  "case_id": "B01-rht-2911",
+  "task_id": "B01",
+  "split_role": "unseen_acceptance",
+  "inputs": [
+    {
+      "kind": "table",
+      "ref": "bench://realthitbench-data/csv/science-table09.csv",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B01-rht-2911.json"
+  },
+  "evidence": [
+    "bench://realthitbench-data/csv/science-table09.csv"
+  ],
+  "tags": [
+    "realthitbench",
+    "StructureCompound",
+    "Fact Checking",
+    "MrExcel"
+  ],
+  "source": "rht",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

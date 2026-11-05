@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 348,
+  "question": "I want to profile the cohort of heroes whose Intelligence score matches Abomination's Intelligence score. What is their average measured weight in kg? Please round the average to two decimals.",
+  "evidence": "Intelligence is one of the six attribute scores a hero has (Intelligence, Strength, Speed, Durability, Power, Combat)",
+  "gold_sql": "SELECT ROUND(AVG(CASE WHEN s.weight_kg > 0 THEN s.weight_kg END), 2) AS average_weight_kg FROM superhero s JOIN hero_attribute ha ON ha.hero_id = s.id JOIN attribute a ON a.id = ha.attribute_id WHERE a.attribute_name = 'Intelligence' AND ha.attribute_value = (SELECT abom_ha.attribute_value FROM superhero abom JOIN hero_attribute abom_ha ON abom_ha.hero_id = abom.id JOIN attribute abom_a ON abom_a.id = abom_ha.attribute_id WHERE abom.superhero_name = 'Abomination' AND abom_a.attribute_name = 'Intelligence')",
+  "db_id": "superhero",
+  "case_id": "B05-bird-0349",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT ROUND(AVG(CASE WHEN s.weight_kg > 0 THEN s.weight_kg END), 2) AS average_weight_kg FROM superhero s JOIN hero_attribute ha ON ha.hero_id = s.id JOIN attribute a ON a.id = ha.attribute_id WHERE a.attribute_name = 'Intelligence' AND ha.attribute_value = (SELECT abom_ha.attribute_value FROM superhero abom JOIN hero_attribute abom_ha ON abom_ha.hero_id = abom.id JOIN attribute abom_a ON abom_a.id = abom_ha.attribute_id WHERE abom.superhero_name = 'Abomination' AND abom_a.attribute_name = 'Intelligence')",
+    "db_id": "superhero",
+    "evidence": "Intelligence is one of the six attribute scores a hero has (Intelligence, Strength, Speed, Durability, Power, Combat)"
+  }
+}

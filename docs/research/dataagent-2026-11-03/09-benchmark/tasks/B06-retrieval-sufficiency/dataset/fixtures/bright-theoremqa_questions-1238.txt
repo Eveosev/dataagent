@@ -1,0 +1,24 @@
+## Identifying the essential problem:
+
+The problem is to determine the duration Pattern C is lit when starting both Pattern A and Pattern B simultaneously, considering Pattern C lights up whenever either Pattern A or B (or both) are lit, and we check the pattern 2.5 seconds after starting them.
+
+## Relevant information:
+
+* Pattern A lights up for 3 seconds.
+* Pattern B lights up for 2 seconds.
+* We check the patterns 2.5 seconds after starting them.
+
+## Step-by-step reasoning:
+
+1. **Pattern A:**
+    * At 2.5 seconds, Pattern A is still lit because 2.5 seconds is less than its 3-second duration.
+2. **Pattern B:**
+    * At 2.5 seconds, Pattern B is no longer lit because 2.5 seconds is greater than its 2-second duration.
+3. **Pattern C:**
+    * Since Pattern A is lit at 2.5 seconds and Pattern B is not, Pattern C will be lit because it lights up whenever either Pattern A or B is lit.
+4. **Duration of Pattern C:**
+    * Pattern C will remain lit for the remaining duration of Pattern A, which is 3 seconds - 2.5 seconds = 0.5 seconds.
+
+## Answer:
+
+Pattern C will be lit for **0.5 seconds** if you start both patterns at the same time and check 2.5 seconds after starting them.

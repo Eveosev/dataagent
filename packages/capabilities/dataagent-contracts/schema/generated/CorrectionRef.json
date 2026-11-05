@@ -1,0 +1,172 @@
+{
+  "$comment": "generated from dataagent_contracts.core:CorrectionRef; do not edit",
+  "$defs": {
+    "TraceEventType": {
+      "enum": [
+        "task_state",
+        "invocation",
+        "correction",
+        "decision",
+        "note"
+      ],
+      "title": "TraceEventType",
+      "type": "string"
+    },
+    "VersionedRef": {
+      "description": "Versioned reference serialized as '<id>@<revision>'.",
+      "pattern": "^[^@\\s]+@[^@\\s]+$",
+      "type": "string"
+    }
+  },
+  "$id": "dataagent-contracts/0.1/core/CorrectionRef",
+  "additionalProperties": false,
+  "properties": {
+    "actor_ref": {
+      "minLength": 1,
+      "title": "Actor Ref",
+      "type": "string"
+    },
+    "event_id": {
+      "minLength": 1,
+      "title": "Event Id",
+      "type": "string"
+    },
+    "event_type": {
+      "$ref": "#/$defs/TraceEventType"
+    },
+    "explanation": {
+      "minLength": 1,
+      "title": "Explanation",
+      "type": "string"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "field_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Field Id"
+    },
+    "invocation_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Invocation Ref"
+    },
+    "kernel_call_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Kernel Call Id"
+    },
+    "kernel_cursor": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Kernel Cursor"
+    },
+    "kernel_session_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Kernel Session Id"
+    },
+    "new_value": {
+      "anyOf": [
+        {},
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "New Value"
+    },
+    "old_value": {
+      "anyOf": [
+        {},
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Old Value"
+    },
+    "payload_ref": {
+      "minLength": 1,
+      "title": "Payload Ref",
+      "type": "string"
+    },
+    "scope_ref": {
+      "minLength": 1,
+      "title": "Scope Ref",
+      "type": "string"
+    },
+    "target_ref": {
+      "$ref": "#/$defs/VersionedRef"
+    },
+    "task_ref": {
+      "$ref": "#/$defs/VersionedRef"
+    },
+    "timestamp": {
+      "format": "date-time",
+      "title": "Timestamp",
+      "type": "string"
+    }
+  },
+  "required": [
+    "event_id",
+    "task_ref",
+    "event_type",
+    "timestamp",
+    "actor_ref",
+    "payload_ref",
+    "target_ref",
+    "explanation",
+    "scope_ref"
+  ],
+  "title": "CorrectionRef",
+  "type": "object"
+}

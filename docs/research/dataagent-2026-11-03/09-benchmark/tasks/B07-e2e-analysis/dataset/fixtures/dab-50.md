@@ -1,0 +1,1 @@
+Are credit payments more likely to result in a fraudulent dispute compared to debit card payments?

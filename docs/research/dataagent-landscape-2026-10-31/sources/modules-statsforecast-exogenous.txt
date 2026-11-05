@@ -1,0 +1,329 @@
+Exogenous Regressors - Nixtla
+Documentation Index
+Fetch the complete documentation index at: /llms.txt
+Use this file to discover all available pages before exploring further.
+Skip to main content
+Assistant
+Responses are generated using AI and may contain mistakes.
+Missed What's New in the Nixtla Engine? Watch the recording
+Nixtla home page
+Search...⌘KAsk Assistant⌘I
+Search...
+Navigation
+How to Guides
+Exogenous Regressors
+TimeGPT
+StatsForecast
+MLForecast
+NeuralForecast
+HierarchicalForecast
+UtilsForecast
+DatasetsForecast
+SynForecast
+ConformalForecast
+CoreForecast
+Statistical ⚡️ Forecast
+Getting Started
+Install | StatsForecast
+Quick Start | StatsForecast
+End to End Walkthrough | StatsForecast
+End to End Walkthrough with Polars
+Tutorials
+Anomaly Detection
+Conformal Prediction
+Cross validation | StatsForecast
+Electricity Load Forecast | StatsForecast
+Detect Demand Peaks | StatsForecast
+Volatility forecasting (GARCH & ARCH)
+Intermittent or Sparse Data
+MLFlow | StatsForecast
+Multiple seasonalities
+Statistical, Machine Learning and Neural Forecasting methods | StatsForecast
+Probabilistic Forecasting | StatsForecast
+Trajectory Simulation
+How to Guides
+Automatic Time Series Forecasting
+Exogenous Regressors
+Generating features
+Sklearn models
+Distributed
+Dask
+Ray
+Spark
+Experiments
+Amazon Forecast vs StatsForecast
+AutoARIMA Comparison (Prophet and pmdarima)
+AutoARIMAProphet Adapter
+Forecasting at Scale using ETS and ray (M5)
+StatsForecast ETS and Facebook Prophet on Spark (M5)
+Model References
+ADIDA Model
+ARCH Model
+ARIMA Model
+AutoARIMA Model
+AutoCES Model
+AutoETS Model
+AutoRegressive Model
+AutoTheta Model
+Conformal Seasonal Pool (CSP)
+CrostonClassic Model
+CrostonOptimized Model
+CrostonSBA Model
+Dynamic Optimized Theta Model
+Dynamic Standard Theta Model
+GARCH Model
+Holt Model
+Holt Winters Model
+IMAPA Model
+MFLES
+Multiple Seasonal Trend (MSTL)
+Optimized Theta Model
+Seasonal Exponential Smoothing Model
+Seasonal Exponential Smoothing Optimized Model
+Simple Exponential Smoothing Optimized Model
+Simple Exponential Smoothing Model
+Standard Theta Model
+TSB Model
+API Reference
+Core Methods
+Fugue Backend
+Models
+StatsForecast's Models
+Feature engineering | StatsForecast
+Contributing
+How to Contribute
+Writing Documentation
+Interpreting Issue Labels
+Submit an Issue
+Step-by-step Contribution Guide
+Contributing Code to Nixtla Development
+On this pageBack to top
+Introduction
+Install libraries
+Load and explore the data
+Split train/test set
+Add exogenous regressors
+Create future exogenous regressors
+Train model
+Evaluate results
+How to Guides
+Exogenous Regressors
+In this notebook, we’ll incorporate exogenous regressors to a
+StatsForecast model.
+Prerequisites
+This tutorial assumes basic familiarity with StatsForecast. For a
+minimal example visit the Quick
+Start
+​
+Introduction
+Exogenous regressors are variables that can affect the values of a
+time series. They may not be directly related to the variable that is
+being forecasted, but they can still have an impact on it. Examples of
+exogenous regressors are weather data, economic indicators, or
+promotional sales. They are typically collected from external sources
+and by incorporating them into a forecasting model, they can improve the
+accuracy of our predictions.
+By the end of this tutorial, you’ll have a good understanding of how to
+incorporate exogenous regressors into
+StatsForecast’s models. Furthermore,
+you’ll see how to evaluate their performance and decide whether or not
+they can help enhance the forecast.
+Outline
+Install libraries
+Load and explore the data
+Split train/test set
+Add exogenous regressors
+Create future exogenous regressors
+Train model
+Evaluate results
+Tip
+You can use Colab to run this Notebook interactively
+​
+Install libraries
+We assume that you have StatsForecast already installed. If not, check
+this guide for instructions on how to install
+StatsForecast.
+# uncomment the following line to install the library
+# %pip install statsforecast
+import pandas as pd
+​
+Load and explore the data
+In this example, we’ll use a single time series from the M5
+Competition
+dataset. This series represents the daily sales of a product in a
+Walmart store. The product-store combination that we’ll use in this
+notebook has unique_id = FOODS_3_586_CA_3. This time series was chosen
+because it is not intermittent and has exogenous regressors that will be
+useful for forecasting.
+We’ll load the following dataframes:
+Y_ts: (pandas DataFrame) The target time series with columns
+[unique_id, ds, y].
+X_ts: (pandas DataFrame) Exogenous time series with columns
+[unique_id, ds, exogenous regressors].
+base_url = 'https://datasets-nixtla.s3.amazonaws.com'
+filters = [('unique_id', '=', 'FOODS_3_586_CA_3')]
+Y_ts = pd.read_parquet(f'{base_url}/m5_y.parquet', filters=filters)
+X_ts = pd.read_parquet(f'{base_url}/m5_x.parquet', filters=filters)
+We can plot the sales of this product-store combination with the
+statsforecast.plot method from the
+StatsForecast class. This
+method has multiple parameters, and the required ones to generate the
+plots in this notebook are explained below.
+df: A pandas dataframe with columns [unique_id, ds, y].
+forecasts_df: A pandas dataframe with columns [unique_id,
+ds] and models.
+engine: str = matplotlib. It can also be plotly. plotly
+generates interactive plots, while matplotlib generates static
+plots.
+from statsforecast import StatsForecast
+StatsForecast.plot(Y_ts)
+The M5 Competition included several exogenous regressors. Here we’ll use
+the following two.
+sell_price: The price of the product for the given store. The
+price is provided per week.
+snap_CA: A binary variable indicating whether the store allows
+SNAP purchases (1 if yes, 0 otherwise). SNAP stands for Supplement
+Nutrition Assitance Program, and it gives individuals and families
+money to help them purchase food products.
+X_ts = X_ts[['unique_id', 'ds', 'sell_price', 'snap_CA']]
+X_ts.head()
+unique_iddssell_pricesnap_CA
+0FOODS_3_586_CA_32011-01-291.480
+1FOODS_3_586_CA_32011-01-301.480
+2FOODS_3_586_CA_32011-01-311.480
+3FOODS_3_586_CA_32011-02-011.481
+4FOODS_3_586_CA_32011-02-021.481
+Here the unique_id is a category, but for the exogenous regressors it
+needs to be a string.
+X_ts['unique_id'] = X_ts.unique_id.astype(str)
+We can plot the exogenous regressors using plotly. We could use
+statsforecast.plot, but then one of the regressors must be renamed
+y, and the name must be changed back to the original before generating
+the forecast.
+StatsForecast.plot(Y_ts, X_ts, max_insample_length=0)
+From this plot, we can conclude that price has increased twice and that
+SNAP occurs at regular intervals.
+​
+Split train/test set
+In the M5 Competition, participants had to forecast sales for the last
+28 days in the dataset. We’ll use the same forecast horizon and create
+the train and test sets accordingly.
+# Extract dates for train and test set
+dates = Y_ts['ds'].unique()
+dtrain = dates[:-28]
+dtest = dates[-28:]
+Y_train = Y_ts.query('ds in @dtrain')
+Y_test = Y_ts.query('ds in @dtest')
+X_train = X_ts.query('ds in @dtrain')
+X_test = X_ts.query('ds in @dtest')
+​
+Add exogenous regressors
+The exogenous regressors need to be place after the target variable y.
+train = Y_train.merge(X_ts, how = 'left', on = ['unique_id', 'ds'])
+train.head()
+unique_iddsysell_pricesnap_CA
+0FOODS_3_586_CA_32011-01-2956.01.480
+1FOODS_3_586_CA_32011-01-3055.01.480
+2FOODS_3_586_CA_32011-01-3145.01.480
+3FOODS_3_586_CA_32011-02-0157.01.481
+4FOODS_3_586_CA_32011-02-0254.01.481
+​
+Create future exogenous regressors
+We need to include the future values of the exogenous regressors so that
+we can produce the forecasts. Notice that we already have this
+information in X_test.
+X_test.head()
+unique_iddssell_pricesnap_CA
+1941FOODS_3_586_CA_32016-05-231.680
+1942FOODS_3_586_CA_32016-05-241.680
+1943FOODS_3_586_CA_32016-05-251.680
+1944FOODS_3_586_CA_32016-05-261.680
+1945FOODS_3_586_CA_32016-05-271.680
+Important
+If the future values of the exogenous regressors are not available,
+then they must be forecasted or the regressors need to be eliminated
+from the model. Without them, it is not possible to generate the
+forecast.
+​
+Train model
+To generate the forecast, we’ll use
+AutoARIMA,
+which is one of the models available in StatsForecast that allows
+exogenous regressors. To use this model, we first need to import it from
+statsforecast.models and then we need to instantiate it. Given that
+we’re working with daily data, we need to set season_length = 7.
+from statsforecast.models import AutoARIMA
+# Create a list with the model and its instantiation parameters
+models = [AutoARIMA(season_length=7)]
+Next, we need to instantiate a new StatsForecast object, which has the
+following parameters.
+df: The dataframe with the training data.
+models: The list of models defined in the previous step.
+freq: A string indicating the frequency of the data. See pandas’
+available
+frequencies.
+n_jobs: An integer that indicates the number of jobs used in
+parallel processing. Use -1 to select all cores.
+sf = StatsForecast(
+models=models,
+freq='D',
+n_jobs=1,
+)
+Now we’re ready to generate the forecast. To do this, we’ll use the
+forecast method, which takes the following arguments.
+h: An integer that represents the forecast horizon. In this case,
+we’ll forecast the next 28 days.
+X_df: A pandas dataframe with the future values of the exogenous
+regressors.
+level: A list of floats with the confidence levels of the
+prediction intervals. For example, level=[95] means that the range
+of values should include the actual future value with probability
+95%.
+horizon = 28
+level = [95]
+fcst = sf.forecast(df=train, h=horizon, X_df=X_test, level=level)
+fcst.head()
+unique_iddsAutoARIMAAutoARIMA-lo-95AutoARIMA-hi-95
+0FOODS_3_586_CA_32016-05-2372.95627644.109070101.803482
+1FOODS_3_586_CA_32016-05-2471.13861140.761467101.515747
+2FOODS_3_586_CA_32016-05-2568.14094537.55008398.731804
+3FOODS_3_586_CA_32016-05-2665.48558834.84163796.129539
+4FOODS_3_586_CA_32016-05-2764.96144134.29197395.630905
+We can plot the forecasts with the statsforecast.plot method described
+above.
+StatsForecast.plot(Y_ts, fcst, max_insample_length=28*2)
+​
+Evaluate results
+We’ll merge the test set and the forecast to evaluate the accuracy using
+the mean absolute
+error (MAE).
+res = Y_test.merge(fcst, how='left', on=['unique_id', 'ds'])
+res.head()
+unique_iddsyAutoARIMAAutoARIMA-lo-95AutoARIMA-hi-95
+0FOODS_3_586_CA_32016-05-2366.072.95627644.109070101.803482
+1FOODS_3_586_CA_32016-05-2462.071.13861140.761467101.515747
+2FOODS_3_586_CA_32016-05-2540.068.14094537.55008398.731804
+3FOODS_3_586_CA_32016-05-2672.065.48558834.84163796.129539
+4FOODS_3_586_CA_32016-05-2769.064.96144134.29197395.630905
+mae = abs(res['y']-res['AutoARIMA']).mean()
+print('The MAE with exogenous regressors is '+str(round(mae,2)))
+The MAE with exogenous regressors is 11.42
+To check whether the exogenous regressors were useful or not, we need to
+generate the forecast again, now without them. To do this, we simply
+pass the dataframe without exogenous variables to the forecast method.
+Notice that the data only includes unique_id, ds, and y. The
+forecast method no longer requires the future values of the exogenous
+regressors X_df.
+# univariate model
+fcst_u = sf.forecast(df=train[['unique_id', 'ds', 'y']], h=28)
+res_u = Y_test.merge(fcst_u, how='left', on=['unique_id', 'ds'])
+mae_u = abs(res_u['y']-res_u['AutoARIMA']).mean()
+print('The MAE without exogenous regressors is '+str(round(mae_u,2)))
+The MAE without exogenous regressors is 12.18
+Hence, we can conclude that using sell_price and snap_CA as external
+regressors helped improve the forecast.
+Was this page helpful?
+YesNo
+Automatic Time Series Forecasting
+Generating features
+githubslacktwitter

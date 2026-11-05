@@ -1,0 +1,41 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_58ce6c19",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "jurisdiction",
+    "focus_year",
+    "statute_md_tax_8_402_1_franchise_tax_applies",
+    "integer",
+    "public_service_company",
+    "engaged_in_energy_delivery_in_state",
+    "statute_md_tax_8_402_1_tax_measure",
+    "statute_md_tax_8_402_1_natural_gas_exempt",
+    "statute_md_state_personnel_8_402_recovery_right",
+    "payment_in_violation_of_section_or_regulation",
+    "officer_who_paid_or_authorized",
+    "statute_md_state_personnel_8_402_recovery_right_against_sureties",
+    "surety_of_official_bond",
+    "landlord",
+    "tenant",
+    "notice",
+    "notice_type",
+    "notice_given_by",
+    "notice_given_to",
+    "notice_given_in_state",
+    "notice_given_in_year",
+    "legal_duty_encoded",
+    "legal_requires_landlord_notice_state_amount_owed",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: Maryland\n    Focus year: 2021\n\n    Question: Does the law require landlords to state the amount owed when giving tenants\n    notice to vacate the property?\n\n    Provided statutes (as given) are tax/personnel statutes unrelated to landlord notice content.\n*/\n\n/* ----------------------------------------------------------------------\n   Basic domain facts for this Q&A\n------------------------------------------------------------------------*/\n\njurisdiction(maryland).\nfocus_year(2021).\n\n/* ----------------------------------------------------------------------\n   Statute translations (as provided)\n   NOTE: These statutes do not regulate landlord notices to vacate.\n------------------------------------------------------------------------*/\n\n/* MD. Tax - General Code Ann.  8-402.1 (2021)\n   (duplicated in the prompt as [1] and [2])\n\n   (a)(1) Franchise tax is imposed for each calendar year on each public service company\n          engaged in transmission, distribution, or delivery of electricity or natural gas in the State.\n   (a)(2) Tax measured by kWh of electricity or therms of natural gas delivered for final consumption.\n   (b)    Tax does not apply to therms of natural gas delivered for final consumption by a\n          public service company that is a county or a municipal corporation.\n*/\n\n% A company is subject to the franchise tax for a given commodity if it is a public service\n% company engaged in the specified activity in the State for that year, and no exemption applies.\nstatute_md_tax_8_402_1_franchise_tax_applies(Company, Year, electricity) :-\n    integer(Year),\n    Year >= 2021,\n    public_service_company(Company),\n    engaged_in_energy_delivery_in_state(Company, maryland, electricity),\n    !.\nstatute_md_tax_8_402_1_franchise_tax_applies(Company, Year, natural_gas) :-\n    integer(Year),\n    Year >= 2021,\n    public_service_company(Company),\n    engaged_in_energy_delivery_in_state(Company, maryland, natural_gas),\n    \\+ statute_md_tax_8_402_1_natural_gas_exempt(Company),\n    !.\n\n% Measurement rules.\nstatute_md_tax_8_402_1_tax_measure(electricity, kilowatt_hours).\nstatute_md_tax_8_402_1_tax_measure(natural_gas, therms).\n\n% Exemption in subsection (b): only for therms of natural gas delivered for final consumption\n% by a public service company that is a county or municipal corporation.\nstatute_md_tax_8_402_1_natural_gas_exempt(Company) :-\n    public_service_company(Company),\n    ( company_is_county(Company)\n    ; company_is_municipal_corporation(Company)\n    ),\n    !.\n\n/* MD. State Personnel and Pensions Code Ann.  8-402 (2021)\n   Money paid in violation of this section or in violation of any regulation adopted under  8-401\n   may be recovered from the officer who pays or authorizes payment or from sureties of that officer's bond.\n*/\n\n% A right of recovery exists when there is a payment made in violation and the officer paid or authorized it.\nstatute_md_state_personnel_8_402_recovery_right(Payment, Officer) :-\n    payment_in_violation_of_section_or_regulation(Payment),\n    officer_who_paid_or_authorized(Payment, Officer),\n    !.\n\n% Alternative recovery target: sureties of the officer's official bond.\nstatute_md_state_personnel_8_402_recovery_right_against_sureties(Payment, Surety) :-\n    payment_in_violation_of_section_or_regulation(Payment),\n    officer_who_paid_or_authorized(Payment, Officer),\n    surety_of_official_bond(Officer, Surety),\n    !.\n\n/* ----------------------------------------------------------------------\n   Scenario translation (facts from the question)\n------------------------------------------------------------------------*/\n\n% Parties and notice event.\nlandlord(l1).\ntenant(t1).\nnotice(n1).\n\nnotice_type(n1, notice_to_vacate_property).\n\nnotice_given_by(n1, l1).\nnotice_given_to(n1, t1).\nnotice_given_in_state(n1, maryland).\nnotice_given_in_year(n1, 2021).\n\n% The question concerns whether the law requires stating the amount owed in such a notice.\n% We encode that the scenario is about a notice-to-vacate and the content requirement at issue.\nscenario_statement :-\n    notice(n1),\n    notice_type(n1, notice_to_vacate_property),\n    notice_given_by(n1, L),\n    landlord(L),\n    notice_given_to(n1, T),\n    tenant(T),\n    notice_given_in_state(n1, maryland),\n    notice_given_in_year(n1, 2021),\n    !.\n\n/* ----------------------------------------------------------------------\n   Reasoning: do the provided statutes impose a landlord-notice content duty?\n------------------------------------------------------------------------*/\n\n% Collect legal duties encoded from the provided statutes.\n% (These are the only statutes we are allowed to use here.)\nlegal_duty_encoded(franchise_tax_imposed_on_public_service_company).\nlegal_duty_encoded(recovery_of_money_paid_in_violation_from_officer_or_sureties).\n\n% The provided statutes impose no duty on landlords about the content of a notice to vacate.\n% We express this as: there is a requirement only if some encoded statute creates it.\nlegal_requires_landlord_notice_state_amount_owed(_State, _Year) :-\n    % If any statute in this program created such a requirement, it would be represented here.\n    % None of the provided statutes do, so this predicate has no satisfying proof.\n    fail.\n\n/* ----------------------------------------------------------------------\n   Final answer predicate\n------------------------------------------------------------------------*/\n\nhousing_answer(yes) :-\n    scenario_statement,\n    jurisdiction(State),\n    focus_year(Year),\n    legal_requires_landlord_notice_state_amount_owed(State, Year),\n    !.\nhousing_answer(no) :-\n    !.\n\n/* ----------------------------------------------------------------------\n   Minimal placeholder facts to keep statute predicates well-formed.\n   (No concrete public service company / payment facts are needed for this question.)\n------------------------------------------------------------------------*/\n\n% Intentionally no facts: public_service_company/1.\n% Intentionally no facts: engaged_in_energy_delivery_in_state/3.\n% Intentionally no facts: company_is_county/1.\n% Intentionally no facts: company_is_municipal_corporation/1.\n% Intentionally no facts: payment_in_violation_of_section_or_regulation/1.\n% Intentionally no facts: officer_who_paid_or_authorized/2.\n% Intentionally no facts: surety_of_official_bond/2.\n\n/* ----------------------------------------------------------------------\n   Main entrypoint (required)\n------------------------------------------------------------------------*/\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-4048",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Does the law require landlords to state the amount owed when giving tenants notice to vacate the property?"
+  }
+}

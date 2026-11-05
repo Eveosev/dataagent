@@ -1,0 +1,73 @@
+{
+  "source": "xlangai/BRIGHT",
+  "query_id": "86",
+  "query": "## Essential Problem:\n\nThe essential problem is to replace each element in an array with the largest element to its right. The last element should be replaced with -1.\n\n## Relevant Information:\n\n* **Array Iteration:** We need to iterate through the array from right to left, as we need to compare each element with the elements to its right.\n* **Maximum Value Tracking:** We need to keep track of the maximum value encountered so far while iterating from right to left.\n* **Array Modification:** We need to modify the original array by replacing each element with the maximum value encountered so far.\n\n## Draft Answer:\n\nHere's a possible solution in Pony:\n\n```pony\nfun replaceElements(arr: Array[I32]): Array[I32] =>\n  var max = arr[-1]\n  var result = Array[I32](arr.len)\n  for i in (arr.len - 2)..0 by -1\n    result[i] = max\n    if max < arr[i]\n      max = arr[i]\n  result[-1] = -1\n  return result\n```\n\n**Explanation:**\n\n1. We initialize `max` with the last element of the array.\n2. We create a new array `result` with the same length as the input array.\n3. We iterate through the input array from the second last element to the first element (using a reverse loop).\n4. For each element, we compare it with the current `max` value. If the element is greater than `max`, we update `max` with the element's value.\n5. We assign the current `max` value to the corresponding position in the `result` array.\n6. Finally, we replace the last element of `result` with -1.\n7. We return the modified `result` array.\n\nThis solution iterates through the array once and keeps track of the maximum value encountered so far. It modifies the original array in-place, making it efficient in terms of time and space complexity.",
+  "gold_ids": [
+    "Pony/1_variables_1.txt",
+    "Pony/4_control-structures_18.txt",
+    "Pony/collections-Range-_0.txt",
+    "Pony/4_control-structures_3.txt",
+    "Pony/4_control-structures_12.txt",
+    "Pony/4_control-structures_13.txt",
+    "Pony/2_ops_2.txt",
+    "Pony/4_control-structures_2.txt",
+    "Pony/4_control-structures_19.txt",
+    "Pony/1_variables_2.txt",
+    "Pony/5_methods_1.txt",
+    "Pony/4_control-structures_16.txt",
+    "Pony/6_errors_2.txt",
+    "Pony/4_control-structures_11.txt",
+    "Pony/4_control-structures_17.txt",
+    "Pony/6_errors_3.txt",
+    "Pony/4_control-structures_15.txt",
+    "Pony/2_primitives_3.txt",
+    "Pony/2_ops_1.txt",
+    "Pony/4_control-structures_14.txt",
+    "Pony/6_errors_1.txt",
+    "Pony/4_control-structures_1.txt"
+  ],
+  "gold_answer": "N/A",
+  "corpus": "documents/pony-00000-of-00001.parquet",
+  "case_id": "B06-bright-0662",
+  "expected": {
+    "kind": "retrieval",
+    "gold_ids": [
+      "Pony/1_variables_1.txt",
+      "Pony/4_control-structures_18.txt",
+      "Pony/collections-Range-_0.txt",
+      "Pony/4_control-structures_3.txt",
+      "Pony/4_control-structures_12.txt",
+      "Pony/4_control-structures_13.txt",
+      "Pony/2_ops_2.txt",
+      "Pony/4_control-structures_2.txt",
+      "Pony/4_control-structures_19.txt",
+      "Pony/1_variables_2.txt",
+      "Pony/5_methods_1.txt",
+      "Pony/4_control-structures_16.txt",
+      "Pony/6_errors_2.txt",
+      "Pony/4_control-structures_11.txt",
+      "Pony/4_control-structures_17.txt",
+      "Pony/6_errors_3.txt",
+      "Pony/4_control-structures_15.txt",
+      "Pony/2_primitives_3.txt",
+      "Pony/2_ops_1.txt",
+      "Pony/4_control-structures_14.txt",
+      "Pony/6_errors_1.txt",
+      "Pony/4_control-structures_1.txt"
+    ],
+    "gold_ids_long": [
+      "Pony/4_control-structures.txt",
+      "Pony/6_errors.txt",
+      "Pony/5_methods.txt",
+      "Pony/1_variables.txt",
+      "Pony/2_primitives.txt",
+      "Pony/collections-Range-.txt",
+      "Pony/src-collections-range-.txt",
+      "Pony/2_ops.txt"
+    ],
+    "gold_answer": "N/A",
+    "excluded_ids": [
+      "N/A"
+    ]
+  }
+}

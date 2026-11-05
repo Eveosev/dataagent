@@ -1,0 +1,37 @@
+{
+  "$comment": "generated from dataagent_contracts.core:Cost; do not edit",
+  "$id": "dataagent-contracts/0.1/core/Cost",
+  "additionalProperties": false,
+  "properties": {
+    "amount": {
+      "minimum": 0,
+      "title": "Amount",
+      "type": "number"
+    },
+    "currency": {
+      "minLength": 1,
+      "title": "Currency",
+      "type": "string"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    }
+  },
+  "required": [
+    "amount",
+    "currency"
+  ],
+  "title": "Cost",
+  "type": "object"
+}

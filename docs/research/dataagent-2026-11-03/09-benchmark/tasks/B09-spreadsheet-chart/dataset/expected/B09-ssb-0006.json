@@ -1,0 +1,22 @@
+{
+  "source": "KAKA22/SpreadsheetBench",
+  "raw": {
+    "id": "22-12",
+    "instruction": "I need a macro for my Excel file that updates the values in column E based on the data in columns A and D. Specifically, if column A is equal to 'USS', then for each corresponding row, check column D for the pay level; if the pay level equals 'R01', change the total in column E to 15.00, and if the pay level is any other 'R' level, assign varying amounts as follows: R01=15, R02=17, R03=23, R04=27, R05=32, R06=34. If the pay level does not match these specified 'R' levels, the total should be changed to 10. I am not sure if filtering column A for 'USS' entries before running the macro would improve performance, considering there are over 15,000 records. Initially, the rates were increasing by 5, but the rates have now changed for 2024, and that increase pattern is not applicable with the new rates.",
+    "spreadsheet_path": "spreadsheet/22-12",
+    "instruction_type": "Sheet-Level Manipulation",
+    "answer_position": "E2:E19",
+    "answer_sheet": "Sheet1",
+    "data_position": "A1:E19"
+  },
+  "case_id": "B09-ssb-0006",
+  "expected": {
+    "kind": "sheet_answer",
+    "instruction": "I need a macro for my Excel file that updates the values in column E based on the data in columns A and D. Specifically, if column A is equal to 'USS', then for each corresponding row, check column D for the pay level; if the pay level equals 'R01', change the total in column E to 15.00, and if the pay level is any other 'R' level, assign varying amounts as follows: R01=15, R02=17, R03=23, R04=27, R05=32, R06=34. If the pay level does not match these specified 'R' levels, the total should be changed to 10. I am not sure if filtering column A for 'USS' entries before running the macro would improve performance, considering there are over 15,000 records. Initially, the rates were increasing by 5, but the rates have now changed for 2024, and that increase pattern is not applicable with the new rates.",
+    "answer": null,
+    "answer_sheet": "Sheet1",
+    "answer_position": "E2:E19",
+    "data_position": "A1:E19",
+    "instruction_type": "Sheet-Level Manipulation"
+  }
+}

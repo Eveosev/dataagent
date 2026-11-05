@@ -1,0 +1,35 @@
+{
+  "source": "xlangai/BRIGHT",
+  "query_id": "38",
+  "query": "## Essential Problem:\n\nThe main problem is understanding the potential health effects of short-term exposure to high levels of UFP (ultrafine particles) in the train station compared to the well-established health risks of smoking cigarettes. \n\n## Relevant Information:\n\nTo address this question, we need to consider several factors:\n\n**1. UFP Concentration:** \n- The provided data indicates a UFP concentration of 400,000 particles per cubic centimeter (cm³) in the train station. \n- This concentration is significantly higher than the typical outdoor air quality, which usually ranges between 10,000-50,000 particles/cm³.\n\n**2. Time of Exposure:** \n- The scenario involves a 30-minute exposure to the high UFP environment. \n- This duration is relatively short compared to long-term exposure associated with chronic health effects.\n\n**3. Health Effects of UFP:** \n- UFP are linked to various adverse health outcomes, including respiratory problems, cardiovascular diseases, and even cognitive decline. \n- However, the specific effects and severity depend on factors like particle size, composition, and individual susceptibility.\n\n**4. Health Effects of Smoking:** \n- Smoking is a well-documented cause of lung cancer, heart disease, stroke, and numerous other health problems. \n- The number of cigarettes smoked and the duration of smoking are key factors in determining the extent of damage.\n\n##  Drafting an Answer:\n\nWhile directly comparing the health risks of short-term UFP exposure to smoking cigarettes is complex, here's a potential answer incorporating the available information:\n\n**\"Spending 30 minutes in a train station environment with 400,000 UFP/cm³ is likely equivalent to inhaling the particulate matter in approximately 1-2 cigarettes. However, it's important to note that this is a rough estimate and individual responses may vary. While the immediate effects might be comparable, the long-term health consequences of smoking are significantly more severe and encompass a broader range of health problems.\"** \n\n## Additional Points:\n\n* The draft emphasizes the limitations of the comparison and highlights the more severe long-term health risks associated with smoking.\n* It's crucial to emphasize the importance of air quality improvement in public spaces like train stations.\n* Further research is needed to establish a more precise comparison between UFP exposure and cigarette smoking.\n\n## Disclaimer: \n\nThis information is for general knowledge and informational purposes only, and does not constitute medical advice. It is essential to consult with qualified healthcare professionals for any health concerns or before making any decisions related to your health or treatment. \n",
+  "gold_ids": [
+    "train_station/PMC8672270_11.txt",
+    "train_station/PMC2801144_37.txt",
+    "train_station/PMC8672270_14.txt",
+    "train_station/PMC8672270_10.txt",
+    "train_station/PMC8672270_12.txt",
+    "train_station/PMC2801144_27.txt"
+  ],
+  "gold_answer": "On average, smoking one cigarette results in inhalation of roughly 600 billion\nultrafine particles (UFP).\n\n> From a joint research study by universities in Lebanon, the U.S., and\n> France: [ \"Comparison of carcinogen, carbon monoxide, and ultrafine particle\n> emissions from narghile waterpipe and cigarette smoking: Sidestream smoke\n> measurements and assessment of second-hand smoke emission factors\"\n> ](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2801144/)\n\nThe average adult human inhales about 10 liters of air per minute while\nstanding.\n\n> From research by the California Environmental Protection Agency: [ \"Research\n> Note 94-11: Topic = How Much Air Do We Breathe?\"\n> ](https://www.arb.ca.gov/research/resnotes/notes/94-11.htm)\n\nThus breathing air at the station with a concentration of 400,000 UFP\nparticles per cm3 for one hour is the same as smoking 0.4 cigarettes; or\n**every 2.5 hours spent at the station is the same as smoking one cigarette.**\n\n    \n    \n    (1000 cm3 / l) * (10 l / min) * (60 min / hr) * (400,000 UFP / cm3) * \n    (1 cigarette / 600,000,000,000 UFP) = 0.4 cigarette / hr",
+  "corpus": "documents/sustainable_living-00000-of-00001.parquet",
+  "case_id": "B06-bright-1045",
+  "expected": {
+    "kind": "retrieval",
+    "gold_ids": [
+      "train_station/PMC8672270_11.txt",
+      "train_station/PMC2801144_37.txt",
+      "train_station/PMC8672270_14.txt",
+      "train_station/PMC8672270_10.txt",
+      "train_station/PMC8672270_12.txt",
+      "train_station/PMC2801144_27.txt"
+    ],
+    "gold_ids_long": [
+      "train_station/PMC2801144.txt",
+      "train_station/PMC8672270.txt"
+    ],
+    "gold_answer": "On average, smoking one cigarette results in inhalation of roughly 600 billion\nultrafine particles (UFP).\n\n> From a joint research study by universities in Lebanon, the U.S., and\n> France: [ \"Comparison of carcinogen, carbon monoxide, and ultrafine particle\n> emissions from narghile waterpipe and cigarette smoking: Sidestream smoke\n> measurements and assessment of second-hand smoke emission factors\"\n> ](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2801144/)\n\nThe average adult human inhales about 10 liters of air per minute while\nstanding.\n\n> From research by the California Environmental Protection Agency: [ \"Research\n> Note 94-11: Topic = How Much Air Do We Breathe?\"\n> ](https://www.arb.ca.gov/research/resnotes/notes/94-11.htm)\n\nThus breathing air at the station with a concentration of 400,000 UFP\nparticles per cm3 for one hour is the same as smoking 0.4 cigarettes; or\n**every 2.5 hours spent at the station is the same as smoking one cigarette.**\n\n    \n    \n    (1000 cm3 / l) * (10 l / min) * (60 min / hr) * (400,000 UFP / cm3) * \n    (1 cigarette / 600,000,000,000 UFP) = 0.4 cigarette / hr",
+    "excluded_ids": [
+      "N/A"
+    ]
+  }
+}

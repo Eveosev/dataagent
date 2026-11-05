@@ -1,0 +1,22 @@
+# Shared-runtime bundle source snapshot. Release artifacts must trace back to
+# these inputs, not to "the workspace at the time".
+schema = 1
+
+[upstream]
+repository = "AgentOS"
+kernel = "agent-kernel@f0fa521"
+research = "docs/research/dataagent-2026-11-03"
+
+[catalog]
+note = "the shared runtime ships zero operations; no catalog snapshot applies"
+
+[packages]
+contracts = "dataagent-contracts@0.1.0"
+runtime = "dataagent-runtime@0.1.0"
+
+[runtime]
+python = ">=3.11,<3.14"
+uv = ">=0.5"
+
+[notes]
+vendoring = "packaging/bundle：双包 vendoring（dataagent_contracts + dataagent_runtime），uv.lock 自包含，--frozen --offline 可安装"

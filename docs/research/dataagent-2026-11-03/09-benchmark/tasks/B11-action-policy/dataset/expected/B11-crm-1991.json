@@ -1,0 +1,26 @@
+{
+  "source": "Salesforce/CRMArenaPro",
+  "raw": {
+    "idx": 1990,
+    "answer": [
+      "01tWs000006f7i1IAA"
+    ],
+    "task": "named_entity_disambiguation",
+    "persona": "You are a busy professional who needs quick, straightforward information.",
+    "metadata": {
+      "required": "- Contact Id interacting: 003Ws00000DYTRVIA5\n- Today's date: 2023-01-27",
+      "optional": "# Domain Details\n## Quarters of the Year\n- Q1: January 1 to March 31 (both inclusive).\n- Q2: April 1 to June 30 (both inclusive).\n- Q3: July 1 to September 30 (both inclusive).\n- Q4: October 1 to December 31 (both inclusive).\n## Seasons\n- Winter (2024): December 1, 2024 to February 28/29, 2025 (both inclusive), specifying the year to avoid ambiguity.\n- Spring: March 1 to May 31 (both inclusive).\n- Summer: June 1 to August 31 (both inclusive).\n- Autumn/Fall: September 1 to November 30 (both inclusive).\n## Time Periods\n- Past 2 quarters: This refers to any timeframe spanning two quarters back from a specified `end_date`. (i.e. begins on the date calculated by subtracting six months from the end_date and ends on the end_date) That translates to a six-month period retrospectively from the `end_date`.\n- Issue Significantly More Than Other Months: This means there is a month where the number of cases reported are larger than all other months."
+    },
+    "reward_metric": "exact_match",
+    "query": "Display the Car Purchase Payment Plan that I requested a week ago. Return only the Id of the product from the contact's relevant past transaction."
+  },
+  "case_id": "B11-crm-1991",
+  "expected": {
+    "kind": "answer",
+    "answer": [
+      "01tWs000006f7i1IAA"
+    ],
+    "reward_metric": "exact_match",
+    "task": "named_entity_disambiguation"
+  }
+}

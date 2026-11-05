@@ -1,0 +1,1 @@
+Please tell me the total and Black deaths due to vehicle-related incidents and firearms separately, for each age from 12 to 18.

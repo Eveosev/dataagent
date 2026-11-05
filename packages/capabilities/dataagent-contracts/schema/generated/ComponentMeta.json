@@ -1,0 +1,112 @@
+{
+  "$comment": "generated from dataagent_contracts.core:ComponentMeta; do not edit",
+  "$id": "dataagent-contracts/0.1/core/ComponentMeta",
+  "additionalProperties": false,
+  "properties": {
+    "capability_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Capability Ids",
+      "type": "array"
+    },
+    "component_id": {
+      "minLength": 1,
+      "title": "Component Id",
+      "type": "string"
+    },
+    "data_license": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Data License"
+    },
+    "distribution": {
+      "items": {
+        "enum": [
+          "internal",
+          "customer_site",
+          "minthub_public"
+        ],
+        "type": "string"
+      },
+      "title": "Distribution",
+      "type": "array"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "implementation_ref": {
+      "minLength": 1,
+      "title": "Implementation Ref",
+      "type": "string"
+    },
+    "license": {
+      "minLength": 1,
+      "title": "License",
+      "type": "string"
+    },
+    "operations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Operations",
+      "type": "array"
+    },
+    "requires_contracts": {
+      "minLength": 1,
+      "title": "Requires Contracts",
+      "type": "string"
+    },
+    "runtime_requirements": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Runtime Requirements",
+      "type": "array"
+    },
+    "version": {
+      "minLength": 1,
+      "title": "Version",
+      "type": "string"
+    },
+    "weights_license": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Weights License"
+    }
+  },
+  "required": [
+    "component_id",
+    "version",
+    "implementation_ref",
+    "license",
+    "requires_contracts"
+  ],
+  "title": "ComponentMeta",
+  "type": "object"
+}

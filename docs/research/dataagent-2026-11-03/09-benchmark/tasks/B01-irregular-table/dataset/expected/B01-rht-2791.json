@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1155,
+  "table": "economy-table84",
+  "structure": "ColumnHeaderMerge",
+  "question_type": "Numerical Reasoning",
+  "sub_type": "Comparison",
+  "answer": "0.13",
+  "cot": [
+    {
+      "planning": "First, we need to locate the rows corresponding to 'Fresh' and 'Applesauce' in the 'Form' column."
+    },
+    {
+      "planning": "Next, we extract the values under the 'Average price per cup equivalent' column for these two rows."
+    },
+    {
+      "planning": "Finally, we calculate the difference by subtracting the value for fresh apples from the value for applesauce."
+    }
+  ],
+  "case_id": "B01-rht-2791",
+  "expected": {
+    "kind": "answer",
+    "question": "How much more expensive per cup equivalent are applesauce than fresh apples?",
+    "answer": "0.13"
+  }
+}

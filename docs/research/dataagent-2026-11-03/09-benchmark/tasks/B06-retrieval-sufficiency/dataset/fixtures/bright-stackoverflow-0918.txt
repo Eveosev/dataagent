@@ -1,0 +1,33 @@
+## Converting Oracle's `DBMS_RANDOM.VALUE()` to Snowflake
+
+I can help you convert the provided Oracle SQL query to Snowflake, specifically focusing on replacing the `DBMS_RANDOM.VALUE()` function. 
+
+Here's the breakdown:
+
+**1. Identify the essential problem:**
+
+The primary issue is that Snowflake doesn't have a direct equivalent to Oracle's `DBMS_RANDOM.VALUE()` function. This function generates a random number between 0 and 1.
+
+**2. Step-by-step solution:**
+
+To achieve the same functionality in Snowflake, we can utilize the `RAND()` function. It generates a random number between 0 and 1, similar to `DBMS_RANDOM.VALUE()`.
+
+Here's the converted Snowflake query:
+
+```sql
+SELECT emp_id, emp_name, emp_mob,
+CASE WHEN RAND() >= 0.85 THEN 'Y' ELSE 'N' END AS tag
+FROM eds_dwg.employee_data;
+```
+
+**3. Explanation:**
+
+- We replaced `DBMS_RANDOM.VALUE()` with `RAND()` to generate the random number.
+- The rest of the query remains the same, using the generated random number within the `CASE` statement to assign 'Y' or 'N' based on the condition.
+
+**Additional notes:**
+
+- Snowflake's `RAND()` function is deterministic, meaning it produces the same sequence of random numbers for the same seed value. This differs from Oracle's `DBMS_RANDOM.VALUE()`, which is non-deterministic.
+- If you require true non-deterministic randomness, consider using Snowflake's `SNOWFLAKE_SAMPLE` function or external tools like `RANDOM_BYTES`.
+
+I hope this explanation helps! 

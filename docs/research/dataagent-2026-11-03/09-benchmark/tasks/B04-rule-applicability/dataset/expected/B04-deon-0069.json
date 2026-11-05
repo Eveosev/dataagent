@@ -1,0 +1,32 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_5fdcfa50",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_year",
+    "scenario_case",
+    "scenario_case_type",
+    "statute_orc_1923_01_applicable",
+    "integer",
+    "statute_orc_1923_01_authorized_court",
+    "statute_orc_1923_01_limitations_period_years",
+    "statute_orc_1923_01_restitution_required_if_unlawful_detainer_found",
+    "statute_orc_1923_01_definition",
+    "high_court",
+    "legal_action_under_orc_1923_chapter",
+    "authorized_court_for_case",
+    "first_hearing_must_be_in_high_court",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    State: Ohio\n    Focus year: 2021\n    Question: \"Are eviction cases first heard in high court?\"\n*/\n\n/* -----------------------------\n   Scenario facts (question context)\n   ----------------------------- */\n\nscenario_state(ohio).\nscenario_year(2021).\n\n/* We model the question as concerning an Ohio \"eviction case\", i.e., an action\n   under Ohio Rev. Code Chapter 1923 (Forcible Entry and Detainer). */\nscenario_case(case1).\nscenario_case_type(case1, eviction_forcible_entry_and_detainer).\n\n/* The factual statement being tested: \"eviction cases [are] first heard in high court\".\n   We encode the *claim* as a query target rather than a fact, because we must derive\n   yes/no from the statute. */\nscenario_statement :-\n    scenario_state(ohio),\n    scenario_year(2021),\n    scenario_case(case1),\n    scenario_case_type(case1, eviction_forcible_entry_and_detainer).\n\n/* -----------------------------\n   Statute translation: Ohio Rev Code  1923.01 (2021)\n   ----------------------------- */\n\n/* Effective date note (from provided text): Effective September 10, 2012.\n   We treat the statute as applicable in any year >= 2012. */\nstatute_orc_1923_01_applicable(State, Year) :-\n    State = ohio,\n    integer(Year),\n    Year >= 2012.\n\n/* ORC 1923.01(A) (2021):\n   \"any judge of a county or municipal court or a court of common pleas ... may inquire\"\n   -> authorized courts for initial inquiry/hearing in an action under this chapter. */\nstatute_orc_1923_01_authorized_court(State, Year, county_court) :-\n    statute_orc_1923_01_applicable(State, Year).\nstatute_orc_1923_01_authorized_court(State, Year, municipal_court) :-\n    statute_orc_1923_01_applicable(State, Year).\nstatute_orc_1923_01_authorized_court(State, Year, court_of_common_pleas) :-\n    statute_orc_1923_01_applicable(State, Year).\n\n/* ORC 1923.01(B) (2021): action must be brought within two years after accrual.\n   Included for completeness; not needed to answer the court-level question. */\nstatute_orc_1923_01_limitations_period_years(ohio, 2) :-\n    statute_orc_1923_01_applicable(ohio, 2012).\n\n/* ORC 1923.01(A): if unlawful detainer found, judge shall cause restitution.\n   Included for completeness; not needed to answer the \"high court first heard\" question. */\nstatute_orc_1923_01_restitution_required_if_unlawful_detainer_found(ohio, Year) :-\n    statute_orc_1923_01_applicable(ohio, Year).\n\n/* ORC 1923.01(C) definitions (abridged to deterministically capture definitional structure).\n   Not required for the court forum question, but included to encode the statute's definitions. */\nstatute_orc_1923_01_definition(ohio, tenant, person_entitled_under_rental_agreement_to_occupy_premises_excluding_others_except_specific_manufactured_home_context).\nstatute_orc_1923_01_definition(ohio, landlord, owner_lessor_sublessor_or_authorized_agent_except_park_operator_if_required_by_facts).\nstatute_orc_1923_01_definition(ohio, rental_agreement, any_written_or_oral_agreement_establishing_terms_for_use_or_occupancy_with_specific_statutory_exceptions).\nstatute_orc_1923_01_definition(ohio, residential_premises, as_defined_in_5321_01_with_specific_manufactured_home_cross_reference).\nstatute_orc_1923_01_definition(ohio, manufactured_home_park, as_defined_in_4781_01_and_includes_tract_with_one_or_two_homes_under_rental_agreements).\n\n/* -----------------------------\n   Legal reasoning helpers\n   ----------------------------- */\n\n/* \"High court\" is not a term in ORC 1923.01. For purposes of answering the question,\n   we model \"high court\" as the Court of Common Pleas (Ohio's general jurisdiction trial court). */\nhigh_court(court_of_common_pleas).\n\n/* An eviction (forcible entry and detainer) case in Ohio is an \"action under this chapter\"\n   for ORC 1923.01(A) purposes. */\nlegal_action_under_orc_1923_chapter(eviction_forcible_entry_and_detainer).\n\n/* Authorized court types for the scenario case, derived from ORC 1923.01(A). */\nauthorized_court_for_case(Case, CourtType) :-\n    scenario_case(Case),\n    scenario_case_type(Case, CaseType),\n    legal_action_under_orc_1923_chapter(CaseType),\n    scenario_state(State),\n    scenario_year(Year),\n    statute_orc_1923_01_authorized_court(State, Year, CourtType).\n\n/* The question asks whether eviction cases are \"first heard\" in high court.\n   We treat \"first heard in high court\" as \"must be initially filed/heard only in high court.\"\n   That would be true only if no non-high-court forum is authorized by statute. */\nfirst_hearing_must_be_in_high_court(Case) :-\n    authorized_court_for_case(Case, _), /* ensures the case is within the statute */\n    \\+ ( authorized_court_for_case(Case, CourtType),\n         \\+ high_court(CourtType)\n       ).\n\n/* -----------------------------\n   Final answer\n   ----------------------------- */\n\nhousing_answer(Result) :-\n    scenario_statement,\n    ( first_hearing_must_be_in_high_court(case1)\n    -> Result = yes\n    ;  Result = no\n    ),\n    !.\n\n/* -----------------------------\n   Main entrypoint\n   ----------------------------- */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-0069",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Are eviction cases first heard in high court?"
+  }
+}

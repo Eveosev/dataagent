@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 79,
+  "question": "I'm sizing a catalogue page of 2017 sets that were localized for international markets. How many cards were there in total across the Magic: The Gathering sets released in 2017 (between January 1 and December 31, 2017) that have a name in a language other than English? A set counts as localized if its name has a foreign-language translation. Include every card in each qualifying set, counting promotional and related supplemental printings as part of the set. I just need the single total across all qualifying sets, not per-set numbers.",
+  "evidence": "A foreign-language translation is a set's name rendered in a language other than English (e.g. Chinese Simplified, German, Spanish).",
+  "gold_sql": "SELECT SUM(s.totalSetSize) AS total_cards FROM sets s WHERE s.releaseDate BETWEEN '2017-01-01' AND '2017-12-31' AND EXISTS (SELECT 1 FROM set_translations t WHERE t.setCode = s.code)",
+  "db_id": "card_games",
+  "case_id": "B05-bird-0080",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT SUM(s.totalSetSize) AS total_cards FROM sets s WHERE s.releaseDate BETWEEN '2017-01-01' AND '2017-12-31' AND EXISTS (SELECT 1 FROM set_translations t WHERE t.setCode = s.code)",
+    "db_id": "card_games",
+    "evidence": "A foreign-language translation is a set's name rendered in a language other than English (e.g. Chinese Simplified, German, Spanish)."
+  }
+}

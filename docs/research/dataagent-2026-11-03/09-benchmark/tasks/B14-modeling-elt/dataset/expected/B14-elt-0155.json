@@ -1,0 +1,169 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "redshift",
+  "pipeline": "movie_platform",
+  "data_model": {
+    "models": [
+      {
+        "name": "movie_platform__list_users",
+        "description": "Each record represents a list user",
+        "columns": [
+          {
+            "name": "user_id",
+            "description": "The unique identifier of the user"
+          },
+          {
+            "name": "user_avatar_image_url",
+            "description": "User profile image URL on Mubi"
+          },
+          {
+            "name": "user_cover_image_url",
+            "description": "User profile cover image URL on Mubi"
+          },
+          {
+            "name": "latest_rated_movie",
+            "description": "The latest movie the user rated, with ties broken by the ascending order of the movie title"
+          },
+          {
+            "name": "list_title_most_followers",
+            "description": "The title of the list with the most followers created by the user, with ties broken by the ascending order of the list title"
+          },
+          {
+            "name": "description_list_most_followers",
+            "description": "The description of the list with the most followers created by the user, with ties broken by the descending order of the list description"
+          },
+          {
+            "name": "first_list_created",
+            "description": "The title of the first list created by the user, with ties broken by the ascending order of the list title"
+          },
+          {
+            "name": "average_followers_of_the_lists_created",
+            "description": "The average number of followers of the lists created by the user"
+          }
+        ]
+      },
+      {
+        "name": "movie_platform__movies",
+        "description": "Each record represents a movie",
+        "columns": [
+          {
+            "name": "movie_id",
+            "description": "The unique identifier of the movie"
+          },
+          {
+            "name": "movie_title",
+            "description": "The title of the movie"
+          },
+          {
+            "name": "movie_url",
+            "description": "URL to the movie page on Mubi"
+          },
+          {
+            "name": "avg_rating_score",
+            "description": "The average rating score of the movie"
+          },
+          {
+            "name": "total_critic_comments",
+            "description": "The total number of critic comments on the movie, replace NULL values with 0."
+          },
+          {
+            "name": "percentage_subscribers_rated",
+            "description": "The percentage of ratings submitted by subscribers among all ratings on the movie."
+          },
+          {
+            "name": "critic_highest_number_likes",
+            "description": "The critic made by the user rating the movie that received the highest number of likes, with ties broken by the ascending order of the critic. Exclude NULL values."
+          },
+          {
+            "name": "percentage_highest_rating_score",
+            "description": "The percentage of the movie's ratings that equal the highest rating score, where 'the highest rating score' is the maximum rating score across all movies"
+          }
+        ]
+      },
+      {
+        "name": "movie_platform__directors",
+        "description": "Each record represents a director",
+        "columns": [
+          {
+            "name": "director_id",
+            "description": "The unique identifier of the director"
+          },
+          {
+            "name": "director_url",
+            "description": "URL to the director page on Mubi"
+          },
+          {
+            "name": "director_name",
+            "description": "The name of the director"
+          },
+          {
+            "name": "third_movie_directed",
+            "description": "The title of the third movie directed by the director, with ties broken by the ascending order of the movie title"
+          },
+          {
+            "name": "highest_average_score_film",
+            "description": "The title of the film with the highest average score directed by the director, with ties broken by the ascending order of the film id"
+          },
+          {
+            "name": "number_of_movies_directed_in_70s",
+            "description": "The number of movies directed by the director in the 1970s, replace NULL values with 0."
+          },
+          {
+            "name": "has_more_than_10_movies_1960_1985",
+            "description": "Set to 1 if the director has directed more than 10 movies between 1960 and 1985, 0 otherwise"
+          },
+          {
+            "name": "average_rating_score_of_most_popular_movie",
+            "description": "The average rating score of the most popular movie directed by the director, if there are multiple movies with the same popularity, rank them by the descending order of the movie id and take the first one"
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    redshift_definition_id: f7a7d195-377f-cf5b-70a5-be6b819019dc\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://movie-platform-bucket/movies.jsonl\n    sync_mode: full_refresh_append\n    table: movies\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - lists\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: movie_platform\n    sync_mode: full_refresh_append\n    tables:\n    - lists_users\npostgres:\n  config:\n    database: movie_platform\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - ratings\n    - ratings_users\n    user: postgres\nredshift:\n  config:\n    host: <redshift_hostname>\n    port: <redshift_port>\n    database: <redshift_db>\n    username: <redshift_username>\n    password: <redshift_pwd>\n    schema: movie_platform\n    s3_bucket_name: <redshift_s3_bucket>\n    s3_bucket_region: <redshift_s3_region>\n    access_key_id: <redshift_s3_access_key>\n    secret_access_key: <redshift_s3_secret_key>\n",
+  "case_id": "B14-elt-0155",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "movie_platform__list_users",
+        "columns": [
+          "user_id",
+          "user_avatar_image_url",
+          "user_cover_image_url",
+          "latest_rated_movie",
+          "list_title_most_followers",
+          "description_list_most_followers",
+          "first_list_created",
+          "average_followers_of_the_lists_created"
+        ]
+      },
+      {
+        "name": "movie_platform__movies",
+        "columns": [
+          "movie_id",
+          "movie_title",
+          "movie_url",
+          "avg_rating_score",
+          "total_critic_comments",
+          "percentage_subscribers_rated",
+          "critic_highest_number_likes",
+          "percentage_highest_rating_score"
+        ]
+      },
+      {
+        "name": "movie_platform__directors",
+        "columns": [
+          "director_id",
+          "director_url",
+          "director_name",
+          "third_movie_directed",
+          "highest_average_score_film",
+          "number_of_movies_directed_in_70s",
+          "has_more_than_10_movies_1960_1985",
+          "average_rating_score_of_most_popular_movie"
+        ]
+      }
+    ]
+  }
+}

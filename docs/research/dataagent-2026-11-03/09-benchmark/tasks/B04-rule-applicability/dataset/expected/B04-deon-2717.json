@@ -1,0 +1,25 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_ab16d580",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_issue",
+    "statute_ne_76_1431_2_cure_period_days",
+    "integer",
+    "legal_min_days_late_before_eviction_action",
+    "law_specifies_min_days_threshold_for_nonpayment_eviction",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: Nebraska\n    Focus year: 2021\n    Question: Whether the law specifies a minimum number of days a tenant can be late on rent\n              before the landlord can file an eviction action for nonpayment.\n*/\n\n/* ------------------------- Scenario encoding ------------------------- */\n\n% Scenario metadata (facts)\nscenario_state(nebraska).\nscenario_focus_year(2021).\nscenario_issue(min_days_late_before_filing_eviction_nonpayment).\n\n% Helper predicate that succeeds when the encoded scenario statement holds.\nscenario_statement :-\n    scenario_state(nebraska),\n    scenario_focus_year(2021),\n    scenario_issue(min_days_late_before_filing_eviction_nonpayment).\n\n/* ------------------------- Statute translations ------------------------- */\n\n% NE Code  76-1431(2) (2021):\n% \"If rent is unpaid when due and the tenant fails to pay rent within seven calendar days\n% after written notice by the landlord of nonpayment and his or her intention to terminate\n% the rental agreement if the rent is not paid within that period of time, the landlord may\n% terminate the rental agreement.\"\nstatute_ne_76_1431_2_cure_period_days(Year, 7) :-\n    integer(Year),\n    Year =:= 2021.\n\n% Deterministic legal rule: minimum statutory cure/late period (in days) after written notice\n% for a nonpayment-based termination that would support an eviction filing.\n%\n% Note: The statute sets the minimum \"within seven calendar days after written notice\" period.\n% This is treated here as the minimum days threshold the law specifies before the landlord can\n% proceed toward eviction for nonpayment (i.e., after proper notice and expiration).\nlegal_min_days_late_before_eviction_action(State, Year, Days) :-\n    State == nebraska,\n    statute_ne_76_1431_2_cure_period_days(Year, Days),\n    !.\n\n/* ------------------------- Reasoning helpers ------------------------- */\n\n% The question is whether the law specifies a minimum number of days (a numeric threshold)\n% before filing an eviction action for nonpayment.\n%\n% We answer \"yes\" if there exists a statutorily specified minimum days threshold for nonpayment\n% that is relevant to proceeding (termination -> eviction filing path).\nlaw_specifies_min_days_threshold_for_nonpayment_eviction(State, Year, Days) :-\n    legal_min_days_late_before_eviction_action(State, Year, Days),\n    integer(Days),\n    Days > 0,\n    !.\n\n/* ------------------------- Final answer ------------------------- */\n\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_state(State),\n    scenario_focus_year(Year),\n    law_specifies_min_days_threshold_for_nonpayment_eviction(State, Year, _Days),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n/* ------------------------- Main entrypoint ------------------------- */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-2717",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Does the law specify a minimum number of days a tenant can be late on rent before the landlord can file an eviction action for nonpayment?"
+  }
+}

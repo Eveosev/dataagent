@@ -1,0 +1,36 @@
+## Essential Problem:
+
+The essential problem is to find a valid course order in which you can take all courses given a set of prerequisites. If there is no valid order, we need to identify that and return an empty array.
+
+## Relevant Information:
+
+* Number of courses: `numCourses`
+* Prerequisites: `prerequisites` (list of pairs indicating course dependencies)
+* Goal: Find a valid course order to take all courses.
+
+## Reasoning:
+
+1. We can represent the course dependencies as a directed graph, where nodes are courses and edges represent prerequisites.
+2. A valid course order corresponds to a topological ordering of the graph, where each node depends only on nodes that come before it in the order.
+3. We can use various algorithms to find a topological ordering, such as:
+    * Depth-First Search (DFS) with a visited set to detect cycles.
+    * Kahn's Algorithm, which uses indegree of each node to determine the next course to take.
+
+## Draft Answer:
+
+Here's a draft answer outlining the steps:
+
+1. **Define a function `find_course_order(numCourses, prerequisites)`:**
+    * Initialize an empty list `course_order`.
+    * Build the directed graph:
+        * Create a dictionary `graph` where keys are courses and values are lists of their prerequisites.
+    * Implement a topological sorting algorithm (e.g., DFS or Kahn's Algorithm):
+        * If using DFS, maintain a `visited` set to detect cycles.
+        * If using Kahn's Algorithm, track the indegree of each node and process nodes with 0 indegree.
+    * In both cases, add the processed nodes to the `course_order` list in the order they are visited/processed.
+    * If a cycle is detected or all nodes cannot be processed, return an empty array.
+    * Otherwise, return the `course_order` list.
+
+2. **Call the `find_course_order` function with the given `numCourses` and `prerequisites`.**
+
+This is a high-level overview of the solution. We can further refine the implementation details based on the chosen algorithm and any specific requirements. 

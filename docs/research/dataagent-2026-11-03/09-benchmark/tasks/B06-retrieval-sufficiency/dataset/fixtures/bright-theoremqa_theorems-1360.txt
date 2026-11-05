@@ -1,0 +1,40 @@
+## Essential Problem:
+
+The teacher needs to choose a team of 3 students from a class of 20. We need to determine the number of different teams possible, considering that the order of selection doesn't matter.
+
+## Relevant Information and Reasoning:
+
+* **Number of students:** 20
+* **Team size:** 3
+* **Order doesn't matter:** We are only interested in the combination of students, not the specific order they are picked.
+
+##  Step-by-Step Approach:
+
+1. **Combinations vs. Permutations:** Since the order of selection doesn't matter, we are dealing with combinations, not permutations. 
+2. **Formula for Combinations:** We can use the formula for combinations to calculate the number of possible teams:
+
+```
+C(n, k) = n! / (k! * (n-k)!)
+```
+
+where:
+* C(n, k) represents the number of combinations
+* n is the total number of students (20)
+* k is the team size (3)
+* ! denotes the factorial function (e.g., 5! = 5 x 4 x 3 x 2 x 1)
+
+## Answer:
+
+Plugging in the values into the formula:
+
+```
+C(20, 3) = 20! / (3! * (20-3)!) = 20! / (3! * 17!) 
+```
+
+We can simplify this further:
+
+```
+C(20, 3) = (20 x 19 x 18) / (3 x 2 x 1) = 1140
+```
+
+Therefore, the teacher can form 1140 different teams of 3 students from a class of 20. 

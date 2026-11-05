@@ -1,0 +1,313 @@
+{
+  "source": "opendatalab/OmniDocBench",
+  "page_no": 2,
+  "image": "exam_paper_en-file-putnam-archive_2001_Solutions_2001s_page_002.png",
+  "attribute": {
+    "data_source": "exam_paper",
+    "language": "english",
+    "layout": "double_column",
+    "special_issue": [
+      "None"
+    ],
+    "subset": "v1.5"
+  },
+  "reading_order": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    null
+  ],
+  "blocks": [
+    {
+      "category": "text_block",
+      "order": 1,
+      "text": "We cannot have $a = 1$, since $1 - 2^n \\neq 2001$ for any $n$.\nThus the only possibility is $a = 13$. One easily checks\nthat $a = 13, n = 2$ is a solution; all that remains is to\ncheck that no other $n$ works. In fact, if $n > 2$, then\n$13^{n+1} \\equiv 2001 \\equiv 1 \\pmod{8}$. But $13^{n+1} \\equiv 13 \\pmod{8}$\nsince $n$ is even, contradiction. Thus $a = 13, n = 2$ is the unique solution."
+    },
+    {
+      "category": "text_block",
+      "order": 2,
+      "text": "Note: once one has that $n$ is even, one can use that\n$2002 = a^{n+1} + 1 - (a+1)^n$ is divisible by $a+1$ to rule out cases."
+    },
+    {
+      "category": "text_block",
+      "order": 3,
+      "text": "A-6 The answer is yes. Consider the arc of the parabola\n$y = Ax^2$ inside the circle $x^2 + (y - 1)^2 = 1$, where we\ninitially assume that $A > 1/2$. This intersects the circle\nin three points, $(0,0)$ and $(\\pm\\sqrt{2A-1}/A, (2A-1)/A)$.\nWe claim that for $A$ sufficiently large, the length $L$ of\nthe parabolic arc between $(0,0)$ and $(\\sqrt{2A-1}/A, (2A-1)/A)$ is greater than 2, which implies the desired result\nby symmetry. We express $L$ using the usual formula for arclength:"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 4,
+      "latex": "$$\n\\begin{aligned}L&=\\int_{0}^{\\sqrt{2A-1}/A}\\sqrt{1+(2Ax)^2}dx\\\\&=\\frac{1}{2A}\\int_{0}^{2\\sqrt{2A-1}}\\sqrt{1+x^2}dx\\\\&=2+\\frac{1}{2A}\\left(\\int_{0}^{2\\sqrt{2A-1}}(\\sqrt{1+x^2}-x)dx-2\\right),\\end{aligned}\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 5,
+      "text": "where we have artificially introduced $-x$ into the integrand in the last step. Now, for $x \\geq 0$,"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 6,
+      "latex": "$$\n\\sqrt{1+x^2}-x = \\frac{1}{\\sqrt{1+x^2}+x} > \\frac{1}{2\\sqrt{1+x^2}} \\geq \\frac{1}{2(x+1)};\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 7,
+      "text": "since $\\int_{0}^{\\infty} dx/(2(x+1))$ diverges, so does $\\int_{0}^{\\infty}(\\sqrt{1+x^2}-x) dx$. Hence, for sufficiently large $A$, we have $\\int_{0}^{2\\sqrt{2A-1}}(\\sqrt{1+x^2}-x) dx > 2$, and hence $L > 2$."
+    },
+    {
+      "category": "text_block",
+      "order": 8,
+      "text": "Note: a numerical computation shows that one must take $A > 34.7$ to obtain $L > 2$, and that the maximum value of $L$ is about 4.0027, achieved for $A \\approx 94.1$."
+    },
+    {
+      "category": "text_block",
+      "order": 9,
+      "text": "B-1 Let $R$ (resp. $B$) denote the set of red (resp. black) squares in such a coloring, and for $s \\in R \\cup B$, let $f(s)n+g(s)+1$ denote the number written in square $s$, where $0 \\leq f(s),g(s) \\leq n-1$. Then it is clear that the value of $f(s)$ depends only on the row of $s$, while the value of $g(s)$ depends only on the column of $s$. Since every row contains exactly $n/2$ elements of $R$ and $n/2$ elements of $B$,"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 10,
+      "latex": "$$\n\\sum_{s \\in R} f(s) = \\sum_{s \\in B} f(s).\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 11,
+      "text": "Similarly, because every column contains exactly $n / 2$ elements of $R$ and $n / 2$ elements of $B$,"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 12,
+      "latex": "$$ \\sum_{s \\in R} g(s) = \\sum_{s \\in B} g(s). $$"
+    },
+    {
+      "category": "text_block",
+      "order": 13,
+      "text": "It follows that"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 14,
+      "latex": "$$ \\sum_{s \\in \\mathcal{R}} f(s)n + g(s) + 1 = \\sum_{s \\in \\mathcal{B}} f(s)n + g(s) + 1, $$"
+    },
+    {
+      "category": "text_block",
+      "order": 15,
+      "text": "as desired."
+    },
+    {
+      "category": "text_block",
+      "order": 16,
+      "text": "Note: Richard Stanley points out a theorem of Ryser (see Ryser, Combinatorial Mathematics, Theorem 3.1) that can also be applied. Namely, if $A$ and $B$ are $0–1$ matrices with the same row and column sums, then there is a sequence of operations on $2 \\times 2$ matrices of the form"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 17,
+      "latex": "$$ \\begin{pmatrix} 0 & 1 \\\\ 1 & 0 \\end{pmatrix} \\to \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix} $$"
+    },
+    {
+      "category": "text_block",
+      "order": 18,
+      "text": "or vice versa,which transforms $A$ into $B$. If we identify 0 and 1 with red and black, then the given coloring and the checkerboard coloring both satisfy the sum condition. Since the desired result is clearly true for the checkerboard coloring, and performing the matrix operations does not affect this, the desired result follows in general."
+    },
+    {
+      "category": "text_block",
+      "order": 19,
+      "text": "B-2 By adding and subtracting the two given equations, we obtain the equivalent pair of equations"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 20,
+      "latex": "$$\n\\begin{array} { l } { 2/x = x ^ { 4 } + 10 x ^ { 2 } y ^ { 2 } + 5 y ^ { 4 } } \\\\ { 1/y = 5 x ^ { 4 } + 10 x ^ { 2 } y ^ { 2 } + y ^ { 4 } . } \\end{array}\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 21,
+      "text": "Multiplying the former by $x$ and the latter by $y$, then adding and subtracting the two resulting equations, we obtain another pair of equations equivalent to the given ones,"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 22,
+      "latex": "$$\n3 = ( x + y ) ^ { 5 } , \\qquad 1 = ( x - y ) ^ { 5 } .\n$$"
+    },
+    {
+      "category": "text_block",
+      "order": 23,
+      "text": "It follows that $x = (3^{1/5} + 1)/2$ and $y = (3^{1/5} - 1)/2$ is the unique solution satisfying the given equations."
+    },
+    {
+      "category": "text_block",
+      "order": 24,
+      "text": "B-3 Since $(k - 1/2)^2 = k^2 - k + 1/4$ and $(k + 1/2)^2 = k^2 + k + 1/4$, we have that $\\langle n \\rangle = k$ if and only if $k^2 - k + 1 \\le n \\le k^2 + k$. Hence"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 25,
+      "latex": "$$\n\\begin{aligned} \\sum_{n=1}^{\\infty} \\frac{2^{\\langle n \\rangle} + 2^{-\\langle n \\rangle}}{2^n} & =  \\sum_{k=1}^{\\infty} \\sum_{n, \\langle n \\rangle = k} \\frac{2^{\\langle n \\rangle} + 2^{-\\langle n \\rangle}}{2^n} \\\\ \\\\& =  \\sum_{k=1}^{\\infty} \\sum_{n=k^2-k+1}^{k^2+k} \\frac{2^k + 2^{-k}}{2^n} \\\\ \\\\& =  \\sum_{k=1}^{\\infty} (2^k + 2^{-k})(2^{-k^2+k} - 2^{-k^2-k}) \\\\ \\\\& =  \\sum_{k=1}^{\\infty} (2^{-k(k-2)} - 2^{-k(k+2)}) \\\\ \\\\& =  \\sum_{k=1}^{\\infty} 2^{-k(k-2)} - \\sum_{k=3}^{\\infty} 2^{-k(k-2)} \\\\ \\\\& = 3.\\end{aligned}\n$$"
+    },
+    {
+      "category": "page_number",
+      "order": null,
+      "text": "2"
+    }
+  ],
+  "tables": [],
+  "case_id": "B02-od-1576",
+  "expected": {
+    "kind": "document",
+    "text": "We cannot have $a = 1$, since $1 - 2^n \\neq 2001$ for any $n$.\nThus the only possibility is $a = 13$. One easily checks\nthat $a = 13, n = 2$ is a solution; all that remains is to\ncheck that no other $n$ works. In fact, if $n > 2$, then\n$13^{n+1} \\equiv 2001 \\equiv 1 \\pmod{8}$. But $13^{n+1} \\equiv 13 \\pmod{8}$\nsince $n$ is even, contradiction. Thus $a = 13, n = 2$ is the unique solution.\nNote: once one has that $n$ is even, one can use that\n$2002 = a^{n+1} + 1 - (a+1)^n$ is divisible by $a+1$ to rule out cases.\nA-6 The answer is yes. Consider the arc of the parabola\n$y = Ax^2$ inside the circle $x^2 + (y - 1)^2 = 1$, where we\ninitially assume that $A > 1/2$. This intersects the circle\nin three points, $(0,0)$ and $(\\pm\\sqrt{2A-1}/A, (2A-1)/A)$.\nWe claim that for $A$ sufficiently large, the length $L$ of\nthe parabolic arc between $(0,0)$ and $(\\sqrt{2A-1}/A, (2A-1)/A)$ is greater than 2, which implies the desired result\nby symmetry. We express $L$ using the usual formula for arclength:\n$$\n\\begin{aligned}L&=\\int_{0}^{\\sqrt{2A-1}/A}\\sqrt{1+(2Ax)^2}dx\\\\&=\\frac{1}{2A}\\int_{0}^{2\\sqrt{2A-1}}\\sqrt{1+x^2}dx\\\\&=2+\\frac{1}{2A}\\left(\\int_{0}^{2\\sqrt{2A-1}}(\\sqrt{1+x^2}-x)dx-2\\right),\\end{aligned}\n$$\nwhere we have artificially introduced $-x$ into the integrand in the last step. Now, for $x \\geq 0$,\n$$\n\\sqrt{1+x^2}-x = \\frac{1}{\\sqrt{1+x^2}+x} > \\frac{1}{2\\sqrt{1+x^2}} \\geq \\frac{1}{2(x+1)};\n$$\nsince $\\int_{0}^{\\infty} dx/(2(x+1))$ diverges, so does $\\int_{0}^{\\infty}(\\sqrt{1+x^2}-x) dx$. Hence, for sufficiently large $A$, we have $\\int_{0}^{2\\sqrt{2A-1}}(\\sqrt{1+x^2}-x) dx > 2$, and hence $L > 2$.\nNote: a numerical computation shows that one must take $A > 34.7$ to obtain $L > 2$, and that the maximum value of $L$ is about 4.0027, achieved for $A \\approx 94.1$.\nB-1 Let $R$ (resp. $B$) denote the set of red (resp. black) squares in such a coloring, and for $s \\in R \\cup B$, let $f(s)n+g(s)+1$ denote the number written in square $s$, where $0 \\leq f(s),g(s) \\leq n-1$. Then it is clear that the value of $f(s)$ depends only on the row of $s$, while the value of $g(s)$ depends only on the column of $s$. Since every row contains exactly $n/2$ elements of $R$ and $n/2$ elements of $B$,\n$$\n\\sum_{s \\in R} f(s) = \\sum_{s \\in B} f(s).\n$$\nSimilarly, because every column contains exactly $n / 2$ elements of $R$ and $n / 2$ elements of $B$,\n$$ \\sum_{s \\in R} g(s) = \\sum_{s \\in B} g(s). $$\nIt follows that\n$$ \\sum_{s \\in \\mathcal{R}} f(s)n + g(s) + 1 = \\sum_{s \\in \\mathcal{B}} f(s)n + g(s) + 1, $$\nas desired.\nNote: Richard Stanley points out a theorem of Ryser (see Ryser, Combinatorial Mathematics, Theorem 3.1) that can also be applied. Namely, if $A$ and $B$ are $0–1$ matrices with the same row and column sums, then there is a sequence of operations on $2 \\times 2$ matrices of the form\n$$ \\begin{pmatrix} 0 & 1 \\\\ 1 & 0 \\end{pmatrix} \\to \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix} $$\nor vice versa,which transforms $A$ into $B$. If we identify 0 and 1 with red and black, then the given coloring and the checkerboard coloring both satisfy the sum condition. Since the desired result is clearly true for the checkerboard coloring, and performing the matrix operations does not affect this, the desired result follows in general.\nB-2 By adding and subtracting the two given equations, we obtain the equivalent pair of equations\n$$\n\\begin{array} { l } { 2/x = x ^ { 4 } + 10 x ^ { 2 } y ^ { 2 } + 5 y ^ { 4 } } \\\\ { 1/y = 5 x ^ { 4 } + 10 x ^ { 2 } y ^ { 2 } + y ^ { 4 } . } \\end{array}\n$$\nMultiplying the former by $x$ and the latter by $y$, then adding and subtracting the two resulting equations, we obtain another pair of equations equivalent to the given ones,\n$$\n3 = ( x + y ) ^ { 5 } , \\qquad 1 = ( x - y ) ^ { 5 } .\n$$\nIt follows that $x = (3^{1/5} + 1)/2$ and $y = (3^{1/5} - 1)/2$ is the unique solution satisfying the given equations.\nB-3 Since $(k - 1/2)^2 = k^2 - k + 1/4$ and $(k + 1/2)^2 = k^2 + k + 1/4$, we have that $\\langle n \\rangle = k$ if and only if $k^2 - k + 1 \\le n \\le k^2 + k$. Hence\n$$\n\\begin{aligned} \\sum_{n=1}^{\\infty} \\frac{2^{\\langle n \\rangle} + 2^{-\\langle n \\rangle}}{2^n} & =  \\sum_{k=1}^{\\infty} \\sum_{n, \\langle n \\rangle = k} \\frac{2^{\\langle n \\rangle} + 2^{-\\langle n \\rangle}}{2^n} \\\\ \\\\& =  \\sum_{k=1}^{\\infty} \\sum_{n=k^2-k+1}^{k^2+k} \\frac{2^k + 2^{-k}}{2^n} \\\\ \\\\& =  \\sum_{k=1}^{\\infty} (2^k + 2^{-k})(2^{-k^2+k} - 2^{-k^2-k}) \\\\ \\\\& =  \\sum_{k=1}^{\\infty} (2^{-k(k-2)} - 2^{-k(k+2)}) \\\\ \\\\& =  \\sum_{k=1}^{\\infty} 2^{-k(k-2)} - \\sum_{k=3}^{\\infty} 2^{-k(k-2)} \\\\ \\\\& = 3.\\end{aligned}\n$$\n2",
+    "tables": [],
+    "blocks": [
+      {
+        "category": "text_block",
+        "order": 1,
+        "text": "We cannot have $a = 1$, since $1 - 2^n \\neq 2001$ for any $n$.\nThus the only possibility is $a = 13$. One easily checks\nthat $a = 13, n = 2$ is a solution; all that remains is to\ncheck that no other $n$ works. In fact, if $n > 2$, then\n$13^{n+1} \\equiv 2001 \\equiv 1 \\pmod{8}$. But $13^{n+1} \\equiv 13 \\pmod{8}$\nsince $n$ is even, contradiction. Thus $a = 13, n = 2$ is the unique solution."
+      },
+      {
+        "category": "text_block",
+        "order": 2,
+        "text": "Note: once one has that $n$ is even, one can use that\n$2002 = a^{n+1} + 1 - (a+1)^n$ is divisible by $a+1$ to rule out cases."
+      },
+      {
+        "category": "text_block",
+        "order": 3,
+        "text": "A-6 The answer is yes. Consider the arc of the parabola\n$y = Ax^2$ inside the circle $x^2 + (y - 1)^2 = 1$, where we\ninitially assume that $A > 1/2$. This intersects the circle\nin three points, $(0,0)$ and $(\\pm\\sqrt{2A-1}/A, (2A-1)/A)$.\nWe claim that for $A$ sufficiently large, the length $L$ of\nthe parabolic arc between $(0,0)$ and $(\\sqrt{2A-1}/A, (2A-1)/A)$ is greater than 2, which implies the desired result\nby symmetry. We express $L$ using the usual formula for arclength:"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 4,
+        "latex": "$$\n\\begin{aligned}L&=\\int_{0}^{\\sqrt{2A-1}/A}\\sqrt{1+(2Ax)^2}dx\\\\&=\\frac{1}{2A}\\int_{0}^{2\\sqrt{2A-1}}\\sqrt{1+x^2}dx\\\\&=2+\\frac{1}{2A}\\left(\\int_{0}^{2\\sqrt{2A-1}}(\\sqrt{1+x^2}-x)dx-2\\right),\\end{aligned}\n$$"
+      },
+      {
+        "category": "text_block",
+        "order": 5,
+        "text": "where we have artificially introduced $-x$ into the integrand in the last step. Now, for $x \\geq 0$,"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 6,
+        "latex": "$$\n\\sqrt{1+x^2}-x = \\frac{1}{\\sqrt{1+x^2}+x} > \\frac{1}{2\\sqrt{1+x^2}} \\geq \\frac{1}{2(x+1)};\n$$"
+      },
+      {
+        "category": "text_block",
+        "order": 7,
+        "text": "since $\\int_{0}^{\\infty} dx/(2(x+1))$ diverges, so does $\\int_{0}^{\\infty}(\\sqrt{1+x^2}-x) dx$. Hence, for sufficiently large $A$, we have $\\int_{0}^{2\\sqrt{2A-1}}(\\sqrt{1+x^2}-x) dx > 2$, and hence $L > 2$."
+      },
+      {
+        "category": "text_block",
+        "order": 8,
+        "text": "Note: a numerical computation shows that one must take $A > 34.7$ to obtain $L > 2$, and that the maximum value of $L$ is about 4.0027, achieved for $A \\approx 94.1$."
+      },
+      {
+        "category": "text_block",
+        "order": 9,
+        "text": "B-1 Let $R$ (resp. $B$) denote the set of red (resp. black) squares in such a coloring, and for $s \\in R \\cup B$, let $f(s)n+g(s)+1$ denote the number written in square $s$, where $0 \\leq f(s),g(s) \\leq n-1$. Then it is clear that the value of $f(s)$ depends only on the row of $s$, while the value of $g(s)$ depends only on the column of $s$. Since every row contains exactly $n/2$ elements of $R$ and $n/2$ elements of $B$,"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 10,
+        "latex": "$$\n\\sum_{s \\in R} f(s) = \\sum_{s \\in B} f(s).\n$$"
+      },
+      {
+        "category": "text_block",
+        "order": 11,
+        "text": "Similarly, because every column contains exactly $n / 2$ elements of $R$ and $n / 2$ elements of $B$,"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 12,
+        "latex": "$$ \\sum_{s \\in R} g(s) = \\sum_{s \\in B} g(s). $$"
+      },
+      {
+        "category": "text_block",
+        "order": 13,
+        "text": "It follows that"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 14,
+        "latex": "$$ \\sum_{s \\in \\mathcal{R}} f(s)n + g(s) + 1 = \\sum_{s \\in \\mathcal{B}} f(s)n + g(s) + 1, $$"
+      },
+      {
+        "category": "text_block",
+        "order": 15,
+        "text": "as desired."
+      },
+      {
+        "category": "text_block",
+        "order": 16,
+        "text": "Note: Richard Stanley points out a theorem of Ryser (see Ryser, Combinatorial Mathematics, Theorem 3.1) that can also be applied. Namely, if $A$ and $B$ are $0–1$ matrices with the same row and column sums, then there is a sequence of operations on $2 \\times 2$ matrices of the form"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 17,
+        "latex": "$$ \\begin{pmatrix} 0 & 1 \\\\ 1 & 0 \\end{pmatrix} \\to \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix} $$"
+      },
+      {
+        "category": "text_block",
+        "order": 18,
+        "text": "or vice versa,which transforms $A$ into $B$. If we identify 0 and 1 with red and black, then the given coloring and the checkerboard coloring both satisfy the sum condition. Since the desired result is clearly true for the checkerboard coloring, and performing the matrix operations does not affect this, the desired result follows in general."
+      },
+      {
+        "category": "text_block",
+        "order": 19,
+        "text": "B-2 By adding and subtracting the two given equations, we obtain the equivalent pair of equations"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 20,
+        "latex": "$$\n\\begin{array} { l } { 2/x = x ^ { 4 } + 10 x ^ { 2 } y ^ { 2 } + 5 y ^ { 4 } } \\\\ { 1/y = 5 x ^ { 4 } + 10 x ^ { 2 } y ^ { 2 } + y ^ { 4 } . } \\end{array}\n$$"
+      },
+      {
+        "category": "text_block",
+        "order": 21,
+        "text": "Multiplying the former by $x$ and the latter by $y$, then adding and subtracting the two resulting equations, we obtain another pair of equations equivalent to the given ones,"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 22,
+        "latex": "$$\n3 = ( x + y ) ^ { 5 } , \\qquad 1 = ( x - y ) ^ { 5 } .\n$$"
+      },
+      {
+        "category": "text_block",
+        "order": 23,
+        "text": "It follows that $x = (3^{1/5} + 1)/2$ and $y = (3^{1/5} - 1)/2$ is the unique solution satisfying the given equations."
+      },
+      {
+        "category": "text_block",
+        "order": 24,
+        "text": "B-3 Since $(k - 1/2)^2 = k^2 - k + 1/4$ and $(k + 1/2)^2 = k^2 + k + 1/4$, we have that $\\langle n \\rangle = k$ if and only if $k^2 - k + 1 \\le n \\le k^2 + k$. Hence"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 25,
+        "latex": "$$\n\\begin{aligned} \\sum_{n=1}^{\\infty} \\frac{2^{\\langle n \\rangle} + 2^{-\\langle n \\rangle}}{2^n} & =  \\sum_{k=1}^{\\infty} \\sum_{n, \\langle n \\rangle = k} \\frac{2^{\\langle n \\rangle} + 2^{-\\langle n \\rangle}}{2^n} \\\\ \\\\& =  \\sum_{k=1}^{\\infty} \\sum_{n=k^2-k+1}^{k^2+k} \\frac{2^k + 2^{-k}}{2^n} \\\\ \\\\& =  \\sum_{k=1}^{\\infty} (2^k + 2^{-k})(2^{-k^2+k} - 2^{-k^2-k}) \\\\ \\\\& =  \\sum_{k=1}^{\\infty} (2^{-k(k-2)} - 2^{-k(k+2)}) \\\\ \\\\& =  \\sum_{k=1}^{\\infty} 2^{-k(k-2)} - \\sum_{k=3}^{\\infty} 2^{-k(k-2)} \\\\ \\\\& = 3.\\end{aligned}\n$$"
+      },
+      {
+        "category": "page_number",
+        "order": null,
+        "text": "2"
+      }
+    ]
+  }
+}

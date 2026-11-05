@@ -1,0 +1,16 @@
+[package]
+name = "agentcpm/iface-session"
+version = "0.1.0"
+kind = "bundle"
+description = "AgentCPM iface-session 契约（D72；源码 verbatim 自 kernel/iface/src/session）"
+license = "Apache-2.0"
+repository = "https://codehub.devcloud.cn-north-4.huaweicloud.com/5a5fe37f080d4dcdab39d8b3ea837bb1/agent-kernel.git"
+keywords = ["iface", "session", "contract"]
+
+# D72：mint `Kind::Iface`；iface 包不要求 subkind / bin / dist / template，只要求声明 ≥1 个 interface 名。
+[provides]
+interfaces = ["session"]
+skills = ["iface-session"]
+
+[requires]
+api = ">=0.1"

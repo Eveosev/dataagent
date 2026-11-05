@@ -1,0 +1,27 @@
+{
+  "source": "beaverbench/beaver-query",
+  "id": "nova_583",
+  "db": "nova",
+  "question": "For each instance VM state and migration status, considering only migrations that are not hidden and only **active** migrations (i.e., migration status not in ('accepted', 'confirmed', 'reverted', 'error', 'failed', 'completed')), return the number of instances involved and the minimum total memory recorded for the migration. Do not return any rounded answers.",
+  "sql": "SELECT i.VM_STATE AS vm_state, m.STATUS AS migration_status, COUNT(i.ID) AS instance_count, MIN(m.MEMORY_TOTAL) AS min_memory_total FROM INSTANCES i JOIN MIGRATIONS m ON i.UUID = m.INSTANCE_UUID WHERE m.HIDDEN = 0 AND m.STATUS NOT IN ('accepted', 'confirmed', 'reverted', 'error', 'failed', 'completed') GROUP BY i.VM_STATE, m.STATUS;",
+  "tables": "[\"INSTANCES\", \"MIGRATIONS\"]",
+  "join_keys": "[[\"INSTANCES.UUID\", \"MIGRATIONS.INSTANCE_UUID\"]]",
+  "column_mapping": "{\"instance VM state\": [\"INSTANCES.VM_STATE\"], \"migration status\": [\"MIGRATIONS.STATUS\"], \"migrations that are not hidden\": [\"MIGRATIONS.HIDDEN\"], \"number of instances involved\": [\"INSTANCES.ID\"], \"minimum total memory recorded for the migration\": [\"MIGRATIONS.MEMORY_TOTAL\"]}",
+  "domain_knowledge": "[\"\\\"Active migrations\\\" is predicated by \\\"migrations.status NOT IN ('accepted', 'confirmed', 'reverted', 'error', 'failed', 'completed')\\\"\"]",
+  "sub_questions": "[]",
+  "sub_sqls": "[]",
+  "category": "domain-specific query",
+  "detailed_category": "base",
+  "case_id": "B05-beaver-0554",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT i.VM_STATE AS vm_state, m.STATUS AS migration_status, COUNT(i.ID) AS instance_count, MIN(m.MEMORY_TOTAL) AS min_memory_total FROM INSTANCES i JOIN MIGRATIONS m ON i.UUID = m.INSTANCE_UUID WHERE m.HIDDEN = 0 AND m.STATUS NOT IN ('accepted', 'confirmed', 'reverted', 'error', 'failed', 'completed') GROUP BY i.VM_STATE, m.STATUS;",
+    "sub_sqls": "[]",
+    "db": "nova",
+    "tables": "[\"INSTANCES\", \"MIGRATIONS\"]",
+    "join_keys": "[[\"INSTANCES.UUID\", \"MIGRATIONS.INSTANCE_UUID\"]]",
+    "column_mapping": "{\"instance VM state\": [\"INSTANCES.VM_STATE\"], \"migration status\": [\"MIGRATIONS.STATUS\"], \"migrations that are not hidden\": [\"MIGRATIONS.HIDDEN\"], \"number of instances involved\": [\"INSTANCES.ID\"], \"minimum total memory recorded for the migration\": [\"MIGRATIONS.MEMORY_TOTAL\"]}",
+    "category": "domain-specific query",
+    "db_archive": "bench://beaver-table/beaver_db.zip"
+  }
+}

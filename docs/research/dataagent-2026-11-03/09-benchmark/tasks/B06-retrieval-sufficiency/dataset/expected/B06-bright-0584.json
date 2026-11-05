@@ -1,0 +1,68 @@
+{
+  "source": "xlangai/BRIGHT",
+  "query_id": "8",
+  "query": "## Essential Problem \n\nThe essential problem is to write a function called `truncateSentence` that takes two arguments:\n\n* `s`: A string representing a sentence.\n* `k`: An integer representing the desired number of words in the truncated sentence.\n\nThe function should return a new string containing only the first `k` words of the original sentence, separated by spaces. \n\n## Relevant Information\n\nTo solve this problem, we need to consider the following information:\n\n* **String manipulation**: We need to be able to split the sentence string into individual words and then select the first `k` words. \n* **Word boundaries**: We need to identify the spaces that separate words, but not spaces within words.\n* **Edge cases**: We need to handle cases where the sentence is shorter than `k` words, or where `k` is negative.\n\n## Draft Answer\n\nHere is a draft answer for the `truncateSentence` function in Pony:\n\n```pony\nfun truncateSentence(s: String, k: I32): String =>\n  let words = s.split(\" \")\n  if words.len < k then\n    return s\n  else if k <= 0 then\n    return \"\"\n  else\n    return words.take(k).join(\" \")\n```\n\nThis code first splits the sentence string into a list of words using the `split` function with a space as the delimiter. \n\nThen, it checks for edge cases:\n\n* If the number of words in the sentence is less than `k`, the original sentence is returned.\n* If `k` is less than or equal to 0, an empty string is returned.\n\nOtherwise, the code takes the first `k` words from the list using the `take` function and joins them back into a string using the `join` function with a space as the delimiter.\n\nThis solution considers the essential problem, relevant information, and edge cases to provide a correct and efficient implementation of the `truncateSentence` function. \n",
+  "gold_ids": [
+    "Pony/src-builtin-string-_143.txt",
+    "Pony/4_control-structures_18.txt",
+    "Pony/4_control-structures_17.txt",
+    "Pony/4_control-structures_2.txt",
+    "Pony/4_control-structures_12.txt",
+    "Pony/4_control-structures_1.txt",
+    "Pony/2_ops_2.txt",
+    "Pony/4_control-structures_19.txt",
+    "Pony/builtin-String-_53.txt",
+    "Pony/4_control-structures_15.txt",
+    "Pony/5_methods_1.txt",
+    "Pony/4_control-structures_14.txt",
+    "Pony/1_variables_1.txt",
+    "Pony/1_variables_2.txt",
+    "Pony/4_control-structures_3.txt",
+    "Pony/2_primitives_3.txt",
+    "Pony/4_control-structures_13.txt",
+    "Pony/4_control-structures_11.txt",
+    "Pony/2_ops_1.txt",
+    "Pony/4_control-structures_16.txt"
+  ],
+  "gold_answer": "N/A",
+  "corpus": "documents/pony-00000-of-00001.parquet",
+  "case_id": "B06-bright-0584",
+  "expected": {
+    "kind": "retrieval",
+    "gold_ids": [
+      "Pony/src-builtin-string-_143.txt",
+      "Pony/4_control-structures_18.txt",
+      "Pony/4_control-structures_17.txt",
+      "Pony/4_control-structures_2.txt",
+      "Pony/4_control-structures_12.txt",
+      "Pony/4_control-structures_1.txt",
+      "Pony/2_ops_2.txt",
+      "Pony/4_control-structures_19.txt",
+      "Pony/builtin-String-_53.txt",
+      "Pony/4_control-structures_15.txt",
+      "Pony/5_methods_1.txt",
+      "Pony/4_control-structures_14.txt",
+      "Pony/1_variables_1.txt",
+      "Pony/1_variables_2.txt",
+      "Pony/4_control-structures_3.txt",
+      "Pony/2_primitives_3.txt",
+      "Pony/4_control-structures_13.txt",
+      "Pony/4_control-structures_11.txt",
+      "Pony/2_ops_1.txt",
+      "Pony/4_control-structures_16.txt"
+    ],
+    "gold_ids_long": [
+      "Pony/4_control-structures.txt",
+      "Pony/builtin-String-.txt",
+      "Pony/src-builtin-string-.txt",
+      "Pony/5_methods.txt",
+      "Pony/1_variables.txt",
+      "Pony/2_primitives.txt",
+      "Pony/2_ops.txt"
+    ],
+    "gold_answer": "N/A",
+    "excluded_ids": [
+      "N/A"
+    ]
+  }
+}

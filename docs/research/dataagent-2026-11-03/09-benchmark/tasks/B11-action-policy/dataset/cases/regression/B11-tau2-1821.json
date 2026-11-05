@@ -1,0 +1,34 @@
+{
+  "case_id": "B11-tau2-1821",
+  "task_id": "B11",
+  "split_role": "regression",
+  "inputs": [
+    {
+      "kind": "scenario",
+      "ref": "fixtures/tau2-telecom-[mms_issue]airplane_mode_on|bad_wifi_calling|break_apn_mms_setting|break_app_sms_permission|unseat_sim_card|user_abroad_roaming_enabled_off[PERSONA:Easy].md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B11-tau2-1821.json"
+  },
+  "evidence": [
+    "fixtures/tau2-telecom-[mms_issue]airplane_mode_on|bad_wifi_calling|break_apn_mms_setting|break_app_sms_permission|unseat_sim_card|user_abroad_roaming_enabled_off[PERSONA:Easy].md#任务指令"
+  ],
+  "tags": [
+    "tau2",
+    "telecom",
+    "reward:['ENV_ASSERTION']"
+  ],
+  "source": "tau2",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

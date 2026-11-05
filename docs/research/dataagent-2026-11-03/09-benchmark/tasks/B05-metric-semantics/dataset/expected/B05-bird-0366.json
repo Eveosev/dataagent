@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 365,
+  "question": "I'm comparing how power-rich male and female heroes are. For all male heroes and all female heroes that have a documented real full name, what is the average number of superpowers per hero for each gender? Please compute each average over the entire hero population of that gender, not just the heroes that happen to have power records. Give me both averages, each rounded to two decimal places, and nothing else.",
+  "evidence": "Full name: the hero's real, full personal name (first name plus last name, and optionally middle names); single names such as mononyms or aliases are not a full name.",
+  "gold_sql": "SELECT ROUND(CAST(SUM(CASE WHEN g.gender = 'Male' THEN COALESCE(pc.cnt, 0) ELSE 0 END) AS REAL) / SUM(CASE WHEN g.gender = 'Male' THEN 1 ELSE 0 END), 2) AS avg_superpowers_male, ROUND(CAST(SUM(CASE WHEN g.gender = 'Female' THEN COALESCE(pc.cnt, 0) ELSE 0 END) AS REAL) / SUM(CASE WHEN g.gender = 'Female' THEN 1 ELSE 0 END), 2) AS avg_superpowers_female FROM superhero AS s INNER JOIN gender AS g ON s.gender_id = g.id LEFT JOIN (SELECT hero_id, COUNT(*) AS cnt FROM hero_power GROUP BY hero_id) AS pc ON pc.hero_id = s.id WHERE s.full_name LIKE '% %'",
+  "db_id": "superhero",
+  "case_id": "B05-bird-0366",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT ROUND(CAST(SUM(CASE WHEN g.gender = 'Male' THEN COALESCE(pc.cnt, 0) ELSE 0 END) AS REAL) / SUM(CASE WHEN g.gender = 'Male' THEN 1 ELSE 0 END), 2) AS avg_superpowers_male, ROUND(CAST(SUM(CASE WHEN g.gender = 'Female' THEN COALESCE(pc.cnt, 0) ELSE 0 END) AS REAL) / SUM(CASE WHEN g.gender = 'Female' THEN 1 ELSE 0 END), 2) AS avg_superpowers_female FROM superhero AS s INNER JOIN gender AS g ON s.gender_id = g.id LEFT JOIN (SELECT hero_id, COUNT(*) AS cnt FROM hero_power GROUP BY hero_id) AS pc ON pc.hero_id = s.id WHERE s.full_name LIKE '% %'",
+    "db_id": "superhero",
+    "evidence": "Full name: the hero's real, full personal name (first name plus last name, and optionally middle names); single names such as mononyms or aliases are not a full name."
+  }
+}

@@ -1,0 +1,169 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "redshift",
+  "pipeline": "movielens",
+  "data_model": {
+    "models": [
+      {
+        "name": "movielens__movies",
+        "description": "Each record represents a movie.",
+        "columns": [
+          {
+            "name": "movieid",
+            "description": "Unique identifier for the movie."
+          },
+          {
+            "name": "country",
+            "description": "The country where the movie was produced."
+          },
+          {
+            "name": "isenglish",
+            "description": "is the movie in English."
+          },
+          {
+            "name": "avg_rating",
+            "description": "The average rating of the movie."
+          },
+          {
+            "name": "number_of_audience_occupation_5",
+            "description": "The number of audience with occupation 5 who watched the movie, replace NULL values with 0."
+          },
+          {
+            "name": "number_of_ratings_by_female_users",
+            "description": "The number of ratings given by female users for the movie, replace NULL values with 0."
+          },
+          {
+            "name": "percentage_of_female_actresses",
+            "description": "The percentage of female actresses in the movie"
+          },
+          {
+            "name": "running_time_3_ave_revenue_1",
+            "description": "Set to 1 if the movie has a running time of 3 and at least one director with an average revenue of 1; otherwise, set to 0."
+          }
+        ]
+      },
+      {
+        "name": "movielens__directors",
+        "description": "Each record represents a director.",
+        "columns": [
+          {
+            "name": "directorid",
+            "description": "Unique identifier for the director."
+          },
+          {
+            "name": "d_quality",
+            "description": "The quality of the director."
+          },
+          {
+            "name": "avg_revenue",
+            "description": "The average revenue of the director."
+          },
+          {
+            "name": "num_action_movie",
+            "description": "The number of action movies directed by the director, replace NULL values with 0."
+          },
+          {
+            "name": "num_movie_avg_rating_over_3",
+            "description": "The number of movies with an average rating over 3 directed by the director, replace NULL values with 0."
+          },
+          {
+            "name": "most_common_film_genres",
+            "description": "The most common film genres directed by the director, with ties broken by ascending order of the genre."
+          },
+          {
+            "name": "has_quality_3_and_at_least_2_genres",
+            "description": "Set to 1 if the director has a quality of at least 3 and has directed at least 2 genres, otherwise, set to 0"
+          },
+          {
+            "name": "is_called_box_office_success_paradox",
+            "description": "Set to 1 if the director is called the \"box office success paradox\", otherwise, set to 0. The “box office success paradox” is defined as a director whose average revenue is greater than his or her quality."
+          }
+        ]
+      },
+      {
+        "name": "movielens__actors",
+        "description": "Each record represents an actor.",
+        "columns": [
+          {
+            "name": "actorid",
+            "description": "Unique identifier for the actor."
+          },
+          {
+            "name": "a_gender",
+            "description": "The gender of the actor."
+          },
+          {
+            "name": "a_quality",
+            "description": "The quality of the actor."
+          },
+          {
+            "name": "num_rating_over_3",
+            "description": "The number of movies the actor has acted in with an average user rating over 3, replace NULL values with 0."
+          },
+          {
+            "name": "has_acted_in_at_least_2_French_films",
+            "description": "Set to 1 if the actor has acted in at least 2 French films, otherwise, set to 0"
+          },
+          {
+            "name": "num_film",
+            "description": "The number of films the actor has acted in, replace NULL values with 0."
+          },
+          {
+            "name": "quality_rating_3_and_acted_English_USA_movies",
+            "description": "Set to 1 if the actor has a quality rating of 3 and has acted in English USA movies, otherwise, set to 0"
+          },
+          {
+            "name": "num_horror_movies",
+            "description": "The number of horror movies the actor has acted in, replace NULL values with 0."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    redshift_definition_id: f7a7d195-377f-cf5b-70a5-be6b819019dc\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://movielens-bucket/directors.csv\n    sync_mode: full_refresh_append\n    table: directors\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - users\nflat_files:\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=1_0ehbxSXXTOeCG09RUOTid-VO-_Q44iw\n  sync_mode: full_refresh_append\n  table: actors\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: movielens\n    sync_mode: full_refresh_append\n    tables:\n    - movies2actors\n    - movies2directors\npostgres:\n  config:\n    database: movielens\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - movies\n    - u2base\n    user: postgres\nredshift:\n  config:\n    host: <redshift_hostname>\n    port: <redshift_port>\n    database: <redshift_db>\n    username: <redshift_username>\n    password: <redshift_pwd>\n    schema: movielens\n    s3_bucket_name: <redshift_s3_bucket>\n    s3_bucket_region: <redshift_s3_region>\n    access_key_id: <redshift_s3_access_key>\n    secret_access_key: <redshift_s3_secret_key>\n",
+  "case_id": "B14-elt-0156",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "movielens__movies",
+        "columns": [
+          "movieid",
+          "country",
+          "isenglish",
+          "avg_rating",
+          "number_of_audience_occupation_5",
+          "number_of_ratings_by_female_users",
+          "percentage_of_female_actresses",
+          "running_time_3_ave_revenue_1"
+        ]
+      },
+      {
+        "name": "movielens__directors",
+        "columns": [
+          "directorid",
+          "d_quality",
+          "avg_revenue",
+          "num_action_movie",
+          "num_movie_avg_rating_over_3",
+          "most_common_film_genres",
+          "has_quality_3_and_at_least_2_genres",
+          "is_called_box_office_success_paradox"
+        ]
+      },
+      {
+        "name": "movielens__actors",
+        "columns": [
+          "actorid",
+          "a_gender",
+          "a_quality",
+          "num_rating_over_3",
+          "has_acted_in_at_least_2_French_films",
+          "num_film",
+          "quality_rating_3_and_acted_English_USA_movies",
+          "num_horror_movies"
+        ]
+      }
+    ]
+  }
+}

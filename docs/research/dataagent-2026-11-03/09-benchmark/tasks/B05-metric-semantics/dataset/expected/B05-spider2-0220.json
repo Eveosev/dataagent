@@ -1,0 +1,16 @@
+{
+  "source": "xlangai/spider2-lite",
+  "raw": {
+    "instance_id": "local299",
+    "db": "bank_sales_trading",
+    "question": "Could you calculate each user’s average balance over the past 30 days, computed daily? Then, for each month (based on the 1st of each month), find the highest of these daily averages for each user. Add up these maximum values across all users for each month as the final result. Please use the first month as a baseline for previous balances and exclude it from the output.",
+    "external_knowledge": null
+  },
+  "case_id": "B05-spider2-0220",
+  "expected": {
+    "kind": "sql",
+    "instance_id": "local299",
+    "sql": null,
+    "db": "bank_sales_trading"
+  }
+}

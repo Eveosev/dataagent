@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 447,
+  "question": "In the thrombosis prediction cohort, I want to gauge how often the most recent anti-ribonuclear protein measurement among female patients was markedly elevated while CPK stayed low at that same measurement. Please give me a single integer: the number of female patients whose most recent anti-ribonuclear protein titer was above 64 and whose CPK from that same laboratory record was below 250. Above 64 means strictly greater than 64, and below 250 means strictly less than 250.",
+  "evidence": "Anti-ribonuclear protein is an autoantibody measured as a titer in the blood; a negative result means the antibody was not detected.",
+  "gold_sql": "SELECT COUNT(DISTINCT p.ID) AS female_patients FROM Patient AS p JOIN Laboratory AS l ON l.ID = p.ID WHERE p.SEX = 'F' AND l.RNP IS NOT NULL AND l.Date = (SELECT MAX(l2.Date) FROM Laboratory AS l2 WHERE l2.ID = p.ID AND l2.RNP IS NOT NULL) AND CAST(l.RNP AS REAL) > 64 AND l.CPK < 250",
+  "db_id": "thrombosis_prediction",
+  "case_id": "B05-bird-0448",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT COUNT(DISTINCT p.ID) AS female_patients FROM Patient AS p JOIN Laboratory AS l ON l.ID = p.ID WHERE p.SEX = 'F' AND l.RNP IS NOT NULL AND l.Date = (SELECT MAX(l2.Date) FROM Laboratory AS l2 WHERE l2.ID = p.ID AND l2.RNP IS NOT NULL) AND CAST(l.RNP AS REAL) > 64 AND l.CPK < 250",
+    "db_id": "thrombosis_prediction",
+    "evidence": "Anti-ribonuclear protein is an autoantibody measured as a titer in the blood; a negative result means the antibody was not detected."
+  }
+}

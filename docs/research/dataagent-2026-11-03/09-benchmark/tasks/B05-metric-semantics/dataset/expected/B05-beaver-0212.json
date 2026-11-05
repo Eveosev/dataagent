@@ -1,0 +1,27 @@
+{
+  "source": "beaverbench/beaver-query",
+  "id": "dw_2924",
+  "db": "dw",
+  "question": "For degree-granting courses in the School of Engineering, show the course description, department name, subject title, and the subject's grade type description, but only include those courses where the total units for the subject exceed the average total units for that department. Do not return any rounded answers.",
+  "sql": "WITH inner_cte AS ( SELECT t0.COURSE_DESCRIPTION, t0.DEPARTMENT_NAME, t1.SUBJECT_TITLE, t1.TOTAL_UNITS, t1.GRADE_TYPE_DESC, t1.DEPARTMENT_NAME AS SUBJECT_DEPT FROM SIS_COURSE_DESCRIPTION t0 JOIN COURSE_CATALOG_SUBJECT_OFFERED t1 ON t0.COURSE = t1.SUBJECT_CODE WHERE t0.SCHOOL_NAME = 'Engineering' AND t0.IS_DEGREE_GRANTING = 'Y' ) , dept_avg_units AS ( SELECT SUBJECT_DEPT, AVG(TOTAL_UNITS) AS avg_units FROM inner_cte GROUP BY SUBJECT_DEPT ) SELECT i.COURSE_DESCRIPTION, i.DEPARTMENT_NAME, i.SUBJECT_TITLE, i.GRADE_TYPE_DESC FROM inner_cte i JOIN dept_avg_units d ON i.SUBJECT_DEPT = d.SUBJECT_DEPT WHERE i.TOTAL_UNITS > d.avg_units;",
+  "tables": "[\"SIS_COURSE_DESCRIPTION\", \"COURSE_CATALOG_SUBJECT_OFFERED\"]",
+  "join_keys": "[[\"COURSE_CATALOG_SUBJECT_OFFERED.SUBJECT_CODE\", \"SIS_COURSE_DESCRIPTION.COURSE\"]]",
+  "column_mapping": "{\"degree-granting courses\": [\"SIS_COURSE_DESCRIPTION.IS_DEGREE_GRANTING\"], \"School of Engineering\": [\"SIS_COURSE_DESCRIPTION.SCHOOL_NAME\"], \"course description\": [\"SIS_COURSE_DESCRIPTION.COURSE_DESCRIPTION\"], \"department name\": [\"SIS_COURSE_DESCRIPTION.DEPARTMENT_NAME\", \"COURSE_CATALOG_SUBJECT_OFFERED.DEPARTMENT_NAME\"], \"subject title\": [\"COURSE_CATALOG_SUBJECT_OFFERED.SUBJECT_TITLE\"], \"subject's grade type description\": [\"COURSE_CATALOG_SUBJECT_OFFERED.GRADE_TYPE_DESC\"], \"total units for the subject\": [\"COURSE_CATALOG_SUBJECT_OFFERED.TOTAL_UNITS\"]}",
+  "domain_knowledge": "[]",
+  "sub_questions": "[\"For courses in the School of Engineering that are degree granting, show the course description, department name, subject title, and assign row numbers within a window of 2 preceding and 1 following rows ordered by subject title.\"]",
+  "sub_sqls": "[\"SELECT t0.COURSE_DESCRIPTION, t0.DEPARTMENT_NAME, t1.SUBJECT_TITLE, ROW_NUMBER() OVER (ORDER BY t1.SUBJECT_TITLE ROWS BETWEEN 2 PRECEDING AND 1 FOLLOWING) AS window_column FROM SIS_COURSE_DESCRIPTION t0 JOIN COURSE_CATALOG_SUBJECT_OFFERED t1 ON t0.COURSE = t1.SUBJECT_CODE WHERE t0.SCHOOL_NAME = 'Engineering' AND t0.IS_DEGREE_GRANTING = 'Y'\"]",
+  "category": "complex query",
+  "detailed_category": "nested",
+  "case_id": "B05-beaver-0212",
+  "expected": {
+    "kind": "sql",
+    "sql": "WITH inner_cte AS ( SELECT t0.COURSE_DESCRIPTION, t0.DEPARTMENT_NAME, t1.SUBJECT_TITLE, t1.TOTAL_UNITS, t1.GRADE_TYPE_DESC, t1.DEPARTMENT_NAME AS SUBJECT_DEPT FROM SIS_COURSE_DESCRIPTION t0 JOIN COURSE_CATALOG_SUBJECT_OFFERED t1 ON t0.COURSE = t1.SUBJECT_CODE WHERE t0.SCHOOL_NAME = 'Engineering' AND t0.IS_DEGREE_GRANTING = 'Y' ) , dept_avg_units AS ( SELECT SUBJECT_DEPT, AVG(TOTAL_UNITS) AS avg_units FROM inner_cte GROUP BY SUBJECT_DEPT ) SELECT i.COURSE_DESCRIPTION, i.DEPARTMENT_NAME, i.SUBJECT_TITLE, i.GRADE_TYPE_DESC FROM inner_cte i JOIN dept_avg_units d ON i.SUBJECT_DEPT = d.SUBJECT_DEPT WHERE i.TOTAL_UNITS > d.avg_units;",
+    "sub_sqls": "[\"SELECT t0.COURSE_DESCRIPTION, t0.DEPARTMENT_NAME, t1.SUBJECT_TITLE, ROW_NUMBER() OVER (ORDER BY t1.SUBJECT_TITLE ROWS BETWEEN 2 PRECEDING AND 1 FOLLOWING) AS window_column FROM SIS_COURSE_DESCRIPTION t0 JOIN COURSE_CATALOG_SUBJECT_OFFERED t1 ON t0.COURSE = t1.SUBJECT_CODE WHERE t0.SCHOOL_NAME = 'Engineering' AND t0.IS_DEGREE_GRANTING = 'Y'\"]",
+    "db": "dw",
+    "tables": "[\"SIS_COURSE_DESCRIPTION\", \"COURSE_CATALOG_SUBJECT_OFFERED\"]",
+    "join_keys": "[[\"COURSE_CATALOG_SUBJECT_OFFERED.SUBJECT_CODE\", \"SIS_COURSE_DESCRIPTION.COURSE\"]]",
+    "column_mapping": "{\"degree-granting courses\": [\"SIS_COURSE_DESCRIPTION.IS_DEGREE_GRANTING\"], \"School of Engineering\": [\"SIS_COURSE_DESCRIPTION.SCHOOL_NAME\"], \"course description\": [\"SIS_COURSE_DESCRIPTION.COURSE_DESCRIPTION\"], \"department name\": [\"SIS_COURSE_DESCRIPTION.DEPARTMENT_NAME\", \"COURSE_CATALOG_SUBJECT_OFFERED.DEPARTMENT_NAME\"], \"subject title\": [\"COURSE_CATALOG_SUBJECT_OFFERED.SUBJECT_TITLE\"], \"subject's grade type description\": [\"COURSE_CATALOG_SUBJECT_OFFERED.GRADE_TYPE_DESC\"], \"total units for the subject\": [\"COURSE_CATALOG_SUBJECT_OFFERED.TOTAL_UNITS\"]}",
+    "category": "complex query",
+    "db_archive": "bench://beaver-table/beaver_db.zip"
+  }
+}

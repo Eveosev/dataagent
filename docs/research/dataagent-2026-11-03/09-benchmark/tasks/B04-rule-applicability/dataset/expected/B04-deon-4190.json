@@ -1,0 +1,36 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_c4ecb127",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "protected_basis",
+    "act_type",
+    "eviction_is_denial",
+    "statute_25_1452_a1_unlawful",
+    "nonvar",
+    "statute_25_1452_a2_unlawful",
+    "statute_25_1452_closed_list",
+    "scenario_state",
+    "scenario_year",
+    "person",
+    "landlord",
+    "tenant",
+    "housing",
+    "tenancy",
+    "eviction_event",
+    "motive",
+    "event_act_type",
+    "unlawful_discriminatory_housing_practice",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    State: Oklahoma\n    Focus year: 2021\n\n    Question: Is it unlawful to evict a tenant because of their gender identity?\n*/\n\n% -----------------------------\n% Basic domain modeling helpers\n% -----------------------------\n\n% We treat \"eviction\" (because of a protected characteristic) as \"otherwise make unavailable or deny any housing\"\n% within 25 OK Stat  25-1452(A)(1) (2021).\n\n% -----------------------------\n% Statute encoding (Oklahoma)\n% -----------------------------\n\n/*\n  25 OK Stat  25-1452 (2021)\n\n  Key parts encoded:\n  -  25-1452(A)(1): unlawful discriminatory housing practice to \"otherwise make unavailable or deny any housing\"\n    because of race, color, religion, gender, national origin, age, familial status, or disability.\n  -  25-1452(A)(2): unlawful to discriminate in terms/conditions/privileges of rental because of those same bases.\n  -  25-1452(C): No other categories/classes protected under  1451-1453.\n*/\n\n% protected_basis/1 is intentionally closed to ONLY the categories listed in the statute.\n% (25 OK Stat  25-1452(A)(1)-(2) and  25-1452(C) (2021))\nprotected_basis(race).\nprotected_basis(color).\nprotected_basis(religion).\nprotected_basis(gender).\nprotected_basis(national_origin).\nprotected_basis(age).\nprotected_basis(familial_status).\nprotected_basis(disability).\n\n% act_type/1 is a controlled vocabulary for the kinds of conduct we reason about.\nact_type(refuse_to_rent).\nact_type(refuse_to_sell).\nact_type(refuse_to_negotiate).\nact_type(make_unavailable_or_deny).\nact_type(discriminate_terms_conditions_privileges).\n\n% eviction_is_denial/1 links eviction to \"make unavailable or deny\" for purposes of  25-1452(A)(1).\n% This is a legal characterization used for the reasoning layer.\neviction_is_denial(make_unavailable_or_deny).\n\n% statute_25_1452_a1_unlawful/3\n% (25 OK Stat  25-1452(A)(1) (2021))\n% Unlawful if a person/agent makes housing unavailable or denies housing because of a protected basis.\nstatute_25_1452_a1_unlawful(Actor, make_unavailable_or_deny, Basis) :-\n    nonvar(Actor),\n    protected_basis(Basis).\n\n% statute_25_1452_a2_unlawful/3\n% (25 OK Stat  25-1452(A)(2) (2021))\n% Unlawful if a person/agent discriminates in terms/conditions/privileges of rental because of a protected basis.\nstatute_25_1452_a2_unlawful(Actor, discriminate_terms_conditions_privileges, Basis) :-\n    nonvar(Actor),\n    protected_basis(Basis).\n\n% statute_25_1452_closed_list/1\n% (25 OK Stat  25-1452(C) (2021))\n% Encodes that only the listed bases are protected. If something is not in protected_basis/1, it is not protected here.\nstatute_25_1452_closed_list(Basis) :-\n    protected_basis(Basis).\n\n% -----------------------------\n% Scenario facts (the question)\n% -----------------------------\n\n% The question is asked in Oklahoma, focus year 2021.\nscenario_state(oklahoma).\nscenario_year(2021).\n\n% Parties and housing\nperson(landlord1).\nperson(tenant1).\nlandlord(landlord1).\ntenant(tenant1).\nhousing(dwelling1).\n\n% Tenant occupies the dwelling (tenancy exists).\ntenancy(tenant1, dwelling1).\n\n% Conduct: landlord evicts the tenant.\n% We encode an eviction as an event and then map it to the statutory act type.\neviction_event(evict1, landlord1, tenant1, dwelling1).\n\n% Motivation asserted by the question: the eviction is because of the tenant's gender identity.\nmotive(evict1, gender_identity).\n\n% scenario_statement/0 succeeds exactly when the factual statement is present:\n% \"An Oklahoma landlord evicts a tenant because of the tenant's gender identity\" (in 2021).\nscenario_statement :-\n    scenario_state(oklahoma),\n    scenario_year(2021),\n    landlord(landlord1),\n    tenant(tenant1),\n    housing(dwelling1),\n    tenancy(tenant1, dwelling1),\n    eviction_event(evict1, landlord1, tenant1, dwelling1),\n    motive(evict1, gender_identity).\n\n% -----------------------------\n% Reasoning layer: apply statute to scenario\n% -----------------------------\n\n% event_act_type/2 maps scenario events into statutory act types.\nevent_act_type(EventId, ActType) :-\n    eviction_event(EventId, _Landlord, _Tenant, _Dwelling),\n    eviction_is_denial(ActType).\n\n% unlawful_discriminatory_housing_practice/1 holds if the scenario event satisfies a statutory prohibition.\nunlawful_discriminatory_housing_practice(EventId) :-\n    eviction_event(EventId, Actor, _Tenant, _Dwelling),\n    event_act_type(EventId, ActType),\n    motive(EventId, Basis),\n    statute_25_1452_closed_list(Basis),              % enforces  25-1452(C) closed list\n    (   statute_25_1452_a1_unlawful(Actor, ActType, Basis)\n    ;   statute_25_1452_a2_unlawful(Actor, ActType, Basis)\n    ).\n\n% -----------------------------\n% Final answer predicate\n% -----------------------------\n\n% housing_answer/1 must be deterministic and return yes/no.\nhousing_answer(yes) :-\n    scenario_statement,\n    unlawful_discriminatory_housing_practice(evict1),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    \\+ unlawful_discriminatory_housing_practice(evict1),\n    !.\n\n% -----------------------------\n% Main entrypoint (required)\n% -----------------------------\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-4190",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is it unlawful to evict a tenant because of their gender identity?"
+  }
+}

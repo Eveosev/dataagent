@@ -1,0 +1,72 @@
+{
+  "source": "xlangai/BRIGHT",
+  "query_id": "37",
+  "query": "## Essential Problem:\n\nThe core problem is to split an input string `s` into an array of substrings based on a specified length `n`. However, the last substring may be shorter if the length of the original string is not evenly divisible by `n`.\n\n## Relevant Information:\n\n* **Input:** String `s` and integer `n` representing the desired substring length.\n* **Output:** Array of strings, where each element is a substring of length `n` except the last one, which might be shorter.\n* **Key Logic:** \n\n    1.  **Iteration:** Iterate over the input string with steps of `n`.\n    2.  **Substrings:** For each step, extract a substring of length `n` from the original string.\n    3.  **Last Substring:** Check if the remaining characters after iterating through the entire string are less than `n`. If so, create a final substring with the remaining characters.\n\n## Draft Answer:\n\nHere's a possible solution in Pony:\n\n```pony\nfun splitString(s: String, n: ISize): Array[String] =>\n    let substrings = Array[String]()\n    var i = 0\n\n    while i < s.length\n        substrings.append(s[i..(i + n - 1)])\n        i += n\n\n    if i < s.length\n        substrings.append(s[i..s.length])\n\n    return substrings\n```\n\nThis code defines a function `splitString` that takes a string `s` and an integer `n` as input and returns an array of strings. \n\n1. It initializes an empty array `substrings` to store the resulting substrings.\n2. It uses a `while` loop to iterate over the string `s` with steps of `n`.\n3. Inside the loop, it extracts a substring of length `n` from the original string using the range operator `[i..(i + n - 1)]` and appends it to the `substrings` array.\n4. After the loop, it checks if there are any remaining characters in the string (`i < s.length`). If so, it creates a final substring with the remaining characters using the range `[i..s.length]` and adds it to the `substrings` array.\n5. Finally, the function returns the `substrings` array.\n\nThis code addresses the essential problem by ensuring that the last substring is shorter than `n` if the length of the original string is not divisible by `n`. It also provides a clear and concise implementation using Pony syntax.",
+  "gold_ids": [
+    "Pony/1_variables_1.txt",
+    "Pony/2_ops_1.txt",
+    "Pony/4_control-structures_16.txt",
+    "Pony/2_ops_2.txt",
+    "Pony/4_control-structures_14.txt",
+    "Pony/4_control-structures_15.txt",
+    "Pony/4_control-structures_2.txt",
+    "Pony/collections-Range-_0.txt",
+    "Pony/1_variables_2.txt",
+    "Pony/4_control-structures_18.txt",
+    "Pony/builtin-String-_36.txt",
+    "Pony/4_control-structures_17.txt",
+    "Pony/2_primitives_3.txt",
+    "Pony/4_control-structures_13.txt",
+    "Pony/4_control-structures_1.txt",
+    "Pony/4_control-structures_19.txt",
+    "Pony/5_methods_1.txt",
+    "Pony/4_control-structures_11.txt",
+    "Pony/3_arithmetic_5.txt",
+    "Pony/4_control-structures_3.txt",
+    "Pony/4_control-structures_12.txt"
+  ],
+  "gold_answer": "N/A",
+  "corpus": "documents/pony-00000-of-00001.parquet",
+  "case_id": "B06-bright-0613",
+  "expected": {
+    "kind": "retrieval",
+    "gold_ids": [
+      "Pony/1_variables_1.txt",
+      "Pony/2_ops_1.txt",
+      "Pony/4_control-structures_16.txt",
+      "Pony/2_ops_2.txt",
+      "Pony/4_control-structures_14.txt",
+      "Pony/4_control-structures_15.txt",
+      "Pony/4_control-structures_2.txt",
+      "Pony/collections-Range-_0.txt",
+      "Pony/1_variables_2.txt",
+      "Pony/4_control-structures_18.txt",
+      "Pony/builtin-String-_36.txt",
+      "Pony/4_control-structures_17.txt",
+      "Pony/2_primitives_3.txt",
+      "Pony/4_control-structures_13.txt",
+      "Pony/4_control-structures_1.txt",
+      "Pony/4_control-structures_19.txt",
+      "Pony/5_methods_1.txt",
+      "Pony/4_control-structures_11.txt",
+      "Pony/3_arithmetic_5.txt",
+      "Pony/4_control-structures_3.txt",
+      "Pony/4_control-structures_12.txt"
+    ],
+    "gold_ids_long": [
+      "Pony/4_control-structures.txt",
+      "Pony/builtin-String-.txt",
+      "Pony/5_methods.txt",
+      "Pony/1_variables.txt",
+      "Pony/2_primitives.txt",
+      "Pony/collections-Range-.txt",
+      "Pony/src-collections-range-.txt",
+      "Pony/2_ops.txt",
+      "Pony/3_arithmetic.txt"
+    ],
+    "gold_answer": "N/A",
+    "excluded_ids": [
+      "N/A"
+    ]
+  }
+}

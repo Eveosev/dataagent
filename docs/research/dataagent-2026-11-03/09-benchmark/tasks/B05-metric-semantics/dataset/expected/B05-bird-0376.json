@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 375,
+  "question": "I'm auditing identity info on our hero profile pages. How many neutral-alignment heroes have a known full name? Just give me the count.",
+  "evidence": "By \"full name\" I mean the hero's real-world identity name, not the superhero/costume name.",
+  "gold_sql": "SELECT COUNT(*) AS neutral_heroes_with_known_full_name FROM superhero AS T1 INNER JOIN alignment AS T2 ON T1.alignment_id = T2.id WHERE T2.alignment = 'Neutral' AND T1.full_name IS NOT NULL AND T1.full_name <> '-'",
+  "db_id": "superhero",
+  "case_id": "B05-bird-0376",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT COUNT(*) AS neutral_heroes_with_known_full_name FROM superhero AS T1 INNER JOIN alignment AS T2 ON T1.alignment_id = T2.id WHERE T2.alignment = 'Neutral' AND T1.full_name IS NOT NULL AND T1.full_name <> '-'",
+    "db_id": "superhero",
+    "evidence": "By \"full name\" I mean the hero's real-world identity name, not the superhero/costume name."
+  }
+}

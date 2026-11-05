@@ -1,0 +1,55 @@
+{
+  "$comment": "generated from dataagent_contracts.core:MetricTime; do not edit",
+  "$id": "dataagent-contracts/0.1/core/MetricTime",
+  "additionalProperties": false,
+  "properties": {
+    "calendar_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Calendar Ref"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "grain": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Grain"
+    },
+    "time_field": {
+      "minLength": 1,
+      "title": "Time Field",
+      "type": "string"
+    }
+  },
+  "required": [
+    "time_field"
+  ],
+  "title": "MetricTime",
+  "type": "object"
+}

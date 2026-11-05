@@ -1,0 +1,21 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "uscis_4ffc62f6",
+  "expect_label": "no",
+  "raw_label": "Dismissed",
+  "rule_predicates": [
+    "decision",
+    "catch",
+    "writeln",
+    "error",
+    "handle_undefined"
+  ],
+  "reference_prolog": "% Case facts\nposted_delivery_bond.\nice_form_i_352_delivery_bond.\nbond_secured_delivery_of_foreign_national.\nbonded_foreign_national.\nice_made_written_request_to_produce.\nfailed_to_produce_bonded_foreign_national.\nice_declared_bond_breached.\nappealed_for_reinstatement.\ninitial_nta_missing_time_or_place.\nobligor_claimed_no_court_date_notice.\nargued_pereira_invalid_nta.\nargued_removal_proceedings_never_commenced.\nargued_nta_defect_prejudiced_delivery.\n\n% Negative/absent case facts represented as defined predicates that fail\nproduced_bonded_foreign_national :- false.\nice_failed_to_make_written_production_request :- false.\ngovernment_prevented_compliance_with_production_request :- false.\nbond_cancelled_before_production_request :- false.\n\n% Legal framework\ndelivery_bond_contract :-\n    posted_delivery_bond,\n    ice_form_i_352_delivery_bond,\n    bond_secured_delivery_of_foreign_national.\n\nbond_condition_required_production :-\n    delivery_bond_contract,\n    bonded_foreign_national,\n    ice_made_written_request_to_produce,\n    \\+ bond_cancelled_before_production_request.\n\nviolation_of_bond_condition :-\n    bond_condition_required_production,\n    failed_to_produce_bonded_foreign_national.\n\ncomplete_nonproduction :-\n    failed_to_produce_bonded_foreign_national,\n    \\+ produced_bonded_foreign_national.\n\nserious_extent_of_violation :-\n    complete_nonproduction.\n\nlegally_sufficient_excuse :-\n    ice_failed_to_make_written_production_request.\n\nlegally_sufficient_excuse :-\n    government_prevented_compliance_with_production_request.\n\n% Pereira/NTA arguments do not excuse failure to comply with an ICE delivery-bond production demand.\nnta_defect_argument_present :-\n    initial_nta_missing_time_or_place,\n    argued_pereira_invalid_nta.\n\nnta_defect_not_delivery_bond_excuse :-\n    nta_defect_argument_present,\n    obligor_claimed_no_court_date_notice,\n    argued_removal_proceedings_never_commenced,\n    argued_nta_defect_prejudiced_delivery.\n\nsubstantial_violation :-\n    violation_of_bond_condition,\n    serious_extent_of_violation,\n    \\+ legally_sufficient_excuse,\n    nta_defect_not_delivery_bond_excuse.\n\nsubstantial_performance :-\n    produced_bonded_foreign_national.\n\nno_substantial_violation :-\n    \\+ substantial_violation.\n\nreinstatement_warranted :-\n    substantial_performance.\n\nreinstatement_warranted :-\n    no_substantial_violation.\n\neligibility_met :-\n    posted_delivery_bond,\n    appealed_for_reinstatement,\n    ice_declared_bond_breached,\n    reinstatement_warranted.\n\ndecision(Result) :-\n    (   eligibility_met\n    ->  Result = 'Accepted'\n    ;   Result = 'Dismissed'\n    ).\n\nmain :-\n    catch(\n        (   decision(Result),\n            writeln(Result)\n        ),\n        error(existence_error(procedure, PI), _),\n        handle_undefined(PI)\n    ).\n\nhandle_undefined(Name/Arity) :-\n    (   current_predicate(Name/OtherArity),\n        OtherArity \\= Arity\n    ->  format('Programming error: called ~w/~w, but only ~w/~w is defined.~n',\n               [Name, Arity, Name, OtherArity])\n    ;   format('Lack of information: predicate ~w/~w is not defined.~n',\n               [Name, Arity])\n    ).\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-5830",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "Dismissed",
+    "question": "Should this case be accepted or dismissed?"
+  }
+}

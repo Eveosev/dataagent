@@ -1,0 +1,37 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_f14cbade",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "integer_days_between",
+    "integer",
+    "at_least_days_after",
+    "statute_tx_24_0061_entitled_to_judgment_and_writ",
+    "eviction_suit",
+    "landlord",
+    "landlord_prevails_in_suit",
+    "statute_tx_24_0061_writ_issuance_allowed",
+    "statute_tx_24_0061_writ_orders_officer_to_post_warning_and_execute",
+    "statute_tx_24_0061_officer_authorized_to_execute_writ",
+    "statute_tx_24_0061_warning_timing_ok",
+    "statute_tx_24_0061_execution_duty_deliver_possession_to_landlord",
+    "statute_tx_24_0061_execution_duty_remove_occupants_if_noncompliant",
+    "statute_tx_24_0061_execution_duty_supervise_property_removal",
+    "person",
+    "person_role",
+    "state",
+    "focus_year",
+    "legal_empowered_by_law_to_execute_eviction_writ",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    State: Texas\n    Focus year: 2021\n\n    Question: Is an officer of the court an individual empowered by law to execute a writ of eviction?\n\n    We model \"writ of eviction\" as the Texas \"writ of possession\" in an eviction suit (TX Prop  24.0061).\n*/\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Basic helpers (pure, deterministic where used)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n% integer_days_between(+FromDay, +ToDay, -DeltaDays)\ninteger_days_between(From, To, Delta) :-\n    integer(From),\n    integer(To),\n    Delta is To - From.\n\n% at_least_days_after(+FromDay, +ToDay, +MinDays)\nat_least_days_after(From, To, MinDays) :-\n    integer_days_between(From, To, Delta),\n    Delta >= MinDays.\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Statute encoding: TX Prop  24.0061 (2021) - Writ of Possession\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n/*\n  TX Prop  24.0061(a):\n  A landlord who prevails in an eviction suit is entitled to:\n    - a judgment for possession, and\n    - a writ of possession.\n*/\nstatute_tx_24_0061_entitled_to_judgment_and_writ(Landlord, EvictionSuit) :-\n    eviction_suit(EvictionSuit),\n    landlord(Landlord),\n    landlord_prevails_in_suit(Landlord, EvictionSuit).\n\n/*\n  TX Prop  24.0061(b):\n  A writ of possession may not be issued before the 6th day after judgment\n  unless:\n    - a possession bond has been filed and approved, and\n    - judgment for possession is thereafter granted by default.\n*/\nstatute_tx_24_0061_writ_issuance_allowed(JudgmentDay, IssueDay, no_bond_no_default) :-\n    integer(JudgmentDay),\n    integer(IssueDay),\n    at_least_days_after(JudgmentDay, IssueDay, 6),\n    !.\nstatute_tx_24_0061_writ_issuance_allowed(_JudgmentDay, _IssueDay, bond_and_default_exception) :-\n    possession_bond_filed_and_approved,\n    default_judgment_for_possession_granted,\n    !.\n\n/*\n  TX Prop  24.0061(d):\n  The writ shall order the \"officer executing the writ\" to perform duties.\n  (We encode the existence of an executing officer and some core duties.)\n*/\nstatute_tx_24_0061_writ_orders_officer_to_post_warning_and_execute(Officer) :-\n    statute_tx_24_0061_officer_authorized_to_execute_writ(Officer),\n    !.\n\n% Core duty: warning must specify execution on/after a date/time not sooner than 24 hours after posting.\n% We model time in hours as integers for simplicity.\nstatute_tx_24_0061_warning_timing_ok(WarningPostedHour, EarliestExecutionHour) :-\n    integer(WarningPostedHour),\n    integer(EarliestExecutionHour),\n    Delta is EarliestExecutionHour - WarningPostedHour,\n    Delta >= 24.\n\n% Core execution duties (summarized):\nstatute_tx_24_0061_execution_duty_deliver_possession_to_landlord(Officer) :-\n    statute_tx_24_0061_officer_authorized_to_execute_writ(Officer),\n    !.\nstatute_tx_24_0061_execution_duty_remove_occupants_if_noncompliant(Officer) :-\n    statute_tx_24_0061_officer_authorized_to_execute_writ(Officer),\n    !.\nstatute_tx_24_0061_execution_duty_supervise_property_removal(Officer) :-\n    statute_tx_24_0061_officer_authorized_to_execute_writ(Officer),\n    !.\n\n/*\n  TX Prop  24.0061(h):\n  \"A sheriff or constable may use reasonable force in executing a writ under this section.\"\n\n  We treat this as the statute's explicit identification of who is empowered to execute\n  the eviction writ (writ of possession) under this section: sheriffs and constables.\n\n  Deterministic: succeeds iff Officer is a sheriff or constable.\n*/\nstatute_tx_24_0061_officer_authorized_to_execute_writ(Officer) :-\n    person(Officer),\n    person_role(Officer, sheriff),\n    !.\nstatute_tx_24_0061_officer_authorized_to_execute_writ(Officer) :-\n    person(Officer),\n    person_role(Officer, constable),\n    !.\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Scenario encoding (facts) + scenario_statement/0\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n% Metadata\nstate(texas).\nfocus_year(2021).\n\n/* Scenario: an \"officer of the court\" (not specified as sheriff/constable) */\nperson(alex).\nperson_role(alex, officer_of_the_court).\n\n% For completeness of the statute model (not essential to the question):\nlandlord(l1).\neviction_suit(s1).\nlandlord_prevails_in_suit(l1, s1).\n\n% No bond/default facts asserted in this scenario:\n% possession_bond_filed_and_approved.\n% default_judgment_for_possession_granted.\n\n% scenario_statement/0 succeeds when the factual statement being tested is present.\n% Here: we have an \"officer of the court\" individual we are asking about.\nscenario_statement :-\n    person(alex),\n    person_role(alex, officer_of_the_court).\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Legal issue / reasoning: \"empowered by law to execute a writ of eviction\"\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n% We treat \"writ of eviction\" as the writ of possession in an eviction suit under TX Prop  24.0061.\nlegal_empowered_by_law_to_execute_eviction_writ(Person) :-\n    statute_tx_24_0061_officer_authorized_to_execute_writ(Person),\n    !.\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Answer predicate\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nhousing_answer(yes) :-\n    scenario_statement,\n    legal_empowered_by_law_to_execute_eviction_writ(alex),\n    !.\nhousing_answer(no) :-\n    scenario_statement,\n    \\+ legal_empowered_by_law_to_execute_eviction_writ(alex),\n    !.\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n%% Main entrypoint (required)\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-2297",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is an officer of the court an individual empowered by law to execute a writ of eviction?"
+  }
+}

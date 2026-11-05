@@ -1,0 +1,67 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "redshift",
+  "pipeline": "synthea",
+  "data_model": {
+    "models": [
+      {
+        "name": "synthea__patients",
+        "description": "Each record represents a patient.",
+        "columns": [
+          {
+            "name": "patient",
+            "description": "The unique identifier of the patient."
+          },
+          {
+            "name": "name",
+            "description": "The name of the patient, formed by concatenating the first name and last name with a space in between."
+          },
+          {
+            "name": "birthdate",
+            "description": "The birth date of the patient"
+          },
+          {
+            "name": "highest_Systolic_Blood_Pressure_observed",
+            "description": "The highest systolic blood pressure observed for the patient."
+          },
+          {
+            "name": "number_of_immunizations",
+            "description": "The number of immunizations the patient has received, replace NULL values with 0."
+          },
+          {
+            "name": "num_encounters_between_2010_and_2017",
+            "description": "The number of encounters the patient has with medical professionals between 2010 and 2017, replace NULL values with 0."
+          },
+          {
+            "name": "has_received_the_IPV_and_is_english",
+            "description": "Set to 1 if the patient has received the IPV and his/her ethnicity is English, 0 otherwise."
+          },
+          {
+            "name": "time_recieve_most_recent_vaccine",
+            "description": "The time when the patient received her/his most recent influenza seasonal vaccine"
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    redshift_definition_id: f7a7d195-377f-cf5b-70a5-be6b819019dc\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://synthea-bucket/all_prevalences.jsonl\n    sync_mode: full_refresh_append\n    table: all_prevalences\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - observations\nflat_files:\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=1BjQWuyYf0-bMOgtN9cco2ebSK2ZRcFNm\n  sync_mode: full_refresh_append\n  table: procedures\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: synthea\n    sync_mode: full_refresh_append\n    tables:\n    - patients\npostgres:\n  config:\n    database: synthea\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - allergies\n    - careplans\n    - claims\n    - conditions\n    - encounters\n    - immunizations\n    - medications\n    user: postgres\nredshift:\n  config:\n    host: <redshift_hostname>\n    port: <redshift_port>\n    database: <redshift_db>\n    username: <redshift_username>\n    password: <redshift_pwd>\n    schema: synthea\n    s3_bucket_name: <redshift_s3_bucket>\n    s3_bucket_region: <redshift_s3_region>\n    access_key_id: <redshift_s3_access_key>\n    secret_access_key: <redshift_s3_secret_key>\n",
+  "case_id": "B14-elt-0184",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "synthea__patients",
+        "columns": [
+          "patient",
+          "name",
+          "birthdate",
+          "highest_Systolic_Blood_Pressure_observed",
+          "number_of_immunizations",
+          "num_encounters_between_2010_and_2017",
+          "has_received_the_IPV_and_is_english",
+          "time_recieve_most_recent_vaccine"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "case_id": "B01-mimo-1566",
+  "task_id": "B01",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "table",
+      "ref": "bench://mimotable/unzipped/data/chinese/spreadsheet/原材料入库台账表.xlsx",
+      "digest": null
+    },
+    {
+      "kind": "table",
+      "ref": "bench://mimotable/unzipped/data/chinese/spreadsheet/周生产计划表.xlsx",
+      "digest": null
+    },
+    {
+      "kind": "table",
+      "ref": "bench://mimotable/unzipped/data/chinese/spreadsheet/库存盘点表（自动计算采购计划）.xlsx",
+      "digest": null
+    },
+    {
+      "kind": "table",
+      "ref": "bench://mimotable/unzipped/data/chinese/spreadsheet/生产制造 表格 (591).xlsx",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B01-mimo-1566.json"
+  },
+  "evidence": [
+    "bench://mimotable/unzipped/data/chinese/spreadsheet/原材料入库台账表.xlsx#workbook"
+  ],
+  "tags": [
+    "chinese",
+    "multiple files, complicate header",
+    "hard table",
+    "op:Lookup",
+    "op:Compare",
+    "op:Calculate"
+  ],
+  "source": "mimo",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

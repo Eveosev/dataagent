@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 367,
+  "question": "I'm profiling publisher rosters and now want to look at the physical build of George Lucas's heroes. What is the average height of the heroes he created, in centimetres, and their average weight, in kilograms? Please round each average to one decimal place, and only include heroes whose height (for the height average) or weight (for the weight average) is actually known.",
+  "evidence": "",
+  "gold_sql": "SELECT ROUND(AVG(CASE WHEN s.height_cm > 0 THEN s.height_cm END), 1) AS average_height_cm, ROUND(AVG(CASE WHEN s.weight_kg > 0 THEN s.weight_kg END), 1) AS average_weight_kg FROM superhero AS s INNER JOIN publisher AS p ON s.publisher_id = p.id WHERE p.publisher_name = 'George Lucas'",
+  "db_id": "superhero",
+  "case_id": "B05-bird-0368",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT ROUND(AVG(CASE WHEN s.height_cm > 0 THEN s.height_cm END), 1) AS average_height_cm, ROUND(AVG(CASE WHEN s.weight_kg > 0 THEN s.weight_kg END), 1) AS average_weight_kg FROM superhero AS s INNER JOIN publisher AS p ON s.publisher_id = p.id WHERE p.publisher_name = 'George Lucas'",
+    "db_id": "superhero",
+    "evidence": ""
+  }
+}

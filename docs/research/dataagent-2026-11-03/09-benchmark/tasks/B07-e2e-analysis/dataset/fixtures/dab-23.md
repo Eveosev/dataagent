@@ -1,0 +1,1 @@
+What is the fraud rate for in-person transactions for the year 2023?

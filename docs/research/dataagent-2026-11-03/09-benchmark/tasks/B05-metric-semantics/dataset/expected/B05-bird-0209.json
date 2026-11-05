@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 208,
+  "question": "I'm profiling our East Bohemia branch districts that serve younger clients for a youth-product campaign. A district counts as serving a client when the client holds an account at a branch located in that district - it's the branch location that matters, not the client's home district. For the East Bohemia districts that serve at least one client born in the 1980s (birth years 1980 through 1989), please give me: the average of those districts' average salaries, rounded to two decimal places, and the number of such districts.",
+  "evidence": "East Bohemia refers to the districts in the East Bohemia region of the Czech Republic.",
+  "gold_sql": "SELECT ROUND(AVG(x.A11), 2) AS avg_salary, COUNT(*) AS district_count FROM (SELECT DISTINCT T1.district_id, T1.A11 FROM district AS T1 INNER JOIN account AS T2 ON T1.district_id = T2.district_id INNER JOIN disp AS T3 ON T2.account_id = T3.account_id INNER JOIN client AS T4 ON T3.client_id = T4.client_id WHERE T1.A3 = 'east Bohemia' AND STRFTIME('%Y', T4.birth_date) BETWEEN '1980' AND '1989') AS x",
+  "db_id": "financial",
+  "case_id": "B05-bird-0209",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT ROUND(AVG(x.A11), 2) AS avg_salary, COUNT(*) AS district_count FROM (SELECT DISTINCT T1.district_id, T1.A11 FROM district AS T1 INNER JOIN account AS T2 ON T1.district_id = T2.district_id INNER JOIN disp AS T3 ON T2.account_id = T3.account_id INNER JOIN client AS T4 ON T3.client_id = T4.client_id WHERE T1.A3 = 'east Bohemia' AND STRFTIME('%Y', T4.birth_date) BETWEEN '1980' AND '1989') AS x",
+    "db_id": "financial",
+    "evidence": "East Bohemia refers to the districts in the East Bohemia region of the Czech Republic."
+  }
+}

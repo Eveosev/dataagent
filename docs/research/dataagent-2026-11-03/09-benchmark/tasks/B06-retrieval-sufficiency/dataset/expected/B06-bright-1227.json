@@ -1,0 +1,32 @@
+{
+  "source": "xlangai/BRIGHT",
+  "query_id": "TheoremQA_maxku/cv-colorsci3-rgb.json",
+  "query": "## Identifying the Essential Problem:\n\nThe essential problem is to determine which of the three gray paint shades is closest to a \"true\" gray, meaning it lacks any noticeable bias towards a specific color hue like red, green, or blue.\n\n## Gathering Relevant Information:\n\n**Understanding Gray:**\n- A true gray is created by mixing red, green, and blue in equal proportions.\n- Any deviation from this balance will introduce a slight hue of the dominant color.\n\n**Analyzing the Shades:**\n- Shade 1: Equal parts of red, green, and blue - This suggests it might be closest to a true gray.\n- Shade 2: More green than red and blue, with red being the least - This indicates a slight green hue.\n- Shade 3: Mostly green, with even less red and the same amount of blue as Shade 2 - This suggests an even stronger green hue than Shade 2.\n\n## Reasoning and Drafting an Answer:\n\nBased on the above analysis, we can conclude:\n\n- **Shade 1 is most likely to be the truest gray** because it uses equal parts of all three primary colors.\n- **Shade 2 will have a slight green hue** due to the increased amount of green pigment.\n- **Shade 3 will have an even more noticeable green hue** than Shade 2 because it contains the most green and the least red.\n\nTherefore, the shade closest to a true gray, lacking any distinct hue, is **Shade 1**.\n",
+  "gold_ids": [
+    "TheoremQA_maxku/cv-colorsci2-hsi.json",
+    "TheoremQA_maxku/cv-colorsci4-hsi.json",
+    "TheoremQA_maxku/cv-colorsci1-rgb.json",
+    "TheoremQA_maxku/cv-colorsci2-hsi.json",
+    "TheoremQA_maxku/cv-colorsci1-rgb.json"
+  ],
+  "gold_answer": "N/A",
+  "corpus": "documents/theoremqa_questions-00000-of-00001.parquet",
+  "case_id": "B06-bright-1227",
+  "expected": {
+    "kind": "retrieval",
+    "gold_ids": [
+      "TheoremQA_maxku/cv-colorsci2-hsi.json",
+      "TheoremQA_maxku/cv-colorsci4-hsi.json",
+      "TheoremQA_maxku/cv-colorsci1-rgb.json",
+      "TheoremQA_maxku/cv-colorsci2-hsi.json",
+      "TheoremQA_maxku/cv-colorsci1-rgb.json"
+    ],
+    "gold_ids_long": [
+      "N/A"
+    ],
+    "gold_answer": "N/A",
+    "excluded_ids": [
+      "TheoremQA_maxku/cv-colorsci3-rgb.json"
+    ]
+  }
+}

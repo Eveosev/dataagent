@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 167,
+  "question": "Between the tallest and shortest players, who has the higher average finishing attribute across his recorded assessments? Give the player's name.",
+  "evidence": "",
+  "gold_sql": "SELECT p.player_name FROM Player AS p JOIN Player_Attributes AS a ON a.player_api_id = p.player_api_id WHERE p.height IN ((SELECT MAX(height) FROM Player), (SELECT MIN(height) FROM Player)) GROUP BY p.player_api_id, p.player_name ORDER BY AVG(a.finishing) DESC, p.player_api_id LIMIT 1",
+  "db_id": "european_football_2",
+  "case_id": "B05-bird-0168",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT p.player_name FROM Player AS p JOIN Player_Attributes AS a ON a.player_api_id = p.player_api_id WHERE p.height IN ((SELECT MAX(height) FROM Player), (SELECT MIN(height) FROM Player)) GROUP BY p.player_api_id, p.player_name ORDER BY AVG(a.finishing) DESC, p.player_api_id LIMIT 1",
+    "db_id": "european_football_2",
+    "evidence": ""
+  }
+}

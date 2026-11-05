@@ -1,0 +1,113 @@
+{
+  "id": "B05",
+  "slug": "metric-semantics",
+  "title": "指标定义与语义查询编译",
+  "plan_row": 5,
+  "plan_ref": "../../../09-benchmark-plan.md",
+  "catalog_atoms": [
+    "DA03.4.1",
+    "DA06.1.1",
+    "DA06.1.2",
+    "DA06.1.3",
+    "DA06.1.4",
+    "DA06.2.1",
+    "DA06.2.2",
+    "DA06.2.3",
+    "DA06.3.1",
+    "DA06.3.2",
+    "DA06.3.3",
+    "DA06.3.4",
+    "DA06.3.5",
+    "DA06.8.1",
+    "DA06.8.2",
+    "DA06.8.3",
+    "DA07.5.1",
+    "DA07.5.2"
+  ],
+  "slice": "S0 / 按需",
+  "unit": "question",
+  "why_not_unit_tested": "同一问题多次口径不一，只有重复提问与多 schema 才能测；企业级 schema 复杂度不可合成",
+  "reference_benchmarks": [
+    {
+      "name": "BEAVER",
+      "url": "https://arxiv.org/abs/2409.02038",
+      "scale_note": "私有数仓 812 表 / 9,128 问题–SQL，来自真实查询日志"
+    },
+    {
+      "name": "data.world CWD",
+      "url": "https://arxiv.org/abs/2311.07509",
+      "scale_note": "保险企业 schema，43 个业务问题"
+    },
+    {
+      "name": "dbt-llm-sl-bench",
+      "url": "https://github.com/dbt-labs/dbt-llm-sl-bench",
+      "scale_note": "11 题；语义层 98–100%，不可表达问题计 0"
+    }
+  ],
+  "dataset": {
+    "sources": [
+      "BEAVER",
+      "Spider 2.0",
+      "BIRD",
+      "data.world CWD",
+      "dbt-llm-sl-bench",
+      "自建认证 KPI 口径集"
+    ],
+    "composition": "认证 KPI 口径以自建集为主；外部集只作标定，避免方言差异污染口径指标",
+    "manifest_ref": "dataset/manifest.json",
+    "refresh": {
+      "unseen_acceptance_every_rounds": 6,
+      "replace_ratio": 0.25,
+      "rule": "样本一经暴露即降级为 regression；unseen_acceptance 不得参与调参"
+    }
+  },
+  "graders": [
+    "refusal_check",
+    "repeat_consistency",
+    "sql_exec_match"
+  ],
+  "metrics": [
+    {
+      "id": "execution_accuracy",
+      "label": "执行准确率",
+      "direction": "higher",
+      "primary": true,
+      "unit": "ratio",
+      "aggregation": "mean_over_cases",
+      "grader": "sql_exec_match",
+      "threshold_status": "pending_baseline"
+    },
+    {
+      "id": "metric_definition_consistency",
+      "label": "口径一致率（同一问题重复 3 次）",
+      "direction": "higher",
+      "primary": false,
+      "unit": "ratio",
+      "aggregation": "mean_over_cases",
+      "grader": "repeat_consistency",
+      "threshold_status": "pending_baseline"
+    },
+    {
+      "id": "unexpressible_refusal_rate",
+      "label": "无法表达时拒答率",
+      "direction": "higher",
+      "primary": false,
+      "unit": "ratio",
+      "aggregation": "mean_over_cases",
+      "grader": "refusal_check",
+      "threshold_status": "pending_baseline"
+    }
+  ],
+  "gate": {
+    "tier": "block",
+    "in_ci": true,
+    "blocking_metrics": [
+      "execution_accuracy"
+    ],
+    "ref": "../../monitor/thresholds.json"
+  },
+  "status": "collecting",
+  "owner": "TBD",
+  "notes_ref": "NOTES.md",
+  "created": "2026-11-04"
+}

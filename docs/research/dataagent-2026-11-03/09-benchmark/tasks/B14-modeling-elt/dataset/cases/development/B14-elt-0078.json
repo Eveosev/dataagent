@@ -1,0 +1,35 @@
+{
+  "case_id": "B14-elt-0078",
+  "task_id": "B14",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "config",
+      "ref": "fixtures/elt-databricks-social_media-config.yaml",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B14-elt-0078.json"
+  },
+  "evidence": [
+    "bench://elt-bench/elt-bench/databricks/social_media/data_model.yaml"
+  ],
+  "tags": [
+    "elt-bench",
+    "databricks",
+    "social_media",
+    "models:1"
+  ],
+  "source": "elt",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 307,
+  "question": "I'm putting together our year-end budget summary. How much did we collect in membership dues, in total dollars, from the students who attended the Football game? Membership dues are the payments recorded under the source 'Dues'.",
+  "evidence": "membership dues: payments recorded under the source 'Dues'",
+  "gold_sql": "SELECT SUM(i.amount) AS total_dues FROM income AS i WHERE i.source = 'Dues' AND i.link_to_member IN (SELECT a.link_to_member FROM attendance AS a INNER JOIN event AS e ON a.link_to_event = e.event_id WHERE e.event_name = 'Football game')",
+  "db_id": "student_club",
+  "case_id": "B05-bird-0308",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT SUM(i.amount) AS total_dues FROM income AS i WHERE i.source = 'Dues' AND i.link_to_member IN (SELECT a.link_to_member FROM attendance AS a INNER JOIN event AS e ON a.link_to_event = e.event_id WHERE e.event_name = 'Football game')",
+    "db_id": "student_club",
+    "evidence": "membership dues: payments recorded under the source 'Dues'"
+  }
+}

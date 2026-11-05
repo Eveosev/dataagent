@@ -1,0 +1,21 @@
+{
+  "source": "datadotworld/cwd-benchmark-data",
+  "inquiry_id": "IQ_39301bf92f7e93608bff059c4a83a845",
+  "prompt": "Return agents and the policy they have sold that have had a claim and the corresponding expense reserve amount by agent id, policy number and claim number ",
+  "sql": [
+    "SELECT\n    party_identifier as AgentID, \n    policy_number,\n    company_claim_number,\n    claim_amount.claim_amount as Expense_Reserve_Amount\nFROM\n    Claim\n    inner join claim_amount  on claim.claim_identifier = claim_amount.claim_identifier\n    inner JOIN expense_reserve ON claim_amount.claim_amount_identifier = expense_reserve.claim_amount_identifier\n    inner join claim_coverage on claim.claim_identifier = claim_coverage.claim_identifier\n    inner join policy_coverage_detail on claim_coverage.policy_coverage_detail_identifier = policy_coverage_detail.policy_coverage_detail_identifier\n    inner join policy on policy.policy_identifier = policy_coverage_detail.policy_identifier\n    inner join  agreement_party_role  on agreement_party_role.agreement_identifier = policy.policy_identifier\n \nwhere agreement_party_role.party_role_code = 'AG'"
+  ],
+  "sparql": [
+    "PREFIX : <https://myinsurancecompany.linked.data.world/d/chat-with-the-data-benchmark/>\nPREFIX in: <http://data.world/schema/insurance/>\n\nSELECT ?agentId ?policyNumber ?claimNumber ?expenseReserveAmount\nWHERE {\nSERVICE :mapped {\n    ?p a in:Policy.\n    ?p in:policyNumber ?policyNumber.\n    ?p in:hasPolicyHolder ?ph.\n    ?p in:soldByAgent [ in:agentId ?agentId].\n    ?pcd in:hasPolicy ?p.\n    ?c in:against ?pcd.\n    ?c in:claimNumber ?claimNumber.\n    ?c in:hasExpenseReserve [ in:expenseReserveAmount ?expenseReserveAmount].\n    }\n}"
+  ],
+  "case_id": "B05-cwd-0008",
+  "expected": {
+    "kind": "query",
+    "question": "Return agents and the policy they have sold that have had a claim and the corresponding expense reserve amount by agent id, policy number and claim number ",
+    "sql": "SELECT\n    party_identifier as AgentID, \n    policy_number,\n    company_claim_number,\n    claim_amount.claim_amount as Expense_Reserve_Amount\nFROM\n    Claim\n    inner join claim_amount  on claim.claim_identifier = claim_amount.claim_identifier\n    inner JOIN expense_reserve ON claim_amount.claim_amount_identifier = expense_reserve.claim_amount_identifier\n    inner join claim_coverage on claim.claim_identifier = claim_coverage.claim_identifier\n    inner join policy_coverage_detail on claim_coverage.policy_coverage_detail_identifier = policy_coverage_detail.policy_coverage_detail_identifier\n    inner join policy on policy.policy_identifier = policy_coverage_detail.policy_identifier\n    inner join  agreement_party_role  on agreement_party_role.agreement_identifier = policy.policy_identifier\n \nwhere agreement_party_role.party_role_code = 'AG'",
+    "alternate_sql": [],
+    "sparql": [
+      "PREFIX : <https://myinsurancecompany.linked.data.world/d/chat-with-the-data-benchmark/>\nPREFIX in: <http://data.world/schema/insurance/>\n\nSELECT ?agentId ?policyNumber ?claimNumber ?expenseReserveAmount\nWHERE {\nSERVICE :mapped {\n    ?p a in:Policy.\n    ?p in:policyNumber ?policyNumber.\n    ?p in:hasPolicyHolder ?ph.\n    ?p in:soldByAgent [ in:agentId ?agentId].\n    ?pcd in:hasPolicy ?p.\n    ?c in:against ?pcd.\n    ?c in:claimNumber ?claimNumber.\n    ?c in:hasExpenseReserve [ in:expenseReserveAmount ?expenseReserveAmount].\n    }\n}"
+    ]
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 458,
+  "question": "Among the patients who have laboratory test records on file, how many are female and how many are male? Please give me one line for the female patients and one line for the male patients, each showing the sex and the number of patients of that sex.",
+  "evidence": "",
+  "gold_sql": "SELECT p.SEX AS sex, COUNT(DISTINCT p.ID) AS patient_count FROM Patient p JOIN Laboratory l ON l.ID = p.ID WHERE p.SEX IN ('F','M') GROUP BY p.SEX",
+  "db_id": "thrombosis_prediction",
+  "case_id": "B05-bird-0459",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT p.SEX AS sex, COUNT(DISTINCT p.ID) AS patient_count FROM Patient p JOIN Laboratory l ON l.ID = p.ID WHERE p.SEX IN ('F','M') GROUP BY p.SEX",
+    "db_id": "thrombosis_prediction",
+    "evidence": ""
+  }
+}

@@ -1,0 +1,1 @@
+How do I set up a conditional format that changes a cell's color to red if the number of days in a cell formatted as 'X Years, X Months, X Days' is less than 5?

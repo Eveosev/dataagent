@@ -1,0 +1,37 @@
+[package]
+name = "dataagent/application-layer"
+version = "0.1.0"
+kind = "bundle"
+description = "DataAgent 应用层：13 个 S0 原子（需求绑定与澄清、表达式生成与求值、单表 SQL 生成与 DuckDB 执行、引擎对齐、工作簿与报告交付），提供 MCP 入口；CLI 仅供本地调试与黑盒验收"
+license = "Apache-2.0"
+keywords = ["data", "planning", "execution", "presentation", "mcp"]
+
+[requires]
+api = "^0.1"
+
+[provides]
+mcp_servers = ["dataagent-application"]
+skills = ["dataagent-compute-plan", "dataagent-rule-execute"]
+
+[capabilities]
+exec = ["uv"]
+fs.read = ["*"]
+fs.write = [".dataagent/**"]
+
+[capabilities.reason]
+exec = "uv 按锁定的 Python 项目拉起 MCP stdio 服务；不执行包内其它程序"
+"fs.read" = "读取工作区内的输入文件与共享 data_root 内容寻址对象"
+"fs.write" = "仅在 data_root（默认工作区 .dataagent/）写入内容寻址对象、计算结果表、报告与导出产物"
+
+[metadata.runtime]
+requires = ["python>=3.11", "uv"]
+
+[metadata.env]
+# 07 §2 / W1c: DECLARATION ONLY (W0 §6) — these values document the variables
+# the component reads; Mint 0.1.25 does not inject them from here. The host
+# injects actual values through the project-level .mcp.json `env` map of the
+# server descriptor (see docs/research/dataagent-2026-11-03/w0-seam-specifications.md §6)
+# to route all three layers through one content store and version database.
+DATAAGENT_WORKSPACE = "工作区根目录（默认当前目录）；组件从该目录解析相对文件引用"
+DATAAGENT_DATA_ROOT = "共享 data_root（默认 <workspace>/.dataagent/）：内容寻址对象、SQLite 版本库、判定库、计算结果表与报告产物；Mint 清空子进程环境后由宿主以自定义 data_root 重新注入"
+DATAAGENT_CATALOG_SNAPSHOT = "可选：覆盖包内 catalog-snapshot.json 的注册表快照路径"

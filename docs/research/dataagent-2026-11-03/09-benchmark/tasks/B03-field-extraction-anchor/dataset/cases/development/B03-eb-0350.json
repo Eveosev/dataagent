@@ -1,0 +1,53 @@
+{
+  "case_id": "B03-eb-0350",
+  "task_id": "B03",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://extractbench/docs/medium/veralto_earnings_deck_q4fy25.pdf",
+      "digest": null
+    },
+    {
+      "kind": "schema",
+      "ref": "fixtures/eb-medium-veralto_earnings_deck_q4fy25-schema.json",
+      "digest": null
+    },
+    {
+      "kind": "rules",
+      "ref": "fixtures/eb-medium-veralto_earnings_deck_q4fy25-rules.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-eb-0350.json"
+  },
+  "evidence": [
+    "bench://extractbench/docs/medium/veralto_earnings_deck_q4fy25.pdf",
+    "fixtures/eb-medium-veralto_earnings_deck_q4fy25-schema.json",
+    "fixtures/eb-medium-veralto_earnings_deck_q4fy25-rules.md"
+  ],
+  "tags": [
+    "extractbench",
+    "medium",
+    "tag:source:real",
+    "tag:challenge:T2.b",
+    "tag:challenge:T2.d",
+    "tag:challenge:T1.b",
+    "tag:structure:S3",
+    "tag:length:medium",
+    "tag:domain:D1",
+    "fields:15"
+  ],
+  "source": "eb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

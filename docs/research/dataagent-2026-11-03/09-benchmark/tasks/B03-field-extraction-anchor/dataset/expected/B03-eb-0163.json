@@ -1,0 +1,948 @@
+{
+  "source": "llamaindex/ExtractBench",
+  "id": "short/cfpb_closing-disclosure_H25F",
+  "pdf": "docs/short/cfpb_closing-disclosure_H25F.pdf",
+  "schema": {
+    "type": "object",
+    "title": "ClosingDisclosureTRID",
+    "$defs": {
+      "ClosingCostLine": {
+        "type": "object",
+        "title": "ClosingCostLine",
+        "properties": {
+          "section": {
+            "type": "string",
+            "title": "Section",
+            "description": "The lettered section heading this fee line falls under, copied verbatim INCLUDING the letter and the section title, e.g. 'A. Origination Charges', 'B. Services Borrower Did Not Shop For', 'C. Services Borrower Did Shop For' (in loan_costs); or 'E. Taxes and Other Government Fees', 'F. Prepaids', 'G. Initial Escrow Payment at Closing', 'H. Other' (in other_costs). Found on page 2 (Closing Cost Details). Do NOT confuse with line_label (the individual fee name): section is the bold lettered header, line_label is the numbered (01, 02, ...) row beneath it. Do NOT use the subtotal rows ('D. TOTAL LOAN COSTS', 'I. TOTAL OTHER COSTS', 'Loan Costs Subtotals') as a section value for a fee line."
+          },
+          "line_label": {
+            "type": "string",
+            "title": "Line Label",
+            "description": "The BASE NAME of this individual numbered fee line ONLY, e.g. 'Application Fee', 'Appraisal Fee', '0.25 % of Loan Amount (Points)', 'Title - Lender's Title Insurance', 'Recording Fees', 'Prepaid Interest', 'Property Taxes', 'Homeowner's Insurance', 'Mortgage Insurance', 'Aggregate Adjustment'. Page 2 (Closing Cost Details), the numbered (01, 02, ...) rows under each lettered section. STRIP all of the following so the same line in two documents produces the identical label: (a) the leading line number (01/02/...); (b) the 'to <payee>' portion (that goes in payee); (c) any inline dollar figures or rate/term descriptors that trail the name on the same row - e.g. for 'Homeowner's Insurance $100.83 per month for 2 mo.' use 'Homeowner's Insurance'; for 'Recording Fees Deed: $40.00 Mortgage: $45.00' use 'Recording Fees'; for 'Prepaid Interest ( $17.44 per day from 4/15/13 to 5/1/13 )' use 'Prepaid Interest'; for 'Homeowner's Insurance Premium ( 12 mo.)' use 'Homeowner's Insurance Premium'; for 'Property Taxes ( 6 mo.)' use 'Property Taxes'. Keep only the descriptive fee NAME, not the parenthetical month counts, per-day/per-month amounts, or deed/mortgage breakdowns. EXCEPTIONS - keep these parentheticals because they are part of the printed line NAME, not data: '0.25 % of Loan Amount (Points)' (the '%' rate IS the line name, keep the exact printed rate e.g. '.5 % of Loan Amount (Points)' on H25E), and the trailing '(Points)' / '(optional)' qualifiers (e.g. keep 'Title - Owner's Title Insurance (optional)' WITH '(optional)'). Do NOT confuse with section (the lettered header). Do NOT emit subtotal / TOTAL rows as a line_label."
+          },
+          "payee": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Payee",
+            "description": "The recipient of this fee, taken from the 'to <name>' text that follows the fee name on the same row, e.g. 'John Smith Appraisers Inc.', 'Epsilon Title Co.', 'Any County USA'. Strip the leading 'to '. Page 2 fee rows. Null when the row shows no 'to ...' payee. Do NOT confuse with line_label (the fee name) or with any dollar amount."
+          },
+          "borrower_paid_at_closing": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Borrower Paid At Closing",
+            "description": "Dollar amount in the FIRST money column, labeled 'Borrower-Paid / At Closing', for this fee line, verbatim with dollar sign and cents, e.g. '$300.00'. Negative values keep their sign, e.g. '- $0.01'. There are up to five money columns in left-to-right order: [Borrower-Paid At Closing] [Borrower-Paid Before Closing] [Seller-Paid At Closing] [Seller-Paid Before Closing] [Paid by Others]; place each amount strictly under the column it physically sits in. CRITICAL: a value that sits in the 'Before Closing' or 'Paid by Others' column must NOT be put here just because this is the first/most-common column - e.g. on the purchase sample 'Appraisal Fee' $405.00 is in the rightmost Paid by Others column (so this is null), and 'Credit Report Fee' $29.80 is in Before Closing (so this is null). Null when the At Closing column is blank for the row."
+          },
+          "borrower_paid_before_closing": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Borrower Paid Before Closing",
+            "description": "Dollar amount in the SECOND money column, labeled 'Borrower-Paid / Before Closing', for this fee line, verbatim e.g. '$29.80', '$405.00'. This column captures fees the borrower paid prior to the closing date (POC-style). On the purchase sample 'Credit Report Fee' $29.80 is here; on the H25E refinance 'Appraisal Fee' $405.00 and 'Credit Report Fee' $30.00 are here. Do NOT confuse with borrower_paid_at_closing (column to its left) or paid_by_others (far-right column). Null when blank."
+          },
+          "seller_paid_at_closing": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Seller Paid At Closing",
+            "description": "Dollar amount in the Seller-Paid 'At Closing' column for this fee line, verbatim e.g. '$450.00'. Page 2. PURCHASE disclosures only have Seller-Paid columns; on REFINANCE disclosures there are no Seller-Paid columns so this is always null. Do NOT confuse with borrower_paid_at_closing. Null when blank or absent."
+          },
+          "seller_paid_before_closing": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Seller Paid Before Closing",
+            "description": "Dollar amount in the Seller-Paid 'Before Closing' column for this fee line, verbatim e.g. '$750.00'. Page 2. PURCHASE only; null on REFINANCE. Null when blank."
+          },
+          "paid_by_others": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Paid By Others",
+            "description": "Dollar amount in the FAR-RIGHT 'Paid by Others' column for this fee line, verbatim e.g. '$405.00'. Page 2, the last money column on the right edge of the table. On the purchase sample the 'Appraisal Fee' $405.00 sits in THIS column (Paid by Others), NOT in any Borrower-Paid column. Do NOT confuse with the seller_paid columns (which are between Borrower-Paid and Paid by Others on a purchase disclosure) or with borrower_paid columns. Null when blank."
+          }
+        },
+        "required": [
+          "section",
+          "line_label"
+        ]
+      },
+      "CashToCloseGridRow": {
+        "type": "object",
+        "title": "CashToCloseGridRow",
+        "properties": {
+          "line_label": {
+            "type": "string",
+            "title": "Line Label",
+            "description": "The row label in the 'Calculating Cash to Close' table, verbatim including any '(letter)' suffix, e.g. 'Total Closing Costs (J)', 'Closing Costs Paid Before Closing', 'Closing Costs Financed (Paid from your Loan Amount)', 'Down Payment/Funds from Borrower', 'Deposit', 'Funds for Borrower', 'Seller Credits', 'Adjustments and Other Credits', 'Cash to Close' (PURCHASE row set); or 'Loan Amount', 'Total Closing Costs (J)', 'Closing Costs Paid Before Closing', 'Total Payoffs and Payments (K)', 'Cash to Close' (REFINANCE row set). PURCHASE is on page 3, REFINANCE on page 3 (H25E) / page 2 (H25F excerpt). The two doc types have different row sets - emit whatever rows appear. Do NOT confuse with the Closing Cost Details fee lines on page 2."
+          },
+          "loan_estimate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Loan Estimate",
+            "description": "Value in the 'Loan Estimate' column for this row, verbatim with sign/dollar e.g. '$8,054.00', '- $10,000.00', '$0'. Do NOT confuse with the 'Final' column (immediately to its right). Null when blank."
+          },
+          "final": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Final",
+            "description": "Value in the 'Final' column for this row, verbatim with sign/dollar e.g. '$9,712.10', '- $29.80'. For the 'Cash to Close' row, capture the dollar amount ONLY (e.g. '$14,147.26'); do NOT append the 'From / To Borrower' checkbox text. Do NOT confuse with the 'Loan Estimate' column. Null when blank."
+          },
+          "did_change": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "YES",
+                  "NO"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Did This Change",
+            "description": "The 'Did this change?' answer for this row, normalized to 'YES' or 'NO'. The Cash to Close summary row itself has no YES/NO answer - null there. Null when blank."
+          }
+        },
+        "required": [
+          "line_label"
+        ]
+      }
+    },
+    "properties": {
+      "date_issued": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Date Issued",
+        "description": "The 'Date Issued' value from the Closing Information block (page 1, top-left), formatted exactly as printed e.g. '4/15/2013' (M/D/YYYY). Do NOT confuse with closing_date or disbursement_date which sit directly below it and may share the same value. Null if absent."
+      },
+      "closing_date": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Closing Date",
+        "description": "The 'Closing Date' value from the Closing Information block (page 1, top-left), as printed e.g. '4/15/2013'. Do NOT confuse with date_issued (line above) or disbursement_date (line below). Null if absent."
+      },
+      "disbursement_date": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Disbursement Date",
+        "description": "The 'Disbursement Date' value from the Closing Information block (page 1, top-left), as printed e.g. '4/15/2013'. Do NOT confuse with closing_date (line above). Null if absent."
+      },
+      "settlement_agent": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Settlement Agent",
+        "description": "The 'Settlement Agent' company name from the Closing Information block (page 1), e.g. 'Epsilon Title Co.', 'Zeta Title'. Do NOT confuse with lender_name (Ficus Bank) or the Settlement Agent column in the page-5 Contact Information table. Null if absent."
+      },
+      "file_number": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "File Number",
+        "description": "The 'File #' value from the Closing Information block (page 1), verbatim e.g. '12-3456'. Do NOT confuse with loan_id ('Loan ID #') or mic_number ('MIC #'). Null if absent."
+      },
+      "property_address": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Property Address",
+        "description": "The 'Property' address from the Closing Information block (page 1), full multi-line address joined into one string e.g. '456 Somewhere Ave, Anytown, ST 12345'. Do NOT confuse with the Borrower or Seller mailing addresses in the Transaction Information block. Null if absent."
+      },
+      "sale_price": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Sale Price",
+        "description": "The 'Sale Price' value from the Closing Information block (page 1), verbatim with dollar e.g. '$180,000'. PURCHASE disclosures only. On a REFINANCE disclosure this label is replaced by 'Appraised Prop. Value' - leave sale_price null and use appraised_property_value instead. Do NOT confuse with loan_amount or appraised_property_value. Null on refinance / when absent."
+      },
+      "appraised_property_value": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Appraised Property Value",
+        "description": "The 'Appraised Prop. Value' value from the Closing Information block (page 1), verbatim e.g. '$180,000'. REFINANCE disclosures only (it replaces 'Sale Price'). On a PURCHASE disclosure leave this null and use sale_price. Do NOT confuse with sale_price or loan_amount. Null on purchase / when absent."
+      },
+      "borrower_name": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Borrower Name",
+        "description": "The 'Borrower' name(s) from the Transaction Information block (page 1), the name line only, verbatim e.g. 'Michael Jones and Mary Stone'. Do NOT include the borrower's street address that follows on the next lines. Do NOT confuse with seller_name or lender_name. Null if absent."
+      },
+      "seller_name": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Seller Name",
+        "description": "The 'Seller' name(s) from the Transaction Information block (page 1), name line only, verbatim e.g. 'Steve Cole and Amy Doe'. PURCHASE disclosures only - REFINANCE disclosures have no Seller row, so this is null on refinance. Do NOT include the seller address. Do NOT confuse with borrower_name. Null on refinance / when absent."
+      },
+      "lender_name": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Lender Name",
+        "description": "The 'Lender' name from the Transaction Information block (page 1), verbatim e.g. 'Ficus Bank'. Do NOT confuse with settlement_agent or with the Lender column of the page-5 Contact Information table. Null if absent."
+      },
+      "loan_term": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Loan Term",
+        "description": "The 'Loan Term' from the Loan Information block (page 1), verbatim e.g. '30 years'. Do NOT confuse with the Projected Payments year ranges (e.g. 'Years 1-7'). Null if absent."
+      },
+      "purpose": {
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "Purchase",
+              "Refinance",
+              "Construction",
+              "Other"
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Purpose",
+        "description": "The 'Purpose' from the Loan Information block (page 1), one of 'Purchase', 'Refinance', 'Construction', 'Other' as printed. Do NOT confuse with product (e.g. 'Fixed Rate') or loan_type ('Conventional'). Null if absent."
+      },
+      "product": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Product",
+        "description": "The 'Product' from the Loan Information block (page 1), verbatim e.g. 'Fixed Rate', '5 Year Interest Only, 5/3 Adjustable Rate'. Do NOT confuse with purpose ('Purchase'/'Refinance') or loan_type ('Conventional'). Null if absent."
+      },
+      "loan_type": {
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "Conventional",
+              "FHA",
+              "VA",
+              "Other"
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Loan Type",
+        "description": "The 'Loan Type' from the Loan Information block (page 1) - the checked box among Conventional / FHA / VA / ____ (Other). Return the checked value as one of 'Conventional', 'FHA', 'VA', 'Other'. In both samples 'Conventional' is checked (the box shows 'x'). Do NOT confuse with purpose or product. Null if no box is determinable."
+      },
+      "loan_id": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Loan ID",
+        "description": "The 'Loan ID #' from the Loan Information block (page 1), verbatim e.g. '123456789'. Do NOT confuse with file_number ('File #') or mic_number ('MIC #'). Null if absent."
+      },
+      "mic_number": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "MIC Number",
+        "description": "The 'MIC #' (Mortgage Insurance Case number) from the Loan Information block (page 1), verbatim e.g. '000654321', '009874513'. Do NOT confuse with loan_id or file_number. Null if absent."
+      },
+      "loan_amount": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Loan Amount",
+        "description": "The 'Loan Amount' from the Loan Terms table (page 1, first row), verbatim with dollar e.g. '$162,000'. Do NOT confuse with closing_costs_total, cash_to_close, sale_price, or amount_financed (page 5). Null if absent."
+      },
+      "interest_rate": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Interest Rate",
+        "description": "The 'Interest Rate' from the Loan Terms table (page 1), verbatim as a percent e.g. '3.875%', '4.25%'. Do NOT confuse with annual_percentage_rate (APR, page 5) or total_interest_percentage (TIP). Null if absent."
+      },
+      "monthly_principal_and_interest": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Monthly Principal & Interest",
+        "description": "The 'Monthly Principal & Interest' amount from the Loan Terms table (page 1), verbatim e.g. '$761.78', '$737.91'. This is the base P&I, NOT the full Estimated Total Monthly Payment (which adds escrow/MI). Do NOT confuse with estimated_total_monthly_payment. Null if absent."
+      },
+      "prepayment_penalty": {
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "YES",
+              "NO"
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Prepayment Penalty",
+        "description": "Whether the loan has a Prepayment Penalty, from the 'Does the loan have these features?' block of the Loan Terms table (page 1). Normalize to 'YES' or 'NO'. Do NOT confuse with balloon_payment (the row below). Null if absent."
+      },
+      "prepayment_penalty_detail": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Prepayment Penalty Detail",
+        "description": "The descriptive text beside a YES prepayment penalty, verbatim e.g. 'As high as $3,240 if you pay off the loan during the first 2 years' (strip a leading bullet). Page 1 Loan Terms. Null when prepayment_penalty is NO or no detail text is printed."
+      },
+      "balloon_payment": {
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "YES",
+              "NO"
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Balloon Payment",
+        "description": "Whether the loan has a Balloon Payment, from the 'Does the loan have these features?' block (page 1). Normalize to 'YES' or 'NO'. Do NOT confuse with prepayment_penalty (row above). Null if absent."
+      },
+      "estimated_total_monthly_payment_first_period": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Estimated Total Monthly Payment (First Period)",
+        "description": "The 'Estimated Total Monthly Payment' value in the FIRST (left) Projected Payments column (page 1), verbatim e.g. '$1,050.26' (Years 1-7 on the purchase sample, Years 1-4 on H25E). Do NOT confuse with monthly_principal_and_interest (just the P&I component) or with the second-period column. Null if absent."
+      },
+      "estimated_total_monthly_payment_second_period": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Estimated Total Monthly Payment (Second Period)",
+        "description": "The 'Estimated Total Monthly Payment' value in the SECOND (right) Projected Payments column (page 1), verbatim e.g. '$967.91' (Years 8-30 on purchase, Years 5-30 on H25E). Do NOT confuse with the first-period column. Null if absent or if there is only one payment column."
+      },
+      "estimated_taxes_insurance_assessments": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Estimated Taxes, Insurance & Assessments",
+        "description": "The 'Estimated Taxes, Insurance & Assessments' monthly amount from the Projected Payments section (page 1), the '$x a month' figure, verbatim dollar only e.g. '$356.13' (omit the trailing 'a month'). Do NOT confuse with estimated_total_monthly_payment or the Estimated Escrow line. Null if absent."
+      },
+      "closing_costs_total": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Closing Costs Total",
+        "description": "The headline 'Closing Costs' figure in the 'Costs at Closing' box (page 1), verbatim e.g. '$9,712.10', '$5,757.57'. This is the page-1 summary number. Do NOT confuse with: cash_to_close (the larger Cash to Close figure), loan_amount, or the page-2 'J. TOTAL CLOSING COSTS' line (which equals this value but is a different field captured inside loan_costs/grid). Equals loan_costs_portion + other_costs_portion - lender_credits. Null if absent."
+      },
+      "closing_costs_loan_costs_portion": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Closing Costs - Loan Costs Portion",
+        "description": "The 'Loan Costs' component cited inside the Closing Costs explanatory sentence on page 1 ('Includes $X in Loan Costs + $Y in Other Costs - $Z in Lender Credits'), verbatim e.g. '$4,694.05', '$3,495.50'. Do NOT confuse with closing_costs_other_costs_portion (the '$Y in Other Costs' value), closing_costs_total, or lender_credits. Null if absent."
+      },
+      "closing_costs_other_costs_portion": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Closing Costs - Other Costs Portion",
+        "description": "The 'Other Costs' component cited inside the Closing Costs explanatory sentence on page 1 ('... + $Y in Other Costs ...'), verbatim e.g. '$5,018.05', '$2,762.07'. Do NOT confuse with closing_costs_loan_costs_portion ('$X in Loan Costs') or lender_credits. Null if absent."
+      },
+      "lender_credits": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Lender Credits",
+        "description": "The 'Lender Credits' amount from the page-1 Closing Costs sentence ('... - $Z in Lender Credits'). ALWAYS take it from the page-1 'Costs at Closing' sentence and report it as a POSITIVE dollar string WITHOUT a leading minus sign, e.g. '$0', '$500' (purchase sample shows '$0'; H25E shows '$500'). Do NOT use the page-2 'Lender Credits' line form '- $500.00' and do NOT prepend a '-' sign. Do NOT confuse with closing_costs_total, the loan/other-costs portions, or Seller Credits. Null if absent."
+      },
+      "cash_to_close": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Cash to Close",
+        "description": "The headline 'Cash to Close' figure in the 'Costs at Closing' box (page 1), the DOLLAR AMOUNT ONLY e.g. '$14,147.26', '$29,677.43'. Do NOT append the 'From / To Borrower' checkbox words that may sit beside it. Do NOT confuse with closing_costs_total (the smaller Closing Costs figure), loan_amount, or the page-3 Calculating-Cash-to-Close grid 'Cash to Close' row. Null if absent."
+      },
+      "total_of_payments": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Total of Payments",
+        "description": "The 'Total of Payments' value from the Loan Calculations box (page 5), verbatim e.g. '$285,803.36'. Do NOT confuse with finance_charge or amount_financed in the same box. Null if absent."
+      },
+      "finance_charge": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Finance Charge",
+        "description": "The 'Finance Charge' value from the Loan Calculations box (page 5), verbatim e.g. '$118,830.27'. Do NOT confuse with total_of_payments or amount_financed. Null if absent."
+      },
+      "amount_financed": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Amount Financed",
+        "description": "The 'Amount Financed' value from the Loan Calculations box (page 5), verbatim e.g. '$162,000.00', '$148,241.94'. Do NOT confuse with loan_amount (page 1, may differ) or finance_charge. Null if absent."
+      },
+      "annual_percentage_rate": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Annual Percentage Rate (APR)",
+        "description": "The 'Annual Percentage Rate (APR)' from the Loan Calculations box (page 5), verbatim percent e.g. '4.174%', '4.543%'. Do NOT confuse with interest_rate (page 1, lower) or total_interest_percentage (TIP). Null if absent."
+      },
+      "total_interest_percentage": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Total Interest Percentage (TIP)",
+        "description": "The 'Total Interest Percentage (TIP)' from the Loan Calculations box (page 5), verbatim percent e.g. '69.46%', '77.29%'. Do NOT confuse with annual_percentage_rate (APR) or interest_rate. Null if absent."
+      },
+      "assumption": {
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "will allow",
+              "will not allow"
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Assumption",
+        "description": "The checked Assumption option in Loan Disclosures (page 4): 'will allow' (lender will allow assumption) or 'will not allow'. In both samples 'will not allow' is checked. Null if not determinable."
+      },
+      "demand_feature": {
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "has",
+              "does not have"
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Demand Feature",
+        "description": "The checked Demand Feature option in Loan Disclosures (page 4): 'has' a demand feature or 'does not have'. In both samples 'does not have' is checked. Null if not determinable."
+      },
+      "negative_amortization": {
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "are scheduled",
+              "may have",
+              "do not have"
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Negative Amortization",
+        "description": "The checked Negative Amortization option in Loan Disclosures (page 4): 'are scheduled' (scheduled neg-am payments), 'may have' (may have neg-am), or 'do not have' (no negative amortization feature). In both samples 'do not have' is checked. Null if not determinable."
+      },
+      "partial_payments": {
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "may accept",
+              "may hold",
+              "does not accept"
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Partial Payments",
+        "description": "The checked Partial Payments option in Loan Disclosures (page 4): 'may accept' partial payments, 'may hold' them in a separate account, or 'does not accept' partial payments. In both samples 'may accept' is checked. Null if not determinable."
+      },
+      "escrow_account": {
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "will have",
+              "will not have"
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Escrow Account",
+        "description": "The checked Escrow Account option in the Escrow Account box (page 4): 'will have' an escrow account or 'will not have'. In both samples 'will have' is checked. Null if not determinable."
+      },
+      "liability_after_foreclosure": {
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "state law may protect",
+              "state law does not protect"
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Liability after Foreclosure",
+        "description": "The checked Liability after Foreclosure option in Other Disclosures (page 5): 'state law may protect' you from liability for the unpaid balance, or 'state law does not protect'. Purchase sample = 'state law may protect'; H25E refinance = 'state law does not protect'. Null if not determinable."
+      },
+      "loan_costs": {
+        "anyOf": [
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/ClosingCostLine"
+            }
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Loan Costs",
+        "description": "Itemized fee lines under the 'Loan Costs' heading of Closing Cost Details (page 2): sections A (Origination Charges), B (Services Borrower Did Not Shop For), C (Services Borrower Did Shop For). Emit one object ONLY for each numbered fee line that has a PRINTED FEE NAME. The form pre-prints blank numbered slots (e.g. '04', '05', '06', '07', '08' with nothing after them) - these are EMPTY placeholders and must NOT be emitted as rows. Also do NOT emit: a row whose line_label would be empty/null, the section header rows themselves, per-section subtotals, or the 'D. TOTAL LOAN COSTS' / 'Loan Costs Subtotals' rows. Expected non-empty counts: purchase sample = 15 lines (A:3, B:6, C:6); H25E refinance = 15 lines (A:4, B:6, C:5). Null when the document does not include the Closing Cost Details page (e.g. an excerpt)."
+      },
+      "other_costs": {
+        "anyOf": [
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/ClosingCostLine"
+            }
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Other Costs",
+        "description": "Itemized fee lines under the 'Other Costs' heading of Closing Cost Details (page 2): sections E (Taxes and Other Government Fees), F (Prepaids), G (Initial Escrow Payment at Closing), H (Other). Emit one object ONLY for each numbered fee line that has a PRINTED FEE NAME, INCLUDING the 'Aggregate Adjustment' line under G. The form pre-prints blank numbered slots and partially-blank rows such as 'Mortgage Insurance Premium ( mo.)' / 'Mortgage Insurance per month for mo.' that have a label but NO dollar amount in any column - treat a row as EMPTY and skip it only when it has neither a meaningful fee name nor any amount; a printed fee name with all-blank amounts (like an unused Mortgage Insurance line) should be SKIPPED. Do NOT emit blank numbered placeholders, section header rows, per-section subtotals, or the 'I. TOTAL OTHER COSTS' / 'J. TOTAL CLOSING COSTS' / 'Other Costs Subtotals' rows. Expected non-empty counts: purchase sample = 15 lines (E:2, F:3, G:3 incl. Aggregate Adjustment, H:7); H25E refinance = 8 lines (E:1, F:3, G:3, H:0, and 'Aggregate Adjustment' counted in G). Null when the document omits the Closing Cost Details page."
+      },
+      "cash_to_close_grid": {
+        "anyOf": [
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/CashToCloseGridRow"
+            }
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Calculating Cash to Close Grid",
+        "description": "Rows of the 'Calculating Cash to Close' table (PURCHASE: page 3; REFINANCE H25E: page 3; REFINANCE excerpt H25F: page 2), which compares Loan Estimate vs Final with a 'Did this change?' answer. Emit one object per row. PURCHASE and REFINANCE have different row sets (refinance includes 'Loan Amount' and 'Total Payoffs and Payments (K)'; purchase includes 'Down Payment/Funds from Borrower', 'Deposit', 'Seller Credits', etc.) - emit whatever rows the document shows, including the final 'Cash to Close' summary row. Do NOT include the page-2 Closing Cost Details fee lines or the page-3 Summaries of Transactions (K/L/M/N) rows."
+      }
+    },
+    "required": []
+  },
+  "expected": {
+    "kind": "json",
+    "schema_ref": "fixtures/eb-short-cfpb_closing-disclosure_H25F-schema.json",
+    "value": {
+      "date_issued": null,
+      "closing_date": null,
+      "disbursement_date": null,
+      "settlement_agent": null,
+      "file_number": null,
+      "property_address": null,
+      "sale_price": null,
+      "appraised_property_value": null,
+      "borrower_name": null,
+      "seller_name": null,
+      "lender_name": null,
+      "loan_term": null,
+      "purpose": "Refinance",
+      "product": null,
+      "loan_type": null,
+      "loan_id": null,
+      "mic_number": null,
+      "loan_amount": null,
+      "interest_rate": null,
+      "monthly_principal_and_interest": null,
+      "prepayment_penalty": null,
+      "prepayment_penalty_detail": null,
+      "balloon_payment": null,
+      "estimated_total_monthly_payment_first_period": null,
+      "estimated_total_monthly_payment_second_period": null,
+      "estimated_taxes_insurance_assessments": null,
+      "closing_costs_total": "$5,977.57",
+      "closing_costs_loan_costs_portion": null,
+      "closing_costs_other_costs_portion": null,
+      "lender_credits": "$500.00",
+      "cash_to_close": "$29,677.43",
+      "total_of_payments": null,
+      "finance_charge": null,
+      "amount_financed": null,
+      "annual_percentage_rate": null,
+      "total_interest_percentage": null,
+      "assumption": null,
+      "demand_feature": null,
+      "negative_amortization": null,
+      "partial_payments": null,
+      "escrow_account": null,
+      "liability_after_foreclosure": null,
+      "loan_costs": null,
+      "other_costs": null,
+      "cash_to_close_grid": [
+        {
+          "line_label": "Loan Amount",
+          "loan_estimate": "$150,000.00",
+          "final": "$150,000.00",
+          "did_change": "NO"
+        },
+        {
+          "line_label": "Total Closing Costs (J)",
+          "loan_estimate": "– $5,099.00",
+          "final": "– $5,977.57",
+          "did_change": "YES"
+        },
+        {
+          "line_label": "Closing Costs Paid Before Closing",
+          "loan_estimate": "$0",
+          "final": "$655.00",
+          "did_change": "YES"
+        },
+        {
+          "line_label": "Total Payoffs and Payments (K)",
+          "loan_estimate": "– $120,000.00",
+          "final": "– $115,000.00",
+          "did_change": "YES"
+        },
+        {
+          "line_label": "Cash to Close",
+          "loan_estimate": "$24,901.00",
+          "final": "$29,677.43",
+          "did_change": null
+        }
+      ]
+    },
+    "anchored_fields": 45,
+    "no_anchor_fields": 0,
+    "pages": {
+      "date_issued": 1,
+      "closing_date": 1,
+      "disbursement_date": 1,
+      "settlement_agent": 1,
+      "file_number": 1,
+      "property_address": 1,
+      "sale_price": 1,
+      "appraised_property_value": 1,
+      "borrower_name": 1,
+      "seller_name": 1,
+      "lender_name": 1,
+      "loan_term": 1,
+      "purpose": 1,
+      "product": 1,
+      "loan_type": 1,
+      "loan_id": 1,
+      "mic_number": 1,
+      "loan_amount": 1,
+      "interest_rate": 1,
+      "monthly_principal_and_interest": 1,
+      "prepayment_penalty": 1,
+      "prepayment_penalty_detail": 1,
+      "balloon_payment": 1,
+      "estimated_total_monthly_payment_first_period": 1,
+      "estimated_total_monthly_payment_second_period": 1,
+      "estimated_taxes_insurance_assessments": 1,
+      "closing_costs_total": 1,
+      "closing_costs_loan_costs_portion": 1,
+      "closing_costs_other_costs_portion": 1,
+      "cash_to_close": 1,
+      "total_of_payments": 5,
+      "finance_charge": 5,
+      "amount_financed": 5,
+      "annual_percentage_rate": 5,
+      "total_interest_percentage": 5,
+      "assumption": 4,
+      "demand_feature": 4,
+      "negative_amortization": 4,
+      "partial_payments": 4,
+      "escrow_account": 4,
+      "liability_after_foreclosure": 5,
+      "loan_costs": 2,
+      "other_costs": 2,
+      "cash_to_close_grid": 3
+    },
+    "evidence_gold": {
+      "source": "schema-description",
+      "version": 1
+    }
+  },
+  "field_rules": "{\"date_issued\": {\"comparator\": \"date\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"closing_date\": {\"comparator\": \"date\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"disbursement_date\": {\"comparator\": \"date\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"settlement_agent\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"file_number\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"property_address\": {\"comparator\": \"address\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"sale_price\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"appraised_property_value\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"borrower_name\": {\"comparator\": \"address\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"seller_name\": {\"comparator\": \"address\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"lender_name\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"loan_term\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"purpose\": {\"comparator\": \"enum\", \"evidence\": [{\"page\": 1, \"bbox\": [0.7549, 0.47799, 0.12363, 0.0264], \"quote\": \"Refinance\", \"value\": \"Refinance\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"product\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"loan_type\": {\"comparator\": \"enum\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"loan_id\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"mic_number\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"loan_amount\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"interest_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"monthly_principal_and_interest\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"prepayment_penalty\": {\"comparator\": \"enum\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"prepayment_penalty_detail\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"balloon_payment\": {\"comparator\": \"enum\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"estimated_total_monthly_payment_first_period\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"estimated_total_monthly_payment_second_period\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"estimated_taxes_insurance_assessments\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"closing_costs_total\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.67678, 0.18952, 0.05863, 0.01985], \"quote\": \"$5,977.57\", \"value\": \"$5,977.57\", \"coarse\": false, \"layer\": \"word\"}, {\"page\": 2, \"bbox\": [0.58845, 0.18245, 0.23529, 0.0303], \"quote\": \"$5,977.57\", \"value\": \"$5,977.57\", \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"closing_costs_loan_costs_portion\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"closing_costs_other_costs_portion\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"lender_credits\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.65583, 0.24244, 0.04373, 0.02081], \"quote\": \"$500.00\", \"value\": \"$500.00\", \"coarse\": false, \"layer\": \"word\"}, {\"page\": 2, \"bbox\": [0.58845, 0.23801, 0.11765, 0.02525], \"quote\": \"$500.00\", \"value\": \"$500.00\", \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"cash_to_close\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.42544, 0.72414, 0.06024, 0.01995], \"quote\": \"$29,677.43\", \"value\": \"$29,677.43\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"total_of_payments\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"finance_charge\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"amount_financed\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"annual_percentage_rate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"total_interest_percentage\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"assumption\": {\"comparator\": \"enum\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"demand_feature\": {\"comparator\": \"enum\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"negative_amortization\": {\"comparator\": \"enum\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"partial_payments\": {\"comparator\": \"enum\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"escrow_account\": {\"comparator\": \"enum\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"liability_after_foreclosure\": {\"comparator\": \"enum\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true}, \"cash_to_close_grid\": {\"comparator\": {\"line_label\": \"case_insensitive\", \"loan_estimate\": \"case_insensitive\", \"final\": \"case_insensitive\", \"did_change\": \"enum\"}, \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": \"Loan Amount\", \"value\": {\"line_label\": \"Loan Amount\", \"loan_estimate\": \"$150,000.00\", \"final\": \"$150,000.00\", \"did_change\": \"NO\"}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"Total Closing Costs (J)\", \"value\": {\"line_label\": \"Total Closing Costs (J)\", \"loan_estimate\": \"– $5,099.00\", \"final\": \"– $5,977.57\", \"did_change\": \"YES\"}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"Closing Costs Paid Before Closing\", \"value\": {\"line_label\": \"Closing Costs Paid Before Closing\", \"loan_estimate\": \"$0\", \"final\": \"$655.00\", \"did_change\": \"YES\"}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"Total Payoffs and Payments (K)\", \"value\": {\"line_label\": \"Total Payoffs and Payments (K)\", \"loan_estimate\": \"– $120,000.00\", \"final\": \"– $115,000.00\", \"did_change\": \"YES\"}, \"coarse\": true}, {\"page\": null, \"bbox\": null, \"quote\": \"Cash to Close\", \"value\": {\"line_label\": \"Cash to Close\", \"loan_estimate\": \"$24,901.00\", \"final\": \"$29,677.43\", \"did_change\": null}, \"coarse\": true}], \"source_policy\": \"verbatim\", \"evidence_required\": true, \"verified\": true, \"structural\": \"match_by:line_label\"}, \"cash_to_close_grid[0].line_label\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.06574, 0.52299, 0.07557, 0.01648], \"quote\": \"Loan Amount\", \"value\": \"Loan Amount\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"cash_to_close_grid[0].loan_estimate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.31893, 0.52213, 0.06707, 0.01995], \"quote\": \"$150,000.00\", \"value\": \"$150,000.00\", \"coarse\": false, \"layer\": \"word\"}, {\"page\": 2, \"bbox\": [0.29449, 0.50758, 0.09804, 0.0404], \"quote\": \"$150,000.00\", \"value\": \"$150,000.00\", \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"cash_to_close_grid[0].final\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.41697, 0.52213, 0.06707, 0.01995], \"quote\": \"$150,000.00\", \"value\": \"$150,000.00\", \"coarse\": false, \"layer\": \"word\"}, {\"page\": 2, \"bbox\": [0.39253, 0.50758, 0.09804, 0.0404], \"quote\": \"$150,000.00\", \"value\": \"$150,000.00\", \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"cash_to_close_grid[0].did_change\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.50051, 0.52309, 0.01865, 0.0164], \"quote\": \"NO\", \"value\": \"NO\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"cash_to_close_grid[1].line_label\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.06574, 0.56253, 0.11774, 0.02081], \"quote\": \"Total Closing Costs (J)\", \"value\": \"Total Closing Costs (J)\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"cash_to_close_grid[1].loan_estimate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.3326, 0.60798, 0.0534, 0.01995], \"quote\": \"$5,099.00\", \"value\": \"– $5,099.00\", \"coarse\": false, \"layer\": \"word\"}, {\"page\": 2, \"bbox\": [0.29449, 0.54798, 0.09804, 0.08586], \"quote\": \"$5,099.00\", \"value\": \"– $5,099.00\", \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"cash_to_close_grid[1].final\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.43064, 0.60798, 0.0534, 0.01995], \"quote\": \"$5,977.57\", \"value\": \"– $5,977.57\", \"coarse\": false, \"layer\": \"word\"}, {\"page\": 2, \"bbox\": [0.39253, 0.54798, 0.09804, 0.08586], \"quote\": \"$5,977.57\", \"value\": \"– $5,977.57\", \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"cash_to_close_grid[1].did_change\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.50051, 0.56278, 0.02221, 0.01698], \"quote\": \"YES\", \"value\": \"YES\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"cash_to_close_grid[2].line_label\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.06574, 0.64839, 0.18439, 0.02081], \"quote\": \"Closing Costs Paid Before Closing\", \"value\": \"Closing Costs Paid Before Closing\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"cash_to_close_grid[2].loan_estimate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.37246, 0.64839, 0.01354, 0.01908], \"quote\": \"$0\", \"value\": \"$0\", \"coarse\": false, \"layer\": \"word\"}, {\"page\": 2, \"bbox\": [0.29449, 0.63384, 0.09804, 0.0404], \"quote\": \"$0\", \"value\": \"$0\", \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"cash_to_close_grid[2].final\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.44031, 0.64839, 0.04373, 0.01908], \"quote\": \"$655.00\", \"value\": \"$655.00\", \"coarse\": false, \"layer\": \"word\"}, {\"page\": 2, \"bbox\": [0.39253, 0.63384, 0.09804, 0.0404], \"quote\": \"$655.00\", \"value\": \"$655.00\", \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"cash_to_close_grid[2].did_change\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.50051, 0.64935, 0.02221, 0.0164], \"quote\": \"YES\", \"value\": \"YES\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"cash_to_close_grid[3].line_label\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.06574, 0.68879, 0.16876, 0.02081], \"quote\": \"Total Payoffs and Payments (K)\", \"value\": \"Total Payoffs and Payments (K)\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"cash_to_close_grid[3].loan_estimate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.31893, 0.68879, 0.06707, 0.01995], \"quote\": \"$120,000.00\", \"value\": \"– $120,000.00\", \"coarse\": false, \"layer\": \"word\"}, {\"page\": 2, \"bbox\": [0.29449, 0.67424, 0.09804, 0.0404], \"quote\": \"$120,000.00\", \"value\": \"– $120,000.00\", \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"cash_to_close_grid[3].final\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.41697, 0.68879, 0.06707, 0.01995], \"quote\": \"$115,000.00\", \"value\": \"– $115,000.00\", \"coarse\": false, \"layer\": \"word\"}, {\"page\": 2, \"bbox\": [0.39253, 0.67424, 0.09804, 0.0404], \"quote\": \"$115,000.00\", \"value\": \"– $115,000.00\", \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"cash_to_close_grid[3].did_change\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.50051, 0.68905, 0.02221, 0.01698], \"quote\": \"YES\", \"value\": \"YES\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"cash_to_close_grid[4].line_label\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.0641, 0.72424, 0.07846, 0.01726], \"quote\": \"Cash to Close\", \"value\": \"Cash to Close\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"cash_to_close_grid[4].loan_estimate\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.3274, 0.72415, 0.06024, 0.01995], \"quote\": \"$24,901.00\", \"value\": \"$24,901.00\", \"coarse\": false, \"layer\": \"word\"}, {\"page\": 2, \"bbox\": [0.29449, 0.71465, 0.09804, 0.03725], \"quote\": \"$24,901.00\", \"value\": \"$24,901.00\", \"coarse\": false, \"layer\": \"structural\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"cash_to_close_grid[4].final\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": 2, \"bbox\": [0.42544, 0.72414, 0.06024, 0.01995], \"quote\": \"$29,677.43\", \"value\": \"$29,677.43\", \"coarse\": false, \"layer\": \"word\"}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}, \"cash_to_close_grid[4].did_change\": {\"comparator\": \"case_insensitive\", \"evidence\": [{\"page\": null, \"bbox\": null, \"quote\": null, \"value\": null, \"coarse\": true}], \"source_policy\": \"computed\", \"evidence_required\": true, \"verified\": true}}",
+  "repeated_structure": "{}",
+  "anchored_fields": 45,
+  "no_anchor_fields": 0,
+  "case_id": "B03-eb-0163"
+}

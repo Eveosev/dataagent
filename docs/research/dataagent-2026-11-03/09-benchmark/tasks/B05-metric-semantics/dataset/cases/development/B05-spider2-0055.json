@@ -1,0 +1,38 @@
+{
+  "case_id": "B05-spider2-0055",
+  "task_id": "B05",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "question",
+      "ref": "fixtures/spider2-sf_bq056.md",
+      "digest": null
+    },
+    {
+      "kind": "corpus",
+      "ref": "bench://spider2-lite/spider2-lite.jsonl",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B05-spider2-0055.json"
+  },
+  "evidence": [
+    "fixtures/spider2-sf_bq056.md"
+  ],
+  "tags": [
+    "spider2",
+    "GEO_OPENSTREETMAP_BOUNDARIES"
+  ],
+  "source": "spider2",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

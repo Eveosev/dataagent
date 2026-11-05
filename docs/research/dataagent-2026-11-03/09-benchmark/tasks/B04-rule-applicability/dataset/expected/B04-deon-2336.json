@@ -1,0 +1,29 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_8dea90ed",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_notice_type",
+    "scenario_actor",
+    "scenario_recipient",
+    "scenario_action",
+    "statute_ak_09_45_105_applies",
+    "legal_notice_must_state_reason",
+    "legal_notice_must_include_termination_datetime",
+    "legal_notice_must_direct_quit_by_termination",
+    "legal_notice_must_warn_of_civil_action_if_holdover",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program encoding Alaska law (2021) and the scenario.\n\n    Question: Does the law require landlords to provide a reason for eviction when giving tenants notice to vacate?\n\n    Statute translated:\n    - AK Stat  09.45.105 (2021): \"Notice to quit ... must ... state ... the nature of the breach ... or other reason for termination ...\"\n*/\n\n% -----------------------------\n% Scenario facts (the statement)\n% -----------------------------\n\nscenario_state(alaska).\nscenario_focus_year(2021).\n\n% The question scenario: a landlord is giving a tenant notice to vacate (i.e., a notice to quit).\nscenario_notice_type(notice_to_quit).\nscenario_actor(landlord).\nscenario_recipient(tenant).\nscenario_action(giving_notice_to_vacate_property).\n\n% Helper predicate that succeeds when the scenario is satisfied (as encoded above).\nscenario_statement :-\n    scenario_state(alaska),\n    scenario_focus_year(2021),\n    scenario_notice_type(notice_to_quit),\n    scenario_actor(landlord),\n    scenario_recipient(tenant),\n    scenario_action(giving_notice_to_vacate_property).\n\n% -----------------------------\n% Statute encoding (deterministic)\n% -----------------------------\n\n/*\n  AK Stat  09.45.105 (2021) - Notice to quit contents requirement.\n  We encode the portion relevant to the question:\n   - The notice to quit must state the nature of the breach/violation OR other reason for termination.\n*/\nstatute_ak_09_45_105_applies(State, Year, NoticeType) :-\n    State = alaska,\n    Year = 2021,\n    NoticeType = notice_to_quit.\n\n% Duty: notice must state a reason (breach/violation or other reason for termination).\nlegal_notice_must_state_reason(State, Year, NoticeType) :-\n    statute_ak_09_45_105_applies(State, Year, NoticeType).\n\n/*\n  For completeness, we also encode the other listed \"must\" elements, even though not needed\n  to answer the question.\n*/\nlegal_notice_must_include_termination_datetime(State, Year, NoticeType) :-\n    statute_ak_09_45_105_applies(State, Year, NoticeType).\n\nlegal_notice_must_direct_quit_by_termination(State, Year, NoticeType) :-\n    statute_ak_09_45_105_applies(State, Year, NoticeType).\n\nlegal_notice_must_warn_of_civil_action_if_holdover(State, Year, NoticeType) :-\n    statute_ak_09_45_105_applies(State, Year, NoticeType).\n\n% -----------------------------\n% Reasoning for the question\n% -----------------------------\n\n% In this scenario, determine whether the law requires stating a reason in the notice to vacate.\nscenario_law_requires_reason_for_notice_to_vacate :-\n    scenario_statement,\n    scenario_state(State),\n    scenario_focus_year(Year),\n    scenario_notice_type(NoticeType),\n    legal_notice_must_state_reason(State, Year, NoticeType).\n\n% -----------------------------\n% Final answer predicate (deterministic)\n% -----------------------------\n\nhousing_answer(yes) :-\n    scenario_law_requires_reason_for_notice_to_vacate,\n    !.\nhousing_answer(no) :-\n    !.\n\n% -----------------------------\n% Main entrypoint (required)\n% -----------------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-2336",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Does the law require landlords to provide a reason for eviction when giving tenants notice to vacate the property?"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "case_id": "B03-cord-0387",
+  "task_id": "B03",
+  "split_role": "unseen_acceptance",
+  "inputs": [
+    {
+      "kind": "image",
+      "ref": "bench://cord-v2/images/test-00089.png",
+      "digest": null
+    },
+    {
+      "kind": "instruction",
+      "ref": "fixtures/cord-test-00089-task.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-cord-0387.json"
+  },
+  "evidence": [
+    "bench://cord-v2/images/test-00089.png",
+    "fixtures/cord-test-00089-task.md"
+  ],
+  "tags": [
+    "cord-v2",
+    "test",
+    "doc:receipt",
+    "fields:11"
+  ],
+  "source": "cord",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

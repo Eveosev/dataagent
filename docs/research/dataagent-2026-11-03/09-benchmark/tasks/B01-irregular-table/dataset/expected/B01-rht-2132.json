@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 496,
+  "table": "health-table06",
+  "structure": "SingleRowClassified",
+  "question_type": "Fact Checking",
+  "sub_type": "Value-Matching",
+  "answer": "Belgium",
+  "cot": [
+    {
+      "planning": "First, we identified the relevant column for the year 2019 from the table."
+    },
+    {
+      "planning": "We extracted the data for all countries and their corresponding values for 2019."
+    },
+    {
+      "planning": "We identified the country with the maximum value in the 2019 column."
+    }
+  ],
+  "case_id": "B01-rht-2132",
+  "expected": {
+    "kind": "answer",
+    "question": "Which country had the highest number of pharmacists per 1000 inhabitants in 2019?",
+    "answer": "Belgium"
+  }
+}

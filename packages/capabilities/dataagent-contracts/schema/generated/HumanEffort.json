@@ -1,0 +1,44 @@
+{
+  "$comment": "generated from dataagent_contracts.core:HumanEffort; do not edit",
+  "$id": "dataagent-contracts/0.1/core/HumanEffort",
+  "additionalProperties": false,
+  "properties": {
+    "count": {
+      "minimum": 0,
+      "title": "Count",
+      "type": "integer"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "minutes": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Minutes"
+    }
+  },
+  "required": [
+    "count"
+  ],
+  "title": "HumanEffort",
+  "type": "object"
+}

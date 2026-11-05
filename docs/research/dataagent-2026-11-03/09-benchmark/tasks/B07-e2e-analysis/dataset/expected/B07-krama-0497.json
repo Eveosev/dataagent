@@ -1,0 +1,26 @@
+{
+  "source": "mitdbg/KramaBench",
+  "file": "dr-input/legal/legal_random.json",
+  "raw": {
+    "id": "legal-hard-28",
+    "query": "In 2024, as a percentage of all reports for the same demographic, did military consumers report a higher percentage of Imposter Scams than the general population? Answer Yes or No. No explanation needed.",
+    "answer": "Yes",
+    "answer_type": "string_exact",
+    "runtime": 1,
+    "data_sources": [
+      "2024_CSN_Reports_by_Military_Consumers.csv",
+      "2024_CSN_Report_Categories.csv"
+    ]
+  },
+  "case_id": "B07-krama-0497",
+  "expected": {
+    "kind": "answer",
+    "answer": "Yes",
+    "answer_type": "string_exact",
+    "runtime_s": 1,
+    "data_sources": [
+      "2024_CSN_Reports_by_Military_Consumers.csv",
+      "2024_CSN_Report_Categories.csv"
+    ]
+  }
+}

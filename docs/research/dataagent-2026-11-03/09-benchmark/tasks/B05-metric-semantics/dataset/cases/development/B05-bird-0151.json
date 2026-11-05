@@ -1,0 +1,40 @@
+{
+  "case_id": "B05-bird-0151",
+  "task_id": "B05",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "question",
+      "ref": "fixtures/bird-150-debit_card_specializing.md",
+      "digest": null
+    },
+    {
+      "kind": "corpus",
+      "ref": "bench://bird-mini-dev/data/mini_dev_sqlite.jsonl",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B05-bird-0151.json"
+  },
+  "evidence": [
+    "fixtures/bird-150-debit_card_specializing.md#schema",
+    "bench://bird-mini-dev/data/mini_dev_sqlite.jsonl"
+  ],
+  "tags": [
+    "bird",
+    "sqlite",
+    "debit_card_specializing"
+  ],
+  "source": "bird",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

@@ -1,0 +1,116 @@
+{
+  "$comment": "generated from dataagent_contracts.core:CriteriaRef; do not edit",
+  "$defs": {
+    "LifecycleStatus": {
+      "enum": [
+        "draft",
+        "candidate",
+        "validated",
+        "active",
+        "deprecated",
+        "invalidated",
+        "rejected"
+      ],
+      "title": "LifecycleStatus",
+      "type": "string"
+    }
+  },
+  "$id": "dataagent-contracts/0.1/core/CriteriaRef",
+  "additionalProperties": false,
+  "properties": {
+    "confirmation_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Confirmation Ref"
+    },
+    "evidence_requirements": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Evidence Requirements",
+      "type": "array"
+    },
+    "expected_outputs": {
+      "minLength": 1,
+      "title": "Expected Outputs",
+      "type": "string"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "id": {
+      "minLength": 1,
+      "title": "Id",
+      "type": "string"
+    },
+    "owner_ref": {
+      "minLength": 1,
+      "title": "Owner Ref",
+      "type": "string"
+    },
+    "revision": {
+      "minLength": 1,
+      "title": "Revision",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/LifecycleStatus"
+    },
+    "thresholds": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "title": "Thresholds",
+      "type": "object"
+    },
+    "unknown_policy": {
+      "enum": [
+        "count_as_fail",
+        "report_separately"
+      ],
+      "title": "Unknown Policy",
+      "type": "string"
+    },
+    "valid_from": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Valid From"
+    }
+  },
+  "required": [
+    "id",
+    "revision",
+    "status",
+    "owner_ref",
+    "expected_outputs",
+    "unknown_policy"
+  ],
+  "title": "CriteriaRef",
+  "type": "object"
+}

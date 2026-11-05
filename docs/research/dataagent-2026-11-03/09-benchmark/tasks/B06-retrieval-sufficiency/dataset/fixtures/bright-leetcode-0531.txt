@@ -1,0 +1,58 @@
+## Essential Problem:
+
+The problem asks us to find the number of nodes in a binary tree with the highest score. The score of a node is defined as the product of the sizes of all the subtrees that are created when the node and its connected edges are removed from the tree. 
+
+## Relevant Information:
+
+**1. Tree structure:**
+
+- We are given the parent array `parents` which describes the structure of the binary tree. 
+- The root of the tree is node `0`.
+
+**2. Score calculation:**
+
+- To calculate the score of a node, we need to consider the sizes of all the subtrees formed when the node and its edges are removed.
+- The size of a subtree is the number of nodes it contains.
+
+## Solution Outline:
+
+**1. Preprocessing:**
+
+- Build the tree structure from the `parents` array.
+- For each node, calculate and store the size of its subtree using a Depth-First Search (DFS) traversal.
+
+**2. Score Calculation:**
+
+- Iterate through each node in the tree.
+- For each node, remove the node and its connected edges from the tree.
+- Find the connected components (subtrees) formed after the removal.
+- Calculate the product of the sizes of all the subtrees.
+- Update the maximum score and the count of nodes with the maximum score.
+
+**3. Return the count of nodes with the maximum score.**
+
+## Additional Thoughts:
+
+- We can optimize the score calculation by using dynamic programming techniques to avoid recalculating subtree sizes during the iteration.
+- We can use a union-find data structure to efficiently find and merge connected components when removing a node.
+
+## Draft Answer:
+
+To find the number of nodes with the highest score in the binary tree, we can follow these steps:
+
+**1. Preprocessing:**
+
+- Build the tree structure from the `parents` array.
+- Perform a DFS traversal to calculate and store the size of the subtree rooted at each node.
+
+**2. Score Calculation:**
+
+- Iterate through each node in the tree.
+- For each node, simulate removing the node and its edges.
+- Use a union-find data structure to efficiently identify and merge the connected components (subtrees) formed after removal.
+- Calculate the product of the sizes of all the subtrees.
+- Update the maximum score and the count of nodes with the maximum score.
+
+**3. Return the count of nodes with the maximum score.**
+
+By following these steps, we can efficiently find the number of nodes in the binary tree with the highest score.

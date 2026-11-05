@@ -1,0 +1,27 @@
+{
+  "source": "beaverbench/beaver-query",
+  "id": "neutron_806",
+  "db": "neutron",
+  "question": "For ports whose status is DOWN, list each port’s ID, name, MAC address, binding host, and VIF type, along with (1) the port’s rank within the DOWN status group ordered by port ID and (2) the dense rank of the port when ordering by its port-security setting (PORT_SECURITY_ENABLED) using a window frame of the current row and the 2 preceding rows. Do not return any rounded answers.",
+  "sql": "WITH PortSecurityWindow AS ( SELECT p.id AS port_id, dense_rank() OVER ( ORDER BY psb.port_security_enabled ROWS BETWEEN 2 PRECEDING AND CURRENT ROW ) AS window_column FROM ports AS p JOIN portsecuritybindings AS psb ON p.id = psb.port_id WHERE p.status = 'DOWN' ), PortBindingRank AS ( SELECT p.ID AS port_id, p.NAME AS port_name, p.MAC_ADDRESS AS mac_address, b.HOST AS binding_host, b.VIF_TYPE AS vif_type, RANK() OVER (PARTITION BY p.STATUS ORDER BY p.ID) AS window_column FROM PORTS p JOIN ML2_PORT_BINDINGS b ON p.ID = b.PORT_ID WHERE p.STATUS = 'DOWN' ) SELECT pbr.port_id, pbr.port_name, pbr.mac_address, pbr.binding_host, pbr.vif_type, pbr.window_column AS rank_within_down_status_by_port_id, psw.window_column AS dense_rank_by_port_security_with_2_preceding_frame FROM PortBindingRank pbr JOIN PortSecurityWindow psw ON pbr.port_id = psw.port_id ORDER BY pbr.port_id;",
+  "tables": "[\"PORTS\", \"ML2_PORT_BINDINGS\"]",
+  "join_keys": "[[\"PORTS.ID\", \"PORTSECURITYBINDINGS.PORT_ID\"], [\"ML2_PORT_BINDINGS.PORT_ID\", \"PORTS.ID\"]]",
+  "column_mapping": "{\"ports whose status is DOWN\": [\"PORTS.STATUS\"], \"port ID\": [\"PORTS.ID\", \"PORTS.ID\"], \"dense rank\": [\"PORTSECURITYBINDINGS.PORT_SECURITY_ENABLED\"], \"port-security setting (PORT_SECURITY_ENABLED)\": [\"PORTSECURITYBINDINGS.PORT_SECURITY_ENABLED\"], \"status DOWN\": [\"PORTS.STATUS\"], \"port name\": [\"PORTS.NAME\"], \"MAC address\": [\"PORTS.MAC_ADDRESS\"], \"binding host\": [\"ML2_PORT_BINDINGS.HOST\"], \"VIF type\": [\"ML2_PORT_BINDINGS.VIF_TYPE\"], \"rank within status group ordered by port ID\": [\"PORTS.STATUS\", \"PORTS.ID\"]}",
+  "domain_knowledge": "[]",
+  "sub_questions": "[\"For ports whose status is DOWN, list each port ID and the dense rank of that port when ordering by its port-security setting (PORT_SECURITY_ENABLED), using a window frame that includes the current row and the 2 preceding rows.\", \"For ports whose status is DOWN, show the port ID, port name, MAC address, the binding host, VIF type, and the rank of each port within its status group ordered by port ID.\"]",
+  "sub_sqls": "[\"SELECT p.id AS port_id, dense_rank() OVER ( ORDER BY psb.port_security_enabled ROWS BETWEEN 2 PRECEDING AND CURRENT ROW ) AS window_column FROM ports AS p JOIN portsecuritybindings AS psb ON p.id = psb.port_id WHERE p.status = 'DOWN';\", \"SELECT p.ID AS port_id, p.NAME AS port_name, p.MAC_ADDRESS AS mac_address, b.HOST AS binding_host, b.VIF_TYPE AS vif_type, RANK() OVER (PARTITION BY p.STATUS ORDER BY p.ID) AS window_column FROM PORTS p JOIN ML2_PORT_BINDINGS b ON p.ID = b.PORT_ID WHERE p.STATUS = 'DOWN';\"]",
+  "category": "complex query",
+  "detailed_category": "cte",
+  "case_id": "B05-beaver-0491",
+  "expected": {
+    "kind": "sql",
+    "sql": "WITH PortSecurityWindow AS ( SELECT p.id AS port_id, dense_rank() OVER ( ORDER BY psb.port_security_enabled ROWS BETWEEN 2 PRECEDING AND CURRENT ROW ) AS window_column FROM ports AS p JOIN portsecuritybindings AS psb ON p.id = psb.port_id WHERE p.status = 'DOWN' ), PortBindingRank AS ( SELECT p.ID AS port_id, p.NAME AS port_name, p.MAC_ADDRESS AS mac_address, b.HOST AS binding_host, b.VIF_TYPE AS vif_type, RANK() OVER (PARTITION BY p.STATUS ORDER BY p.ID) AS window_column FROM PORTS p JOIN ML2_PORT_BINDINGS b ON p.ID = b.PORT_ID WHERE p.STATUS = 'DOWN' ) SELECT pbr.port_id, pbr.port_name, pbr.mac_address, pbr.binding_host, pbr.vif_type, pbr.window_column AS rank_within_down_status_by_port_id, psw.window_column AS dense_rank_by_port_security_with_2_preceding_frame FROM PortBindingRank pbr JOIN PortSecurityWindow psw ON pbr.port_id = psw.port_id ORDER BY pbr.port_id;",
+    "sub_sqls": "[\"SELECT p.id AS port_id, dense_rank() OVER ( ORDER BY psb.port_security_enabled ROWS BETWEEN 2 PRECEDING AND CURRENT ROW ) AS window_column FROM ports AS p JOIN portsecuritybindings AS psb ON p.id = psb.port_id WHERE p.status = 'DOWN';\", \"SELECT p.ID AS port_id, p.NAME AS port_name, p.MAC_ADDRESS AS mac_address, b.HOST AS binding_host, b.VIF_TYPE AS vif_type, RANK() OVER (PARTITION BY p.STATUS ORDER BY p.ID) AS window_column FROM PORTS p JOIN ML2_PORT_BINDINGS b ON p.ID = b.PORT_ID WHERE p.STATUS = 'DOWN';\"]",
+    "db": "neutron",
+    "tables": "[\"PORTS\", \"ML2_PORT_BINDINGS\"]",
+    "join_keys": "[[\"PORTS.ID\", \"PORTSECURITYBINDINGS.PORT_ID\"], [\"ML2_PORT_BINDINGS.PORT_ID\", \"PORTS.ID\"]]",
+    "column_mapping": "{\"ports whose status is DOWN\": [\"PORTS.STATUS\"], \"port ID\": [\"PORTS.ID\", \"PORTS.ID\"], \"dense rank\": [\"PORTSECURITYBINDINGS.PORT_SECURITY_ENABLED\"], \"port-security setting (PORT_SECURITY_ENABLED)\": [\"PORTSECURITYBINDINGS.PORT_SECURITY_ENABLED\"], \"status DOWN\": [\"PORTS.STATUS\"], \"port name\": [\"PORTS.NAME\"], \"MAC address\": [\"PORTS.MAC_ADDRESS\"], \"binding host\": [\"ML2_PORT_BINDINGS.HOST\"], \"VIF type\": [\"ML2_PORT_BINDINGS.VIF_TYPE\"], \"rank within status group ordered by port ID\": [\"PORTS.STATUS\", \"PORTS.ID\"]}",
+    "category": "complex query",
+    "db_archive": "bench://beaver-table/beaver_db.zip"
+  }
+}

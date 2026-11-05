@@ -1,0 +1,142 @@
+{
+  "type": "object",
+  "properties": {
+    "filer_ein": {
+      "type": "string",
+      "description": "Filer's 9-digit EIN. XML emits as concatenated 9 digits ('131635294'); PDF renders as '13-1635294'. Normalize by stripping the hyphen for matching."
+    },
+    "filer_name": {
+      "type": "string",
+      "description": "Filer business name line 1 (e.g., 'UNITED WAY WORLDWIDE')."
+    },
+    "tax_year": {
+      "type": "integer",
+      "description": "Tax year of the return (e.g., 2024)."
+    },
+    "tax_period_end_date": {
+      "type": "string",
+      "description": "Last day of the tax period, ISO YYYY-MM-DD. Note that calendar-year filers use 12-31; some use other fiscal year-ends."
+    },
+    "grant_records_maintained": {
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "description": "Schedule I Part I line 1: does the organization maintain records to substantiate grant amounts, eligibility, and selection criteria? Output null when Part I line 1 is not visible on the form."
+    },
+    "total_501c3_org_count": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "Schedule I Part II line 2: total count of section 501(c)(3) organization recipients listed."
+    },
+    "total_other_org_count": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "Schedule I Part II line 3: total count of other (non-501(c)(3)) organization recipients listed."
+    },
+    "grants": {
+      "type": "array",
+      "description": "Every recipient organization or government that received aggregate grants > $5,000 from the filer during the tax year. Order on the IRS form is filer-defined (usually alphabetical or by amount); not significant for grading.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "recipient_name": {
+            "type": "string",
+            "description": "Recipient name, line 1 (e.g., '2-1-1 BIG BEND INC'). May be a person's name when the recipient is a sole-proprietor non-profit."
+          },
+          "recipient_name_continuation": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Recipient name line 2 (continuation). Always null when the data source provides the full name on one line — even if the IRS form physically wraps it across two visible lines, put the full name in recipient_name and leave this null."
+          },
+          "address_line1": {
+            "type": "string",
+            "description": "Recipient mailing address line 1 (e.g., 'PO BOX 10950', '1007 PATHFINDER WAY')."
+          },
+          "address_line2": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Address line 2 if present."
+          },
+          "city": {
+            "type": "string",
+            "description": "Recipient city (e.g., 'TALLAHASSEE')."
+          },
+          "state": {
+            "type": "string",
+            "description": "Two-letter US state abbreviation (e.g., 'FL', 'CA')."
+          },
+          "zip_code": {
+            "type": "string",
+            "description": "ZIP code. XML emits as concatenated digits ('32302', '201911575'); PDF renders 5-digit or ZIP+4 with hyphen ('20191-1575'). Normalize before matching."
+          },
+          "recipient_ein": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Recipient's 9-digit EIN. May be null when the recipient is a government entity or unidentified individual. PDF renders with hyphen; XML without."
+          },
+          "irc_section": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "IRC section under which the recipient is exempt (e.g., '501(C)(3)', 'GOVERNMENT ENTITY'). Free-form string."
+          },
+          "cash_grant_amount": {
+            "type": "integer",
+            "description": "Cash grant amount in whole US dollars. XML stores as nonneg integer with no commas; PDF renders with commas."
+          },
+          "noncash_assistance_amount": {
+            "type": "integer",
+            "description": "Noncash assistance value in whole dollars. Often 0."
+          },
+          "valuation_method": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Required when noncash_assistance_amount > 0. Free-form: 'BOOK', 'FMV', 'APPRAISAL', 'OTHER'."
+          },
+          "noncash_assistance_description": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Description of noncash assistance, when noncash_assistance_amount > 0."
+          },
+          "purpose_of_grant": {
+            "type": "string",
+            "description": "Stated purpose, free-form (e.g., 'HEALTH', 'EDUCATION', 'GENERAL OPERATING SUPPORT', 'CAPACITY BUILDING'). Customers care about this field for thematic analysis."
+          }
+        },
+        "required": [
+          "recipient_name",
+          "address_line1",
+          "city",
+          "state",
+          "zip_code",
+          "cash_grant_amount",
+          "noncash_assistance_amount",
+          "purpose_of_grant"
+        ]
+      }
+    }
+  },
+  "required": [
+    "filer_ein",
+    "filer_name",
+    "tax_year",
+    "tax_period_end_date",
+    "grants"
+  ]
+}

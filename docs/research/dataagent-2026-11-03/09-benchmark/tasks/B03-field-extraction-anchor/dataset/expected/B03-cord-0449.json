@@ -1,0 +1,140 @@
+{
+  "source": "naver-clova-ix/cord-v2",
+  "split": "train",
+  "index": 52,
+  "gt_parse": {
+    "menu": [
+      {
+        "nm": "2001-Hokkaido Milk Toast",
+        "unitprice": "22.000",
+        "cnt": "x1",
+        "price": "22.000"
+      },
+      {
+        "nm": "6001-Plastic Bag Small",
+        "unitprice": "0",
+        "cnt": "x1",
+        "price": "0"
+      }
+    ],
+    "total": {
+      "total_price": "22.000",
+      "creditcardprice": "22.000",
+      "menuqty_cnt": "2"
+    }
+  },
+  "case_id": "B03-cord-0449",
+  "expected": {
+    "kind": "json",
+    "value": {
+      "menu": [
+        {
+          "nm": "2001-Hokkaido Milk Toast",
+          "unitprice": "22.000",
+          "cnt": "x1",
+          "price": "22.000"
+        },
+        {
+          "nm": "6001-Plastic Bag Small",
+          "unitprice": "0",
+          "cnt": "x1",
+          "price": "0"
+        }
+      ],
+      "total": {
+        "total_price": "22.000",
+        "creditcardprice": "22.000",
+        "menuqty_cnt": "2"
+      }
+    },
+    "fields": {
+      "menu[0].nm": "2001-Hokkaido Milk Toast",
+      "menu[0].unitprice": "22.000",
+      "menu[0].cnt": "x1",
+      "menu[0].price": "22.000",
+      "menu[1].nm": "6001-Plastic Bag Small",
+      "menu[1].unitprice": "0",
+      "menu[1].cnt": "x1",
+      "menu[1].price": "0",
+      "total.total_price": "22.000",
+      "total.creditcardprice": "22.000",
+      "total.menuqty_cnt": "2"
+    },
+    "anchored_fields": 0,
+    "no_anchor_fields": 11,
+    "spans": [
+      {
+        "field": "menu[0].nm",
+        "text": "2001-Hokkaido Milk Toast",
+        "page": 1
+      },
+      {
+        "field": "menu[0].unitprice",
+        "text": "22.000",
+        "page": 1
+      },
+      {
+        "field": "menu[0].cnt",
+        "text": "x1",
+        "page": 1
+      },
+      {
+        "field": "menu[0].price",
+        "text": "22.000",
+        "page": 1
+      },
+      {
+        "field": "menu[1].nm",
+        "text": "6001-Plastic Bag Small",
+        "page": 1
+      },
+      {
+        "field": "menu[1].unitprice",
+        "text": "0",
+        "page": 1
+      },
+      {
+        "field": "menu[1].cnt",
+        "text": "x1",
+        "page": 1
+      },
+      {
+        "field": "menu[1].price",
+        "text": "0",
+        "page": 1
+      },
+      {
+        "field": "total.total_price",
+        "text": "22.000",
+        "page": 1
+      },
+      {
+        "field": "total.creditcardprice",
+        "text": "22.000",
+        "page": 1
+      },
+      {
+        "field": "total.menuqty_cnt",
+        "text": "2",
+        "page": 1
+      }
+    ],
+    "pages": {
+      "menu[0].nm": 1,
+      "menu[0].unitprice": 1,
+      "menu[0].cnt": 1,
+      "menu[0].price": 1,
+      "menu[1].nm": 1,
+      "menu[1].unitprice": 1,
+      "menu[1].cnt": 1,
+      "menu[1].price": 1,
+      "total.total_price": 1,
+      "total.creditcardprice": 1,
+      "total.menuqty_cnt": 1
+    },
+    "evidence_gold": {
+      "source": "cord-valid-line",
+      "version": 1
+    }
+  }
+}

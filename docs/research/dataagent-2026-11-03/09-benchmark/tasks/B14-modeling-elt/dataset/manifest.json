@@ -1,0 +1,82 @@
+{
+  "dataset_id": "B14.dataset",
+  "task_id": "B14",
+  "revision": "v0.2",
+  "status": "collecting",
+  "unit": "pipeline",
+  "sources": [
+    {
+      "name": "elt-bench",
+      "locator": "https://github.com/uiuc-kang-lab/ELT-Bench",
+      "license": "未声明",
+      "digest": "sha256:bfdab8cef3990c93c233dd0933b675e5df8903c2728bc8bcbea818b5799ba7d3",
+      "revision": "fcf3129df49ce5ce63ff46b2bbbbba1eaf9ec055",
+      "files": 2417,
+      "mb": 62.4,
+      "fetched_at": "2026-11-04T17:40:06+08:00"
+    }
+  ],
+  "splits": {
+    "development": {
+      "count": 120,
+      "frozen": false
+    },
+    "regression": {
+      "count": 54,
+      "frozen": false
+    },
+    "unseen_acceptance": {
+      "count": 50,
+      "frozen": false
+    }
+  },
+  "exposure": {
+    "ledger_ref": "exposure.jsonl",
+    "entries": 0
+  },
+  "fixtures": {
+    "storage": "local",
+    "path": "fixtures/",
+    "limits": "单文件 <= 2 MB；超出走对象存储并在 digest 记录"
+  },
+  "updated": "2026-11-04",
+  "notes": "由 build_cases.py 从 workspace/benchmark-data 构建；原始数据不入库",
+  "build": {
+    "version": 2,
+    "script": "tools/build_cases.py",
+    "built_at": "2026-11-04",
+    "policy": "每个 (目标仓, 数据源) 一条用例；config 落 fixtures，规格留在 gold。split 按哈希。",
+    "available": {
+      "development": 196,
+      "regression": 54,
+      "unseen_acceptance": 50
+    },
+    "selected": {
+      "development": 120,
+      "regression": 54,
+      "unseen_acceptance": 50
+    },
+    "caps": {
+      "development": 120,
+      "regression": 60,
+      "unseen_acceptance": 60
+    },
+    "coverage": {
+      "covered_metrics": [
+        "model_schema_match",
+        "column_semantics_match"
+      ],
+      "missing_metrics": [
+        "pipeline_run_success",
+        "data_freshness"
+      ],
+      "note": "端到端跑通需要 Docker + Airbyte + Snowflake/Redshift/Databricks 凭证，本机不构建；Spider 2.0 的 dbt 任务（spider2-dbt）已决定延后，暂由 ELT-Bench 覆盖"
+    },
+    "counts": {
+      "databricks": 100,
+      "redshift": 100,
+      "schemas": 0,
+      "snowflake": 100
+    }
+  }
+}

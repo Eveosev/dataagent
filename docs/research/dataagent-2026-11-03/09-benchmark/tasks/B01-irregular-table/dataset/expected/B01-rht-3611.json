@@ -1,0 +1,32 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1975,
+  "table": "energy-table06",
+  "structure": "BackgroundColor",
+  "question_type": "Visualization",
+  "sub_type": "BarChart Generation",
+  "answer": "[5, 2, 2, 5]\n",
+  "cot": [
+    {
+      "Planning": "First, we need to analyze the “Function” column from the table to identify the frequency of each unique function."
+    },
+    {
+      "Planning": "Count the occurrences of each unique function to get their respective frequencies."
+    },
+    {
+      "Planning": "Sort the function names (X-axis) in ascending alphabetical order to ensure the chart meets the requirement."
+    },
+    {
+      "Planning": "Prepare the sorted list of function names and their corresponding frequencies."
+    },
+    {
+      "Planning": "Write a Python code block to plot a bar chart using the prepared data, ensuring the X-axis reflects the sorted order."
+    }
+  ],
+  "case_id": "B01-rht-3611",
+  "expected": {
+    "kind": "answer",
+    "question": "Based on the table, draw a bar chart to illustrate the frequency of Function across all items.",
+    "answer": "[5, 2, 2, 5]\n"
+  }
+}

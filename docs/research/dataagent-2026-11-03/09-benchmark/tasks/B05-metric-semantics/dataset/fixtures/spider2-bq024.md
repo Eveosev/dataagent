@@ -1,0 +1,1 @@
+For the year 2012, which top 10 evaluation groups have the largest subplot acres when considering only the condition with the largest subplot acres within each group? Please include the evaluation group, evaluation type, condition status code, evaluation description, state code, macroplot acres, and subplot acres.

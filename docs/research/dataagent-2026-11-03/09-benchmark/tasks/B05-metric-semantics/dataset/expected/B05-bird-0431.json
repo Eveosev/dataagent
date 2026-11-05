@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 430,
+  "question": "In the thrombosis and autoimmune-disease cohort, I want to compare how often lactate dehydrogenase stays in the normal range between patients admitted to the hospital and patients followed at the outpatient clinic. Please give me one row per patient group showing the number of lactate dehydrogenase measurements within the normal range recorded for that group, with the admitted group's row first. Label the rows 'admitted to the hospital' for the Admission = '+' group and 'followed at the outpatient clinic' for the Admission = '-' group. Every laboratory measurement recorded for those patients across the whole study period counts. Nothing else is needed.",
+  "evidence": "The normal range for lactate dehydrogenase means a value below 500.",
+  "gold_sql": "SELECT CASE WHEN P.Admission = '+' THEN 'admitted to the hospital' ELSE 'followed at the outpatient clinic' END AS patient_group, COUNT(*) AS normal_ldh_measurements FROM Patient AS P JOIN Laboratory AS L ON P.ID = L.ID WHERE P.Admission IN ('+', '-') AND L.LDH < 500 GROUP BY 1 ORDER BY CASE P.Admission WHEN '+' THEN 0 ELSE 1 END",
+  "db_id": "thrombosis_prediction",
+  "case_id": "B05-bird-0431",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT CASE WHEN P.Admission = '+' THEN 'admitted to the hospital' ELSE 'followed at the outpatient clinic' END AS patient_group, COUNT(*) AS normal_ldh_measurements FROM Patient AS P JOIN Laboratory AS L ON P.ID = L.ID WHERE P.Admission IN ('+', '-') AND L.LDH < 500 GROUP BY 1 ORDER BY CASE P.Admission WHEN '+' THEN 0 ELSE 1 END",
+    "db_id": "thrombosis_prediction",
+    "evidence": "The normal range for lactate dehydrogenase means a value below 500."
+  }
+}

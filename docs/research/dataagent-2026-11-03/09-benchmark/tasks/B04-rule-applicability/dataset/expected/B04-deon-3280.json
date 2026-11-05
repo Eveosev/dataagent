@@ -1,0 +1,36 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_f8cd45d2",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_landlord",
+    "scenario_tenant",
+    "scenario_property",
+    "scenario_notice",
+    "scenario_notice_kind",
+    "scenario_notice_purpose",
+    "scenario_notice_reason",
+    "statute_9_209_notice_kind",
+    "statute_9_209_min_days_after_service_to_pay",
+    "statute_9_209_requires_amount_demanded_in_notice",
+    "statute_9_210_notice_kind",
+    "statute_9_210_notice_days",
+    "statute_9_210_requires_amount_owed_in_notice",
+    "legal_requires_amount_owed_in_notice",
+    "integer",
+    "scenario_amount_owed_requirement",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program (Illinois, focus year 2021)\n    Question: Does the law require landlords to state the amount owed when giving tenants notice to vacate?\n*/\n\n% -----------------------------\n% Scenario facts (question statement encoded)\n% -----------------------------\n\nscenario_state(illinois).\nscenario_focus_year(2021).\n\nscenario_landlord(landlord1).\nscenario_tenant(tenant1).\nscenario_property(property1).\n\n/* The question refers generally to a \"notice to vacate the property\".\n   We encode that as a \"notice to quit\" under 735 ILCS 5/9-210 (a common Illinois\n   termination notice for lease default), not specifically a 5-day rent-demand notice.\n*/\nscenario_notice(notice1).\nscenario_notice_kind(notice1, notice_to_quit_9_210).\nscenario_notice_purpose(notice1, vacate_property).\nscenario_notice_reason(notice1, lease_default_unspecified).\n\n/* Helper predicate that succeeds when the encoded factual statement holds. */\nscenario_statement :-\n    scenario_state(illinois),\n    scenario_focus_year(2021),\n    scenario_landlord(landlord1),\n    scenario_tenant(tenant1),\n    scenario_property(property1),\n    scenario_notice(notice1),\n    scenario_notice_kind(notice1, notice_to_quit_9_210),\n    scenario_notice_purpose(notice1, vacate_property),\n    scenario_notice_reason(notice1, lease_default_unspecified).\n\n% -----------------------------\n% Statute translations (deterministic predicates capturing duties/rights)\n% -----------------------------\n\n/* 735 ILCS 5/9-209 (Demand for rent - eviction action)\n   - Landlord may demand rent due and notify tenant in writing.\n   - Notice must give at least 5 days after service to pay.\n   - Text repeatedly references \"amount demanded in the notice\", implying the notice\n     states the amount demanded (amount owed).\n*/\nstatute_9_209_notice_kind(rent_demand_notice_9_209).\n\nstatute_9_209_min_days_after_service_to_pay(5).\n\nstatute_9_209_requires_amount_demanded_in_notice(yes).\n\n/* 735 ILCS 5/9-210 (Notice to quit)\n   - When default is made in any lease term, no more than 10 days' notice to quit is necessary.\n   - Statutory form: insert \"character of the default\"; it does NOT require stating any rent amount owed.\n*/\nstatute_9_210_notice_kind(notice_to_quit_9_210).\n\nstatute_9_210_notice_days(10).\n\nstatute_9_210_requires_amount_owed_in_notice(no).\n\n% -----------------------------\n% Legal reasoning helpers (apply statutes to the scenario)\n% -----------------------------\n\n/* For Illinois in the focus year, determine if the relevant statute requires stating an amount owed\n   for a given notice kind. Deterministic: exactly one result for recognized notice kinds. */\nlegal_requires_amount_owed_in_notice(illinois, Year, NoticeKind, Result) :-\n    integer(Year),\n    Year >= 2021,\n    (   NoticeKind = rent_demand_notice_9_209\n    ->  statute_9_209_requires_amount_demanded_in_notice(Result), !\n    ;   NoticeKind = notice_to_quit_9_210\n    ->  statute_9_210_requires_amount_owed_in_notice(Result), !\n    ;   % If a notice kind is not one of the encoded statutory notices, we cannot derive a requirement here.\n        Result = no, !\n    ).\n\n/* The question asks about \"notice to vacate the property\"; in this scenario, that is notice1. */\nscenario_amount_owed_requirement(Result) :-\n    scenario_statement,\n    scenario_state(State),\n    scenario_focus_year(Year),\n    scenario_notice(notice1),\n    scenario_notice_kind(notice1, NoticeKind),\n    legal_requires_amount_owed_in_notice(State, Year, NoticeKind, Result).\n\n% -----------------------------\n% Final answer predicate\n% -----------------------------\n\nhousing_answer(yes) :-\n    scenario_amount_owed_requirement(yes),\n    !.\nhousing_answer(no) :-\n    scenario_amount_owed_requirement(no),\n    !.\n\n% -----------------------------\n% Main entrypoint (required)\n% -----------------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-3280",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Does the law require landlords to state the amount owed when giving tenants notice to vacate the property?"
+  }
+}

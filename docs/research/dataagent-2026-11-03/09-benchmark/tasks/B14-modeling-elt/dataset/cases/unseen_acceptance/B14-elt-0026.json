@@ -1,0 +1,35 @@
+{
+  "case_id": "B14-elt-0026",
+  "task_id": "B14",
+  "split_role": "unseen_acceptance",
+  "inputs": [
+    {
+      "kind": "config",
+      "ref": "fixtures/elt-databricks-disney-config.yaml",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B14-elt-0026.json"
+  },
+  "evidence": [
+    "bench://elt-bench/elt-bench/databricks/disney/data_model.yaml"
+  ],
+  "tags": [
+    "elt-bench",
+    "databricks",
+    "disney",
+    "models:1"
+  ],
+  "source": "elt",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

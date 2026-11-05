@@ -1,0 +1,1224 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "databricks",
+  "pipeline": "mailchimp",
+  "data_model": {
+    "models": [
+      {
+        "name": "mailchimp__lists",
+        "description": "Each record represents a list in Mailchimp, enriched with campaign metrics, (optionally) automation metrics and information about members.",
+        "columns": [
+          {
+            "name": "list_id",
+            "description": "The unique ID of a list."
+          },
+          {
+            "name": "date_created",
+            "description": "The date and time that a list was created.",
+            "format": "YYYY-MM-DD HH:MM:SS"
+          },
+          {
+            "name": "name",
+            "description": "The name of a list."
+          },
+          {
+            "name": "list_rating",
+            "description": "An auto-generated activity score for the list (0-5)."
+          },
+          {
+            "name": "beamer_address",
+            "description": "The list's email beamer address."
+          },
+          {
+            "name": "contact_address_1",
+            "description": "The street address for the list contact."
+          },
+          {
+            "name": "contact_city",
+            "description": "The city for the list contact."
+          },
+          {
+            "name": "contact_company",
+            "description": "The company name for the list."
+          },
+          {
+            "name": "contact_country",
+            "description": "A two-character ISO3166 country code. Defaults to US if invalid."
+          },
+          {
+            "name": "contact_state",
+            "description": "The state for the list contact."
+          },
+          {
+            "name": "contact_zip",
+            "description": "The postal or zip code for the list contact."
+          },
+          {
+            "name": "default_from_email",
+            "description": "The default from email for campaigns sent to a list."
+          },
+          {
+            "name": "default_from_name",
+            "description": "The default from name for campaigns sent to a list."
+          },
+          {
+            "name": "default_language",
+            "description": "The default language for a lists's forms."
+          },
+          {
+            "name": "email_type_option",
+            "description": "Whether the list supports multiple formats for emails. When set to true, subscribers can choose whether they want to receive HTML or plain-text emails. When set to false, subscribers will receive HTML emails, with a plain-text alternative backup."
+          },
+          {
+            "name": "permission_reminder",
+            "description": "The permission reminder for a list."
+          },
+          {
+            "name": "subscribe_url_long",
+            "description": "The full version of a list's subscribe form (host will vary)."
+          },
+          {
+            "name": "subscribe_url_short",
+            "description": "Mailchimp's EepURL shortened version of a list's subscribe form."
+          },
+          {
+            "name": "use_archive_bar",
+            "description": "Whether campaigns for this list use the Archive Bar in archives by default."
+          },
+          {
+            "name": "visibility",
+            "description": "Whether this list is public or private."
+          },
+          {
+            "name": "count_members",
+            "description": "The number of members in a list."
+          },
+          {
+            "name": "most_recent_signup_timestamp",
+            "description": "The date of the most recent signup to a list.",
+            "format": "YYYY-MM-DD HH:MM:SS"
+          },
+          {
+            "name": "campaign_sends",
+            "description": "The number of sent emails from campaigns. Set to 0 if NULL."
+          },
+          {
+            "name": "campaign_opens",
+            "description": "The number of open events from campaign emails. The same email being opened multiple times is included in this metric. Set to 0 if NULL."
+          },
+          {
+            "name": "campaign_clicks",
+            "description": "The number of click events from campaign emails. The same email being clicked multiple times is included in this metric. Set to 0 if NULL."
+          },
+          {
+            "name": "campaign_unique_opens",
+            "description": "The unique number of emails opened from campaign emails. If a given email to a user was opened multiple times, it will only count once in this metric. This is the metric for opens that is reported by Mailchimp. Set to 0 if NULL."
+          },
+          {
+            "name": "campaign_unique_clicks",
+            "description": "The unique number of emails clicked from campaign emails. If a given email to a user was clicked multiple times, it will only count once in this metric. This is the metric for clicks that is reported by Mailchimp. Set to 0 if NULL."
+          },
+          {
+            "name": "campaign_unsubscribes",
+            "description": "The number of users who have unsubscribed from campaign emails. Set to 0 if NULL."
+          },
+          {
+            "name": "automation_sends",
+            "description": "The number of sent emails from automations. Set to 0 if NULL."
+          },
+          {
+            "name": "automation_opens",
+            "description": "The number of open events from automation emails. The same email being opened multiple times is included in this metric. Set to 0 if NULL."
+          },
+          {
+            "name": "automation_clicks",
+            "description": "The number of click events from automation emails. The same email being clicked multiple times is included in this metric. Set to 0 if NULL."
+          },
+          {
+            "name": "automation_unique_opens",
+            "description": "The unique number of emails opened from automation emails. If a given email to a user was opened multiple times, it will only count once in this metric. This is the metric for opens that is reported by Mailchimp. Set to 0 if NULL."
+          },
+          {
+            "name": "automation_unique_clicks",
+            "description": "The unique number of emails clicked from automation emails. If a given email to a user was clicked multiple times, it will only count once in this metric. This is the metric for clicks that is reported by Mailchimp. Set to 0 if NULL."
+          },
+          {
+            "name": "automation_unsubscribes",
+            "description": "The number of users who have unsubscribed from automation emails. Set to 0 if NULL."
+          }
+        ]
+      },
+      {
+        "name": "mailchimp__members",
+        "description": "Each record represents a member in Mailchimp, enriched with campaign metrics and (optionally) automation metrics.",
+        "columns": [
+          {
+            "name": "member_id",
+            "description": "The ID of the member."
+          },
+          {
+            "name": "email_address",
+            "description": "Email address for a subscriber."
+          },
+          {
+            "name": "email_client",
+            "description": "The list member's email client."
+          },
+          {
+            "name": "email_type",
+            "description": "Type of email this member asked to get ('html' or 'text')."
+          },
+          {
+            "name": "status",
+            "description": "Subscriber's current status. Possible Values:subscribed, unsubscribed, cleaned, pending, transactional, archived"
+          },
+          {
+            "name": "list_id",
+            "description": "The ID of the list the member belongs to."
+          },
+          {
+            "name": "signup_timestamp",
+            "description": "The date and time the subscriber signed up for the list.",
+            "format": "YYYY-MM-DD HH:MM:SS"
+          },
+          {
+            "name": "opt_in_timestamp",
+            "description": "The date and time the subscribe confirmed their opt-in status.",
+            "format": "YYYY-MM-DD HH:MM:SS"
+          },
+          {
+            "name": "last_changed_timestamp",
+            "description": "The date and time the member's info was last changed.",
+            "format": "YYYY-MM-DD HH:MM:SS"
+          },
+          {
+            "name": "country_code",
+            "description": "The member's unique code for the location country."
+          },
+          {
+            "name": "dstoff",
+            "description": "The member's offset for timezones where daylight saving time is observed."
+          },
+          {
+            "name": "gmtoff",
+            "description": "The member's time difference in hours from GMT."
+          },
+          {
+            "name": "opt_in_ip_address",
+            "description": "The IP address the subscriber used to confirm their opt-in status."
+          },
+          {
+            "name": "signup_ip_address",
+            "description": "IP address the subscriber signed up from."
+          },
+          {
+            "name": "language",
+            "description": "If set/detected, the subscriber's language."
+          },
+          {
+            "name": "latitude",
+            "description": "The member's location latitude."
+          },
+          {
+            "name": "longitude",
+            "description": "The member's location longitude."
+          },
+          {
+            "name": "member_rating",
+            "description": "Star rating for this member, between 1 and 5."
+          },
+          {
+            "name": "timezone",
+            "description": "The timezone for the member's location."
+          },
+          {
+            "name": "unique_email_id",
+            "description": "An identifier for the address across all of Mailchimp."
+          },
+          {
+            "name": "vip",
+            "description": "VIP status for subscriber."
+          },
+          {
+            "name": "campaign_sends",
+            "description": "The number of sent emails from campaigns. Set to 0 if NULL."
+          },
+          {
+            "name": "campaign_opens",
+            "description": "The number of open events from campaign emails. The same email being opened multiple times is included in this metric. Set to 0 if NULL."
+          },
+          {
+            "name": "campaign_clicks",
+            "description": "The number of click events from campaign emails. The same email being clicked multiple times is included in this metric. Set to 0 if NULL."
+          },
+          {
+            "name": "campaign_unique_opens",
+            "description": "The unique number of emails opened from campaign emails. If a given email to a user was opened multiple times, it will only count once in this metric. This is the metric for opens that is reported by Mailchimp. Set to 0 if NULL."
+          },
+          {
+            "name": "campaign_unique_clicks",
+            "description": "The unique number of emails clicked from campaign emails. If a given email to a user was clicked multiple times, it will only count once in this metric. This is the metric for clicks that is reported by Mailchimp. Set to 0 if NULL."
+          },
+          {
+            "name": "campaign_unsubscribes",
+            "description": "The number of users who have unsubscribed from campaign emails. Set to 0 if NULL."
+          },
+          {
+            "name": "automation_sends",
+            "description": "The number of sent emails from automations. Set to 0 if NULL."
+          },
+          {
+            "name": "automation_opens",
+            "description": "The number of open events from automation emails. The same email being opened multiple times is included in this metric. Set to 0 if NULL."
+          },
+          {
+            "name": "automation_clicks",
+            "description": "The number of click events from automation emails. The same email being clicked multiple times is included in this metric. Set to 0 if NULL."
+          },
+          {
+            "name": "automation_unique_opens",
+            "description": "The unique number of emails opened from automation emails. If a given email to a user was opened multiple times, it will only count once in this metric. This is the metric for opens that is reported by Mailchimp. Set to 0 if NULL."
+          },
+          {
+            "name": "automation_unique_clicks",
+            "description": "The unique number of emails clicked from automation emails. If a given email to a user was clicked multiple times, it will only count once in this metric. This is the metric for clicks that is reported by Mailchimp. Set to 0 if NULL."
+          },
+          {
+            "name": "automation_unsubscribes",
+            "description": "The number of users who have unsubscribed from automation emails. Set to 0 if NULL."
+          }
+        ]
+      },
+      {
+        "name": "mailchimp__campaigns",
+        "description": "Each record represents a campaign in Mailchimp, enriched with click, open and unsubscribe metrics.",
+        "columns": [
+          {
+            "name": "campaign_id",
+            "description": "The ID of the campaign in Mailchimp."
+          },
+          {
+            "name": "segment_id",
+            "description": "The ID of the Segment a campaign was sent to."
+          },
+          {
+            "name": "create_timestamp",
+            "description": "The date and time the campaign was created.",
+            "format": "YYYY-MM-DD HH:MM:SS"
+          },
+          {
+            "name": "send_timestamp",
+            "description": "The date and time a campaign was sent.",
+            "format": "YYYY-MM-DD HH:MM:SS"
+          },
+          {
+            "name": "list_id",
+            "description": "The ID of the List a campaign was sent to."
+          },
+          {
+            "name": "reply_to_email",
+            "description": "The reply-to email address for the campaign."
+          },
+          {
+            "name": "campaign_type",
+            "description": "The type of campaign sent. Possible values:regular, plaintext, absplit, variate, rss."
+          },
+          {
+            "name": "title",
+            "description": "The title of the campaign."
+          },
+          {
+            "name": "archive_url",
+            "description": "The link to the campaign's archive version in ISO 8601 format."
+          },
+          {
+            "name": "authenticate",
+            "description": "Whether Mailchimp authenticated the campaign. Defaults to true."
+          },
+          {
+            "name": "auto_footer",
+            "description": "Automatically append Mailchimp's default footer to the campaign."
+          },
+          {
+            "name": "auto_tweet",
+            "description": "Automatically tweet a link to the campaign archive page when the campaign is sent."
+          },
+          {
+            "name": "clicktale",
+            "description": "The custom slug for ClickTale tracking (max of 50 bytes)."
+          },
+          {
+            "name": "content_type",
+            "description": "How the campaign's content is put together ('template', 'drag_and_drop', 'html', 'url')."
+          },
+          {
+            "name": "drag_and_drop",
+            "description": "Whether the campaign uses the drag-and-drop editor."
+          },
+          {
+            "name": "fb_comments",
+            "description": "Allows Facebook comments on the campaign (also force-enables the Campaign Archive toolbar). Defaults to true."
+          },
+          {
+            "name": "from_name",
+            "description": "The 'from' name on the campaign (not an email address)."
+          },
+          {
+            "name": "google_analytics",
+            "description": "The custom slug for Google Analytics tracking (max of 50 bytes)."
+          },
+          {
+            "name": "inline_css",
+            "description": "Automatically inline the CSS included with the campaign content."
+          },
+          {
+            "name": "long_archive_url",
+            "description": "The original link to the campaign's archive version."
+          },
+          {
+            "name": "status",
+            "description": "The current status of the campaign."
+          },
+          {
+            "name": "subject_line",
+            "description": "The subject line for the campaign."
+          },
+          {
+            "name": "template_id",
+            "description": "The ID for the template used in this campaign."
+          },
+          {
+            "name": "timewarp",
+            "description": "Send this campaign using Timewarpe_this"
+          },
+          {
+            "name": "to_name",
+            "description": "The campaign's custom 'To' name. Typically the first name merge field."
+          },
+          {
+            "name": "track_ecomm_360",
+            "description": "Whether to enable eCommerce360 tracking."
+          },
+          {
+            "name": "track_goals",
+            "description": "Whether to enable Goal tracking."
+          },
+          {
+            "name": "track_html_clicks",
+            "description": "Whether to track clicks in the HTML version of the campaign. Defaults to true. Cannot be set to false for variate campaigns."
+          },
+          {
+            "name": "track_opens",
+            "description": "Whether to track opens. Defaults to true. Cannot be set to false for variate campaigns."
+          },
+          {
+            "name": "track_text_clicks",
+            "description": "Whether to track clicks in the plain-text version of the campaign. Defaults to true. Cannot be set to false for variate campaigns."
+          },
+          {
+            "name": "use_conversation",
+            "description": "Use Mailchimp Conversation feature to manage out-of-office replies."
+          },
+          {
+            "name": "sends",
+            "description": "The number of sent emails from campaigns. Set to 0 if NULL."
+          },
+          {
+            "name": "opens",
+            "description": "The number of open events from campaign emails. The same email being opened multiple times is included in this metric. Set to 0 if NULL."
+          },
+          {
+            "name": "clicks",
+            "description": "The number of click events from campaign emails. The same email being clicked multiple times is included in this metric. Set to 0 if NULL."
+          },
+          {
+            "name": "unique_opens",
+            "description": "The unique number of emails opened from campaign emails. If a given email to a user was opened multiple times, it will only count once in this metric. This is the metric for opens that is reported by Mailchimp. Set to 0 if NULL."
+          },
+          {
+            "name": "unique_clicks",
+            "description": "The unique number of emails clicked from campaign emails. If a given email to a user was clicked multiple times, it will only count once in this metric. This is the metric for clicks that is reported by Mailchimp. Set to 0 if NULL."
+          },
+          {
+            "name": "unsubscribes",
+            "description": "The number of users who have unsubscribed from campaign emails. Set to 0 if NULL."
+          }
+        ]
+      },
+      {
+        "name": "mailchimp__campaign_recipients",
+        "description": "Each record represents the send of a campaign email, enriched with click, open and unsubscribe metrics.",
+        "columns": [
+          {
+            "name": "email_id",
+            "description": "The ID of the email sent. Surrogate key generated from 'campaign_id' and 'member_id'. Use the dbt utils package to generate the surrogate key."
+          },
+          {
+            "name": "campaign_id",
+            "description": "The ID of the campaign a sent email is from."
+          },
+          {
+            "name": "member_id",
+            "description": "The ID of the member an email was sent to."
+          },
+          {
+            "name": "list_id",
+            "description": "The ID of the list the campaign was sent to."
+          },
+          {
+            "name": "segment_id",
+            "description": "The ID of the segment the campaign was sent to."
+          },
+          {
+            "name": "opens",
+            "description": "The number of open events from campaign emails. The same email being opened multiple times is included in this metric. Set to 0 if NULL."
+          },
+          {
+            "name": "unique_opens",
+            "description": "The unique number of emails opened from campaign emails. If a given email to a user was opened multiple times, it will only count once in this metric. This is the metric for opens that is reported by Mailchimp. Set to 0 if NULL."
+          },
+          {
+            "name": "clicks",
+            "description": "The number of click events from campaign emails. The same email being clicked multiple times is included in this metric. Set to 0 if NULL."
+          },
+          {
+            "name": "unique_clicks",
+            "description": "The unique number of emails clicked from campaign emails. If a given email to a user was clicked multiple times, it will only count once in this metric. This is the metric for clicks that is reported by Mailchimp. Set to 0 if NULL."
+          },
+          {
+            "name": "was_opened",
+            "description": "Whether the email sent was opened. Set to False if NULL."
+          },
+          {
+            "name": "was_clicked",
+            "description": "Whether the email sent was clicked. Set to False if NULL."
+          },
+          {
+            "name": "send_timestamp",
+            "description": "The date and time a campaign was sent.",
+            "format": "YYYY-MM-DD HH:MM:SS"
+          },
+          {
+            "name": "first_open_timestamp",
+            "description": "The timestamp of the first open for an email.",
+            "format": "YYYY-MM-DD HH:MM:SS"
+          },
+          {
+            "name": "time_to_open_minutes",
+            "description": "The time from send to open in minutes."
+          },
+          {
+            "name": "time_to_open_hours",
+            "description": "The time from send to open in hours."
+          },
+          {
+            "name": "time_to_open_days",
+            "description": "The time from send to open in days."
+          },
+          {
+            "name": "was_unsubscribed",
+            "description": "Whether the user unsubscribed via the sent email. Set to False if NULL, otherwise True."
+          }
+        ]
+      },
+      {
+        "name": "mailchimp__campaign_activities",
+        "description": "Each record represents an activity taken in relation to a campaign email, enriched with data about when the campaign was sent and the lag between send and the activity.",
+        "columns": [
+          {
+            "name": "action_type",
+            "description": "One of the following actions:'open', 'click', or 'bounce'"
+          },
+          {
+            "name": "campaign_id",
+            "description": "The unique ID for the sent campaign."
+          },
+          {
+            "name": "member_id",
+            "description": "The ID of the member the activity relates to."
+          },
+          {
+            "name": "list_id",
+            "description": "The ID of the list the email was sent to."
+          },
+          {
+            "name": "activity_timestamp",
+            "description": "The timestamp when the activity occurred.",
+            "format": "YYYY-MM-DD HH:MM:SS"
+          },
+          {
+            "name": "ip_address",
+            "description": "The IP address recorded for the action."
+          },
+          {
+            "name": "url",
+            "description": "If the action is a 'click', the URL on which the member clicked."
+          },
+          {
+            "name": "activity_id",
+            "description": "The ID of the activity/event. Surrogate key generated in dbt from 'action_type', 'campaign_id', 'member_id', and 'activity_timestamp'. Use the dbt utils package to generate the surrogate key."
+          },
+          {
+            "name": "email_id",
+            "description": "The ID of the email sent. Surrogate key generated in dbt from 'campaign_id' and 'member_id'. Use the dbt utils package to generate the surrogate key."
+          },
+          {
+            "name": "send_timestamp",
+            "description": "The time the campaign was sent.",
+            "format": "YYYY-MM-DD HH:MM:SS"
+          },
+          {
+            "name": "time_since_send_minutes",
+            "description": "The time from send to activity in minutes."
+          },
+          {
+            "name": "time_since_send_hours",
+            "description": "The time from send to activity in hours."
+          },
+          {
+            "name": "time_since_send_days",
+            "description": "The time from send to activity in days."
+          }
+        ]
+      },
+      {
+        "name": "mailchimp__automations",
+        "description": "Each record represents an automation in Mailchimp, enriched with click, open and unsubscribe metrics. (Enabled if you are using automations.)",
+        "columns": [
+          {
+            "name": "automation_id",
+            "description": "The ID of the automation in Mailchimp."
+          },
+          {
+            "name": "list_id",
+            "description": "The ID of the List an automation was sent to."
+          },
+          {
+            "name": "segment_id",
+            "description": "The ID of the Segment an automation was sent to."
+          },
+          {
+            "name": "segment_text",
+            "description": "Description of the segment. Formatted as a string marked up with HTML."
+          },
+          {
+            "name": "started_timestamp",
+            "description": "The date and time the Automation was started.",
+            "format": "YYYY-MM-DD HH:MM:SS"
+          },
+          {
+            "name": "created_timestamp",
+            "description": "The date and time the Automation was created.",
+            "format": "YYYY-MM-DD HH:MM:SS"
+          },
+          {
+            "name": "status",
+            "description": "The current status of the Automation. Possible Values:save, paused, sending"
+          },
+          {
+            "name": "title",
+            "description": "The title of the Automation."
+          },
+          {
+            "name": "trigger_settings",
+            "description": "Available triggers for Automation workflows."
+          },
+          {
+            "name": "sends",
+            "description": "The number of sent emails from campaigns. Set to 0 if NULL."
+          },
+          {
+            "name": "opens",
+            "description": "The number of open events from campaign emails. The same email being opened multiple times is included in this metric. Set to 0 if NULL."
+          },
+          {
+            "name": "clicks",
+            "description": "The number of click events from campaign emails. The same email being clicked multiple times is included in this metric. Set to 0 if NULL."
+          },
+          {
+            "name": "unique_opens",
+            "description": "The unique number of emails opened from campaign emails. If a given email to a user was opened multiple times, it will only count once in this metric. This is the metric for opens that is reported by Mailchimp. Set to 0 if NULL."
+          },
+          {
+            "name": "unique_clicks",
+            "description": "The unique number of emails clicked from campaign emails. If a given email to a user was clicked multiple times, it will only count once in this metric. This is the metric for clicks that is reported by Mailchimp. Set to 0 if NULL."
+          },
+          {
+            "name": "unsubscribes",
+            "description": "The number of users who have unsubscribed from campaign emails. Set to 0 if NULL."
+          }
+        ]
+      },
+      {
+        "name": "mailchimp__automation_emails",
+        "description": "Each record represents an automation email (that make up automations), enriched with click, open and unsubscribe metrics. (Enabled if you are using automations.)",
+        "columns": [
+          {
+            "name": "automation_email_id",
+            "description": "The ID for the automation email that relates to the activity."
+          },
+          {
+            "name": "automation_id",
+            "description": "The ID of the automation an email relates to."
+          },
+          {
+            "name": "created_timestamp",
+            "description": "The date and time the automation email was created.",
+            "format": "YYYY-MM-DD HH:MM:SS"
+          },
+          {
+            "name": "started_timestamp",
+            "description": "The date and time the automation email was started.",
+            "format": "YYYY-MM-DD HH:MM:SS"
+          },
+          {
+            "name": "send_timestamp",
+            "description": "The date and time the automation email was sent.",
+            "format": "YYYY-MM-DD HH:MM:SS"
+          },
+          {
+            "name": "from_name",
+            "description": "The 'from' name on the automation email (not an email address)."
+          },
+          {
+            "name": "reply_to",
+            "description": "The reply-to email address for the automation."
+          },
+          {
+            "name": "status",
+            "description": "The current status of the automation email."
+          },
+          {
+            "name": "subject_line",
+            "description": "The subject line for the automation email."
+          },
+          {
+            "name": "title",
+            "description": "The title of the automation email."
+          },
+          {
+            "name": "archive_url",
+            "description": "The link to the automation email's archive version in ISO 8601 format."
+          },
+          {
+            "name": "authenticate",
+            "description": "Whether Mailchimp authenticated the automation email. Defaults to true."
+          },
+          {
+            "name": "auto_footer",
+            "description": "Automatically append Mailchimp's default footer to the automation email."
+          },
+          {
+            "name": "auto_tweet",
+            "description": "Automatically tweet a link to the automation email archive page when the automation email is sent."
+          },
+          {
+            "name": "content_type",
+            "description": "How the automation email's content is put together ('template', 'drag_and_drop', 'html', 'url')."
+          },
+          {
+            "name": "delay_action",
+            "description": "The action that triggers the delay of an Automation email."
+          },
+          {
+            "name": "delay_action_description",
+            "description": "The user-friendly description of the action that triggers an Automation email."
+          },
+          {
+            "name": "delay_amount",
+            "description": "The delay amount for an Automation email."
+          },
+          {
+            "name": "delay_full_description",
+            "description": "The user-friendly description of the delay and trigger action settings for an Automation email."
+          },
+          {
+            "name": "delay_type",
+            "description": "The type of delay for an Automation email."
+          },
+          {
+            "name": "drag_and_drop",
+            "description": "Whether the automation email uses the drag-and-drop editor."
+          },
+          {
+            "name": "fb_comments",
+            "description": "Allows Facebook comments on the automation email (also force-enables the Campaign Archive toolbar). Defaults to true."
+          },
+          {
+            "name": "google_analytics",
+            "description": "The custom slug for Google Analytics tracking (max of 50 bytes)."
+          },
+          {
+            "name": "inline_css",
+            "description": "Automatically inline the CSS included with the automation email content."
+          },
+          {
+            "name": "position",
+            "description": "The position of an Automation email in a workflow."
+          },
+          {
+            "name": "template_id",
+            "description": "The ID for the template used in this automation email."
+          },
+          {
+            "name": "track_ecomm_360",
+            "description": "Whether to enable eCommerce360 tracking."
+          },
+          {
+            "name": "track_goals",
+            "description": "Whether to enable Goal tracking."
+          },
+          {
+            "name": "track_html_clicks",
+            "description": "Whether to track clicks in the HTML version of the automation email. Defaults to true. Cannot be set to false for variate campaigns."
+          },
+          {
+            "name": "track_opens",
+            "description": "Whether to track opens. Defaults to true. Cannot be set to false for variate automation emails."
+          },
+          {
+            "name": "track_text_clicks",
+            "description": "Whether to track clicks in the plain-text version of the automation email. Defaults to true. Cannot be set to false for variate campaigns."
+          },
+          {
+            "name": "list_id",
+            "description": "The ID of the List this automation email is being sent to."
+          },
+          {
+            "name": "segment_id",
+            "description": "The ID of the Segment this automation email is being sent to."
+          },
+          {
+            "name": "sends",
+            "description": "The number of sent emails from automation. Set to 0 if NULL."
+          },
+          {
+            "name": "opens",
+            "description": "The number of open events from automation emails. The same email being opened multiple times is included in this metric. Set to 0 if NULL."
+          },
+          {
+            "name": "clicks",
+            "description": "The number of click events from automation emails. The same email being clicked multiple times is included in this metric. Set to 0 if NULL."
+          },
+          {
+            "name": "unique_opens",
+            "description": "The unique number of emails opened from automation emails. If a given email to a user was opened multiple times, it will only count once in this metric. This is the metric for opens that is reported by Mailchimp. Set to 0 if NULL."
+          },
+          {
+            "name": "unique_clicks",
+            "description": "The unique number of emails clicked from automation emails. If a given email to a user was clicked multiple times, it will only count once in this metric. This is the metric for clicks that is reported by Mailchimp. Set to 0 if NULL."
+          },
+          {
+            "name": "unsubscribes",
+            "description": "The number of users who have unsubscribed from automation emails. Set to 0 if NULL."
+          }
+        ]
+      },
+      {
+        "name": "mailchimp__automation_activities",
+        "description": "Each record represents an activity taken in relation to a automation email.",
+        "columns": [
+          {
+            "name": "action_type",
+            "description": "One of the following actions:'open', 'click', or 'bounce'"
+          },
+          {
+            "name": "automation_email_id",
+            "description": "The ID for the automation email that relates to the activity."
+          },
+          {
+            "name": "member_id",
+            "description": "The ID of the member the activity relates to."
+          },
+          {
+            "name": "list_id",
+            "description": "The ID of the list the email was sent to."
+          },
+          {
+            "name": "activity_timestamp",
+            "description": "The timestamp when the activity occurred.",
+            "format": "YYYY-MM-DD HH:MM:SS"
+          },
+          {
+            "name": "ip_address",
+            "description": "The IP address recorded for the action."
+          },
+          {
+            "name": "url",
+            "description": "If the action is a 'click', the URL on which the member clicked."
+          },
+          {
+            "name": "activity_id",
+            "description": "The ID of the activity/event. Surrogate key generated in dbt from 'action_type', 'automation_email_id', 'member_id', and 'activity_timestamp'. Use the dbt utils package to generate the surrogate key."
+          },
+          {
+            "name": "automation_id",
+            "description": "The ID for the automation that relates to the activity."
+          },
+          {
+            "name": "segment_id",
+            "description": "The ID for the Segment that relates to the activity."
+          }
+        ]
+      },
+      {
+        "name": "mailchimp__segments",
+        "description": "Each record represents a segment in Mailchimp, enriched with campaign metrics and (optionally) automation metrics. (Enabled if you are using segments.)",
+        "columns": [
+          {
+            "name": "segment_id",
+            "description": "The ID for the Segment from Mailchimp"
+          },
+          {
+            "name": "list_id",
+            "description": "The ID of the List the segment is part of."
+          },
+          {
+            "name": "list_name",
+            "description": "The name of the List the segment is part of."
+          },
+          {
+            "name": "member_count",
+            "description": "The number of members in the segment."
+          },
+          {
+            "name": "segment_name",
+            "description": "The name of the segment."
+          },
+          {
+            "name": "segment_type",
+            "description": "The type of segment"
+          },
+          {
+            "name": "updated_timestamp",
+            "description": "The date and time the segment was last updated.",
+            "format": "YYYY-MM-DD HH:MM:SS"
+          },
+          {
+            "name": "created_timestamp",
+            "description": "The date and time the segment was created.",
+            "format": "YYYY-MM-DD HH:MM:SS"
+          },
+          {
+            "name": "campaign_sends",
+            "description": "The number of sent emails from campaigns. Set the value to 0 if it is NULL."
+          },
+          {
+            "name": "campaign_opens",
+            "description": "The number of open events from campaign emails. The same email being opened multiple times is included in this metric. Set the value to 0 if it is NULL."
+          },
+          {
+            "name": "campaign_clicks",
+            "description": "The number of click events from campaign emails. The same email being clicked multiple times is included in this metric. Set the value to 0 if it is NULL."
+          },
+          {
+            "name": "campaign_unique_opens",
+            "description": "The unique number of emails opened from campaign emails. If a given email to a user was opened multiple times, it will only count once in this metric. This is the metric for opens that is reported by Mailchimp. Set the value to 0 if it is NULL."
+          },
+          {
+            "name": "campaign_unique_clicks",
+            "description": "The unique number of emails clicked from campaign emails. If a given email to a user was clicked multiple times, it will only count once in this metric. This is the metric for clicks that is reported by Mailchimp. Set the value to 0 if it is NULL."
+          },
+          {
+            "name": "campaign_unsubscribes",
+            "description": "The number of users who have unsubscribed from campaign emails. Set the value to 0 if it is NULL."
+          },
+          {
+            "name": "automation_sends",
+            "description": "The number of sent emails from automations. Set the value to 0 if it is NULL."
+          },
+          {
+            "name": "automation_opens",
+            "description": "The number of open events from automation emails. The same email being opened multiple times is included in this metric. Set the value to 0 if it is NULL."
+          },
+          {
+            "name": "automation_clicks",
+            "description": "The number of click events from automation emails. The same email being clicked multiple times is included in this metric. Set the value to 0 if it is NULL."
+          },
+          {
+            "name": "automation_unique_opens",
+            "description": "The unique number of emails opened from automation emails. If a given email to a user was opened multiple times, it will only count once in this metric. This is the metric for opens that is reported by Mailchimp. Set the value to 0 if it is NULL."
+          },
+          {
+            "name": "automation_unique_clicks",
+            "description": "The unique number of emails clicked from automation emails. If a given email to a user was clicked multiple times, it will only count once in this metric. This is the metric for clicks that is reported by Mailchimp. Set the value to 0 if it is NULL."
+          },
+          {
+            "name": "automation_unsubscribes",
+            "description": "The number of users who have unsubscribed from automation emails. Set the value to 0 if it is NULL."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    databricks_definition_id: 072d5540-f236-4294-ba7c-ade8fd918496\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://mailchimp-bucket/automation_recipient.csv\n    sync_mode: full_refresh_append\n    table: automation_recipient\n  - path: s3://mailchimp-bucket/campaign.jsonl\n    sync_mode: full_refresh_append\n    table: campaign\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - automation_email\n    - automation_recipient_activity\n    - list\n    - unsubscribe\nflat_files:\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=1gqgXVV4V3ptREl4A4FlCHAgNRSgTLRaI\n  sync_mode: full_refresh_append\n  table: automation\n- format: csv\n  path: https://drive.google.com/uc?export=download&id=1PeClmQkfkuzqXxzGcYerYnto4pDGvZSK\n  sync_mode: full_refresh_append\n  table: campaign_recipient\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: mailchimp\n    sync_mode: full_refresh_append\n    tables:\n    - segment\n    - segment_member\npostgres:\n  config:\n    database: mailchimp\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - campaign_recipient_activity\n    - member\n    user: postgres\ndatabricks:\n  config:\n    database: <db_database>\n    hostname: <db_hostname>\n    client_id: <db_client_id>\n    secret: <db_secret>\n    schema: mailchimp\n    http_path: <db_path>\n",
+  "case_id": "B14-elt-0047",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "mailchimp__lists",
+        "columns": [
+          "list_id",
+          "date_created",
+          "name",
+          "list_rating",
+          "beamer_address",
+          "contact_address_1",
+          "contact_city",
+          "contact_company",
+          "contact_country",
+          "contact_state",
+          "contact_zip",
+          "default_from_email",
+          "default_from_name",
+          "default_language",
+          "email_type_option",
+          "permission_reminder",
+          "subscribe_url_long",
+          "subscribe_url_short",
+          "use_archive_bar",
+          "visibility",
+          "count_members",
+          "most_recent_signup_timestamp",
+          "campaign_sends",
+          "campaign_opens",
+          "campaign_clicks",
+          "campaign_unique_opens",
+          "campaign_unique_clicks",
+          "campaign_unsubscribes",
+          "automation_sends",
+          "automation_opens",
+          "automation_clicks",
+          "automation_unique_opens",
+          "automation_unique_clicks",
+          "automation_unsubscribes"
+        ]
+      },
+      {
+        "name": "mailchimp__members",
+        "columns": [
+          "member_id",
+          "email_address",
+          "email_client",
+          "email_type",
+          "status",
+          "list_id",
+          "signup_timestamp",
+          "opt_in_timestamp",
+          "last_changed_timestamp",
+          "country_code",
+          "dstoff",
+          "gmtoff",
+          "opt_in_ip_address",
+          "signup_ip_address",
+          "language",
+          "latitude",
+          "longitude",
+          "member_rating",
+          "timezone",
+          "unique_email_id",
+          "vip",
+          "campaign_sends",
+          "campaign_opens",
+          "campaign_clicks",
+          "campaign_unique_opens",
+          "campaign_unique_clicks",
+          "campaign_unsubscribes",
+          "automation_sends",
+          "automation_opens",
+          "automation_clicks",
+          "automation_unique_opens",
+          "automation_unique_clicks",
+          "automation_unsubscribes"
+        ]
+      },
+      {
+        "name": "mailchimp__campaigns",
+        "columns": [
+          "campaign_id",
+          "segment_id",
+          "create_timestamp",
+          "send_timestamp",
+          "list_id",
+          "reply_to_email",
+          "campaign_type",
+          "title",
+          "archive_url",
+          "authenticate",
+          "auto_footer",
+          "auto_tweet",
+          "clicktale",
+          "content_type",
+          "drag_and_drop",
+          "fb_comments",
+          "from_name",
+          "google_analytics",
+          "inline_css",
+          "long_archive_url",
+          "status",
+          "subject_line",
+          "template_id",
+          "timewarp",
+          "to_name",
+          "track_ecomm_360",
+          "track_goals",
+          "track_html_clicks",
+          "track_opens",
+          "track_text_clicks",
+          "use_conversation",
+          "sends",
+          "opens",
+          "clicks",
+          "unique_opens",
+          "unique_clicks",
+          "unsubscribes"
+        ]
+      },
+      {
+        "name": "mailchimp__campaign_recipients",
+        "columns": [
+          "email_id",
+          "campaign_id",
+          "member_id",
+          "list_id",
+          "segment_id",
+          "opens",
+          "unique_opens",
+          "clicks",
+          "unique_clicks",
+          "was_opened",
+          "was_clicked",
+          "send_timestamp",
+          "first_open_timestamp",
+          "time_to_open_minutes",
+          "time_to_open_hours",
+          "time_to_open_days",
+          "was_unsubscribed"
+        ]
+      },
+      {
+        "name": "mailchimp__campaign_activities",
+        "columns": [
+          "action_type",
+          "campaign_id",
+          "member_id",
+          "list_id",
+          "activity_timestamp",
+          "ip_address",
+          "url",
+          "activity_id",
+          "email_id",
+          "send_timestamp",
+          "time_since_send_minutes",
+          "time_since_send_hours",
+          "time_since_send_days"
+        ]
+      },
+      {
+        "name": "mailchimp__automations",
+        "columns": [
+          "automation_id",
+          "list_id",
+          "segment_id",
+          "segment_text",
+          "started_timestamp",
+          "created_timestamp",
+          "status",
+          "title",
+          "trigger_settings",
+          "sends",
+          "opens",
+          "clicks",
+          "unique_opens",
+          "unique_clicks",
+          "unsubscribes"
+        ]
+      },
+      {
+        "name": "mailchimp__automation_emails",
+        "columns": [
+          "automation_email_id",
+          "automation_id",
+          "created_timestamp",
+          "started_timestamp",
+          "send_timestamp",
+          "from_name",
+          "reply_to",
+          "status",
+          "subject_line",
+          "title",
+          "archive_url",
+          "authenticate",
+          "auto_footer",
+          "auto_tweet",
+          "content_type",
+          "delay_action",
+          "delay_action_description",
+          "delay_amount",
+          "delay_full_description",
+          "delay_type",
+          "drag_and_drop",
+          "fb_comments",
+          "google_analytics",
+          "inline_css",
+          "position",
+          "template_id",
+          "track_ecomm_360",
+          "track_goals",
+          "track_html_clicks",
+          "track_opens",
+          "track_text_clicks",
+          "list_id",
+          "segment_id",
+          "sends",
+          "opens",
+          "clicks",
+          "unique_opens",
+          "unique_clicks",
+          "unsubscribes"
+        ]
+      },
+      {
+        "name": "mailchimp__automation_activities",
+        "columns": [
+          "action_type",
+          "automation_email_id",
+          "member_id",
+          "list_id",
+          "activity_timestamp",
+          "ip_address",
+          "url",
+          "activity_id",
+          "automation_id",
+          "segment_id"
+        ]
+      },
+      {
+        "name": "mailchimp__segments",
+        "columns": [
+          "segment_id",
+          "list_id",
+          "list_name",
+          "member_count",
+          "segment_name",
+          "segment_type",
+          "updated_timestamp",
+          "created_timestamp",
+          "campaign_sends",
+          "campaign_opens",
+          "campaign_clicks",
+          "campaign_unique_opens",
+          "campaign_unique_clicks",
+          "campaign_unsubscribes",
+          "automation_sends",
+          "automation_opens",
+          "automation_clicks",
+          "automation_unique_opens",
+          "automation_unique_clicks",
+          "automation_unsubscribes"
+        ]
+      }
+    ]
+  }
+}

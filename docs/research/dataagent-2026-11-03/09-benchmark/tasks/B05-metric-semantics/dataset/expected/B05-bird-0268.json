@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 267,
+  "question": "For every edition of the French Grand Prix from the 1990 season through the most recent edition, I'd like to know which drivers set a fastest lap of the race slower than 90 seconds. For each such driver, give me the date of the edition, the driver's forename and surname, and their fastest lap time of that race in m:ss.mmm form. If several drivers in an edition clear that 90-second mark, list one row per driver. If an edition has no driver over 90 seconds, still show the edition with its date, but no driver or lap time. Please order the rows from the earliest edition date to the latest, and within an edition by driver surname alphabetically - if two drivers share the same fastest-lap time, order them by forename alphabetically.",
+  "evidence": "A driver's fastest lap in an edition means the shortest time they took to complete any single lap of that race, measured from the start of that lap; the 90-second threshold applies to that fastest lap, not to an average.",
+  "gold_sql": "WITH editions AS (SELECT raceId, date FROM races WHERE name = 'French Grand Prix' AND year >= 1990), best AS (SELECT raceId, driverId, MIN(milliseconds) AS best FROM lapTimes GROUP BY raceId, driverId) SELECT e.date, d.forename, d.surname, lt.time FROM editions e LEFT JOIN best b ON b.raceId = e.raceId AND b.best > 90 * 1000 LEFT JOIN lapTimes lt ON lt.raceId = b.raceId AND lt.driverId = b.driverId AND lt.milliseconds = b.best LEFT JOIN drivers d ON d.driverId = b.driverId ORDER BY e.date, d.surname, d.forename",
+  "db_id": "formula_1",
+  "case_id": "B05-bird-0268",
+  "expected": {
+    "kind": "sql",
+    "sql": "WITH editions AS (SELECT raceId, date FROM races WHERE name = 'French Grand Prix' AND year >= 1990), best AS (SELECT raceId, driverId, MIN(milliseconds) AS best FROM lapTimes GROUP BY raceId, driverId) SELECT e.date, d.forename, d.surname, lt.time FROM editions e LEFT JOIN best b ON b.raceId = e.raceId AND b.best > 90 * 1000 LEFT JOIN lapTimes lt ON lt.raceId = b.raceId AND lt.driverId = b.driverId AND lt.milliseconds = b.best LEFT JOIN drivers d ON d.driverId = b.driverId ORDER BY e.date, d.surname, d.forename",
+    "db_id": "formula_1",
+    "evidence": "A driver's fastest lap in an edition means the shortest time they took to complete any single lap of that race, measured from the start of that lap; the 90-second threshold applies to that fastest lap, not to an average."
+  }
+}

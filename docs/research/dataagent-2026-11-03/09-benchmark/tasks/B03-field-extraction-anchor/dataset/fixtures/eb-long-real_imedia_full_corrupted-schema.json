@@ -1,0 +1,105 @@
+{
+  "type": "object",
+  "title": "Real-content creditor matrix extraction schema",
+  "description": "Extract the case header and every creditor row from a Chapter 11 creditor matrix. Rows are a sparse fully-ruled nine-column table; many cells are blank. Return creditors in document (alphabetical) order; use null for any blank cell.",
+  "required": [
+    "report_title",
+    "case_number",
+    "creditors"
+  ],
+  "properties": {
+    "report_title": {
+      "type": "string",
+      "description": "Document title printed centered on each page, e.g. 'Creditor Matrix'."
+    },
+    "case_number": {
+      "type": "string",
+      "description": "Bankruptcy case number from the ECF filing stamp, e.g. '23-11132'."
+    },
+    "creditors": {
+      "type": "array",
+      "description": "Every creditor row in document order. Use null for blank cells.",
+      "items": {
+        "type": "object",
+        "required": [
+          "creditor_name",
+          "attention",
+          "address_1",
+          "address_2",
+          "address_3",
+          "city",
+          "state",
+          "zip",
+          "country",
+          "source_page"
+        ],
+        "properties": {
+          "creditor_name": {
+            "type": "string",
+            "description": "Creditor name (first column)."
+          },
+          "attention": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Attention / care-of line, else null."
+          },
+          "address_1": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "First address line (or 'Address Redacted'), else null."
+          },
+          "address_2": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Second address line, else null."
+          },
+          "address_3": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Third address line, else null."
+          },
+          "city": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "City, else null."
+          },
+          "state": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "State/province code, else null."
+          },
+          "zip": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Postal code, else null."
+          },
+          "country": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Country (blank for domestic US rows), else null."
+          },
+          "source_page": {
+            "type": "integer",
+            "description": "One-indexed PDF page where the row is printed."
+          }
+        }
+      }
+    }
+  }
+}

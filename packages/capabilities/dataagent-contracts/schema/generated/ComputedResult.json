@@ -1,0 +1,341 @@
+{
+  "$comment": "generated from dataagent_contracts.core:ComputedResult; do not edit",
+  "$defs": {
+    "Completeness": {
+      "additionalProperties": false,
+      "properties": {
+        "declared_scope": {
+          "minLength": 1,
+          "title": "Declared Scope",
+          "type": "string"
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "extent": {
+          "$ref": "#/$defs/CompletenessExtent"
+        },
+        "observed": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "type": "integer"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Observed"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        },
+        "snapshot_consistent": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Snapshot Consistent"
+        }
+      },
+      "required": [
+        "extent",
+        "declared_scope"
+      ],
+      "title": "Completeness",
+      "type": "object"
+    },
+    "CompletenessExtent": {
+      "enum": [
+        "complete_in_declared_scope",
+        "page",
+        "sampled",
+        "truncated",
+        "unknown"
+      ],
+      "title": "CompletenessExtent",
+      "type": "string"
+    },
+    "EngineBinding": {
+      "additionalProperties": false,
+      "description": "Coordinates of the engine that produced or will execute a spec.\n\n07 §5.4: package name, engine version and, when available, the locked\nwheel digest. Consumers compare against the actually installed version\nand fail closed on mismatch (``da07.engine_version_mismatch``).",
+      "properties": {
+        "engine_id": {
+          "minLength": 1,
+          "title": "Engine Id",
+          "type": "string"
+        },
+        "engine_version": {
+          "minLength": 1,
+          "title": "Engine Version",
+          "type": "string"
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "wheel_digest": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Wheel Digest"
+        }
+      },
+      "required": [
+        "engine_id",
+        "engine_version"
+      ],
+      "title": "EngineBinding",
+      "type": "object"
+    },
+    "TimeRange": {
+      "additionalProperties": false,
+      "properties": {
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "from": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "From"
+        },
+        "to": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "To"
+        }
+      },
+      "title": "TimeRange",
+      "type": "object"
+    },
+    "VersionedRef": {
+      "description": "Versioned reference serialized as '<id>@<revision>'.",
+      "pattern": "^[^@\\s]+@[^@\\s]+$",
+      "type": "string"
+    }
+  },
+  "$id": "dataagent-contracts/0.1/core/ComputedResult",
+  "additionalProperties": false,
+  "properties": {
+    "assumptions": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Assumptions",
+      "type": "array"
+    },
+    "certified": {
+      "default": false,
+      "title": "Certified",
+      "type": "boolean"
+    },
+    "completeness": {
+      "$ref": "#/$defs/Completeness"
+    },
+    "engine_binding": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/EngineBinding"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "evidence_refs": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Evidence Refs",
+      "type": "array"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "filters_applied": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Filters Applied",
+      "type": "array"
+    },
+    "form": {
+      "enum": [
+        "scalar",
+        "table"
+      ],
+      "title": "Form",
+      "type": "string"
+    },
+    "grain": {
+      "minLength": 1,
+      "title": "Grain",
+      "type": "string"
+    },
+    "result_id": {
+      "minLength": 1,
+      "title": "Result Id",
+      "type": "string"
+    },
+    "semantic_versions": {
+      "items": {
+        "$ref": "#/$defs/VersionedRef"
+      },
+      "title": "Semantic Versions",
+      "type": "array"
+    },
+    "sql_digest": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Sql Digest"
+    },
+    "table_ref": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/VersionedRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "target_ref": {
+      "$ref": "#/$defs/VersionedRef"
+    },
+    "time_range": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TimeRange"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "unit": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Unit"
+    },
+    "value": {
+      "anyOf": [
+        {},
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Value"
+    }
+  },
+  "required": [
+    "result_id",
+    "target_ref",
+    "form",
+    "grain",
+    "evidence_refs",
+    "completeness"
+  ],
+  "title": "ComputedResult",
+  "type": "object"
+}

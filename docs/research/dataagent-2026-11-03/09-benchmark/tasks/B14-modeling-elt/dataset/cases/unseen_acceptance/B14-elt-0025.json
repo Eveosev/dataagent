@@ -1,0 +1,35 @@
+{
+  "case_id": "B14-elt-0025",
+  "task_id": "B14",
+  "split_role": "unseen_acceptance",
+  "inputs": [
+    {
+      "kind": "config",
+      "ref": "fixtures/elt-databricks-debit_card_specializing-config.yaml",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B14-elt-0025.json"
+  },
+  "evidence": [
+    "bench://elt-bench/elt-bench/databricks/debit_card_specializing/data_model.yaml"
+  ],
+  "tags": [
+    "elt-bench",
+    "databricks",
+    "debit_card_specializing",
+    "models:1"
+  ],
+  "source": "elt",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

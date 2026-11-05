@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1505,
+  "table": "education-table29",
+  "structure": "SingleRowClassified",
+  "question_type": "Fact Checking",
+  "sub_type": "Value-Matching",
+  "answer": "1.71",
+  "cot": [
+    {
+      "planning": "First, we need to find the column corresponding with '9'."
+    },
+    {
+      "planning": "Next, we need to find the row corresponding with 'CAI'."
+    },
+    {
+      "planning": "Finally, we output the final value."
+    }
+  ],
+  "case_id": "B01-rht-3141",
+  "expected": {
+    "kind": "answer",
+    "question": "What is the average score for the CAI condition in '9'? (Accurate to two decimal places)",
+    "answer": "1.71"
+  }
+}

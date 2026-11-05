@@ -1,0 +1,215 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentos.local/benchmark/manifest.schema.json",
+  "title": "Dataset manifest",
+  "type": "object",
+  "required": [
+    "dataset_id",
+    "task_id",
+    "revision",
+    "status",
+    "unit",
+    "sources",
+    "splits",
+    "exposure",
+    "fixtures"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "dataset_id": {
+      "type": "string"
+    },
+    "task_id": {
+      "type": "string",
+      "pattern": "^B(0[1-9]|1[0-5])$"
+    },
+    "revision": {
+      "type": "string",
+      "pattern": "^v(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    },
+    "status": {
+      "enum": [
+        "planned",
+        "collecting",
+        "frozen",
+        "deprecated"
+      ]
+    },
+    "unit": {
+      "type": "string"
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "license"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "license": {
+            "type": "string"
+          },
+          "digest": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "splits": {
+      "type": "object",
+      "required": [
+        "development",
+        "regression",
+        "unseen_acceptance"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "development": {
+          "type": "object",
+          "required": [
+            "count",
+            "frozen"
+          ],
+          "properties": {
+            "count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "frozen": {
+              "type": "boolean"
+            }
+          }
+        },
+        "regression": {
+          "type": "object",
+          "required": [
+            "count",
+            "frozen"
+          ],
+          "properties": {
+            "count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "frozen": {
+              "type": "boolean"
+            }
+          }
+        },
+        "unseen_acceptance": {
+          "type": "object",
+          "required": [
+            "count",
+            "frozen"
+          ],
+          "properties": {
+            "count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "frozen": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "exposure": {
+      "type": "object",
+      "required": [
+        "ledger_ref",
+        "entries"
+      ],
+      "properties": {
+        "ledger_ref": {
+          "type": "string"
+        },
+        "entries": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "fixtures": {
+      "type": "object",
+      "required": [
+        "storage",
+        "path"
+      ],
+      "properties": {
+        "storage": {
+          "enum": [
+            "local",
+            "object_store",
+            "ref_only"
+          ]
+        },
+        "path": {
+          "type": "string"
+        },
+        "limits": {
+          "type": "string"
+        }
+      }
+    },
+    "updated": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "notes": {
+      "type": "string"
+    },
+    "build": {
+      "type": "object",
+      "required": [
+        "version",
+        "script",
+        "built_at",
+        "policy",
+        "selected",
+        "available"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "script": {
+          "type": "string"
+        },
+        "built_at": {
+          "type": "string"
+        },
+        "policy": {
+          "type": "string"
+        },
+        "selected": {
+          "type": "object"
+        },
+        "available": {
+          "type": "object"
+        },
+        "caps": {
+          "type": "object"
+        },
+        "coverage": {
+          "type": "object"
+        },
+        "counts": {
+          "type": "object"
+        }
+      }
+    }
+  }
+}

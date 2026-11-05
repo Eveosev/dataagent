@@ -1,0 +1,20 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "s1_c_iv_neg",
+  "expect_label": "no",
+  "raw_label": "0",
+  "rule_predicates": [
+    "bracket",
+    "section_1c_iv_applies",
+    "taxable_income",
+    "unmarried"
+  ],
+  "reference_prolog": "/* s1_c_iv_neg: label=0 (Contradiction)\n   Alice is unmarried, TI=$102,268.\n   Claim: pay $27,225 under section 1(c)(iv). Contradiction because\n   bracket (iv) requires $115,000 < TI <= $250,000 but TI < $115,000. */\n\n/* Section 1(c)(iv): applies only if $115,000 < TI <= $250,000 */\nsection_1c_iv_applies(TI) :-\n    TI > 115000,\n    TI =< 250000.\n\ntaxable_income(alice, 102268).\nunmarried(alice).\n\n:- ( taxable_income(alice, TI),\n     unmarried(alice),\n     section_1c_iv_applies(TI)\n   -> format('Result: Entailment~n')\n   ;  format('Result: Contradiction~n')\n   ).\n:- halt.\n",
+  "case_id": "B04-deon-5413",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "0",
+    "question": "Alice has to pay $27225 in taxes for the year 2017 under section 1(c)(iv)."
+  }
+}

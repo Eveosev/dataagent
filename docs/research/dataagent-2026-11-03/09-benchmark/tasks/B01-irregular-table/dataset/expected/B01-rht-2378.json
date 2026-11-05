@@ -1,0 +1,32 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 742,
+  "table": "economy-table40",
+  "structure": "ColumnHeaderMerge",
+  "question_type": "Fact Checking",
+  "sub_type": "Multi-hop Fact Checking",
+  "answer": "Lenovo Desktop",
+  "cot": [
+    {
+      "step": "First, we need to locate all rows in the table corresponding to \"Lenovo Desktop\" and \"Samsung Monitor.\""
+    },
+    {
+      "step": "Extract the \"Unit Price\" values for these items."
+    },
+    {
+      "step": "Calculate the average unit price for all \"Lenovo Desktop\" items."
+    },
+    {
+      "step": "Calculate the average unit price for all \"Samsung Monitor\" items."
+    },
+    {
+      "step": "Compare the two average prices to determine which is higher."
+    }
+  ],
+  "case_id": "B01-rht-2378",
+  "expected": {
+    "kind": "answer",
+    "question": "Compare the unit prices of \"Lenovo Desktop\" and \"Samsung Monitor\" items. Which one has a higher unit price on average?",
+    "answer": "Lenovo Desktop"
+  }
+}

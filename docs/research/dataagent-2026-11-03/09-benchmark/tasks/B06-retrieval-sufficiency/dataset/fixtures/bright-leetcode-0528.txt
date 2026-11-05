@@ -1,0 +1,69 @@
+## Identifying the Essential Problem
+
+The essential problem is to find the maximum amount of money you can earn by strategically picking up passengers while driving from point 1 to point n. This involves choosing the most profitable passengers and optimizing the route to minimize travel time and maximize profit.
+
+## Relevant Information
+
+* **Passenger information:**
+    * Starting point (starti)
+    * Ending point (endi)
+    * Tip amount (tipi)
+* **Taxi route:**
+    * Start at point 1
+    * End at point n
+    * Cannot change direction
+* **Constraints:**
+    * Number of points (n)
+    * Number of passengers (rides.length)
+    * Starting and ending points (1 <= starti < endi <= n)
+    * Tip amount (1 <= tipi <= 10^5)
+
+## Reasoning and Approach
+
+1. **Sort the passengers:** Sort the passengers in ascending order based on their starting points (starti). This ensures we consider passengers in the order they appear along the route.
+2. **Dynamic Programming:** We can use dynamic programming to efficiently calculate the maximum profit. We define a DP array `dp` where `dp[i]` represents the maximum profit we can earn by reaching point `i`.
+3. **DP State Transition:** The DP transition iterates through the passengers and updates `dp[i]` based on the following logic:
+    * If the passenger's starting point is less than or equal to `i` (meaning they are available), we consider two options:
+        * **Pick up the passenger:** Add the passenger's contribution (`endi - starti + tipi`) to the profit at the previous point (`dp[starti - 1]`).
+        * **Continue without picking up the passenger:** Use the profit at the previous point (`dp[i - 1]`).
+    * Choose the maximum of the two options and store it in `dp[i]`.
+4. **Final Result:** The maximum profit we can earn is stored in `dp[n]`.
+
+## Draft Answer
+
+Here's an algorithm to find the maximum profit:
+
+**1. Sort Passengers:**
+
+```python
+def sort_passengers(rides):
+  return sorted(rides, key=lambda ride: ride[0])
+```
+
+**2. Dynamic Programming:**
+
+```python
+def max_profit(n, rides):
+  rides = sort_passengers(rides)
+  dp = [0] * (n + 1)
+  
+  for i in range(1, n + 1):
+    for ride in rides:
+      starti, endi, tipi = ride
+      if starti <= i:
+        dp[i] = max(dp[i], dp[starti - 1] + endi - starti + tipi)
+      else:
+        break
+  
+  return dp[n]
+```
+
+**3. Example Usage:**
+
+```python
+n = 5
+rides = [[2, 5, 4], [1, 5, 1]]
+max_profit(n, rides) # Output: 7
+```
+
+This algorithm efficiently calculates the maximum profit by considering all possible passenger combinations and choosing the most profitable route. It uses dynamic programming to avoid redundant calculations and achieve optimal results.

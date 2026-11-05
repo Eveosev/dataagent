@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 352,
+  "question": "How many characters published by A-Bomb's publisher have no race listed? I just need a single count. (By A-Bomb's publisher, I mean the publisher that publishes the character A-Bomb.)",
+  "evidence": "race: the character's race or group, e.g. Human, Alien, Mutant",
+  "gold_sql": "SELECT COUNT(*) AS character_count FROM superhero WHERE publisher_id = (SELECT publisher_id FROM superhero WHERE superhero_name = 'A-Bomb') AND (race_id IS NULL OR race_id = (SELECT id FROM race WHERE race = '-'))",
+  "db_id": "superhero",
+  "case_id": "B05-bird-0353",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT COUNT(*) AS character_count FROM superhero WHERE publisher_id = (SELECT publisher_id FROM superhero WHERE superhero_name = 'A-Bomb') AND (race_id IS NULL OR race_id = (SELECT id FROM race WHERE race = '-'))",
+    "db_id": "superhero",
+    "evidence": "race: the character's race or group, e.g. Human, Alien, Mutant"
+  }
+}

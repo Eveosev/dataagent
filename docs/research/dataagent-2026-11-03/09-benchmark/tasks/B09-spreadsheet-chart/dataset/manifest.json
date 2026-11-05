@@ -1,0 +1,99 @@
+{
+  "dataset_id": "B09.dataset",
+  "task_id": "B09",
+  "revision": "v0.5",
+  "status": "collecting",
+  "unit": "task",
+  "sources": [
+    {
+      "name": "spreadsheetbench",
+      "locator": "KAKA22/SpreadsheetBench",
+      "license": "CC-BY-SA-4.0",
+      "digest": "sha256:77c3891092e09cd76e029c15adf3dd52ae330a0282bf43c0a4e9327f1ea8cf82",
+      "revision": null,
+      "files": 15,
+      "mb": 110.7,
+      "fetched_at": "2026-11-04T17:49:05+08:00"
+    },
+    {
+      "name": "spreadsheetbench",
+      "locator": "KAKA22/SpreadsheetBench",
+      "license": "CC-BY-SA-4.0",
+      "digest": "sha256:77c3891092e09cd76e029c15adf3dd52ae330a0282bf43c0a4e9327f1ea8cf82",
+      "revision": null,
+      "files": 15,
+      "mb": 110.7,
+      "fetched_at": "2026-11-04T17:49:05+08:00"
+    },
+    {
+      "name": "nvbench2",
+      "locator": "TianqiLuo/nvBench2.0",
+      "license": "未声明",
+      "digest": "sha256:8080e3500fc0dac85cdaec864a3a70222c917468c366879d4ee06d1c15b7f636",
+      "revision": null,
+      "files": 21,
+      "mb": 8.2,
+      "fetched_at": "2026-11-04T18:01:03+08:00"
+    }
+  ],
+  "splits": {
+    "development": {
+      "count": 120,
+      "frozen": false
+    },
+    "regression": {
+      "count": 60,
+      "frozen": false
+    },
+    "unseen_acceptance": {
+      "count": 60,
+      "frozen": false
+    }
+  },
+  "exposure": {
+    "ledger_ref": "exposure.jsonl",
+    "entries": 0
+  },
+  "fixtures": {
+    "storage": "local",
+    "path": "fixtures/",
+    "limits": "单文件 <= 2 MB；超出走对象存储并在 digest 记录"
+  },
+  "updated": "2026-11-04",
+  "notes": "由 build_cases.py 从 workspace/benchmark-data 构建；原始数据不入库",
+  "build": {
+    "version": 5,
+    "script": "tools/build_cases.py",
+    "built_at": "2026-11-04",
+    "policy": "两档数据集各自解压后按题目 id 入库；工作簿走 bench:// 引用。split 按 id 哈希。",
+    "available": {
+      "development": 1680,
+      "regression": 616,
+      "unseen_acceptance": 579
+    },
+    "selected": {
+      "development": 120,
+      "regression": 60,
+      "unseen_acceptance": 60
+    },
+    "caps": {
+      "development": 120,
+      "regression": 60,
+      "unseen_acceptance": 60
+    },
+    "coverage": {
+      "covered_metrics": [
+        "cell_accuracy",
+        "region_iou"
+      ],
+      "missing_metrics": [
+        "report_factuality"
+      ],
+      "note": "图表类由 nvBench2 覆盖（mark/encoding 结构匹配）；报告成稿质量待 VisEval 数据"
+    },
+    "counts": {
+      "spreadsheetbench_912_v0.1.tar.gz": 912,
+      "spreadsheetbench_verified_400.tar.gz": 400
+    }
+  }
+}

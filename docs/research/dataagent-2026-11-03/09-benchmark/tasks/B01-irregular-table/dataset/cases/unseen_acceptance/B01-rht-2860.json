@@ -1,0 +1,35 @@
+{
+  "case_id": "B01-rht-2860",
+  "task_id": "B01",
+  "split_role": "unseen_acceptance",
+  "inputs": [
+    {
+      "kind": "table",
+      "ref": "bench://realthitbench-data/csv/environment-table18.csv",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B01-rht-2860.json"
+  },
+  "evidence": [
+    "bench://realthitbench-data/csv/environment-table18.csv"
+  ],
+  "tags": [
+    "realthitbench",
+    "SingleRowClassified",
+    "Numerical Reasoning",
+    "data.gov.uk"
+  ],
+  "source": "rht",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

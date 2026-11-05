@@ -1,0 +1,492 @@
+{
+  "type": "object",
+  "required": [
+    "invoice_number",
+    "invoice_type",
+    "date",
+    "vendor",
+    "customer",
+    "line_items",
+    "subtotal",
+    "total_amount",
+    "currency"
+  ],
+  "properties": {
+    "invoice_number": {
+      "type": "string",
+      "description": "The vendor's unique identifier for THIS invoice document. Labels: 'Invoice Number', 'Invoice #', 'Invoice No', 'Invoice ID', 'INVOICE NUMBER'. Verbatim string including any leading zeros, letters, or dashes (e.g. 'NF67652', '9823373304', '025-479686', 'INUS246402', '2105629'). Do NOT confuse with the Customer/Account Number, the Purchase Order Number, the Order/Sales Order Number, or any product Item Number. Located in the invoice header block, usually top-right near the date."
+    },
+    "invoice_type": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "credit_note",
+        "proforma"
+      ],
+      "description": "Classification of the document: 'standard' for an ordinary bill/invoice; 'credit_note' only if the document is explicitly a credit memo / credit note (negative balance owed back to the customer); 'proforma' only if explicitly labeled 'Pro Forma'. Default to 'standard' unless the document text clearly states otherwise. Do NOT infer 'credit_note' from individual negative line/credit rows inside a roll-forward account summary."
+    },
+    "original_invoice_number": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "For credit notes only, the invoice number of the original invoice being credited (verbatim string). Do NOT confuse with this document's own invoice_number. Null for standard and proforma invoices, or whenever no original invoice is referenced."
+    },
+    "date": {
+      "type": "string",
+      "description": "The invoice issue date, normalized to YYYY-MM-DD. Labels: 'Invoice Date', 'Date', 'DATE'. Do NOT confuse with the Due Date, the Order Date, a per-line Tax Date / Shipment Date, or 'Samples Received On'. Located in the header block near the invoice number. Convert from the printed format (e.g. '07/19/14' -> '2014-07-19', '01-May-24' -> '2024-05-01')."
+    },
+    "due_date": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Payment due date, normalized to YYYY-MM-DD. Labels: 'Due Date', 'Payment Due', 'DUE DATE'. Do NOT confuse with the invoice issue date or the payment-terms string (e.g. 'Net 30'). Located in the header or terms block. Null if no explicit due date is printed."
+    },
+    "purchase_order_number": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "The customer's Purchase Order number referenced on the invoice. Labels: 'Purchase Order Number', 'PO Number', 'P.O. Number', 'PO NUMBER'. Verbatim string exactly as printed (may be alphanumeric or even a free-text reference, e.g. '95055', '212706', 'WEB2454487473', 'Dish 160R Upton St'). Do NOT confuse with the vendor's Order/Sales Order Number (order_number), the Invoice Number, the Customer/Account Number, or 'Your Ref'/'Our Ref'. Located in the header/terms block. Null if no PO field is present or it is blank."
+    },
+    "order_number": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "The vendor-assigned order / sales order number identifying the order this invoice fulfills. Labels: 'Order Number', 'Sales Order Number', 'Ord No', 'ORDER NUMBER'. Verbatim string as printed (e.g. '1491364305', 'S151787147', 'FLDQ324', '189884'). Do NOT confuse with the customer's Purchase Order Number (purchase_order_number), the Invoice Number, the Customer/Account Number, or 'Your Ref'/'Our Ref'. Located in the header block. Null if no order/sales-order number is printed."
+    },
+    "vendor": {
+      "type": "object",
+      "description": "The party issuing the invoice and to be paid (the 'Remit To' / letterhead seller, e.g. 'CDW Government', 'Axon Enterprise Inc.'). Do NOT populate from the Bill To / customer block.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The vendor/seller name exactly as printed on the letterhead or remit-to block. Do NOT use the Bill To (customer) name."
+        },
+        "address": {
+          "type": "object",
+          "description": "Seller/VENDOR postal address. TIEBREAK: use the seller's PRIMARY address printed in the top letterhead/header block next to the vendor name/logo. If a SEPARATE 'Remit To' / 'Please send payment to' / lockbox / 'Dept. <acct>' payment address is also printed, do NOT use it here (that is a remittance address).",
+          "properties": {
+            "street": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Vendor street line from the letterhead/header block; NOT a Remit-To/lockbox 'Dept.' line."
+            },
+            "city": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "City. Null if not present."
+            },
+            "state": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "State, province, or region (e.g. 'MA', 'TX'). Do NOT confuse with country. Null if not applicable/printed."
+            },
+            "zip_code": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Postal/ZIP code as printed, verbatim string incl any +4 (e.g. '60675-1515'). Null if not present."
+            },
+            "country": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Country. Null if not printed (assume domestic; do not invent a country that is not shown)."
+            }
+          }
+        },
+        "phone": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Vendor phone number as printed. Do NOT confuse with the customer's phone. Null if not present."
+        },
+        "email": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "email"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Vendor remittance/AR email as printed. Do NOT confuse with the customer's email. Null if not present."
+        },
+        "tax_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The vendor's tax identifier, verbatim string. Labels: 'FEIN', 'FEI Number', 'TIN', 'Tax ID', 'Federal ID #', 'Fed. ID No.'. Do NOT confuse with the customer's account number or any invoice/order number. Null if not printed."
+        }
+      }
+    },
+    "customer": {
+      "type": "object",
+      "description": "The party being billed (the 'Bill To' / 'Invoice To' recipient who owes payment, e.g. 'Hingham Town Hall Selectmen', 'City of Mission'). Do NOT populate from the vendor letterhead/remit-to block, nor from the 'Ship To' / delivery address if a distinct Bill To exists.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The customer/Bill To name exactly as printed. Do NOT use the vendor name or the Ship To name when a distinct Bill To exists."
+        },
+        "address": {
+          "$ref": "#/$defs/address"
+        },
+        "phone": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Customer phone number as printed. Do NOT confuse with the vendor's phone. Null if not present in the Bill To block."
+        },
+        "email": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "email"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Customer email as printed. Do NOT confuse with the vendor's remittance/AR email. Null if not present."
+        },
+        "account_number": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The customer's account number with this vendor. Labels: 'Customer Number', 'Account Number', 'GRAINGER ACCOUNT NUMBER', 'Cust No', 'Invoice Account'. Verbatim string incl leading zeros (e.g. '1095519', 'C2588144', '838233708', '43895', '141848'). Do NOT confuse with the Invoice Number, the Purchase Order Number, or the Order Number. Located in the header/Bill To block. Null if no customer/account number is printed."
+        }
+      }
+    },
+    "line_items": {
+      "type": "array",
+      "description": "The billed line items from the MAIN charges/details table ONLY (e.g. the 'New charges (details below)' table, the per-item 'Detailed Invoice Information' table, or the numbered 'Line No.' table). EXCLUDE: rows from an 'Account Summary'/balance roll-forward block (Balance Forward, payments/credits, 'Other invoices from this date', Total Amount Due), remittance-stub rows, and subtotal/tax/total summary rows. For invoices that group charges under CATEGORY headers where the price is printed at the header level (e.g. Tyler 'ERP Pro Financials Annual Fees'), emit ONE line_item per priced category header row (description = the category header text, amount = its printed Extended Price); do NOT emit separate rows for the unpriced indented component/'Cycle' sublines.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "line_no": {
+            "type": "integer",
+            "description": "Printed row sequence number of this line item. Labels: 'Line No.', 'Line #', 'Item' (when it is a 1,2,3... counter). If no explicit Line No. column exists, assign 1..N in printed top-to-bottom order. Do NOT confuse with item_code (the product SKU/part number) nor with quantity."
+          },
+          "item_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Vendor product code / SKU / part number for this line. Labels: 'Item Number', 'Item #', 'ITEM #', 'Item', 'MFG #' / 'Manufacturer Part Number'. Verbatim string incl leading zeros and letters (e.g. '2856676', '61DE01', 'KID21005779', 'IQ10183', '72036'). Do NOT confuse with line_no (the row sequence counter). Null if the line has no product code column (e.g. service-only invoices)."
+          },
+          "description": {
+            "type": "string",
+            "description": "The product or service NAME for this line as printed in the Description column, including an inline manufacturer/part number if printed on the same item line (e.g. 'OFFICE DEHUMID ... MANUFACTURER # FFAP5033W1'). Tolerate OCR artifacts. EXCLUDE: (a) shipment/delivery/tracking metadata (Delivery#, Date, Carrier, No. of pkgs, Wt, Trk#, SHIPPED FROM); (b) Tax-Date / Shipment-Date / 'Cycle: Start.../End...' / service-period sublines; (c) customer-service annotations or 'Customer has indicated to invoice to...' / 'archived the PO' notes; (d) the item_code, quantity, unit_price, or amount columns. Normalize internal whitespace to single spaces. Do NOT confuse with item_code (the SKU/part-number column) or notes (free-text message block)."
+          },
+          "quantity": {
+            "type": "number",
+            "description": "Quantity billed for this line. Labels: 'Quantity', 'QTY', 'Units', 'QTY SHIP'. May be fractional for hourly/weight-based services. Do NOT confuse with line_no or with unit_price."
+          },
+          "unit_price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Price per unit for this line as a number (strip currency symbols and thousands separators; e.g. '$2,340.00' -> 2340.00). Labels: 'Unit Price', 'Price', 'Rate', 'Adjusted Price'. Do NOT confuse with the line amount/extended price (that is the quantity-times-unit total). Null if no per-unit price is printed for the line."
+          },
+          "discount_percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Line-level discount as a percentage number (e.g. 10 for 10%). Do NOT confuse with tax_rate or with a 'Rush %' surcharge. Null if no discount percent is printed for the line."
+          },
+          "tax_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Line-level tax rate as a percentage number (e.g. 8.25 for 8.25%). Do NOT confuse with discount_percent. Null if no per-line tax rate is printed."
+          },
+          "amount": {
+            "type": "number",
+            "description": "The extended line amount (quantity times unit price, after any line discount, before invoice-level tax) as a number; strip currency symbols and separators. Labels: 'Amount', 'Total', 'EXT PRICE', 'Extended Price', 'TOTAL'. Do NOT confuse with unit_price (per-unit) or with the invoice subtotal/total."
+          }
+        },
+        "required": [
+          "line_no",
+          "description",
+          "amount"
+        ]
+      }
+    },
+    "subtotal": {
+      "type": "number",
+      "description": "Sum of all line item amounts before invoice-level tax, shipping, and discounts, as a number (strip currency symbols/separators). Labels: 'Subtotal', 'SUBTOTAL', 'INVOICE SUB TOTAL', 'Sub Total', 'Sales Amount'. Do NOT confuse with total_amount (the final amount due) or with a per-line amount. Located in the totals block."
+    },
+    "discount_total": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Total invoice-level discount amount as a number. Labels: 'Discount', 'Total Discount'. Do NOT confuse with a per-line discount_percent or with negative account-summary credit rows. Null if no invoice-level discount line is printed."
+    },
+    "tax_total": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Total tax amount on the invoice as a number. Labels: 'Sales Tax', 'Tax', 'TAX & BOTTLE DEPOSITS TOTAL'. Do NOT confuse with a per-line tax_rate (a percentage) or with the subtotal. Null if no tax total line is printed."
+    },
+    "shipping": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Shipping / freight charge total as a number. Labels: 'Shipping', 'Freight'. Do NOT confuse with the subtotal or tax_total. Null if no shipping line is printed."
+    },
+    "total_amount": {
+      "type": "number",
+      "description": "The final total amount due on the invoice as a number (strip currency symbols/separators). Labels: 'Amount Due', 'Total', 'Invoice Total', 'Total Due', 'BALANCE DUE', 'Order Total'. Do NOT confuse with the subtotal, with a per-line amount, or with an 'Account Summary' balance-forward figure. Located in the totals block, usually the last/boldest figure."
+    },
+    "payment_terms": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Payment terms text as printed. Labels: 'Terms', 'Payment Terms', 'Payment'. Verbatim string (e.g. 'Net 30 Days', 'NET 45', 'NET30'). Do NOT confuse with the due_date (a date). Null if no terms text is printed."
+    },
+    "bank_details": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "bank_name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Name of the bank for remittance (e.g. 'The Northern Trust', 'JPMorgan Chase'). Null if not printed."
+            },
+            "account_number": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The vendor's bank account number for payment, verbatim string. Do NOT confuse with the customer's account_number or the invoice/order numbers. Null if not printed."
+            },
+            "routing_number": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The bank routing / ABA number for payment, verbatim string. Labels: 'Routing No', 'Bank Routing No'. Null if not printed."
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Vendor bank/remittance details for electronic payment, if an ACH/wire/routing block is present. Null if no bank details are printed on the invoice."
+    },
+    "currency": {
+      "type": "string",
+      "enum": [
+        "USD",
+        "EUR",
+        "GBP",
+        "CAD",
+        "AUD",
+        "JPY",
+        "CNY",
+        "INR",
+        "BRL",
+        "CHF",
+        "KRW"
+      ],
+      "description": "The ISO 4217 currency code of the invoice amounts. Read from an explicit 'Currency' field or a printed code (e.g. 'USD'); otherwise infer from the currency symbol ('$' on a US vendor invoice -> 'USD'). Do NOT guess beyond what the symbol/locale supports."
+    },
+    "notes": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Verbatim content of an EXPLICITLY LABELED free-text block on the invoice (label one of: Notes, Comments, Message, Remarks, Special Instructions, Important Messages). EXCLUDE payment/remittance boilerplate, marketing ('Go Green', paperless-billing promos), received/paid stamps, finance-charge terms, and vendor address-change notices. Null if the invoice has no such explicitly labeled notes block. Do NOT confuse with line_items.description or payment_terms. If a labeled block's content is entirely excluded categories (marketing/paperless/remittance boilerplate), return null."
+    }
+  },
+  "$defs": {
+    "address": {
+      "type": "object",
+      "description": "A postal address parsed into components.",
+      "properties": {
+        "street": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Street line(s) of the address as printed (incl suite/PO box). Null if not present."
+        },
+        "city": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "City. Null if not present."
+        },
+        "state": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "State, province, or region (e.g. 'MA', 'TX'). Do NOT confuse with country. Null if not applicable/printed."
+        },
+        "zip_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Postal/ZIP code as printed, verbatim string incl any +4 (e.g. '60675-1515'). Null if not present."
+        },
+        "country": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Country. Null if not printed (assume domestic; do not invent a country that is not shown)."
+        }
+      }
+    }
+  }
+}

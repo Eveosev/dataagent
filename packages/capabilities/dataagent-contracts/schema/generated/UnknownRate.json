@@ -1,0 +1,38 @@
+{
+  "$comment": "generated from dataagent_contracts.core:UnknownRate; do not edit",
+  "$id": "dataagent-contracts/0.1/core/UnknownRate",
+  "additionalProperties": false,
+  "properties": {
+    "count": {
+      "minimum": 0,
+      "title": "Count",
+      "type": "integer"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "rate": {
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Rate",
+      "type": "number"
+    }
+  },
+  "required": [
+    "count",
+    "rate"
+  ],
+  "title": "UnknownRate",
+  "type": "object"
+}

@@ -1,0 +1,26 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1851,
+  "table": "health-table18",
+  "structure": "MultiColumnClassified",
+  "question_type": "Fact Checking",
+  "sub_type": "Inference-based Fact Checking",
+  "answer": "2.384",
+  "cot": [
+    {
+      "Planning": "First, we need to filter the table for rows where “Material” is “Stainless Steel”."
+    },
+    {
+      "Planning": "Then, we filter the “Mean Delta Log Recovery” column for these rows, ignoring missing values."
+    },
+    {
+      "Planning": "Finally, we round the result to three decimal places."
+    }
+  ],
+  "case_id": "B01-rht-3487",
+  "expected": {
+    "kind": "answer",
+    "question": "What is the “Mean Delta Log Recovery” for “Stainless Steel”. Keep the answer to three decimal places?",
+    "answer": "2.384"
+  }
+}

@@ -1,0 +1,64 @@
+## Essential Problem
+
+The core issue is optimizing database queries to minimize data retrieval for performance reasons. You want to avoid loading the "File" property of the "InvoiceFile" entity when fetching a list of invoices but include it when retrieving a specific invoice by its ID.
+
+## Step-by-Step Reasoning and Information Gathering
+
+1. **Entity Framework Core Configuration:** 
+    - There are multiple ways to configure entity relationships and data loading in EF Core. 
+    - We need to explore options that allow selective loading of the "File" property based on the query context.
+
+2. **Loading Strategies:**
+    - **Eager Loading:** This approach pre-loads associated data (like "InvoiceFiles" in this case) along with the main entity ("Invoices"). While efficient for fetching all related data at once, it might be overkill when only a subset of the data is needed.
+    - **Lazy Loading:** This defers the loading of associated data until it's explicitly accessed. This can improve performance for scenarios where not all related data is required. However, it can lead to additional database queries when the data is accessed.
+    - **Explicit Loading:** This approach involves manually loading related data using separate queries. This offers the most control over data retrieval and can be optimized for specific scenarios.
+
+3. **Performance Considerations:**
+    - The size of the "File" property is crucial. Loading large files for every invoice in a list can significantly impact performance.
+    - The frequency of accessing the "File" property also plays a role. If it's rarely accessed, eager loading might be unnecessary.
+
+## Potential Solutions
+
+1. **Using IgnoreQueryFilter:**
+    - This approach involves defining a query filter that excludes the "File" property. However, you can temporarily disable the filter using `IgnoreQueryFilters()` when retrieving an invoice by ID.
+2. **Explicit Loading with Include:**
+    - You can retrieve the invoice list without the "File" property and then use a separate query with `Include(x => x.InvoiceFiles)` to fetch the file data only when needed.
+3. **Lazy Loading with Conditional Loading:**
+    - Configure lazy loading for the "InvoiceFiles" relationship. When retrieving an invoice by ID, check if the "File" property is null and load it explicitly if necessary.
+
+## Draft Answer
+
+Based on the analysis, here's a potential solution combining Explicit Loading and Include:
+
+```csharp
+// Fetching invoice list without files
+var invoices = await _payoutDbContext.Invoices
+    .Include(x => x.InvoiceFiles) // Include for relationship, but data not loaded yet
+    .AsNoTracking()
+    .AsSplitQuery()
+    .ToListAsync();
+
+// Retrieving specific invoice with file data
+var invoice = await _payoutDbContext.Invoices
+    .Include(x => x.InvoiceFiles) // Include to eager load file data
+    .Where(x => x.Id == invoiceId)
+    .AsNoTracking()
+    .FirstOrDefaultAsync();
+
+// Accessing the file data
+if (invoice.InvoiceFiles.Any() && invoice.InvoiceFiles[0].File == null)
+{
+    invoice.InvoiceFiles[0].File = await _payoutDbContext.InvoiceFiles
+        .Where(x => x.Id == invoice.InvoiceFiles[0].Id)
+        .Select(x => x.File)
+        .FirstOrDefaultAsync();
+}
+```
+
+This approach avoids loading the "File" data for the entire list while ensuring it's available when accessed for a specific invoice. Remember to adjust the logic based on your specific needs and data access patterns.
+
+## Additional Considerations
+
+- Evaluate the impact of different approaches on performance by measuring execution times and memory usage.
+- Consider using caching mechanisms to store frequently accessed file data and reduce database load.
+- Choose the solution that best balances performance, code complexity, and maintainability for your application.

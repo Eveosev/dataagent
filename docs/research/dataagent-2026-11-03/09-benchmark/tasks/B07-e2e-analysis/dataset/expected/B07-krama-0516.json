@@ -1,0 +1,37 @@
+{
+  "source": "mitdbg/KramaBench",
+  "file": "dr-input/wildfire/wildfire_random.json",
+  "raw": {
+    "id": "wildfire-hard-18",
+    "query": "Based on the NOAA dataset, controlling for the weather, do more aggressive suppression actually contribute to fire ending faster and affecting less buildings?",
+    "answer": "More aggressive fire suppression efforts do correlate with slightly faster containment of wildfires, but not necessarily with fewer structures burned.",
+    "answer_type": "string_approximate",
+    "data_sources": [
+      "noaa_wildfires.csv",
+      "noaa_wildfires_variabledescrip.csv"
+    ],
+    "runtime": 11,
+    "input_files_to_dr": [
+      "PublicView_RAWS_-3515561676727363726.csv",
+      "nifc_suppression_costs.csv",
+      "noaa_wildfires_monthly_stats.csv",
+      "wildfire_total_fires_p45_54.csv",
+      "NST-EST2024-POP.xlsx",
+      "noaa_wildfires_variabledescrip.csv",
+      "cleaned_helicopter_requests_by_region.csv",
+      "noaa_wildfires.csv",
+      "state_abbreviation_to_state.json"
+    ]
+  },
+  "case_id": "B07-krama-0516",
+  "expected": {
+    "kind": "answer",
+    "answer": "More aggressive fire suppression efforts do correlate with slightly faster containment of wildfires, but not necessarily with fewer structures burned.",
+    "answer_type": "string_approximate",
+    "runtime_s": 11,
+    "data_sources": [
+      "noaa_wildfires.csv",
+      "noaa_wildfires_variabledescrip.csv"
+    ]
+  }
+}

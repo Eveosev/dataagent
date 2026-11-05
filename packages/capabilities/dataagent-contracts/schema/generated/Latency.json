@@ -1,0 +1,37 @@
+{
+  "$comment": "generated from dataagent_contracts.core:Latency; do not edit",
+  "$id": "dataagent-contracts/0.1/core/Latency",
+  "additionalProperties": false,
+  "properties": {
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "p50": {
+      "minimum": 0,
+      "title": "P50",
+      "type": "number"
+    },
+    "p95": {
+      "minimum": 0,
+      "title": "P95",
+      "type": "number"
+    }
+  },
+  "required": [
+    "p50",
+    "p95"
+  ],
+  "title": "Latency",
+  "type": "object"
+}

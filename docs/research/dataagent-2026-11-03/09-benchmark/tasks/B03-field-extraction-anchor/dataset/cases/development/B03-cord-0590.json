@@ -1,0 +1,41 @@
+{
+  "case_id": "B03-cord-0590",
+  "task_id": "B03",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "image",
+      "ref": "bench://cord-v2/images/validation-00033.png",
+      "digest": null
+    },
+    {
+      "kind": "instruction",
+      "ref": "fixtures/cord-validation-00033-task.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-cord-0590.json"
+  },
+  "evidence": [
+    "bench://cord-v2/images/validation-00033.png",
+    "fixtures/cord-validation-00033-task.md"
+  ],
+  "tags": [
+    "cord-v2",
+    "validation",
+    "doc:receipt",
+    "fields:10"
+  ],
+  "source": "cord",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

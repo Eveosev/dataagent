@@ -1,0 +1,109 @@
+{
+  "source": "naver-clova-ix/cord-v2",
+  "split": "train",
+  "index": 42,
+  "gt_parse": {
+    "menu": {
+      "nm": "ALMOND CHOCO CREAMCHEESE",
+      "unitprice": "28,000",
+      "cnt": "1 x",
+      "price": "28,000"
+    },
+    "sub_total": {
+      "subtotal_price": "28,000"
+    },
+    "total": {
+      "total_price": "28,000",
+      "cashprice": "28,000",
+      "changeprice": "0"
+    }
+  },
+  "case_id": "B03-cord-0397",
+  "expected": {
+    "kind": "json",
+    "value": {
+      "menu": {
+        "nm": "ALMOND CHOCO CREAMCHEESE",
+        "unitprice": "28,000",
+        "cnt": "1 x",
+        "price": "28,000"
+      },
+      "sub_total": {
+        "subtotal_price": "28,000"
+      },
+      "total": {
+        "total_price": "28,000",
+        "cashprice": "28,000",
+        "changeprice": "0"
+      }
+    },
+    "fields": {
+      "menu.nm": "ALMOND CHOCO CREAMCHEESE",
+      "menu.unitprice": "28,000",
+      "menu.cnt": "1 x",
+      "menu.price": "28,000",
+      "sub_total.subtotal_price": "28,000",
+      "total.total_price": "28,000",
+      "total.cashprice": "28,000",
+      "total.changeprice": "0"
+    },
+    "anchored_fields": 0,
+    "no_anchor_fields": 8,
+    "spans": [
+      {
+        "field": "menu.nm",
+        "text": "ALMOND CHOCO CREAMCHEESE",
+        "page": 1
+      },
+      {
+        "field": "menu.unitprice",
+        "text": "28,000",
+        "page": 1
+      },
+      {
+        "field": "menu.cnt",
+        "text": "1 x",
+        "page": 1
+      },
+      {
+        "field": "menu.price",
+        "text": "28,000",
+        "page": 1
+      },
+      {
+        "field": "sub_total.subtotal_price",
+        "text": "28,000",
+        "page": 1
+      },
+      {
+        "field": "total.total_price",
+        "text": "28,000",
+        "page": 1
+      },
+      {
+        "field": "total.cashprice",
+        "text": "28,000",
+        "page": 1
+      },
+      {
+        "field": "total.changeprice",
+        "text": "0",
+        "page": 1
+      }
+    ],
+    "pages": {
+      "menu.nm": 1,
+      "menu.unitprice": 1,
+      "menu.cnt": 1,
+      "menu.price": 1,
+      "sub_total.subtotal_price": 1,
+      "total.total_price": 1,
+      "total.cashprice": 1,
+      "total.changeprice": 1
+    },
+    "evidence_gold": {
+      "source": "cord-valid-line",
+      "version": 1
+    }
+  }
+}

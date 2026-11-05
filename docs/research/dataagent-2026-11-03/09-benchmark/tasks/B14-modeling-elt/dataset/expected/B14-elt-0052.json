@@ -1,0 +1,67 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "databricks",
+  "pipeline": "mondial_geo",
+  "data_model": {
+    "models": [
+      {
+        "name": "countries",
+        "description": "Each record represents a country.",
+        "columns": [
+          {
+            "name": "country_name",
+            "description": "The name of the country."
+          },
+          {
+            "name": "country_area",
+            "description": "The area of the country."
+          },
+          {
+            "name": "country_population",
+            "description": "The population number of the country."
+          },
+          {
+            "name": "the_majority_ethnic_group",
+            "description": "The majority ethnic group in the country, with ties broken by the ascending order of the ethnic group name."
+          },
+          {
+            "name": "num_ethnic_groups",
+            "description": "The number of ethnic groups in the country, replace NULL values with 0."
+          },
+          {
+            "name": "num_languages_spoken",
+            "description": "The number of languages spoken in the country, replace NULL values with 0."
+          },
+          {
+            "name": "has_over_1_organizations_and_an_inflation_rate_of_over_3_per",
+            "description": "Set to 1 if more than one organization is headquartered in the country and the country's inflation rate is greater than 3. Otherwise set to 0."
+          },
+          {
+            "name": "num_neighbors",
+            "description": "The number of neighbors of the country, replace NULL values with 0."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    databricks_definition_id: 072d5540-f236-4294-ba7c-ade8fd918496\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://mondial-geo-bucket/country.jsonl\n    sync_mode: full_refresh_append\n    table: country\n  - path: s3://mondial-geo-bucket/language.parquet\n    sync_mode: full_refresh_append\n    table: language\n  - path: s3://mondial-geo-bucket/province.jsonl\n    sync_mode: full_refresh_append\n    table: province\n  - path: s3://mondial-geo-bucket/religion.jsonl\n    sync_mode: full_refresh_append\n    table: religion\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - borders\n    - city\n    - desert\n    - economy\n    - geo_desert\n    - geo_estuary\n    - geo_island\n    - geo_lake\n    - geo_mountain\n    - geo_river\n    - geo_sea\n    - geo_source\n    - mergesWith\n    - mountainOnIsland\n    - population\n    - sea\n    - target\nflat_files:\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=1ZH2rBVObQBmNrEXrTRkvTEW7CczlWNC7\n  sync_mode: full_refresh_append\n  table: ethnicGroup\n- format: csv\n  path: https://drive.google.com/uc?export=download&id=1yM--6W5iTYcfe315YXkoi5qchy5sP9pn\n  sync_mode: full_refresh_append\n  table: continent\n- format: csv\n  path: https://drive.google.com/uc?export=download&id=1ySLbg190xwnaxuyBpUpSkHJp1ICds7qk\n  sync_mode: full_refresh_append\n  table: encompasses\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: mondial_geo\n    sync_mode: full_refresh_append\n    tables:\n    - island\n    - islandIn\n    - lake\n    - organization\n    - river\npostgres:\n  config:\n    database: mondial_geo\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - is_member\n    - located\n    - located_on\n    - politics\n    user: postgres\ndatabricks:\n  config:\n    database: <db_database>\n    hostname: <db_hostname>\n    client_id: <db_client_id>\n    secret: <db_secret>\n    schema: mondial_geo\n    http_path: <db_path>\n",
+  "case_id": "B14-elt-0052",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "countries",
+        "columns": [
+          "country_name",
+          "country_area",
+          "country_population",
+          "the_majority_ethnic_group",
+          "num_ethnic_groups",
+          "num_languages_spoken",
+          "has_over_1_organizations_and_an_inflation_rate_of_over_3_per",
+          "num_neighbors"
+        ]
+      }
+    ]
+  }
+}

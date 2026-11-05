@@ -1,0 +1,1 @@
+How can I write a VBA code in Excel that takes a list of products and their sales amounts from columns A and B, combines the sales of products with the same name, sorts these combined totals from highest to lowest sales, and displays the results in columns G and H?

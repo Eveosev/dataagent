@@ -1,0 +1,28 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_9bf902c6",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_asked_term",
+    "scenario_target_concept",
+    "statute_ohio_1923_13_writ_official_term",
+    "statute_ohio_1923_13_writ_effect",
+    "statute_ohio_1923_13_writ_directed_to",
+    "statute_ohio_1923_13_duty_to_issue_writ",
+    "legal_concept_court_order_to_authorities_to_remove_tenant",
+    "legal_term_used_for_concept",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    State: Ohio\n    Focus year: 2021\n\n    Question:\n    \"Is the term 'Writ of ejectment' used to refer to the order from the court\n     to the authorities to remove a tenant?\"\n*/\n\n% -----------------------------\n% Scenario (facts + summary)\n% -----------------------------\n\nscenario_state(ohio).\nscenario_focus_year(2021).\n\n% The term being asked about (normalized to an atom)\nscenario_asked_term(writ_of_ejectment).\n\n% What the asked term is alleged to refer to (in plain logical form)\nscenario_target_concept(court_order_to_authorities_to_remove_tenant).\n\n/* Helper predicate that succeeds when the encoded factual statement is present.\n   This \"summarizes the scenario\" so it can be reused in reasoning. */\nscenario_statement :-\n    scenario_state(ohio),\n    scenario_focus_year(2021),\n    scenario_asked_term(writ_of_ejectment),\n    scenario_target_concept(court_order_to_authorities_to_remove_tenant).\n\n% -----------------------------\n% Statute translation (Ohio Rev. Code  1923.13 (2021))\n% -----------------------------\n\n/* Ohio Rev Code  1923.13 (A) & (B) (2021)\n   When a judgment of restitution is entered in an action under Ch. 1923,\n   at plaintiff's request, the court shall issue a \"writ of execution on the judgment\".\n*/\nstatute_ohio_1923_13_writ_official_term(2021, writ_of_execution_on_judgment).\n\n/* Ohio Rev Code  1923.13(A) (2021)\n   The writ commands an officer to remove the defendant and give the plaintiff restitution (possession). */\nstatute_ohio_1923_13_writ_effect(2021, writ_of_execution_on_judgment, commands_removal_of_defendant).\nstatute_ohio_1923_13_writ_effect(2021, writ_of_execution_on_judgment, commands_restitution_of_premises).\n\n/* Ohio Rev Code  1923.13(A) (2021)\n   The writ is directed to law-enforcement / court officers (examples given in the form). */\nstatute_ohio_1923_13_writ_directed_to(2021, writ_of_execution_on_judgment, constable).\nstatute_ohio_1923_13_writ_directed_to(2021, writ_of_execution_on_judgment, police_officer).\nstatute_ohio_1923_13_writ_directed_to(2021, writ_of_execution_on_judgment, sheriff).\nstatute_ohio_1923_13_writ_directed_to(2021, writ_of_execution_on_judgment, authorized_bailiff).\n\n/* Ohio Rev Code  1923.13(A) (2021)\n   Duty trigger: judgment of restitution entered + plaintiff (or agent/attorney) requests issuance.\n   (We encode the duty abstractly; the question is terminological, but we still represent the duty.)\n*/\nstatute_ohio_1923_13_duty_to_issue_writ(2021, judgment_of_restitution_entered, plaintiff_requests, writ_of_execution_on_judgment).\n\n/* NOTE:\n   The provided statutory text uses \"writ of execution on the judgment\" and does NOT state that\n   this order is called a \"writ of ejectment.\" We intentionally do not add any such synonym rule\n   because the task is to encode only what is in the provided statutes.\n*/\n\n% -----------------------------\n% Legal reasoning helpers\n% -----------------------------\n\n/* The concept asked about: \"order from the court to the authorities to remove a tenant\"\n   is matched to the statute's writ when (1) it is an official term in the statute and\n   (2) it has the removal-command effect. */\nlegal_concept_court_order_to_authorities_to_remove_tenant(State, Year, Term) :-\n    State = ohio,\n    statute_ohio_1923_13_writ_official_term(Year, Term),\n    statute_ohio_1923_13_writ_effect(Year, Term, commands_removal_of_defendant),\n    statute_ohio_1923_13_writ_directed_to(Year, Term, _AnyOfficer).\n\n/* \"Term X is used to refer to concept Y\" iff X is an official statutory term that matches the concept. */\nlegal_term_used_for_concept(State, Year, Term, court_order_to_authorities_to_remove_tenant) :-\n    legal_concept_court_order_to_authorities_to_remove_tenant(State, Year, Term).\n\n% -----------------------------\n% Answer computation (deterministic)\n% -----------------------------\n\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_state(State),\n    scenario_focus_year(Year),\n    scenario_asked_term(Term),\n    scenario_target_concept(court_order_to_authorities_to_remove_tenant),\n    legal_term_used_for_concept(State, Year, Term, court_order_to_authorities_to_remove_tenant),\n    !.\n\nhousing_answer(no) :-\n    scenario_statement,\n    scenario_state(State),\n    scenario_focus_year(Year),\n    scenario_asked_term(Term),\n    scenario_target_concept(court_order_to_authorities_to_remove_tenant),\n    \\+ legal_term_used_for_concept(State, Year, Term, court_order_to_authorities_to_remove_tenant),\n    !.\n\n% -----------------------------\n% Main entrypoint (required)\n% -----------------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-4797",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Is the term 'Writ of ejectment' used to refer to the order from the court to the authorities to remove a tenant?"
+  }
+}

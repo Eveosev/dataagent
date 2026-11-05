@@ -1,0 +1,33 @@
+{
+  "case_id": "B06-bright-1256",
+  "task_id": "B06",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "query",
+      "ref": "fixtures/bright-theoremqa_questions-1256.txt",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B06-bright-1256.json"
+  },
+  "evidence": [
+    "bench://bright/documents/theoremqa_questions-00000-of-00001.parquet"
+  ],
+  "tags": [
+    "bright",
+    "theoremqa_questions"
+  ],
+  "source": "bright",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

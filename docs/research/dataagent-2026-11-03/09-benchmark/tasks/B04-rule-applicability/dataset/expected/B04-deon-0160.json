@@ -1,0 +1,41 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_b01392b3",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "state",
+    "focus_year",
+    "role",
+    "property",
+    "notice_to_vacate",
+    "notice_mentions_repercussions_for_failure_to_cure",
+    "statute_duty",
+    "public_service_company",
+    "nonvar",
+    "engaged_in_delivery_in_state",
+    "delivered_for_final_consumption_in_state",
+    "number",
+    "measured_by_unit",
+    "is_county",
+    "is_municipal_corporation",
+    "franchise_tax_applies_to_delivery",
+    "integer",
+    "franchise_tax_exempt_delivery",
+    "money_paid_in_violation",
+    "officer_who_paid_or_authorized",
+    "surety_on_official_bond",
+    "may_recover_from",
+    "requires_landlord_to_describe_repercussions_for_failure_to_cure_in_notice",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    State: Maryland\n    Focus year: 2021\n\n    Question:\n    \"Does the law require landlords to describe repercussions for failure to cure\n     when giving tenants notice to vacate the property?\"\n*/\n\n/* -----------------------------\n   Scenario facts (question statement)\n   ----------------------------- */\n\nstate(maryland).\nfocus_year(2021).\n\nrole(landlord1, landlord).\nrole(tenant1, tenant).\nproperty(property1).\n\n/* A landlord gave a tenant a notice to vacate. */\nnotice_to_vacate(notice1, landlord1, tenant1, property1).\n/* Whether the notice describes repercussions for failure to cure is not asserted by the question. */\nnotice_mentions_repercussions_for_failure_to_cure(notice1, unknown).\n\n/* Helper predicate that succeeds when the encoded scenario is present. */\nscenario_statement :-\n    state(maryland),\n    focus_year(2021),\n    role(landlord1, landlord),\n    role(tenant1, tenant),\n    property(property1),\n    notice_to_vacate(notice1, landlord1, tenant1, property1).\n\n/* -----------------------------\n   Statute translations (as provided)\n   NOTE: The provided statutes are tax/personnel provisions, not landlord-tenant notice rules.\n   We still encode their duties/thresholds/rights as required.\n   ----------------------------- */\n\n/* Generic representation of statutory duties for this knowledge base. */\nstatute_duty(maryland, 2021, 'MD Tax-Gen 8-402.1', pay_franchise_tax, public_service_company).\nstatute_duty(maryland, 2021, 'MD State Pers. & Pens. 8-402', may_recover_money_paid_in_violation, officer_or_surety).\n\n/* --- MD. Tax - General Code Ann.  8-402.1 (2021) ---\n   Encodes:\n   (a)(1) Franchise tax imposed each calendar year on each public service company engaged in\n          transmission/distribution/delivery of electricity or natural gas in the State.\n   (a)(2) Tax measured by kWh electricity or therms natural gas delivered for final consumption in the State.\n   (b) Exemption: tax does not apply to therms of natural gas delivered for final consumption by a PSC that is\n       (1) a county; or (2) a municipal corporation.\n*/\n\n/* Minimal domain predicates used by the statute encoding. */\npublic_service_company(Company) :-\n    nonvar(Company),\n    Company \\= none.\n\nengaged_in_delivery_in_state(Company, maryland, Commodity) :-\n    public_service_company(Company),\n    ( Commodity = electricity\n    ; Commodity = natural_gas\n    ).\n\n/* Quantity is \"for final consumption in the State\". We represent this as a fact-like predicate. */\ndelivered_for_final_consumption_in_state(_Company, maryland, _Commodity, Quantity) :-\n    number(Quantity),\n    Quantity >= 0.\n\nmeasured_by_unit(electricity, kilowatt_hours).\nmeasured_by_unit(natural_gas, therms).\n\n/* Exemption status for natural gas therms delivered for final consumption. */\nis_county(_Entity) :- fail.\nis_municipal_corporation(_Entity) :- fail.\n\n/* The tax applies to a company's delivery of a commodity unless the natural-gas county/municipal exemption applies. */\nfranchise_tax_applies_to_delivery(Company, Year, maryland, Commodity, Quantity, Unit) :-\n    integer(Year),\n    Year >= 0,\n    engaged_in_delivery_in_state(Company, maryland, Commodity),\n    delivered_for_final_consumption_in_state(Company, maryland, Commodity, Quantity),\n    measured_by_unit(Commodity, Unit),\n    \\+ franchise_tax_exempt_delivery(Company, Commodity).\n\nfranchise_tax_exempt_delivery(Company, natural_gas) :-\n    ( is_county(Company)\n    ; is_municipal_corporation(Company)\n    ).\n\nfranchise_tax_exempt_delivery(_Company, electricity) :-\n    fail.\n\n/* --- MD. State Personnel and Pensions Code Ann.  8-402 (2021) ---\n   Encodes:\n   \"Money paid in violation of this section or ... may be recovered from the officer ... or sureties ...\"\n*/\n\n/* Abstract violation and recovery model. */\nmoney_paid_in_violation(_Payment) :- fail.\n\nofficer_who_paid_or_authorized(_Officer, _Payment) :- fail.\nsurety_on_official_bond(_Surety, _Officer) :- fail.\n\nmay_recover_from(RecoveryTarget, Payment) :-\n    money_paid_in_violation(Payment),\n    ( officer_who_paid_or_authorized(RecoveryTarget, Payment)\n    ; ( surety_on_official_bond(RecoveryTarget, Officer),\n        officer_who_paid_or_authorized(Officer, Payment)\n      )\n    ).\n\n/* -----------------------------\n   Legal reasoning for the housing question\n   ----------------------------- */\n\n/* We model the queried legal requirement as existence of a statute-duty imposing it.\n   Because the provided statutes contain no landlord-tenant notice-to-vacate content,\n   no such duty exists in this knowledge base.\n*/\nrequires_landlord_to_describe_repercussions_for_failure_to_cure_in_notice(State, Year) :-\n    statute_duty(State, Year, _Citation, include_repercussions_in_notice_to_vacate, landlord).\n\n/* -----------------------------\n   Final answer predicate\n   ----------------------------- */\n\nhousing_answer(yes) :-\n    scenario_statement,\n    state(State),\n    focus_year(Year),\n    requires_landlord_to_describe_repercussions_for_failure_to_cure_in_notice(State, Year),\n    !.\n\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n/* -----------------------------\n   Main entrypoint\n   ----------------------------- */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-0160",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Does the law require landlords to describe repercussions for failure to cure when giving tenants notice to vacate the property?"
+  }
+}

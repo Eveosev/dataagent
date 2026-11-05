@@ -1,0 +1,113 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "databricks",
+  "pipeline": "university",
+  "data_model": {
+    "models": [
+      {
+        "name": "universities",
+        "description": "Each record represents a university.",
+        "columns": [
+          {
+            "name": "university_id",
+            "description": "Unique identifier for the university."
+          },
+          {
+            "name": "university_name",
+            "description": "The name of the university."
+          },
+          {
+            "name": "country_name",
+            "description": "The name of the country where the university is located."
+          },
+          {
+            "name": "avg_student_staff_ratio",
+            "description": "The average student-to-staff ratio of the university."
+          },
+          {
+            "name": "num_international_students",
+            "description": "The number of international students in the university in 2012, replace NULL values with 0."
+          },
+          {
+            "name": "avg_ranking_score_in_Teaching",
+            "description": "The average ranking score in Teaching the university got across all ranking systems"
+          },
+          {
+            "name": "score_less_than_28_per_avg_research_2015",
+            "description": "Set to 1 if the university's score in research is less than 28% of the average research score of all universities in 2015, otherwise, set to 0."
+          },
+          {
+            "name": "num_male_students",
+            "description": "The number of male students in the university in 2015."
+          }
+        ]
+      },
+      {
+        "name": "countries",
+        "description": "Each record represents a country.",
+        "columns": [
+          {
+            "name": "country_id",
+            "description": "The unique identifier of the country."
+          },
+          {
+            "name": "country_name",
+            "description": "The name of the country."
+          },
+          {
+            "name": "num_universities",
+            "description": "The number of universities in the country, replace NULL values with 0."
+          },
+          {
+            "name": "university_with_highest_score_in_Citations_criteria_2016",
+            "description": "The name of the university in the country with the highest score in Citations criteria in 2016, with ties broken by the ascending order of the university name"
+          },
+          {
+            "name": "has_university_with_num_students_greater_than_98_per_avg_2013",
+            "description": "set to 1 if the country has any university with the number of students greater than 98% of the average student population of all universities in 2013, 0 otherwise."
+          },
+          {
+            "name": "num_international_students_2015",
+            "description": "The number of international students in the country in 2015, replace NULL values with 0."
+          },
+          {
+            "name": "most_populated_university_2014",
+            "description": "The most populated university in the country in 2014, with ties broken by the descending order of the university name"
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    databricks_definition_id: 072d5540-f236-4294-ba7c-ade8fd918496\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://university-bucket/country.jsonl\n    sync_mode: full_refresh_append\n    table: country\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - ranking_criteria\n    - university_ranking_year\nflat_files:\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=1SYRAIovakcygZ6JTtKIr3JzjBcd6vSX6\n  sync_mode: full_refresh_append\n  table: ranking_system\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: university\n    sync_mode: full_refresh_append\n    tables:\n    - university\npostgres:\n  config:\n    database: university\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - university_year\n    user: postgres\ndatabricks:\n  config:\n    database: <db_database>\n    hostname: <db_hostname>\n    client_id: <db_client_id>\n    secret: <db_secret>\n    schema: university\n    http_path: <db_path>\n",
+  "case_id": "B14-elt-0092",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "universities",
+        "columns": [
+          "university_id",
+          "university_name",
+          "country_name",
+          "avg_student_staff_ratio",
+          "num_international_students",
+          "avg_ranking_score_in_Teaching",
+          "score_less_than_28_per_avg_research_2015",
+          "num_male_students"
+        ]
+      },
+      {
+        "name": "countries",
+        "columns": [
+          "country_id",
+          "country_name",
+          "num_universities",
+          "university_with_highest_score_in_Citations_criteria_2016",
+          "has_university_with_num_students_greater_than_98_per_avg_2013",
+          "num_international_students_2015",
+          "most_populated_university_2014"
+        ]
+      }
+    ]
+  }
+}

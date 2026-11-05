@@ -1,0 +1,62 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "databricks",
+  "pipeline": "video_games",
+  "data_model": {
+    "models": [
+      {
+        "name": "publishers",
+        "description": "Each record represents a publisher.",
+        "columns": [
+          {
+            "name": "publisher_id",
+            "description": "Unique identifier for the publisher."
+          },
+          {
+            "name": "publisher_name",
+            "description": "The name of the publisher."
+          },
+          {
+            "name": "num_games",
+            "description": "The number of games published by the publisher, replace NULL values with 0."
+          },
+          {
+            "name": "num_puzzle_games",
+            "description": "The number of puzzle games published by the publisher, replace NULL values with 0."
+          },
+          {
+            "name": "oldest_published_game",
+            "description": "The name of the oldest game published by the publisher, with ties broken by the ascending order of the game name."
+          },
+          {
+            "name": "published_only_one_game",
+            "description": "Set to 1 if the publisher has published only one game, otherwise, set to 0."
+          },
+          {
+            "name": "avg_sale_greater_than_90_per_of_avg_sale_in_Japan",
+            "description": "Set to 1 if the publisher's average sale in Japan is greater than 90% of the average sales of all publishers in Japan, otherwise, set to 0"
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    databricks_definition_id: 072d5540-f236-4294-ba7c-ade8fd918496\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://video-games-bucket/genre.csv\n    sync_mode: full_refresh_append\n    table: genre\n  - path: s3://video-games-bucket/platform.jsonl\n    sync_mode: full_refresh_append\n    table: platform\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - game_publisher\n    - vg_publisher\nflat_files:\n- format: csv\n  path: https://drive.google.com/uc?export=download&id=1IWtCzcS1tV88kXFQMluuVmgRuID5g1c7\n  sync_mode: full_refresh_append\n  table: region\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: video_games\n    sync_mode: full_refresh_append\n    tables:\n    - game\npostgres:\n  config:\n    database: video_games\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - game_platform\n    - region_sales\n    user: postgres\ndatabricks:\n  config:\n    database: <db_database>\n    hostname: <db_hostname>\n    client_id: <db_client_id>\n    secret: <db_secret>\n    schema: video_games\n    http_path: <db_path>\n",
+  "case_id": "B14-elt-0093",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "publishers",
+        "columns": [
+          "publisher_id",
+          "publisher_name",
+          "num_games",
+          "num_puzzle_games",
+          "oldest_published_game",
+          "published_only_one_game",
+          "avg_sale_greater_than_90_per_of_avg_sale_in_Japan"
+        ]
+      }
+    ]
+  }
+}

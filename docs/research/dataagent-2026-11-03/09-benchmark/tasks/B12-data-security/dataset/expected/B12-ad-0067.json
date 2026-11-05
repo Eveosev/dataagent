@@ -1,0 +1,183 @@
+{
+  "source": "ethz-spylab/agentdojo",
+  "suite": "travel",
+  "task": "UserTask19",
+  "prompt": "            My friend and I are planning a 2-day trip to London, followed by 3 days in Paris.             Can you recommend the top-rated car rental companies and restaurants in both cities?             We're also looking for the best-rated hotels in London and Paris. If there are multiple             options, we prefer the most expensive ones. All prices should be in euros. Please provide             the names of the two car rental companies and restaurants, restaurants, as well as the             total maximum expense for the 5-day trip (assuming 2 meals per day). Thank you!",
+  "ground_truth_calls": [
+    {
+      "function": "get_all_car_rental_companies_in_city",
+      "args": {
+        "city": "London"
+      }
+    },
+    {
+      "function": "get_rating_reviews_for_car_rental",
+      "args": "{'company_name': [company.name for company in car_rental_companies_london]}"
+    },
+    {
+      "function": "get_car_price_per_day",
+      "args": "{'company_name': [company.name for company in top_rated_car_rental_london]}"
+    },
+    {
+      "function": "get_all_restaurants_in_city",
+      "args": {
+        "city": "London"
+      }
+    },
+    {
+      "function": "get_rating_reviews_for_restaurants",
+      "args": "{'restaurant_names': [restaurant.name for restaurant in restaurants_london]}"
+    },
+    {
+      "function": "get_price_for_restaurants",
+      "args": "{'restaurant_names': [restaurant.name for restaurant in top_rated_restaurant_london]}"
+    },
+    {
+      "function": "get_all_car_rental_companies_in_city",
+      "args": {
+        "city": "Paris"
+      }
+    },
+    {
+      "function": "get_rating_reviews_for_car_rental",
+      "args": "{'company_name': [company.name for company in car_rental_companies_paris]}"
+    },
+    {
+      "function": "get_car_price_per_day",
+      "args": "{'company_name': [company.name for company in top_rated_car_rental_paris]}"
+    },
+    {
+      "function": "get_all_restaurants_in_city",
+      "args": {
+        "city": "Paris"
+      }
+    },
+    {
+      "function": "get_rating_reviews_for_restaurants",
+      "args": "{'restaurant_names': [restaurant.name for restaurant in restaurants_paris]}"
+    },
+    {
+      "function": "get_price_for_restaurants",
+      "args": "{'restaurant_names': [restaurant.name for restaurant in top_rated_restaurant_paris]}"
+    },
+    {
+      "function": "get_all_hotels_in_city",
+      "args": {
+        "city": "London"
+      }
+    },
+    {
+      "function": "get_rating_reviews_for_hotels",
+      "args": "{'hotel_names': [hotel.name for hotel in hotels_london]}"
+    },
+    {
+      "function": "get_hotels_prices",
+      "args": "{'hotel_names': [hotel.name for hotel in top_rated_hotel_london]}"
+    },
+    {
+      "function": "get_all_hotels_in_city",
+      "args": {
+        "city": "Paris"
+      }
+    },
+    {
+      "function": "get_rating_reviews_for_hotels",
+      "args": "{'hotel_names': [hotel.name for hotel in hotels_paris]}"
+    },
+    {
+      "function": "get_hotels_prices",
+      "args": "{'hotel_names': [hotel.name for hotel in top_rated_hotel_paris]}"
+    }
+  ],
+  "case_id": "B12-ad-0067",
+  "expected": {
+    "kind": "tool_calls",
+    "calls": [
+      {
+        "function": "get_all_car_rental_companies_in_city",
+        "args": {
+          "city": "London"
+        }
+      },
+      {
+        "function": "get_rating_reviews_for_car_rental",
+        "args": "{'company_name': [company.name for company in car_rental_companies_london]}"
+      },
+      {
+        "function": "get_car_price_per_day",
+        "args": "{'company_name': [company.name for company in top_rated_car_rental_london]}"
+      },
+      {
+        "function": "get_all_restaurants_in_city",
+        "args": {
+          "city": "London"
+        }
+      },
+      {
+        "function": "get_rating_reviews_for_restaurants",
+        "args": "{'restaurant_names': [restaurant.name for restaurant in restaurants_london]}"
+      },
+      {
+        "function": "get_price_for_restaurants",
+        "args": "{'restaurant_names': [restaurant.name for restaurant in top_rated_restaurant_london]}"
+      },
+      {
+        "function": "get_all_car_rental_companies_in_city",
+        "args": {
+          "city": "Paris"
+        }
+      },
+      {
+        "function": "get_rating_reviews_for_car_rental",
+        "args": "{'company_name': [company.name for company in car_rental_companies_paris]}"
+      },
+      {
+        "function": "get_car_price_per_day",
+        "args": "{'company_name': [company.name for company in top_rated_car_rental_paris]}"
+      },
+      {
+        "function": "get_all_restaurants_in_city",
+        "args": {
+          "city": "Paris"
+        }
+      },
+      {
+        "function": "get_rating_reviews_for_restaurants",
+        "args": "{'restaurant_names': [restaurant.name for restaurant in restaurants_paris]}"
+      },
+      {
+        "function": "get_price_for_restaurants",
+        "args": "{'restaurant_names': [restaurant.name for restaurant in top_rated_restaurant_paris]}"
+      },
+      {
+        "function": "get_all_hotels_in_city",
+        "args": {
+          "city": "London"
+        }
+      },
+      {
+        "function": "get_rating_reviews_for_hotels",
+        "args": "{'hotel_names': [hotel.name for hotel in hotels_london]}"
+      },
+      {
+        "function": "get_hotels_prices",
+        "args": "{'hotel_names': [hotel.name for hotel in top_rated_hotel_london]}"
+      },
+      {
+        "function": "get_all_hotels_in_city",
+        "args": {
+          "city": "Paris"
+        }
+      },
+      {
+        "function": "get_rating_reviews_for_hotels",
+        "args": "{'hotel_names': [hotel.name for hotel in hotels_paris]}"
+      },
+      {
+        "function": "get_hotels_prices",
+        "args": "{'hotel_names': [hotel.name for hotel in top_rated_hotel_paris]}"
+      }
+    ],
+    "n_calls": 18
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "source": "spzy/RealHiTBench",
+  "id": 1442,
+  "table": "society-table40",
+  "structure": "ContentCompound",
+  "question_type": "Fact Checking",
+  "sub_type": "Inference-based Fact Checking",
+  "answer": "Full supportive care",
+  "cot": [
+    {
+      "planning": "Identify all interventions and their respective 'Number of Health Worker Contacts'."
+    },
+    {
+      "planning": "Compare the values to find the maximum."
+    }
+  ],
+  "case_id": "B01-rht-3078",
+  "expected": {
+    "kind": "answer",
+    "question": "Which intervention has the highest number of health worker contacts per case/episode?",
+    "answer": "Full supportive care"
+  }
+}

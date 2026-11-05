@@ -1,0 +1,208 @@
+Cancellation - Python SDK | Temporal Documentation
+Skip to main content
+HomeCoursesSDKsDurable AICode ExchangeTemporal Cloud
+Ask AI
+Search
+Home
+Quickstarts
+Evaluate
+Develop
+Go SDK
+Java SDK
+.NET SDK
+PHP SDK
+Python SDK
+Quickstart
+Workflows
+Workflow basics
+Child Workflows
+Continue-As-New
+Cancellation
+Timeouts
+Message passing
+Schedules
+Timers
+Versioning
+Workflow Streams
+Activities
+Workers
+Client
+Nexus
+Platform
+Best practices
+Integrations
+Ruby SDK
+Rust SDK
+TypeScript SDK
+Environment configuration
+Worker performance
+Safe deployments
+Plugins guide
+Task Queue Priority and Fairness
+Temporal Cloud
+Deploy to production
+CLI (temporal)
+Design Patterns
+Guides
+Durable AI
+References
+Troubleshooting
+Best practices
+Encyclopedia
+Interactive Demos
+Integrations
+Glossary
+Develop with AI
+Develop
+Python SDK
+Workflows
+Cancellation
+On this page
+For the complete documentation index, see /llms.txt. This page is also available as raw Markdown at /develop/python/workflows/cancellation.md. Append .md to any page URL to fetch its Markdown. This site has a public search endpoint for questions about Temporal: GET https://docs.temporal.io/api/retrieve?q=<question>&jtb=<job-to-be-done>&src=docs-page&agent=<your-name>. No authentication is needed. It returns a JSON array of {content, source_url, page_url}, ordered by relevance, and source_url links to docs pages as Markdown. If you call it, set q to a specific, complete question that names the SDK language if relevant, and jtb to one sentence on what your user is trying to accomplish (optional). Keep src=docs-page as is, and set agent to your name, for example claude-code or codex. Don't include personal data, credentials, or confidential information.
+Cancellation
+Copy for LLMView Markdown
+You can interrupt a Workflow Execution in one of the following ways:
+Cancel: Canceling a Workflow provides a graceful way to stop Workflow Execution.
+Terminate: Terminating a Workflow forcefully stops Workflow Execution.
+Terminating a Workflow forcefully stops Workflow Execution. This action resembles killing a process.
+The system records a WorkflowExecutionTerminated event in the Event History.
+The termination forcefully and immediately stops the Workflow Execution.
+The Workflow code gets no chance to handle termination.
+A Workflow Task doesn't get scheduled.
+In most cases, canceling is preferable because it allows the Workflow to finish gracefully. Terminate only if the
+Workflow is stuck and cannot be canceled normally.
+Cancel a Workflow Execution​
+Canceling a Workflow provides a graceful way to stop Workflow Execution. This action resembles sending a SIGTERM to a
+process.
+The system records a WorkflowExecutionCancelRequested event in the Event History.
+A Workflow Task gets scheduled to process the cancelation.
+The Workflow code can handle the cancelation and execute any cleanup logic.
+The system doesn't forcefully stop the Workflow.
+To cancel a Workflow Execution in Python, use the
+cancel() function on the Workflow handle.
+python-sandbox/workflows/cancellation/client.py
+await client.get_workflow_handle(workflow_id).cancel()
+Cancel an Activity from a Workflow​
+Canceling an Activity from within a Workflow requires that the Activity Execution sends Heartbeats and sets a Heartbeat
+Timeout. If the Heartbeat is not invoked, the Activity cannot receive a cancellation request. When any non-immediate
+Activity is executed, the Activity Execution should send Heartbeats and set a
+Heartbeat Timeout to ensure that the server knows it is
+still working.
+When an Activity is canceled, an error is raised in the Activity at the next available opportunity. If cleanup logic
+needs to be performed, it can be done in a finally clause or inside a caught cancel error. However, for the Activity
+to appear canceled the exception needs to be re-raised.
+info
+Unlike regular Activities, Local Activities can be canceled if they don't send Heartbeats. Local
+Activities are handled locally, and all the information needed to handle the cancellation logic is available in the same
+Worker process.
+To cancel an Activity from a Workflow Execution, call the
+cancel() method on the Activity handle that
+is returned from start_activity().
+python-sandbox/workflows/cancellation/activity_cancellation.py
+@activity.defn
+async def cancellable_activity(input: ComposeArgsInput) -> NoReturn:
+try:
+while True:
+print("Heartbeating cancel activity")
+await asyncio.sleep(0.5)
+activity.heartbeat("some details")
+except asyncio.CancelledError:
+print("Activity cancelled")
+raise
+@activity.defn
+async def run_activity(input: ComposeArgsInput):
+print("Executing activity")
+return input.arg1 + input.arg2
+@workflow.defn
+class GreetingWorkflow:
+@workflow.run
+async def run(self, input: ComposeArgsInput) -> None:
+activity_handle = workflow.start_activity(
+cancellable_activity,
+ComposeArgsInput(input.arg1, input.arg2),
+start_to_close_timeout=timedelta(minutes=5),
+heartbeat_timeout=timedelta(seconds=30),
+)
+await asyncio.sleep(3)
+activity_handle.cancel()
+info
+The Activity handle is a Python task. By calling cancel(), you're essentially requesting the task to be canceled.
+Terminate a Workflow Execution​
+Terminating a Workflow forcefully stops Workflow Execution. This action resembles killing a process.
+The system records a WorkflowExecutionTerminated event in the Event History.
+The termination forcefully and immediately stops the Workflow Execution.
+The Workflow code gets no chance to handle termination.
+A Workflow Task doesn't get scheduled.
+To terminate a Workflow Execution in Python, use the
+terminate() function on the Workflow
+handle.
+python-sandbox/workflows/cancellation/client.py
+await client.get_workflow_handle(workflow_id).terminate()
+Reset a Workflow Execution​
+Resetting a Workflow Execution terminates the current Workflow Execution and starts a new Workflow Execution from a
+point you specify in its Event History. Use reset when a Workflow is blocked due to a non-deterministic error or other
+issues that prevent it from completing.
+When you reset a Workflow, the Event History up to the reset point is copied to the new Workflow Execution, and the
+Workflow resumes from that point with the current code. Reset only works if you've fixed the underlying issue, such as
+removing non-deterministic code. Any progress made after the reset point will be discarded. Provide a reason when
+resetting, as it will be recorded in the Event History.
+Web UI
+Temporal CLI
+Navigate to the Workflow Execution details page,
+Click the Reset button in the top right dropdown menu,
+Select the Event ID to reset to,
+Provide a reason for the reset,
+Confirm the reset.
+The Web UI shows available reset points and creates a link to the new Workflow Execution after the reset completes.
+Use the temporal workflow reset command to reset a Workflow Execution:
+temporal workflow reset \
+--workflow-id <workflow-id> \
+--event-id <event-id> \
+--reason "Reason for reset"
+For example:
+temporal workflow reset \
+--workflow-id my-background-check \
+--event-id 4 \
+--reason "Fixed non-deterministic code"
+By default, the command resets the latest Workflow Execution in the default Namespace. Use --run-id to reset a
+specific run. Use --namespace to specify a different Namespace:
+temporal workflow reset \
+--workflow-id my-background-check \
+--event-id 4 \
+--reason "Fixed non-deterministic code" \
+--namespace my-namespace \
+--tls-cert-path /path/to/cert.pem \
+--tls-key-path /path/to/key.pem
+Monitor the new Workflow Execution after resetting to ensure it completes successfully.
+Tags:
+Workflows
+Python SDK
+Temporal SDKs
+Help us make Temporal better. View this page on GitHub.
+Previous
+Continue-As-New
+Next
+Timeouts
+Cancel a Workflow Execution
+Cancel an Activity from a Workflow
+Terminate a Workflow Execution
+Reset a Workflow Execution
+Resources
+Glossary
+Learn Temporal
+Code Exchange
+Blog
+YouTube
+Support forum
+Ask an expert
+Company
+Temporal Cloud
+GitHub
+Trust Center
+Security
+Changelog
+For agents
+Develop with AI
+llms.txt
+Copyright © 2026 Temporal Technologies Inc.
+Your Privacy Choices

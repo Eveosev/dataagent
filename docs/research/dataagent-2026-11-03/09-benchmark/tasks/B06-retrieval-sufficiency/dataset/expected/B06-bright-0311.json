@@ -1,0 +1,28 @@
+{
+  "source": "xlangai/BRIGHT",
+  "query_id": "96",
+  "query": "## Essential Problem\n\nThe essential problem is to identify the technical term for the percentage of CO2 that remains in the atmosphere after a given increase.\n\n## Relevant Information\n\n1. **CO2 concentration increase:** 2 ppm/year\n2. **Total CO2 increase:** 4.6 ppm/year\n3. **Percentage of CO2 remaining:** 2/4.6 * 100% ≈ 43.48%\n\n## Reasoning\n\n1. The total CO2 increase is the sum of two components:\n    - **CO2 absorbed by natural processes:** This includes uptake by oceans, plants, and soil.\n    - **CO2 remaining in the atmosphere:** This is the portion of the increase that contributes to global warming.\n\n2. The percentage of CO2 remaining in the atmosphere can be calculated by dividing the CO2 increase by the total CO2 increase and multiplying by 100%.\n\n3. This percentage is a measure of the **atmospheric residence time** of CO2, which is the average time that a molecule of CO2 remains in the atmosphere before being removed by natural processes.\n\n## Possible Technical Terms\n\nBased on the above reasoning, here are some possible technical terms for the percentage of CO2 remaining in the atmosphere:\n\n* **Atmospheric residence time:** This term directly describes the average time a CO2 molecule stays in the atmosphere.\n* **Airborne fraction:** This term describes the fraction of emitted CO2 that remains in the atmosphere.\n* **CO2 atmospheric growth rate:** This term describes the rate at which the atmospheric CO2 concentration is increasing.\n* **Atmospheric CO2 retention:** This term specifically describes the amount of CO2 that remains in the atmosphere after a given increase.\n\n## Additional Thoughts\n\n* The atmospheric residence time of CO2 is not a constant value, as it can vary depending on various factors such as natural processes, human activities, and climate change.\n* Understanding the atmospheric residence time of CO2 is crucial for predicting future climate change and developing effective mitigation strategies.\n* It's important to note that the provided calculation is a simplified estimate and the actual atmospheric residence time of CO2 is a complex issue with various contributing factors. \n",
+  "gold_ids": [
+    "airborne_fraction/Airborne_fraction4.txt",
+    "airborne_fraction/Airborne_fraction5.txt",
+    "airborne_fraction/Airborne_fraction3.txt"
+  ],
+  "gold_answer": "$\\begingroup$\n\nWe call this the [ airborne fraction\n](https://en.wikipedia.org/wiki/Airborne_fraction) , although as the name\nsuggests, it's normally expressed as a fraction rather than a percentage.\n\n[ Raupach et al (2014) ](https://www.biogeosciences.net/11/3453/2014/) is an\n(open access) example of it being used in the literature, and in that paper\nthey quote a long-term 1959 to 2012 value of 0.44, so in the same ball-park as\nyour estimate. Similarly, here's an example of it's use in [ Chapter 7 of the\nIPCC AR4 ](https://ipcc.ch/publications_and_data/ar4/wg1/en/ch7s7-3-5-2.html)\nwith a range of modelled values from 0.4 to 0.5. It's also often calculated\nover single years, as in your example, to look at the trends and variability.\n\nAs an aside, the 2 ppm in your calculation is called the [ atmospheric CO2\ngrowth rate ](https://www.newscientist.com/article/2112153-a-pause-in-growth-\nrate-of-atmospheric-co2-is-over-heres-why/) and the total mass of CO2 in the\natmosphere would be the atmospheric CO2 _burden_ .",
+  "corpus": "documents/earth_science-00000-of-00001.parquet",
+  "case_id": "B06-bright-0311",
+  "expected": {
+    "kind": "retrieval",
+    "gold_ids": [
+      "airborne_fraction/Airborne_fraction4.txt",
+      "airborne_fraction/Airborne_fraction5.txt",
+      "airborne_fraction/Airborne_fraction3.txt"
+    ],
+    "gold_ids_long": [
+      "airborne_fraction/Airborne_fraction.txt"
+    ],
+    "gold_answer": "$\\begingroup$\n\nWe call this the [ airborne fraction\n](https://en.wikipedia.org/wiki/Airborne_fraction) , although as the name\nsuggests, it's normally expressed as a fraction rather than a percentage.\n\n[ Raupach et al (2014) ](https://www.biogeosciences.net/11/3453/2014/) is an\n(open access) example of it being used in the literature, and in that paper\nthey quote a long-term 1959 to 2012 value of 0.44, so in the same ball-park as\nyour estimate. Similarly, here's an example of it's use in [ Chapter 7 of the\nIPCC AR4 ](https://ipcc.ch/publications_and_data/ar4/wg1/en/ch7s7-3-5-2.html)\nwith a range of modelled values from 0.4 to 0.5. It's also often calculated\nover single years, as in your example, to look at the trends and variability.\n\nAs an aside, the 2 ppm in your calculation is called the [ atmospheric CO2\ngrowth rate ](https://www.newscientist.com/article/2112153-a-pause-in-growth-\nrate-of-atmospheric-co2-is-over-heres-why/) and the total mass of CO2 in the\natmosphere would be the atmospheric CO2 _burden_ .",
+    "excluded_ids": [
+      "N/A"
+    ]
+  }
+}

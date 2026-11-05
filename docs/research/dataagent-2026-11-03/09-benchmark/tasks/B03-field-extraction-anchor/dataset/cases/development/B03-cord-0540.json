@@ -1,0 +1,41 @@
+{
+  "case_id": "B03-cord-0540",
+  "task_id": "B03",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "image",
+      "ref": "bench://cord-v2/images/train-00031.png",
+      "digest": null
+    },
+    {
+      "kind": "instruction",
+      "ref": "fixtures/cord-train-00031-task.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-cord-0540.json"
+  },
+  "evidence": [
+    "bench://cord-v2/images/train-00031.png",
+    "fixtures/cord-train-00031-task.md"
+  ],
+  "tags": [
+    "cord-v2",
+    "train",
+    "doc:receipt",
+    "fields:16"
+  ],
+  "source": "cord",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

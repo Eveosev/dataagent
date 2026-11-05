@@ -1,0 +1,54 @@
+{
+  "case_id": "B03-eb-0290",
+  "task_id": "B03",
+  "split_role": "unseen_acceptance",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://extractbench/docs/medium/erie_county_2017_single_audit.pdf",
+      "digest": null
+    },
+    {
+      "kind": "schema",
+      "ref": "fixtures/eb-medium-erie_county_2017_single_audit-schema.json",
+      "digest": null
+    },
+    {
+      "kind": "rules",
+      "ref": "fixtures/eb-medium-erie_county_2017_single_audit-rules.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-eb-0290.json"
+  },
+  "evidence": [
+    "bench://extractbench/docs/medium/erie_county_2017_single_audit.pdf",
+    "fixtures/eb-medium-erie_county_2017_single_audit-schema.json",
+    "fixtures/eb-medium-erie_county_2017_single_audit-rules.md"
+  ],
+  "tags": [
+    "extractbench",
+    "medium",
+    "tag:source:real",
+    "tag:challenge:T2.d",
+    "tag:challenge:T1.a",
+    "tag:challenge:T1.b",
+    "tag:structure:S1",
+    "tag:structure:S3",
+    "tag:length:medium",
+    "tag:domain:D3",
+    "fields:4"
+  ],
+  "source": "eb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

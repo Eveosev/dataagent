@@ -1,0 +1,35 @@
+{
+  "case_id": "B01-rht-4320",
+  "task_id": "B01",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "table",
+      "ref": "bench://realthitbench-data/csv/employment-table13.csv",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B01-rht-4320.json"
+  },
+  "evidence": [
+    "bench://realthitbench-data/csv/employment-table13.csv"
+  ],
+  "tags": [
+    "realthitbench",
+    "ContentCompound",
+    "Structure Comprehending",
+    "Bureau of Labor Statistics"
+  ],
+  "source": "rht",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

@@ -1,0 +1,190 @@
+{
+  "source": "opendatalab/OmniDocBench",
+  "page_no": 0,
+  "image": "page-bb98165a-8033-4ea4-a527-58ac974f2c32.png",
+  "attribute": {
+    "data_source": "book",
+    "language": "english",
+    "layout": "single_column",
+    "special_issue": [],
+    "subset": "equation_hard"
+  },
+  "reading_order": [
+    0,
+    1,
+    2,
+    4,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    15,
+    16,
+    null
+  ],
+  "blocks": [
+    {
+      "category": "header",
+      "order": 0,
+      "text": "SEC. 5.3"
+    },
+    {
+      "category": "header",
+      "order": 1,
+      "text": "INTERPOLATIONBY SPLINE FUNCTIONS"
+    },
+    {
+      "category": "page_number",
+      "order": 2,
+      "text": "291"
+    },
+    {
+      "category": "figure_caption",
+      "order": 4,
+      "text": "Figure 5.15 The parabolically terminated cubic spline."
+    },
+    {
+      "category": "figure_caption",
+      "order": 6,
+      "text": "Figure 5.16 The curvature adjusted cubic spline with $S ^ { \\prime \\prime } ( 0 ) = 0.3$and $ { S } ^ { \\prime \\prime } ( 3 ) = 3 . 3$."
+    },
+    {
+      "category": "text_block",
+      "order": 7,
+      "text": "and the solution is $ {m}_{1} = {2.7} $ and $ {m}_{2} = {4.5} $ . The given boundary conditions are used to determine $ {m}_{0} = {S}^{\\prime \\prime }\\left( 0\\right) = {0.3} $ and $ {m}_{3} = {S}^{\\prime \\prime }\\left( 3\\right) = {3.3} $ . Substitution of $ \\left\\{ {m}_{k}\\right\\} $ in equations (16) produces the solution"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 8,
+      "latex": "$${ S _ { 0 } ( x ) = 0 . 5 x ^ { 3 } \\quad 0 . 1 5 x ^ { 2 } + 0 . 1 5 x } \\quad { \\mathrm { f o r ~ } 0 \\leq x \\leq 1 , }$$"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 9,
+      "latex": "$${ S _ { 1 } ( x ) = \\quad 1 . 2 ( x \\quad 1 ) ^ { 3 } + 1 . 3 5 ( x \\quad 1 ) ^ { 2 } }$$"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 10,
+      "latex": "$$\\tag{22}  \\quad  {  + 1 . 3 5 ( x \\quad 1 ) + 0 . 5 } \\quad { \\mathrm { f o r ~ } 1 \\leq x \\leq 2 , }$$"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 11,
+      "latex": "$${ S _ { 2 } ( x ) = 1 . 3 ( x \\quad 2 ) ^ { 3 } \\quad 2 . 2 5 ( x \\quad 2 ) ^ { 2 } }$$"
+    },
+    {
+      "category": "equation_isolated",
+      "order": 12,
+      "latex": "$${ \\qquad + 0 . 4 5 ( x \\quad 2 ) + 2 . 0 } \\quad { \\mathrm { f o r ~ } 2 \\leq x \\leq 3 . }$$"
+    },
+    {
+      "category": "text_block",
+      "order": 13,
+      "text": "This curvature-adjusted cubic spline is shown in Figure 5.16."
+    },
+    {
+      "category": "title",
+      "order": 15,
+      "text": "# Suitability of Cubic Splines"
+    },
+    {
+      "category": "text_block",
+      "order": 16,
+      "text": "A practical feature of splines is the minimum of the oscillatory behavior that they possess. Consequently, among all functions $ f\\left( x\\right) $ that are twice continuously differentiable on $ \\left\\lbrack {a,b}\\right\\rbrack $ and interpolate a given set of data points $ {\\left\\{ \\left( {x}_{k},{y}_{k}\\right) \\right\\} }_{k = 0}^{N} $, the cubic spline has less wiggle. The next result explains this phenomenon."
+    },
+    {
+      "category": "equation_semantic",
+      "order": null,
+      "latex": ""
+    }
+  ],
+  "tables": [],
+  "case_id": "B02-od-0020",
+  "expected": {
+    "kind": "document",
+    "text": "SEC. 5.3\nINTERPOLATIONBY SPLINE FUNCTIONS\n291\nFigure 5.15 The parabolically terminated cubic spline.\nFigure 5.16 The curvature adjusted cubic spline with $S ^ { \\prime \\prime } ( 0 ) = 0.3$and $ { S } ^ { \\prime \\prime } ( 3 ) = 3 . 3$.\nand the solution is $ {m}_{1} = {2.7} $ and $ {m}_{2} = {4.5} $ . The given boundary conditions are used to determine $ {m}_{0} = {S}^{\\prime \\prime }\\left( 0\\right) = {0.3} $ and $ {m}_{3} = {S}^{\\prime \\prime }\\left( 3\\right) = {3.3} $ . Substitution of $ \\left\\{ {m}_{k}\\right\\} $ in equations (16) produces the solution\n$${ S _ { 0 } ( x ) = 0 . 5 x ^ { 3 } \\quad 0 . 1 5 x ^ { 2 } + 0 . 1 5 x } \\quad { \\mathrm { f o r ~ } 0 \\leq x \\leq 1 , }$$\n$${ S _ { 1 } ( x ) = \\quad 1 . 2 ( x \\quad 1 ) ^ { 3 } + 1 . 3 5 ( x \\quad 1 ) ^ { 2 } }$$\n$$\\tag{22}  \\quad  {  + 1 . 3 5 ( x \\quad 1 ) + 0 . 5 } \\quad { \\mathrm { f o r ~ } 1 \\leq x \\leq 2 , }$$\n$${ S _ { 2 } ( x ) = 1 . 3 ( x \\quad 2 ) ^ { 3 } \\quad 2 . 2 5 ( x \\quad 2 ) ^ { 2 } }$$\n$${ \\qquad + 0 . 4 5 ( x \\quad 2 ) + 2 . 0 } \\quad { \\mathrm { f o r ~ } 2 \\leq x \\leq 3 . }$$\nThis curvature-adjusted cubic spline is shown in Figure 5.16.\n# Suitability of Cubic Splines\nA practical feature of splines is the minimum of the oscillatory behavior that they possess. Consequently, among all functions $ f\\left( x\\right) $ that are twice continuously differentiable on $ \\left\\lbrack {a,b}\\right\\rbrack $ and interpolate a given set of data points $ {\\left\\{ \\left( {x}_{k},{y}_{k}\\right) \\right\\} }_{k = 0}^{N} $, the cubic spline has less wiggle. The next result explains this phenomenon.",
+    "tables": [],
+    "blocks": [
+      {
+        "category": "header",
+        "order": 0,
+        "text": "SEC. 5.3"
+      },
+      {
+        "category": "header",
+        "order": 1,
+        "text": "INTERPOLATIONBY SPLINE FUNCTIONS"
+      },
+      {
+        "category": "page_number",
+        "order": 2,
+        "text": "291"
+      },
+      {
+        "category": "figure_caption",
+        "order": 4,
+        "text": "Figure 5.15 The parabolically terminated cubic spline."
+      },
+      {
+        "category": "figure_caption",
+        "order": 6,
+        "text": "Figure 5.16 The curvature adjusted cubic spline with $S ^ { \\prime \\prime } ( 0 ) = 0.3$and $ { S } ^ { \\prime \\prime } ( 3 ) = 3 . 3$."
+      },
+      {
+        "category": "text_block",
+        "order": 7,
+        "text": "and the solution is $ {m}_{1} = {2.7} $ and $ {m}_{2} = {4.5} $ . The given boundary conditions are used to determine $ {m}_{0} = {S}^{\\prime \\prime }\\left( 0\\right) = {0.3} $ and $ {m}_{3} = {S}^{\\prime \\prime }\\left( 3\\right) = {3.3} $ . Substitution of $ \\left\\{ {m}_{k}\\right\\} $ in equations (16) produces the solution"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 8,
+        "latex": "$${ S _ { 0 } ( x ) = 0 . 5 x ^ { 3 } \\quad 0 . 1 5 x ^ { 2 } + 0 . 1 5 x } \\quad { \\mathrm { f o r ~ } 0 \\leq x \\leq 1 , }$$"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 9,
+        "latex": "$${ S _ { 1 } ( x ) = \\quad 1 . 2 ( x \\quad 1 ) ^ { 3 } + 1 . 3 5 ( x \\quad 1 ) ^ { 2 } }$$"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 10,
+        "latex": "$$\\tag{22}  \\quad  {  + 1 . 3 5 ( x \\quad 1 ) + 0 . 5 } \\quad { \\mathrm { f o r ~ } 1 \\leq x \\leq 2 , }$$"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 11,
+        "latex": "$${ S _ { 2 } ( x ) = 1 . 3 ( x \\quad 2 ) ^ { 3 } \\quad 2 . 2 5 ( x \\quad 2 ) ^ { 2 } }$$"
+      },
+      {
+        "category": "equation_isolated",
+        "order": 12,
+        "latex": "$${ \\qquad + 0 . 4 5 ( x \\quad 2 ) + 2 . 0 } \\quad { \\mathrm { f o r ~ } 2 \\leq x \\leq 3 . }$$"
+      },
+      {
+        "category": "text_block",
+        "order": 13,
+        "text": "This curvature-adjusted cubic spline is shown in Figure 5.16."
+      },
+      {
+        "category": "title",
+        "order": 15,
+        "text": "# Suitability of Cubic Splines"
+      },
+      {
+        "category": "text_block",
+        "order": 16,
+        "text": "A practical feature of splines is the minimum of the oscillatory behavior that they possess. Consequently, among all functions $ f\\left( x\\right) $ that are twice continuously differentiable on $ \\left\\lbrack {a,b}\\right\\rbrack $ and interpolate a given set of data points $ {\\left\\{ \\left( {x}_{k},{y}_{k}\\right) \\right\\} }_{k = 0}^{N} $, the cubic spline has less wiggle. The next result explains this phenomenon."
+      },
+      {
+        "category": "equation_semantic",
+        "order": null,
+        "latex": ""
+      }
+    ]
+  }
+}

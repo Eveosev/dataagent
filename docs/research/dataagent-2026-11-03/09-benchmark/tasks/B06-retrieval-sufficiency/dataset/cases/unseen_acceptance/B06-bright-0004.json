@@ -1,0 +1,33 @@
+{
+  "case_id": "B06-bright-0004",
+  "task_id": "B06",
+  "split_role": "unseen_acceptance",
+  "inputs": [
+    {
+      "kind": "query",
+      "ref": "fixtures/bright-aops-0004.txt",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B06-bright-0004.json"
+  },
+  "evidence": [
+    "bench://bright/documents/aops-00000-of-00001.parquet"
+  ],
+  "tags": [
+    "bright",
+    "aops"
+  ],
+  "source": "bright",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

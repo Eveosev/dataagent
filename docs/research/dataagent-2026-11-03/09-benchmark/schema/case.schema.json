@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentos.local/benchmark/case.schema.json",
+  "title": "Benchmark case",
+  "type": "object",
+  "required": [
+    "case_id",
+    "task_id",
+    "split_role",
+    "inputs",
+    "expected",
+    "evidence",
+    "annotation"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "pattern": "^B(0[1-9]|1[0-5])-[a-z0-9-]+-[0-9]{3,5}$"
+    },
+    "task_id": {
+      "type": "string",
+      "pattern": "^B(0[1-9]|1[0-5])$"
+    },
+    "split_role": {
+      "enum": [
+        "development",
+        "regression",
+        "unseen_acceptance"
+      ]
+    },
+    "inputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "kind",
+          "ref"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "file",
+              "table",
+              "doc",
+              "sql",
+              "question",
+              "scenario",
+              "series",
+              "inline"
+            ]
+          },
+          "ref": {
+            "type": "string"
+          },
+          "digest": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "required": [
+        "kind",
+        "ref"
+      ]
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "source": {
+      "type": "string"
+    },
+    "license": {
+      "type": "string"
+    },
+    "fingerprint": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "annotation": {
+      "type": "object",
+      "required": [
+        "status",
+        "adjudicated"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "draft",
+            "reviewed",
+            "adjudicated",
+            "deprecated"
+          ]
+        },
+        "annotators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "adjudicated": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

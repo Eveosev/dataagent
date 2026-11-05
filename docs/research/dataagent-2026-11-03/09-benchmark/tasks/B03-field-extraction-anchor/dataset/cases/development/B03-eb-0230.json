@@ -1,0 +1,53 @@
+{
+  "case_id": "B03-eb-0230",
+  "task_id": "B03",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "file",
+      "ref": "bench://extractbench/docs/short/real_franklin_nov_2025.pdf",
+      "digest": null
+    },
+    {
+      "kind": "schema",
+      "ref": "fixtures/eb-short-real_franklin_nov_2025-schema.json",
+      "digest": null
+    },
+    {
+      "kind": "rules",
+      "ref": "fixtures/eb-short-real_franklin_nov_2025-rules.md",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B03-eb-0230.json"
+  },
+  "evidence": [
+    "bench://extractbench/docs/short/real_franklin_nov_2025.pdf",
+    "fixtures/eb-short-real_franklin_nov_2025-schema.json",
+    "fixtures/eb-short-real_franklin_nov_2025-rules.md"
+  ],
+  "tags": [
+    "extractbench",
+    "short",
+    "tag:source:synthetic",
+    "tag:challenge:T1.a",
+    "tag:challenge:T1.b",
+    "tag:structure:S3",
+    "tag:delivery:G1",
+    "tag:length:short",
+    "tag:domain:D1",
+    "fields:14"
+  ],
+  "source": "eb",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

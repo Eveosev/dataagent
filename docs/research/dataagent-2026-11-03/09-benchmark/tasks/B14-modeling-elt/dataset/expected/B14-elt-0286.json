@@ -1,0 +1,67 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "snowflake",
+  "pipeline": "thrombosis_prediction",
+  "data_model": {
+    "models": [
+      {
+        "name": "patients",
+        "description": "Each record represents a patient.",
+        "columns": [
+          {
+            "name": "id",
+            "description": "Unique identifier for the patient."
+          },
+          {
+            "name": "sex",
+            "description": "The sex of the patient."
+          },
+          {
+            "name": "birthday",
+            "description": "The birthday of the patient."
+          },
+          {
+            "name": "has_thrombosis_2_ANA_S_IgM",
+            "description": "set to 1 if the patient has a degree of thrombosis level 2,  ANA pattern of only S, and a level of anti-Cardiolip in antibody (IgM) 20% higher than average ACL IgM among patients with thrombosis level 2 and ANA pattern 'S', otherwise, set to 0"
+          },
+          {
+            "name": "UA_index_in_latest_laboratory_examination",
+            "description": "the UA index in the patient's latest laboratory examination result"
+          },
+          {
+            "name": "num_laboratory_examinations_hematoclit_exceed_52",
+            "description": "The number of laboratory examinations where the patient’s hematocrit level exceeded 52, replace NULL values with 0."
+          },
+          {
+            "name": "abnormal_white_blood_cell_count",
+            "description": "Set to 1 if the white blood cell count in the patient's latest laboratory examination is less than or equal to 3.5 or greater than or equal to 9, otherwise, set to 0"
+          },
+          {
+            "name": "has_an_abnormal_level_of_glutamic_oxaloacetic_transaminase",
+            "description": "Set to 1 if the level of glutamic oxaloacetic transaminase in the patient's latest laboratory examination is greater than or equal to 60, otherwise, set to 0"
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    snowflake_definition_id: 424892c4-daac-4491-b35d-c6688ba547ba\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - Examination\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: thrombosis_prediction\n    sync_mode: full_refresh_append\n    tables:\n    - Patient\npostgres:\n  config:\n    database: thrombosis_prediction\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - laboratory\n    user: postgres\nsnowflake:\n  config:\n    database: thrombosis_prediction\n    password: Snowflake@123\n    role: AIRBYTE_ROLE\n    schema: AIRBYTE_SCHEMA\n    username: AIRBYTE_USER\n    warehouse: AIRBYTE_WAREHOUSE\n",
+  "case_id": "B14-elt-0286",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "patients",
+        "columns": [
+          "id",
+          "sex",
+          "birthday",
+          "has_thrombosis_2_ANA_S_IgM",
+          "UA_index_in_latest_laboratory_examination",
+          "num_laboratory_examinations_hematoclit_exceed_52",
+          "abnormal_white_blood_cell_count",
+          "has_an_abnormal_level_of_glutamic_oxaloacetic_transaminase"
+        ]
+      }
+    ]
+  }
+}

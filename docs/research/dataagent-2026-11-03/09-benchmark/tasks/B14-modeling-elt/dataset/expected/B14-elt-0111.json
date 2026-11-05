@@ -1,0 +1,159 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "redshift",
+  "pipeline": "books",
+  "data_model": {
+    "models": [
+      {
+        "name": "publishers",
+        "description": "Each record represents a publisher.",
+        "columns": [
+          {
+            "name": "publisher_id",
+            "description": "Unique identifier for the publisher."
+          },
+          {
+            "name": "publisher_name",
+            "description": "Name of the publisher."
+          },
+          {
+            "name": "num_books",
+            "description": "Number of books published by the publisher, replace NULL values with 0."
+          },
+          {
+            "name": "num_books_pages_greater_than_70_per_of_avg",
+            "description": "Number of books with more than 70% of the average number of pages of all books, replace NULL values with 0."
+          },
+          {
+            "name": "per_Japanese_books",
+            "description": "Percentage of books published by the publisher that are written in Japanese."
+          },
+          {
+            "name": "title_of_the_oldest_book",
+            "description": "Title of the oldest book published by the publisher, with ties broken by the ascending order of the title."
+          },
+          {
+            "name": "book_title_with_the_most_pages",
+            "description": "Title of the book with the most pages published by the publisher, with ties broken by the descending order of the title."
+          }
+        ]
+      },
+      {
+        "name": "customers",
+        "description": "Each record represents a customer.",
+        "columns": [
+          {
+            "name": "customer_id",
+            "description": "Unique identifier for the customer."
+          },
+          {
+            "name": "customer_name",
+            "description": "Name of the customer. Concatenate the first name and last name with a space in between."
+          },
+          {
+            "name": "email",
+            "description": "Email of the customer."
+          },
+          {
+            "name": "per_books_over_13",
+            "description": "Percentage of the books whose price is over $13 among all the books ordered by the customer."
+          },
+          {
+            "name": "num_orders",
+            "description": "Number of orders placed by the customer, replace NULL values with 0."
+          },
+          {
+            "name": "preferred_shipping_method",
+            "description": "the shipping method that is preferred by customers the most, with ties broken by the ascending order of the shipping method name."
+          },
+          {
+            "name": "has_ordered_the_oldest_book",
+            "description": "Set to 1 if the customer has ordered the oldest book; otherwise, set to 0."
+          },
+          {
+            "name": "per_order_shipped_internationally",
+            "description": "the percentage of orders placed by the customer that were shipped internationally"
+          }
+        ]
+      },
+      {
+        "name": "authors",
+        "description": "Each record represents an author.",
+        "columns": [
+          {
+            "name": "author_id",
+            "description": "Unique identifier for the author."
+          },
+          {
+            "name": "author_name",
+            "description": "Name of the author."
+          },
+          {
+            "name": "first_book",
+            "description": "Title of the first book written by the author, with ties broken by the ascending order of the title."
+          },
+          {
+            "name": "per_book_published_1992",
+            "description": "the percentage of books published by the author in 1992"
+          },
+          {
+            "name": "wrote_fewer_total_pages_than_the_average",
+            "description": "Set to 1 if the author has written fewer total pages than the average total pages of all authors; otherwise, set to 0."
+          },
+          {
+            "name": "most_expensive_book",
+            "description": "Title of the most expensive book written by the author, with ties broken by the descending order of the title."
+          },
+          {
+            "name": "avg_book_price_over_19",
+            "description": "Set to 1 if the average sale price of the books written by the author is over $19; otherwise, set to 0."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    redshift_definition_id: f7a7d195-377f-cf5b-70a5-be6b819019dc\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://books-bucket/country.csv\n    sync_mode: full_refresh_append\n    table: country\n  - path: s3://books-bucket/shipping_method.csv\n    sync_mode: full_refresh_append\n    table: shipping_method\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - book_author\n    - book_language\n    - publisher\nflat_files:\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=1Bq1Izwp4uzD1p9f7ybviABunBKngExlp\n  sync_mode: full_refresh_append\n  table: address_status\n- format: csv\n  path: https://drive.google.com/uc?export=download&id=11Z4G9zRi2X7GoaxXLo2fLv57shxFw2uY\n  sync_mode: full_refresh_append\n  table: order_status\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: books\n    sync_mode: full_refresh_append\n    tables:\n    - author\n    - book\n    - customer\npostgres:\n  config:\n    database: books\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - address\n    - cust_order\n    - customer_address\n    - order_history\n    - order_line\n    user: postgres\nredshift:\n  config:\n    host: <redshift_hostname>\n    port: <redshift_port>\n    database: <redshift_db>\n    username: <redshift_username>\n    password: <redshift_pwd>\n    schema: books\n    s3_bucket_name: <redshift_s3_bucket>\n    s3_bucket_region: <redshift_s3_region>\n    access_key_id: <redshift_s3_access_key>\n    secret_access_key: <redshift_s3_secret_key>\n",
+  "case_id": "B14-elt-0111",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "publishers",
+        "columns": [
+          "publisher_id",
+          "publisher_name",
+          "num_books",
+          "num_books_pages_greater_than_70_per_of_avg",
+          "per_Japanese_books",
+          "title_of_the_oldest_book",
+          "book_title_with_the_most_pages"
+        ]
+      },
+      {
+        "name": "customers",
+        "columns": [
+          "customer_id",
+          "customer_name",
+          "email",
+          "per_books_over_13",
+          "num_orders",
+          "preferred_shipping_method",
+          "has_ordered_the_oldest_book",
+          "per_order_shipped_internationally"
+        ]
+      },
+      {
+        "name": "authors",
+        "columns": [
+          "author_id",
+          "author_name",
+          "first_book",
+          "per_book_published_1992",
+          "wrote_fewer_total_pages_than_the_average",
+          "most_expensive_book",
+          "avg_book_price_over_19"
+        ]
+      }
+    ]
+  }
+}

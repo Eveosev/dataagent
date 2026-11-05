@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "dataagent-data": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--frozen",
+        "--project",
+        "$PKG",
+        "python",
+        "-m",
+        "dataagent_data.interfaces.mcp_server"
+      ],
+      "env": {
+        "DATAAGENT_ENFORCEMENT_MODE": "enforce"
+      },
+      "timeout_s": 120
+    }
+  }
+}

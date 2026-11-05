@@ -1,0 +1,32 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_27bcb1ba",
+  "expect_label": "no",
+  "raw_label": "no",
+  "rule_predicates": [
+    "statute_gml_753_deadline_business_days",
+    "statute_gml_753_newspaper_requirement",
+    "statute_gml_753_obligation",
+    "statute_gml_753_requires",
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_tenant",
+    "scenario_eviction_case",
+    "scenario_case_involves_tenant",
+    "scenario_writ_issuance_at_issue",
+    "scenario_tenant_requests_stay_to_pay_rent",
+    "statute_domain",
+    "statute_can_create_tenant_writ_stay_right",
+    "legal_right_tenant_request_stay_to_pay_rent",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: New York\n    Focus year: 2021\n\n    NOTE: The provided \"Natural Language Statutes\" are NY Gen Mun L  753 (2021),\n    which concerns publication requirements for proposed joint consolidation agreements.\n    It does not address landlord-tenant evictions, writs, or stays to pay rent.\n\n    This program encodes:\n      (1) The statute text as deterministic obligations; and\n      (2) The question scenario as facts; and\n      (3) A reasoning layer that answers whether the statutes grant the tenant the right requested.\n*/\n\n% -----------------------------\n% Statute encoding (NY Gen Mun L  753 (2021))\n% -----------------------------\n\n/* NY Gen Mun L  753 (2021) - Publication of proposed joint consolidation agreement.\n   Trigger: no later than five business days after commencement of consolidation proceedings\n   pursuant to  752, the governing body/bodies shall:\n     1) display a copy and summary in a public place(s) for inspection;\n     2) display on a website maintained by each entity or other relevant website;\n     3) publish a descriptive summary at least once each week for four successive weeks\n        in a newspaper of general circulation within each entity.\n*/\n\n% Deterministic \"deadline\" rule: the statute imposes a 5-business-day deadline from commencement.\nstatute_gml_753_deadline_business_days(2021, new_york, 5).\n\n% Deterministic \"publication frequency\" rule: once each week for four successive weeks.\nstatute_gml_753_newspaper_requirement(2021, new_york, once_each_week, 4).\n\n% Deterministic obligation enumeration under  753.\n% We treat \"governing body or bodies of the local government entities to be consolidated\" as Actor.\nstatute_gml_753_obligation(2021, new_york, display_public_place_copy_and_summary).\nstatute_gml_753_obligation(2021, new_york, display_on_website_copy_summary_and_reference).\nstatute_gml_753_obligation(2021, new_york, publish_newspaper_summary_once_weekly_four_weeks).\n\n/* A consolidated, deterministic predicate describing all duties together, so that the statute\n   is queryable as a single structured requirement. */\nstatute_gml_753_requires(Year, State, DeadlineBusinessDays, NewspaperFrequency, NewspaperWeeks, Duties) :-\n    Year = 2021,\n    State = new_york,\n    statute_gml_753_deadline_business_days(Year, State, DeadlineBusinessDays),\n    statute_gml_753_newspaper_requirement(Year, State, NewspaperFrequency, NewspaperWeeks),\n    Duties = [\n        display_public_place_copy_and_summary,\n        display_on_website_copy_summary_and_reference,\n        publish_newspaper_summary_once_weekly_four_weeks\n    ],\n    !.\n\n% -----------------------------\n% Scenario encoding (facts from the question)\n% -----------------------------\n\nscenario_state(new_york).\nscenario_focus_year(2021).\n\nscenario_tenant(tenant1).\nscenario_eviction_case(case1).\nscenario_case_involves_tenant(case1, tenant1).\n\n% The tenant is asking whether they can request a stay of issuance of a writ to have more time to pay rent.\nscenario_writ_issuance_at_issue(case1).\nscenario_tenant_requests_stay_to_pay_rent(tenant1, case1).\n\n% Helper predicate that succeeds when the scenario is satisfied.\nscenario_statement :-\n    scenario_state(new_york),\n    scenario_focus_year(2021),\n    scenario_tenant(Tenant),\n    scenario_eviction_case(Case),\n    scenario_case_involves_tenant(Case, Tenant),\n    scenario_writ_issuance_at_issue(Case),\n    scenario_tenant_requests_stay_to_pay_rent(Tenant, Case),\n    !.\n\n% -----------------------------\n% Reasoning layer: connect statute -> rights relevant to the question\n% -----------------------------\n\n% The statute domain in question is municipal consolidation publication, not landlord-tenant procedure.\nstatute_domain(2021, new_york, gml_753, municipal_consolidation_publication) :- !.\n\n% If a statute's domain is not landlord-tenant eviction procedure, it does not create a tenant right\n% to request a stay of a writ to pay rent (for purposes of this program's limited statute set).\nstatute_can_create_tenant_writ_stay_right(Year, State, StatuteId) :-\n    statute_domain(Year, State, StatuteId, landlord_tenant_eviction_procedure),\n    !.\n\nstatute_can_create_tenant_writ_stay_right(_Year, _State, _StatuteId) :-\n    fail.\n\n% A tenant has the right to request the stay only if some encoded statute can create that right.\nlegal_right_tenant_request_stay_to_pay_rent(Year, State) :-\n    statute_can_create_tenant_writ_stay_right(Year, State, gml_753),\n    !.\n\nlegal_right_tenant_request_stay_to_pay_rent(_Year, _State) :-\n    fail.\n\n% -----------------------------\n% Final answer predicate (deterministic)\n% -----------------------------\n\nhousing_answer(yes) :-\n    scenario_statement,\n    scenario_focus_year(Year),\n    scenario_state(State),\n    legal_right_tenant_request_stay_to_pay_rent(Year, State),\n    !.\n\nhousing_answer(no) :-\n    scenario_statement,\n    !.\n\n% -----------------------------\n% Main entrypoint\n% -----------------------------\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-0148",
+  "expected": {
+    "kind": "label",
+    "value": "no",
+    "raw_label": "no",
+    "question": "Can a tenant request that the issuance of a writ be stayed so that they have more time to pay rent?"
+  }
+}

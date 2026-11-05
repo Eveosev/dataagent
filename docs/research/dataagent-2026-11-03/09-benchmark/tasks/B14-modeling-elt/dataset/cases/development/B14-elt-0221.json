@@ -1,0 +1,35 @@
+{
+  "case_id": "B14-elt-0221",
+  "task_id": "B14",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "config",
+      "ref": "fixtures/elt-snowflake-college_completion-config.yaml",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B14-elt-0221.json"
+  },
+  "evidence": [
+    "bench://elt-bench/elt-bench/snowflake/college_completion/data_model.yaml"
+  ],
+  "tags": [
+    "elt-bench",
+    "snowflake",
+    "college_completion",
+    "models:1"
+  ],
+  "source": "elt",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

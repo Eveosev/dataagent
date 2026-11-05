@@ -1,0 +1,49 @@
+## Essential Problem:
+
+The core of this problem is to determine if rearranging two characters in the string `s` can produce the string `goal`. In simpler terms, we need to check if `s` and `goal` are just one character swap away from being identical.
+
+## Relevant Information:
+
+* **Lengths of the strings:** Strings `s` and `goal` must have the same length for a character swap to be possible.
+* **Character uniqueness:** If all characters in `s` are unique, then a swap can't result in `goal`. 
+* **Character counts:** Comparing the character frequencies of `s` and `goal` can reveal if they have the same characters (including duplicates).
+* **Character positions:** Identifying the differing characters and their positions in both strings allows us to see if swapping them would create `goal`.
+
+## Draft Answer:
+
+Here's a draft solution for the `buddyStrings` function in Pony:
+
+```pony
+fun buddyStrings(s: String, goal: String): Bool {
+    
+    // Check for different lengths
+    if s.len != goal.len {
+        return false
+    }
+    
+    // Check for all unique characters in s
+    if s.chars.toSet().len == s.len {
+        return false
+    }
+    
+    // Compare character frequencies 
+    val s_char_counts = s.chars.groupBy(c => c).mapValues(chars => chars.len)
+    val goal_char_counts = goal.chars.groupBy(c => c).mapValues(chars => chars.len)
+    
+    if s_char_counts != goal_char_counts {
+        return false
+    }
+    
+    // Find positions of differing characters
+    val differing_chars = s.zip(goal).filter(pair => pair.0 != pair.1)
+    if differing_chars.len != 2 {
+        return false
+    }
+    
+    // Check if swapping those characters creates goal
+    val (pos1, pos2) = differing_chars.map(pair => pair.1)
+    return s.substring(0, pos1) + s[pos2] + s.substring(pos1 + 1, pos2) + s[pos1] + s.substring(pos2 + 1) == goal
+}
+```
+
+This code first performs checks on string lengths and character uniqueness. Then, it compares character frequencies in both strings to ensure they contain the same characters (including duplicates). Finally, it identifies differing characters and their positions. If exactly two characters differ and swapping them produces `goal`, the function returns true. Otherwise, it returns false. 

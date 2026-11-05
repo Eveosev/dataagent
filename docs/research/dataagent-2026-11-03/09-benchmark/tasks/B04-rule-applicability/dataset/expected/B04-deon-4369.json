@@ -1,0 +1,34 @@
+{
+  "source": "gydou/DeonticBench",
+  "row_id": "housing_f414e2f2",
+  "expect_label": "yes",
+  "raw_label": "yes",
+  "rule_predicates": [
+    "scenario_state",
+    "scenario_focus_year",
+    "scenario_document",
+    "scenario_served_to",
+    "scenario_eviction_procedure",
+    "statute_effective_from",
+    "year_is_on_or_after",
+    "integer",
+    "statute_ms_11_25_7_requires_element",
+    "statute_ms_11_25_7_requires_property_disposal_notice",
+    "statute_ms_11_25_107_requires_element",
+    "statute_ms_11_25_107_requires_property_disposal_notice",
+    "statute_ms_89_7_31_summons_core_elements",
+    "statute_ms_89_7_31_requires_property_disposal_notice",
+    "statute_ms_89_7_31_applies",
+    "eviction_summons_must_describe_landlord_property_disposal_rights",
+    "housing_answer",
+    "format"
+  ],
+  "reference_prolog": "/*  Self-contained SWI-Prolog program\n    Jurisdiction: Mississippi\n    Focus year: 2021\n    Question: Must an eviction summons served to tenants describe the landlord's rights to dispose of tenant property?\n*/\n\n/* -----------------------------\n   Scenario facts (question statement)\n   ----------------------------- */\n\nscenario_state(mississippi).\nscenario_focus_year(2021).\n\n/* We encode the question as concerning an \"eviction summons\" served to a tenant.\n   In Mississippi, MS Code  89-7-31 (2020) specifically governs a \"summons\" issued on an affidavit\n   requiring the occupant to remove or show cause, and expressly mandates a property-disposal warning\n   statement be included in the summons. */\nscenario_document(eviction_summons).\nscenario_served_to(tenant).\nscenario_eviction_procedure(ms_89_7_31_affidavit_summons).\n\n/* scenario_statement/0 succeeds when the factual statement (as encoded) holds. */\nscenario_statement :-\n    scenario_state(mississippi),\n    scenario_focus_year(2021),\n    scenario_document(eviction_summons),\n    scenario_served_to(tenant),\n    scenario_eviction_procedure(ms_89_7_31_affidavit_summons).\n\n/* -----------------------------\n   Statute translations (deterministic predicates)\n   ----------------------------- */\n\n/* Helper: year applicability check */\nstatute_effective_from(ms_code_11_25_7, 2020).\nstatute_effective_from(ms_code_11_25_107, 2020).\nstatute_effective_from(ms_code_89_7_31, 2020).\n\nyear_is_on_or_after(Year, FromYear) :-\n    integer(Year),\n    integer(FromYear),\n    Year >= FromYear.\n\n/* --- MS Code  11-25-7 (2020): justice court warrant form (unlawful ouster/withholding)\n   Encodes required elements (high-level), and notably does NOT require a tenant-property-disposal notice. */\nstatute_ms_11_25_7_requires_element(describe_land).\nstatute_ms_11_25_7_requires_element(command_to_summon_defendant).\nstatute_ms_11_25_7_requires_element(appearance_place_usual_justice_court_location).\nstatute_ms_11_25_7_requires_element(appearance_date).\nstatute_ms_11_25_7_requires_element(answer_complaint).\nstatute_ms_11_25_7_requires_element(clerk_signature).\n\nstatute_ms_11_25_7_requires_property_disposal_notice(no).\n\n/* --- MS Code  11-25-107 (2020): county court warrant form (unlawful ouster/withholding)\n   Encodes required elements (high-level), and does NOT require a tenant-property-disposal notice. */\nstatute_ms_11_25_107_requires_element(describe_land).\nstatute_ms_11_25_107_requires_element(command_to_summon_defendant).\nstatute_ms_11_25_107_requires_element(appearance_place_usual_county_court_location).\nstatute_ms_11_25_107_requires_element(appearance_date).\nstatute_ms_11_25_107_requires_element(answer_complaint).\nstatute_ms_11_25_107_requires_element(clerk_or_judge_signature).\n\nstatute_ms_11_25_107_requires_property_disposal_notice(no).\n\n/* --- MS Code  89-7-31 (2020): summons on affidavit; must include a specific notice.\n   Key encoding: \"In addition to other information required for the summons, the summons shall state: ...\"\n*/\nstatute_ms_89_7_31_summons_core_elements([\n    directed_to_sheriff_or_constable_or_marshal,\n    describes_premises,\n    commands_person_in_possession_to_immediately_remove_or_show_cause,\n    hearing_day_named_in_summons\n]).\n\n/* The required warning statement about the landlord's ability to dispose of personal property. */\nstatute_ms_89_7_31_requires_property_disposal_notice(yes).\n\n/* Applicability: Mississippi + year on/after effective + this procedure uses the  89-7-31 summons. */\nstatute_ms_89_7_31_applies(State, Year, Procedure, DocumentType) :-\n    State = mississippi,\n    DocumentType = eviction_summons,\n    Procedure = ms_89_7_31_affidavit_summons,\n    statute_effective_from(ms_code_89_7_31, FromYear),\n    year_is_on_or_after(Year, FromYear).\n\n/* -----------------------------\n   Legal reasoning (derive answer)\n   ----------------------------- */\n\n/* The question asks if the eviction summons must describe landlord rights to dispose of tenant property.\n   We treat that as \"property disposal notice required in the summons.\" */\neviction_summons_must_describe_landlord_property_disposal_rights(yes) :-\n    scenario_statement,\n    scenario_state(State),\n    scenario_focus_year(Year),\n    scenario_eviction_procedure(Procedure),\n    scenario_document(DocumentType),\n    statute_ms_89_7_31_applies(State, Year, Procedure, DocumentType),\n    statute_ms_89_7_31_requires_property_disposal_notice(yes),\n    !.\neviction_summons_must_describe_landlord_property_disposal_rights(no) :-\n    !.\n\n/* -----------------------------\n   Final required predicate\n   ----------------------------- */\n\nhousing_answer(yes) :-\n    eviction_summons_must_describe_landlord_property_disposal_rights(yes),\n    !.\nhousing_answer(no) :-\n    !.\n\n/* -----------------------------\n   Main entrypoint (required)\n   ----------------------------- */\n\nmain :-\n    housing_answer(Result),\n    format('housing_answer(~w).~n', [Result]).\n\n\n:- initialization(main, main).",
+  "case_id": "B04-deon-4369",
+  "expected": {
+    "kind": "label",
+    "value": "yes",
+    "raw_label": "yes",
+    "question": "Is it required that the evictions summons served to tenants describe what rights the landlord has to dispose of the tenant’s property?"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "source": "birdsql/bird_mini_dev",
+  "question_id": 433,
+  "question": "I'm screening outpatient clinic patients with anemia for rheumatologic autoimmunity. Among patients who were followed as outpatients (rather than admitted to the hospital) and who ever had a hemoglobin value below 10 on any lab test, who showed the strongest anti-ribonuclear protein antibody response? Please return, for every patient whose anti-ribonuclear protein antibody level reached the highest point ever recorded on their lab tests (list all of them if several share that highest level): the patient ID, the patient's sex, and that highest-ever recorded anti-ribonuclear protein antibody level. Nothing else.",
+  "evidence": "Anti-ribonuclear protein refers to the antibody measured in the laboratory tests (anti-RNP).",
+  "gold_sql": "SELECT p.ID, p.SEX, MAX(CAST(r.RNP AS REAL)) AS highest_level FROM Patient p JOIN Laboratory r ON r.ID = p.ID WHERE p.Admission = '-' AND EXISTS (SELECT 1 FROM Laboratory h WHERE h.ID = p.ID AND h.HGB < 10) GROUP BY p.ID, p.SEX HAVING MAX(CAST(r.RNP AS REAL)) = (SELECT MAX(CAST(r2.RNP AS REAL)) FROM Patient p2 JOIN Laboratory r2 ON r2.ID = p2.ID WHERE p2.Admission = '-' AND EXISTS (SELECT 1 FROM Laboratory h2 WHERE h2.ID = p2.ID AND h2.HGB < 10))",
+  "db_id": "thrombosis_prediction",
+  "case_id": "B05-bird-0434",
+  "expected": {
+    "kind": "sql",
+    "sql": "SELECT p.ID, p.SEX, MAX(CAST(r.RNP AS REAL)) AS highest_level FROM Patient p JOIN Laboratory r ON r.ID = p.ID WHERE p.Admission = '-' AND EXISTS (SELECT 1 FROM Laboratory h WHERE h.ID = p.ID AND h.HGB < 10) GROUP BY p.ID, p.SEX HAVING MAX(CAST(r.RNP AS REAL)) = (SELECT MAX(CAST(r2.RNP AS REAL)) FROM Patient p2 JOIN Laboratory r2 ON r2.ID = p2.ID WHERE p2.Admission = '-' AND EXISTS (SELECT 1 FROM Laboratory h2 WHERE h2.ID = p2.ID AND h2.HGB < 10))",
+    "db_id": "thrombosis_prediction",
+    "evidence": "Anti-ribonuclear protein refers to the antibody measured in the laboratory tests (anti-RNP)."
+  }
+}

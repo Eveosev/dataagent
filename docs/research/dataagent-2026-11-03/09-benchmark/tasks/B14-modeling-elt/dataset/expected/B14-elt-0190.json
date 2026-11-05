@@ -1,0 +1,150 @@
+{
+  "source": "uiuc-kang-lab/ELT-Bench",
+  "warehouse": "redshift",
+  "pipeline": "twilio",
+  "data_model": {
+    "models": [
+      {
+        "name": "twilio__account_overview",
+        "description": "This model provides aggregate information per each account regarding the Twilio Messages resource.",
+        "columns": [
+          {
+            "name": "account_id",
+            "description": "The unique identifier for account."
+          },
+          {
+            "name": "account_name",
+            "description": "Friendly name associated with the account."
+          },
+          {
+            "name": "account_status",
+            "description": "The status or state of the account."
+          },
+          {
+            "name": "account_type",
+            "description": "The type or category of the account."
+          },
+          {
+            "name": "date_day",
+            "description": "The day of the message activity.",
+            "format": "YYYY-MM-DD"
+          },
+          {
+            "name": "date_week",
+            "description": "The week of the message activity.",
+            "format": "YYYY-MM-DD"
+          },
+          {
+            "name": "date_month",
+            "description": "The month of the message activity.",
+            "format": "YYYY-MM-DD"
+          },
+          {
+            "name": "price_unit",
+            "description": "The currency unit in which the `price` is measured."
+          },
+          {
+            "name": "total_outbound_messages",
+            "description": "Total number of outbound messages for this account."
+          },
+          {
+            "name": "total_inbound_messages",
+            "description": "Total number of inbound messages for this account."
+          },
+          {
+            "name": "total_accepted_messages",
+            "description": "Total number of accepted messages for this account."
+          },
+          {
+            "name": "total_scheduled_messages",
+            "description": "Total number of scheduled messages for this account."
+          },
+          {
+            "name": "total_canceled_messages",
+            "description": "Total number of canceled messages for this account."
+          },
+          {
+            "name": "total_queued_messages",
+            "description": "Total number of queued messages for this account."
+          },
+          {
+            "name": "total_sending_messages",
+            "description": "Total number of sending messages for this account."
+          },
+          {
+            "name": "total_sent_messages",
+            "description": "Total number of sent messages for this account."
+          },
+          {
+            "name": "total_failed_messages",
+            "description": "Total number of failed messages for this account."
+          },
+          {
+            "name": "total_delivered_messages",
+            "description": "Total number of delivered messages for this account."
+          },
+          {
+            "name": "total_undelivered_messages",
+            "description": "Total number of undelivered messages for this account."
+          },
+          {
+            "name": "total_receiving_messages",
+            "description": "Total number of receiving messages for this account."
+          },
+          {
+            "name": "total_received_messages",
+            "description": "Total number of received messages for this account."
+          },
+          {
+            "name": "total_read_messages",
+            "description": "Total number of read messages for this account."
+          },
+          {
+            "name": "total_messages",
+            "description": "Total number of messages for this account."
+          },
+          {
+            "name": "total_messages_spend",
+            "description": "Total cost or price associated with this account."
+          }
+        ]
+      }
+    ]
+  },
+  "config": "Airbyte:\n  config:\n    files_definition_id: 778daa7c-feaf-4db6-96f3-70fd645acc77\n    mongodb_definition_id: b2e713cd-cc36-4c0a-b5bd-b47cb8a0561e\n    namespace_definition: destination\n    postgres_definition_id: decd338e-5647-4c0b-adf4-da0e75f5a750\n    s3_definition_id: 69589781-7828-43c5-9f63-8925b1c1ccc2\n    server_url: http://airbyte-abctl-control-plane:80/api/public/v1/\n    redshift_definition_id: f7a7d195-377f-cf5b-70a5-be6b819019dc\naws_s3:\n  AWS_ACCESS_KEY_ID: test\n  AWS_DEFAULT_REGION: us-west-2\n  AWS_ENDPOINT_URL: http://elt-localstack:4566\n  AWS_SECRET_ACCESS_KEY: test\n  data:\n  - path: s3://twilio-bucket/account_history.jsonl\n    sync_mode: full_refresh_append\n    table: account_history\n  - path: s3://twilio-bucket/incoming_phone_number.jsonl\n    sync_mode: full_refresh_append\n    table: incoming_phone_number\ncustom_api:\n  config:\n    configuration: {}\n    sync_mode: full_refresh_append\n    tables:\n    - messaging_service\n    - outgoing_caller_id\nflat_files:\n- format: jsonl\n  path: https://drive.google.com/uc?export=download&id=1TC1Q1WYLy5dwcGVASc5YsklQbTijDX_k\n  sync_mode: full_refresh_append\n  table: usage_record\n- format: csv\n  path: https://drive.google.com/uc?export=download&id=149V3-6Bbs_lUgIMSpc0Rp3Bme4wRowvj\n  sync_mode: full_refresh_append\n  table: address\nmongodb:\n  config:\n    connection_string: mongodb://elt-mongodb:27017/?directConnection=true\n    database: twilio\n    sync_mode: full_refresh_append\n    tables:\n    - call\npostgres:\n  config:\n    database: twilio\n    host: elt-postgres\n    password: testelt\n    port: 5432\n    schema: public\n    sync_mode: full_refresh_append\n    tables:\n    - message\n    user: postgres\nredshift:\n  config:\n    host: <redshift_hostname>\n    port: <redshift_port>\n    database: <redshift_db>\n    username: <redshift_username>\n    password: <redshift_pwd>\n    schema: twilio\n    s3_bucket_name: <redshift_s3_bucket>\n    s3_bucket_region: <redshift_s3_region>\n    access_key_id: <redshift_s3_access_key>\n    secret_access_key: <redshift_s3_secret_key>\n",
+  "case_id": "B14-elt-0190",
+  "expected": {
+    "kind": "schema_spec",
+    "models": [
+      {
+        "name": "twilio__account_overview",
+        "columns": [
+          "account_id",
+          "account_name",
+          "account_status",
+          "account_type",
+          "date_day",
+          "date_week",
+          "date_month",
+          "price_unit",
+          "total_outbound_messages",
+          "total_inbound_messages",
+          "total_accepted_messages",
+          "total_scheduled_messages",
+          "total_canceled_messages",
+          "total_queued_messages",
+          "total_sending_messages",
+          "total_sent_messages",
+          "total_failed_messages",
+          "total_delivered_messages",
+          "total_undelivered_messages",
+          "total_receiving_messages",
+          "total_received_messages",
+          "total_read_messages",
+          "total_messages",
+          "total_messages_spend"
+        ]
+      }
+    ]
+  }
+}

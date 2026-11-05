@@ -1,0 +1,34 @@
+{
+  "source": "xlangai/BRIGHT",
+  "query_id": "7",
+  "query": "## 1. Essential Problem\n\nThe essential problem is to efficiently determine the outline of the skyline formed by a set of buildings, given their locations and heights. This involves identifying the \"key points\" where the skyline changes its height, and representing them as a sorted list of coordinates.\n\n## 2. Relevant Information\n\nHere's what we need to consider:\n\n* **Building data:** We are given an array `buildings` where each element `buildings[i]` is a list containing three values: `lefti`, `righti`, and `heighti`. These represent the left edge, right edge, and height of the `i`th building, respectively.\n* **Key points:** These are the points on the skyline where the height changes. We need to identify the x-coordinate and corresponding height of these points.\n* **Sorting:** The output skyline should be represented as a list of key points sorted by their x-coordinate.\n* **Merging consecutive lines:** We need to merge consecutive horizontal lines with the same height into a single line in the final output.\n\n## 3. Draft Answer\n\nHere's a draft answer outlining the steps involved in solving the problem:\n\n**1. Initialize data structures:**\n\n* Create an empty list called `skyline` to store the key points of the skyline.\n* Create a priority queue `pq` to efficiently track the active buildings and their heights. The priority queue will be ordered by height in descending order.\n\n**2. Iterate through the buildings:**\n\n* For each building `b = [lefti, righti, heighti]`:\n    * Add `b` to the priority queue `pq`.\n    * If `lefti` is not the same as the previous building's `righti` (i.e., there is a gap between buildings), add a key point `[lefti, 0]` to the `skyline` to represent the ground level.\n    * While the top element of `pq` has a `righti` less than or equal to `lefti` (i.e., the building is no longer active):\n        * Remove the top element from `pq`.\n        * If `pq` is now empty, add a key point `[righti, 0]` to the `skyline` to mark the end of the skyline.\n        * Otherwise, update the top element of `pq` with the maximum height among the remaining active buildings.\n    * If the top element of `pq` has a height different from the previous key point's height, add a key point `[lefti, heighti]` to the `skyline`.\n\n**3. Merge consecutive lines:**\n\n* Iterate through the `skyline` and merge consecutive lines with the same height into a single line.\n\n**4. Return the skyline:**\n\n* Return the `skyline` list, which now contains the key points representing the final skyline.\n\nThis approach utilizes a priority queue to efficiently track the active buildings and their heights, ensuring that the key points are identified and merged correctly. This solution is efficient and handles the merging of consecutive lines, resulting in the correct skyline representation.\n\nThis is a draft answer, and further optimization and implementation details might be needed based on the specific programming language and environment.",
+  "gold_ids": [
+    "leetcode/leetcode_699.txt",
+    "leetcode/leetcode_2381.txt"
+  ],
+  "gold_answer": "N/A",
+  "corpus": "documents/leetcode-00000-of-00001.parquet",
+  "case_id": "B06-bright-0441",
+  "expected": {
+    "kind": "retrieval",
+    "gold_ids": [
+      "leetcode/leetcode_699.txt",
+      "leetcode/leetcode_2381.txt"
+    ],
+    "gold_ids_long": [
+      "N/A"
+    ],
+    "gold_answer": "N/A",
+    "excluded_ids": [
+      "leetcode/leetcode_2179.txt",
+      "leetcode/leetcode_850.txt",
+      "leetcode/leetcode_1649.txt",
+      "leetcode/leetcode_315.txt",
+      "leetcode/leetcode_2407.txt",
+      "leetcode/leetcode_327.txt",
+      "leetcode/leetcode_2426.txt",
+      "leetcode/leetcode_218.txt",
+      "leetcode/leetcode_493.txt"
+    ]
+  }
+}
