@@ -218,7 +218,7 @@
   },
   "R13": {
    "light": "green",
-   "evidence": "已发布基线已建立（owner 2026-11-06 批准，方案范围外 Q3 的 owner 决策，走『初始化 git 仓库并打 tag』变体）：git 仓库初始化于 /Users/payne/Vibe/AgentOS，基线 commit fbe24d8f4263513a711fc96126ded588b9650f2c，标注 tag dataagent-runtime-0.1.0（tag object 8544568…，git cat-file tag 可复核）；tag 内 dataagent-runtime 源码快照 sha256:78c93a64776a5dbc4ad45fd9c3f9f849d5d105b300f08179445fcaa2f9e1f400（67 文件）与 r3 验收态逐字节一致（snapshot.py 复算）。semver 判定：本轮（r1–r3）相对 pre-CLI 基线（/tmp/agentos-snapshots/pre-cli-20261106-013324.tar.gz）无破坏性变更——旧 stdin JSON 模式与 --list 旧 JSON 输出保留并由 dataagent-data/tests/test_interfaces.py 锁定（654 passed，r2/r3 记录），新语法为增量；包版本维持 0.1.0 且该版本从未发布，无同版本不同制品问题（r2 实跑 uv build 产 wheel 0.1.0）。自本 tag 起破坏性 API 变更必须升 major"
+   "evidence": "已发布基线已建立（owner 2026-11-06 批准，方案范围外 Q3 的 owner 决策，走『初始化 git 仓库并打 tag』变体）：git 仓库初始化于 /Users/payne/Vibe/AgentOS，基线 commit fbe24d8f4263513a711fc96126ded588b9650f2c，标注 tag dataagent-runtime-0.1.0（tag object 20022e0a962ecd42fd575bd9b8872ca2f11c3f99（r5 更正，r4-review D11：原文误写 8544568…，为被重建取代的 unreachable 旧 tag），git cat-file tag 可复核）；tag 内 dataagent-runtime 源码快照 sha256:78c93a64776a5dbc4ad45fd9c3f9f849d5d105b300f08179445fcaa2f9e1f400（67 文件）与 r3 验收态逐字节一致（snapshot.py 复算）。semver 判定：本轮（r1–r3）相对 pre-CLI 基线（/tmp/agentos-snapshots/pre-cli-20261106-013324.tar.gz）无破坏性变更——旧 stdin JSON 模式与 --list 旧 JSON 输出保留并由 dataagent-data/tests/test_interfaces.py 锁定（654 passed，r2/r3 记录），新语法为增量；包版本维持 0.1.0 且该版本从未发布，无同版本不同制品问题（r2 实跑 uv build 产 wheel 0.1.0）。自本 tag 起破坏性 API 变更必须升 major"
   },
   "R14": {
    "light": "green",

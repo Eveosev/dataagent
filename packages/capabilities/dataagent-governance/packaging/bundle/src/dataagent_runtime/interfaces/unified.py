@@ -144,18 +144,73 @@ def _parse_params(params: list[str]) -> Parsed:
     return parsed
 
 
-def _schema_properties(spec: Any) -> dict[str, dict[str, Any]]:
-    schema = spec.input_model.model_json_schema()
-    return schema.get("properties", {})
+_SCALAR_KINDS = frozenset({"string", "integer", "number", "boolean"})
+
+# Keys that constrain the shape of a value. A property with none of them
+# (pydantic's rendering of ``Any``, with or without ``title``/``default``)
+# accepts any JSON, so a raw string is a valid ``--set`` value.
+_STRUCTURAL_KEYS = (
+    "$ref",
+    "type",
+    "enum",
+    "anyOf",
+    "allOf",
+    "oneOf",
+    "items",
+    "prefixItems",
+    "properties",
+    "additionalProperties",
+)
 
 
-def _coerce(name: str, raw: str, properties: dict[str, dict[str, Any]]) -> Any:
+def _resolve_kind(prop: Any, defs: dict[str, Any], *, _depth: int = 0) -> str | None:
+    """Scalar JSON type behind a property, following ``$ref``/``anyOf``.
+
+    The inputSchema does not always spell a scalar as a literal ``type``:
+    optional scalars arrive as ``anyOf`` unions with ``null``, string-form
+    models (VersionedRef) and enums as ``$ref``, and unconstrained fields
+    as ``{}`` (r4-review D10). Returns the scalar kind, or None when the
+    field is not scalar-settable (arrays, objects, file/ref models).
+    """
+
+    if _depth > 8 or not isinstance(prop, dict):
+        return None
+    if "$ref" in prop:
+        name = str(prop["$ref"]).rsplit("/", 1)[-1]
+        return _resolve_kind(defs.get(name), defs, _depth=_depth + 1)
+    kind = prop.get("type")
+    if isinstance(kind, str) and kind in _SCALAR_KINDS:
+        return kind
+    if "enum" in prop:
+        values = prop["enum"]
+        if isinstance(values, list) and values and all(isinstance(v, str) for v in values):
+            return "string"
+        return None
+    if "anyOf" in prop:
+        kinds = {
+            resolved
+            for variant in prop["anyOf"]
+            if (resolved := _resolve_kind(variant, defs, _depth=_depth + 1)) is not None
+        }
+        return kinds.pop() if len(kinds) == 1 else None
+    if not any(key in prop for key in _STRUCTURAL_KEYS):
+        # Unconstrained (``Any``): a raw string is a valid value.
+        return "string"
+    return None
+
+
+def _coerce(
+    name: str,
+    raw: str,
+    properties: dict[str, dict[str, Any]],
+    defs: dict[str, Any],
+) -> Any:
     """`--set` scalar conversion against the inputSchema (12 §5.3)."""
 
     prop = properties.get(name)
     if prop is None:
         raise UsageError(f"--set {name}: not a field of the input schema")
-    kind = prop.get("type")
+    kind = _resolve_kind(prop, defs)
     if kind == "integer":
         try:
             return int(raw)
@@ -402,7 +457,7 @@ def _op_help(spec: Any, hooks: LayerHooks) -> str:
         "input fields:",
     ]
     for name, prop in schema.get("properties", {}).items():
-        kind = prop.get("type")
+        kind = _resolve_kind(prop, schema.get("$defs", {}))
         if kind is None:
             kind = prop.get("$ref", "object").rsplit("/", 1)[-1]
         required = "required" if name in schema.get("required", []) else "optional"
@@ -462,10 +517,12 @@ def _build_payload(
     parsed: Parsed,
     hooks: LayerHooks,
     runtime: Any,
-    properties: dict[str, dict[str, Any]],
+    schema: dict[str, Any],
 ) -> dict[str, Any]:
     """The operation input assembled from the parsed flags (12 §5.3)."""
 
+    properties = schema.get("properties", {})
+    defs = schema.get("$defs", {})
     payload: dict[str, Any] = {}
     if parsed.input_file is not None:
         body = _load_json_file(parsed.input_file, what="--input-file")
@@ -475,7 +532,7 @@ def _build_payload(
             raise UsageError("--input-file: 'context' cannot be supplied by arguments (12 §5.4)")
         payload.update(body)
     for name, raw in parsed.sets:
-        payload[name] = _coerce(name, raw, properties)
+        payload[name] = _coerce(name, raw, properties, defs)
     for name, raw in parsed.set_jsons:
         if name not in properties:
             raise UsageError(f"--set-json {name}: not a field of the input schema")
@@ -522,7 +579,7 @@ def _run(op: str, params: list[str], hooks: LayerHooks) -> int:
 
     runtime = hooks.runtime_factory()
     try:
-        payload = _build_payload(spec, parsed, hooks, runtime, _schema_properties(spec))
+        payload = _build_payload(spec, parsed, hooks, runtime, spec.input_model.model_json_schema())
     except UsageError as exc:
         _stderr(f"usage error: {exc}")
         return EXIT_USAGE

@@ -24,3 +24,10 @@
 | [r4-fixes.md](r4-fixes.md) | r4 | 开发者基线建立记录：owner 批准后 git init + tag `dataagent-runtime-0.1.0`（commit `fbe24d8`），R13 green；产品代码与 r3 零改动 |
 | [r4-runtime.score.json](r4-runtime.score.json) | r4 | 开发者自评结果（93.1 / A / 无闸门；R13 green 证据：基线 tag + 旧 wire 形状锁定测试 16 passed） |
 | [r4.score.txt](r4.score.txt) | r4 | 自评 `score_landing.py` 输出 |
+| [r4-tester-runtime.score.json](r4-tester-runtime.score.json) | r4 | Tester 独立验收结果（79.0 / C / 不可验收；GATE-P1 D10 `--set` anyOf/$ref 标量 + GATE-CHECKLIST #ceedd2；R13 green 已验证，D11 新 P2） |
+| [r4-tester-runtime.quality.md](r4-tester-runtime.quality.md) | r4 | Tester 复跑的 `quality_run.py` 机器测量报告 |
+| [r4-review.md](r4-review.md) | r4 | 第 4 轮验收（不可验收：基线 tag 可核且 R13 green，但 `--set` 不支持 anyOf/$ref 标量 → P1 + 清单 partial；自评 93.1 仅在其自身结果文件上复现，独立 79.0） |
+| [r5-fixes.md](r5-fixes.md) | r5 | 开发者修复记录：D10（`_resolve_kind` 解析 anyOf/$ref/$defs，`--set` 支持字符串形模型/枚举/可选标量/Any 字段，`--help` 渲染实际标量类型）+ D11（r4 记录 tag object 更正为实际 ref `20022e0a`，带审计标注） |
+| [r5-runtime.score.json](r5-runtime.score.json) | r5 | 开发者自评结果（93.1 / A / 无闸门；D10/D11 fixed、`#ceedd2` done；D2 partial、D3 open 留待后续轮） |
+| [r5-runtime.quality.md](r5-runtime.quality.md) | r5 | `quality_run.py` 机器测量报告 |
+| [r5.score.txt](r5.score.txt) | r5 | 自评 `score_landing.py` 输出 |

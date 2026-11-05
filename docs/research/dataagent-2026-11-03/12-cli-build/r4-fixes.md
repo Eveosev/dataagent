@@ -14,7 +14,7 @@ r2/r3 的唯一验收闸门是 **GATE-UNKNOWN（R13）**：仓库无已发布基
    - 新增根 `.gitignore`：只排除易变/生成/超大目录（`workspace/`、`scratch/`、`evidence/`、`.worktrees/`、`.venv/`、`node_modules/`、`__pycache__/`、`.mint/`、`.DS_Store` 等）；源码、docs、skills、apps、integrations 等全部入库。
    - 嵌套仓库（`packages/agent-kernel`、`apps/plugins/*`）以 gitlink 记录其 HEAD。
 2. **基线 commit `fbe24d8f4263513a711fc96126ded588b9650f2c`**（11,785 个暂存路径）。
-3. **标注 tag `dataagent-runtime-0.1.0`**：指向上述 commit，tag object `8544568cfbea078b3131d208b8e4d6a4193a9a87`；tag message 记录 owner 批准、r3 快照 digest、R13 语义（自本 tag 起破坏性 API 变更必须升 major）。`git cat-file tag dataagent-runtime-0.1.0` 可复核。
+3. **标注 tag `dataagent-runtime-0.1.0`**：指向上述 commit，tag object `20022e0a962ecd42fd575bd9b8872ca2f11c3f99`（r5 更正，r4-review D11：本行原文误写 `8544568c…`——那是 03:42:32 创建、03:42:38 被重建取代的 unreachable 旧 tag，记录未同步）；tag message 记录 owner 批准、r3 快照 digest、R13 语义（自本 tag 起破坏性 API 变更必须升 major）。`git cat-file tag dataagent-runtime-0.1.0` 可复核。
 4. **记录提交**：本目录 r4 记录 + 方案记录表 r4 行（tag 之后的第二个 commit，不影响 tag 指向）。
 
 ## R13 判 green 的证据链

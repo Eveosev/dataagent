@@ -11,6 +11,7 @@ import json
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import Any, Literal
 
 import pytest
 from pydantic import BaseModel
@@ -53,6 +54,18 @@ class TwoPhaseInput(BaseModel):
 
 class TwoPhaseOutput(BaseModel):
     value: int
+
+
+class ScalarsInput(BaseModel):
+    """Fields whose inputSchema scalars are spelled via anyOf/$ref (D10)."""
+
+    resource_ref: VersionedRef  # $ref -> $defs entry with type: string
+    delimiter: str | None = None  # anyOf [string, null]
+    budget_rows: int | None = None  # anyOf [integer, null]
+    flag: bool | None = None  # anyOf [boolean, null]
+    event_type: Literal["task_state", "note"] | None = None  # anyOf [$ref enum, null]
+    note: Any = None  # anyOf [{}, null]
+    sheets: list[str] | None = None  # anyOf [array, null] — not a scalar
 
 
 CAPTURED: dict[str, object] = {}
@@ -101,6 +114,13 @@ def _register():
     @operation("TEST.1.4", input_model=PingInput, output_model=PingOutput, description="big")
     def big(input_obj, ctx, runtime):  # noqa: ANN001
         return PingOutput(value=input_obj.value)
+
+    @operation(
+        "TEST.1.6", input_model=ScalarsInput, output_model=PingOutput, description="scalars"
+    )
+    def scalars(input_obj, ctx, runtime):  # noqa: ANN001
+        CAPTURED["scalars"] = input_obj.model_dump(mode="json")
+        return PingOutput(value=1)
 
 
 @pytest.fixture()
@@ -204,6 +224,75 @@ def test_run_set_json(env, capsys):
     summary = json.loads(out)
     assert summary["data"]["got"] == {"id": "table:t", "revision": "r1"}
     assert "table:t@r1" in summary["handles"]
+
+
+def test_run_set_resolves_anyof_and_ref_scalars(env, capsys):
+    """r4-review D10: --set must type through anyOf/$ref, not just literal ``type``."""
+
+    code, out, err = _run_cli(
+        [
+            "run",
+            "scalars",
+            "--set", "resource_ref=table:orders@r1",
+            "--set", "delimiter=,",
+            "--set", "budget_rows=10",
+            "--set", "flag=yes",
+            "--set", "event_type=note",
+            "--set", "note=hello",
+        ],
+        capsys,
+    )
+    assert code == 0, err
+    summary = json.loads(out)
+    assert summary["status"] == "ok"
+    payload = CAPTURED["scalars"]
+    assert payload["resource_ref"] == "table:orders@r1"
+    assert payload["delimiter"] == ","
+    assert payload["budget_rows"] == 10
+    assert payload["flag"] is True
+    assert payload["event_type"] == "note"
+    assert payload["note"] == "hello"
+
+
+def test_run_set_ref_scalar_bad_value_is_usage_error(env, capsys):
+    """A $ref string-form scalar still exits 2 on a value pydantic rejects."""
+
+    code, _, err = _run_cli(
+        ["run", "scalars", "--set", "resource_ref=missing-separator", "--set", "budget_rows=x"],
+        capsys,
+    )
+    assert code == 2
+    assert "not an integer" in err
+    code, _, err = _run_cli(
+        ["run", "scalars", "--set", "resource_ref=missing-separator"], capsys
+    )
+    assert code == 2
+    assert "schema error" in err
+
+
+def test_run_set_still_rejects_non_scalar_anyof(env, capsys):
+    """anyOf [array, null] stays a non-scalar: use --set-json."""
+
+    code, _, err = _run_cli(
+        ["run", "scalars", "--set", "resource_ref=table:x@r1", "--set", "sheets=a,b"],
+        capsys,
+    )
+    assert code == 2
+    assert "field is not a scalar" in err
+
+
+def test_op_help_resolves_scalar_kinds(env, capsys):
+    """r4-review D10: anyOf/$ref scalars render as their scalar kind, not <object>."""
+
+    code, out, _ = _run_cli(["scalars", "--help"], capsys)
+    assert code == 0
+    assert "--set resource_ref=<string>" in out
+    assert "--set delimiter=<string>" in out
+    assert "--set budget_rows=<integer>" in out
+    assert "--set flag=<boolean>" in out
+    assert "--set event_type=<string>" in out
+    assert "--set sheets=<object>" in out
+    assert "<VersionedRef>" not in out
 
 
 def test_run_schema_error_is_usage(env, capsys):
