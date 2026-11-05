@@ -248,9 +248,14 @@ class DispatcherTests(unittest.TestCase):
         self.assertIn("package  dataagent/data-layer: ./.mint/packages/dataagent/data-layer@0.1.0",
                       result.stdout)
 
-    def test_lock_unreadable_pin_falls_back(self):
-        """r6-review D16 (edge): a lock entry for the layer without a
-        readable version line is also not a pin — fall back, don't die."""
+    def test_lock_unreadable_pin_fails_closed(self):
+        """r6/r7-review D16: a lock entry for the layer without a
+        readable version is a corrupt lock — fail closed (exit 3), never
+        silently fall back to the highest installed version.
+
+        (r7 briefly codified the fail-open fallback here; the r7 review
+        rejected it, so the expectation is now the r6 semantics.)
+        """
 
         _make_layer(self.project, "data-layer", "0.1.0")
         (self.project / "mint.lock").write_text(
@@ -258,8 +263,124 @@ class DispatcherTests(unittest.TestCase):
             encoding="utf-8",
         )
         result = self._run("data", "list")
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("data-layer@0.1.0", (self.out / "cwd").read_text())
+        self.assertEqual(result.returncode, 3)
+        self.assertIn("without a readable version", result.stderr)
+        # nothing was executed: the layer process never ran
+        self.assertFalse((self.out / "args").exists())
+
+    def test_doctor_lock_unreadable_pin_fails_closed(self):
+        """r7-review D16 (doctor face): an unreadable pin is a failing
+        doctor check, and the policy probe must not run against a
+        bypassed governance version."""
+
+        for pkg in ("data-layer", "application-layer", "governance-layer"):
+            _make_layer(self.project, pkg, "0.1.0")
+        (self.out / "policy").write_text("{}\n", encoding="utf-8")
+        (self.project / "mint.lock").write_text(
+            'v = 1\n\n[[package]]\nname = "dataagent/governance-layer"\nkind = "bundle"\n',
+            encoding="utf-8",
+        )
+        result = self._run("doctor")
+        self.assertEqual(result.returncode, 3)
+        self.assertIn("LOCK unreadable", result.stderr)
+        self.assertIn("governance layer unavailable", result.stderr)
+
+    def _pin_matrix(self, lock, pin, installed):
+        """Shared body for the r7-review D16 formatting matrix: legal
+        TOML whitespace variants must resolve to the same pin for both
+        dispatch and doctor (dispatch+doctor agree on the directory)."""
+
+        for ver in installed:
+            _make_layer(self.project, "data-layer", ver)
+        (self.out / "args").unlink(missing_ok=True)
+        (self.project / "mint.lock").write_text(lock, encoding="utf-8")
+        result = self._run("data", "list")
+        if pin in installed:
+            self.assertEqual(result.returncode, 0, result.stderr)
+            cwd = (self.out / "cwd").read_text()
+            self.assertIn(f"data-layer@{pin}", cwd)
+            for other in installed:
+                if other != pin:
+                    self.assertNotIn(f"data-layer@{other}", cwd)
+            self.assertEqual((self.out / "args").read_text().splitlines()[2], "list")
+            result = self._run("doctor")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn(
+                f"package  dataagent/data-layer: ./.mint/packages/dataagent/data-layer@{pin}",
+                result.stdout,
+            )
+        else:
+            self.assertEqual(result.returncode, 3)
+            self.assertIn("not installed", result.stderr)
+            self.assertFalse((self.out / "args").exists())
+            result = self._run("doctor")
+            self.assertEqual(result.returncode, 3)
+            self.assertIn(f"MISSING pinned {pin}", result.stderr)
+
+    def test_compact_pin_dual_versions_uses_pin(self):
+        """r7-review D16: compact `name="…"`/`version="0.1.0"` is legal
+        TOML (tomllib-equivalent) and must pin even when a higher
+        version is installed — r7 silently used the highest instead."""
+
+        for pkg in ("application-layer", "governance-layer"):
+            _make_layer(self.project, pkg, "0.1.0")
+        (self.out / "policy").write_text("{}\n", encoding="utf-8")
+        self._pin_matrix(
+            'v=1\n\n[[package]]\nname="dataagent/data-layer"\nversion="0.1.0"\nkind="bundle"\n',
+            "0.1.0", ("0.1.0", "0.2.0"),
+        )
+
+    def test_indented_pin_dual_versions_uses_pin(self):
+        """r7-review D16: indented `  name = "…"` keys are legal TOML
+        and must pin even when a higher version is installed."""
+
+        for pkg in ("application-layer", "governance-layer"):
+            _make_layer(self.project, pkg, "0.1.0")
+        (self.out / "policy").write_text("{}\n", encoding="utf-8")
+        self._pin_matrix(
+            'v = 1\n\n[[package]]\n  name = "dataagent/data-layer"\n'
+            '  version = "0.1.0"\n  kind = "bundle"\n',
+            "0.1.0", ("0.1.0", "0.2.0"),
+        )
+
+    def test_literal_pin_dual_versions_uses_pin(self):
+        """r7-review D16 (TOML subset): single-quoted literal strings are
+        legal TOML and resolve like basic strings."""
+
+        for pkg in ("application-layer", "governance-layer"):
+            _make_layer(self.project, pkg, "0.1.0")
+        (self.out / "policy").write_text("{}\n", encoding="utf-8")
+        self._pin_matrix(
+            "v = 1\n\n[[package]]\nname = 'dataagent/data-layer'\n"
+            "version = '0.1.0'\nkind = 'bundle'\n",
+            "0.1.0", ("0.1.0", "0.2.0"),
+        )
+
+    def test_compact_pin_missing_exits_3(self):
+        """r7-review D16 + r5-review D13: a compact-format pin that is
+        not installed fails closed — r7 executed the other installed
+        version (exit 0) instead."""
+
+        for pkg in ("application-layer", "governance-layer"):
+            _make_layer(self.project, pkg, "0.1.0")
+        (self.out / "policy").write_text("{}\n", encoding="utf-8")
+        self._pin_matrix(
+            'v=1\n\n[[package]]\nname="dataagent/data-layer"\nversion="0.2.0"\nkind="bundle"\n',
+            "0.2.0", ("0.1.0",),
+        )
+
+    def test_indented_pin_missing_exits_3(self):
+        """r7-review D16 + r5-review D13: indented-format pin that is
+        not installed fails closed for dispatch and doctor alike."""
+
+        for pkg in ("application-layer", "governance-layer"):
+            _make_layer(self.project, pkg, "0.1.0")
+        (self.out / "policy").write_text("{}\n", encoding="utf-8")
+        self._pin_matrix(
+            'v = 1\n\n[[package]]\n  name = "dataagent/data-layer"\n'
+            '  version = "0.2.0"\n  kind = "bundle"\n',
+            "0.2.0", ("0.1.0",),
+        )
 
 
 if __name__ == "__main__":

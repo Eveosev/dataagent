@@ -47,3 +47,11 @@
 | [r7-runtime.score.json](r7-runtime.score.json) | r7 | 开发者自评结果（93.1 / A / 无闸门；D16 fixed、D5 re-fixed；D2 partial、D3 open 留待后续轮）|
 | [r7-runtime.quality.md](r7-runtime.quality.md) | r7 | `quality_run.py` 机器测量报告（112 passed、重复率 2.13%、CC>10 28.32%）|
 | [r7.score.txt](r7.score.txt) | r7 | 自评 `score_landing.py` 输出 |
+| [r7-review.md](r7-review.md) | r7 | 第 7 轮独立验收（不可验收 79.0 / C；GATE-P1 D16 + GATE-CHECKLIST #b9b374；D5 fixed，D16 partial：合法空白 TOML pin 仍被忽略且 fail-open；D2 partial、D3 open） |
+| [r7-tester-runtime.score.json](r7-tester-runtime.score.json) | r7 | 独立验收结果（79.0 / C；16 条缺陷完整复核；清单 done16 / partial1 / na10） |
+| [r7-tester-runtime.quality.md](r7-tester-runtime.quality.md) | r7 | 独立机器测量（112 passed、重复率 2.13%、CC>10 28.32%、吞错 0、bundle 一致） |
+| [r7-tester.score.txt](r7-tester.score.txt) | r7 | 独立 `score_landing.py` 输出（79.0 / C / GATE-P1 + GATE-CHECKLIST） |
+| [r8-fixes.md](r8-fixes.md) | r8 | 开发者修复记录：r7-review D16 残留——`pinned_version` 改 POSIX awk TOML 子集解析（compact/缩进/字面字符串均同解析），三态出口区分「无该层条目」（回退）与「条目版本不可读」（fail-closed exit 3）；`pin_status` 以 `\|\|` 捕获防 if 条件吞 die；pin 未装仍 D13 exit 3 不回退；cli 17→23 |
+| [r8-runtime.score.json](r8-runtime.score.json) | r8 | 开发者自评结果（93.1 / A / 无闸门；D16 fixed；D2 partial、D3 open 留待后续轮） |
+| [r8-runtime.quality.md](r8-runtime.quality.md) | r8 | `quality_run.py` 机器测量报告（112 passed、重复率 2.13%、CC>10 28.32%、runtime 源零改动） |
+| [r8.score.txt](r8.score.txt) | r8 | 自评 `score_landing.py` 输出 |

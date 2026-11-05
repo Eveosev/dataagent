@@ -50,15 +50,71 @@ module_of() {
 # to another version (r5-review D13). A lock that has no entry for this
 # layer is simply "no pin" for this layer (r6-review D16): an installed
 # layer must resolve exactly like the no-lock case.
+#
+# pinned_version never dies and never prints on its "no pin" paths; its
+# exit status is consumed with `||` (NOT inside `if` — a die in an if
+# condition is swallowed by the subshell and would fail open, which is
+# exactly the r7-review D16 regression):
+#   0  this layer is pinned (version on stdout)
+#   1  no mint.lock, or no entry for this package — callers fall back
+#      to the highest installed version
+#   2  mint.lock has an entry for this package whose version cannot be
+#      read — a corrupt lock; callers must fail closed (exit 3)
+#
+# The lock is parsed with a TOML subset (POSIX awk, no Python): mint.lock
+# is generated TOML, and legal formatting variants — compact `name="…"`,
+# indented `  name = "…"`, literal '…' strings, trailing comments — must
+# all resolve to the same pin.
 pinned_version() {
     pkg=$1
     [ -f ./mint.lock ] || return 1
-    ver=$(sed -n "/name = \"dataagent\\/$pkg\"/,/^\\[\\[/p" ./mint.lock |
-        grep -m1 '^version' | sed 's/.*"\(.*\)".*/\1/')
-    # No lock entry for this package (or an unreadable one) is not a pin;
-    # failing here lets resolve_dir/doctor fall back to highest-installed.
-    [ -n "$ver" ] || return 1
-    printf '%s\n' "$ver"
+    ver=""
+    rc=0
+    ver=$(awk -v want="dataagent/$pkg" '
+        # A table header ends the previous entry; evaluate it against
+        # want exactly once (first matching entry wins).
+        function flush() {
+            if (name == want && !seen) {
+                seen = 1
+                if (ver == "") bad = 1
+                else { print ver; got = 1 }
+            }
+            name = ""; ver = ""
+        }
+        /^[[:space:]]*\[/ { flush(); next }
+        # key = "value" | key="value" | literal '\''value'\'' with any
+        # leading indentation and an optional trailing comment.
+        match($0, /^[[:space:]]*(name|version)[[:space:]]*=/) {
+            key = substr($0, RSTART, RLENGTH)
+            sub(/^[[:space:]]+/, "", key); sub(/[[:space:]]*=$/, "", key)
+            rest = substr($0, RSTART + RLENGTH)
+            sub(/^[[:space:]]*/, "", rest)
+            q = substr(rest, 1, 1)
+            if (q == "\"" || q == "'\''") {
+                i = index(substr(rest, 2), q)
+                if (i > 0) {
+                    if (key == "name") name = substr(rest, 2, i - 1)
+                    else ver = substr(rest, 2, i - 1)
+                }
+            }
+        }
+        END { flush(); exit got ? 0 : (bad ? 2 : 1) }
+    ' ./mint.lock) || rc=$?
+    case $rc in
+        0) printf '%s\n' "$ver"; return 0 ;;
+        1) return 1 ;;
+        *) return 2 ;;
+    esac
+}
+
+# Shared capture of pinned_version's three-way outcome (r7-review D16):
+# sets pin_ver / pin_rc. Callers MUST consume pin_rc — 2 (unreadable
+# lock entry) has to fail closed (die in dispatch paths, a failing
+# doctor check) and must never fall through to highest-installed.
+pin_status() {
+    pkg=$1
+    pin_rc=0
+    pin_ver=$(pinned_version "$pkg") || pin_rc=$?
 }
 
 resolve_dir() {
@@ -66,9 +122,11 @@ resolve_dir() {
     root=./.mint/packages/dataagent
     [ -d "$root" ] || die "no installed dataagent packages under $root (mint add dataagent/preset-s0)"
     dir=""
-    if ver=$(pinned_version "$pkg"); then
-        [ -d "$root/$pkg@$ver" ] || die "mint.lock pins dataagent/$pkg@$ver but that version is not installed (mint add dataagent/preset-s0)"
-        dir="$root/$pkg@$ver"
+    pin_status "$pkg"
+    [ "$pin_rc" -ne 2 ] || die "mint.lock has an entry for dataagent/$pkg without a readable version (regenerate mint.lock)"
+    if [ "$pin_rc" -eq 0 ]; then
+        [ -d "$root/$pkg@$pin_ver" ] || die "mint.lock pins dataagent/$pkg@$pin_ver but that version is not installed (mint add dataagent/preset-s0)"
+        dir="$root/$pkg@$pin_ver"
     fi
     if [ -z "$dir" ]; then
         dir=$(ls -d "$root/$pkg@"* 2>/dev/null | sort -V | tail -1) || dir=""
@@ -139,15 +197,26 @@ doctor_cmd() {
         dir=""
         # Same resolution order as resolve_dir (r6-review D16): pin when
         # mint.lock pins this layer (and it is installed), otherwise the
-        # highest installed version — never a missing-pin rejection.
-        if ver=$(pinned_version "$pkg"); then
-            if [ ! -d "./.mint/packages/dataagent/$pkg@$ver" ]; then
-                echo "package  dataagent/$pkg: MISSING pinned $ver (mint add dataagent/preset-s0)" >&2
+        # highest installed version — never a missing-pin rejection. An
+        # unreadable pin is a failing check, not a fallback (r7-review
+        # D16): dispatch would exit 3 on the same lock.
+        pin_status "$pkg"
+        case $pin_rc in
+            0)
+                if [ ! -d "./.mint/packages/dataagent/$pkg@$pin_ver" ]; then
+                    echo "package  dataagent/$pkg: MISSING pinned $pin_ver (mint add dataagent/preset-s0)" >&2
+                    status=3
+                    continue
+                fi
+                dir="./.mint/packages/dataagent/$pkg@$pin_ver"
+                ;;
+            1) ;;
+            *)
+                echo "package  dataagent/$pkg: LOCK unreadable (regenerate mint.lock)" >&2
                 status=3
                 continue
-            fi
-            dir="./.mint/packages/dataagent/$pkg@$ver"
-        fi
+                ;;
+        esac
         if [ -z "$dir" ]; then
             dir=$(ls -d "./.mint/packages/dataagent/$pkg@"* 2>/dev/null | sort -V | tail -1) || dir=""
         fi
@@ -176,12 +245,14 @@ doctor_cmd() {
         echo "data_root: $root (will be created on first run)"
     fi
     gov_dir=""
-    if ver=$(pinned_version "governance-layer"); then
-        gov_dir="./.mint/packages/dataagent/governance-layer@$ver"
-    fi
-    if [ -z "$gov_dir" ]; then
-        gov_dir=$(ls -d ./.mint/packages/dataagent/governance-layer@* 2>/dev/null | sort -V | tail -1) || gov_dir=""
-    fi
+    # Same three-way pin outcome for the policy probe (r7-review D16):
+    # unreadable pin → no dir → "governance layer unavailable" instead
+    # of probing a bypassed version.
+    pin_status "governance-layer"
+    case $pin_rc in
+        0) gov_dir="./.mint/packages/dataagent/governance-layer@$pin_ver" ;;
+        1) gov_dir=$(ls -d ./.mint/packages/dataagent/governance-layer@* 2>/dev/null | sort -V | tail -1) || gov_dir="" ;;
+    esac
     if [ -n "$gov_dir" ] && [ -x "$gov_dir/.venv/bin/python" ]; then
         # exit 0 = policy configured, 1 = none, anything else = probe broken
         probe='
