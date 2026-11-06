@@ -46,7 +46,7 @@ score: 79.0（C）
 
 实现只把去空白后的裸 `[[package]]` / `[package]` 识别为包条目；quoted keys 仅剥引号不解码；value scanner 只处理一行。
 
-位置：[分发器:183–205](</Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-cli/bin/dataagent#L183-L205>)、[字符串解析:113–163](</Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-cli/bin/dataagent#L113-L163>)、[dispatch 回退:231–244](</Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-cli/bin/dataagent#L231-L244>)、[doctor 回退:314–332](</Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-cli/bin/dataagent#L314-L332>)。
+位置：[分发器:183–205](<../../../../packages/capabilities/dataagent-cli/bin/dataagent#L183-L205>)、[字符串解析:113–163](<../../../../packages/capabilities/dataagent-cli/bin/dataagent#L113-L163>)、[dispatch 回退:231–244](<../../../../packages/capabilities/dataagent-cli/bin/dataagent#L231-L244>)、[doctor 回退:314–332](<../../../../packages/capabilities/dataagent-cli/bin/dataagent#L314-L332>)。
 
 每个合法输入先经 stdlib tomllib 确认，并以真实 `mint list --offline --json` 复核：Mint **exit 0，锁中 bundle pin 为 0.1.0**。独立布局安装 0.1.0 和 0.2.0；`.venv/bin/python` wrapper 先记录自身路径再 exec 真实解释器，因此下表版本是实际 exec 观测，不是仅据 stdout 推断。
 
@@ -91,7 +91,7 @@ canonical missing pin 在两轮仍均 exit 3；quoted 表头是 r9 表作用域�
 
 ## 3. D17 已关闭：真实 Mint 安装与执行
 
-[CLI 清单:15–19](</Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-cli/mint.toml#L15-L19>) 补 `layout = "any"`；[preset 依赖:16–21](</Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-s0/mint.toml#L16-L21>) 未破坏。
+[CLI 清单:15–19](<../../../../packages/capabilities/dataagent-cli/mint.toml#L15-L19>) 补 `layout = "any"`；[preset 依赖:16–21](<../../../../packages/capabilities/dataagent-s0/mint.toml#L16-L21>) 未破坏。
 
 独立临时 MINT_HOME 的 trust ledger，不复用用户信任写入路径；仅复用本机 offline cores/cache/index。实测：
 
@@ -110,10 +110,10 @@ canonical missing pin 在两轮仍均 exit 3；quoted 表头是 r9 表作用域�
 
 | ID | 级 | 状态 | 独立复核 |
 |-|-|-|-|
-| D2 | P2 | partial | CC>10 LOC **28.32% > 7.3%**；[enforcement.py:255](</Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-runtime/src/dataagent_runtime/enforcement.py#L255>)，本轮 runtime 未改 |
-| D3 | P2 | open | CLI deadline 为 None；显式 20 ms deadline 下 handler **130 ms 后仍 ok 且 completed=true**；[context:426–449](</Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-runtime/src/dataagent_runtime/interfaces/unified.py#L426-L449>)、[invoke:353–360](</Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-runtime/src/dataagent_runtime/invoke.py#L353-L360>)；[行为证据](</Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence/runtime-probes.log>) |
+| D2 | P2 | partial | CC>10 LOC **28.32% > 7.3%**；[enforcement.py:255](<../../../../packages/capabilities/dataagent-runtime/src/dataagent_runtime/enforcement.py#L255>)，本轮 runtime 未改 |
+| D3 | P2 | open | CLI deadline 为 None；显式 20 ms deadline 下 handler **130 ms 后仍 ok 且 completed=true**；[context:426–449](<../../../../packages/capabilities/dataagent-runtime/src/dataagent_runtime/interfaces/unified.py#L426-L449>)、[invoke:353–360](<../../../../packages/capabilities/dataagent-runtime/src/dataagent_runtime/invoke.py#L353-L360>)；[行为证据](</Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence/runtime-probes.log>) |
 | D1、D4 | P2 | fixed | 重复率 2.13%；裸 except / 吞错 0 / 0 |
-| D5 | P1 | fixed | 含换行 32 KiB 精确边界、40K/Unicode 句柄、全文持久化通过；[fits:676–679](</Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-runtime/src/dataagent_runtime/interfaces/unified.py#L676-L679>)；[精确边界证据](</Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence/boundary-results.json>) |
+| D5 | P1 | fixed | 含换行 32 KiB 精确边界、40K/Unicode 句柄、全文持久化通过；[fits:676–679](<../../../../packages/capabilities/dataagent-runtime/src/dataagent_runtime/interfaces/unified.py#L676-L679>)；[精确边界证据](</Users/payne/.dsh/state/agent-teamwork/team/r9-reviewer-evidence/boundary-results.json>) |
 | D6–D9 | P2 | fixed | usage 正确；summary/full 外发内容剥离；missing file / invalid confirm / bad JSON usage2，无 traceback |
 | D10 | P1 | fixed | 三层 249 字段 / 121 标量 / 44 ops，判型 mismatch0 / coerce failure0；delimiter/bool/resource_ref 成功 |
 | D11 | P2 | fixed | 实际 tag20022e0a 与带日期更正记录一致；archive digest 复算 |

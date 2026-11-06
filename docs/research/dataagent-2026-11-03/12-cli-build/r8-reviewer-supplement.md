@@ -20,7 +20,7 @@ score: 79.0（C）
 
 **不可验收：79.0 / 100（C），GATE-P1（D16、D17）+ GATE-CHECKLIST。** 五套测试全部通过，但真实 Mint 包解析与新增 CLI 锁文件探针发现两个 P1 阻断。未修改产品源码、测试或 fixtures。
 
-与 [此前独立验收结论](</Users/payne/Vibe/AgentOS/docs/research/dataagent-2026-11-03/12-cli-build/r8-review.md#L19-L24>) 为**相同源码快照**。结论不同来自新增取证：此前矩阵只覆盖独立顶层包条目，没有实际 Mint 安装/清单解析，也没有依赖子表、引号键与转义字符串。下列结果不是测试失败或评分口径变更。
+与 [此前独立验收结论](<r8-review.md#L19-L24>) 为**相同源码快照**。结论不同来自新增取证：此前矩阵只覆盖独立顶层包条目，没有实际 Mint 安装/清单解析，也没有依赖子表、引号键与转义字符串。下列结果不是测试失败或评分口径变更。
 
 ## 基线
 
@@ -38,7 +38,7 @@ score: 79.0（C）
 
 ### P1 / D17 新增：CLI 清单缺 artifacts.layout，真实 Mint 无法解析，CLI 与 preset 安装链路被阻断
 
-位置：[CLI mint.toml:15–16](</Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-cli/mint.toml#L15-L16>)；[preset mint.toml:21](</Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-s0/mint.toml#L21>)。
+位置：[CLI mint.toml:15–16](<../../../../packages/capabilities/dataagent-cli/mint.toml#L15-L16>)；[preset mint.toml:21](<../../../../packages/capabilities/dataagent-s0/mint.toml#L21>)。
 
 `[artifacts]` 已声明却只包含 `bin = "dataagent"`，缺少必需的 `layout`。Mint 的 [Artifacts 定义:599–604](</Users/payne/Vibe/AgentOS/packages/agent-kernel/mint/crates/mint-manifest/src/lib.rs#L599-L604>) 没有给该字段 serde 默认值；整个表缺省与表内字段缺省不是同一语义。
 
@@ -55,7 +55,7 @@ in `artifacts`
 
 ### P1 / D16 部分修复：锁解析不区分 TOML 表作用域，合法 pin 的等价表示仍被误拒或绕过
 
-位置：[dataagent:73–101](</Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-cli/bin/dataagent#L73-L101>)；调用位置 [dataagent:120–134](</Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-cli/bin/dataagent#L120-L134>)、[doctor:203–217](</Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-cli/bin/dataagent#L203-L217>)。
+位置：[dataagent:73–101](<../../../../packages/capabilities/dataagent-cli/bin/dataagent#L73-L101>)；调用位置 [dataagent:120–134](<../../../../packages/capabilities/dataagent-cli/bin/dataagent#L120-L134>)、[doctor:203–217](<../../../../packages/capabilities/dataagent-cli/bin/dataagent#L203-L217>)。
 
 1. **真实 Mint 锁结构回归。** `awk` 把任何 `[` 行视为条目边界，但没有记录是否处于 `[[package]]`。`[[package.requires]]` 的 `name` 因此被当成包名；该依赖边只有 `req` 没有 `version`，首个匹配即被标为不可读，后续真实包 pin 不再读取。Mint 的 [LockDep 定义](</Users/payne/Vibe/AgentOS/packages/agent-kernel/mint/crates/mint-pack/src/lib.rs#L580-L588>) 与 [真实自动生成锁](</Users/payne/Vibe/AgentOS/workspace/offline-ql-test/mint.lock#L16-L35>) 均使用此结构。
 2. **引号键 / 转义字符串。** 正则仅接受裸 `name|version`，字符串使用 `index` 切片，未解析 basic string 的转义。`"name"` / `"version"` 键或 `name="dataagent\u002fdata-layer"` 仍被视作无 pin，静默执行最高已装版本；转义 dot 的 version 则当原始目录名误拒。
@@ -77,11 +77,11 @@ in `artifacts`
 
 ### P2 / D2 遗留：复杂度占比超阈
 
-位置：[enforcement.py:255](</Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-runtime/src/dataagent_runtime/enforcement.py#L255>)、[invoke.py:299](</Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-runtime/src/dataagent_runtime/invoke.py#L299>)。独立 quality_run 的 CC>10 LOC 占比 **28.32% > 7.3%**，仍 partial；CC>25 为 0%。
+位置：[enforcement.py:255](<../../../../packages/capabilities/dataagent-runtime/src/dataagent_runtime/enforcement.py#L255>)、[invoke.py:299](<../../../../packages/capabilities/dataagent-runtime/src/dataagent_runtime/invoke.py#L299>)。独立 quality_run 的 CC>10 LOC 占比 **28.32% > 7.3%**，仍 partial；CC>25 为 0%。
 
 ### P2 / D3 遗留：无默认 deadline，也不取消在途工作
 
-位置：[unified.py:426–449](</Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-runtime/src/dataagent_runtime/interfaces/unified.py#L426-L449>)、[invoke.py:353–360](</Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-runtime/src/dataagent_runtime/invoke.py#L353-L360>)、[invoke.py:438–442](</Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-runtime/src/dataagent_runtime/invoke.py#L438-L442>)。探针测得 CLI deadline=None；显式 20 ms deadline 时 handler 运行 **130 ms**，仍返回 ok 且完成；[行为证据](</Users/payne/.dsh/state/agent-teamwork/team/r8-reviewer-evidence/probes/runtime-checks.json>)。沿用既有 P2 定级，不作为新增 P1。
+位置：[unified.py:426–449](<../../../../packages/capabilities/dataagent-runtime/src/dataagent_runtime/interfaces/unified.py#L426-L449>)、[invoke.py:353–360](<../../../../packages/capabilities/dataagent-runtime/src/dataagent_runtime/invoke.py#L353-L360>)、[invoke.py:438–442](<../../../../packages/capabilities/dataagent-runtime/src/dataagent_runtime/invoke.py#L438-L442>)。探针测得 CLI deadline=None；显式 20 ms deadline 时 handler 运行 **130 ms**，仍返回 ok 且完成；[行为证据](</Users/payne/.dsh/state/agent-teamwork/team/r8-reviewer-evidence/probes/runtime-checks.json>)。沿用既有 P2 定级，不作为新增 P1。
 
 ## 已通过与清单
 

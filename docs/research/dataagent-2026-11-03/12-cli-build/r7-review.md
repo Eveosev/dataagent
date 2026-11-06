@@ -42,7 +42,7 @@ score: 79.0（C）
 
 | 条目 | 判定 | 说明 |
 |-|-|-|
-| `W1共享内核实现（dataage#99a1de` stdout 摘要 32 KiB | **done** | r7 `fits()` 计入 `print` 换行（[unified.py:676-679](/Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-runtime/src/dataagent_runtime/interfaces/unified.py#L676-L679)、[:780](/Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-runtime/src/dataagent_runtime/interfaces/unified.py#L780)）；真实 dispatcher 边界见 §3 D5 |
+| `W1共享内核实现（dataage#99a1de` stdout 摘要 32 KiB | **done** | r7 `fits()` 计入 `print` 换行（[unified.py:676-679](../../../../packages/capabilities/dataagent-runtime/src/dataagent_runtime/interfaces/unified.py#L676-L679)、[:780](../../../../packages/capabilities/dataagent-runtime/src/dataagent_runtime/interfaces/unified.py#L780)）；真实 dispatcher 边界见 §3 D5 |
 | `W3分发器包实现#b9b374` mint.lock 优先 / 缺省最高版本 | **partial** | 无 pin 回退与 doctor/dispatch 一致性已成立；合法 TOML 空白 pin 仍不可读且 fail-open，见 §3 D16 |
 | 其余 15 条（W1 参数/help/list/退出码/身份/needs_input/外发、W2 三层接入、W3 link/setup/SKILL/s0、W4 测试与交付） | done | 复跑证据见 `r7-tester-runtime.score.json` checklist；na 10 条为元数据与记录行 |
 
@@ -88,7 +88,7 @@ bin-r6 data list   # exit=3  stderr: mint.lock pins dataagent/data-layer without
 bin data list      # exit=0  32 行（r7 fail-open）
 ```
 
-**根因**：[bin/dataagent:53-63](/Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-cli/bin/dataagent#L53-L63) 的 `pinned_version` 把「该层没有条目」与「条目版本不可读」都 `return 1`；[resolve_dir:64-73](/Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-cli/bin/dataagent#L64-L73) 与 [doctor:143-152](/Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-cli/bin/dataagent#L140-L152) 随后回退最高已装。r6-review 的清除条件要求区分二者并保留 D13 的 fail-closed；新增测试 `test_lock_unreadable_pin_falls_back`（[test_dispatcher.py:251-263](/Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-cli/tests/test_dispatcher.py#L251-L263)）反而把 fail-open 固化为期望行为，因此 17 条 cli 测试全绿不能证明该语义正确。
+**根因**：[bin/dataagent:53-63](../../../../packages/capabilities/dataagent-cli/bin/dataagent#L53-L63) 的 `pinned_version` 把「该层没有条目」与「条目版本不可读」都 `return 1`；[resolve_dir:64-73](../../../../packages/capabilities/dataagent-cli/bin/dataagent#L64-L73) 与 [doctor:143-152](../../../../packages/capabilities/dataagent-cli/bin/dataagent#L140-L152) 随后回退最高已装。r6-review 的清除条件要求区分二者并保留 D13 的 fail-closed；新增测试 `test_lock_unreadable_pin_falls_back`（[test_dispatcher.py:251-263](../../../../packages/capabilities/dataagent-cli/tests/test_dispatcher.py#L251-L263)）反而把 fail-open 固化为期望行为，因此 17 条 cli 测试全绿不能证明该语义正确。
 
 复跑：[d16_probe.py](/Users/payne/.dsh/state/agent-teamwork/team/r7-cli-review-evidence/d16_probe.py)（矩阵 `D16_matrix.json`）、[d16_two_versions.py](/Users/payne/.dsh/state/agent-teamwork/team/r7-cli-review-evidence/d16_two_versions.py)（`D16_two_versions.json`）、`D16_pre_post_control.txt`、`cli_probe.py`（`D13_compact_toml` 失败项）。
 
@@ -97,8 +97,8 @@ bin data list      # exit=0  32 行（r7 fail-open）
 | ID | 级 | 状态 | 与上轮对比 | 复现（输入 → 期望 / 实际） | 位置 |
 |-|-|-|-|-|-|
 | D1 | P2 | fixed | 保持关闭 | `quality_run` 重复率 2.13%（≤3%） | sqlite.py 等 |
-| D2 | P2 | partial | 保持 | CC>10 LOC 占比 **28.32%**（阈 7.3%）；CC>25 0.0% | [enforcement.py:255](/Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-runtime/src/dataagent_runtime/enforcement.py#L255) |
-| D3 | P2 | open | 保持 | CLI `ctx.deadline=None`；显式 20 ms deadline 下 handler 仍跑 **125 ms** 并完成，`status=ok` | [invoke.py:353-360](/Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-runtime/src/dataagent_runtime/invoke.py#L353-L360) |
+| D2 | P2 | partial | 保持 | CC>10 LOC 占比 **28.32%**（阈 7.3%）；CC>25 0.0% | [enforcement.py:255](../../../../packages/capabilities/dataagent-runtime/src/dataagent_runtime/enforcement.py#L255) |
+| D3 | P2 | open | 保持 | CLI `ctx.deadline=None`；显式 20 ms deadline 下 handler 仍跑 **125 ms** 并完成，`status=ok` | [invoke.py:353-360](../../../../packages/capabilities/dataagent-runtime/src/dataagent_runtime/invoke.py#L353-L360) |
 | D4 | P2 | fixed | 保持关闭 | 裸 except 0 / 吞错 0（AST） | unified.py 等 |
 | D5 | P1 | **fixed** | **partial→fixed** | 见上表；32,768 B JSON → stdout 277 B | unified.py:676-679,780 |
 | D6 | P2 | fixed | 保持关闭 | `dataagent bogus` usage 文本含 `dataagent <layer> <command> [flags]`，无多余 `<layer>` | bin/dataagent:224 |

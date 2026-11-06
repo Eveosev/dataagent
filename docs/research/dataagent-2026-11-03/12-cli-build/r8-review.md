@@ -43,7 +43,7 @@ score: 93.1（A）
 
 | 条目 | 判定 | 说明 |
 |-|-|-|
-| `W1共享内核实现#99a1de` stdout 摘要 32 KiB | **done** | D5 边界见 §3；`fits()` 计入换行（[unified.py:676-679](/Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-runtime/src/dataagent_runtime/interfaces/unified.py#L676-L679)） |
+| `W1共享内核实现#99a1de` stdout 摘要 32 KiB | **done** | D5 边界见 §3；`fits()` 计入换行（[unified.py:676-679](../../../../packages/capabilities/dataagent-runtime/src/dataagent_runtime/interfaces/unified.py#L676-L679)） |
 | `W3分发器包实现#b9b374` mint.lock 优先 / 缺省最高版本 | **done** | r8 独立矩阵全部成立，见 §3 D16 |
 | 其余 15 条 | done | 复跑证据见 [r8-tester-runtime.score.json](r8-tester-runtime.score.json) checklist |
 | 10 条 na | na | 方案元数据/记录行（非需求） |
@@ -67,7 +67,7 @@ score: 93.1（A）
 | 重复条目 0.1.0 后 0.2.0 | 0.1.0 + 0.2.0 | 首个匹配生效 `@0.1.0` | 同序 |
 | gov 条目不可读 / gov pin 0.9.9 未装 | data 正常 | data 仍 exit 0 / exec 0.2.0 | **exit 3**（`LOCK unreadable` 或 `MISSING pinned`，策略探针 `governance layer unavailable`）；data pin 0.1.0 时 dispatch 仍 exit 0 exec 0.1.0 |
 
-复跑：[d16_probe.py](/Users/payne/.dsh/state/agent-teamwork/team/r8-cli-review-evidence/d16_probe.py)（`D16_matrix.json`，28 组合）、[d16_edges.py](/Users/payne/.dsh/state/agent-teamwork/team/r8-cli-review-evidence/d16_edges.py)（`D16_edges.json`，7 组合）、`ctrl-r7.*` / `ctrl-r8.*`。实现位置：[bin/dataagent:68-118](/Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-cli/bin/dataagent#L68-L118)（`pinned_version` 三态 + awk 子集解析）、[:114-118](/Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-cli/bin/dataagent#L114-L118)（`pin_status` 以 `||` 捕获，避免 `if` 条件吞掉 die）、[:120-140](/Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-cli/bin/dataagent#L120-L140)（`resolve_dir`）、[:193-240](/Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-cli/bin/dataagent#L193-L240)（`doctor` 与策略探针）。结论：**D16 关闭**。
+复跑：[d16_probe.py](/Users/payne/.dsh/state/agent-teamwork/team/r8-cli-review-evidence/d16_probe.py)（`D16_matrix.json`，28 组合）、[d16_edges.py](/Users/payne/.dsh/state/agent-teamwork/team/r8-cli-review-evidence/d16_edges.py)（`D16_edges.json`，7 组合）、`ctrl-r7.*` / `ctrl-r8.*`。实现位置：[bin/dataagent:68-118](../../../../packages/capabilities/dataagent-cli/bin/dataagent#L68-L118)（`pinned_version` 三态 + awk 子集解析）、[:114-118](../../../../packages/capabilities/dataagent-cli/bin/dataagent#L114-L118)（`pin_status` 以 `||` 捕获，避免 `if` 条件吞掉 die）、[:120-140](../../../../packages/capabilities/dataagent-cli/bin/dataagent#L120-L140)（`resolve_dir`）、[:193-240](../../../../packages/capabilities/dataagent-cli/bin/dataagent#L193-L240)（`doctor` 与策略探针）。结论：**D16 关闭**。
 
 ### D5（P1 → fixed）32 KiB 摘要上限（含换行）
 
@@ -87,8 +87,8 @@ score: 93.1（A）
 | ID | 级 | 状态 | 与上轮对比 | 复现（输入 → 期望 / 实际） | 位置 |
 |-|-|-|-|-|-|
 | D1 | P2 | fixed | 保持关闭 | quality_run 重复率 **2.13%**（≤3%） | sqlite.py 等 |
-| D2 | P2 | partial | 保持 | CC>10 LOC 占比 **28.32%**（阈 7.3%）；CC>25 0.0% | [enforcement.py:255](/Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-runtime/src/dataagent_runtime/enforcement.py#L255) |
-| D3 | P2 | open | 保持 | CLI `ctx.deadline=None`；显式 20 ms deadline 下 handler 仍跑 **125 ms** 并完成，`status=ok` | [invoke.py:353-360](/Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-runtime/src/dataagent_runtime/invoke.py#L353-L360) |
+| D2 | P2 | partial | 保持 | CC>10 LOC 占比 **28.32%**（阈 7.3%）；CC>25 0.0% | [enforcement.py:255](../../../../packages/capabilities/dataagent-runtime/src/dataagent_runtime/enforcement.py#L255) |
+| D3 | P2 | open | 保持 | CLI `ctx.deadline=None`；显式 20 ms deadline 下 handler 仍跑 **125 ms** 并完成，`status=ok` | [invoke.py:353-360](../../../../packages/capabilities/dataagent-runtime/src/dataagent_runtime/invoke.py#L353-L360) |
 | D4 | P2 | fixed | 保持关闭 | 裸 except 0 / 吞错 0（AST） | unified.py 等 |
 | D5 | P1 | fixed | 保持关闭 | 见上表；32,768 B JSON → stdout 285 B | unified.py:676-679,708-711 |
 | D6 | P2 | fixed | 保持关闭 | `dataagent bogus` usage 含 `dataagent gov policy apply <file>`，无多余 `<layer> gov`，exit 2 | bin/dataagent:288-311 |

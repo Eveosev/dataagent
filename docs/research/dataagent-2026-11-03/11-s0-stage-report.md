@@ -111,7 +111,7 @@ basis: 06-data-layer-build/r41-review.md；07-application-layer-build/r41-review
 ```bash
 mkdir -p ~/dataagent-e2e && cd ~/dataagent-e2e
 mint init --no-preset --offline -y        # 写 mint.toml、AGENTS.md、skills/，记录项目信任
-mint add path:/Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-s0 -y
+mint add path:../../../packages/capabilities/dataagent-s0 -y
 mint list                                  # 预期 4 个包：preset-s0、data-layer、application-layer、governance-layer
 mint inspect dataagent/data-layer --abilities
 ```

@@ -23,10 +23,10 @@ score: 79.0（C）
 
 | 级别 / ID | finding | 位置 |
 |-|-|-|
-| **P1 / D16 — pin 绕过及回归** | CRLF 多行 basic/literal name，Mint/tomllib 解析为 `dataagent/data-layer`；dispatcher / doctor exit 0、实际 exec 0.2.0。锁定未装 0.9.9 同样 bypass；r9 exit 3 → r10 exit 0。 | [字符串扫描:182–248](</Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-cli/bin/dataagent#L182-L248>)、[读入:544](</Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-cli/bin/dataagent#L544>)、[回退:580–593](</Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-cli/bin/dataagent#L580-L593>) |
-| **P1 / D16 — 合法锁误拒** | CRLF 多行 version 的前导 CR 未裁剪，已装 0.1.0 被报 missing；CRLF 续行不认 `\r\n`，报不可读。真实 Mint 两者 exit 0、pin 0.1.0。 | [续行:145–158](</Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-cli/bin/dataagent#L145-L158>)、[前导换行:185–186](</Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-cli/bin/dataagent#L185-L186>) |
-| **P1 / D16 — 注册表碰撞回归** | 合法键 `"a\u001cb"=1` 与 `a.b=2` 被 SUBSEP 连接映射为同一个路径，误报重复键 exit 3；Mint 接受，r9/r8 均 exit 0 执行正确 pin。 | [键路径注册表:283–298](</Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-cli/bin/dataagent#L283-L298>) |
-| **P1 / D16 — 不可解析锁未 fail-closed** | `resolver=INVALID`、`v=01`、非法日期、表头后同一行赋值、裸控制字符被 Mint/tomllib 拒绝；dispatcher / doctor 仍 exit 0 执行 0.1.0。 | [值扫描:347–377](</Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-cli/bin/dataagent#L347-L377>)、[表头:465–497](</Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-cli/bin/dataagent#L465-L497>)、[字符串:210–212](</Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-cli/bin/dataagent#L210-L212>) |
+| **P1 / D16 — pin 绕过及回归** | CRLF 多行 basic/literal name，Mint/tomllib 解析为 `dataagent/data-layer`；dispatcher / doctor exit 0、实际 exec 0.2.0。锁定未装 0.9.9 同样 bypass；r9 exit 3 → r10 exit 0。 | [字符串扫描:182–248](<../../../../packages/capabilities/dataagent-cli/bin/dataagent#L182-L248>)、[读入:544](<../../../../packages/capabilities/dataagent-cli/bin/dataagent#L544>)、[回退:580–593](<../../../../packages/capabilities/dataagent-cli/bin/dataagent#L580-L593>) |
+| **P1 / D16 — 合法锁误拒** | CRLF 多行 version 的前导 CR 未裁剪，已装 0.1.0 被报 missing；CRLF 续行不认 `\r\n`，报不可读。真实 Mint 两者 exit 0、pin 0.1.0。 | [续行:145–158](<../../../../packages/capabilities/dataagent-cli/bin/dataagent#L145-L158>)、[前导换行:185–186](<../../../../packages/capabilities/dataagent-cli/bin/dataagent#L185-L186>) |
+| **P1 / D16 — 注册表碰撞回归** | 合法键 `"a\u001cb"=1` 与 `a.b=2` 被 SUBSEP 连接映射为同一个路径，误报重复键 exit 3；Mint 接受，r9/r8 均 exit 0 执行正确 pin。 | [键路径注册表:283–298](<../../../../packages/capabilities/dataagent-cli/bin/dataagent#L283-L298>) |
+| **P1 / D16 — 不可解析锁未 fail-closed** | `resolver=INVALID`、`v=01`、非法日期、表头后同一行赋值、裸控制字符被 Mint/tomllib 拒绝；dispatcher / doctor 仍 exit 0 执行 0.1.0。 | [值扫描:347–377](<../../../../packages/capabilities/dataagent-cli/bin/dataagent#L347-L377>)、[表头:465–497](<../../../../packages/capabilities/dataagent-cli/bin/dataagent#L465-L497>)、[字符串:210–212](<../../../../packages/capabilities/dataagent-cli/bin/dataagent#L210-L212>) |
 
 证据：[真实解释器复现](</Users/payne/.dsh/state/agent-teamwork/team/r10-reviewer-evidence/real-extra-results.json>)、[r8/r9/r10 同输入控制](</Users/payne/.dsh/state/agent-teamwork/team/r10-reviewer-evidence/crlf-control-results.json>)、[独立补充矩阵](</Users/payne/.dsh/state/agent-teamwork/team/r10-reviewer-evidence/extra-lock-results.json>)。
 
@@ -92,8 +92,8 @@ cksum=""
 
 | ID | 级 | 状态 | 证据与位置 |
 |-|-|-|-|
-| D2 | P2 | partial | CC>10 28.32% > 7.3%；[enforcement.py:255](</Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-runtime/src/dataagent_runtime/enforcement.py#L255>) |
-| D3 | P2 | open | 无默认 deadline；显式 20 ms 后仍 **124 ms** 完成并返回 ok；[context:426–449](</Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-runtime/src/dataagent_runtime/interfaces/unified.py#L426-L449>)、[invoke:353–360](</Users/payne/Vibe/AgentOS/packages/capabilities/dataagent-runtime/src/dataagent_runtime/invoke.py#L353-L360>)；[行为探针](</Users/payne/.dsh/state/agent-teamwork/team/r10-reviewer-evidence/runtime-probes.log>) |
+| D2 | P2 | partial | CC>10 28.32% > 7.3%；[enforcement.py:255](<../../../../packages/capabilities/dataagent-runtime/src/dataagent_runtime/enforcement.py#L255>) |
+| D3 | P2 | open | 无默认 deadline；显式 20 ms 后仍 **124 ms** 完成并返回 ok；[context:426–449](<../../../../packages/capabilities/dataagent-runtime/src/dataagent_runtime/interfaces/unified.py#L426-L449>)、[invoke:353–360](<../../../../packages/capabilities/dataagent-runtime/src/dataagent_runtime/invoke.py#L353-L360>)；[行为探针](</Users/payne/.dsh/state/agent-teamwork/team/r10-reviewer-evidence/runtime-probes.log>) |
 | **D18 新增** | P2 | open | 原合法 fuzz 跳过161却描述1500合法锁；非法 fuzz仅实际测试64，统计式 `len(rows)+fails` 在全部通过时给0，不记录已测试数量。[合法计数:159–165](</Users/payne/.dsh/state/agent-teamwork/team/r10-fix-evidence/lock_fuzz.py#L159-L165>)、[非法生成筛选:22–28](</Users/payne/.dsh/state/agent-teamwork/team/r10-fix-evidence/lock_fuzz_invalid.py#L22-L28>)、[错误计数:49–51](</Users/payne/.dsh/state/agent-teamwork/team/r10-fix-evidence/lock_fuzz_invalid.py#L49-L51>) |
 
 全部原17缺陷保留；D1、D4–D15、D17 共14条保持关闭。D10/D12 标量与句柄原控制通过；D13 canonical/compact 缺 pin 保持拒3，新增 CRLF 同类回归记入既有 D16，未用重复 ID 掩盖；D14 缺 policy doctor3 / apply 后0；D15 proposal-only 与第二阶段通过；D7 full/summary 外发剥离；D8/D9 无 traceback；D11 tag ref/archive复核。
@@ -110,7 +110,7 @@ cksum=""
 
 ## 6. 开发者声明核对
 
-独立评分后才读取 [修复记录](</Users/payne/Vibe/AgentOS/docs/research/dataagent-2026-11-03/12-cli-build/r10-fixes.md>)。
+独立评分后才读取 [修复记录](<r10-fixes.md>)。
 
 | 声明 | 结论 | 实证 |
 |-|-|-|
