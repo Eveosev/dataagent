@@ -113,7 +113,7 @@ DataAgent 数据层 MCP 输入 schema 大，因为每个工具内联完整的 `$
 | `dataagent/{data,application,governance}-layer` | 保持现有 bundle；各层 CLI 增加 §5.3 的参数与输出约定 |
 | `dataagent/preset-s0` | 增加对 `dataagent/cli` 的依赖 |
 
-分发规则：`dataagent <layer> …` → 定位 `<项目>/.mint/packages/dataagent/<layer>-layer@*/`（按 `mint.lock` 取版本）→ exec `<包>/.venv/bin/python -m dataagent_<layer>.interfaces.cli …`。不在一个进程内加载三层：治理层锁 `duckdb<2`、`sqlglot<27`，应用层 bundle 锁 duckdb 2.0.0、sqlglot 30.29。
+分发规则：`dataagent <layer> …` → 定位 `<项目>/.mint/packages/dataagent/<layer>-layer@<ver>/`（唯一已装版本；Mint 在改锁的命令后删除与锁不一致的版本，`mint/bins/mint/src/install.rs:970-980`）→ exec `<包>/.venv/bin/python -m dataagent_<layer>.interfaces.cli …`。不在一个进程内加载三层：治理层锁 `duckdb<2`、`sqlglot<27`，应用层 bundle 锁 duckdb 2.0.0、sqlglot 30.29。
 
 ### 5.2 依赖环境
 

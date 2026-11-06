@@ -4,7 +4,7 @@
 
 - `bin/dataagent`：POSIX sh 分发器，无 Python 依赖、无 `.mcp.json`。
   - `dataagent <data|app|gov> ...` → 定位 `<项目>/.mint/packages/dataagent/<layer>-layer@<ver>/`
-    （`mint.lock` 版本优先，缺省取最高），exec `<包>/.venv/bin/python -m dataagent_<layer>.interfaces.cli`；
+    （每层只装一个版本，即 Mint 锁定的版本；不解析 `mint.lock`，多于一个版本时退 3 并提示 `mint sync`），exec `<包>/.venv/bin/python -m dataagent_<layer>.interfaces.cli`；
     exec 前按白名单清洗环境变量（§5.4，凭据不进入层进程）。
   - `dataagent link`：项目根生成自包含 `./dataagent`（供 `allow_prefixes` 与 Skill 引用）。
   - `dataagent setup`：对三层包 `uv sync --frozen`。
