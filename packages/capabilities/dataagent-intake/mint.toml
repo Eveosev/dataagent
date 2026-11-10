@@ -1,0 +1,15 @@
+[package]
+name = "dataagent/preset-intake"
+version = "0.1.0"
+kind = "preset"
+description = "本地多源接入：识别、探查、映射与纠正"
+license = "Apache-2.0"
+[requires]
+api = "^0.1"
+[provides]
+presets = ["dataagent-intake"]
+skills = ["dataagent-intake"]
+[dependencies]
+"dataagent/workbench" = {path="../workbench"}
+"dataagent/data-layer" = {path="../data-layer"}
+"dataagent/cli" = {path="../cli"}

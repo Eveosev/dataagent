@@ -1,0 +1,23 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+[project]
+name = "dataagent-workbench"
+version = "0.1.0"
+requires-python = ">=3.11,<3.14"
+dependencies = ["dataagent-contracts", "dataagent-runtime", "fastapi>=0.115,<1", "uvicorn>=0.30,<1"]
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "httpx>=0.27,<1",
+    "httpx2>=2.16.0",
+]
+[tool.uv.sources]
+dataagent-contracts = {path="../dataagent-contracts", editable=true}
+dataagent-runtime = {path="../dataagent-runtime", editable=true}
+[tool.hatch.build.targets.wheel]
+packages = ["src/dataagent_workbench"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+pythonpath = ["src"]

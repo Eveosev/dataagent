@@ -1,0 +1,22 @@
+[package]
+name = "dataagent/workbench"
+version = "0.1.0"
+kind = "bundle"
+description = "本地多源接入与 Ontology 映射工作台"
+license = "Apache-2.0"
+[requires]
+api = "^0.1"
+[provides]
+mcp_servers = ["dataagent-workbench"]
+[capabilities]
+exec = ["uv"]
+fs.read = ["*"]
+fs.write = [".dataagent/**"]
+net = ["http://127.0.0.1:*"]
+[capabilities.reason]
+exec = "启动锁定的工作台项目及隔离的数据层进程"
+"fs.read" = "读取用户选择的工作区来源；拒绝越界路径"
+"fs.write" = "保存任务、映射、证据与本地服务状态"
+net = "本地工作台服务"
+[metadata.runtime]
+requires = ["python>=3.11", "uv"]

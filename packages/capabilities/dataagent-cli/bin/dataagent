@@ -31,6 +31,8 @@ layer_pkg() {
         data) echo "data-layer" ;;
         app) echo "application-layer" ;;
         gov) echo "governance-layer" ;;
+        workbench) echo "workbench" ;;
+        ops) echo "operations" ;;
         *) return 1 ;;
     esac
 }
@@ -40,6 +42,8 @@ module_of() {
         data) echo "$MODULE_data" ;;
         app) echo "$MODULE_application" ;;
         gov) echo "$MODULE_governance" ;;
+        workbench) echo "dataagent_workbench" ;;
+        ops) echo "dataagent_operations" ;;
         *) return 1 ;;
     esac
 }
@@ -118,7 +122,7 @@ link_cmd() {
 
 setup_cmd() {
     command -v uv >/dev/null 2>&1 || die "uv not found on PATH; install it or run uv sync inside each layer package"
-    for layer in $LAYERS; do
+    for layer in $(active_layers); do
         pkg=$(layer_pkg "$layer")
         dir=$(resolve_dir "$pkg") || exit 3
         echo "setup: $dir"
@@ -133,7 +137,7 @@ setup_cmd() {
 # --authorize anyway.
 doctor_cmd() {
     status=0
-    for layer in $LAYERS; do
+    for layer in $(active_layers); do
         pkg=$(layer_pkg "$layer")
         # Same resolution as resolve_dir: exactly one installed version.
         dir=$(installed_dirs "$pkg")
@@ -192,6 +196,8 @@ except Exception:
             *) echo "policy:   check failed" >&2
                status=3 ;;
         esac
+    elif [ -n "$(installed_dirs workbench)" ] && [ -z "$(installed_dirs governance-layer)" ]; then
+        echo "policy:   local-owner workspace only (governance layer not installed)"
     else
         echo "policy:   governance layer unavailable" >&2
         status=3
@@ -210,7 +216,7 @@ usage: dataagent <layer> <command> [flags]
        dataagent setup
        dataagent doctor
 
-layers: data | app | gov
+layers: data | app | gov | workbench | ops
 
 layer commands (see `dataagent <layer> <op> --help` for the parameter table):
   dataagent <layer> list                          one line per operation
@@ -228,9 +234,19 @@ EOF
     exit 2
 }
 
+active_layers() {
+    if [ -n "$(installed_dirs workbench)" ]; then
+        for layer in data app gov workbench ops; do
+            [ -z "$(installed_dirs "$(layer_pkg "$layer")")" ] || printf '%s\n' "$layer"
+        done
+    else
+        printf '%s\n' $LAYERS
+    fi
+}
+
 [ $# -ge 1 ] || usage
 case $1 in
-    data|app|gov) dispatch "$@" ;;
+    data|app|gov|workbench|ops) dispatch "$@" ;;
     link) [ $# -eq 1 ] && link_cmd || usage ;;
     setup) [ $# -eq 1 ] && setup_cmd || usage ;;
     doctor) [ $# -eq 1 ] && doctor_cmd || usage ;;

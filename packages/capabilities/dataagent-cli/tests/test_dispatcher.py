@@ -74,6 +74,19 @@ class DispatcherTests(unittest.TestCase):
             cwd=str(cwd or self.project),
         )
 
+    def test_dispatch_workbench_and_ops(self):
+        for layer, pkg, module in [('workbench','workbench','dataagent_workbench'), ('ops','operations','dataagent_operations')]:
+            _make_layer(self.project, pkg, '0.1.0')
+            result = self._run(layer, 'status')
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual((self.out / 'args').read_text().splitlines()[1], module+'.interfaces.cli')
+
+    def test_workbench_only_doctor_does_not_require_uninstalled_layers(self):
+        _make_layer(self.project, 'workbench', '0.1.0')
+        result = self._run('doctor')
+        self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+        self.assertIn('local-owner', result.stdout)
+
     def test_dispatch_data_layer(self):
         _make_layer(self.project, "data-layer", "0.1.0")
         result = self._run("data", "list")
