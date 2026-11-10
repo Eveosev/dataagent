@@ -1,0 +1,74 @@
+{
+  "$comment": "generated from dataagent_contracts.intake:WorkSpec; do not edit",
+  "$id": "dataagent-contracts/0.1/intake/WorkSpec",
+  "additionalProperties": false,
+  "properties": {
+    "acceptance_criteria": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Acceptance Criteria",
+      "type": "array"
+    },
+    "authorization_ref": {
+      "minLength": 1,
+      "title": "Authorization Ref",
+      "type": "string"
+    },
+    "constraints": {
+      "additionalProperties": true,
+      "title": "Constraints",
+      "type": "object"
+    },
+    "domain_config_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Domain Config Ref"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "goal": {
+      "minLength": 1,
+      "title": "Goal",
+      "type": "string"
+    },
+    "id": {
+      "minLength": 1,
+      "title": "Id",
+      "type": "string"
+    },
+    "revision": {
+      "default": "1",
+      "title": "Revision",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "goal",
+    "acceptance_criteria",
+    "authorization_ref"
+  ],
+  "title": "WorkSpec",
+  "type": "object"
+}

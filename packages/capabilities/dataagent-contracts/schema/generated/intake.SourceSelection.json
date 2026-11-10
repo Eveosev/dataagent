@@ -1,0 +1,71 @@
+{
+  "$comment": "generated from dataagent_contracts.intake:SourceSelection; do not edit",
+  "$id": "dataagent-contracts/0.1/intake/SourceSelection",
+  "additionalProperties": false,
+  "properties": {
+    "credential_binding_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Credential Binding Ref"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "kind": {
+      "enum": [
+        "file",
+        "sqlite",
+        "postgres",
+        "rest",
+        "web_ui"
+      ],
+      "title": "Kind",
+      "type": "string"
+    },
+    "locator_ref": {
+      "minLength": 1,
+      "title": "Locator Ref",
+      "type": "string"
+    },
+    "options": {
+      "additionalProperties": true,
+      "title": "Options",
+      "type": "object"
+    },
+    "requested_scope": {
+      "additionalProperties": true,
+      "title": "Requested Scope",
+      "type": "object"
+    },
+    "source_id": {
+      "minLength": 1,
+      "title": "Source Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "source_id",
+    "kind",
+    "locator_ref"
+  ],
+  "title": "SourceSelection",
+  "type": "object"
+}

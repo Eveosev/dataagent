@@ -1,0 +1,40 @@
+{
+  "$comment": "generated from dataagent_contracts.intake:JobHandle; do not edit",
+  "$id": "dataagent-contracts/0.1/intake/JobHandle",
+  "additionalProperties": false,
+  "properties": {
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "job_ref": {
+      "title": "Job Ref",
+      "type": "string"
+    },
+    "revision": {
+      "title": "Revision",
+      "type": "string"
+    },
+    "session_id": {
+      "title": "Session Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "session_id",
+    "job_ref",
+    "revision"
+  ],
+  "title": "JobHandle",
+  "type": "object"
+}

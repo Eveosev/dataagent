@@ -27,6 +27,7 @@ __all__ = [
     "JsonPointerSelector",
     "ExcelCellSelector",
     "RecordKeySelector",
+    "GuiControlSelector",
 ]
 
 
@@ -170,6 +171,20 @@ class RecordKeySelector(_SelectorBase):
     field: str = Field(min_length=1)
 
 
+class GuiControlSelector(_SelectorBase):
+    kind: Literal['gui_control'] = 'gui_control'
+    observation_ref: str = Field(min_length=1)
+    screenshot_ref: str = Field(min_length=1)
+    control: str = Field(min_length=1)
+    viewport: tuple[int, int]
+
+    @model_validator(mode='after')
+    def _positive_viewport(self):
+        if any(v <= 0 for v in self.viewport):
+            raise ValueError('viewport dimensions must be positive')
+        return self
+
+
 Selector = Annotated[
     Union[
         PdfBBoxSelector,
@@ -178,6 +193,7 @@ Selector = Annotated[
         JsonPointerSelector,
         ExcelCellSelector,
         RecordKeySelector,
+        GuiControlSelector,
     ],
     Field(discriminator="kind"),
 ]

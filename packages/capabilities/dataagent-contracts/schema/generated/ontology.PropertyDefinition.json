@@ -1,0 +1,49 @@
+{
+  "$comment": "generated from dataagent_contracts.ontology:PropertyDefinition; do not edit",
+  "$id": "dataagent-contracts/0.1/ontology/PropertyDefinition",
+  "additionalProperties": false,
+  "properties": {
+    "description": {
+      "default": "",
+      "title": "Description",
+      "type": "string"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "required": {
+      "default": false,
+      "title": "Required",
+      "type": "boolean"
+    },
+    "value_type": {
+      "enum": [
+        "string",
+        "decimal",
+        "integer",
+        "boolean",
+        "date",
+        "datetime",
+        "reference"
+      ],
+      "title": "Value Type",
+      "type": "string"
+    }
+  },
+  "required": [
+    "value_type"
+  ],
+  "title": "PropertyDefinition",
+  "type": "object"
+}

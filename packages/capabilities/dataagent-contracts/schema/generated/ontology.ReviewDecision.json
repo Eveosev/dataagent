@@ -1,0 +1,54 @@
+{
+  "$comment": "generated from dataagent_contracts.ontology:ReviewDecision; do not edit",
+  "$id": "dataagent-contracts/0.1/ontology/ReviewDecision",
+  "additionalProperties": false,
+  "properties": {
+    "changes": {
+      "additionalProperties": true,
+      "title": "Changes",
+      "type": "object"
+    },
+    "decision": {
+      "default": "save",
+      "enum": [
+        "save",
+        "reject"
+      ],
+      "title": "Decision",
+      "type": "string"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "preview_ref": {
+      "title": "Preview Ref",
+      "type": "string"
+    },
+    "target_scope": {
+      "enum": [
+        "instance",
+        "mapping",
+        "ontology"
+      ],
+      "title": "Target Scope",
+      "type": "string"
+    }
+  },
+  "required": [
+    "preview_ref",
+    "target_scope"
+  ],
+  "title": "ReviewDecision",
+  "type": "object"
+}

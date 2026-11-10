@@ -1,0 +1,138 @@
+{
+  "$comment": "generated from dataagent_contracts.ontology:MappingSpec; do not edit",
+  "$defs": {
+    "FieldBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "options": {
+          "additionalProperties": true,
+          "title": "Options",
+          "type": "object"
+        },
+        "source_field": {
+          "title": "Source Field",
+          "type": "string"
+        },
+        "transform": {
+          "default": "identity",
+          "enum": [
+            "identity",
+            "decimal",
+            "minor_to_major",
+            "integer",
+            "date",
+            "datetime",
+            "enum",
+            "combine",
+            "choose"
+          ],
+          "title": "Transform",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_field"
+      ],
+      "title": "FieldBinding",
+      "type": "object"
+    }
+  },
+  "$id": "dataagent-contracts/0.1/ontology/MappingSpec",
+  "additionalProperties": false,
+  "properties": {
+    "bindings": {
+      "additionalProperties": {
+        "$ref": "#/$defs/FieldBinding"
+      },
+      "title": "Bindings",
+      "type": "object"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "identity_strategy": {
+      "default": "declared_keys",
+      "title": "Identity Strategy",
+      "type": "string"
+    },
+    "ontology_revision": {
+      "title": "Ontology Revision",
+      "type": "string"
+    },
+    "revision": {
+      "title": "Revision",
+      "type": "string"
+    },
+    "scope": {
+      "default": "workspace",
+      "title": "Scope",
+      "type": "string"
+    },
+    "source_fingerprint": {
+      "title": "Source Fingerprint",
+      "type": "string"
+    },
+    "unmapped": {
+      "additionalProperties": {
+        "enum": [
+          "extension",
+          "unresolved",
+          "exclude"
+        ],
+        "type": "string"
+      },
+      "title": "Unmapped",
+      "type": "object"
+    },
+    "validation_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Validation Ref"
+    }
+  },
+  "required": [
+    "id",
+    "revision",
+    "ontology_revision",
+    "source_fingerprint",
+    "bindings"
+  ],
+  "title": "MappingSpec",
+  "type": "object"
+}

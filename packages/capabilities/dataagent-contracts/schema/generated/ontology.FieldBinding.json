@@ -1,0 +1,51 @@
+{
+  "$comment": "generated from dataagent_contracts.ontology:FieldBinding; do not edit",
+  "$id": "dataagent-contracts/0.1/ontology/FieldBinding",
+  "additionalProperties": false,
+  "properties": {
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "options": {
+      "additionalProperties": true,
+      "title": "Options",
+      "type": "object"
+    },
+    "source_field": {
+      "title": "Source Field",
+      "type": "string"
+    },
+    "transform": {
+      "default": "identity",
+      "enum": [
+        "identity",
+        "decimal",
+        "minor_to_major",
+        "integer",
+        "date",
+        "datetime",
+        "enum",
+        "combine",
+        "choose"
+      ],
+      "title": "Transform",
+      "type": "string"
+    }
+  },
+  "required": [
+    "source_field"
+  ],
+  "title": "FieldBinding",
+  "type": "object"
+}

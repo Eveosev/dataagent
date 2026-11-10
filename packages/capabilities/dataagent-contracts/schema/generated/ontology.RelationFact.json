@@ -1,0 +1,99 @@
+{
+  "$comment": "generated from dataagent_contracts.ontology:RelationFact; do not edit",
+  "$defs": {
+    "RoleBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "role": {
+          "title": "Role",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value"
+        },
+        "value_type": {
+          "default": "string",
+          "enum": [
+            "string",
+            "decimal",
+            "integer",
+            "boolean",
+            "date",
+            "datetime",
+            "reference"
+          ],
+          "title": "Value Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "role",
+        "value"
+      ],
+      "title": "RoleBinding",
+      "type": "object"
+    }
+  },
+  "$id": "dataagent-contracts/0.1/ontology/RelationFact",
+  "additionalProperties": false,
+  "properties": {
+    "assertion_refs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Assertion Refs",
+      "type": "array"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "relation": {
+      "title": "Relation",
+      "type": "string"
+    },
+    "role_bindings": {
+      "items": {
+        "$ref": "#/$defs/RoleBinding"
+      },
+      "title": "Role Bindings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "id",
+    "relation",
+    "role_bindings",
+    "assertion_refs"
+  ],
+  "title": "RelationFact",
+  "type": "object"
+}

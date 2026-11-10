@@ -1,0 +1,47 @@
+{
+  "$comment": "generated from dataagent_contracts.intake:CoverageGap; do not edit",
+  "$id": "dataagent-contracts/0.1/intake/CoverageGap",
+  "additionalProperties": false,
+  "properties": {
+    "code": {
+      "title": "Code",
+      "type": "string"
+    },
+    "detail": {
+      "default": "",
+      "title": "Detail",
+      "type": "string"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "partition": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "title": "Partition"
+    }
+  },
+  "required": [
+    "partition",
+    "code"
+  ],
+  "title": "CoverageGap",
+  "type": "object"
+}

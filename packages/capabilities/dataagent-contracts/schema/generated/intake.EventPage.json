@@ -1,0 +1,44 @@
+{
+  "$comment": "generated from dataagent_contracts.intake:EventPage; do not edit",
+  "$id": "dataagent-contracts/0.1/intake/EventPage",
+  "additionalProperties": false,
+  "properties": {
+    "cursor": {
+      "title": "Cursor",
+      "type": "integer"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "has_more": {
+      "title": "Has More",
+      "type": "boolean"
+    },
+    "items": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Items",
+      "type": "array"
+    }
+  },
+  "required": [
+    "items",
+    "cursor",
+    "has_more"
+  ],
+  "title": "EventPage",
+  "type": "object"
+}

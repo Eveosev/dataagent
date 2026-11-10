@@ -1,0 +1,11 @@
+{
+  "source_id": "invoice-pdf",
+  "source_revision": "sha256:example-content",
+  "kind": "pdf",
+  "fields": ["invoice_number", "amount"],
+  "records": [{"invoice_number": "INV-001", "amount": "1260.00"}],
+  "total_partitions": 3,
+  "completed_partitions": [1, 3],
+  "gaps": [{"partition": 2, "code": "ocr_engine_missing", "detail": "扫描页待识别"}],
+  "anchors": {"0.amount": [{"source_ref": "invoice-pdf", "source_revision": "sha256:example-content", "selector": {"kind": "pdf_text_span", "page": 1, "char_start": 20, "char_end": 27}}]}
+}

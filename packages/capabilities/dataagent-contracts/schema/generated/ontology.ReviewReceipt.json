@@ -1,0 +1,42 @@
+{
+  "$comment": "generated from dataagent_contracts.ontology:ReviewReceipt; do not edit",
+  "$id": "dataagent-contracts/0.1/ontology/ReviewReceipt",
+  "additionalProperties": false,
+  "properties": {
+    "decision_ref": {
+      "title": "Decision Ref",
+      "type": "string"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "revalidate": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Revalidate",
+      "type": "array"
+    },
+    "revision": {
+      "title": "Revision",
+      "type": "string"
+    }
+  },
+  "required": [
+    "decision_ref",
+    "revision"
+  ],
+  "title": "ReviewReceipt",
+  "type": "object"
+}

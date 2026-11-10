@@ -1,0 +1,45 @@
+{
+  "$comment": "generated from dataagent_contracts.ontology:DatasetRelease; do not edit",
+  "$id": "dataagent-contracts/0.1/ontology/DatasetRelease",
+  "additionalProperties": false,
+  "properties": {
+    "digest": {
+      "title": "Digest",
+      "type": "string"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "preview_ref": {
+      "title": "Preview Ref",
+      "type": "string"
+    },
+    "revision": {
+      "title": "Revision",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "revision",
+    "preview_ref",
+    "digest"
+  ],
+  "title": "DatasetRelease",
+  "type": "object"
+}

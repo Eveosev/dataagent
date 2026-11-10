@@ -1,0 +1,116 @@
+{
+  "$comment": "generated from dataagent_contracts.ontology:OntologyRevision; do not edit",
+  "$defs": {
+    "PropertyDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "default": "",
+          "title": "Description",
+          "type": "string"
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "required": {
+          "default": false,
+          "title": "Required",
+          "type": "boolean"
+        },
+        "value_type": {
+          "enum": [
+            "string",
+            "decimal",
+            "integer",
+            "boolean",
+            "date",
+            "datetime",
+            "reference"
+          ],
+          "title": "Value Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "value_type"
+      ],
+      "title": "PropertyDefinition",
+      "type": "object"
+    }
+  },
+  "$id": "dataagent-contracts/0.1/ontology/OntologyRevision",
+  "additionalProperties": false,
+  "properties": {
+    "entity_type": {
+      "title": "Entity Type",
+      "type": "string"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "identity_fields": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Identity Fields",
+      "type": "array"
+    },
+    "properties": {
+      "additionalProperties": {
+        "$ref": "#/$defs/PropertyDefinition"
+      },
+      "title": "Properties",
+      "type": "object"
+    },
+    "relations": {
+      "additionalProperties": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "title": "Relations",
+      "type": "object"
+    },
+    "revision": {
+      "title": "Revision",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "revision",
+    "entity_type",
+    "properties",
+    "identity_fields"
+  ],
+  "title": "OntologyRevision",
+  "type": "object"
+}

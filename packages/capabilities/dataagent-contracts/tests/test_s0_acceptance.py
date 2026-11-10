@@ -192,7 +192,8 @@ def test_item2_schema_and_examples_validate():
         schema = json.loads((SCHEMA / f"{schema_name}.json").read_text(encoding="utf-8"))
         instance = json.loads((EXAMPLES / filename).read_text(encoding="utf-8"))
         jsonschema.Draft202012Validator(schema).validate(instance)
-    assert len(list(SCHEMA.glob("*.json"))) == 69  # 68 schemas + index.json
+    # This gate counts S0 core schemas; feature namespaces have their own schemas.
+    assert len([p for p in SCHEMA.glob("*.json") if '.' not in p.stem]) == 69
 
 
 def test_item3_envelope_constraints():
