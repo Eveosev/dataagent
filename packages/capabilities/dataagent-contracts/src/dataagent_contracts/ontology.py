@@ -46,6 +46,7 @@ class MappingSpec(ExtModel):
     ontology_revision: str
     source_fingerprint: str
     bindings: dict[str, FieldBinding]
+    relation_bindings: dict[str, dict[str, FieldBinding]] = Field(default_factory=dict)
     unmapped: dict[str, Literal['extension', 'unresolved', 'exclude']] = Field(default_factory=dict)
     scope: str = 'workspace'
     identity_strategy: str = 'declared_keys'

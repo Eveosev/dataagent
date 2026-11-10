@@ -1,0 +1,11 @@
+{
+  "id":"procurement","revision":"1","entity_type":"PurchaseDocument",
+  "properties":{
+    "number":{"value_type":"string","required":true,"description":"在工作区采购资料范围内唯一的单据编号"},
+    "amount":{"value_type":"decimal","required":true,"description":"主要货币单位金额，转换必须明确"},
+    "currency":{"value_type":"string","required":true},
+    "issuer":{"value_type":"string"}
+  },
+  "identity_fields":["number"],
+  "relations":{"price":["document","amount","currency"]}
+}

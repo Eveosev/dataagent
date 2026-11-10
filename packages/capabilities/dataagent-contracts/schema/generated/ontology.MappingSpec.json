@@ -88,6 +88,16 @@
       "title": "Ontology Revision",
       "type": "string"
     },
+    "relation_bindings": {
+      "additionalProperties": {
+        "additionalProperties": {
+          "$ref": "#/$defs/FieldBinding"
+        },
+        "type": "object"
+      },
+      "title": "Relation Bindings",
+      "type": "object"
+    },
     "revision": {
       "title": "Revision",
       "type": "string"

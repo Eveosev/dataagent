@@ -1,0 +1,147 @@
+"""Restricted deterministic conversions and evidence-preserving materialization."""
+from dataclasses import dataclass
+from datetime import date,datetime
+from decimal import Decimal,localcontext
+from zoneinfo import ZoneInfo
+from dataagent_contracts.ontology import Assertion,EntityInstance,RelationFact,RoleBinding,FieldBinding
+from .identity import canonical,digest,entity_key
+from .facts import relation_key
+
+
+@dataclass
+class Materialized:
+    instances: list[EntityInstance]
+    assertions: list[Assertion]
+    facts: list[RelationFact]
+    issues: list[dict]
+
+
+def convert(binding,record):
+    if not isinstance(binding,FieldBinding):binding=FieldBinding.model_validate(binding)
+    value=record.get(binding.source_field)
+    options=binding.options
+    if binding.transform=='combine':
+        fields=options.get('fields',[binding.source_field])
+        if any(record.get(k) is None for k in fields):return None
+        return str(options.get('separator',' ')).join(str(record[k]) for k in fields)
+    if binding.transform=='choose':
+        allowed={'when_field','equals','then_field','else_field'}
+        if set(options)!=allowed:raise ValueError('choose needs explicit equality and two source fields')
+        field=options['then_field'] if record.get(options['when_field'])==options['equals'] else options['else_field']
+        return record.get(field)
+    if value is None:return None
+    if binding.transform in {'decimal','minor_to_major','integer'}:
+        raw=str(value)
+        if options.get('strip_commas'):raw=raw.replace(',','')
+        with localcontext() as ctx:
+            ctx.prec=max(50,len(raw)+10)
+            number=Decimal(raw)
+            if not number.is_finite():raise ValueError('nonfinite number')
+            if binding.transform=='minor_to_major':return number/Decimal(100)
+            if binding.transform=='integer':
+                if number!=number.to_integral_value():raise ValueError('non-integral value')
+                return int(number)
+            return number
+    if binding.transform=='date':
+        return (datetime.strptime(str(value),options['format']).date() if 'format' in options else date.fromisoformat(str(value))).isoformat()
+    if binding.transform=='datetime':
+        parsed=datetime.strptime(str(value),options['format']) if 'format' in options else datetime.fromisoformat(str(value))
+        if parsed.tzinfo is None:
+            if 'timezone' not in options:raise ValueError('timezone required for naive datetime')
+            parsed=parsed.replace(tzinfo=ZoneInfo(options['timezone']))
+        return parsed.isoformat()
+    if binding.transform=='enum':
+        values=options.get('values',{})
+        if str(value) not in values:raise ValueError('unknown enum value')
+        return values[str(value)]
+    if isinstance(value,(dict,list)):raise ValueError('nested value needs an explicit scalar mapping')
+    return value
+
+
+def _typed(value,kind):
+    if value is None:return None
+    if kind in {'string','reference'}:return str(value)
+    if kind=='decimal':return convert(FieldBinding(source_field='x',transform='decimal'),{'x':value})
+    if kind=='integer':return convert(FieldBinding(source_field='x',transform='integer'),{'x':value})
+    if kind=='boolean':
+        if isinstance(value,bool):return value
+        if value in ('true','false'):return value=='true'
+        raise ValueError('boolean must be true or false')
+    if kind in {'date','datetime'}:return convert(FieldBinding(source_field='x',transform=kind),{'x':value})
+    raise ValueError('unsupported target type')
+
+
+def materialize(ontology,mapping,observations,*,scope):
+    if mapping.ontology_revision!=f'{ontology.id}@{ontology.revision}':raise ValueError('ontology revision mismatch')
+    if mapping.scope not in {'workspace',scope}:raise ValueError('mapping scope mismatch')
+    unknown=set(mapping.bindings)-ontology.properties.keys()
+    if unknown:raise ValueError('unknown ontology properties: '+','.join(sorted(unknown)))
+    if set(mapping.relation_bindings)-ontology.relations.keys():raise ValueError('unknown ontology relation')
+    required={k for k,v in ontology.properties.items() if v.required}
+    issues=[{'code':'ontology.required_binding_missing','target':k} for k in sorted(required-mapping.bindings.keys())]
+    instances,assertions,facts={},[],{}
+    for source in observations:
+        if mapping.source_fingerprint!=source.metadata.get('structure_fingerprint'):
+            raise ValueError('source structure mismatch')
+        if source.coverage!='full':issues.append({'code':'ontology.incomplete_source','source_id':source.source_id,'coverage':source.coverage})
+        for rownum,row in enumerate(source.records):
+            values,field_anchors={},{}
+            for target,binding in mapping.bindings.items():
+                try:
+                    value=_typed(convert(binding,row),ontology.properties[target].value_type)
+                    if value is not None:values[target]=value
+                    fields=binding.options.get('fields',[binding.source_field])
+                    field_anchors[target]=[a for f in fields for a in source.anchors.get(f'{rownum}.{f}',[])]
+                    if value is not None and not field_anchors[target]:
+                        issues.append({'code':'ontology.evidence_missing','target':target,'row':rownum})
+                except (ValueError,ArithmeticError,KeyError) as exc:
+                    issues.append({'code':'ontology.conversion_failed','target':target,'row':rownum,'detail':str(exc)})
+            missing=sorted(required-values.keys())
+            for target in missing:issues.append({'code':'ontology.required_value_missing','target':target,'row':rownum})
+            keys=[(k,values.get(k)) for k in ontology.identity_fields]
+            unresolved_keys=any(v is None or v=='' for _,v in keys)
+            eid=('candidate:'+digest([scope,source.source_id,source.source_revision,rownum]) if unresolved_keys
+                else entity_key(scope,ontology.entity_type,mapping.identity_strategy,keys))
+            if unresolved_keys:issues.append({'code':'ontology.identity_unresolved','row':rownum})
+            extras={k:row.get(k) for k,disposition in mapping.unmapped.items() if disposition=='extension' and k in row}
+            instance=instances.get(eid)
+            if instance is None:
+                instance=EntityInstance(id=eid,scope=scope,entity_type=ontology.entity_type,values=values.copy(),source_anchors=field_anchors,
+                    unresolved=missing,extensions={'source.unmapped':extras} if extras else None)
+                instances[eid]=instance
+            else:
+                for k,v in values.items():
+                    if k in instance.values and instance.values[k]!=v:
+                        instance.values[k]=None
+                        if k not in instance.unresolved:instance.unresolved.append(k)
+                        issues.append({'code':'ontology.conflicting_values','entity_id':eid,'target':k})
+                    elif k not in instance.values:instance.values[k]=v
+                    instance.source_anchors.setdefault(k,[]).extend(field_anchors.get(k,[]))
+            def assertion(relation,roles,evidence):
+                if not evidence:return
+                fid=relation_key(scope,relation,roles)
+                aid='assertion:'+digest([fid,source.source_id,source.source_revision,rownum,f'{mapping.id}@{mapping.revision}'])
+                a=Assertion(id=aid,scope=scope,ontology_revision=mapping.ontology_revision,relation=relation,
+                    role_bindings=roles,source_anchors=evidence,mapping_revision=f'{mapping.id}@{mapping.revision}',
+                    extractor_version=source.metadata.get('extractor_version','unknown'))
+                assertions.append(a)
+                if fid not in facts:facts[fid]=RelationFact(id=fid,relation=relation,role_bindings=roles,assertion_refs=[])
+                if aid not in facts[fid].assertion_refs:facts[fid].assertion_refs.append(aid)
+            for target,value in values.items():
+                assertion(target,[RoleBinding(role='subject',value=eid,value_type='reference'),
+                    RoleBinding(role='value',value=value,value_type=ontology.properties[target].value_type)],field_anchors[target])
+            for relation,bindings in mapping.relation_bindings.items():
+                order=ontology.relations[relation]
+                if set(bindings)!=set(order):raise ValueError('relation role mismatch')
+                roles,evidence=[],[]
+                try:
+                    for role in order:
+                        binding=bindings[role]
+                        value=eid if binding.source_field=='$entity' else convert(binding,row)
+                        if value is None:raise ValueError('relation role has no value')
+                        kind='reference' if binding.source_field=='$entity' else ('decimal' if isinstance(value,Decimal) else 'string')
+                        roles.append(RoleBinding(role=role,value=value,value_type=kind))
+                        evidence.extend(source.anchors.get(f'{rownum}.{binding.source_field}',[]))
+                    assertion(relation,roles,evidence)
+                except ValueError as exc:issues.append({'code':'ontology.relation_unresolved','target':relation,'row':rownum,'detail':str(exc)})
+    return Materialized(list(instances.values()),assertions,list(facts.values()),issues)
