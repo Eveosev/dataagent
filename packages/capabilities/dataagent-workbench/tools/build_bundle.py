@@ -44,6 +44,11 @@ packages = ['''+', '.join(names)+']\n')
     spec=importlib.util.spec_from_file_location('data_bundle',data_script)
     mod=importlib.util.module_from_spec(spec);spec.loader.exec_module(mod)
     mod.stage(out/'data-layer')
+    ocr=CAP/'dataagent-ocr/src/dataagent_ocr'
+    if ocr.exists():
+        shutil.copytree(ocr,out/'data-layer/src/dataagent_ocr',ignore=IGNORE)
+        project=out/'data-layer/pyproject.toml'
+        project.write_text(project.read_text().replace('"src/dataagent_data",','"src/dataagent_data", "src/dataagent_ocr",'))
     shutil.copytree(CAP/'dataagent-cli',out/'cli',ignore=IGNORE)
     shutil.copytree(CAP/'dataagent-intake',out/'preset-intake',ignore=IGNORE)
     manifest(out)
