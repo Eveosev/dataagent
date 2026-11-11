@@ -430,4 +430,5 @@ M4 的首批边界为 Web 业务系统；原生桌面应用后端沿同一 Compu
 | --- | --- |
 | [计划自检](16-local-ingestion-workflow-build/plan-review.md) | 设计覆盖、接口与依赖修正、验证边界 |
 | [测试数据与验收场景清单](16-local-ingestion-workflow-build/test-inventory.md) | 样例、已验证证据、已发现问题和待验收矩阵 |
+| [Mint 本机离线安装与使用](16-local-ingestion-workflow-build/mint-offline-quickstart.md) | 离线装包、首个工作台样例、TUI 与扩展验收 |
 | [离线安装与链路验收](16-local-ingestion-workflow-build/implementation-2026-11-11.md) | 可复跑命令、真实运行引用、评审修复与待验收场景 |
