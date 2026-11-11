@@ -34,8 +34,9 @@ def ensure_service(wb):
     raise ValueError('workbench service did not become ready; inspect .dataagent/runtime/workbench.log')
 
 
-def open_view(wb, session_id):
+def open_view(wb, session_id=None, *, run_id=None):
     data = ensure_service(wb)
-    url = data['url']+'/#session='+session_id
-    webbrowser.open(url+'&token='+wb.token)
-    return {'session_id':session_id,'url':url,'opened':True}
+    request=urllib.request.Request(data['url']+'/local/open',
+        data=json.dumps({'session_id':session_id,'run_id':run_id}).encode(),headers={'Content-Type':'application/json'},method='POST')
+    with urllib.request.urlopen(request,timeout=10) as response:
+        return json.load(response)

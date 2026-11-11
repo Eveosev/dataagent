@@ -1,0 +1,47 @@
+{
+  "$comment": "generated from dataagent_contracts.workflow:ApiArguments; do not edit",
+  "$defs": {
+    "JsonValue": {}
+  },
+  "$id": "dataagent-contracts/0.1/workflow/ApiArguments",
+  "additionalProperties": false,
+  "properties": {
+    "body": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Body",
+      "type": "object"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "path": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Path",
+      "type": "object"
+    },
+    "query": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Query",
+      "type": "object"
+    }
+  },
+  "title": "ApiArguments",
+  "type": "object"
+}

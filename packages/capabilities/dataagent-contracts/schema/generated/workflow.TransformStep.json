@@ -1,0 +1,61 @@
+{
+  "$comment": "generated from dataagent_contracts.workflow:TransformStep; do not edit",
+  "$defs": {
+    "JsonValue": {}
+  },
+  "$id": "dataagent-contracts/0.1/workflow/TransformStep",
+  "additionalProperties": false,
+  "properties": {
+    "assign": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Assign",
+      "type": "object"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "id": {
+      "pattern": "^[A-Za-z0-9_-]{1,80}$",
+      "title": "Id",
+      "type": "string"
+    },
+    "kind": {
+      "const": "transform",
+      "title": "Kind",
+      "type": "string"
+    },
+    "next": {
+      "anyOf": [
+        {
+          "pattern": "^[A-Za-z0-9_-]{1,80}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Next"
+    }
+  },
+  "required": [
+    "id",
+    "kind",
+    "assign"
+  ],
+  "title": "TransformStep",
+  "type": "object"
+}

@@ -1,0 +1,235 @@
+{
+  "$comment": "generated from dataagent_contracts.workflow:WorkflowRun; do not edit",
+  "$defs": {
+    "JsonValue": {},
+    "WorkSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "acceptance_criteria": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Acceptance Criteria",
+          "type": "array"
+        },
+        "authorization_ref": {
+          "minLength": 1,
+          "title": "Authorization Ref",
+          "type": "string"
+        },
+        "constraints": {
+          "additionalProperties": true,
+          "title": "Constraints",
+          "type": "object"
+        },
+        "domain_config_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Domain Config Ref"
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "goal": {
+          "minLength": 1,
+          "title": "Goal",
+          "type": "string"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "revision": {
+          "default": "1",
+          "title": "Revision",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "goal",
+        "acceptance_criteria",
+        "authorization_ref"
+      ],
+      "title": "WorkSpec",
+      "type": "object"
+    }
+  },
+  "$id": "dataagent-contracts/0.1/workflow/WorkflowRun",
+  "additionalProperties": false,
+  "properties": {
+    "business_key": {
+      "title": "Business Key",
+      "type": "string"
+    },
+    "completed": {
+      "items": {
+        "pattern": "^[A-Za-z0-9_-]{1,80}$",
+        "type": "string"
+      },
+      "title": "Completed",
+      "type": "array"
+    },
+    "current_step": {
+      "anyOf": [
+        {
+          "pattern": "^[A-Za-z0-9_-]{1,80}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Current Step"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "inputs": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Inputs",
+      "type": "object"
+    },
+    "job_ref": {
+      "title": "Job Ref",
+      "type": "string"
+    },
+    "message": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Message"
+    },
+    "outputs": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Outputs",
+      "type": "object"
+    },
+    "receipt_refs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Receipt Refs",
+      "type": "array"
+    },
+    "revision": {
+      "default": 1,
+      "title": "Revision",
+      "type": "integer"
+    },
+    "scope_ref": {
+      "title": "Scope Ref",
+      "type": "string"
+    },
+    "snapshot_id": {
+      "title": "Snapshot Id",
+      "type": "string"
+    },
+    "state": {
+      "default": "active",
+      "enum": [
+        "active",
+        "waiting",
+        "needs_input",
+        "paused",
+        "cancelled",
+        "revoked",
+        "unknown",
+        "failed",
+        "completed",
+        "replan_required"
+      ],
+      "title": "State",
+      "type": "string"
+    },
+    "unknown_action_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Unknown Action Ref"
+    },
+    "wait_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Wait Ref"
+    },
+    "work_spec": {
+      "$ref": "#/$defs/WorkSpec"
+    },
+    "workflow_revision": {
+      "title": "Workflow Revision",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "workflow_revision",
+    "work_spec",
+    "snapshot_id",
+    "scope_ref",
+    "business_key",
+    "inputs",
+    "current_step",
+    "job_ref"
+  ],
+  "title": "WorkflowRun",
+  "type": "object"
+}

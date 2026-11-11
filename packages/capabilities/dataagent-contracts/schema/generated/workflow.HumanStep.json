@@ -1,0 +1,67 @@
+{
+  "$comment": "generated from dataagent_contracts.workflow:HumanStep; do not edit",
+  "$defs": {
+    "JsonValue": {}
+  },
+  "$id": "dataagent-contracts/0.1/workflow/HumanStep",
+  "additionalProperties": false,
+  "properties": {
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "id": {
+      "pattern": "^[A-Za-z0-9_-]{1,80}$",
+      "title": "Id",
+      "type": "string"
+    },
+    "input_schema": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Input Schema",
+      "type": "object"
+    },
+    "kind": {
+      "const": "human",
+      "title": "Kind",
+      "type": "string"
+    },
+    "next": {
+      "anyOf": [
+        {
+          "pattern": "^[A-Za-z0-9_-]{1,80}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Next"
+    },
+    "prompt": {
+      "minLength": 1,
+      "title": "Prompt",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "kind",
+    "prompt",
+    "input_schema"
+  ],
+  "title": "HumanStep",
+  "type": "object"
+}

@@ -7,10 +7,37 @@ import json
 from pathlib import Path
 import shutil
 import subprocess
+import tomllib
 
 HERE=Path(__file__).resolve().parents[1]
 CAP=HERE.parent
 IGNORE=shutil.ignore_patterns('__pycache__','*.pyc','.venv','node_modules','tests')
+
+
+def stage_runtime(out, package, vendored):
+    source = CAP / package
+    out.mkdir()
+    names = []
+    dependencies = set()
+    for project_path in [source, *(CAP / name for name in vendored)]:
+        module = project_path.name.replace('-', '_')
+        names.append('src/' + module)
+        shutil.copytree(project_path / 'src' / module, out / 'src' / module, ignore=IGNORE)
+        project = tomllib.loads((project_path / 'pyproject.toml').read_text())['project']
+        dependencies.update(dep for dep in project.get('dependencies', []) if not dep.startswith('dataagent-'))
+    for name in ['mint.toml', '.mcp.json']:
+        shutil.copy2(source / name, out / name)
+    (out / 'pyproject.toml').write_text(f'''[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+[project]
+name = "{package}"
+version = "0.1.0"
+requires-python = ">=3.11,<3.14"
+dependencies = {json.dumps(sorted(dependencies))}
+[tool.hatch.build.targets.wheel]
+packages = {json.dumps(names)}
+''')
 
 
 def stage(out: Path):
@@ -21,25 +48,11 @@ def stage(out: Path):
         shutil.rmtree(out)
     out.mkdir(parents=True)
     (out/'.dataagent-build').write_text('local intake closure\n')
-    wb=out/'workbench';wb.mkdir()
-    names=[]
-    for pkg in ['dataagent-workbench','dataagent-contracts','dataagent-runtime','dataagent-ontology']:
-        src=CAP/pkg/'src'/pkg.replace('-','_')
-        if src.exists():
-            name=pkg.replace('-','_');names.append(f'"src/{name}"')
-            shutil.copytree(src,wb/'src'/name,ignore=IGNORE)
-    for name in ['mint.toml','.mcp.json']:
-        shutil.copy2(HERE/name,wb/name)
-    (wb/'pyproject.toml').write_text('''[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-[project]
-name = "dataagent-workbench"
-version = "0.1.0"
-requires-python = ">=3.11,<3.14"
-dependencies = ["pydantic>=2.7,<3", "fastapi>=0.115,<1", "uvicorn>=0.30,<1"]
-[tool.hatch.build.targets.wheel]
-packages = ['''+', '.join(names)+']\n')
+    wb=out/'workbench'
+    shared=['dataagent-contracts','dataagent-runtime']
+    stage_runtime(wb,'dataagent-workbench',[*shared,'dataagent-ontology'])
+    stage_runtime(out/'operations','dataagent-operations',shared)
+    shutil.copytree(CAP/'dataagent-intake/skills',wb/'skills',ignore=IGNORE)
     data_script=CAP/'dataagent-data/scripts/build_bundle.py'
     spec=importlib.util.spec_from_file_location('data_bundle',data_script)
     mod=importlib.util.module_from_spec(spec);spec.loader.exec_module(mod)
@@ -65,7 +78,7 @@ def main():
     p.add_argument('--no-lock',action='store_true');args=p.parse_args()
     stage(args.out)
     if not args.no_lock:
-        for pkg in ['workbench','data-layer']:
+        for pkg in ['workbench','data-layer','operations']:
             subprocess.run(['uv','lock','--project',str(args.out/pkg)],check=True)
     manifest(args.out.resolve())
     print(args.out.resolve())

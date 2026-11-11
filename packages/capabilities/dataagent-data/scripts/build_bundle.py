@@ -37,6 +37,7 @@ dependencies = [
   "pydantic>=2.7,<3",
   "openpyxl>=3.1,<4",
   "pdfplumber>=0.11,<1",
+  "psycopg[binary]>=3.2,<4",
 ]
 
 [project.optional-dependencies]

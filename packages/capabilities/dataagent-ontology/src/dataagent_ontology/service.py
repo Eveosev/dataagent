@@ -31,18 +31,27 @@ class OntologyService:
         if row is None:raise KeyError('ontology not registered')
         return OntologyRevision.model_validate(row['body'])
 
-    def preview(self,mapping,observations,ctx):
+    def prepare_preview(self,mapping,observations,ctx,*,source_mappings=None):
         self.check(ctx)
         ontology=self.definition(mapping.ontology_revision,ctx)
-        result=materialize(ontology,mapping,observations,scope=self.scope)
+        result=materialize(ontology,mapping,observations,scope=self.scope,source_mappings=source_mappings)
         if not result.instances:result.issues.append({'code':'ontology.no_records'})
         source_revisions={p.source_id:p.source_revision for p in observations}
         content={'ontology_revision':mapping.ontology_revision,'mapping':mapping.model_dump(mode='json'),
             'source_revisions':source_revisions,'instances':[i.model_dump(mode='json') for i in result.instances],
             'issues':result.issues}
-        preview=MappingPreview(id=uuid4().hex,revision='1',digest=digest(content),**content)
+        if source_mappings is not None:
+            content['extensions'] = {'intake.source_mappings': {
+                key: value.model_dump(mode='json') for key, value in source_mappings.items()
+            }}
+        preview=MappingPreview(id=uuid4().hex,revision='1',digest=digest(content),
+            **{k:v for k,v in content.items() if k!='instances'},instances=result.instances)
         body={**preview.model_dump(mode='json'),'assertions':[a.model_dump(mode='json') for a in result.assertions],
             'facts':[f.model_dump(mode='json') for f in result.facts],'review_state':'unreviewed'}
+        return preview,body
+
+    def preview(self,mapping,observations,ctx):
+        preview,body=self.prepare_preview(mapping,observations,ctx)
         self.store.commit(ChangeSet(writes=[Write('preview',preview.id,self.scope,body)]))
         return preview
 
@@ -54,7 +63,7 @@ class OntologyService:
         if row['revision']!=expected_revision:raise VersionConflict('preview changed; reload before review')
         return row
 
-    def review(self,decision,expected_revision,ctx):
+    def prepare_review(self,decision,expected_revision,ctx):
         row=self._current_preview(decision.preview_ref,expected_revision,ctx)
         if decision.preview_ref!=row['id']+'@'+row['revision']:
             raise VersionConflict('decision does not target current preview')
@@ -88,17 +97,29 @@ class OntologyService:
             body['review_state']='approved';body['approved_preview_ref']=decision.preview_ref
         body['revision']=next_revision
         body['last_decision_ref']=did+'@1'
-        self.store.commit(ChangeSet(writes=[
+        writes=[
             Write('preview',row['id'],self.scope,body,row['revision']),
-            Write('review',did,self.scope,{'decision':decision.model_dump(mode='json'),'subject_ref':ctx.subject_ref})]))
-        return ReviewReceipt(decision_ref=did+'@1',revision=next_revision,revalidate=revalidate)
+            Write('review',did,self.scope,{'decision':decision.model_dump(mode='json'),'subject_ref':ctx.subject_ref})]
+        return ReviewReceipt(decision_ref=did+'@1',revision=next_revision,revalidate=revalidate),writes
+
+    def review(self,decision,expected_revision,ctx):
+        receipt,writes=self.prepare_review(decision,expected_revision,ctx)
+        self.store.commit(ChangeSet(writes=writes))
+        return receipt
 
     def publish(self,candidate_ref,expected_revision,ctx):
         row=self._current_preview(candidate_ref,expected_revision,ctx)
         body=row['body']
         if body.get('review_state')!='approved' or body.get('approved_preview_ref')!=str(candidate_ref):
             raise ValueError('precise preview must be reviewed before publication')
-        rid='release:'+digest([row['id'],body['digest']])
+        release,writes=self.release_writes(body,row['id'],row['revision'],str(candidate_ref))
+        self.store.commit(ChangeSet(writes=writes))
+        return release
+
+    def release_writes(self,body,preview_id,expected_revision,candidate_ref):
+        if body.get('review_state')!='approved' or body.get('approved_preview_ref')!=str(candidate_ref):
+            raise ValueError('unapproved release')
+        rid='release:'+digest([preview_id,body['digest']])
         release=DatasetRelease(id=rid,revision='1',preview_ref=str(candidate_ref),digest=body['digest'])
         writes=[Write('release',rid,self.scope,release.model_dump(mode='json'))]
         # Assertions are immutable provenance; repeated identical facts union assertion refs.
@@ -111,7 +132,6 @@ class OntologyService:
                 f={**f,'assertion_refs':sorted(set(f['assertion_refs']+prior['body']['assertion_refs']))}
             writes.append(Write('fact',f['id'],self.scope,f,prior['revision'] if prior else None))
         body['review_state']='published';body['release_ref']=rid+'@1'
-        body['revision']=str(int(row['revision'])+1)
-        writes.append(Write('preview',row['id'],self.scope,body,row['revision']))
-        self.store.commit(ChangeSet(writes=writes))
-        return release
+        body['revision']=str(int(expected_revision)+1)
+        writes.append(Write('preview',preview_id,self.scope,body,expected_revision))
+        return release,writes

@@ -25,8 +25,20 @@ def probe_document(path, source_id, revision, *, engine=None, max_pages=200):
                     method='ocr'
                 except Exception as exc:
                     gaps.append(CoverageGap(partition=page.page,code='ocr_failed',detail=type(exc).__name__))
+            block_evidence = []
+            if method == 'text':
+                block_evidence = [b.model_dump(mode='json') for b in page.blocks]
+            else:
+                offset = 0
+                for block in blocks:
+                    end = offset + len(block.text)
+                    if block.bbox:
+                        block_evidence.append({'text': block.text, 'bbox': [float(x)/2 for x in block.bbox],
+                                               'char_start': offset, 'char_end': end})
+                    offset = end + 1
             pages.append({'page':page.page,'text':text,'method':method,
                 'width':page.width,'height':page.height,
+                'blocks':block_evidence,
                 'extractor':getattr(engine,'engine_version','pdfplumber') if method=='ocr' else 'pdfplumber'})
             if not text.strip():
                 if not any(g.partition==page.page for g in gaps):

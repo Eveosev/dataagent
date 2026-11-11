@@ -1,0 +1,155 @@
+{
+  "$comment": "generated from dataagent_contracts.workflow:VerifyStep; do not edit",
+  "$defs": {
+    "ApiArguments": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Body",
+          "type": "object"
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "path": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Path",
+          "type": "object"
+        },
+        "query": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Query",
+          "type": "object"
+        }
+      },
+      "title": "ApiArguments",
+      "type": "object"
+    },
+    "JsonValue": {},
+    "Predicate": {
+      "additionalProperties": false,
+      "properties": {
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "one_of": {
+          "items": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "minItems": 1,
+          "title": "One Of",
+          "type": "array"
+        },
+        "pointer": {
+          "pattern": "^(/([^~]|~[01])*)?$",
+          "title": "Pointer",
+          "type": "string"
+        }
+      },
+      "required": [
+        "pointer",
+        "one_of"
+      ],
+      "title": "Predicate",
+      "type": "object"
+    }
+  },
+  "$id": "dataagent-contracts/0.1/workflow/VerifyStep",
+  "additionalProperties": false,
+  "properties": {
+    "condition": {
+      "$ref": "#/$defs/Predicate"
+    },
+    "criteria": {
+      "items": {
+        "type": "integer"
+      },
+      "minItems": 1,
+      "title": "Criteria",
+      "type": "array"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "id": {
+      "pattern": "^[A-Za-z0-9_-]{1,80}$",
+      "title": "Id",
+      "type": "string"
+    },
+    "kind": {
+      "const": "verify",
+      "title": "Kind",
+      "type": "string"
+    },
+    "next": {
+      "anyOf": [
+        {
+          "pattern": "^[A-Za-z0-9_-]{1,80}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Next"
+    },
+    "operation_id": {
+      "minLength": 1,
+      "title": "Operation Id",
+      "type": "string"
+    },
+    "parameters": {
+      "$ref": "#/$defs/ApiArguments"
+    }
+  },
+  "required": [
+    "id",
+    "operation_id",
+    "kind",
+    "condition",
+    "criteria"
+  ],
+  "title": "VerifyStep",
+  "type": "object"
+}

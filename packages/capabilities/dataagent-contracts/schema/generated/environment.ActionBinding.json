@@ -1,0 +1,92 @@
+{
+  "$comment": "generated from dataagent_contracts.environment:ActionBinding; do not edit",
+  "$defs": {
+    "JsonValue": {}
+  },
+  "$id": "dataagent-contracts/0.1/environment/ActionBinding",
+  "additionalProperties": false,
+  "properties": {
+    "action": {
+      "title": "Action",
+      "type": "string"
+    },
+    "channel": {
+      "const": "api",
+      "default": "api",
+      "title": "Channel",
+      "type": "string"
+    },
+    "expected_effect": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Expected Effect",
+      "type": "object"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "lookup_operation": {
+      "title": "Lookup Operation",
+      "type": "string"
+    },
+    "method": {
+      "title": "Method",
+      "type": "string"
+    },
+    "operation_id": {
+      "title": "Operation Id",
+      "type": "string"
+    },
+    "path": {
+      "title": "Path",
+      "type": "string"
+    },
+    "precondition": {
+      "anyOf": [
+        {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Precondition"
+    },
+    "remote_fencing": {
+      "title": "Remote Fencing",
+      "type": "boolean"
+    },
+    "remote_idempotency": {
+      "title": "Remote Idempotency",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "action",
+    "operation_id",
+    "lookup_operation",
+    "method",
+    "path",
+    "remote_idempotency",
+    "remote_fencing",
+    "expected_effect"
+  ],
+  "title": "ActionBinding",
+  "type": "object"
+}

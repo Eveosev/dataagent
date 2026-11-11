@@ -2,6 +2,7 @@
 import hashlib
 import os
 import secrets
+import json
 from pathlib import Path
 from uuid import uuid4
 from dataagent_contracts.core import CallContext
@@ -10,28 +11,31 @@ from .session_service import SessionService
 
 
 class Workbench:
-    def __init__(self, workspace):
+    def __init__(self, workspace, *, layer_client=None, allowed_model_fields=None):
         self.workspace = Path(workspace).resolve()
         self.root = self.workspace/'.dataagent'
         self.root.mkdir(parents=True,exist_ok=True)
         runtime = self.root/'runtime'
         runtime.mkdir(exist_ok=True)
-        token_path = runtime/'workbench.token'
-        try:
-            fd = os.open(token_path,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
-        except FileExistsError:
-            pass
-        else:
-            with os.fdopen(fd,'w') as f:
-                f.write(secrets.token_urlsafe(32))
-        self.token = token_path.read_text().strip()
-        if len(self.token) < 32:
-            raise ValueError('invalid local workbench credential')
+        # Browser authentication lives only in the HTTP process, never in agent-readable files.
+        self.token = secrets.token_urlsafe(32)
+        (runtime/'workbench.token').unlink(missing_ok=True)
         self.scope = 'workspace:'+hashlib.sha256(str(self.workspace).encode()).hexdigest()[:24]
         self.subject = 'local-owner:'+str(os.getuid())
-        self.authorization = 'local-owner:'+hashlib.sha256(self.token.encode()).hexdigest()[:24]
+        self.authorization = 'local-owner:'+hashlib.sha256((self.scope+self.subject).encode()).hexdigest()[:24]
         self.store = SqliteWorkbenchStore(self.root/'db/workbench.sqlite3')
         self.sessions = SessionService(self.store,self.scope,self.subject,self.authorization)
+        self.layer_client=layer_client
+        policy=self.root/'model-context.json'
+        self.allowed_model_fields=(allowed_model_fields if allowed_model_fields is not None
+            else json.loads(policy.read_text()) if policy.is_file() else None)
+        from dataagent_ontology.service import OntologyService
+        from dataagent_ontology.registry import load_definition
+        self.ontology=OntologyService(self.store,scope=self.scope,subject=self.subject,authorization=self.authorization)
+        self.definition=load_definition(Path(__file__).parent/'ontologies/procurement.json')
+        self.ontology.register(self.definition,self.ctx)
+        from .intake_service import IntakeService
+        self.intake=IntakeService(self)
 
     @property
     def ctx(self):

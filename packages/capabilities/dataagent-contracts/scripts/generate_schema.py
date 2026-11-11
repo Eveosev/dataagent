@@ -22,7 +22,7 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from dataagent_contracts import core  # noqa: E402
-from dataagent_contracts import intake, ontology  # noqa: E402
+from dataagent_contracts import environment, intake, ontology, workflow  # noqa: E402
 from dataagent_contracts.core import (  # noqa: E402
     EMBEDDED_TYPES,
     CORE_TYPES,
@@ -114,7 +114,7 @@ def build() -> dict[str, dict[str, Any]]:
                 "enum": [m.value for m in enum_type],
             }
         out[enum_type.__name__] = _dump(enum_type.__name__, schema)
-    for module in (intake, ontology):
+    for module in (environment, intake, ontology, workflow):
         namespace = module.__name__.rsplit('.', 1)[-1]
         for name, model in sorted(vars(module).items()):
             if not isinstance(model, type) or not issubclass(model, BaseModel):

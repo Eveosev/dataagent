@@ -1,0 +1,22 @@
+[package]
+name = "dataagent/operations"
+version = "0.1.0"
+kind = "bundle"
+description = "本地业务系统探查与可恢复工作流"
+license = "Apache-2.0"
+[requires]
+api = "^0.1"
+[provides]
+mcp_servers = ["dataagent-operations"]
+[capabilities]
+exec = ["uv", "node"]
+fs.read = ["*"]
+fs.write = [".dataagent/**"]
+net = ["http://127.0.0.1:*"]
+[capabilities.reason]
+exec = "启动锁定的工作流组件与宿主配置的本地浏览器观察进程"
+"fs.read" = "读取宿主配置与工作区已登记的任务目标"
+"fs.write" = "保存工作流修订、执行回执和等待记录"
+net = "探查与调用宿主配置的本地业务测试环境"
+[metadata.runtime]
+requires = ["python>=3.11", "uv"]

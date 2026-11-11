@@ -1,7 +1,7 @@
 """Session, goal and real job creation in one local transaction."""
 from uuid import uuid4
 from dataagent_contracts.intake import IntakeSession, JobHandle, EventPage
-from dataagent_runtime.ports.workbench_store import Write, ChangeSet
+from dataagent_runtime.ports.workbench_store import Write, ChangeSet, VersionConflict
 
 
 class SessionService:
@@ -23,7 +23,7 @@ class SessionService:
         session = IntakeSession(id=sid,revision='1',goal_ref=gid+'@1',sources=sources,
             job_ref=jid,next_actions=['probe'])
         self.store.commit(ChangeSet(writes=[
-            Write('goal',gid,self.scope,goal.model_dump(mode='json')),
+            Write('goal',gid,self.scope,goal.model_copy(update={'id':gid}).model_dump(mode='json')),
             Write('session',sid,self.scope,session.model_dump(mode='json')),
             Write('job',jid,self.scope,{'id':jid,'session_id':sid,'state':'queued','checkpoint':''})],
             events=[{'session_id':sid,'scope':self.scope,'type':'intake.created'}]))
@@ -42,6 +42,8 @@ class SessionService:
 
     def update(self, session_id, expected_revision, changes, ctx, *, extra_writes=()):
         session = self.get(session_id,ctx)
+        if session.phase == 'saved':
+            raise VersionConflict('saved intake is closed; start a new intake to revise its mapping')
         body = session.model_dump(mode='json')
         if set(changes) - {'phase','selected_versions','issues','next_actions'}:
             raise ValueError('immutable session identity or source selection')

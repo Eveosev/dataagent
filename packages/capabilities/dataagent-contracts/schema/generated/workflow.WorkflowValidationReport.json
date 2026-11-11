@@ -1,0 +1,662 @@
+{
+  "$comment": "generated from dataagent_contracts.workflow:WorkflowValidationReport; do not edit",
+  "$defs": {
+    "ActStep": {
+      "additionalProperties": false,
+      "properties": {
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "id": {
+          "pattern": "^[A-Za-z0-9_-]{1,80}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "const": "act",
+          "title": "Kind",
+          "type": "string"
+        },
+        "next": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z0-9_-]{1,80}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Next"
+        },
+        "operation_id": {
+          "minLength": 1,
+          "title": "Operation Id",
+          "type": "string"
+        },
+        "parameters": {
+          "$ref": "#/$defs/ApiArguments"
+        }
+      },
+      "required": [
+        "id",
+        "operation_id",
+        "kind"
+      ],
+      "title": "ActStep",
+      "type": "object"
+    },
+    "ApiArguments": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Body",
+          "type": "object"
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "path": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Path",
+          "type": "object"
+        },
+        "query": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Query",
+          "type": "object"
+        }
+      },
+      "title": "ApiArguments",
+      "type": "object"
+    },
+    "DecideStep": {
+      "additionalProperties": false,
+      "properties": {
+        "condition": {
+          "$ref": "#/$defs/Predicate"
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "id": {
+          "pattern": "^[A-Za-z0-9_-]{1,80}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "const": "decide",
+          "title": "Kind",
+          "type": "string"
+        },
+        "next": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z0-9_-]{1,80}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Next"
+        },
+        "otherwise": {
+          "pattern": "^[A-Za-z0-9_-]{1,80}$",
+          "title": "Otherwise",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "condition",
+        "otherwise"
+      ],
+      "title": "DecideStep",
+      "type": "object"
+    },
+    "HumanStep": {
+      "additionalProperties": false,
+      "properties": {
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "id": {
+          "pattern": "^[A-Za-z0-9_-]{1,80}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "input_schema": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Input Schema",
+          "type": "object"
+        },
+        "kind": {
+          "const": "human",
+          "title": "Kind",
+          "type": "string"
+        },
+        "next": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z0-9_-]{1,80}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Next"
+        },
+        "prompt": {
+          "minLength": 1,
+          "title": "Prompt",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "prompt",
+        "input_schema"
+      ],
+      "title": "HumanStep",
+      "type": "object"
+    },
+    "JsonValue": {},
+    "ObserveStep": {
+      "additionalProperties": false,
+      "properties": {
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "id": {
+          "pattern": "^[A-Za-z0-9_-]{1,80}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "const": "observe",
+          "title": "Kind",
+          "type": "string"
+        },
+        "next": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z0-9_-]{1,80}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Next"
+        },
+        "operation_id": {
+          "minLength": 1,
+          "title": "Operation Id",
+          "type": "string"
+        },
+        "parameters": {
+          "$ref": "#/$defs/ApiArguments"
+        }
+      },
+      "required": [
+        "id",
+        "operation_id",
+        "kind"
+      ],
+      "title": "ObserveStep",
+      "type": "object"
+    },
+    "Predicate": {
+      "additionalProperties": false,
+      "properties": {
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "one_of": {
+          "items": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "minItems": 1,
+          "title": "One Of",
+          "type": "array"
+        },
+        "pointer": {
+          "pattern": "^(/([^~]|~[01])*)?$",
+          "title": "Pointer",
+          "type": "string"
+        }
+      },
+      "required": [
+        "pointer",
+        "one_of"
+      ],
+      "title": "Predicate",
+      "type": "object"
+    },
+    "TransformStep": {
+      "additionalProperties": false,
+      "properties": {
+        "assign": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Assign",
+          "type": "object"
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "id": {
+          "pattern": "^[A-Za-z0-9_-]{1,80}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "const": "transform",
+          "title": "Kind",
+          "type": "string"
+        },
+        "next": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z0-9_-]{1,80}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Next"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "assign"
+      ],
+      "title": "TransformStep",
+      "type": "object"
+    },
+    "VerifyStep": {
+      "additionalProperties": false,
+      "properties": {
+        "condition": {
+          "$ref": "#/$defs/Predicate"
+        },
+        "criteria": {
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 1,
+          "title": "Criteria",
+          "type": "array"
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "id": {
+          "pattern": "^[A-Za-z0-9_-]{1,80}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "const": "verify",
+          "title": "Kind",
+          "type": "string"
+        },
+        "next": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z0-9_-]{1,80}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Next"
+        },
+        "operation_id": {
+          "minLength": 1,
+          "title": "Operation Id",
+          "type": "string"
+        },
+        "parameters": {
+          "$ref": "#/$defs/ApiArguments"
+        }
+      },
+      "required": [
+        "id",
+        "operation_id",
+        "kind",
+        "condition",
+        "criteria"
+      ],
+      "title": "VerifyStep",
+      "type": "object"
+    },
+    "WaitStep": {
+      "additionalProperties": false,
+      "properties": {
+        "condition": {
+          "$ref": "#/$defs/Predicate"
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "id": {
+          "pattern": "^[A-Za-z0-9_-]{1,80}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "const": "wait",
+          "title": "Kind",
+          "type": "string"
+        },
+        "next": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z0-9_-]{1,80}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Next"
+        },
+        "operation_id": {
+          "minLength": 1,
+          "title": "Operation Id",
+          "type": "string"
+        },
+        "parameters": {
+          "$ref": "#/$defs/ApiArguments"
+        }
+      },
+      "required": [
+        "id",
+        "operation_id",
+        "kind",
+        "condition"
+      ],
+      "title": "WaitStep",
+      "type": "object"
+    },
+    "WorkflowSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "entry": {
+          "pattern": "^[A-Za-z0-9_-]{1,80}$",
+          "title": "Entry",
+          "type": "string"
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "input_schema": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Input Schema",
+          "type": "object"
+        },
+        "nodes": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "act": "#/$defs/ActStep",
+                "decide": "#/$defs/DecideStep",
+                "human": "#/$defs/HumanStep",
+                "observe": "#/$defs/ObserveStep",
+                "transform": "#/$defs/TransformStep",
+                "verify": "#/$defs/VerifyStep",
+                "wait": "#/$defs/WaitStep"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/ObserveStep"
+              },
+              {
+                "$ref": "#/$defs/TransformStep"
+              },
+              {
+                "$ref": "#/$defs/DecideStep"
+              },
+              {
+                "$ref": "#/$defs/ActStep"
+              },
+              {
+                "$ref": "#/$defs/WaitStep"
+              },
+              {
+                "$ref": "#/$defs/HumanStep"
+              },
+              {
+                "$ref": "#/$defs/VerifyStep"
+              }
+            ]
+          },
+          "maxItems": 100,
+          "minItems": 1,
+          "title": "Nodes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "entry",
+        "input_schema",
+        "nodes"
+      ],
+      "title": "WorkflowSpec",
+      "type": "object"
+    }
+  },
+  "$id": "dataagent-contracts/0.1/workflow/WorkflowValidationReport",
+  "additionalProperties": false,
+  "properties": {
+    "draft_id": {
+      "title": "Draft Id",
+      "type": "string"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "issues": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Issues",
+      "type": "array"
+    },
+    "spec": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/WorkflowSpec"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "spec_digest": {
+      "title": "Spec Digest",
+      "type": "string"
+    },
+    "unobserved_steps": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Unobserved Steps",
+      "type": "array"
+    },
+    "valid": {
+      "title": "Valid",
+      "type": "boolean"
+    },
+    "validated_steps": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Validated Steps",
+      "type": "array"
+    }
+  },
+  "required": [
+    "id",
+    "draft_id",
+    "spec_digest",
+    "valid"
+  ],
+  "title": "WorkflowValidationReport",
+  "type": "object"
+}

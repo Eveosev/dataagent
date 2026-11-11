@@ -71,16 +71,25 @@ def _typed(value,kind):
     raise ValueError('unsupported target type')
 
 
-def materialize(ontology,mapping,observations,*,scope):
+def _validate_mapping(ontology, mapping, scope):
     if mapping.ontology_revision!=f'{ontology.id}@{ontology.revision}':raise ValueError('ontology revision mismatch')
     if mapping.scope not in {'workspace',scope}:raise ValueError('mapping scope mismatch')
     unknown=set(mapping.bindings)-ontology.properties.keys()
     if unknown:raise ValueError('unknown ontology properties: '+','.join(sorted(unknown)))
     if set(mapping.relation_bindings)-ontology.relations.keys():raise ValueError('unknown ontology relation')
+
+
+def materialize(ontology,mapping,observations,*,scope,source_mappings=None):
+    _validate_mapping(ontology, mapping, scope)
     required={k for k,v in ontology.properties.items() if v.required}
-    issues=[{'code':'ontology.required_binding_missing','target':k} for k in sorted(required-mapping.bindings.keys())]
+    issues=[]
     instances,assertions,facts={},[],{}
     for source in observations:
+        if source_mappings is not None:
+            mapping = source_mappings[source.source_id]
+            _validate_mapping(ontology, mapping, scope)
+        issues.extend({'code':'ontology.required_binding_missing','target':k,'source_id':source.source_id}
+                      for k in sorted(required-mapping.bindings.keys()))
         if mapping.source_fingerprint!=source.metadata.get('structure_fingerprint'):
             raise ValueError('source structure mismatch')
         if source.coverage!='full':issues.append({'code':'ontology.incomplete_source','source_id':source.source_id,'coverage':source.coverage})
@@ -107,7 +116,7 @@ def materialize(ontology,mapping,observations,*,scope):
             instance=instances.get(eid)
             if instance is None:
                 instance=EntityInstance(id=eid,scope=scope,entity_type=ontology.entity_type,values=values.copy(),source_anchors=field_anchors,
-                    unresolved=missing,extensions={'source.unmapped':extras} if extras else None)
+                    unresolved=missing,extensions={'source.unmapped':extras} if extras and source_mappings is None else None)
                 instances[eid]=instance
             else:
                 for k,v in values.items():
@@ -117,6 +126,16 @@ def materialize(ontology,mapping,observations,*,scope):
                         issues.append({'code':'ontology.conflicting_values','entity_id':eid,'target':k})
                     elif k not in instance.values:instance.values[k]=v
                     instance.source_anchors.setdefault(k,[]).extend(field_anchors.get(k,[]))
+            if extras and source_mappings is not None:
+                if instance.extensions is None:
+                    instance.extensions = {}
+                by_source = instance.extensions.setdefault('source.unmapped_by_source', {})
+                if source.source_id in by_source and by_source[source.source_id] != extras:
+                    instance.extensions.setdefault('source.unmapped_additional_rows', []).append({
+                        'source_id': source.source_id, 'row': rownum, 'values': extras,
+                    })
+                else:
+                    by_source[source.source_id] = extras
             def assertion(relation,roles,evidence):
                 if not evidence:return
                 fid=relation_key(scope,relation,roles)

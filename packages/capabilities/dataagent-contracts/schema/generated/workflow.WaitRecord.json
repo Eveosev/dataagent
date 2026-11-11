@@ -1,0 +1,64 @@
+{
+  "$comment": "generated from dataagent_contracts.workflow:WaitRecord; do not edit",
+  "$defs": {
+    "JsonValue": {}
+  },
+  "$id": "dataagent-contracts/0.1/workflow/WaitRecord",
+  "additionalProperties": false,
+  "properties": {
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "observation": {
+      "$ref": "#/$defs/JsonValue",
+      "default": null
+    },
+    "observed_at": {
+      "format": "date-time",
+      "title": "Observed At",
+      "type": "string"
+    },
+    "run_id": {
+      "title": "Run Id",
+      "type": "string"
+    },
+    "state": {
+      "enum": [
+        "waiting",
+        "consumed",
+        "cancelled"
+      ],
+      "title": "State",
+      "type": "string"
+    },
+    "step_id": {
+      "pattern": "^[A-Za-z0-9_-]{1,80}$",
+      "title": "Step Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "run_id",
+    "step_id",
+    "state",
+    "observed_at"
+  ],
+  "title": "WaitRecord",
+  "type": "object"
+}

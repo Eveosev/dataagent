@@ -5,7 +5,7 @@ build-backend="hatchling.build"
 name="dataagent-ontology"
 version="0.1.0"
 requires-python=">=3.11,<3.14"
-dependencies=["dataagent-contracts","dataagent-runtime","pydantic>=2.7,<3"]
+dependencies=["dataagent-contracts","dataagent-runtime","pydantic>=2.7,<3","jsonschema>=4.26,<5","referencing>=0.37,<1"]
 [project.optional-dependencies]
 dev=["pytest>=8"]
 [tool.uv.sources]

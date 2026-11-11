@@ -4,14 +4,7 @@ import os
 import sys
 from ..bootstrap import Workbench
 from ..service_tools import invoke, result_summary
-
-TOOLS = [
-    {'name':'intake_start','description':'建立多源接入任务，保存目标和真实作业',
-     'inputSchema':{'type':'object','properties':{'goal':{'type':'string'},'sources':{'type':'array','items':{'type':'object'}}},'required':['goal','sources'],'additionalProperties':False}},
-    *[{'name':name,'description':description,'inputSchema':{'type':'object','properties':{'session_id':{'type':'string'}},'required':['session_id'],'additionalProperties':False}}
-      for name, description in [('intake_status','读取接入任务状态与版本'),('workbench_view','打开本地工作台查看及纠正任务')]]
-]
-
+from ..tool_schema import TOOLS
 
 def handle(wb, request):
     method = request.get('method')

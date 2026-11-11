@@ -1,0 +1,70 @@
+{
+  "$comment": "generated from dataagent_contracts.workflow:ActionReceipt; do not edit",
+  "$defs": {
+    "JsonValue": {}
+  },
+  "$id": "dataagent-contracts/0.1/workflow/ActionReceipt",
+  "additionalProperties": false,
+  "properties": {
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "observation_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Observation Ref"
+    },
+    "observed_at": {
+      "format": "date-time",
+      "title": "Observed At",
+      "type": "string"
+    },
+    "record": {
+      "$ref": "#/$defs/JsonValue"
+    },
+    "response": {
+      "$ref": "#/$defs/JsonValue",
+      "default": null
+    },
+    "source": {
+      "enum": [
+        "response",
+        "reconciliation",
+        "preexisting",
+        "browser_reconciliation"
+      ],
+      "title": "Source",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "source",
+    "observed_at",
+    "record"
+  ],
+  "title": "ActionReceipt",
+  "type": "object"
+}

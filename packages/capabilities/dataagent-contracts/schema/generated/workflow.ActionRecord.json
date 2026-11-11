@@ -1,0 +1,159 @@
+{
+  "$comment": "generated from dataagent_contracts.workflow:ActionRecord; do not edit",
+  "$defs": {
+    "ActionReceipt": {
+      "additionalProperties": false,
+      "properties": {
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "observation_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Observation Ref"
+        },
+        "observed_at": {
+          "format": "date-time",
+          "title": "Observed At",
+          "type": "string"
+        },
+        "record": {
+          "$ref": "#/$defs/JsonValue"
+        },
+        "response": {
+          "$ref": "#/$defs/JsonValue",
+          "default": null
+        },
+        "source": {
+          "enum": [
+            "response",
+            "reconciliation",
+            "preexisting",
+            "browser_reconciliation"
+          ],
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "source",
+        "observed_at",
+        "record"
+      ],
+      "title": "ActionReceipt",
+      "type": "object"
+    },
+    "JsonValue": {}
+  },
+  "$id": "dataagent-contracts/0.1/workflow/ActionRecord",
+  "additionalProperties": false,
+  "properties": {
+    "action": {
+      "title": "Action",
+      "type": "string"
+    },
+    "business_key": {
+      "title": "Business Key",
+      "type": "string"
+    },
+    "dispatch_count": {
+      "default": 0,
+      "title": "Dispatch Count",
+      "type": "integer"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "message": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Message"
+    },
+    "operation_id": {
+      "title": "Operation Id",
+      "type": "string"
+    },
+    "parameters_digest": {
+      "title": "Parameters Digest",
+      "type": "string"
+    },
+    "receipt": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ActionReceipt"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "state": {
+      "enum": [
+        "reserved",
+        "in_flight",
+        "applied",
+        "not_applied",
+        "partial",
+        "unknown"
+      ],
+      "title": "State",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "operation_id",
+    "action",
+    "business_key",
+    "parameters_digest",
+    "state"
+  ],
+  "title": "ActionRecord",
+  "type": "object"
+}

@@ -1,0 +1,101 @@
+{
+  "$comment": "generated from dataagent_contracts.workflow:DecideStep; do not edit",
+  "$defs": {
+    "JsonValue": {},
+    "Predicate": {
+      "additionalProperties": false,
+      "properties": {
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "one_of": {
+          "items": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "minItems": 1,
+          "title": "One Of",
+          "type": "array"
+        },
+        "pointer": {
+          "pattern": "^(/([^~]|~[01])*)?$",
+          "title": "Pointer",
+          "type": "string"
+        }
+      },
+      "required": [
+        "pointer",
+        "one_of"
+      ],
+      "title": "Predicate",
+      "type": "object"
+    }
+  },
+  "$id": "dataagent-contracts/0.1/workflow/DecideStep",
+  "additionalProperties": false,
+  "properties": {
+    "condition": {
+      "$ref": "#/$defs/Predicate"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "id": {
+      "pattern": "^[A-Za-z0-9_-]{1,80}$",
+      "title": "Id",
+      "type": "string"
+    },
+    "kind": {
+      "const": "decide",
+      "title": "Kind",
+      "type": "string"
+    },
+    "next": {
+      "anyOf": [
+        {
+          "pattern": "^[A-Za-z0-9_-]{1,80}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Next"
+    },
+    "otherwise": {
+      "pattern": "^[A-Za-z0-9_-]{1,80}$",
+      "title": "Otherwise",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "kind",
+    "condition",
+    "otherwise"
+  ],
+  "title": "DecideStep",
+  "type": "object"
+}

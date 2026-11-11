@@ -1,0 +1,43 @@
+{
+  "$comment": "generated from dataagent_contracts.workflow:Predicate; do not edit",
+  "$defs": {
+    "JsonValue": {}
+  },
+  "$id": "dataagent-contracts/0.1/workflow/Predicate",
+  "additionalProperties": false,
+  "properties": {
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "one_of": {
+      "items": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "minItems": 1,
+      "title": "One Of",
+      "type": "array"
+    },
+    "pointer": {
+      "pattern": "^(/([^~]|~[01])*)?$",
+      "title": "Pointer",
+      "type": "string"
+    }
+  },
+  "required": [
+    "pointer",
+    "one_of"
+  ],
+  "title": "Predicate",
+  "type": "object"
+}

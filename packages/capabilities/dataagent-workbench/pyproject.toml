@@ -5,7 +5,13 @@ build-backend = "hatchling.build"
 name = "dataagent-workbench"
 version = "0.1.0"
 requires-python = ">=3.11,<3.14"
-dependencies = ["dataagent-contracts", "dataagent-runtime", "fastapi>=0.115,<1", "uvicorn>=0.30,<1"]
+dependencies = [
+    "dataagent-contracts",
+    "dataagent-ontology",
+    "dataagent-runtime",
+    "fastapi>=0.115,<1",
+    "uvicorn>=0.30,<1",
+]
 [project.optional-dependencies]
 dev = [
     "pytest>=8",
@@ -15,6 +21,7 @@ dev = [
 [tool.uv.sources]
 dataagent-contracts = {path="../dataagent-contracts", editable=true}
 dataagent-runtime = {path="../dataagent-runtime", editable=true}
+dataagent-ontology = { path = "../dataagent-ontology", editable = true }
 [tool.hatch.build.targets.wheel]
 packages = ["src/dataagent_workbench"]
 [tool.pytest.ini_options]

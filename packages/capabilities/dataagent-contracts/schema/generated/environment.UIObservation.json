@@ -1,0 +1,174 @@
+{
+  "$comment": "generated from dataagent_contracts.environment:UIObservation; do not edit",
+  "$defs": {
+    "UIControl": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "required": {
+          "default": false,
+          "title": "Required",
+          "type": "boolean"
+        },
+        "role": {
+          "title": "Role",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "role"
+      ],
+      "title": "UIControl",
+      "type": "object"
+    }
+  },
+  "$id": "dataagent-contracts/0.1/environment/UIObservation",
+  "additionalProperties": false,
+  "properties": {
+    "controls": {
+      "items": {
+        "$ref": "#/$defs/UIControl"
+      },
+      "title": "Controls",
+      "type": "array"
+    },
+    "environment_id": {
+      "title": "Environment Id",
+      "type": "string"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "observed_at": {
+      "format": "date-time",
+      "title": "Observed At",
+      "type": "string"
+    },
+    "page_ref": {
+      "title": "Page Ref",
+      "type": "string"
+    },
+    "page_version": {
+      "title": "Page Version",
+      "type": "string"
+    },
+    "record_evidence": {
+      "anyOf": [
+        {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Record Evidence"
+    },
+    "scope_ref": {
+      "title": "Scope Ref",
+      "type": "string"
+    },
+    "screenshot_digest": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Screenshot Digest"
+    },
+    "screenshot_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Screenshot Ref"
+    },
+    "state": {
+      "enum": [
+        "observed",
+        "login_required",
+        "unavailable"
+      ],
+      "title": "State",
+      "type": "string"
+    },
+    "status_text": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Status Text"
+    }
+  },
+  "required": [
+    "id",
+    "environment_id",
+    "page_ref",
+    "page_version",
+    "scope_ref",
+    "observed_at",
+    "state"
+  ],
+  "title": "UIObservation",
+  "type": "object"
+}
