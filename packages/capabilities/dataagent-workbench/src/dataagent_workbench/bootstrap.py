@@ -36,6 +36,8 @@ class Workbench:
         self.ontology.register(self.definition,self.ctx)
         from .intake_service import IntakeService
         self.intake=IntakeService(self)
+        from .ontology_discovery import DiscoveryService
+        self.discovery = DiscoveryService(self)
 
     @property
     def ctx(self):

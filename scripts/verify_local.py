@@ -179,6 +179,51 @@ def verify_sources(project, postgres_locator, postgres_user):
             'rest_partial': rest, 'rest_requests': reads}
 
 
+def verify_discovery(project):
+    seed = ROOT/'packages/capabilities/dataagent-scenarios/fixtures/intake/sales-discovery.sql'
+    with sqlite3.connect(project/'sales-discovery.db') as db:
+        db.executescript(seed.read_text())
+    started = call_workbench(project, 'intake_start', {
+        'goal': '从陌生数据库识别销售订单、明细和客户',
+        'mode': 'ontology_discovery',
+        'sources': [{'source_id': 'sales', 'kind': 'sqlite', 'locator_ref': 'sales-discovery.db'}],
+    })
+    args = {'session_id': started['session_id']}
+    request = call_workbench(project, 'intake_advance', args)
+    assert request['kind'] == 'ontology_discovery' and request['coverage'] == 'full'
+    assert 'allowed_target' not in request
+    tables = {table['name']: table for table in request['catalog']['tables']}
+    assert {name: table['rows_observed'] for name, table in tables.items()} == {
+        'party': 2, 'doc_hdr': 2, 'doc_line': 3,
+    }
+    fk, = [link for link in request['catalog']['relationships'] if link['origin'] == 'declared']
+    inferred, = [link for link in request['catalog']['relationships'] if link['origin'] == 'sample_supported']
+    assert fk['target_columns'] == ['book', 'doc_no'] and fk['matched_rows'] == 3
+    assert inferred['target_table'] == 'party' and inferred['matched_rows'] == 2
+    draft = call_workbench(project, 'ontology_discovery_propose', {
+        **args, 'expected_revision': request['expected_revision'], 'proposal': {
+            'source_revision': request['source_revision'],
+            'entities': [
+                {'table': 'party', 'name': 'Customer', 'grain': '每个客户一行',
+                 'identity': ['party_no'], 'properties': [{'column': 'nm', 'name': 'name'}]},
+                {'table': 'doc_hdr', 'name': 'SalesOrder', 'grain': '每个账簿内的一份销售单',
+                 'identity': ['book', 'doc_no']},
+                {'table': 'doc_line', 'name': 'SalesOrderLine', 'grain': '销售单的一条明细',
+                 'identity': ['book', 'doc_no', 'seq'],
+                 'properties': [{'column': 'cents', 'name': 'amountInCents'}]},
+            ],
+            'relationships': [
+                {'evidence_id': fk['id'], 'name': 'belongsToOrder'},
+                {'evidence_id': inferred['id'], 'name': 'orderedBy'},
+            ],
+        },
+    })
+    assert draft['state'] == 'pending'
+    reloaded = call_workbench(project, 'intake_inference', args)
+    assert reloaded['draft'] == {'ref': draft['ref'], 'state': 'pending'}
+    return {**args, 'source_revision': request['source_revision'], 'draft': draft}
+
+
 def verify_api_workflow(project, *, mixed=False):
     sys.path.insert(0, str(ROOT/'packages/capabilities/dataagent-scenarios/src'))
     from dataagent_scenarios.business_system import create_app
@@ -296,7 +341,7 @@ def verify_api_workflow(project, *, mixed=False):
 
 
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('--phase',choices=['bootstrap','files','sources','api-workflow','mixed-workflow'],default='bootstrap')
+    parser=argparse.ArgumentParser();parser.add_argument('--phase',choices=['bootstrap','files','sources','api-workflow','mixed-workflow','discovery'],default='bootstrap')
     parser.add_argument('--output',type=Path,default=ROOT/'.superpowers/sdd/16-local-ingestion-workflow-build-plan/acceptance')
     parser.add_argument('--ocr-root',type=Path,help='verified local OCR directory to use for scanned PDF acceptance')
     parser.add_argument('--postgres-locator',help='local test database URL with a seeded invoice table')
@@ -308,7 +353,7 @@ def main():
         parser.error('--phase sources requires --postgres-locator')
     mint=shutil.which('mint') or str(Path.home()/'.mint/bin/mint')
     project=Path(tempfile.mkdtemp(prefix='dataagent-intake-'))
-    run([mint,'init','--no-preset'],project)
+    run([mint,'init','--no-preset','--offline','-y'],project)
     run([mint,'add','path:'+str(ROOT/'build/local/preset-intake'),'--offline','-y'],project)
     cli=list((project/'.mint/packages/dataagent').glob('cli@*/bin/dataagent'))
     assert len(cli)==1,'exactly one installed CLI required'
@@ -324,6 +369,9 @@ def main():
         'mint':run([mint,'--version'],project).strip(),'doctor':doctor,
         'manifest':json.loads((ROOT/'build/local/manifest.json').read_text()),
         'not_verified':['file processing','TUI session','GUI session']}
+    if args.phase == 'discovery':
+        report['discovery'] = verify_discovery(project)
+        report['not_verified'] = ['model-generated ontology proposal', 'TUI session', 'GUI session']
     if args.phase == 'files':
         report['scan'] = verify_scan(project, args.ocr_root)
         report['not_verified'].remove('file processing')
@@ -333,7 +381,10 @@ def main():
     if args.phase in {'api-workflow','mixed-workflow'}:
         report['workflow'] = verify_api_workflow(project, mixed=args.phase == 'mixed-workflow')
     (args.output/f'{args.phase}.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
-    print(json.dumps({'status':'passed','project':str(project),'report':str(args.output/f'{args.phase}.json')},ensure_ascii=False))
+    summary = {'status': 'passed', 'project': str(project), 'report': str(args.output/f'{args.phase}.json')}
+    if args.phase == 'discovery':
+        summary['session_id'] = report['discovery']['session_id']
+    print(json.dumps(summary, ensure_ascii=False))
 
 
 if __name__=='__main__':main()

@@ -2,6 +2,7 @@ import {useEffect,useRef,useState} from 'react';
 import {api,display,transformNames} from '../client';
 import type {View,Draft,FieldBinding,IntakeSession,MappingSpec,SourceProfile} from '../client';
 import {SourceViewer} from '../components/SourceViewer';
+import {DiscoveryPage} from './DiscoveryPage';
 import {MappingDetail} from '../components/MappingDetail';
 
 function savedMappings(view:View){
@@ -26,6 +27,7 @@ export function MappingPage({sessionId,onNew,onError}:{sessionId:string;onNew:()
   setView(data);
   if(dirtyRef.current&&!reset)return;
   revision.current=data.session.revision;
+  if(data.discovery)return;
   if(reset){
    sessionStorage.removeItem(localKey);setDirty(false);dirtyRef.current=false;draftError.current=null;setDraftState('');
   }
@@ -124,6 +126,7 @@ export function MappingPage({sessionId,onNew,onError}:{sessionId:string;onNew:()
   }catch(error){onError(error);}
  }
  if(!view)return <main className="loading">正在恢复任务…</main>;
+ if(view.discovery)return <DiscoveryPage view={view} reload={load} onNew={onNew} onError={onError}/>;
  const phase=view.session.phase,done=phase==='saved',working=phase==='queued'||phase==='probing';
  const canRetry=view.session.next_actions?.includes('retry_probe');
  const instance=view.preview?.instances?.[record];const binding=bindings[field];

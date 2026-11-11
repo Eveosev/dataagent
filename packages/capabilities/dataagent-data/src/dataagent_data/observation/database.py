@@ -11,14 +11,18 @@ def probe_database(selection, ctx, *, workspace, budget_rows=200, credentials=No
 def _probe(selection, ctx, *, workspace, budget_rows=200, credentials=None, metadata_only=False):
     if selection.kind not in {'sqlite','postgres'} or isinstance(budget_rows,bool) or not isinstance(budget_rows,int) or not 1<=budget_rows<=10000:
         raise ValueError('database source and row budget 1..10000 required')
-    if set(selection.options)-{'timeout'} or set(selection.requested_scope)-{'tables','schema'}:
+    allowed_options = {'timeout', 'sample_strategy'} if selection.kind == 'sqlite' else {'timeout'}
+    if set(selection.options) - allowed_options or set(selection.requested_scope) - {'tables', 'schema'}:
         raise ValueError('unsupported database options; arbitrary SQL is prohibited')
     if selection.kind=='sqlite':
+        if selection.options.get('sample_strategy', 'sequential') not in ('sequential', 'per_table'):
+            raise ValueError('unsupported SQLite sample strategy')
         from ..adapters.sources.sqlite import collect
     else:
         from ..adapters.sources.postgres import collect
     tables,issues,raw_gaps=collect(selection,workspace,budget_rows,metadata_only=metadata_only,credentials=credentials)
     records=[];anchors={};record_keys=[];table_metadata=[];anchor_specs=[]
+    binary_fields = {}
     for table in tables:
         name=table['name'];schema=table.get('schema');keys=table['primary_key'];rows=table['records']
         descriptor={k:v for k,v in table.items() if k not in {'records','sampled'}}
@@ -28,6 +32,10 @@ def _probe(selection, ctx, *, workspace, budget_rows=200, credentials=None, meta
         if not keys: issues.append({'code':'stable_key_unavailable','table':name,'detail':'anchors use immutable snapshot row positions'})
         for ordinal,row in enumerate(rows):
             index=len(records);records.append(json_value(row))
+            if selection.kind == 'sqlite':
+                binary = [column for column, value in row.items() if isinstance(value, bytes)]
+                if binary:
+                    binary_fields[str(index)] = binary
             identity={'table':name,'keys':[typed_key(k,row[k]) for k in keys]}
             if schema: identity['schema']=schema
             record_keys.append(identity)
@@ -37,7 +45,9 @@ def _probe(selection, ctx, *, workspace, budget_rows=200, credentials=None, meta
                 anchor_keys['primary_key'] = json_value({k:row[k] for k in keys})
             else: anchor_keys['snapshot_row']=ordinal
             for field in row: anchor_specs.append((f'{index}.{field}',anchor_keys,field))
-    revision,ref=snapshot(workspace,{'kind':selection.kind,'scope':selection.requested_scope,'tables':tables})
+    storage_types = {'binary_fields': binary_fields} if binary_fields else {}
+    revision,ref=snapshot(workspace,{'kind':selection.kind,'scope':selection.requested_scope,
+                                    'tables':tables, **storage_types})
     for key,identity,field in anchor_specs:
         anchors[key]=[SourceAnchor(source_ref=selection.source_id,source_revision=revision,extraction_ref=ref,selector={'kind':'record_key','keys':identity,'field':field})]
     structure=[{k:v for k,v in table.items() if k not in {'records','sampled'}} for table in tables]
@@ -49,4 +59,5 @@ def _probe(selection, ctx, *, workspace, budget_rows=200, credentials=None, meta
         gaps=[CoverageGap(partition=p,code=c) for p,c in raw_gaps],sampled=sampled,issues=issues,
         metadata={'tables':table_metadata,'record_keys':record_keys,'snapshot_ref':ref,'structure_fingerprint':digest(structure),
             'completeness':'schema_only' if metadata_only else 'sampled' if sampled else 'partial' if raw_gaps else 'full',
-            'statistics_scope':'schema_only' if metadata_only else 'observed_rows','extractor_version':'dataagent-database-probe@1'})
+            'statistics_scope':'schema_only' if metadata_only else 'observed_rows','extractor_version':'dataagent-database-probe@1',
+            **storage_types})

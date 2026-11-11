@@ -2,6 +2,7 @@
 from uuid import uuid4
 from dataagent_contracts.intake import IntakeSession, JobHandle, EventPage
 from dataagent_runtime.ports.workbench_store import Write, ChangeSet, VersionConflict
+from .ontology_discovery import DISCOVERY_MODE, MODE_EXTENSION
 
 
 class SessionService:
@@ -13,15 +14,20 @@ class SessionService:
         if (ctx.scope_ref,ctx.subject_ref,ctx.authorization_ref) != (self.scope,self.subject,self.authorization):
             raise PermissionError('context does not match trusted local workspace owner')
 
-    def start(self, sources, goal, ctx):
+    def start(self, sources, goal, ctx, *, mode="mapping"):
         self.check(ctx)
         if goal.authorization_ref != self.authorization:
             raise PermissionError('goal authorization is not the host authorization')
         if not sources or len({s.source_id for s in sources}) != len(sources):
             raise ValueError('sources must have distinct identifiers')
+        if mode not in ('mapping', DISCOVERY_MODE):
+            raise ValueError('unknown intake mode')
+        if mode == DISCOVERY_MODE and (len(sources) != 1 or sources[0].kind != 'sqlite'):
+            raise ValueError('ontology discovery requires exactly one SQLite source')
         sid, jid, gid = uuid4().hex, uuid4().hex, uuid4().hex
         session = IntakeSession(id=sid,revision='1',goal_ref=gid+'@1',sources=sources,
-            job_ref=jid,next_actions=['probe'])
+            job_ref=jid,next_actions=['probe'],
+            extensions={MODE_EXTENSION: mode} if mode == DISCOVERY_MODE else None)
         self.store.commit(ChangeSet(writes=[
             Write('goal',gid,self.scope,goal.model_copy(update={'id':gid}).model_dump(mode='json')),
             Write('session',sid,self.scope,session.model_dump(mode='json')),

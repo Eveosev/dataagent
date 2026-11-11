@@ -24,6 +24,32 @@ def quote(identifier):
     return '"'+identifier.replace('"','""')+'"'
 
 
+def key_constraints(conn, table):
+    identifier = quote(table)
+    foreign_keys = {}
+    for key_id, position, target, source_col, target_col, *_ in conn.execute(
+        f'PRAGMA foreign_key_list({identifier})'
+    ):
+        foreign_keys.setdefault((key_id, target), []).append((position, source_col, target_col))
+    foreign_keys = [
+        {'target_table': target, 'source_columns': [row[1] for row in sorted(columns)],
+         'target_columns': [row[2] for row in sorted(columns)]}
+        for (_, target), columns in sorted(foreign_keys.items())
+    ]
+    unique_keys = []
+    for _, name, unique, origin, partial in conn.execute(f'PRAGMA index_list({identifier})'):
+        if unique and origin != 'pk' and not partial:
+            columns = [row[2] for row in conn.execute(f'PRAGMA index_info({quote(name)})')]
+            if columns and all(column is not None for column in columns):
+                unique_keys.append(columns)
+    constraints = {}
+    if foreign_keys:
+        constraints['foreign_keys'] = foreign_keys
+    if unique_keys:
+        constraints['unique_keys'] = sorted(unique_keys)
+    return constraints
+
+
 def collect(selection, workspace, budget_rows, *, metadata_only=False, credentials=None):
     path=safe_database_path(workspace,selection.locator_ref)
     tables=[];issues=[];gaps=[]
@@ -37,21 +63,29 @@ def collect(selection, workspace, budget_rows, *, metadata_only=False, credentia
         selected=selection.requested_scope.get('tables',available)
         if not isinstance(selected,list) or any(not isinstance(x,str) for x in selected) or len(selected)>100:
             raise ValueError('requested_scope.tables must be a list of at most 100 names')
-        remaining=budget_rows
+        remaining = budget_rows
+        per_table = selection.options.get('sample_strategy') == 'per_table'
+        pending_tables = len(set(selected) & set(available))
         for name in dict.fromkeys(selected):
             if name not in available:
                 issues.append({'code':'table_not_found','table':name});gaps.append((name,'table_not_found'));continue
-            columns=[{'name':row[1],'type':row[2],'nullable':not bool(row[3]),'primary_key_position':row[5]} for row in conn.execute('PRAGMA table_info('+quote(name)+')')]
+            columns = [
+                {'name': row[1], 'type': row[2], 'nullable': not bool(row[3]), 'primary_key_position': row[5]}
+                for row in conn.execute(f'PRAGMA table_xinfo({quote(name)})') if row[6] != 1
+            ]
             keys=[col['name'] for col in sorted(columns,key=lambda c:c['primary_key_position']) if col['primary_key_position']]
             rows=[];sampled=False
             if not metadata_only:
                 order=' ORDER BY '+','.join(quote(key) for key in keys) if keys else ''
                 query='SELECT '+','.join(quote(col['name']) for col in columns)+' FROM '+quote(name)+order+' LIMIT ?'
-                result=conn.execute(query,(remaining+1,)).fetchall()
-                sampled=len(result)>remaining
-                rows=[dict(zip([col['name'] for col in columns],row)) for row in result[:remaining]]
+                limit = (remaining + pending_tables - 1) // pending_tables if per_table else remaining
+                result=conn.execute(query,(limit+1,)).fetchall()
+                sampled=len(result)>limit
+                rows=[dict(zip([col['name'] for col in columns],row)) for row in result[:limit]]
                 remaining-=len(rows)
-            tables.append({'name':name,'columns':columns,'primary_key':keys,'records':rows,'sampled':sampled})
+            pending_tables -= 1
+            tables.append({'name':name,'columns':columns,'primary_key':keys,'records':rows,'sampled':sampled,
+                           **key_constraints(conn, name)})
         conn.rollback()
     return tables,issues,gaps
 

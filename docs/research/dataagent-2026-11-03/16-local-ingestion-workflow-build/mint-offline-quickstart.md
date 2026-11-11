@@ -77,7 +77,32 @@ mint chat --offline -y
 
 核对后告诉 Agent「确认保存当前预览，返回任务 ID、最终状态和发布引用」。成功时任务状态为 `saved`，并有 `release` 引用。同结构再次接入可验证映射复用。Mint 官方桌面 GUI 的完整接入流程待验收。
 
-## 4. 扩展测试
+## 4. 从 SQLite 发现本体
+
+在离线安装后的测试目录创建合成库。
+
+```sh
+sqlite3 sales-discovery.db < "$FIXTURES/sales-discovery.sql"
+```
+
+在工作台上传 `sales-discovery.db`，填写业务目标，选择「从数据库发现本体」，开始接入。展开「来源证据」查看 `party`、`doc_hdr`、`doc_line` 的键、字段类型和样本。关系证据应包含数据库声明的明细 → 订单复合外键，以及观测值匹配的订单 → 客户候选。
+
+同一 Mint 工作区的本机模型就绪后，将工作台的「复制指令」结果发送给 TUI 或 Mint GUI。也可从 Mint 直接发起任务。
+
+> 请用 dataagent-intake 从当前目录的 sales-discovery.db 发现本体。根据来源证据提出实体、每行粒度、标识、属性和关系。提交草案并打开同一任务的工作台，等我审核。
+
+工作台会自动显示草案及待核对项。核对来源表和字段后点击「确认当前草案」或「退回草案」。确认保存草案和审核记录。
+
+无本机模型时，从 DataAgent 工作区运行以下命令。它离线装包并用固定提案走同一工具校验链。用输出中的 `project` 和 `session_id` 打开待审核草案。
+
+```sh
+cd "$DATAAGENT_CHECKOUT"
+MINT_NET_OFFLINE=1 UV_OFFLINE=1 bash scripts/verify_local.sh --phase discovery
+cd <输出中的 project>
+./.mint/packages/dataagent/cli@0.1.0/bin/dataagent workbench view <输出中的 session_id>
+```
+
+## 5. 扩展测试
 
 在 DataAgent 工作区运行下列脚本。每个阶段创建独立的临时 Mint 项目，输出 JSON 证据路径。
 
@@ -98,7 +123,7 @@ bash scripts/verify_local.sh --phase mixed-workflow
 | API 报销和回执恢复 | `api-workflow` 自动启动本地合成业务系统，独立核验单据进入 `waiting_approval` |
 | API 超时后的浏览器对账 | `mixed-workflow` 使用本机 Node、Playwright 与 Chrome，核对同一业务键，确认提交仅派发一次 |
 
-## 5. 常见问题
+## 6. 常见问题
 
 | 现象 | 检查方式 |
 | --- | --- |
@@ -108,4 +133,4 @@ bash scripts/verify_local.sh --phase mixed-workflow
 | 浏览器要求重新进入工作台 | 回到环回地址，重新点击「打开本地工作台」。打开已知任务也可用 `workbench view` |
 | 扫描件显示需要 OCR | 使用已验证的本地 OCR 目录复跑扫描场景。首轮可继续使用文本 PDF 和 CSV 验证映射 |
 
-全新测试目录已通过离线安装、`setup`、`doctor`、环回工作台健康检查与 TUI 启动。四项工作台浏览器测试和两个本地工作流阶段均通过。Mint CLI 运行版本与内核源码核对基线见文首。iface 同步脚本返回 77 并跳过旧制品检查。
+全新测试目录已通过离线安装、`setup`、`doctor`、环回工作台健康检查与 TUI 启动。CSV、PDF、多源映射和 SQLite 本体发现均有浏览器回归覆盖，两个本地工作流阶段已通过。Mint CLI 运行版本与内核源码核对基线见文首。iface 同步脚本返回 77 并跳过旧制品检查。

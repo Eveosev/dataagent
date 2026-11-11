@@ -14,7 +14,7 @@ def invoke(wb, name, args):
     if name == 'intake_start':
         goal = WorkSpec(id=uuid4().hex,goal=args['goal'],
             acceptance_criteria=args.get('acceptance_criteria',['来源可核对']),authorization_ref=wb.authorization)
-        handle = wb.sessions.start([SourceSelection.model_validate(s) for s in args['sources']],goal,wb.ctx)
+        handle = wb.sessions.start([SourceSelection.model_validate(s) for s in args['sources']],goal,wb.ctx,mode=typed.mode)
         return CapabilityResult(status=CapabilityStatus.pending,data=handle.model_dump(mode='json'),
             continuation=Continuation(job_ref=handle.job_ref))
     if name == 'intake_status':
@@ -25,6 +25,20 @@ def invoke(wb, name, args):
         session=(wb.intake.advance(args['session_id'],wb.ctx) if name=='intake_advance'
             else wb.sessions.get(args['session_id'],wb.ctx))
         request=wb.intake.inference_request(session.id,wb.ctx)
+        if request['kind'] == 'ontology_discovery':
+            if session.phase == 'needs_input':
+                action, = session.next_actions
+                code, message, suggestion = {
+                    'retry_probe': ('intake.probe_failed', 'SQLite 来源待探查', '检查来源后继续探查'),
+                    'select_source': ('intake.discovery_no_tables', '未找到可探查的表', '选择含业务表的 SQLite 文件'),
+                    'propose_discovery': ('intake.discovery_proposal_required', '来源已探查，需要本体提案',
+                                          '提交 ontology_discovery_propose'),
+                }[action]
+                return CapabilityResult(status=CapabilityStatus.needs_input, data=request, issues=[
+                    Issue(code=code, message=message, severity='warning', retryable=action == 'retry_probe',
+                          suggested_action=suggestion),
+                ])
+            return CapabilityResult.ok(request)
         if session.phase=='needs_input':
             return CapabilityResult(status=CapabilityStatus.needs_input,data=request,
                 issues=[Issue(code='intake.proposal_required',message='来源已探查，需要映射提案或补充材料',
@@ -32,6 +46,10 @@ def invoke(wb, name, args):
                     suggested_action='根据获准样本提交 intake_propose；有关键歧义时请用户补充',
                     inference_request=request)])
         return CapabilityResult.ok({'session_id':session.id,'phase':session.phase,'revision':session.revision})
+    if name == 'ontology_discovery_propose':
+        return CapabilityResult.ok(wb.discovery.propose(
+            typed.session_id, typed.proposal, typed.expected_revision, wb.ctx,
+        ))
     if name == 'intake_extract':
         return CapabilityResult.ok(wb.intake.extract_document_fields(
             typed.session_id, typed.source_id, typed.fields, typed.expected_revision, wb.ctx,

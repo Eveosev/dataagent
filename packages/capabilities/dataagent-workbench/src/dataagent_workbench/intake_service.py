@@ -6,6 +6,7 @@ from dataagent_ontology.identity import digest
 from .adapters.layer_client import LayerClient,installed_data_package
 from .inference_requests import mapping_request
 from .document_fields import extract_fields
+from .ontology_discovery import is_discovery
 
 
 def _rest_retryable(profile):
@@ -32,6 +33,8 @@ class IntakeService:
         wb=self.wb;s=wb.sessions.get(session_id,ctx)
         if s.phase == 'saved':return s
         prior_profiles = {profile.source_id: profile for profile in self._profiles(s)}
+        if is_discovery(s) and prior_profiles and s.phase != 'probing' and 'retry_probe' not in s.next_actions:
+            return s
         if s.phase == 'preview' and not any(_rest_retryable(profile) for profile in prior_profiles.values()):
             return s
         client=wb.layer_client or LayerClient(installed_data_package(wb.workspace))
@@ -44,9 +47,12 @@ class IntakeService:
             key = 'profile:'+source.source_id
             previous = prior_profiles.get(source.source_id)
             if previous is not None and not _rest_retryable(previous):continue
+            selection = source
+            if is_discovery(s):
+                selection = source.model_copy(update={'options': {**source.options, 'sample_strategy': 'per_table'}})
             try:
-                profile=(client.probe(source,ctx,wb.workspace,previous=previous) if previous is not None
-                         else client.probe(source,ctx,wb.workspace))
+                profile=(client.probe(selection,ctx,wb.workspace,previous=previous) if previous is not None
+                         else client.probe(selection,ctx,wb.workspace))
             except (ValueError,OSError,TimeoutError) as exc:
                 errors.append({'code':'intake.probe_failed','source_id':source.source_id,'detail':str(exc)})
                 continue
@@ -60,10 +66,13 @@ class IntakeService:
         job=wb.store.current('job',s.job_ref,scope=wb.scope)
         profiles=self._profiles(s)
         retry=errors or any(_rest_retryable(profile) for profile in profiles)
+        next_action = 'propose_mapping'
+        if is_discovery(s):
+            next_action = 'propose_discovery' if profiles and profiles[0].metadata['tables'] else 'select_source'
         s=wb.sessions.update(s.id,s.revision,{'phase':'needs_input','issues':errors,
-            'next_actions':['retry_probe'] if retry else ['propose_mapping']},ctx,
+            'next_actions':['retry_probe'] if retry else [next_action]},ctx,
             extra_writes=[Write('job',s.job_ref,wb.scope,{**job['body'],'state':'needs_input','checkpoint':'profiles'},job['revision'])])
-        if len(profiles)==1 and profiles[0].coverage=='full' and not errors:
+        if not is_discovery(s) and len(profiles)==1 and profiles[0].coverage=='full' and not errors:
             key=digest([wb.scope,profiles[0].metadata['structure_fingerprint'],f'{wb.definition.id}@{wb.definition.revision}'])
             cached=wb.store.current('verified_mapping',key,scope=wb.scope)
             if cached:
@@ -73,7 +82,10 @@ class IntakeService:
 
     def inference_request(self,session_id,ctx):
         s=self.wb.sessions.get(session_id,ctx)
-        return mapping_request(s,self._profiles(s),self.wb.definition,self.wb.allowed_model_fields)
+        profiles = self._profiles(s)
+        if is_discovery(s):
+            return self.wb.discovery.request(s, profiles)
+        return mapping_request(s, profiles, self.wb.definition, self.wb.allowed_model_fields)
 
     def extract_document_fields(self, session_id, source_id, fields, expected_revision, ctx):
         wb = self.wb
@@ -102,6 +114,8 @@ class IntakeService:
 
     def submit_proposal(self,session_id,proposal,expected_revision,ctx,*,reused=False):
         wb=self.wb;s=wb.sessions.get(session_id,ctx)
+        if is_discovery(s):
+            raise ValueError('use ontology_discovery_propose for this intake')
         if s.revision!=expected_revision:raise VersionConflict('session changed; reload proposal inputs')
         if proposal.ontology_revision!=f'{wb.definition.id}@{wb.definition.revision}':raise ValueError('target ontology outside task')
         observations=[p for p in self._profiles(s) if p.metadata['structure_fingerprint']==proposal.source_fingerprint]
@@ -122,6 +136,8 @@ class IntakeService:
     def submit_source_proposals(self, session_id, proposals, expected_revision, ctx):
         wb = self.wb
         session = wb.sessions.get(session_id, ctx)
+        if is_discovery(session):
+            raise ValueError('use ontology_discovery_propose for this intake')
         if session.revision != expected_revision:
             raise VersionConflict('session changed; reload proposal inputs')
         observations = self._profiles(session)
@@ -202,7 +218,9 @@ class IntakeService:
             row=wb.store.get('preview',id,rev,scope=wb.scope)
             body=row['body'] if row else None
         draft=self.wb.store.current('ui_draft',s.id,scope=wb.scope)
-        return {'session':s.model_dump(mode='json'),'profiles':[p.model_dump(mode='json') for p in self._profiles(s)],
+        profiles = self._profiles(s)
+        return {'session':s.model_dump(mode='json'),'profiles':[p.model_dump(mode='json') for p in profiles],
+            'discovery':wb.discovery.state(s, profiles),
             'ontology':wb.definition.model_dump(mode='json'),'preview':body,
             'draft':draft['body'] if draft else {},
             'mapping_reused':bool(body and body.get('mapping_reused'))}

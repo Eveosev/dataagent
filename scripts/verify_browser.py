@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import socket
 import subprocess
+import sys
 import tempfile
 import threading
 import time
@@ -27,7 +28,8 @@ try:
  env={k:v for k,v in os.environ.items() if k in {'PATH','HOME','LANG','TMPDIR','PLAYWRIGHT_BROWSERS_PATH'}}
  evidence=ROOT/'.superpowers/sdd/16-local-ingestion-workflow-build-plan/acceptance'
  evidence.mkdir(parents=True,exist_ok=True)
- env.update(DATAAGENT_TEST_URL=url,DATAAGENT_TEST_TOKEN=wb.token,DATAAGENT_SCREENSHOT=str(evidence/'mapping-live.png'))
+ env.update(DATAAGENT_TEST_URL=url,DATAAGENT_TEST_TOKEN=wb.token,DATAAGENT_SCREENSHOT=str(evidence/'mapping-live.png'),
+            DATAAGENT_TEST_WORKSPACE=str(workspace),DATAAGENT_TEST_PYTHON=sys.executable)
  result=subprocess.run(['npm','run','test:e2e'],cwd=ROOT/'packages/capabilities/dataagent-workbench/web',env=env)
  raise SystemExit(result.returncode)
 finally:

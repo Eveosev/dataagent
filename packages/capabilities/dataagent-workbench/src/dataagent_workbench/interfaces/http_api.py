@@ -7,13 +7,14 @@ import time
 import webbrowser
 from pathlib import Path
 from uuid import uuid4
-from urllib.parse import urlencode
+from urllib.parse import unquote, urlencode
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse,FileResponse
 from fastapi.staticfiles import StaticFiles
 from dataagent_contracts.intake import SourceSelection, WorkSpec
 from dataagent_contracts.ontology import MappingSpec,ReviewDecision
 from dataagent_runtime.ports.workbench_store import VersionConflict
+from ..ontology_discovery import DiscoveryReview
 
 
 def create_app(wb):
@@ -119,7 +120,7 @@ def create_app(wb):
         data = await request.json()
         goal = WorkSpec(id='goal',goal=data['goal'],acceptance_criteria=data.get('acceptance_criteria',['来源可核对']),
             authorization_ref=wb.authorization,domain_config_ref=data.get('domain_config_ref'))
-        return wb.sessions.start([SourceSelection.model_validate(s) for s in data['sources']],goal,wb.ctx)
+        return wb.sessions.start([SourceSelection.model_validate(s) for s in data['sources']],goal,wb.ctx,mode=data.get('mode','mapping'))
 
     @app.get('/api/sessions/{sid}')
     def status(sid: str):
@@ -131,7 +132,7 @@ def create_app(wb):
 
     @app.post('/api/files')
     async def upload(request: Request):
-        name=Path(request.headers.get('x-file-name','input')).name
+        name=Path(unquote(request.headers.get('x-file-name','input'))).name
         suffix=Path(name).suffix.lower()
         if suffix not in {'.pdf','.csv','.tsv','.xlsx','.xlsm','.json','.jsonl','.sqlite','.sqlite3','.db'}:
             raise ValueError('unsupported file type')
@@ -147,7 +148,8 @@ def create_app(wb):
         except BaseException:
             path.unlink(missing_ok=True);raise
         if suffix in {'.sqlite','.sqlite3','.db'}:
-            return SourceSelection(source_id=sid,kind='sqlite',locator_ref=str(path.relative_to(wb.workspace)))
+            return SourceSelection(source_id=sid,kind='sqlite',locator_ref=str(path.relative_to(wb.workspace)),
+                extensions={'dataagent.display_name': name})
         return SourceSelection(source_id=sid,kind='file',locator_ref=str(path.relative_to(wb.workspace)),options={'display_name':name})
 
     @app.get('/api/sessions/{sid}/view')
@@ -155,6 +157,11 @@ def create_app(wb):
 
     @app.post('/api/sessions/{sid}/advance')
     def advance(sid:str):return wb.intake.advance(sid,wb.ctx)
+
+    @app.post('/api/sessions/{sid}/discovery/review')
+    async def review_discovery(sid: str, request: Request):
+        decision = DiscoveryReview.model_validate(await request.json())
+        return wb.discovery.review(sid, decision, wb.ctx)
 
     @app.put('/api/sessions/{sid}/draft')
     async def draft(sid:str,request:Request):

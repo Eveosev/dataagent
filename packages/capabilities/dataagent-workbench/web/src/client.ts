@@ -3,10 +3,11 @@ import type {IntakeSession} from './generated/IntakeSession';
 import type {OntologyRevision} from './generated/OntologyRevision';
 import type {MappingSpec,FieldBinding} from './generated/MappingSpec';
 import type {MappingPreview} from './generated/MappingPreview';
+import type {Discovery} from './pages/DiscoveryPage';
 export type {SourceProfile,IntakeSession,OntologyRevision,MappingSpec,FieldBinding};
 export type Preview=MappingPreview & {review_state:string; mapping_reused?:boolean; corrections?:unknown[]};
 export type Draft={bindings?:Record<string,FieldBinding>;source_bindings?:Record<string,Record<string,FieldBinding>>;selected_field?:string;source_id?:string;record_index?:number};
-export type View={session:IntakeSession;profiles:SourceProfile[];ontology:OntologyRevision;preview:Preview|null;draft:Draft;mapping_reused:boolean};
+export type View={session:IntakeSession;profiles:SourceProfile[];ontology:OntologyRevision;preview:Preview|null;draft:Draft;mapping_reused:boolean;discovery:Discovery|null};
 export class ApiError extends Error {constructor(public status:number,message:string){super(message);}}
 export async function api<T>(path:string,method='GET',body?:unknown):Promise<T>{
  const response=await fetch(path,{method,credentials:'same-origin',headers:body?{'Content-Type':'application/json'}:{},body:body?JSON.stringify(body):undefined});

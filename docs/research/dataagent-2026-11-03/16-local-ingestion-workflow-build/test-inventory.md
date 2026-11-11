@@ -42,6 +42,7 @@ status: 验收盘点
 | [scan.pdf](../../../../packages/capabilities/dataagent-scenarios/fixtures/intake/scan.pdf) | 纯图片 PDF，INV-003，1260.00 CNY | 实际 OCR、页与文本证据、映射金额。RapidOCR 已在装包后完成识别、原文引用、映射和保存 |
 | [invoices.xlsx](../../../../packages/capabilities/dataagent-scenarios/fixtures/intake/invoices.xlsx) | 单 sheet，2 条记录，中间空行 | 第二条金额定位到 B4。稀疏行定位已有数据层测试，安装后接入待验证 |
 | [invoices.json](../../../../packages/capabilities/dataagent-scenarios/fixtures/intake/invoices.json) | 一条 INV-001，金额字段为字符串 | 保留原值，建立 JSON Pointer。另有根对象、嵌套数组动态样例。安装后接入待验证 |
+| [sales-discovery.sql](../../../../packages/capabilities/dataagent-scenarios/fixtures/intake/sales-discovery.sql) | 两个客户、两张销售单、三条明细 | 已用离线包和 Chrome 核对复合外键、无声明客户关联、草案与待核对项 |
 | [expected.json](../../../../packages/capabilities/dataagent-scenarios/fixtures/intake/expected.json) | 文本 PDF、缺页、Excel 单元格、扫描件期望值 | 用于独立核对结果，保留在验收侧 |
 
 ### 测试运行时生成的数据
@@ -94,6 +95,7 @@ status: 验收盘点
 | M2-04 | REST 中断、恢复与漂移 | 安装后第二页 429 可继续。第一页只请求一次，已保存锚点保留。版本冲突和缺少全局版本的分页保留缺口 | 更大范围的游标继续及版本变化后重新探查 |
 | M2-05 | 多源身份与冲突 | 同一 INV-003 四种来源合并一个对象。金额冲突保留两份断言并阻止保存。Chrome 已验证跨源顺序变化时的正确行定位 | 补充跨业务域身份和真实混排 PDF 同对象样例 |
 | M2-06 | 来源权限和用户入口 | 远端使用宿主连接 ID，拒绝工具参数改写范围。浏览器工作台列出连接名和类型 | 从 Mint 双端发起数据库和 API 接入 |
+| M2-07 | 陌生 SQLite 本体发现 | 离线装包后由公开工具提交固定草案。Chrome 上传、查看证据、确认后刷新。单测覆盖两个等价客户表的歧义 | 用本机模型分别在 Mint TUI 和 GUI 从同一证据生成草案 |
 
 ### M3 API 环境探查与持久工作流
 

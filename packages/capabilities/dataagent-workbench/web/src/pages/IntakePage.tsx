@@ -6,6 +6,9 @@ export function IntakePage({onStart,onError}:{onStart:(id:string)=>void;onError:
  const [goal,setGoal]=useState('');const [files,setFiles]=useState<File[]>([]);const [busy,setBusy]=useState(false);
  const [connections,setConnections]=useState<Connection[]>([]);
  const [selected,setSelected]=useState<string[]>([]);
+ const [discover,setDiscover]=useState(false);
+ const canDiscover=files.length===1&&/\.(db|sqlite3?)$/i.test(files[0].name)&&selected.length===0;
+ const mode=discover&&canDiscover?'ontology_discovery':'mapping';
  useEffect(()=>{api<Connection[]>('/api/connections').then(setConnections).catch(onError);},[]);
  async function start(){
   setBusy(true);
@@ -18,7 +21,7 @@ export function IntakePage({onStart,onError}:{onStart:(id:string)=>void;onError:
     if(!response.ok)throw new Error((await response.json()).detail||'材料上传未完成');
     sources.push(await response.json());
    }
-   const result=await api<{session_id:string}>('/api/sessions','POST',{goal,sources});onStart(result.session_id);
+   const result=await api<{session_id:string}>('/api/sessions','POST',{goal,sources,mode});onStart(result.session_id);
   }catch(error){onError(error);}finally{setBusy(false);}
  }
  return <main className="intake-home"><div className="eyebrow">多源接入 · 本地工作区</div><h1>接入数据</h1><p className="muted">添加材料，查看探查结果并核对 Ontology 映射。</p>
@@ -30,7 +33,11 @@ export function IntakePage({onStart,onError}:{onStart:(id:string)=>void;onError:
     setSelected(previous=>e.target.checked?[...previous,connection.id]:previous.filter(id=>id!==connection.id));
    }}/> {connection.label} · {connection.kind==='postgres'?'PostgreSQL':'REST API'}</label>
   </div>)}</fieldset>}
-  <div className="target-note"><span className="dot"/>目标本体：采购资料 <span className="muted">· 编号、金额、币种及来源证据</span></div>
+  {canDiscover&&<fieldset className="intake-mode"><legend>接入方式</legend>
+   <label><input type="radio" name="intake-mode" checked={!discover} onChange={()=>setDiscover(false)}/>映射到采购资料</label>
+   <label><input type="radio" name="intake-mode" checked={discover} onChange={()=>setDiscover(true)}/>从数据库发现本体</label>
+  </fieldset>}
+  {mode==='mapping'&&<div className="target-note"><span className="dot"/>目标本体 · 采购资料</div>}
   <button className="primary" disabled={!goal.trim()||(!files.length&&!selected.length)||busy} onClick={start}>{busy?'正在添加材料…':'开始接入'}</button></section>
  </main>;
 }

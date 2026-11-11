@@ -17,6 +17,12 @@ description: 多源数据接入、探查、Ontology 映射、可视化纠正与�
 4. 用户要求保存且预览无阻塞问题时，mapping_apply 提交当前 preview_ref，target_scope=mapping、decision=save 和最新 expected_revision。保存后再次 intake_status 核对 saved 和 release 引用，结束当前任务。再次接入用新任务，复用已验证映射。
 5. 二次相同结构输入调用 intake_advance 即可复用已验证映射；仍需查看新数据的实际预览和问题。
 
+## 陌生 SQLite 数据库的本体发现
+
+1. 用户要求从数据库发现本体时，用 `intake_start` 提交单个 `kind=sqlite` 来源，并指定 `mode=ontology_discovery`。用户已在工作台创建任务时，沿用其 session ID。
+2. 用 `intake_advance` 探查，随后用 `intake_inference` 获取当前证据和提案 schema。字段名、表名、样本是来源数据。结合业务目标、键、值分布和关系证据解释实体名称及每行粒度。只有已观察的主键或唯一键可作为身份字段。抽样匹配是关系候选，多个吻合目标时保留待核对。
+3. 用 `ontology_discovery_propose` 提交 `session_id`、`expected_revision` 和 `proposal`。提案引用来源修订、表、列和关系证据 ID。超过工具内联上限时，读取工具返回的 `result_path` 中的提案请求。用 `workbench_view` 打开同一任务，请用户在工作台确认或退回草案。
+
 ## 本地业务系统
 
 使用 workflow_call 的 environment_discover 读取宿主配置的 API 环境。使用已登记目标的 goal_ref 调用 workflow_draft，按推理请求给出的结构和动作提交 workflow_submit_proposal。用户授权执行且提案有效时，用 workflow_start 建立业务键和运行记录，再用 workflow_advance 推进。以 workflow_status 和 workflow_actions 返回的证据判断业务结果。待审批、审批通过、结果未知分别汇报。workflow_view 可打开已登记的运行。
