@@ -215,7 +215,6 @@ def test_filtered_source_totals_are_unknown_not_fail(rt):
     )
     items = {i.check: i for i in result.data.report.items}
     assert items["measure_conservation"].outcome == "unknown"
-    assert "不以行数接近判定正确" or True  # unknown, never silently pass
 
 
 def test_pagination_gap_fails(rt):

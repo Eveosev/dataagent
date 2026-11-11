@@ -11,9 +11,7 @@ re-reads the bound table outside the read-once guard, and the samplers
 rows before the bound aggregate. None of them may pass with the metric's
 version attached.
 
-The legal controls from the same round stay green: the exact aggregate
-and the ``SELECT *`` CTE passthrough remain accepted and deliver the
-bound total 300.
+The matching positive controls live in ``test_r27_caliber_where_fixes.py``.
 """
 
 from __future__ import annotations
@@ -22,8 +20,6 @@ import pytest
 
 from dataagent_contracts.core import CapabilityStatus
 
-from dataagent_application import helpers
-from dataagent_application.execution import sql as sql_exec
 from dataagent_application.planning import expressions as plan
 from dataagent_application.planning import requirements as req
 
@@ -134,29 +130,6 @@ def _generate(runtime, ctx, table, requirement, metric, sql):
 
 
 _WINDOW = "occurred_on >= '2026-01-01' AND occurred_on < '2026-02-01'"
-
-
-def _delivered_total(runtime, ctx, table, requirement, metric, result):
-    executed = sql_exec.execute_duckdb_sql(
-        sql_exec.ExecuteDuckdbSqlInput.model_validate(
-            {
-                "spec": result.data.spec.model_dump(mode="json"),
-                "table_refs": [_table_payload(table)],
-                "semantic_versions": [{"id": metric["draft_id"], "revision": "r1"}],
-                "grain": "region",
-                "unit": "CNY",
-            }
-        ),
-        ctx,
-        runtime,
-    )
-    assert executed.status is CapabilityStatus.ok
-    computed = helpers.load_computed_table(runtime, executed.data.result.table_ref)
-    return sum(
-        float(row[1])
-        for row in computed.rows
-        if len(row) > 1 and isinstance(row[1], (int, float))
-    )
 
 
 @pytest.mark.parametrize(
@@ -287,35 +260,3 @@ def test_row_samplers_are_rejected(runtime, ctx, caliber_case, sql):
     assert result.status is CapabilityStatus.failed
     assert result.issues[0].code == "da06.sql_caliber_mismatch"
     assert "SAMPLE" in result.issues[0].message.upper()
-
-
-def test_control_shapes_still_deliver_the_bound_total(runtime, ctx, caliber_case):
-    """The exact aggregate and the CTE passthrough keep passing at 300."""
-
-    table, requirement, metric = caliber_case
-    name = plan._sql_table_name(table)
-    for sql in (
-        f"SELECT region, sum(amount) AS total FROM {name} "
-        f"WHERE approved = true AND {_WINDOW} GROUP BY region",
-        f"WITH base AS (SELECT * FROM {name}) "
-        f"SELECT region, sum(amount) AS total FROM base "
-        f"WHERE approved = true AND {_WINDOW} GROUP BY region",
-    ):
-        result = _generate(runtime, ctx, table, requirement, metric, sql)
-        assert result.status is CapabilityStatus.ok
-        assert _delivered_total(runtime, ctx, table, requirement, metric, result) == 300.0
-
-
-def test_cte_chain_with_bound_filters_only_still_passes(runtime, ctx, caliber_case):
-    """A read CTE whose WHERE holds only the bound conjuncts is fine."""
-
-    table, requirement, metric = caliber_case
-    name = plan._sql_table_name(table)
-    result = _generate(
-        runtime, ctx, table, requirement, metric,
-        f"WITH base AS (SELECT * FROM {name} "
-        f"WHERE approved = true AND {_WINDOW}) "
-        f"SELECT region, sum(amount) AS total FROM base GROUP BY region",
-    )
-    assert result.status is CapabilityStatus.ok
-    assert _delivered_total(runtime, ctx, table, requirement, metric, result) == 300.0

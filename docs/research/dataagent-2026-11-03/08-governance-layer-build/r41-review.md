@@ -206,7 +206,9 @@ X1、X2、X4、X5 的 runtime 部分见 §1。
 |-|-|-|
 | `governance/` | `common.py`（夹具）、`r1_wire_identity.py`、`r2_policy_bootstrap.py`、`r3_gold_leak_and_exclusion.py`、`r5_empty_gold_and_errors.py`、`r6_sensitivity_gaps.py`、`r8_egress_hook.py`、`r9_misc.py`、`r13_dedup.py`、`compare_snapshot.py` | X1、X2、X4、X5、G1–G10、§2.5 |
 | `runtime/` | `runtime_probe.py`、`invoke_out.py`、`ledger_race.py`、`resfields.py` | X1、X2、X4、R2–R5 |
-| `s0/` | `ops.py`、`repro_app_warn.py`、`repro_app_enforce.py`、`repro_nores.py`、`count32.py`、`probe/test_probe32.py` | X2、X3、S1–S3、§4 |
+| `s0/` | `ops.py`、`repro_app_warn.py`、`repro_app_enforce.py`、`repro_nores.py`、`count32.py` | X2、X3、S2、S3、§4 |
+
+S1 的治理探针源码可在提交 `fbe24d8` 查阅。
 
 `governance/` 脚本以自身目录为 `sys.path`，可直接运行：
 

@@ -144,7 +144,7 @@ tests: contracts 117 passed；data 649 passed，1 warning
 
 ## 6. 复现
 
-脚本在 [r41-repro/](r41-repro/)：`data/` 对应 D1–D6（`repro_bypass.py`、`repro_label.py`、`repro_subject.py`、`repro_decid.py`、`repro_ckpt.py`、`probes/test_probe_metrics.py`；`probe_parsers.py` 为解析器边界探针，结果正常），`contracts/` 对应 C1–C4（`schema_vs_model.py`、`contract_probe2.py`、`cp3.py`、`cp4.py`）。
+脚本目录为 [r41-repro/](r41-repro/)。`data/` 包含 `repro_bypass.py`、`repro_label.py`、`repro_subject.py`、`repro_decid.py`、`repro_ckpt.py` 和解析器边界探针 `probe_parsers.py`。`contracts/` 对应 C1–C4，包含 `schema_vs_model.py`、`contract_probe2.py`、`cp3.py`、`cp4.py`。D5 指标探针源码可在提交 `fbe24d8` 查阅。
 
 脚本按原工作目录编写，临时目录写死为 `/tmp/claude-502/data`，部分脚本含本机绝对路径。运行：
 

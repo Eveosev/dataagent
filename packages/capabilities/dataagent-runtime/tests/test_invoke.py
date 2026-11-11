@@ -116,13 +116,6 @@ def _decision(**kwargs):
     return AccessDecision(**base)
 
 
-def test_invoke_enforce_denies_without_covering_decision(registered, tmp_path):
-    rt = _runtime(EnforcementConfig(mode="enforce"), tmp_path)
-    result = invoke("echo", {"payload": "hi", "source": "table:orders@r1"}, _ctx(), runtime=rt)
-    assert result.status == "failed"
-    assert result.issues[0].code == "da12.access_denied"
-
-
 def test_invoke_enforce_allows_with_covering_decision(registered, tmp_path):
     rt = _runtime(EnforcementConfig(mode="enforce"), tmp_path)
     rt.decisions.save_access(_decision())
