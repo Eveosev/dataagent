@@ -35,4 +35,4 @@ kernel_commit: 663e2a33fb5c0517e78c1a329beee8032e261a70
 | 歧义与拒绝 | 组件测试覆盖两个同样吻合的客户表、空键、虚构字段和关系、二进制与 Base64 文本冲突、空库、生成列和过期提案 |
 | 本机模型 | `mint model status --offline` 未发现托管模型部署。本轮使用固定结构化提案，Mint TUI 和原生 GUI 的模型推理待本机模型就绪后复验 |
 
-[离线操作步骤](mint-offline-quickstart.md#4-从-sqlite-发现本体)
+[SQLite 测试用例](offline-input-cases.md#数据库和-api-输入) · [Mint 操作步骤](mint-offline-quickstart.md#2-从-tui-或原生-gui-操作)

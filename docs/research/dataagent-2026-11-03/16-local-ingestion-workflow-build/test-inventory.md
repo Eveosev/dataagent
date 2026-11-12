@@ -6,6 +6,8 @@ status: 验收盘点
 
 # 测试数据与验收场景清单
 
+逐项准备材料、操作和核对结果见[离线输入测试用例](offline-input-cases.md)。
+
 | 里程碑 | 已有证据 | 当前验收状态 |
 | --- | --- | --- |
 | M1 文件接入 | 离线装包、真实 Mint Agent、Mint TUI 首次接入与复用、Chrome 文件映射、RapidOCR 扫描 PDF | Mint GUI、真实混排 PDF 和 Excel 安装后验收待完成 |
