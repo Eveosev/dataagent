@@ -4,7 +4,7 @@ title: 广义 DataAgent 文档集
 ---
 # 广义 DataAgent 文档集
 
-> 状态：草稿 v0.2（2026-11-16；00–07 成套）。
+> 状态：草稿 v0.3（2026-11-17；00–07 成套；各篇决策已拍：P1 不提 agent-kernel PR，其余按推荐）。
 > 输入：[附B 原始诉求](<附B 原始诉求.md>)。
 > 读法：先读 00 的统一词汇，再按编号顺序读；只想知道接下来做什么，直接读分期路线、PRD、MVP 实施文档。
 > 本文档集以本地 Markdown 为源（docs/dataagent），用 bigproj publish 发布到飞书。
@@ -47,5 +47,5 @@ title: 广义 DataAgent 文档集
 1. 先读本文件与 00，再读 PRD 与 MVP 实施文档。
 2. 代码事实以 <仓库>@<分支>@<提交号> 为准；接手时先 fetch，核对提交号和行号有没有漂移。
 3. 与规范或已拍的裁决冲突时，以规范和裁决为准，并提醒用户。
-4. 待拍决策只认裁决清单：https://modelbest.feishu.cn/wiki/Ah8MwzzwliTB8FkWXUlcHiwVnpd?table=tbl6DLj1IhjkG5qY
+4. 决策只认裁决清单：https://modelbest.feishu.cn/wiki/Ah8MwzzwliTB8FkWXUlcHiwVnpd?table=tbl6DLj1IhjkG5qY
 5. 有评论的篇不要整篇重发。

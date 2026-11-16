@@ -2,13 +2,13 @@
 doc_id: mvp
 title: 07 MVP 实施文档
 answers: P1（多源数据接入）的任务清单：每个任务改哪些文件、跑什么命令、怎么验收、怎么回滚，谁来做
-status: 草稿 v0.2（37 张任务卡，W1–W2；已按独立复核修正命令、范围与依赖；crew 调用方式待 payne 提供后补进 §0.4）
+status: 草稿 v0.3（37 张任务卡，W1–W2；11-17 已拍：P1 不提 agent-kernel PR，T40–T43 暂缓；crew 调用方式待 payne 提供后补进 §0.4）
 feishu_node: QkPrw4kegiVZdZkHtJHcLIEinVg
 feishu_obj: KfxJduEjyo9YyqxkA9tcCM8znpb
 ---
 # 07 MVP 实施文档
 
-> 输入：[06 PRD](<06 PRD.md>)（目标 G、验收 V、改动 FR）、[05 分期路线与 MVP 范围](<05 分期路线与 MVP 范围.md>)、[03 平台方案与 iface 共建](<03 平台方案与 iface 共建.md>)（R0–R3、PR-1 至 PR-4）、[04 验收方法与数据](<04 验收方法与数据.md>)。
+> 输入：[06 PRD](<06 PRD.md>)（目标 G、验收 V、改动 FR）、[05 分期路线与 MVP 范围](<05 分期路线与 MVP 范围.md>)、[03 平台方案与 iface 共建](<03 平台方案与 iface 共建.md>)（R0–R3；PR-1 至 PR-4 暂缓）、[04 验收方法与数据](<04 验收方法与数据.md>)。
 > 代码基线：DataAgent `codex/16-local-intake@87d5e8e` 加 worktree 未提交内容（T00 后以集成分支 `feat/p1-intake` 为准）；agent-kernel `master@33075118`。
 
 ## 0. 怎么用这份文档
@@ -31,7 +31,7 @@ feishu_obj: KfxJduEjyo9YyqxkA9tcCM8znpb
 |---|---|---|
 | `CAP` | 能力包目录 | `packages/capabilities` |
 | `BENCH` | 09-benchmark 目录 | `docs/research/dataagent-2026-11-03/09-benchmark` |
-| `KERNEL` | agent-kernel 开发 clone（不是 `upstream/agent-kernel`） | 按 [03](<03 平台方案与 iface 共建.md>) 的 Q5 定 |
+| `KERNEL` | agent-kernel 开发 clone（不是 `upstream/agent-kernel`） | P1 不需要（[03](<03 平台方案与 iface 共建.md>) 的 Q5 已拍：P1 不提 PR） |
 | `OCR_ROOT` | 已验证的本机 OCR 目录 | payne 提供（方案 13） |
 | `PG_LOCATOR` | 本机 PostgreSQL 测试库地址，含种子发票表（`scripts/verify_local.py:347`） | payne 提供 |
 | `LINGCAI_DATASET` | 令才 Computer Use 数据集 | `~/.codex/visualizations/2026/10/28/01a182a2-1762-7d71-a3b1-f35548b004be/lingcai-dataset-2026-10-28` |
@@ -44,7 +44,7 @@ feishu_obj: KfxJduEjyo9YyqxkA9tcCM8znpb
 1. T00 建集成分支 `feat/p1-intake`，它包含 main 上的文档集（00–07、09 计划 v0.3），crew 执行者在 worktree 里能读到。
 2. 每张卡在自己的分支 `crew/<编号>` 上做，crew 放在 `.crew/worktrees/<编号>`（`.crew/` 由 T00 加进 `.gitignore`）。
 3. 验收通过、codex 审核结论为「通过」后，payne 确认合入 `feat/p1-intake`；crew 不自动合并。
-4. agent-kernel 的卡在 `$KERNEL` 上建分支 `dataagent/pr-<n>`；执行方只做到本地测试通过，推送和开合并请求由 payne 确认后执行。
+4. agent-kernel 的卡（T40–T43）P1 暂缓；将来恢复时在 `$KERNEL` 上建分支 `dataagent/pr-<n>`，执行方只做到本地测试通过，推送和开合并请求由 payne 确认后执行。
 5. P1 退出时（T54）`feat/p1-intake` 合入 main，两个宿主各自更新指针。
 
 ### 0.4 crew 派工约定
@@ -61,7 +61,7 @@ feishu_obj: KfxJduEjyo9YyqxkA9tcCM8znpb
 - 期望文件、金标由被测程序生成；必须独立编写。
 - 为了让可判定率好看给报文硬加映射；空数组就是空数组，按缺口如实分类。
 - 把领域词（报销、发票、采购等）写进核心包；放领域包。
-- 在验收中途给平台层改包名；P1 不改名（03 的 Q2 推荐 A）。
+- 在验收中途给平台层改包名；P1 不改名（03 的 Q2 已拍 A）。
 - 在 `upstream/agent-kernel` 里提交；那是只读跟随的副本。
 - 直接改 `test-inventory.md` 的状态；统一由 T53 登记。
 
@@ -81,7 +81,7 @@ feishu_obj: KfxJduEjyo9YyqxkA9tcCM8znpb
 | 2.2 平台收敛（R0–R3） | T10、T11a、T11b、T12a、T12b、T13、T14、T15、T16 | W1–W2 |
 | 2.3 接入能力补齐 | T20–T25 | W1–W2 |
 | 2.4 评测与验收数据 | T30–T38 | W1–W2 |
-| 2.5 iface PR | T40–T43 | W1–W2 |
+| 2.5 iface PR（暂缓） | T40–T43 | — |
 | 2.6 双端、评审与收尾 | T50–T54 | W2 |
 
 ```mermaid
@@ -126,7 +126,7 @@ flowchart LR
 
 | 目标 | 文件 | 改法 | 命令 | 验收 | 回滚 |
 |---|---|---|---|---|---|
-| 确认打包版 Mint.app 的回合里 Agent 能不能看到 bundle 的 MCP 工具 | `docs/research/dataagent-2026-11-03/16-local-ingestion-workflow-build/gui-channel-check.md`（新增）、同目录 `README.md`（登记） | 在装了 `preset-intake` 的工作区打开 Mint.app，让 Agent 列出可用工具；记录 Mint.app 版本、`runtime_layout`、工具列表、通知里的 MCP 拉起错误 | 人工操作；截图 | 记录写明「工具列表是否出现 `dataagent-workbench__*`」；结论写回 03 的 Q1，决定 T43 是否要做 | — |
+| 确认打包版 Mint.app 的回合里 Agent 能不能看到 bundle 的 MCP 工具 | `docs/research/dataagent-2026-11-03/16-local-ingestion-workflow-build/gui-channel-check.md`（新增）、同目录 `README.md`（登记） | 在装了 `preset-intake` 的工作区打开 Mint.app，让 Agent 列出可用工具；记录 Mint.app 版本、`runtime_layout`、工具列表、通知里的 MCP 拉起错误 | 人工操作；截图 | 记录写明「工具列表是否出现 `dataagent-workbench__*`」；结论写回 03 的 Q1；看不到时按 Q1（11-17 已拍）GUI 验收改用非 Kernel 布局，Kernel command 组件通道原型由派工方另开卡（P1 级） | — |
 
 ### 2.2 平台收敛（R0–R3）
 
@@ -178,7 +178,7 @@ flowchart LR
 |---|---|---|---|---|---|
 | 所有外发过一个闸门；只有一个 HTTP 客户端；工作台探查经访问复检 | `$CAP/dataagent-runtime/src/dataagent_runtime/{policy/egress.py,env/http.py}`（新增）、`enforcement.py`、`interfaces/unified.py`；`$CAP/dataagent-data/src/dataagent_data/{adapters/sources/rest.py,preparation/extraction.py}`；`$CAP/dataagent-operations/src/dataagent_operations/adapters/api.py`；`$CAP/dataagent-ocr/src/dataagent_ocr/{egress.py,providers/openai_compat.py}`；`$CAP/dataagent-workbench/src/dataagent_workbench/{inference_requests.py,adapters/layer_client.py}`；各包 `tests/` | 一套外发规则覆盖 MCP 结果、CLI 输出（`unified.py:456-477`）、推断请求三个出口，`candidate_spans` 纳入；三套 HTTP 客户端改用 `env/http`（关代理、禁重定向、体积上限、来源白名单）；工作台探查改经注册表与 DA12.1 复检 | `bash scripts/test_all.sh` | 通过；新增的外发测试覆盖三个出口与 `candidate_spans` | 逐项开关；revert |
 
-**T16 领域包与领域词检查** · 执行：zcode · 审核：codex · 依赖：T11b · 优先级：P0 · W2 · FR1.14 / G1.10 · 按 00 的 Q2 推荐 A 执行
+**T16 领域包与领域词检查** · 执行：zcode · 审核：codex · 依赖：T11b · 优先级：P0 · W2 · FR1.14 / G1.10 · 按 00 的 Q2（已拍 A）执行
 
 | 目标 | 文件 | 改法 | 命令 | 验收 | 回滚 |
 |---|---|---|---|---|---|
@@ -210,7 +210,7 @@ flowchart LR
 |---|---|---|---|---|---|
 | 多来源组合二次接入也复用已验证映射 | `$CAP/dataagent-workbench/src/dataagent_workbench/intake_service.py`；`$CAP/dataagent-workbench/tests/test_proposal_loop.py` | 已验证映射按「作用域 + 来源指纹集合 + 本体修订」登记与命中（现只在单来源时，`intake_service.py:75`、`:203`） | `bash scripts/test_all.sh dataagent-workbench -- tests/test_proposal_loop.py` | 新增用例：同样组合的多来源二次接入 `mapping_reused=true`；来源指纹变了不误复用 | revert |
 
-**T24 默认最小披露** · 执行：dsh · 审核：codex · 依赖：T15、06 的 Q3 拍板 · 优先级：P1 · W2 · FR1.4 / G1.9
+**T24 默认最小披露** · 执行：dsh · 审核：codex · 依赖：T15（06 的 Q3 已拍 A）· 优先级：P1 · W2 · FR1.4 / G1.9
 
 | 目标 | 文件 | 改法 | 命令 | 验收 | 回滚 |
 |---|---|---|---|---|---|
@@ -284,29 +284,31 @@ flowchart LR
 |---|---|---|---|---|---|
 | `dataagent run --case` 能跑 B16、B17 | `$CAP/dataagent-runtime/src/dataagent_runtime/interfaces/bench.py`、`$CAP/dataagent-runtime/tests/`；`$BENCH/tasks/{B16,B17}-*/history/runs/` | B16 调身份对齐能力输出实体对；B17 调映射能力输出字段对应 | `bash scripts/prepare_acceptance.sh && cd $BENCH && python3 -I harness/run.py --task B16 --adapter dataagent-cli --round-id $RID --split development --limit 3 --config harness/config.local.json`；换新 `$RID` 跑 B17 | 两个任务各 3 条 `status=ok` 且出分 | revert |
 
-### 2.5 iface PR（agent-kernel）
+### 2.5 iface PR（agent-kernel，暂缓）
 
-前置：03 的 Q5 拍板、`$KERNEL` 已建；每个 PR 先和对接人确认方向，契约类先写设计笔进 `kernel/docs/notes/` 并在 DECISIONS 拍板。执行方只做到本地测试通过；推送与开合并请求由 payne 确认后执行。行号基于 `33075118`，开工前更新并核对。
+**2026-11-17 已拍（03 的 Q5）：P1 先不向 agent-kernel 提 PR。T40–T43 暂缓，不派 crew，不进 P1 退出条件；下面的卡保留为将来恢复时的起点，恢复时先重写前置与行号。**
 
-**T40 PR-1 工具效果注解与按效果审批** · 执行：dsh · 审核：codex · 对接：李奕杉、李鹏越 · 依赖：T12a · 优先级：P0 · W1–W2 · FR1.15 / G1.5、G1.16
+原前置：03 的 Q5 拍板、`$KERNEL` 已建；每个 PR 先和对接人确认方向，契约类先写设计笔进 `kernel/docs/notes/` 并在 DECISIONS 拍板。执行方只做到本地测试通过；推送与开合并请求由 payne 确认后执行。行号基于 `33075118`，开工前更新并核对。
+
+**T40 PR-1 工具效果注解与按效果审批** · 执行：dsh · 审核：codex · 对接：李奕杉、李鹏越 · 依赖：T12a · 优先级：暂缓（原 P0）· FR1.15 / G1.5、G1.16
 
 | 目标 | 文件 | 改法 | 命令 | 验收 | 回滚 |
 |---|---|---|---|---|---|
 | MCP 工具的效果注解进入审批判断 | `$KERNEL/kernel/iface/src/tool.rs`；`$KERNEL/mint/crates/mint-core/src/mcp/client.rs`；`$KERNEL/mint/crates/mint-core/src/approval.rs`；`$KERNEL/kernel/docs/notes/`（设计笔） | `ToolSpec` 只加不改地增加效果等级与幂等标记；MCP 适配时读 `readOnlyHint` 等注解；审批按效果判，只读不弹确认；新文件写 lineage | `cd $KERNEL && cargo test -p agentcpm-iface && cargo test -p mint-core` | 测试通过；新增用例覆盖注解到审批的映射；附 DataAgent 默认审批下一次接入的确认次数（V1.5） | 关闭合并请求 |
 
-**T41 PR-2 MCP 调用下发调用元数据** · 执行：dsh · 审核：codex · 对接：李奕杉 · 依赖：T11a · 优先级：P0 · W2 · FR1.15 / G1.16
+**T41 PR-2 MCP 调用下发调用元数据** · 执行：dsh · 审核：codex · 对接：李奕杉 · 依赖：T11a · 优先级：暂缓（原 P0）· FR1.15 / G1.16
 
 | 目标 | 文件 | 改法 | 命令 | 验收 | 回滚 |
 |---|---|---|---|---|---|
 | MCP 工具能读到 `session_id`、`call_id`、`turn` | `$KERNEL/mint/crates/mint-core/src/mcp/client.rs`（`call_tool` 的 `_meta`）及其测试 | 按 `kernel/iface/src/types/mod.rs:5-11` 的 `CallMeta` 在 `tools/call` 的 `_meta` 里下发 | `cd $KERNEL && cargo test -p mint-core` | 测试通过；DataAgent 的 `resolve_context()` 在 Mint 会话里取到宿主下发的会话编号，与 Mint 会话一致 | 关闭合并请求 |
 
-**T42 PR-3 bundle 包凭据声明与注入** · 执行：dsh · 审核：codex · 对接：李鹏越 · 依赖：T14 · 优先级：P0 · W2 · FR1.15 / G1.6、G1.16 · 按 01 的 Q1 推荐 A 执行
+**T42 PR-3 bundle 包凭据声明与注入** · 执行：dsh · 审核：codex · 对接：李鹏越 · 依赖：T14 · 优先级：暂缓（原 P0）· FR1.15 / G1.6、G1.16 · 按 01 的 Q1（已拍 A）执行
 
 | 目标 | 文件 | 改法 | 命令 | 验收 | 回滚 |
 |---|---|---|---|---|---|
 | bundle 能声明凭据逻辑名，宿主只在拉起它的 MCP 进程时注入 | `$KERNEL/mint/crates/mint-manifest/src/validate.rs`；`$KERNEL/mint/crates/mint-core/src/mcp_loader.rs`；必要时 `$KERNEL/kernel/iface/src/policy/secret.rs`；设计笔 | 放开 bundle 的 `capabilities.secrets`；用户在 TUI / GUI 设置值；注入只到声明它的进程；按已注册值打码 | `cd $KERNEL && cargo test -p mint-manifest && cargo test -p mint-core` | 测试通过；合入后 V1.6 在打包桌面版 GUI 下也通过 | 关闭合并请求 |
 
-**T43 PR-4 打包桌面版 bundle 工具可见** · 执行：auto · 审核：codex · 对接：Mint GUI 负责人 · 依赖：T02 结论为「看不到」· 优先级：P1 · W2 · G1.4 · 暂不派（T02 出结论后重写）
+**T43 PR-4 打包桌面版 bundle 工具可见** · 执行：auto · 审核：codex · 对接：Mint GUI 负责人 · 依赖：T02 结论为「看不到」· 优先级：暂缓（原 P1）· G1.4 · 暂不派
 
 | 目标 | 文件 | 改法 | 命令 | 验收 | 回滚 |
 |---|---|---|---|---|---|
@@ -320,11 +322,11 @@ flowchart LR
 |---|---|---|---|---|---|
 | TUI 完成 C-01、C-02、C-03 | 证据包入 Release，仓内留摘要 `16-local-ingestion-workflow-build/evidence-tui.md` 并在同目录 `README.md` 登记 | 全新工作区装 preset-intake；按 05 §4.2 操作；记录审批策略 | 人工 | 证据包含版本、会话、任务、发布引用、录屏；M1-09、M2-06 达到「已验证」条件 | — |
 
-**T51 Mint GUI 证据包** · 执行：人工（payne），不派 crew · 依赖：T02、T50（需要时还有 T43）· 优先级：P0（或登记外部阻断）· W2 · G1.4
+**T51 Mint GUI 证据包** · 执行：人工（payne），不派 crew · 依赖：T02、T50 · 优先级：P0（或登记外部阻断）· W2 · G1.4
 
 | 目标 | 文件 | 改法 | 命令 | 验收 | 回滚 |
 |---|---|---|---|---|---|
-| GUI 完成 C-01、C-02，或登记外部阻断 | `16-local-ingestion-workflow-build/evidence-gui.md`、同目录 `README.md` | 同 T50 | 人工 | M1-10 达到「已验证」条件；不通则写明阻断原因、升级对象与日期 | — |
+| GUI 完成 C-01、C-02，或登记外部阻断 | `16-local-ingestion-workflow-build/evidence-gui.md`、同目录 `README.md` | 同 T50；T02 结论为看不到时改用非 Kernel 布局，并在证据里写明所用布局 | 人工 | M1-10 达到「已验证」条件；不通则写明阻断原因、升级对象与日期 | — |
 
 **T52 体验观察** · 执行：人工 · 依赖：T50 · 优先级：P1 · W2 · G1.9
 
@@ -332,11 +334,11 @@ flowchart LR
 |---|---|---|---|---|---|
 | 一次目标用户无提示操作观察 | `16-local-ingestion-workflow-build/ux-observation.md`、同目录 `README.md` | 按方案 16 §10 记录首次预览时间、完成时间、主动操作、澄清轮次、重做次数 | 人工 | 达到 06 的 Q2 门槛，或记录差距与改进项 | — |
 
-**T53 独立评审与登记** · 执行：dsh（复跑与记录）+ codex（审核结论）· 依赖：T10、T11a、T11b、T12a、T12b、T13、T14、T16、T20–T23、T25、T30–T38、T40–T42、T50、T51（T15、T24、T43、T52 完成的话一并纳入）· 优先级：P0 · W2 · G1.11
+**T53 独立评审与登记** · 执行：dsh（复跑与记录）+ codex（审核结论）· 依赖：T10、T11a、T11b、T12a、T12b、T13、T14、T16、T20–T23、T25、T30–T38、T50、T51（T15、T24、T52 完成的话一并纳入）· 优先级：P0 · W2 · G1.11
 
 | 目标 | 文件 | 改法 | 命令 | 验收 | 回滚 |
 |---|---|---|---|---|---|
-| P1 可验收结论；验收矩阵登记 | `16-local-ingestion-workflow-build/{r1-review.md,r1-fixes.md,test-inventory.md,README.md}` | 按 06 §6 的 V1.1–V1.16 逐条复跑命令、核对证据，区分已修复、部分修复、新缺陷，附复现输入与 `file:line`；把达到条件的 M1-xx、M2-xx 改为「已验证」；codex 只读审核记录并给结论 | `bash scripts/test_all.sh`；各卡的验收命令（逐条列在 r1-review.md） | codex 结论为「通过」，r1-review.md 结论为「可验收」；或缺陷清单转成新卡 | — |
+| P1 可验收结论；验收矩阵登记 | `16-local-ingestion-workflow-build/{r1-review.md,r1-fixes.md,test-inventory.md,README.md}` | 按 06 §6 的 V1.1–V1.15 逐条复跑命令（V1.16 暂缓）、核对证据，区分已修复、部分修复、新缺陷，附复现输入与 `file:line`；把达到条件的 M1-xx、M2-xx 改为「已验证」；codex 只读审核记录并给结论 | `bash scripts/test_all.sh`；各卡的验收命令（逐条列在 r1-review.md） | codex 结论为「通过」，r1-review.md 结论为「可验收」；或缺陷清单转成新卡 | — |
 
 **T54 合入与登记** · 执行：人工（payne），不派 crew · 依赖：T53 · 优先级：P0 · W2（11-29）
 
@@ -361,7 +363,7 @@ flowchart LR
 
 一期完成 = 下面几条同时成立：
 
-1. [06 PRD](<06 PRD.md>) §7.5 的 P1 退出条件成立（V1.1–V1.16 达标，或按规定登记外部阻断）。
+1. [06 PRD](<06 PRD.md>) §7.5 的 P1 退出条件成立（V1.1–V1.15 达标，或按规定登记外部阻断；V1.16 暂缓）。
 2. [05 分期路线](<05 分期路线与 MVP 范围.md>) §4.2 的验收用例 C-01 至 C-08 全部通过或登记外部阻断。
 3. 飞书开发交付里 P1 的 P0 卡全部为「已完成」，验收状态由验收人填写。
 
@@ -369,14 +371,14 @@ flowchart LR
 
 1. 平台层改名、存储与打包收敛（R4–R5）、Python 组件 SDK 抽出（P2）。
 2. 多概念本体、定义页、本体查询工具、可视化视图（P2）。
-3. PR-5 至 PR-8（P2 起）。
+3. 向 agent-kernel 提 PR（PR-1 至 PR-8；11-17 已拍 P1 不提，T40–T43 暂缓）。
 4. 质量规则、专家金标、B04 / B05 判分器补齐（P3）。
 5. 食品安全场景（等数据）。
 
 ## 6. 风险与待定项
 
-1. 两周内任务多：37 张卡里 P0 有 33 张（含人工卡）。关键路径是 T00 → T10 → T11a → T12a → T12b → T13 → T23 → T50 → T53 → T54，以及 T10 → T11a → T11b → T16 → T34a → T34b → T35 → T36。W2 中（11-25）复核；P1 级的 T15、T24、T43、T52 可顺延到 W3，不影响 P1 退出。
-2. T40–T42 依赖 `$KERNEL` 写权限与对接人确认（03 的 Q5），未就绪时先提设计笔，G1.5、G1.6 的 GUI 部分登记外部阻断。
+1. 两周内任务多：37 张卡里 P0 有 30 张（含人工卡；T40–T43 暂缓）。关键路径是 T00 → T10 → T11a → T12a → T12b → T13 → T23 → T50 → T53 → T54，以及 T10 → T11a → T11b → T16 → T34a → T34b → T35 → T36。W2 中（11-25）复核；P1 级的 T15、T24、T52 可顺延到 W3，不影响 P1 退出。
+2. 不提 PR 的代价（03 的 Q5，11-17 已拍）：宿主不认工具效果注解，默认审批下只读工具仍弹确认（V1.5）；GUI 下凭据只能走钥匙串逻辑名（V1.6 的 GUI 部分）；会话编号由本机解析，主体按本机单用户 fail-closed。这几项按绕行验收，不通时登记外部阻断。
 3. T34a、T34b 只读调用 `$QL_AUDIT`（来源仓 `~/Vibe/AgentCPM-agent-evolution`）；字段目录能否进 DataAgent 仓由 payne 确认。
 4. 期望文件与金标（T21、T25）必须独立编写，否则 V1.1、V1.3 不可信。
 5. 平台卡（T11a–T14）改动接入主链路，与验收并行；每张卡都跑安装后验收，保留旧路径开关一个版本。

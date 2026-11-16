@@ -2,7 +2,7 @@
 doc_id: prd
 title: 06 PRD
 answers: P1（多源数据接入）与 P2（本体的实现、打通、可视化）改什么、为什么改；每个目标怎么验收
-status: 草稿 v0.1（P1、P2 细到验收命令；P3–P6 见 05；待拍 Q1–Q11）
+status: 草稿 v0.2（P1、P2 细到验收命令；P3–P6 见 05；11-17 决策已拍：P1 不提 agent-kernel PR，其余按推荐）
 feishu_node: SXeGwwK9Zi9VyzkpHYycsPcMnUc
 feishu_obj: JxbYdi11YoijDQxwF4ZcSOy2nRb
 ---
@@ -18,7 +18,7 @@ feishu_obj: JxbYdi11YoijDQxwF4ZcSOy2nRb
 2. 本体只有单实体、包内固定一个；本体草案转不成正式修订；发布后的对象没有查询入口；应用层与本体完全断开（[02](<02 借鉴 Palantir Ontology 与 Databricks Genie.md>) §4）。
 3. 平台事各包各做一套（[03](<03 平台方案与 iface 共建.md>) §3）；默认审批、凭据、宿主超时三处直接挡住 Mint 双端验收（[01](<01 多源接入与本体的 iface 依赖与分工.md>) §1）。
 4. 真实业务数据拿不到，审核场景没有对错真值；09-benchmark 有 3217 条用例但没有一轮正式跑分（[04](<04 验收方法与数据.md>) §7）。
-5. 11-16 已拍：多源接入是刚需（P1），P2 做本体的实现、打通、可视化；我们承担完善 iface 的职责；不只锚定令才（[00](<00 术语与总览.md>) §13）。
+5. 11-16 已拍：多源接入是刚需（P1），P2 做本体的实现、打通、可视化；我们承担完善 iface 的职责；不只锚定令才（[00](<00 术语与总览.md>) §13）。11-17 已拍：P1 先不向 agent-kernel 提 PR，缺口在平台层绕行；其余决策按推荐（§8）。
 
 ## 2 目标与非目标
 
@@ -41,7 +41,7 @@ feishu_obj: JxbYdi11YoijDQxwF4ZcSOy2nRb
 | G1.13 | 令才真实报文接入并映射到规则字段目录，可判定率提升（L2） | V1.13 | P1 |
 | G1.14 | 冻结版本可回归（L2） | V1.14 | P1 |
 | G1.15 | 变异用例能检出（L3） | V1.15 | P1 |
-| G1.16 | P1 需要的 iface PR 已提交并有 DataAgent 调用证据 | V1.16 | P1 |
+| G1.16 | （暂缓）P1 需要的 iface PR 已提交并有 DataAgent 调用证据；11-17 已拍 P1 不提 PR | V1.16 | 暂缓 |
 | G2.1 | 多概念本体模型可用 | V2.1 | P2 |
 | G2.2 | 本体修订有影响分析、发布门禁与回退 | V2.2 | P2 |
 | G2.3 | 本体发现能转成正式修订 | V2.3 | P2 |
@@ -53,7 +53,7 @@ feishu_obj: JxbYdi11YoijDQxwF4ZcSOy2nRb
 | G2.9 | 平台收敛到位（R4–R5） | V2.9 | P2 |
 | G2.10 | 定义页可用 | V2.10 | P2 |
 | G2.11 | 破坏性变更有门禁 | V2.11 | P2 |
-| G2.12 | Skills 包可用（Q7 选 A 时纳入退出条件） | V2.12 | P2 |
+| G2.12 | Skills 包可用（Q7 已拍 A，纳入 P2 退出条件） | V2.12 | P2 |
 | G2.13 | 关系与本体发现有正式基线（B18） | V2.13 | P2 |
 
 ### 2.2 非目标
@@ -69,7 +69,7 @@ feishu_obj: JxbYdi11YoijDQxwF4ZcSOy2nRb
 2. 可追溯：展示给用户或下游的每个值都能追到来源锚点与修订。
 3. 可证明：没有真值的场景用 [04](<04 验收方法与数据.md>) 的三层数据、五种方法分别报数，不合成一个准确率。
 4. 不过拟合：核心与领域包按三条硬规则分界（[04](<04 验收方法与数据.md>) §5）。
-5. 协议共建：平台缺口在平台层先绕行，同时向 agent-kernel 提 PR（[03](<03 平台方案与 iface 共建.md>) §8）。
+5. 协议共建：平台缺口在平台层先绕行；PR 设计留在 [03](<03 平台方案与 iface 共建.md>) §8，P1 不提（11-17 已拍）。
 
 ### 3.2 推荐与理由
 
@@ -95,7 +95,7 @@ feishu_obj: JxbYdi11YoijDQxwF4ZcSOy2nRb
 | FR1.12 | 目标字段目录接入：把外部规则字段目录作为领域包导入，用通用映射能力把来源字段映射上去；令才 ql-audit 规则字段目录为第一例 | 领域包 `lingcai-expense`（新增）；`scripts/verify_local.py` 新阶段 `lingcai-payloads` | 不存在 | P1 |
 | FR1.13 | 评测任务 B16 多源对齐、B17 字段映射（含令才私有子集）、B19 令才变异集：数据、转换器、判分器 | `docs/research/dataagent-2026-11-03/09-benchmark/` | 只在计划里 | P1 |
 | FR1.14 | 领域包与领域词检查：采购本体移出工作台核心；核心包源码领域词 CI 检查 | `wb/bootstrap.py:35`、`wb/ontologies/`；新增检查脚本 | 采购本体写死在核心 | P1 |
-| FR1.15 | 向 agent-kernel 提 PR-1 至 PR-4 | agent-kernel（独立 clone） | 未提 | P1 |
+| FR1.15 | （暂缓）向 agent-kernel 提 PR-1 至 PR-4；11-17 已拍 P1 不提 | agent-kernel（独立 clone） | 未提 | 暂缓 |
 | FR1.16 | R0：代码入库、导入守卫、iface 基线、干净检出测试修复 | 全仓；`packaging/iface-baseline.toml` | 分支未推送；data 1 项、CLI 1 项测试失败 | P1 |
 | FR1.17 | R1：调用上下文唯一解析，主体与用途不由调用方自报 | 平台层 `types/`、`policy/context.py`；10 处调用点 | 至少 10 处来源 | P1 |
 | FR1.18 | R3：外发闸门覆盖 MCP、CLI、推断请求三个出口；HTTP 客户端统一；工作台探查经注册表与访问复检（不进 P1 退出条件，可顺延 W3） | 平台层 `policy/egress`、`env/http` | 3 套闸门、3 套客户端；`candidate_spans` 未过闸 | P1 |
@@ -125,8 +125,8 @@ feishu_obj: JxbYdi11YoijDQxwF4ZcSOy2nRb
 | MCP 工具 | 所有工具带 `readOnlyHint` / `destructiveHint` / `idempotentHint`；工具 schema 里 `context` 改为可选，调用参数里的上下文只作提示；长调用超时前返回 `retry_probe` 与续跑句柄 | P1 |
 | CLI | 新增 `dataagent run --case/--out/--config`；`dataagent doctor` 输出 OCR 引擎与模型版本 | P1 |
 | 验收脚本 | `verify_local.sh` 新增 `lingcai-payloads` 阶段；`files` 阶段扩到 8 类样本；`sources` 阶段加哨兵凭据 | P1 |
-| 连接配置 | 连接清单只存逻辑名；凭据按 `env:`、`keychain:`、`file:` 逻辑名解析；PR-3 合入后改为宿主注入 | P1 |
-| agent-kernel | PR-1 `ToolSpec` 效果等级；PR-2 MCP `_meta` 调用元数据；PR-3 bundle `capabilities.secrets`；PR-4 打包桌面版 bundle 工具可见 | P1 |
+| 连接配置 | 连接清单只存逻辑名；凭据按 `env:`、`keychain:`、`file:` 逻辑名解析；将来 PR-3 合入后改为宿主注入 | P1 |
+| agent-kernel | （暂缓，11-17 已拍 P1 不提）PR-1 `ToolSpec` 效果等级；PR-2 MCP `_meta` 调用元数据；PR-3 bundle `capabilities.secrets`；PR-4 打包桌面版 bundle 工具可见 | 暂缓 |
 | MCP 工具 | 新增 `ontology_describe`、`object_query`、`relation_query`、`fact_trace`；审核与发布工具改为动作形式（参数 + 提交条件 + 日志） | P2 |
 | 契约 | `OntologyRevision` 多概念、值类型、链接与关系对象、定义页；`DatasetRelease` 加发布指针与未决、排除清单 | P2 |
 | 包 | `dataagent-runtime` 改名 `dataagent-platform`（保留一个版本的再导出）；新增 Python 组件 SDK | P2 |
@@ -139,8 +139,8 @@ feishu_obj: JxbYdi11YoijDQxwF4ZcSOy2nRb
 | V1.2 | `bash scripts/verify_local.sh --phase sources --postgres-locator <只读库>` | 退出码 0；REST 第 1 页请求次数 = 1，第 2 页 429 后续跑完成；M2-01 至 M2-04 在安装产物上为「已验证」 | P1 |
 | V1.3 | `bash scripts/prepare_acceptance.sh && bash scripts/verify_local.sh --phase sources --postgres-locator "$PG_LOCATOR"`（跨源样本组与金标见 07 的 T25） | 对象数、冲突数与独立金标一致；冲突对象保存返回阻断问题；M2-05 为「已验证」 | P1 |
 | V1.4 | TUI、GUI 各做一次 C-01 与 C-02（05 §4.2），证据摘要写入 `16-local-ingestion-workflow-build/evidence-{tui,gui}.md`（07 的 T50、T51） | 证据包含发起、网页纠正、返回聊天保存、发布引用、所用审批策略；M1-09、M1-10、M2-06 为「已验证」 | P1 |
-| V1.5 | 默认审批配置下做一次 C-01，确认次数记入 `evidence-tui.md` | 全流程人工确认不超过 3 次，只读类工具不弹确认；依赖 PR-1，未合入时登记外部阻断 | P1 |
-| V1.6 | sources 阶段的连接加哨兵凭据（新增），再从 Mint TUI 跑一次同样的接入；然后 `grep -r <哨兵值>` 工作区（除 `.dataagent/secrets/`）、`~/.mint` 会话日志、工具结果文件 | 0 命中；`intake_status`、`intake_inference` 输出不含凭据字段；GUI 部分依赖 PR-3 | P1 |
+| V1.5 | 默认审批配置下做一次 C-01，确认次数记入 `evidence-tui.md` | 全流程人工确认不超过 3 次，只读类工具不弹确认；宿主认注解要 PR-1（P1 不提），做不到时登记外部阻断并记录所用审批策略 | P1 |
+| V1.6 | sources 阶段的连接加哨兵凭据（新增），再从 Mint TUI 跑一次同样的接入；然后 `grep -r <哨兵值>` 工作区（除 `.dataagent/secrets/`）、`~/.mint` 会话日志、工具结果文件 | 0 命中；`intake_status`、`intake_inference` 输出不含凭据字段；GUI 部分用钥匙串逻辑名绕行（宿主注入要 PR-3，P1 不提），绕行不通时登记外部阻断 | P1 |
 | V1.7 | 二次接入（单来源、多来源各一例）；30 MB 级样本接入；M1-08、M2-04 复跑 | 预览里 `mapping_reused=true`；单次 `intake_advance` 墙钟小于 55 秒且分段完成；M1-08、M2-04 为「已验证」 | P1 |
 | V1.8 | `bash scripts/verify_local.sh --phase bootstrap`；`dataagent doctor`；在安装目录 grep 开发仓绝对路径 | 退出码 0；doctor 输出 OCR 引擎与模型版本；grep 0 命中；M1-01 为「已验证」 | P1 |
 | V1.9 | 一次目标用户无提示操作观察（方案 16 §10），记录写入 `ux-observation.md`（07 的 T52） | 记录首次预览时间、完成时间、主动操作、澄清轮次、重做次数；10 MB 以内文件首次预览不超过 60 秒，澄清不超过 2 轮（Q2） | P1 |
@@ -150,7 +150,7 @@ feishu_obj: JxbYdi11YoijDQxwF4ZcSOy2nRb
 | V1.13 | `bash scripts/verify_local.sh --phase lingcai-payloads --dataset "$LINGCAI_DATASET" --ql-audit "$QL_AUDIT" --version <规则包版本> --scenes common,8.5,8.8 --mapping <Mint 会话导出的映射>`（新增，07 的 T34b、T35） | 29 份报文全部接入，每个字段有 JSON Pointer 锚点；按前置与后置 QL 计算的静态可判定率从 11.8%（3683 次中 435 次）提升到门槛（Q11）；新补字段证据可核验率 100%；映射不上的字段逐项分类（报文缺失、空数组、目录未注册、名称不一致） | P1 |
 | V1.14 | V1.13 的命令加 `--repeat 2`；引擎重跑结果写入 `$PRIVATE_DIR/lingcai/baseline/`，仓库存摘要（07 的 T36） | 两次的快照摘要、映射结果、可判定规则集合逐项一致；引擎重跑记录规则版本、引擎版本与结果快照（缺地址与凭据时登记外部阻断） | P1 |
 | V1.15 | B19：`python3 -I harness/run.py --task B19 --adapter dataagent-cli --round-id <轮次号> --config harness/config.local.json`（07 的 T33） | 6 类变异（超标金额、日期越界、跨单重复发票号、购方名称不符、税号不符、缺必需附件）各正反成对；检出率与干净单误报率达到门槛（Q11）；漏检逐条归因到接入、映射或规则 | P1 |
-| V1.16 | 在 03 §8.3 的 PR 表登记 PR-1 至 PR-4 的提交链接与合入状态（07 的 T40–T42） | 已在 agent-kernel 提交（或按 03 的 Q5 提交设计笔），附一致性测试与 DataAgent 调用证据；合入状态登记在 03 §8.3 | P1 |
+| V1.16 | （暂缓）在 03 §8.3 的 PR 表登记 PR-1 至 PR-4 的提交链接与合入状态（07 的 T40–T42） | 11-17 已拍 P1 不提 PR，本项不进 P1 退出条件 | 暂缓 |
 | V2.1 | `uv run --frozen --extra dev --project packages/capabilities/dataagent-ontology pytest`（含新增 `tests/test_ontology_model.py`） | 全部通过；报销本体至少 5 个概念、4 条关系并通过校验；旧单实体 `procurement.json` 仍可读 | P2 |
 | V2.2 | 新增 `tests/test_revision_impact.py`；网页操作一次录屏 | 把采购本体「金额」单位从元改为分后，影响报告的映射数、实例数与金标一致；重验前发布返回阻断问题；回退后发布指针等于上一修订，审核历史条数不减 | P2 |
 | V2.3 | `bash scripts/verify_local.sh --phase discovery`（新增断言）；文件与 REST 发现样本 | 确认草案后生成本体修订草案、审核后发布成功；文件与 REST 发现各一组通过；M2-07 在 TUI、GUI 各由真实模型生成草案（本机模型不可用时登记外部阻断） | P2 |
@@ -172,11 +172,11 @@ feishu_obj: JxbYdi11YoijDQxwF4ZcSOy2nRb
 | 依赖 | 谁 | 没到位时 |
 |---|---|---|
 | 代码入库（T00） | payne（本机） | 无绕行；crew 无法派工 |
-| PR-1 工具效果注解 | 李奕杉、李鹏越 | V1.5 登记外部阻断；验收记录所用审批策略 |
-| PR-3 bundle 凭据 | 李鹏越 | 连接清单路径写包内 `.mcp.json` 字面值；凭据用钥匙串逻辑名；GUI 下仍不通则登记外部阻断 |
-| GUI 工具通道（PR-4） | Mint GUI 负责人 | 11-18 核实；不通则登记外部阻断并升级，TUI 先验收 |
-| PR-2 调用元数据 | 李奕杉 | 本机 `local-owner` 作为唯一主体，fail-closed |
-| agent-kernel 写权限 | kernel 组 | 先提设计笔与需求，由对方实现（03 的 Q5） |
+| PR-1 工具效果注解（P1 不提） | 李奕杉、李鹏越 | V1.5 登记外部阻断；验收记录所用审批策略 |
+| PR-3 bundle 凭据（P1 不提） | 李鹏越 | 连接清单路径写包内 `.mcp.json` 字面值；凭据用钥匙串逻辑名；GUI 下仍不通则登记外部阻断 |
+| GUI 工具通道 | payne（T02 核实）、Mint GUI 负责人 | 11-18 核实；看不到则改用非 Kernel 布局，同时做 Kernel command 组件通道原型（03 的 Q1）；仍不通则登记外部阻断并升级，TUI 先验收 |
+| PR-2 调用元数据（P1 不提） | 李奕杉 | 本机 `local-owner` 作为唯一主体，fail-closed |
+| agent-kernel 写权限 | kernel 组 | P1 不需要（03 的 Q5 已拍：P1 不提 PR） |
 | 令才引擎地址与凭据 | payne | V1.14 的引擎重跑部分登记外部阻断；V1.13、V1.15 用本地确定性检查 |
 | B16、B17 公开数据的许可 | 我们 | 换候选集，在 manifest 里如实记缺口 |
 | ql-audit 规则集与报销测试数据 | ql-audit 子项目 | P2 的 G2.6 顺延 |
@@ -184,12 +184,12 @@ feishu_obj: JxbYdi11YoijDQxwF4ZcSOy2nRb
 
 ### 7.2 核心包需求排期
 
-| PR（缺口编号） | 最晚需要 | 用在 | 没到位时 |
+| PR（缺口编号） | 用到的期（提交时机另定） | 用在 | 没到位时 |
 |---|---|---|---|
-| PR-1（B1） | P1（W2） | G1.5 | 登记外部阻断 |
-| PR-2（A1） | P1（W2） | G1.10、G3.3 | 本机单用户 fail-closed |
-| PR-3（B2） | P1（W2） | G1.6、G1.4 | 钥匙串逻辑名绕行 |
-| PR-4（GUI 通道） | P1（W1 核实） | G1.4 | 登记外部阻断 |
+| PR-1（B1） | P1（暂缓提交） | G1.5 | 登记外部阻断 |
+| PR-2（A1） | P1（暂缓提交） | G1.10、G3.3 | 本机单用户 fail-closed |
+| PR-3（B2） | P1（暂缓提交） | G1.6、G1.4 | 钥匙串逻辑名绕行 |
+| PR-4（GUI 通道） | P1（W1 核实；暂缓提交） | G1.4 | 非 Kernel 布局 + command 组件通道原型；仍不通则登记外部阻断 |
 | PR-5（A2） | P2 | 本体审核、令才澄清 | 返回 → 网页操作 → 再调用 |
 | PR-6（B4） | P3 | G3.4 | 本地事件日志 |
 | PR-7（B3、A5） | P5 | G5.3、G5.4 | 本机常驻进程 |
@@ -219,10 +219,12 @@ MintHub 上的候选与判断见 [03](<03 平台方案与 iface 共建.md>) §11
 
 ### 7.5 退出条件
 
-1. **P1**：G1.1–G1.3、G1.6–G1.8、G1.10–G1.13、G1.15、G1.16 全部通过（G1.10 不含 FR1.18）；G1.14 的组件回归部分通过，引擎重跑部分通过或登记外部阻断；G1.4 的 TUI 部分通过；G1.4 的 GUI 部分、G1.5、G1.9 通过，或登记为外部阻断且有升级记录。分支合入 main，宿主指针更新。
-2. **P2**：G2.1–G2.11、G2.13 全部通过（G2.12 看 Q7），或 G2.3 的真实模型部分登记为外部阻断；独立评审「可验收」。
+1. **P1**：G1.1–G1.3、G1.6 的 TUI 部分、G1.7、G1.8、G1.10–G1.13、G1.15 全部通过（G1.10 不含 FR1.18）；G1.14 的组件回归部分通过，引擎重跑部分通过或登记外部阻断；G1.4 的 TUI 部分通过；G1.4 的 GUI 部分、G1.5、G1.6 的 GUI 部分、G1.9 通过，或登记为外部阻断且有升级记录；G1.16 暂缓（11-17 已拍 P1 不提 PR）。分支合入 main，宿主指针更新。
+2. **P2**：G2.1–G2.13 全部通过（G2.12 按 Q7 已拍 A 纳入），或 G2.3 的真实模型部分登记为外部阻断；独立评审「可验收」。
 
-## 8 待拍决策
+## 8 决策（2026-11-17 已拍）
+
+> Q1–Q11 均按推荐拍板（A），裁决清单 D-019 至 D-029。Q7 选 A：G2.12 纳入 P2 退出条件；Q10、Q11 的门槛在首轮跑出后按推荐里的规则校准。
 
 | | 决策 | 选项 A | 选项 B | 推荐 | 影响 |
 |---|---|---|---|---|---|

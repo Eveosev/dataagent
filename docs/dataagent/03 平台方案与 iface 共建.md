@@ -2,7 +2,7 @@
 doc_id: platform
 title: 03 平台方案与 iface 共建
 answers: 现有实现怎么按 iface 族重组（平台层）；我们怎么参与完善 iface（PR 清单与规矩）；分几步做、每步怎么验收
-status: 草稿 v0.2（设计；并入 11-16 已拍「我们承担完善 iface 职责」；未实施；待拍 Q1–Q6）
+status: 草稿 v0.3（设计；并入 11-16 已拍「我们承担完善 iface 职责」与 11-17 已拍「P1 不提 agent-kernel PR」；未实施）
 feishu_node: Ld3jwNrhDiHOiNkr90xcBl2NnHg
 feishu_obj: CzIudMsyuo9ygjxRjDWct1ZWnBd
 ---
@@ -21,8 +21,8 @@ feishu_obj: CzIudMsyuo9ygjxRjDWct1ZWnBd
    - **iface 共建**：缺口按「契约类 / 实现类」转成 PR（§8），按 kernel 的规矩提交，用 DataAgent 的真实调用作验收证据。
 3. **当前的主要问题是同一件平台事做了多套，而不是没对齐 iface**：调用上下文至少 10 处来源、授权模型 3 套、内容寻址存储 2 种布局、SQLite 6 个、出网闸门 3 套、凭据 3 套、HTTP 客户端 3 套、MCP 服务框架 2 套（3 个入口）、摘要计算 8 份（§3）。先收敛，再对齐。
 4. **分 8 步（R0–R7）**：R0–R3 在 P1 内完成，P1 验收要的身份、凭据、超时、审批都在这几步里；P1 期间平台代码留在 `dataagent-runtime` 包内按族建子模块，不改包名，避免在验收中途大改；R4–R5 在 P2，含改名为 `dataagent-platform` 并抽出通用的 Python 组件 SDK（§8.4）；R6 随 PR 合入逐项切换；R7 在 MintHub 发布前。分期见 [05 分期路线](<05 分期路线与 MVP 范围.md>)，任务卡见 [07 MVP 实施文档](<07 MVP 实施文档.md>)。
-5. **P1 要提的 PR 有 4 个**：工具效果注解、MCP 调用下发调用元数据、bundle 包凭据声明与注入、打包桌面版 bundle 工具可见（最后一个先核实，见下条）。
-6. **先核实一个风险**：打包桌面版走 Kernel 回合（`mint/packages/gui-tauri/src-tauri/src/bridge/lifecycle.rs:47-91`），Mint 装的业务包不进 Kernel（`mint/tools/scripts/mint-runtime-launch.sh:477`；唯一例外是脚本里写死查找的 `tool-fs`，`:318-333`），bundle 的 MCP 工具由 cpmrt 装载（`MC/engine.rs:686-693`），但回合在 Kernel 里跑，Agent 很可能看不到这些工具（推断）。这可能就是 GUI 一直停住的原因；如果属实，P1 的 GUI 验收要换通道（Q1）或靠 PR-4。
+5. **P1 不向 agent-kernel 提 PR（2026-11-17 已拍，Q5）**：P1 用到的 4 项机制（工具效果注解、MCP 调用下发调用元数据、bundle 包凭据声明与注入、打包桌面版 bundle 工具可见）在平台层绕行；PR-1 至 PR-8 保留为设计，提交时机另定。绕行与影响见 §8.3 和 [06 PRD](<06 PRD.md>) §7.1。
+6. **先核实一个风险**：打包桌面版走 Kernel 回合（`mint/packages/gui-tauri/src-tauri/src/bridge/lifecycle.rs:47-91`），Mint 装的业务包不进 Kernel（`mint/tools/scripts/mint-runtime-launch.sh:477`；唯一例外是脚本里写死查找的 `tool-fs`，`:318-333`），bundle 的 MCP 工具由 cpmrt 装载（`MC/engine.rs:686-693`），但回合在 Kernel 里跑，Agent 很可能看不到这些工具（推断）。这可能就是 GUI 一直停住的原因；如果属实，P1 的 GUI 验收改用非 Kernel 布局，同时做 Kernel command 组件通道的原型（Q1，11-17 已拍）；PR-4 不提。
 
 ## 2 非 Rust 包接入 iface 的通道（agent-kernel@33075118）
 
@@ -189,18 +189,20 @@ flowchart LR
 3. **lineage**：新增源文件在文件头写 `lineage: <repo>:<path>:<line> (A/B/C/D/E)`，否则不合并（`kernel/README.md` §4 第 5 条）。
 4. **按调用链验收**：每个 PR 附一致性测试，并附 DataAgent 的真实调用作证据（`kernel/README.md` §4 第 4 条）；证据写清能证明什么、不能证明什么。
 5. **两次规则**：只提至少两个应用会用到的机制，PR 说明里写清 ql-audit、rsi-toolkit 是否同样受益；只有 DataAgent 需要的留在平台层。
-6. **在哪里写**：`upstream/agent-kernel` 只 pull 不提交；PR 在独立 clone 上开发，写权限见 Q5。
+6. **在哪里写**：`upstream/agent-kernel` 只 pull 不提交；PR 在独立 clone 上开发，写权限见 Q5。P1 不提交（11-17 已拍）。
 
 ### 8.3 PR 清单
 
 类型：契约 = 改 `kernel/iface/src`；实现 = 契约已有，改 Mint 让 MCP 包用得上。行号基于 agent-kernel `33075118`。
 
+> 2026-11-17 已拍（Q5）：P1 先不提 PR。下表「期」是用到该机制的期，提交时机另定；PR-1 至 PR-4 的任务 T40–T43 暂缓，P1 期间按 [06 PRD](<06 PRD.md>) §7.1 的绕行验收。
+
 | PR | 类型 | 改什么 | 位置 | 对接 | DataAgent 验收证据 | 期 | 任务 |
 |---|---|---|---|---|---|---|---|
-| PR-1 工具效果注解与按效果审批 | 契约 + 实现 | `ToolSpec` 只加不改地增加效果等级（只读 / 推进 / 副作用）与幂等标记；Mint 读 MCP 工具的 `readOnlyHint`、`destructiveHint`、`idempotentHint`，审批按效果判 | `kernel/iface/src/tool.rs:35-39`；`MC/mcp/client.rs:738-757`；`MC/approval.rs:148-174` | 李奕杉（tool）、李鹏越（policy） | 默认审批下一次文件接入人工确认不超过 3 次（V1.5） | P1 | T40 |
-| PR-2 MCP 调用下发调用元数据 | 实现 | `tools/call` 的 `_meta` 增加 `session_id`、`call_id`、`turn`（契约已要求「工具调用时必须可读到」） | `MC/mcp/client.rs:397-408`；`kernel/iface/src/types/mod.rs:5-11` | 李奕杉 | DataAgent 任务记录里的会话编号与 Mint 会话一致；R1 走宿主路径 | P1 | T41 |
-| PR-3 bundle 包凭据声明与注入 | 契约 + 实现 | 允许 bundle 声明 `capabilities.secrets` 逻辑名；用户在 TUI / GUI 设置值；宿主只在拉起声明它的 MCP 进程时注入；`LeakDetector` 按已注册值打码 | `MM/validate.rs:868-870`；`MC/mcp_loader.rs:404-438`；`kernel/iface/src/policy/secret.rs` | 李鹏越 | V1.6 在打包桌面版 GUI 下也通过 | P1 | T42 |
-| PR-4 打包桌面版 bundle 工具可见 | 实现（先核实） | Kernel 回合能调到 cpmrt 装载的 bundle MCP 工具，或桌面布局把 bundle 工具注册进 Kernel | `mint/tools/scripts/mint-runtime-launch.sh:458-509`；`MC/engine.rs:686-693` | Mint GUI 负责人（待确认） | GUI 会话工具列表出现 `dataagent-workbench__*`；V1.4 的 GUI 部分 | P1（11-18 核实后定） | T02、T43 |
+| PR-1 工具效果注解与按效果审批 | 契约 + 实现 | `ToolSpec` 只加不改地增加效果等级（只读 / 推进 / 副作用）与幂等标记；Mint 读 MCP 工具的 `readOnlyHint`、`destructiveHint`、`idempotentHint`，审批按效果判 | `kernel/iface/src/tool.rs:35-39`；`MC/mcp/client.rs:738-757`；`MC/approval.rs:148-174` | 李奕杉（tool）、李鹏越（policy） | 默认审批下一次文件接入人工确认不超过 3 次（V1.5） | P1 用到；暂缓提交 | T40（暂缓） |
+| PR-2 MCP 调用下发调用元数据 | 实现 | `tools/call` 的 `_meta` 增加 `session_id`、`call_id`、`turn`（契约已要求「工具调用时必须可读到」） | `MC/mcp/client.rs:397-408`；`kernel/iface/src/types/mod.rs:5-11` | 李奕杉 | DataAgent 任务记录里的会话编号与 Mint 会话一致；R1 走宿主路径 | P1 用到；暂缓提交 | T41（暂缓） |
+| PR-3 bundle 包凭据声明与注入 | 契约 + 实现 | 允许 bundle 声明 `capabilities.secrets` 逻辑名；用户在 TUI / GUI 设置值；宿主只在拉起声明它的 MCP 进程时注入；`LeakDetector` 按已注册值打码 | `MM/validate.rs:868-870`；`MC/mcp_loader.rs:404-438`；`kernel/iface/src/policy/secret.rs` | 李鹏越 | V1.6 在打包桌面版 GUI 下也通过 | P1 用到；暂缓提交 | T42（暂缓） |
+| PR-4 打包桌面版 bundle 工具可见 | 实现（先核实） | Kernel 回合能调到 cpmrt 装载的 bundle MCP 工具，或桌面布局把 bundle 工具注册进 Kernel | `mint/tools/scripts/mint-runtime-launch.sh:458-509`；`MC/engine.rs:686-693` | Mint GUI 负责人（待确认） | GUI 会话工具列表出现 `dataagent-workbench__*`；V1.4 的 GUI 部分 | P1 用到；暂缓提交（T02 先核实） | T02；T43（暂缓） |
 | PR-5 工具执行中向人要输入 | 实现 | MCP `input_required` 接到 `HumanChannel`，答复回到工具 | `MC/mcp/client.rs:416-419`；`kernel/iface/src/policy/human.rs:154` | 李鹏越 | 本体审核与令才澄清不必绕到网页 | P2 | — |
 | PR-6 组件事件追加 | 契约 | `store.ext_append / ext_read / ext_checkpoint`（方案 06 附录 A） | `kernel/iface/src/store.rs` | 郑达奇、魏耀全 | 接入与发布事件进会话日志，带 `call_id` | P3 | — |
 | PR-7 后台长任务与进展回推 | 契约 + 实现 | 提交、状态、取消、取结果；定时与变更触发；结果经 `InboxContract` 回推；对齐官方「后台长任务」排期 | iface-tool、iface-session | 李奕杉、彭淳毅 | P5 持续接入 | P5 | — |
@@ -219,7 +221,7 @@ flowchart LR
 
 | P1 验收项（见 06 PRD） | 依赖的步 | 没做会怎样 |
 |---|---|---|
-| Mint 双端发起，默认审批下可用 | R2 效果注解；宿主认注解（PR-1） | 每次调用都弹窗；只能在 `full-access` 下验收 |
+| Mint 双端发起，默认审批下可用 | R2 效果注解；宿主认注解（PR-1，P1 不提） | 每次调用都弹窗；只能在 `full-access` 下验收 |
 | 数据库与 API 凭据安全 | R3 | 凭据经环境变量或明文进日志 |
 | 大文件、扫描 PDF 接入不中断 | R2 时间预算与续跑 | 宿主 60 秒超时截断（推断） |
 | 主体与用途可信 | R1 | 访问判定可被调用方伪造（X1–X3） |
@@ -253,7 +255,9 @@ MintHub 上还没有 `dataagent/*` 包。
 3. **镜像漂移**：iface 还在快速变化（今天新增 `BlobStoreContract`）。每次对比前更新 agent-kernel，`iface-baseline.toml` 的差异进 CI 提示。
 4. **工作量**：R1–R3 涉及 7 个包，必须一人主责平台包，业务包负责人只改调用点。
 
-## 13 待拍决策
+## 13 决策（2026-11-17 已拍）
+
+> Q1–Q4、Q6 按推荐拍板，裁决清单 D-007 至 D-012。Q5 拍板为：**P1 先不向 agent-kernel 提 PR**（D-011），缺口在平台层绕行，PR 设计保留，提交时机另定。受 Q5 影响，Q1 里「靠 PR-4」一项不走：T02 核实属实时，GUI 改用非 Kernel 布局，同时做 B 的适配器原型。
 
 | | 决策 | 选项 A | 选项 B | 推荐 | 影响 |
 |---|---|---|---|---|---|

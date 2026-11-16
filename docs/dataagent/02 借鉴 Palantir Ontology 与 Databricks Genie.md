@@ -2,7 +2,7 @@
 doc_id: research
 title: 02 借鉴 Palantir Ontology 与 Databricks Genie
 answers: Palantir 和 Databricks 怎么用本体、定义、技能、目录把「自然语言问数」做可信；DataAgent 照着改什么、落在哪一期
-status: 草稿 v0.3（调研；外部资料 2026-11-16 访问，已独立复核；待拍事项已并入 05、06）
+status: 草稿 v0.3（调研；外部资料 2026-11-16 访问，已独立复核；待拍事项已并入 05、06，11-17 已按推荐拍板）
 feishu_node: HshywkjmEiCv9vkEs1Dcr4lOnRh
 feishu_obj: FU7KdBHTnoFrutxNGjbcXa7Fnxf
 ---
@@ -146,7 +146,7 @@ flowchart TB
 
 ## 8 待拍事项去向
 
-本篇提出的待拍问题已并入分期与 PRD，只在那里登记，避免裁决清单重复：
+本篇提出的待拍问题已并入分期与 PRD，只在那里登记，避免裁决清单重复；2026-11-17 均已按推荐拍板：
 
 | 问题 | 登记在 |
 |---|---|
