@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
+<title id="title">多源本体对象审核工作台界面草图</title>
+<desc id="desc">三栏布局：左侧来源采购订单，中间统一业务对象与字段，右侧金额冲突核对及仅对当前对象生效的纠正。全部为示例数据。</desc>
+<defs><style>
+text{font-family: "PingFang SC", "Microsoft YaHei", sans-serif;fill:#17243c;font-size:16px}
+.muted{fill:#68778d;font-size:14px}.small{font-size:13px}.label{font-size:14px;fill:#52627a}.title{font-size:28px;font-weight:650}.section{font-size:19px;font-weight:600}.bold{font-weight:600}.blue{fill:#2459c6}.amber{fill:#995800}.white{fill:#fff}.line{stroke:#e3e8f0;stroke-width:1}.card{fill:#fff;stroke:#dfe5ee;stroke-width:1}.green{fill:#16785a}
+</style></defs>
+<rect width="1600" height="1000" fill="#f3f5f9"/>
+<rect width="1600" height="64" fill="#17243c"/>
+<text x="36" y="40" class="white bold" font-size="20">DataAgent</text><text x="174" y="40" style="fill:#c8d4eb">多源接入 / 业务对象</text>
+<rect x="1390" y="18" width="172" height="30" rx="15" fill="#33435d"/><text x="1414" y="39" style="fill:#e0e8f7" class="small">界面草图 · 示例数据</text>
+<text x="38" y="115" class="title">采购业务 · 对象核对</text><text x="39" y="145" class="muted">接入批次：采购单与 ERP 数据核对　 /　业务定义：采购管理　 /　当前范围：本批次</text>
+<rect x="1140" y="88" width="128" height="52" rx="9" fill="#fff"/><text x="1158" y="109" class="muted small">业务对象</text><text x="1234" y="128" class="bold">40</text>
+<rect x="1280" y="88" width="128" height="52" rx="9" fill="#fff8e9"/><text x="1298" y="109" class="muted small">待审核</text><text x="1375" y="128" class="bold amber">6</text>
+<rect x="1420" y="88" width="140" height="52" rx="9" fill="#fff0ed"/><text x="1438" y="109" class="muted small">存在冲突</text><text x="1527" y="128" class="bold" fill="#a34235">2</text>
+<rect x="38" y="171" width="1524" height="51" rx="9" fill="#fff"/>
+<rect x="48" y="178" width="118" height="36" rx="6" fill="#eaf0ff"/><text x="74" y="201" class="blue bold">对象审核</text>
+<text x="194" y="201" class="label">映射规则</text><text x="323" y="201" class="label">关联视图</text><text x="452" y="201" class="label">操作流程</text><text x="581" y="201" class="label">定义与发布</text>
+<text x="1331" y="201" class="muted small">上一个　 2 / 6　 下一个</text>
+<rect x="38" y="242" width="432" height="662" rx="12" class="card"/>
+<rect x="488" y="242" width="634" height="662" rx="12" class="card"/>
+<rect x="1140" y="242" width="422" height="662" rx="12" class="card"/>
+<text x="60" y="276" class="section">来源材料</text><text x="1023" y="276" class="muted small">精确来源可追溯</text>
+<rect x="60" y="296" width="388" height="36" rx="6" fill="#f1f4f9"/><text x="74" y="320" class="small">采购单.pdf　 ·　第 1 页　 ▾</text>
+<rect x="77" y="350" width="354" height="430" rx="3" fill="#fff" stroke="#d7dfe9"/>
+<text x="190" y="395" class="bold" font-size="21">采购订单</text>
+<text x="98" y="438" class="label">订单编号　 PO-1042</text><text x="98" y="472" class="label">供应商　　 明远设备有限公司</text><text x="98" y="506" class="label">订单日期　 2026-11-08</text>
+<line x1="98" y1="529" x2="409" y2="529" class="line"/>
+<text x="99" y="556" class="muted small">品名　　　　　 数量　　 单价</text>
+<text x="99" y="590" class="label">配件组件　　　  2　　 600.00</text>
+<rect x="91" y="615" width="327" height="48" rx="4" fill="#fff3d6" stroke="#dda64b" stroke-width="1.5"/>
+<text x="105" y="645" class="bold amber">合计金额　 人民币 1,200.00 元</text>
+<text x="99" y="704" class="muted small">备注：本金额为订单含税总额。</text><text x="99" y="740" class="muted small">原始材料保留，纠正另存。</text>
+<text x="60" y="816" class="muted small">已定位：第 1 页 / 合计金额区域</text>
+<rect x="60" y="837" width="388" height="44" rx="6" fill="#f6f8fb"/><text x="74" y="864" class="label small">切换来源　 ERP 响应　 ·　查看读取时间</text>
+<text x="512" y="276" class="section">统一业务对象</text>
+<text x="512" y="319" class="bold" font-size="22">采购单 PO-1042</text>
+<rect x="919" y="295" width="177" height="30" rx="15" fill="#fff3d6"/><text x="939" y="315" class="amber small">1 项冲突 · 待裁定</text>
+<text x="512" y="347" class="muted small">来自 2 个来源　 ·　3 个属性已核对　 ·　2 个扩展项</text>
+<rect x="510" y="368" width="590" height="38" rx="5" fill="#f3f6fa"/>
+<text x="525" y="393" class="label">业务字段</text><text x="704" y="393" class="label">当前值 / 候选</text><text x="994" y="393" class="label">核对状态</text>
+<text x="525" y="443">采购单编号</text><text x="704" y="443">PO-1042</text><text x="996" y="443" class="green small">✓ 一致</text>
+<line x1="512" y1="467" x2="1098" y2="467" class="line"/>
+<text x="525" y="501">供应商</text><text x="704" y="501">明远设备有限公司</text><text x="996" y="501" class="green small">✓ 一致</text>
+<line x1="512" y1="525" x2="1098" y2="525" class="line"/>
+<rect x="510" y="537" width="590" height="80" rx="5" fill="#fff7e7"/>
+<rect x="510" y="537" width="4" height="80" rx="2" fill="#d99a2a"/>
+<text x="525" y="565" class="bold amber">金额（元）</text><text x="704" y="565" class="amber">1,200.00 / 1,260.00</text><text x="996" y="565" class="amber small">! 冲突</text>
+<text x="704" y="596" class="muted small">采购单与 ERP 换算结果不同　→</text>
+<text x="525" y="657">币种</text><text x="704" y="657">人民币（CNY）</text><text x="996" y="657" class="green small">✓ 一致</text>
+<line x1="512" y1="682" x2="1098" y2="682" class="line"/>
+<text x="525" y="718">业务状态</text><text x="704" y="718">待核实</text><text x="995" y="718" class="muted small">缺少回执</text>
+<rect x="510" y="751" width="590" height="59" rx="7" fill="#f3f6fa"/><text x="526" y="777" class="bold small">来源扩展属性　2 项　▾</text><text x="526" y="798" class="muted small">保留原字段、原值和来源；可单独提出定义修订。</text>
+<text x="513" y="851" class="blue small">查看关联对象　　查看转换过程　　查看审核历史</text>
+<text x="1162" y="276" class="section">核对与纠正</text>
+<rect x="1162" y="296" width="378" height="77" rx="8" fill="#fff7e7"/><text x="1178" y="324" class="bold amber">金额存在来源冲突</text><text x="1178" y="350" class="label small">请选择依据，或输入纠正值与说明。</text>
+<text x="1163" y="405" class="label">候选值</text>
+<rect x="1162" y="421" width="378" height="72" rx="7" fill="#fff" stroke="#d7dfe9"/><circle cx="1183" cy="446" r="8" fill="#fff" stroke="#9eabbc"/><text x="1203" y="451" class="bold">1,200.00 元</text><text x="1203" y="477" class="muted small">采购单 / 合计金额</text>
+<rect x="1162" y="505" width="378" height="90" rx="7" fill="#fff" stroke="#d7dfe9"/><circle cx="1183" cy="531" r="8" fill="#fff" stroke="#9eabbc"/><text x="1203" y="536" class="bold">1,260.00 元</text><text x="1203" y="561" class="muted small">ERP / 原值 126,000 分 ÷ 100</text><text x="1203" y="582" class="blue small">查看原始响应与转换</text>
+<text x="1163" y="628" class="label">补充说明或纠正值</text><rect x="1162" y="642" width="378" height="66" rx="6" fill="#fafbfd" stroke="#d7dfe9"/><text x="1175" y="669" class="muted small">例如：按采购单含税总额核对……</text>
+<text x="1163" y="741" class="label small">本次生效范围：仅采购单 PO-1042</text>
+<rect x="1162" y="758" width="378" height="44" rx="7" fill="#e4eaf3"/><text x="1266" y="787" fill="#6b7c94" class="bold">保存当前对象纠正</text>
+<text x="1163" y="833" class="blue small">补充证据　　　保留待核实</text>
+<text x="1163" y="867" class="blue small">修改同类输入映射　→　先预览影响</text>
+<text x="39" y="945" class="muted">审核确认、映射变更、业务定义修订分别记录；数据发布使用固定版本及审核范围。</text>
+<text x="39" y="975" class="muted small">来源材料　↔　业务字段　↔　问题与纠正　｜　所有操作由服务端核对权限、范围和目标修订。</text>
+</svg>

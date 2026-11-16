@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" role="img"><title>含税金额字段映射详情设计草图</title><style>text{font-family:"PingFang SC","Microsoft YaHei",sans-serif}</style>
+<rect x="0" y="0" width="1600" height="1000" rx="0" fill="#f2f5f9" stroke="none"/>
+<rect x="0" y="0" width="1600" height="62" rx="0" fill="#18273f" stroke="none"/>
+<text x="35" y="39" font-size="20" fill="#fff" font-weight="650">DataAgent</text>
+<text x="170" y="39" font-size="15" fill="#c8d4ea" font-weight="400">数据接入 / Ontology 映射</text>
+<rect x="1392" y="18" width="172" height="26" rx="13" fill="#33435c" stroke="none"/>
+<text x="1403" y="36" font-size="12" fill="#d8e3f5" font-weight="500">原创草图 · 示例数据</text>
+<text x="38" y="113" font-size="28" fill="#192941" font-weight="650">含税金额 · 映射详情</text>
+<text x="39" y="144" font-size="14" fill="#6a7b92" font-weight="400">← 返回采购单映射　 /　目标：含税金额（元）　 /　当前作用域：ERP 采购接口</text>
+<rect x="38" y="169" width="1524" height="50" rx="8" fill="#fff" stroke="none"/>
+<text x="61" y="200" font-size="15" fill="#526b88" font-weight="550">从来源选择依据 → 查看转换 → 对照实例结果 → 应用到明确范围</text>
+<rect x="38" y="240" width="420" height="606" rx="11" fill="#fff" stroke="#dfe6ef"/>
+<text x="59" y="274" font-size="18" fill="#192941" font-weight="600">1　选择来源与依据</text>
+<text x="60" y="306" font-size="14" fill="#697d95" font-weight="400">目标业务含义：采购单含税总额</text>
+<rect x="59" y="329" width="378" height="91" rx="8" fill="#fff" stroke="#dce4ef"/>
+<text x="76" y="357" font-size="15" fill="#192941" font-weight="550">○ amount_minor</text>
+<text x="76" y="386" font-size="14" fill="#687d95" font-weight="400">120000 分　→　1,200.00 元</text>
+<text x="76" y="408" font-size="12" fill="#a16d1d" font-weight="400">原候选：未确认是否含税</text>
+<rect x="59" y="437" width="378" height="112" rx="8" fill="#edf3ff" stroke="#789be0"/>
+<text x="76" y="467" font-size="15" fill="#2c5ac0" font-weight="600">● gross_minor</text>
+<text x="76" y="496" font-size="15" fill="#284c83" font-weight="400">126000 分　→　1,260.00 元</text>
+<text x="76" y="525" font-size="13" fill="#637d9f" font-weight="400">来源说明：采购单含税金额</text>
+<rect x="59" y="573" width="378" height="150" rx="8" fill="#faf8f2" stroke="#e7dec9"/>
+<text x="76" y="603" font-size="15" fill="#192941" font-weight="550">核对材料：采购单.pdf</text>
+<text x="76" y="637" font-size="15" fill="#192941" font-weight="400">“含税总额：人民币 1,260.00 元”</text>
+<text x="76" y="672" font-size="13" fill="#78869a" font-weight="400">第 1 页 · 含税总额区域</text>
+<text x="76" y="700" font-size="13" fill="#2b5bc8" font-weight="400">打开原文并定位　→</text>
+<text x="60" y="766" font-size="13" fill="#7a8da3" font-weight="400">候选来源均保留原始值、单位及位置。</text>
+<text x="60" y="805" font-size="13" fill="#2b5bc8" font-weight="400">＋ 选择其他字段或补充材料</text>
+<rect x="478" y="240" width="540" height="606" rx="11" fill="#fff" stroke="#dfe6ef"/>
+<text x="499" y="274" font-size="18" fill="#192941" font-weight="600">2　查看并调整转换</text>
+<text x="500" y="307" font-size="13" fill="#687d95" font-weight="400">来源字段</text>
+<rect x="499" y="321" width="498" height="42" rx="8" fill="#f4f7fb" stroke="none"/>
+<text x="514" y="348" font-size="15" fill="#192941" font-weight="400">ERP 采购接口 / gross_minor　 ▾</text>
+<text x="500" y="398" font-size="13" fill="#687d95" font-weight="400">转换方式</text>
+<rect x="499" y="413" width="498" height="95" rx="8" fill="#eef4fc" stroke="none"/>
+<text x="515" y="444" font-size="17" fill="#2f527e" font-weight="550">金额单位转换：分 → 元</text>
+<text x="515" y="480" font-size="14" fill="#69809d" font-weight="400">每 100 分换算为 1 元，保留十进制精度。</text>
+<text x="501" y="542" font-size="13" fill="#71839a" font-weight="400">修改前</text>
+<text x="652" y="542" font-size="17" fill="#9b6b23" font-weight="400">1,200.00 元</text>
+<text x="501" y="581" font-size="13" fill="#71839a" font-weight="400">修改后</text>
+<text x="652" y="581" font-size="19" fill="#267453" font-weight="600">1,260.00 元</text>
+<line x1="500" y1="610" x2="996" y2="610" stroke="#e3e8f0"/>
+<text x="501" y="643" font-size="13" fill="#687d95" font-weight="400">业务说明</text>
+<rect x="499" y="658" width="498" height="71" rx="8" fill="#f8fafc" stroke="#dee5ef"/>
+<text x="515" y="686" font-size="14" fill="#5f7693" font-weight="400">按含税总额映射，并与采购单原文核对。</text>
+<text x="501" y="768" font-size="13" fill="#2b5bc8" font-weight="400">高级表达式与转换依据　▾</text>
+<text x="501" y="808" font-size="13" fill="#788ba2" font-weight="400">本次只修改此字段，其他已验证映射保持。</text>
+<rect x="1038" y="240" width="524" height="606" rx="11" fill="#fff" stroke="#dfe6ef"/>
+<text x="1059" y="274" font-size="18" fill="#192941" font-weight="600">3　查看结果与影响</text>
+<text x="1060" y="307" font-size="14" fill="#3e627d" font-weight="550">试算 20 条：18 一致 · 1 缺失 · 1 冲突</text>
+<text x="1060" y="336" font-size="12" fill="#788ba2" font-weight="400">全量 240 条尚未运行；以下展示 3 条样本。</text>
+<rect x="1059" y="357" width="482" height="37" rx="8" fill="#f3f6fa" stroke="none"/>
+<text x="1071" y="382" font-size="13" fill="#627893" font-weight="400">采购单</text>
+<text x="1229" y="382" font-size="13" fill="#627893" font-weight="400">转换后</text>
+<text x="1397" y="382" font-size="13" fill="#627893" font-weight="400">原文核对</text>
+<text x="1071" y="430" font-size="14" fill="#314962" font-weight="400">PO-1042</text>
+<text x="1229" y="430" font-size="14" fill="#314962" font-weight="400">1,260.00</text>
+<text x="1397" y="430" font-size="14" fill="#2d7658" font-weight="400">✓ 一致</text>
+<line x1="1061" y1="453" x2="1539" y2="453" stroke="#e3e8f0"/>
+<text x="1071" y="488" font-size="14" fill="#314962" font-weight="400">PO-1043</text>
+<text x="1229" y="488" font-size="14" fill="#314962" font-weight="400">450.00</text>
+<text x="1397" y="488" font-size="14" fill="#2d7658" font-weight="400">✓ 一致</text>
+<line x1="1061" y1="511" x2="1539" y2="511" stroke="#e3e8f0"/>
+<text x="1071" y="546" font-size="14" fill="#314962" font-weight="400">PO-1044</text>
+<text x="1229" y="546" font-size="14" fill="#314962" font-weight="400">未知</text>
+<text x="1397" y="546" font-size="14" fill="#314962" font-weight="400">! 缺失</text>
+<line x1="1061" y1="569" x2="1539" y2="569" stroke="#e3e8f0"/>
+<text x="1060" y="621" font-size="14" fill="#192941" font-weight="550">应用范围</text>
+<rect x="1059" y="637" width="482" height="81" rx="8" fill="#f4f7fb" stroke="none"/>
+<text x="1075" y="664" font-size="15" fill="#192941" font-weight="400">仅 ERP 采购接口</text>
+<text x="1075" y="696" font-size="13" fill="#69809c" font-weight="400">本批数据 + 后续符合映射适用条件的输入</text>
+<text x="1060" y="759" font-size="13" fill="#7b8ca2" font-weight="400">未解决对象保留问题标记，重新验证后生效。</text>
+<text x="1060" y="805" font-size="13" fill="#2b5bc8" font-weight="400">查看完整问题清单　→</text>
+<rect x="38" y="865" width="1524" height="84" rx="8" fill="#fff" stroke="#dfe6ef"/>
+<text x="59" y="898" font-size="14" fill="#667b93" font-weight="400">已预览当前映射修订，修改与样本结果保持关联。</text>
+<text x="59" y="925" font-size="13" fill="#7c8da2" font-weight="400">保存后返回映射主表，并保留筛选、样本和当前任务。</text>
+<rect x="1042" y="887" width="186" height="40" rx="8" fill="#fff" stroke="#d8e1ec"/>
+<text x="1092" y="913" font-size="14" fill="#192941" font-weight="400">保留为草稿</text>
+<rect x="1245" y="887" width="296" height="40" rx="8" fill="#2a5bc9" stroke="none"/>
+<text x="1306" y="913" font-size="15" fill="#fff" font-weight="550">应用到此来源</text>
+<text x="40" y="984" font-size="12" fill="#74879e" font-weight="400">用户可选择候选，也可用业务语言纠正；生效范围和未覆盖范围始终可见。</text>
+</svg>
