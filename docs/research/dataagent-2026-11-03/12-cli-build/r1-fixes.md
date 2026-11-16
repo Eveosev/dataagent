@@ -1,7 +1,7 @@
 # r1 修复/实现记录 — 统一 CLI
 
 - 轮次：r1（2026-11-06）
-- 方案：[12-unified-cli-build-plan.md](../12-unified-cli-build-plan.md)（依据 [12-unified-cli-research.md](../12-unified-cli-research.md) v0.3 §5）
+- 方案：[12-unified-cli-build-plan.md](../12-unified-cli-build-plan.md)（依据 [12-unified-cli-research.md](../archive/12-unified-cli-research.md) v0.3 §5）
 - 评分：[r1.score.json](r1.score.json) / [r1.score.txt](r1.score.txt) — **59.0/100（GATE-RED：D1 重复率硬阈，见下）**
 - 源码快照（改动前）：`/tmp/agentos-snapshots/pre-cli-20261106-013324.tar.gz`
 

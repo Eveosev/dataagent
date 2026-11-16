@@ -1,6 +1,6 @@
 # 12-cli-build 记录目录
 
-统一 CLI 方案 [12-unified-cli-research.md](../12-unified-cli-research.md) 与实现计划
+统一 CLI 方案 [12-unified-cli-research.md](../archive/12-unified-cli-research.md) 与实现计划
 [12-unified-cli-build-plan.md](../12-unified-cli-build-plan.md) 的实施/评审记录。
 
 | 文件 | 轮次 | 内容 |

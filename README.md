@@ -25,6 +25,7 @@ workspace/                           本地运行数据（忽略）；benchmark 
 | `dataagent-application` | Mint bundle | 执行应用层 S0 13 项原子 | 07 |
 | `dataagent-governance` | Mint bundle | 评测与治理层 S0 6 项原子 | 08 |
 | `dataagent-cli` | Mint 静态包 | 统一 `dataagent` CLI 分发器 | 12 |
+| `dataagent-ocr` | Python 库 + CLI + SKILL | OCR 提供方：OpenAI 兼容端点、隔离 venv 本地引擎、自定义 worker；测试调用与固定、质量监测与重选 | 13 |
 | `dataagent-s0` | Mint preset | 组合三个 bundle 与 CLI 的 S0 工作区 | 08 §8 |
 | `dataagent-scenarios` | 仅测试 | 跨层链路与端到端场景测试 | 08 §8 |
 
@@ -52,13 +53,14 @@ workspace/                           本地运行数据（忽略）；benchmark 
 | [执行应用层实施记录](docs/research/dataagent-2026-11-03/07-application-layer-build/) | 评审（`rN-review.md`）与修复记录、复现脚本 |
 | [评测与治理层建设方案](docs/research/dataagent-2026-11-03/08-governance-layer-build-plan.md) | 评测与治理层非 FDE 54 项：S0 6 项；运行时访问复检与外发检查；S0 Preset |
 | [评测与治理层实施记录](docs/research/dataagent-2026-11-03/08-governance-layer-build/) | 评审与修复记录、复现脚本；含 `dataagent-runtime`、S0 组合与跨包共性问题 |
-| [07/08 可行性评审](docs/research/dataagent-2026-11-03/07-08-feasibility-review-2026-11-04.md) | 07、08 方案的技术可行性与 S0 接缝缺口 |
+| [07/08 可行性评审](docs/research/dataagent-2026-11-03/archive/07-08-feasibility-review-2026-11-04.md) | 07、08 方案的技术可行性与 S0 接缝缺口 |
 | [W0 接缝规格](docs/research/dataagent-2026-11-03/w0-seam-specifications.md) | S0 跨层接缝（codec、表与文档引用等）六项规格与两族样例 |
 | [能力效果监控与 Benchmark](docs/research/dataagent-2026-11-03/09-benchmark-plan.md) | 需长期监控的 15 个核心模块、参考 benchmark、监控指标 |
 | [评测任务目录](docs/research/dataagent-2026-11-03/09-benchmark/README.md) | 任务卡、评测集账本、轮次与基线、门槛与趋势看板、校验工具 |
-| [S0 阶段报告](docs/research/dataagent-2026-11-03/11-s0-stage-report.md) | 整体进展与阻断项；Mint 本地安装与端到端测试流程；51 个 S0 原子的测试方法 |
-| [Mint 内 Agent 的 DataAgent CLI 调研](docs/research/dataagent-2026-11-03/12-unified-cli-research.md) | Agent 自装与经 `dataagent` CLI 调用能力：Mint 机制、通道对比、包与命令设计、对 Mint 的诉求 |
+| [S0 阶段报告](docs/research/dataagent-2026-11-03/archive/11-s0-stage-report.md) | 整体进展与阻断项；Mint 本地安装与端到端测试流程；51 个 S0 原子的测试方法 |
+| [Mint 内 Agent 的 DataAgent CLI 调研](docs/research/dataagent-2026-11-03/archive/12-unified-cli-research.md) | Agent 自装与经 `dataagent` CLI 调用能力：Mint 机制、通道对比、包与命令设计、对 Mint 的诉求 |
 | [统一 CLI 建设方案](docs/research/dataagent-2026-11-03/12-unified-cli-build-plan.md) | `dataagent-cli` 实施方案与 `12-cli-build/` 记录索引 |
+| [OCR 组件方案](docs/research/dataagent-2026-11-03/13-ocr-component-plan.md) | `dataagent-ocr`：提供方类型、固定与重选规则、凭据、外发、依赖型引擎安装、数据层接入；记录在 `13-ocr-build/` |
 
 ## 调研
 

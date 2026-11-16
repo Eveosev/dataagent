@@ -1,7 +1,7 @@
 # 统一 CLI 实现计划（r1）
 
 - 版本：r1（2026-11-06）
-- 依据：[12-unified-cli-research.md](12-unified-cli-research.md) v0.3 §5（W0 契约以本文冻结的 r1 范围为准：stdin 旧模式保留，`--list` 旧 JSON 输出保留，`list` 为新格式）
+- 依据：[12-unified-cli-research.md](archive/12-unified-cli-research.md) v0.3 §5（W0 契约以本文冻结的 r1 范围为准：stdin 旧模式保留，`--list` 旧 JSON 输出保留，`list` 为新格式）
 - 目标包：`dataagent-runtime`（内核）、三层 `interfaces/cli.py`（接入）、`dataagent-cli`（新分发器包）、`dataagent-s0`（依赖）
 - 范围外：MCP schema 压缩（§5.2 已定后续单列）、Mint Hub 发布（Q3）、治理/应用依赖对齐（Q5）
 

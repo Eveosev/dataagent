@@ -13,7 +13,7 @@ verdict: 技术路线可行；补齐 S0 接缝后实施；当前版本不足以�
 
 **两份方案可以作为建设方向，尚不能直接作为 S0 闭环验收基线。** 不需要推翻 Python 核心、MCP 入口、Agent 侧推理、DuckDB、封闭表达式解释器或三层 bundle 的设计。主要问题是跨层内容协议、执行语义、治理执行点及真实验收事实尚未接通。
 
-判断依据是 [00 总规划](00-pluggable-dataagent.md) 的三个目标：能力可选择、替换和组合；在 Mint GUI / TUI 中完成业务闭环，令才按制度提取、规则审核与交付效果验收；有效组合能沉淀为 Skill / Preset，供其他业务复用。S0 的要求是两族均在未见样本上验收、六类指标并报、显式报告未覆盖范围。
+判断依据是 [00 总规划](../00-pluggable-dataagent.md) 的三个目标：能力可选择、替换和组合；在 Mint GUI / TUI 中完成业务闭环，令才按制度提取、规则审核与交付效果验收；有效组合能沉淀为 Skill / Preset，供其他业务复用。S0 的要求是两族均在未见样本上验收、六类指标并报、显式报告未覆盖范围。
 
 | 评审对象 | 可行性判断 | 可立即推进 | 宣称完成前须补齐 |
 |---|---|---|---|
@@ -42,7 +42,7 @@ verdict: 技术路线可行；补齐 S0 接缝后实施；当前版本不足以�
 
 ## 3. P1：共享存储尚未形成跨层内容协议
 
-**位置：** [07 §2](07-application-layer-build-plan.md)，第 45–46 行；§3 第 73 行；§5.2 第 127 行。
+**位置：** [07 §2](../07-application-layer-build-plan.md)，第 45–46 行；§3 第 73 行；§5.2 第 127 行。
 
 方案规定三个 bundle 共用 `data_root`，按 digest 读取 `TableRef` / `DocumentRef`，同时禁止应用层、治理层导入数据层实现。但 digest 只定位字节，不定义字节内容的格式和语义。
 
@@ -54,7 +54,7 @@ verdict: 技术路线可行；补齐 S0 接缝后实施；当前版本不足以�
 
 ## 4. P1：条件表达式尚未闭合为完整规则判定
 
-**位置：** [07 §5.1](07-application-layer-build-plan.md)，第 114–118 行。
+**位置：** [07 §5.1](../07-application-layer-build-plan.md)，第 114–118 行。
 
 只写“RuleDefinition 的条件逐项编译为 AST”，未规定条件组合 `combination`、例外 `exceptions`、适用性和前置条件如何影响最终 `satisfied / violated / unknown / not_applicable`。这些信息已存在于 core `RuleDefinition`。普通条件计算正确，仍可能把例外对象判为违规，或把适用性未知当作适用。
 
@@ -66,7 +66,7 @@ verdict: 技术路线可行；补齐 S0 接缝后实施；当前版本不足以�
 
 ## 5. P1：SQL 只限制语法和访问，未约束已绑定口径
 
-**位置：** [07 §4.1 / §5.2](07-application-layer-build-plan.md)，第 80–83、125–128 行。
+**位置：** [07 §4.1 / §5.2](../07-application-layer-build-plan.md)，第 80–83、125–128 行。
 
 `SELECT`、输入表集合和函数黑名单不能保证 SQL 执行了已经确认的指标。例如指标为“已批准记录的金额之和”，proposal 改成 `SUM(other_existing_column)` 或漏掉批准状态过滤，仍可能通过当前检查，输出却附原指标版本。
 
@@ -78,7 +78,7 @@ DA11.2.3 关注粒度与合并；DA11.5.5 对冻结样本验收。两者都不�
 
 ## 6. P1：core 输出承载与证据解析尚未冻结
 
-**位置：** [07 §4.2 / §5](07-application-layer-build-plan.md)，第 90–95、118、128、146 行；[08 §5.3](08-governance-layer-build-plan.md)，第 122–125 行。
+**位置：** [07 §4.2 / §5](../07-application-layer-build-plan.md)，第 90–95、118、128、146 行；[08 §5.3](../08-governance-layer-build-plan.md)，第 122–125 行。
 
 `Assessment` 用 `basis_refs` 引用证据，没有顶层 `evidence`；`ComputedResult` 当前没有直接承载 SQL digest、输入版本和 EngineBinding 的专门字段。可以经证据/执行回执引用承载，但方案须指定唯一、可解析的路径。仅把 `ExecutableSpec` 和 `EngineBinding` 的类型名迁入 core，不足以接通 DA07 → DA11 → DA10。
 
@@ -88,7 +88,7 @@ DA11.2.3 关注粒度与合并；DA11.5.5 对冻结样本验收。两者都不�
 
 ## 7. P1：授权引导、约束执行与内核接线须具体化
 
-**位置：** [08 §4.3 / §5.1](08-governance-layer-build-plan.md)，第 89–107 行；[07 §2](07-application-layer-build-plan.md)，第 47 行。
+**位置：** [08 §4.3 / §5.1](../08-governance-layer-build-plan.md)，第 89–107 行；[07 §2](../07-application-layer-build-plan.md)，第 47 行。
 
 这里有三条必须同时接通的路径：
 
@@ -105,7 +105,7 @@ DA11.2.3 关注粒度与合并；DA11.5.5 对冻结样本验收。两者都不�
 
 ## 8. P1：外发检查必须覆盖完整模型可见输出
 
-**位置：** [08 §4.3](08-governance-layer-build-plan.md)，第 90 行；[07 §4.1](07-application-layer-build-plan.md)，第 84 行。
+**位置：** [08 §4.3](../08-governance-layer-build-plan.md)，第 90 行；[07 §4.1](../07-application-layer-build-plan.md)，第 84 行。
 
 当前工具通常直接生成两段式响应，没有调用 `InferencePort.infer`。例如 `preparation/extraction.py:303` 将原文写入 `issues[].inference_request`，又在 `data.candidate_spans` 中返回一份；`interfaces/mcp_server.py:140` 原样序列化整个结果。只在 InferencePort 或仅在 `inference_request` 字段检查，原文仍可通过普通 `data`、诊断或随后可读取的产物进入 Agent 上下文。
 
@@ -117,7 +117,7 @@ DA11.2.3 关注粒度与合并；DA11.5.5 对冻结样本验收。两者都不�
 
 ## 9. P1：判据正式生效入口缺少可调用合同
 
-**位置：** [08 §5.2](08-governance-layer-build-plan.md)，第 114 行；§3 第 62 行；§1 S0 operation 表。
+**位置：** [08 §5.2](../08-governance-layer-build-plan.md)，第 114 行；§3 第 62 行；§1 S0 operation 表。
 
 DA11.5.1 只创建 draft，验收只接受 active；方案要求“单独确认调用”，却未定义 operation、管理入口或注册表例外，也未定义如何核验确认记录。现有 CriteriaRef 只要求 active 时 `confirmation_ref` 非空，非空不等于有权确认。
 
@@ -127,7 +127,7 @@ DA11.5.1 只创建 draft，验收只接受 active；方案要求“单独确认�
 
 ## 10. P1：未见样本验收必须与真实运行及观测对账
 
-**位置：** [08 §4.2 / §5.2–5.3](08-governance-layer-build-plan.md)，第 83、115–128 行；阶段 2 第 150、152 行。
+**位置：** [08 §4.2 / §5.2–5.3](../08-governance-layer-build-plan.md)，第 83、115–128 行；阶段 2 第 150、152 行。
 
 这里需要补两份最小合同：
 
@@ -142,7 +142,7 @@ DA11.5.1 只创建 draft，验收只接受 active；方案要求“单独确认�
 
 ## 11. P1：Mint 安装与共享配置须落实到独立制品
 
-**位置：** [07 §3 / §9](07-application-layer-build-plan.md)，第 73、185–188 行；[08 §8](08-governance-layer-build-plan.md)，第 175–180 行。
+**位置：** [07 §3 / §9](../07-application-layer-build-plan.md)，第 73、185–188 行；[08 §8](../08-governance-layer-build-plan.md)，第 175–180 行。
 
 三个 Mint bundle 依赖 contracts/runtime，不代表各自 `uv --project $PKG` 的 Python 环境自动拥有这些依赖。现数据层已有 staging + vendoring，专门解决发布后兄弟目录消失；07 / 08 没有明确沿用或替换方式，也未定义不同 bundle 自带不同 runtime 时的存储协议兼容性。
 
