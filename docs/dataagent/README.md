@@ -21,7 +21,7 @@ title: 广义 DataAgent 文档集
 | 04 | 04 验收方法与数据 | 真实业务数据拿不到、审核场景没有对错真值时，怎么验收；用哪些数据；怎么防止方案过拟合到令才 | 草稿 v0.2（设计；依据 11-16 已拍事项与令才 Computer Use 数据集评估；11-17 决策已拍） | [链接](https://modelbest.feishu.cn/wiki/EZH9wwCYYi97A0kA78ncHpiZnTc) |
 | 05 | 05 分期路线与 MVP 范围 | P1 到 P6 各交付什么；一期（MVP）做什么不做什么；用哪些用例验收 | 草稿 v0.2（P1、P2 日期为承诺，P3 起为估计；11-17 决策已拍：P1 不提 agent-kernel PR） | [链接](https://modelbest.feishu.cn/wiki/OLZ5wCEEki24Y1kwRTHcqT1lnMg) |
 | 06 | 06 PRD | P1（多源数据接入）与 P2（本体的实现、打通、可视化）改什么、为什么改；每个目标怎么验收 | 草稿 v0.2（P1、P2 细到验收命令；P3–P6 见 05；11-17 决策已拍：P1 不提 agent-kernel PR，其余按推荐） | [链接](https://modelbest.feishu.cn/wiki/SXeGwwK9Zi9VyzkpHYycsPcMnUc) |
-| 07 | 07 MVP 实施文档 | P1（多源数据接入）的任务清单：每个任务改哪些文件、跑什么命令、怎么验收、怎么回滚，谁来做 | 草稿 v0.3（37 张任务卡，W1–W2；11-17 已拍：P1 不提 agent-kernel PR，T40–T43 暂缓；crew 调用方式待 payne 提供后补进 §0.4） | [链接](https://modelbest.feishu.cn/wiki/QkPrw4kegiVZdZkHtJHcLIEinVg) |
+| 07 | 07 MVP 实施文档 | P1（多源数据接入）的任务清单：每个任务改哪些文件、跑什么命令、怎么验收、怎么回滚，谁来做 | 草稿 v0.4（37 张任务卡，W1–W2；11-17 已拍：P1 不提 agent-kernel PR，T40–T43 暂缓；执行方为 Mac 上的 Claude Code + crew，payne 只做确认、凭据、真人环节与验收签字） | [链接](https://modelbest.feishu.cn/wiki/QkPrw4kegiVZdZkHtJHcLIEinVg) |
 | 附B | 附B 原始诉求 | 提需求时的原话 | 已有 | [链接](https://modelbest.feishu.cn/wiki/TsWkwjM5HiESY9k5oeocbqmrnff) |
 <!-- bigproj:doc-list end -->
 
