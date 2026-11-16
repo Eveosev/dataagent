@@ -8,20 +8,22 @@
 
 ## 与 mint / iface 对比前，必须先确认 agent-kernel 是否为最新
 
-agent-kernel 不在本仓库内；挂载于 AgentOS 时位于 `../../packages/agent-kernel`，只 pull、不提交。每次与 Mint（`agentcpm/iface-*` 制品、Mint CLI）或 iface 契约做对比、取证、出结论之前：
+agent-kernel 不在本仓库内，只 pull、不提交：在 agentcpm-os 宿主下位于 `../../upstream/agent-kernel`，在 AgentOS 宿主下位于 `../../packages/agent-kernel`。每次与 Mint 或 iface 契约做对比、取证、出结论之前：
 
 ```bash
-cd ../../packages/agent-kernel
+cd <宿主里的 agent-kernel>
 git fetch origin --prune
 test "$(git rev-list --count HEAD..@{u})" -eq 0 || git pull --ff-only
-bash scripts/sync-iface-packages.sh --check
+git rev-parse HEAD
 ```
 
-- `--check` 失败说明 `packages/iface-*` 与 `kernel/iface/src` 漂移，以 `kernel/iface/src` 为准。
+- 契约以 `kernel/iface/src/` 为准，身份包在 `products/iface-identity/`；`packages/iface-*` 已停止维护，不作基线；`scripts/sync-iface-packages.sh --check` 已停用，不再运行。
 - 结论中记录 `agent-kernel@<git rev-parse HEAD>`。
-- iface 契约位置见 AgentOS `README.md`「iface 契约：位置与对比流程」。
+- 向 agent-kernel 提 PR 的规矩见 `docs/dataagent/03 平台方案与 iface 共建.md` §8。
 
 ## 文档位置
+
+- 现行文档集：`docs/dataagent/`（00 术语与总览 → 07 MVP 实施文档），用 bigproj 发布到飞书；P1 任务清单见 `07 MVP 实施文档.md`。
 
 - 当前设计与实施：`docs/research/dataagent-2026-11-03/`，入口 `README.md`；飞书为发布副本，链接见该 README 的文件表。
 - 能力包：`packages/capabilities/dataagent-*`；包与方案文档的对应见本仓 `README.md`「能力包」。
@@ -59,3 +61,37 @@ bash scripts/sync-iface-packages.sh --check
 - 包发布 tag `<包名>-<semver>`（如 `dataagent-runtime-0.1.0`）；冻结 `freeze/<名>-<日期>`。
 - 推送后在 AgentOS 宿主固定：`git add domains/dataagent && git commit -m "chore(dataagent): bump to <sha12> — <摘要>"`。
 - 制品（`*.mint.tar.zst`、`*.whl`、源码归档）不再新增入库；发布到 MintHub 或 Release，仓内只留 digest。
+
+## bigproj（agentcpm-os）
+
+本仓库同时挂在 AgentOS（`domains/dataagent`）和 agentcpm-os（`projects/dataagent`）下，两边规则见各自宿主的 AGENTS.md「双宿主规则」。在 agentcpm-os 下工作时，宿主指针的 bump 写在 agentcpm-os 仓库里。下面三个块由 bigproj 维护，不要手改。
+
+<!-- bigproj:stage begin -->
+## 当前阶段
+
+原始诉求（2026-11-16 起）。下一步：确认附B 原始诉求，写清目标和交付物后进入调研与设计。
+<!-- bigproj:stage end -->
+
+<!-- bigproj:links begin -->
+## 文档与看板
+
+| 名称 | 本地 | 飞书 |
+|---|---|---|
+| 文档集首页 | docs/dataagent/README.md | https://modelbest.feishu.cn/wiki/WCXwwJIatirPtXkCF8gcV7x9nme |
+| 工作表（功能拆解、裁决清单） | — | https://modelbest.feishu.cn/wiki/Ah8MwzzwliTB8FkWXUlcHiwVnpd |
+| 开发交付（本子项目视图） | — | https://modelbest.feishu.cn/wiki/FDIPwTuQci1FY7kiQ6GccbG8nDe?table=tbl3i9VGaRruX7b5&view=vewlcx9Npd |
+| workspace 项目首页 | — | https://modelbest.feishu.cn/wiki/DlRpwgNlSiwMHRk3xHGcZdZBnWd |
+<!-- bigproj:links end -->
+
+<!-- bigproj:core-rules begin -->
+## 核心规则（摘自 workspace，v1，由 bigproj 维护，不要手改）
+
+- 本项目属于 workspace「agentcpm-os」（~/Vibe/AgentCPM-OS）；通用规则在它的 AGENTS.md，会话不在 workspace 里启动时先读一遍。
+- 叙述类文档以 docs/dataagent/ 下的本地 Markdown 为源，用 bigproj publish 发布到飞书；不在飞书上直接写正文。
+- 只在主分支、合并后 publish；worktree 里只写本地稿。发布提示「飞书端已被修改」时先合回本地，不要强行覆盖。
+- 文档之间用相对路径互链；不要改各篇头部的 doc_id 和 feishu_node、feishu_obj。
+- 新篇按读法顺序编号，一篇回答一个问题；提需求的原话放「附B 原始诉求」，不改写。
+- PRD 的每个目标（G）对应一条验收指标（V）；待拍问题记 Q，用 bigproj decisions 汇总到裁决清单。
+- 按 原始诉求 → 调研与设计 → 分期与 PRD → MVP 实施 → 开发 → 验收 推进；每步由人确认后用 bigproj stage 进入下一步。
+- 开发交付只改自己负责的行并写会话名；验收状态由人改。发布、删除、申请资源、对外发消息先征得人确认；飞书页面不删除，只归档。
+<!-- bigproj:core-rules end -->
