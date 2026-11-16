@@ -24,6 +24,7 @@ git rev-parse HEAD
 ## 文档位置
 
 - 现行文档集：`docs/dataagent/`（00 术语与总览 → 07 MVP 实施文档），用 bigproj 发布到飞书；P1 任务清单见 `07 MVP 实施文档.md`。
+- P1 执行入口：`docs/dataagent-盘点材料/P1-操作清单.md`（Mac 上的 Claude Code 按它推进 P1、用 crew 派工；payne 只在其 §1 列出的时刻确认或操作）。
 
 - 当前设计与实施：`docs/research/dataagent-2026-11-03/`，入口 `README.md`；飞书为发布副本，链接见该 README 的文件表。
 - 能力包：`packages/capabilities/dataagent-*`；包与方案文档的对应见本仓 `README.md`「能力包」。

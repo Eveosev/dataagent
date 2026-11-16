@@ -2,7 +2,7 @@
 doc_id: mvp
 title: 07 MVP 实施文档
 answers: P1（多源数据接入）的任务清单：每个任务改哪些文件、跑什么命令、怎么验收、怎么回滚，谁来做
-status: 草稿 v0.3（37 张任务卡，W1–W2；11-17 已拍：P1 不提 agent-kernel PR，T40–T43 暂缓；crew 调用方式待 payne 提供后补进 §0.4）
+status: 草稿 v0.4（37 张任务卡，W1–W2；11-17 已拍：P1 不提 agent-kernel PR，T40–T43 暂缓；执行方为 Mac 上的 Claude Code + crew，payne 只做确认、凭据、真人环节与验收签字）
 feishu_node: QkPrw4kegiVZdZkHtJHcLIEinVg
 feishu_obj: KfxJduEjyo9YyqxkA9tcCM8znpb
 ---
@@ -32,28 +32,31 @@ feishu_obj: KfxJduEjyo9YyqxkA9tcCM8znpb
 | `CAP` | 能力包目录 | `packages/capabilities` |
 | `BENCH` | 09-benchmark 目录 | `docs/research/dataagent-2026-11-03/09-benchmark` |
 | `KERNEL` | agent-kernel 开发 clone（不是 `upstream/agent-kernel`） | P1 不需要（[03](<03 平台方案与 iface 共建.md>) 的 Q5 已拍：P1 不提 PR） |
-| `OCR_ROOT` | 已验证的本机 OCR 目录 | payne 提供（方案 13） |
-| `PG_LOCATOR` | 本机 PostgreSQL 测试库地址，含种子发票表（`scripts/verify_local.py:347`） | payne 提供 |
+| `OCR_ROOT` | 已验证的本机 OCR 目录 | Claude Code 在阶段 A 从 `13-ocr-build/` 实施记录里找；找不到再问 payne |
+| `PG_LOCATOR` | 本机 PostgreSQL 测试库地址，含种子发票表（`scripts/verify_local.py:347`） | Claude Code 在阶段 A 查本机现成库；没有时起库方案经 payne 同意 |
 | `LINGCAI_DATASET` | 令才 Computer Use 数据集 | `~/.codex/visualizations/2026/10/28/01a182a2-1762-7d71-a3b1-f35548b004be/lingcai-dataset-2026-10-28` |
 | `QL_AUDIT` | ql-audit 插件目录（只读，只调用不修改） | `~/Vibe/AgentCPM-agent-evolution/products/ql-audit/plugins/ql-audit` |
-| `PRIVATE_DIR` | 本机私有输出目录 | payne 指定，如 `~/Vibe/dataagent-private` |
+| `PRIVATE_DIR` | 本机私有输出目录 | 默认 `~/Vibe/dataagent-private`（`chmod 700`，不在任何 git 仓库里）；各变量写在其中的 `p1.env` |
 | `RID` | 探索轮号 | 每条 harness 命令取新值 |
 
 ### 0.3 分支与合并
 
 1. T00 建集成分支 `feat/p1-intake`，它包含 main 上的文档集（00–07、09 计划 v0.3），crew 执行者在 worktree 里能读到。
-2. 每张卡在自己的分支 `crew/<编号>` 上做，crew 放在 `.crew/worktrees/<编号>`（`.crew/` 由 T00 加进 `.gitignore`）。
-3. 验收通过、codex 审核结论为「通过」后，payne 确认合入 `feat/p1-intake`；crew 不自动合并。
+2. 每张卡在自己的分支 `crew/<编号>` 上做，crew 放在 `.crew/worktrees/<编号>`（`.crew/` 由 crew 写进 `.git/info/exclude`，不改 `.gitignore`）。
+3. 验收通过、codex 审核结论为「通过」后，Claude Code 出合并计划，payne 确认后 `merge --yes` 合入 `feat/p1-intake` 并推送；crew 不自动合并、不推送。
 4. agent-kernel 的卡（T40–T43）P1 暂缓；将来恢复时在 `$KERNEL` 上建分支 `dataagent/pr-<n>`，执行方只做到本地测试通过，推送和开合并请求由 payne 确认后执行。
 5. P1 退出时（T54）`feat/p1-intake` 合入 main，两个宿主各自更新指针。
 
 ### 0.4 crew 派工约定
 
-1. 卡的编号即 crew 的任务 ID；飞书「开发交付」表里任务名以同一编号开头。crew 按编号更新那一行的进展、测试证据与会话名，不改验收状态与验收人。
-2. 执行方：`dsh`、`zcode` 实现，`codex` 只读审核；`auto` 由派工方判断；`人工` 由 payne 在本机操作，不派 crew，Claude Code 协助记录证据。
-3. 返工最多 2 轮，仍不过就停下交给 payne。
-4. 标「暂不派」的卡，条件满足后重写再派。
-5. 派工命令格式待 payne 提供 crew 调用方式后补在这里。
+1. 派工方是 payne Mac 上的 Claude Code（Claude 桌面应用的沙盒里没有 dsh、zcode、codex）。启动方式、各阶段步骤和需要 payne 的时刻见盘点材料 `P1-操作清单.md`。
+2. 调用：`node <crew skill 目录>/scripts/crew.mjs <命令>`，在 DataAgent 仓库（`feat/p1-intake`）里运行；skill 目录按 crew skill 说明查找，版本 0.1.0。常用命令：`doctor`、`check <任务单>`、`dispatch <任务单> [--yes] --master <会话名>`、`wait <ID…> --timeout 540`、`show <ID>`、`retry`、`continue`、`merge <ID> [--yes]`、`status`、`review --doc|--task`。
+3. 任务单（`.crew/specs/<卡号>.yaml`，字段以 crew 的 `references/task-spec.md` 为准）：任务 ID = 卡号；目标 = 卡的「目标」加「改法」；范围 = 「文件」列；验收命令 = 「命令」列（先 `source ~/Vibe/dataagent-private/p1.env`）；审核要点 = 「验收」列；implementer = 「执行」；`dev_record` = 盘点材料 `feishu-records.json` 的 `dev_records.<卡号>`；`--master` 按 `dataagent-<模块>-<卡号>-<日期>`。
+4. 派工、`continue`、`retry`、`merge` 都先出计划，payne 确认后加 `--yes`；一批可以一次确认。
+5. 卡的编号即 crew 的任务 ID；飞书「开发交付」表里任务名以同一编号开头。crew 按 `dev_record` 更新那一行的任务状态、进展、测试证据、CI 结果与会话名，不改验收状态与验收人。
+6. 执行方：`dsh`、`zcode` 实现，`codex` 只读审核；`auto` 由派工方判断；标「Claude Code」的卡不派 crew，由派工方的 Claude Code 自己做，只在需要人眼看界面、凭据、真人或签字时找 payne。
+7. 返工最多 2 轮（crew 自动），仍不过就停在「待决定」，交给 payne 选。
+8. 标「暂不派」的卡，条件满足后重写再派。
 
 ### 0.5 执行者常见误区
 
@@ -68,8 +71,8 @@ feishu_obj: KfxJduEjyo9YyqxkA9tcCM8znpb
 ## 1. 前置条件
 
 1. T00 完成：代码在 GitHub 可见，集成分支存在。
-2. crew 在 payne 的 Mac 上可用（T01）；Claude 桌面应用的沙盒调不到本机 CLI，派工由本机 Claude Code 发起。
-3. 本机有 Mint CLI、uv、Node、Chrome；`OCR_ROOT`、`PG_LOCATOR`、`PRIVATE_DIR` 已设。
+2. crew 在 payne 的 Mac 上可用（T01）；Claude 桌面应用的沙盒调不到本机 CLI，派工和本机操作都由 Mac 上的 Claude Code 执行（启动方式见盘点材料 `P1-操作清单.md` §0）。
+3. 本机有 Mint CLI、uv、Node、Chrome；环境变量由 Claude Code 在阶段 A 定好并写进 `~/Vibe/dataagent-private/p1.env`（`PG_LOCATOR` 没有现成库时，起库方案经 payne 同意）。
 
 ## 2. 分步清单（一期）
 
@@ -110,23 +113,23 @@ flowchart LR
 
 ### 2.1 入库与准备
 
-**T00 代码入库与集成分支** · 执行：人工（payne，本机 Claude Code 协助），不派 crew · 依赖：无 · 优先级：P0 · W1（11-17）· FR1.16 / G1.10
+**T00 代码入库与集成分支** · 执行：Claude Code（Mac），不派 crew；推送按 payne 的授权 · 依赖：无 · 优先级：P0 · W1（11-17）· FR1.16 / G1.10
 
 | 目标 | 文件 | 改法 | 命令 | 验收 | 回滚 |
 |---|---|---|---|---|---|
-| 三个 checkout 的改动按顺序入库；方案 16 代码、OCR 包、方案与设计文档在 GitHub 可见；集成分支包含 main 上的文档集 | `~/Vibe/AgentCPM-OS/projects/dataagent`（main）；`~/Vibe/AgentOS/domains/dataagent`（main）；`~/Vibe/AgentOS/.worktrees/dataagent-local-intake`（分支） | 按「同一仓库同一时间只在一个 checkout 里改」依次处理：① agentcpm-os 的 checkout 在 main 提交文档集并推送；② AgentOS 的 main checkout 拉取，逐条处理 `git status` 列出的改动（含删除与修改）后推送；③ worktree 合入 `origin/main`，逐条处理未提交内容（`dataagent-ocr`、`13-*`、`design/`、`archive/`、`fde-agent-2026-11-09/` 等），分支改名 `feat/16-local-intake` 推送，再拉 `feat/p1-intake` 推送；`.gitignore` 加 `.crew/`；DataAgent 仓 `AGENTS.md`「与 mint / iface 对比前」一节改为 workspace 的口径 | `git ls-remote origin feat/16-local-intake feat/p1-intake`；`git merge-base --is-ancestor origin/main origin/feat/p1-intake && echo ok`；三个 checkout 各跑 `git status --porcelain` | 两个分支都在远端；merge-base 输出 ok；三个 `git status --porcelain` 都为空 | 推送前各留本地备份分支；只增不删 |
+| 三个 checkout 的改动按顺序入库；方案 16 代码、OCR 包、方案与设计文档在 GitHub 可见；集成分支包含 main 上的文档集 | `~/Vibe/AgentCPM-OS/projects/dataagent`（main）；`~/Vibe/AgentOS/domains/dataagent`（main）；`~/Vibe/AgentOS/.worktrees/dataagent-local-intake`（分支） | 按「同一仓库同一时间只在一个 checkout 里改」依次处理：① agentcpm-os 的 checkout 在 main 提交文档集并推送；② AgentOS 的 main checkout 拉取，逐条处理 `git status` 列出的改动（含删除与修改）后推送；③ worktree 合入 `origin/main`，逐条处理未提交内容（`dataagent-ocr`、`13-*`、`design/`、`archive/`、`fde-agent-2026-11-09/` 等），分支改名 `feat/16-local-intake` 推送，再拉 `feat/p1-intake` 推送；DataAgent 仓 `AGENTS.md`「与 mint / iface 对比前」一节随合入 `origin/main` 带进来。逐条命令见盘点材料 `P1-操作清单.md` 阶段 B（11-17 核对：AgentOS 的 main checkout 里的未提交改动是 worktree 的副本或旧版，先拷两份较新的索引再整体 stash 备份） | `git ls-remote origin feat/16-local-intake feat/p1-intake`；`git merge-base --is-ancestor origin/main origin/feat/p1-intake && echo ok`；三个 checkout 各跑 `git status --porcelain` | 两个分支都在远端；merge-base 输出 ok；三个 `git status --porcelain` 都为空 | 推送前各留本地备份分支；只增不删 |
 
-**T01 crew 冒烟** · 执行：人工（Claude Code）· 依赖：T00、crew 已建 · 优先级：P0 · W1 · 暂不派（等 crew 调用方式）
-
-| 目标 | 文件 | 改法 | 命令 | 验收 | 回滚 |
-|---|---|---|---|---|---|
-| crew 能在 DataAgent 仓库派工、验收、审核、回写飞书 | 无代码改动 | 在 DataAgent 仓库跑 crew 自检，派一个只改一行注释的试验任务 | `crew doctor`；试验派工（命令待补） | doctor 通过；试验任务有 diff、验收结果、codex 审核结论；飞书开发交付对应行被更新，带会话名 | 试验分支经 payne 确认后删除 |
-
-**T02 打包桌面版 GUI 工具通道核实** · 执行：人工（payne）· 依赖：无 · 优先级：P0 · W1（11-18 前）· G1.4、03 的 Q1
+**T01 crew 冒烟** · 执行：Claude Code（Mac）· 依赖：T00 · 优先级：P0 · W1
 
 | 目标 | 文件 | 改法 | 命令 | 验收 | 回滚 |
 |---|---|---|---|---|---|
-| 确认打包版 Mint.app 的回合里 Agent 能不能看到 bundle 的 MCP 工具 | `docs/research/dataagent-2026-11-03/16-local-ingestion-workflow-build/gui-channel-check.md`（新增）、同目录 `README.md`（登记） | 在装了 `preset-intake` 的工作区打开 Mint.app，让 Agent 列出可用工具；记录 Mint.app 版本、`runtime_layout`、工具列表、通知里的 MCP 拉起错误 | 人工操作；截图 | 记录写明「工具列表是否出现 `dataagent-workbench__*`」；结论写回 03 的 Q1；看不到时按 Q1（11-17 已拍）GUI 验收改用非 Kernel 布局，Kernel command 组件通道原型由派工方另开卡（P1 级） | — |
+| crew 能在 DataAgent 仓库派工、验收、审核、回写飞书 | 无代码改动 | 在 DataAgent 仓库跑 crew 自检（`doctor --smoke` 先经 payne 同意），派一个只新增 `docs/dataagent-盘点材料/crew-smoke.md` 的试验任务 | `node <crew 目录>/scripts/crew.mjs doctor`；试验任务按 §0.4 派工、`wait`、`show` | doctor 通过；试验任务有 diff、验收结果、codex 审核结论；飞书开发交付对应行被更新，带会话名 | 试验分支经 payne 确认后删除 |
+
+**T02 打包桌面版 GUI 工具通道核实** · 执行：Claude Code（Mac）；日志确认不了时请 payne 看一眼界面 · 依赖：无 · 优先级：P0 · W1（11-18 前）· G1.4、03 的 Q1
+
+| 目标 | 文件 | 改法 | 命令 | 验收 | 回滚 |
+|---|---|---|---|---|---|
+| 确认打包版 Mint.app 的回合里 Agent 能不能看到 bundle 的 MCP 工具 | `docs/research/dataagent-2026-11-03/16-local-ingestion-workflow-build/gui-channel-check.md`（新增）、同目录 `README.md`（登记） | 在装了 `preset-intake` 的工作区打开 Mint.app，让 Agent 列出可用工具；记录 Mint.app 版本、`runtime_layout`、工具列表、通知里的 MCP 拉起错误；先从 `~/.mint` 的会话与日志里确认 | 见盘点材料 `P1-操作清单.md` 阶段 C；必要时截图 | 记录写明「工具列表是否出现 `dataagent-workbench__*`」；结论写回 03 的 Q1；看不到时按 Q1（11-17 已拍）GUI 验收改用非 Kernel 布局，Kernel command 组件通道原型由派工方另开卡（P1 级） | — |
 
 ### 2.2 平台收敛（R0–R3）
 
@@ -192,7 +195,7 @@ flowchart LR
 |---|---|---|---|---|---|
 | OCR 是数据层的显式依赖；装包后 setup / doctor 配置并检查 OCR 引擎与模型 | `$CAP/dataagent-workbench/tools/build_bundle.py`；`$CAP/dataagent-cli/bin/dataagent`、`$CAP/dataagent-cli/tests/`；`$CAP/dataagent-ocr/src/**`；`scripts/acceptance/files.py`、`scripts/acceptance/bootstrap.py` | 构建不再按目录是否存在静默跳过 OCR（`build_bundle.py:60-64`）；`dataagent doctor` 输出引擎与模型版本，缺失时给出配置项；扫描件验收不再 `copytree` 预置 OCR 目录（原 `verify_local.py:66-69`），改走 setup | `bash scripts/test_all.sh dataagent-cli dataagent-ocr`；`bash scripts/prepare_acceptance.sh && bash scripts/verify_local.sh --phase bootstrap && bash scripts/verify_local.sh --phase files --ocr-root "$OCR_ROOT"` | 通过；bootstrap 阶段断言 doctor 输出含引擎与模型版本；缺引擎时扫描页返回 `needs_input` 或部分完成，不显示为成功；M1-01 达到「已验证」条件 | revert |
 
-**T21 files 阶段扩到 8 类样本** · 执行：zcode（样本与比对）+ 人工或独立会话（期望文件）· 审核：codex · 依赖：T20 · 优先级：P0 · W1–W2 · FR1.1 / G1.1
+**T21 files 阶段扩到 8 类样本** · 执行：zcode（样本与比对）+ Claude Code 另开子 agent 独立编写期望文件（不给实现方的 diff 和输出）· 审核：codex · 依赖：T20 · 优先级：P0 · W1–W2 · FR1.1 / G1.1
 
 | 目标 | 文件 | 改法 | 命令 | 验收 | 回滚 |
 |---|---|---|---|---|---|
@@ -216,7 +219,7 @@ flowchart LR
 |---|---|---|---|---|---|
 | 没有白名单时只给字段名和统计 | `$CAP/dataagent-workbench/src/dataagent_workbench/{inference_requests.py,bootstrap.py}`；`$CAP/dataagent-workbench/tests/` | 无 `model-context.json` 时样本与 PDF 文字摘录不进推断请求；白名单显式允许的才进 | `bash scripts/test_all.sh dataagent-workbench` | 新增用例：无白名单时推断请求不含样本值与原文；有白名单时只含获准字段 | revert |
 
-**T25 跨源样本组与金标** · 执行：dsh（样本）+ 人工或独立会话（金标）· 审核：codex · 依赖：T14 · 优先级：P0 · W2 · FR1.5 / G1.3
+**T25 跨源样本组与金标** · 执行：dsh（样本）+ Claude Code 另开子 agent 独立编写金标（不给实现方的 diff 和输出）· 审核：codex · 依赖：T14 · 优先级：P0 · W2 · FR1.5 / G1.3
 
 | 目标 | 文件 | 改法 | 命令 | 验收 | 回滚 |
 |---|---|---|---|---|---|
@@ -260,19 +263,19 @@ flowchart LR
 |---|---|---|---|---|---|
 | 29 份令才报文接入，映射到字段目录，算出可判定率与缺口 | `scripts/acceptance/lingcai_payloads.py`（新增）、`scripts/verify_local.py`（登记新阶段）、`scripts/lingcai_preflight.mjs`（新增） | 报文按 JSON 来源接入，字段带 JSON Pointer 锚点；映射读自 `--mapping <文件>`（T35 产出），不给时为「无映射」现状口径，另报一行名称相似度基线；可判定率由 `lingcai_preflight.mjs` 调 `$QL_AUDIT/server/audit.mjs` 导出的 `planAudit`（`:25`）与 `preflight`（`:247`），字段表 = `fields.json` 加映射结果；按前置、后置分开统计；输出缺口分类；输出只含聚合计数 | `bash scripts/prepare_acceptance.sh && bash scripts/verify_local.sh --phase lingcai-payloads --dataset "$LINGCAI_DATASET" --ql-audit "$QL_AUDIT" --version <规则包版本> --scenes common,8.5,8.8` | 29 份全部接入；无映射时复现现状口径（3683 次规则参与，就绪约 11.8%；与规则包版本有出入时说明）；报告只含聚合计数 | revert |
 
-**T35 令才映射提案（Mint 会话）** · 执行：人工（payne，Mint TUI），不派 crew · 依赖：T34b · 优先级：P0 · W2 · G1.13
+**T35 令才映射提案（Mint 会话）** · 执行：Claude Code（Mac，驱动 Mint TUI；没有非交互模式时写好逐句提示请 payne 照发），不派 crew · 依赖：T34b · 优先级：P0 · W2 · G1.13
 
 | 目标 | 文件 | 改法 | 命令 | 验收 | 回滚 |
 |---|---|---|---|---|---|
 | 由 Mint Agent 给出报文到字段目录的映射提案，并测出提升 | 映射文件存 `$PRIVATE_DIR/lingcai/mapping.json`；证据摘要 `16-local-ingestion-workflow-build/evidence-lingcai.md` | 在 Mint TUI 发起接入，目标选 `lingcai-expense` 字段目录；Agent 按推断请求提案，组件校验试算；导出映射 | T34b 的命令加 `--mapping "$PRIVATE_DIR/lingcai/mapping.json"` | 可判定率达到 06 的 Q11 门槛；新补字段证据可核验率 100%；证据摘要含会话 ID 与版本，不含报文值 | — |
 
-**T36 冻结版本回归** · 执行：dsh（组件回归）+ 人工（引擎重跑）· 审核：codex · 依赖：T35 · 优先级：P0（组件）/ P1（引擎）· W2 · G1.14
+**T36 冻结版本回归** · 执行：dsh（组件回归）+ Claude Code（引擎重跑，需 payne 给引擎地址与凭据）· 审核：codex · 依赖：T35 · 优先级：P0（组件）/ P1（引擎）· W2 · G1.14
 
 | 目标 | 文件 | 改法 | 命令 | 验收 | 回滚 |
 |---|---|---|---|---|---|
 | 同一版本结果稳定；有引擎回归基线 | `scripts/acceptance/lingcai_payloads.py`（加 `--repeat`）；基线快照存 `$PRIVATE_DIR/lingcai/baseline/`，仓库只存摘要 | 同一组件版本连续跑两次，逐项比对快照摘要、映射结果、可判定规则集合；有令才引擎地址与凭据时，用 ql-audit 当前规则包重跑审核，记录规则版本、引擎版本与结果快照 | T35 的命令加 `--repeat 2` | 两次逐项一致；引擎重跑完成或登记外部阻断 | — |
 
-**T37 首个正式轮 r001** · 执行：dsh（`set_baseline.py`）+ 人工（Claude Code 开轮、裁定）· 审核：codex · 依赖：T38 · 优先级：P0 · W2 · G1.12
+**T37 首个正式轮 r001** · 执行：dsh（`set_baseline.py`）+ Claude Code（开轮、裁定）· 审核：codex · 依赖：T38 · 优先级：P0 · W2 · G1.12
 
 | 目标 | 文件 | 改法 | 命令 | 验收 | 回滚 |
 |---|---|---|---|---|---|
@@ -316,19 +319,19 @@ flowchart LR
 
 ### 2.6 双端、评审与收尾
 
-**T50 Mint TUI 证据包** · 执行：人工（payne），不派 crew · 依赖：T12b、T14、T21、T22、T23、T25 · 优先级：P0 · W2 · G1.4、G1.7
+**T50 Mint TUI 证据包** · 执行：Claude Code（Mac；网页操作用 `scripts/verify_browser.py` 自动化，录屏权限请 payne 授予），不派 crew · 依赖：T12b、T14、T21、T22、T23、T25 · 优先级：P0 · W2 · G1.4、G1.7
 
 | 目标 | 文件 | 改法 | 命令 | 验收 | 回滚 |
 |---|---|---|---|---|---|
-| TUI 完成 C-01、C-02、C-03 | 证据包入 Release，仓内留摘要 `16-local-ingestion-workflow-build/evidence-tui.md` 并在同目录 `README.md` 登记 | 全新工作区装 preset-intake；按 05 §4.2 操作；记录审批策略 | 人工 | 证据包含版本、会话、任务、发布引用、录屏；M1-09、M2-06 达到「已验证」条件 | — |
+| TUI 完成 C-01、C-02、C-03 | 证据包入 Release，仓内留摘要 `16-local-ingestion-workflow-build/evidence-tui.md` 并在同目录 `README.md` 登记 | 全新工作区装 preset-intake；按 05 §4.2 操作；记录审批策略 | Claude Code 操作并录屏；做不到的界面步骤请 payne 操作 | 证据包含版本、会话、任务、发布引用、录屏；M1-09、M2-06 达到「已验证」条件 | — |
 
-**T51 Mint GUI 证据包** · 执行：人工（payne），不派 crew · 依赖：T02、T50 · 优先级：P0（或登记外部阻断）· W2 · G1.4
+**T51 Mint GUI 证据包** · 执行：Claude Code（Mac；日志与自动化覆盖不到的界面操作请 payne 做），不派 crew · 依赖：T02、T50 · 优先级：P0（或登记外部阻断）· W2 · G1.4
 
 | 目标 | 文件 | 改法 | 命令 | 验收 | 回滚 |
 |---|---|---|---|---|---|
-| GUI 完成 C-01、C-02，或登记外部阻断 | `16-local-ingestion-workflow-build/evidence-gui.md`、同目录 `README.md` | 同 T50；T02 结论为看不到时改用非 Kernel 布局，并在证据里写明所用布局 | 人工 | M1-10 达到「已验证」条件；不通则写明阻断原因、升级对象与日期 | — |
+| GUI 完成 C-01、C-02，或登记外部阻断 | `16-local-ingestion-workflow-build/evidence-gui.md`、同目录 `README.md` | 同 T50；T02 结论为看不到时改用非 Kernel 布局，并在证据里写明所用布局 | Claude Code 操作并录屏；界面步骤做不到时请 payne 操作 | M1-10 达到「已验证」条件；不通则写明阻断原因、升级对象与日期 | — |
 
-**T52 体验观察** · 执行：人工 · 依赖：T50 · 优先级：P1 · W2 · G1.9
+**T52 体验观察** · 执行：真人（payne 找一个没参与开发的人），Claude Code 准备记录表与计时 · 依赖：T50 · 优先级：P1 · W2 · G1.9
 
 | 目标 | 文件 | 改法 | 命令 | 验收 | 回滚 |
 |---|---|---|---|---|---|
@@ -340,7 +343,7 @@ flowchart LR
 |---|---|---|---|---|---|
 | P1 可验收结论；验收矩阵登记 | `16-local-ingestion-workflow-build/{r1-review.md,r1-fixes.md,test-inventory.md,README.md}` | 按 06 §6 的 V1.1–V1.15 逐条复跑命令（V1.16 暂缓）、核对证据，区分已修复、部分修复、新缺陷，附复现输入与 `file:line`；把达到条件的 M1-xx、M2-xx 改为「已验证」；codex 只读审核记录并给结论 | `bash scripts/test_all.sh`；各卡的验收命令（逐条列在 r1-review.md） | codex 结论为「通过」，r1-review.md 结论为「可验收」；或缺陷清单转成新卡 | — |
 
-**T54 合入与登记** · 执行：人工（payne），不派 crew · 依赖：T53 · 优先级：P0 · W2（11-29）
+**T54 合入与登记** · 执行：Claude Code（Mac；合入与推送 main 前经 payne 确认，验收状态由验收人填），不派 crew · 依赖：T53 · 优先级：P0 · W2（11-29）
 
 | 目标 | 文件 | 改法 | 命令 | 验收 | 回滚 |
 |---|---|---|---|---|---|
@@ -377,7 +380,7 @@ flowchart LR
 
 ## 6. 风险与待定项
 
-1. 两周内任务多：37 张卡里 P0 有 30 张（含人工卡；T40–T43 暂缓）。关键路径是 T00 → T10 → T11a → T12a → T12b → T13 → T23 → T50 → T53 → T54，以及 T10 → T11a → T11b → T16 → T34a → T34b → T35 → T36。W2 中（11-25）复核；P1 级的 T15、T24、T52 可顺延到 W3，不影响 P1 退出。
+1. 两周内任务多：37 张卡里 P0 有 30 张（含 Claude Code 自己做的卡；T40–T43 暂缓）。关键路径是 T00 → T10 → T11a → T12a → T12b → T13 → T23 → T50 → T53 → T54，以及 T10 → T11a → T11b → T16 → T34a → T34b → T35 → T36。W2 中（11-25）复核；P1 级的 T15、T24、T52 可顺延到 W3，不影响 P1 退出。
 2. 不提 PR 的代价（03 的 Q5，11-17 已拍）：宿主不认工具效果注解，默认审批下只读工具仍弹确认（V1.5）；GUI 下凭据只能走钥匙串逻辑名（V1.6 的 GUI 部分）；会话编号由本机解析，主体按本机单用户 fail-closed。这几项按绕行验收，不通时登记外部阻断。
 3. T34a、T34b 只读调用 `$QL_AUDIT`（来源仓 `~/Vibe/AgentCPM-agent-evolution`）；字段目录能否进 DataAgent 仓由 payne 确认。
 4. 期望文件与金标（T21、T25）必须独立编写，否则 V1.1、V1.3 不可信。
