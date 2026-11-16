@@ -3,8 +3,9 @@ doc_id: mvp
 title: 07 MVP 实施文档
 answers: P1（多源数据接入）的任务清单：每个任务改哪些文件、跑什么命令、怎么验收、怎么回滚，谁来做
 status: 草稿 v0.2（37 张任务卡，W1–W2；已按独立复核修正命令、范围与依赖；crew 调用方式待 payne 提供后补进 §0.4）
+feishu_node: QkPrw4kegiVZdZkHtJHcLIEinVg
+feishu_obj: KfxJduEjyo9YyqxkA9tcCM8znpb
 ---
-
 # 07 MVP 实施文档
 
 > 输入：[06 PRD](<06 PRD.md>)（目标 G、验收 V、改动 FR）、[05 分期路线与 MVP 范围](<05 分期路线与 MVP 范围.md>)、[03 平台方案与 iface 共建](<03 平台方案与 iface 共建.md>)（R0–R3、PR-1 至 PR-4）、[04 验收方法与数据](<04 验收方法与数据.md>)。

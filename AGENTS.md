@@ -69,7 +69,7 @@ git rev-parse HEAD
 <!-- bigproj:stage begin -->
 ## 当前阶段
 
-原始诉求（2026-11-16 起）。下一步：确认附B 原始诉求，写清目标和交付物后进入调研与设计。
+MVP 实施（2026-11-17 起）。下一步：MVP 实施文档定稿后，把分步清单登记成开发交付，进入开发。
 <!-- bigproj:stage end -->
 
 <!-- bigproj:links begin -->

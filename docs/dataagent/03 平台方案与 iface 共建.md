@@ -3,8 +3,9 @@ doc_id: platform
 title: 03 平台方案与 iface 共建
 answers: 现有实现怎么按 iface 族重组（平台层）；我们怎么参与完善 iface（PR 清单与规矩）；分几步做、每步怎么验收
 status: 草稿 v0.2（设计；并入 11-16 已拍「我们承担完善 iface 职责」；未实施；待拍 Q1–Q6）
+feishu_node: Ld3jwNrhDiHOiNkr90xcBl2NnHg
+feishu_obj: CzIudMsyuo9ygjxRjDWct1ZWnBd
 ---
-
 # 03 平台方案与 iface 共建
 
 > 基线：DataAgent `codex/16-local-intake@87d5e8e`（未推送）加 worktree 未提交的 `dataagent-ocr`；agent-kernel `master@33075118`（2026-11-16 17:20）。
@@ -96,12 +97,16 @@ flowchart TB
   end
   CT["dataagent-contracts（领域类型）"]
   HOST["宿主：Mint Core / Kernel Host（iface 实现）"]
-  AG -->|MCP| WB & DATA & APP & GOV & OPS
+  AG -->|MCP| WB
+  AG -->|MCP| DATA
+  AG -->|MCP| APP
+  AG -->|MCP| GOV
+  AG -->|MCP| OPS
   WEB --> WB
   BIZ --> PLAT
   BIZ --> CT
   PLAT --> CT
-  PLAT -. "宿主适配器（通道开放后）" .-> HOST
+  PLAT -. 宿主适配器（通道开放后） .-> HOST
 ```
 
 | 包 | 来源 | 内容 |

@@ -3,8 +3,9 @@ doc_id: roadmap
 title: 05 分期路线与 MVP 范围
 answers: P1 到 P6 各交付什么；一期（MVP）做什么不做什么；用哪些用例验收
 status: 草稿 v0.1（P1、P2 日期为承诺，P3 起为估计；待拍 Q1–Q4）
+feishu_node: OLZ5wCEEki24Y1kwRTHcqT1lnMg
+feishu_obj: RYNTd2Vq1oeaMvxyhiMcZVKZn7f
 ---
-
 # 05 分期路线与 MVP 范围
 
 > 输入：[00 术语与总览](<00 术语与总览.md>)、[04 验收方法与数据](<04 验收方法与数据.md>)、[02 借鉴 Palantir Ontology 与 Databricks Genie](<02 借鉴 Palantir Ontology 与 Databricks Genie.md>)；总规划切片 S0–S2；方案 16 的 M1–M4 与 `test-inventory.md`（`codex/16-local-intake@87d5e8e`）。

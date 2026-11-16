@@ -3,8 +3,9 @@ doc_id: iface-gaps
 title: 01 多源接入与本体的 iface 依赖与分工
 answers: 在 Mint 上完成多源接入和 ontology 接入，要哪些 iface 支持、还缺哪些功能、哪些归业务侧、哪些要核心包加机制
 status: 草稿 v0.2（读码梳理，未运行；缺口转为 PR 清单见 03 §8；待拍 Q1–Q3）
+feishu_node: XMMywweq2i7ioGkxSqicDclTnyd
+feishu_obj: JICXdFjtJoKefgxICGqcyfnxnNW
 ---
-
 # 01 多源接入与本体的 iface 依赖与分工
 
 > 基线：DataAgent `codex/16-local-intake@87d5e8e`（未推送，位于 `~/Vibe/AgentOS/.worktrees/dataagent-local-intake`）加该 worktree 里未提交的 `dataagent-ocr`；agent-kernel `master@01bef1c12`（2026-11-16 16:31，本次 fetch 后快进）。

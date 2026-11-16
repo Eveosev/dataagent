@@ -3,8 +3,9 @@ doc_id: prd
 title: 06 PRD
 answers: P1（多源数据接入）与 P2（本体的实现、打通、可视化）改什么、为什么改；每个目标怎么验收
 status: 草稿 v0.1（P1、P2 细到验收命令；P3–P6 见 05；待拍 Q1–Q11）
+feishu_node: SXeGwwK9Zi9VyzkpHYycsPcMnUc
+feishu_obj: JxbYdi11YoijDQxwF4ZcSOy2nRb
 ---
-
 # 06 PRD
 
 > 输入：[00 术语与总览](<00 术语与总览.md>)、[01 iface 依赖与分工](<01 多源接入与本体的 iface 依赖与分工.md>)、[02 借鉴 Palantir Ontology 与 Databricks Genie](<02 借鉴 Palantir Ontology 与 Databricks Genie.md>)、[03 平台方案与 iface 共建](<03 平台方案与 iface 共建.md>)、[04 验收方法与数据](<04 验收方法与数据.md>)、[05 分期路线与 MVP 范围](<05 分期路线与 MVP 范围.md>)；方案 16 与 `test-inventory.md`（`codex/16-local-intake@87d5e8e`）。

@@ -3,8 +3,9 @@ doc_id: research
 title: 02 借鉴 Palantir Ontology 与 Databricks Genie
 answers: Palantir 和 Databricks 怎么用本体、定义、技能、目录把「自然语言问数」做可信；DataAgent 照着改什么、落在哪一期
 status: 草稿 v0.3（调研；外部资料 2026-11-16 访问，已独立复核；待拍事项已并入 05、06）
+feishu_node: HshywkjmEiCv9vkEs1Dcr4lOnRh
+feishu_obj: FU7KdBHTnoFrutxNGjbcXa7Fnxf
 ---
-
 # 02 借鉴 Palantir Ontology 与 Databricks Genie
 
 > 外部资料：palantir.com/docs 与 docs.databricks.com、databricks.com/blog，2026-11-16 访问，编号见文末「出处」（P = Palantir，G = Databricks）。厂商自报的准确率只作参考。
