@@ -1,0 +1,36 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "dataagent-ocr"
+version = "0.1.0"
+description = "DataAgent OCR providers: OpenAI-compatible endpoints, isolated local engines and command adapters; credential storage, verification and pinning, quality monitoring, engine installation"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.11,<3.14"
+authors = [{ name = "AgentOS DataAgent" }]
+dependencies = [
+  "dataagent-contracts",
+  "dataagent-runtime",
+  "pydantic>=2.7,<3",
+  "pillow>=10.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+dataagent-ocr = "dataagent_ocr.cli:main"
+
+[tool.uv.sources]
+dataagent-contracts = { path = "../dataagent-contracts", editable = true }
+dataagent-runtime = { path = "../dataagent-runtime", editable = true }
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dataagent_ocr"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+pythonpath = ["src"]
