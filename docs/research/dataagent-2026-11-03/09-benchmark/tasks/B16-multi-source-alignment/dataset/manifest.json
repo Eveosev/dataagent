@@ -1,7 +1,7 @@
 {
   "dataset_id": "B16.dataset",
   "task_id": "B16",
-  "revision": "v0.10",
+  "revision": "v0.11",
   "status": "collecting",
   "unit": "case",
   "sources": [
@@ -13,7 +13,10 @@
       "revision": "2023-10-06",
       "files": 3,
       "mb": 0.9,
-      "fetched_at": "2026-11-17T21:04:47+08:00"
+      "fetched_at": "2026-11-17T21:04:47+08:00",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "license_evidence": "https://dbs.uni-leipzig.de/research/projects/object_matching/benchmark_datasets_for_entity_resolution",
+      "license_checked_at": "2026-11-17"
     },
     {
       "name": "leipzig-amazon-google",
@@ -23,7 +26,10 @@
       "revision": "2023-10-06",
       "files": 3,
       "mb": 3.0,
-      "fetched_at": "2026-11-17T21:05:26+08:00"
+      "fetched_at": "2026-11-17T21:05:26+08:00",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "license_evidence": "https://dbs.uni-leipzig.de/research/projects/object_matching/benchmark_datasets_for_entity_resolution",
+      "license_checked_at": "2026-11-17"
     },
     {
       "name": "leipzig-abt-buy",
@@ -33,7 +39,10 @@
       "revision": "2023-10-06",
       "files": 3,
       "mb": 0.5,
-      "fetched_at": "2026-11-17T21:05:29+08:00"
+      "fetched_at": "2026-11-17T21:05:29+08:00",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "license_evidence": "https://dbs.uni-leipzig.de/research/projects/object_matching/benchmark_datasets_for_entity_resolution",
+      "license_checked_at": "2026-11-17"
     }
   ],
   "splits": {
@@ -62,7 +71,7 @@
   "updated": "2026-11-17",
   "notes": "由 build_cases.py 从 workspace/benchmark-data 构建；原始数据不入库",
   "build": {
-    "version": 10,
+    "version": 11,
     "script": "tools/build_cases.py",
     "built_at": "2026-11-17",
     "policy": "金标只取数据集 perfectMapping；按金标连通分量做固定 sha256 60/20/20；每条用例取同 split 内与左记录最相似的非金标右记录 4 条作候选负例，候选顺序按哈希固定，避免金标总在首位。",
@@ -109,8 +118,11 @@
         },
         {
           "candidate": "DBLP-ACM / Amazon-Google / Abt-Buy",
-          "license": "CC BY 4.0（Leipzig DBS group，2019-01 声明）",
-          "decision": "采用；manifest 记 attribution"
+          "license": "CC BY 4.0",
+          "decision": "采用；manifest 记 attribution",
+          "evidence": "https://dbs.uni-leipzig.de/research/projects/object_matching/benchmark_datasets_for_entity_resolution",
+          "evidence_quote": "January 2019: These datasets are made available by the database group of Prof. Erhard Rahm under the Creative Commons license. To give proper credit please refer to this website and the VLDB2010 paper [1]",
+          "evidence_checked_at": "2026-11-17"
         }
       ]
     },

@@ -217,7 +217,7 @@ docs/research/.../09-benchmark/
 | Spider 2.0 全量 / dbt 任务 | B14 | 需按官网流程申请；**已决定延后** | 申请后补 `spider2-dbt` 源，B14 暂由 ELT-Bench 覆盖 |
 | LongMemEval m 档 | B13 | 2.7 GB，暂不取 | 需要时补 `longmemeval_m`，用例已用 oracle + s_cleaned |
 | B15 交付数据 | B15 | 无公开 benchmark，需真实客户台账与影子日志 | 见 `tasks/B15-fde-delivery/NOTES.md`「数据构建」 |
-| DeepMatcher UW 镜像 / Magellan 数据 | B16 | 镜像未声明数据集许可；Magellan 当前仓库不再分发基准数据 | 已改用 Leipzig 原始发布（CC BY 4.0），见 `tasks/B16-multi-source-alignment/NOTES.md`「许可核实」 |
+| DeepMatcher UW 镜像 / Magellan 数据 | B16 | 镜像未声明数据集许可；Magellan 当前仓库不再分发基准数据 | 已改用 Leipzig 原始发布；[发布页](https://dbs.uni-leipzig.de/research/projects/object_matching/benchmark_datasets_for_entity_resolution) 的 January 2019 声明链接到 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)，见 `tasks/B16-multi-source-alignment/NOTES.md`「许可核实」 |
 
 
 **原则**：缺数据不编金标。抓不到或未授权时，`manifest.build.coverage` 与 `NOTES.md` 明确写缺口，`fetch-report.json` 记 `status/remedy`；任何「补齐」都必须可复核（`FETCH.json` 有 locator 与 digest）。
@@ -264,7 +264,7 @@ python3 -I docs/research/dataagent-2026-11-03/09-benchmark/tools/report.py
 | 判分链路 | `harness/grade.py` 可跑通：金标回填 240 条得满分（B03/B16），扰动 20% 后掉分；scorecard 通过 schema 校验 |
 | B16 判分自检 | oracle 三切分 F1=1、FMR=0；empty 三切分 F1=0；手工金标回填 F1=1、FMR=0；聚类 `[[L,R1],[R1,R2]]` 经传递闭包得 F1=1、FMR=0；`[[L,R1,OUTSIDE]]` 把 OUTSIDE 计 FP，得 F1=2/3、FMR=0.5；FMR `1/1`+`3/4` 按预测对 pooled=0.8；全程无合并时 value=null、denominator=0 |
 | 适配器 | `dataagent-cli` / `oracle` / `empty` 三个，见 `harness/adapters/README.md`；`harness/run.py` 一键产出 run.json + cases.jsonl + scorecard。B16 的 oracle 分支已补，三切分 F1=1、FMR=0 |
-| 已跑通的探索轮 | B02 `x001`（oracle，满分）、B02 `x002`（empty，地板）、B02 `x003`（CLI 缺失，如实 failed）、B03/B04 `x001`（oracle）、B16 `x816`（oracle，三切分 F1=1、FMR=0）、B16 `x320`（empty，三切分 F1=0）；本轮运行产物不入库，明细见 B16 NOTES 验证记录 |
+| 已跑通的探索轮 | B02 `x001`（oracle，满分）、B02 `x002`（empty，地板）、B02 `x003`（CLI 缺失，如实 failed）、B03/B04 `x001`（oracle）、B16 `x434`（oracle，三切分 F1=1、FMR=0）、B16 `x938`（empty，三切分 F1=0）；本轮运行产物不入库，明细见 B16 NOTES 验证记录 |
 | 基线 | 未建立，16 个 `baseline.json` 的 `run_id` 为 null |
 | 门槛 | 仅 2 条绝对门槛（B01 行保留率、B12 外泄率），其余待首轮回填 |
 
@@ -285,7 +285,7 @@ python3 -I docs/research/dataagent-2026-11-03/09-benchmark/tools/report.py
 | B13 记忆与经验召回 | 240 | v0.2 | collecting | 已构建 |
 | B14 数据建模与物化 | 224 | v0.1 | collecting | 已构建 |
 | B15 FDE 交付效果 | 0 | v0.0 | planned | 待下载/待建 |
-| B16 多源对齐与实体解析 | 240 | v0.9 | collecting | 已构建 |
+| B16 多源对齐与实体解析 | 240 | v0.10 | collecting | 已构建 |
 
 数据构建命令与引用规则见 §9；不可得来源的原因与所需动作见 §9.2；每个任务的指标覆盖写在 `manifest.build.coverage` 与 `tasks/<task>/NOTES.md`「数据构建」。
 

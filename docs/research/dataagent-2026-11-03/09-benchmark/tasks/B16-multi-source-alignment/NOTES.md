@@ -20,9 +20,17 @@
 | DeepMatcher UW-Madison `Datasets.md` 镜像 | 数据集许可未声明；仓库 `LICENSE` 为 BSD-3-Clause，只覆盖代码 | 不采用镜像 |
 | Magellan `anhaidgroup/magellan` | MIT（当前仓库只含项目站点代码，不再分发基准数据） | 不采用 |
 | Fodors-Zagats、iTunes-Amazon、Walmart-Amazon、BeerAdvo-RateBeer、Company | 原始站点与 DeepMatcher 镜像均未声明可再分发许可 | 舍弃 |
-| DBLP-ACM、Amazon-Google、Abt-Buy | Leipzig DBS group 自 2019-01 起以 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) 发布 | 采用 |
+| DBLP-ACM、Amazon-Google、Abt-Buy | Leipzig DBS group 自 2019-01 起以 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) 发布；[发布页](https://dbs.uni-leipzig.de/research/projects/object_matching/benchmark_datasets_for_entity_resolution) 的 January 2019 声明链接到该 4.0 条款（2026-11-17 核对） | 采用 |
 
-采用的数据集就是 DeepMatcher 论文使用的同一批成对实体匹配集，但抓取 Leipzig 原始发布而不是 UW-Madison 镜像：镜像没有数据集级许可，Leipzig 页面明确写了 CC BY 4.0，并要求署名 Leipzig DBS group / Köpcke et al., VLDB 2010。manifest 的 `sources[].license` 与 `build.coverage.license_audit` 都记了这条链。
+采用的数据集就是 DeepMatcher 论文使用的同一批成对实体匹配集，但抓取 Leipzig 原始发布而不是 UW-Madison 镜像：镜像没有数据集级许可，Leipzig 发布页的 January 2019 声明以 Creative Commons license 提供这些数据集，许可链接指向 CC BY 4.0，并要求署名 Leipzig DBS group / Köpcke et al., VLDB 2010。manifest 的 `sources[].license` 与 `build.coverage.license_audit` 都记了这条链。
+
+### 许可证据（2026-11-17 核对）
+
+发布页：<https://dbs.uni-leipzig.de/research/projects/object_matching/benchmark_datasets_for_entity_resolution>。原文：
+
+> January 2019: These datasets are made available by the database group of Prof. Erhard Rahm under the [Creative Commons license](https://creativecommons.org/licenses/by/4.0/).
+
+同页表格列出 Abt-Buy、Amazon-GoogleProducts、DBLP-ACM 及各自的 perfect mapping；声明中的 “Creative Commons license” 直接链接到 `https://creativecommons.org/licenses/by/4.0/`。旧 `old.dbs.uni-leipzig.de` 子域返回 403，不作为证据。manifest 的 `sources[].license_url`、`sources[].license_evidence` 与 `build.coverage.license_audit` 记录同一链接和引文。
 
 ### 用例形状
 
@@ -73,7 +81,7 @@
 <!-- data-build:start -->
 ## 数据构建摘要
 
-- 构建：`tools/build_cases.py --task B16`（转换器 `tools/converters/B16.py`），manifest `v0.9`
+- 构建：`tools/build_cases.py --task B16`（转换器 `tools/converters/B16.py`），manifest `v0.10`
 - 原始数据：`leipzig-dblp-acm`、`leipzig-amazon-google`、`leipzig-abt-buy`，落在 `workspace/benchmark-data/B16/`
 - 当前用例：development 120 / regression 60 / unseen 60（共 240）
 - 金标：数据集自带 `perfectMapping.csv`；非金标候选按排他性视为非匹配
@@ -86,13 +94,14 @@
 |-|-|-|
 | x424 / x929 | oracle F1=0（适配器缺 B16 分支），empty F1=0；240/240 全部产出；FMR 按预测对 pooled，无合并时 value=null | 修复聚类传递闭包与 FMR 汇总；数据 v0.7（历史） |
 | x506 / x009 | oracle 三切分 F1=1、FMR=0；empty 三切分 F1=0；240/240 全部产出 | 补 oracle B16 分支；聚类候选集外成员计 FP；数据 v0.8（历史） |
-| x816 / x320 | oracle 三切分 F1=1、FMR=0；empty 三切分 F1=0；240/240 全部产出 | 当前验收轮；数据 v0.9 |
+| x816 / x320 | oracle 三切分 F1=1、FMR=0；empty 三切分 F1=0；240/240 全部产出 | 数据 v0.9（历史） |
+| x434 / x938 | oracle 三切分 F1=1、FMR=0；empty 三切分 F1=0；240/240 全部产出 | 当前验收轮；数据 v0.10；补许可证据 |
 
 ## 验证记录
 
 | run_id | 适配器 | development F1 / FMR | regression F1 / FMR | unseen_acceptance F1 / FMR | 数据 |
 |-|-|-|-|-|-|
-| `x816-2026-11-17` | oracle | 1.000 / 0.000 | 1.000 / 0.000 | 1.000 / 0.000 | v0.9 |
-| `x320-2026-11-17` | empty | 0.000 / null | 0.000 / null | 0.000 / null | v0.9 |
+| `x434-2026-11-17` | oracle | 1.000 / 0.000 | 1.000 / 0.000 | 1.000 / 0.000 | v0.10 |
+| `x938-2026-11-17` | empty | 0.000 / null | 0.000 / null | 0.000 / null | v0.10 |
 
 FMR 的 `null` 表示该切分没有预测合并，pooled 分母为 0；不是 missing，也不是 0 分。本轮运行产物在 `history/runs/`，按 `.gitignore` 排除；验证结论以上表为准。

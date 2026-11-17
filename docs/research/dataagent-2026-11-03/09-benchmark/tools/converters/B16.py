@@ -24,6 +24,14 @@ from pathlib import Path
 
 MAX_DISTRACTORS = 4
 SPLITS = ("development", "regression", "unseen_acceptance")
+LICENSE_URL = "https://creativecommons.org/licenses/by/4.0/"
+LICENSE_CHECKED_AT = "2026-11-17"
+LICENSE_EVIDENCE = "https://dbs.uni-leipzig.de/research/projects/object_matching/benchmark_datasets_for_entity_resolution"
+LICENSE_EVIDENCE_QUOTE = (
+    "January 2019: These datasets are made available by the database group of Prof. Erhard Rahm "
+    "under the Creative Commons license. To give proper credit please refer to this website and "
+    "the VLDB2010 paper [1]"
+)
 # 与 tools/build_cases.py 的 split_of 保持一致；改一处必须同步另一处。
 RATIOS = {"development": 60, "regression": 20, "unseen_acceptance": 20}
 
@@ -71,6 +79,9 @@ def build(ctx) -> dict:
     counts = {}
     for spec in SOURCES:
         source_rec = ctx.source(spec["id"])
+        source_rec["license_url"] = LICENSE_URL
+        source_rec["license_evidence"] = LICENSE_EVIDENCE
+        source_rec["license_checked_at"] = LICENSE_CHECKED_AT
         if not source_rec.get("revision"):
             fetch_path = ctx.raw_path(spec["id"], "FETCH.json")
             if fetch_path.exists():
@@ -110,8 +121,11 @@ def build(ctx) -> dict:
                     },
                     {
                         "candidate": "DBLP-ACM / Amazon-Google / Abt-Buy",
-                        "license": "CC BY 4.0（Leipzig DBS group，2019-01 声明）",
+                        "license": "CC BY 4.0",
                         "decision": "采用；manifest 记 attribution",
+                        "evidence": LICENSE_EVIDENCE,
+                        "evidence_quote": LICENSE_EVIDENCE_QUOTE,
+                        "evidence_checked_at": LICENSE_CHECKED_AT,
                     },
                 ],
             },
