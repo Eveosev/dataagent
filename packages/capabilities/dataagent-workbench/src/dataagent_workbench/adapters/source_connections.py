@@ -1,12 +1,10 @@
 """Resolve user-selected connection references with host-owned settings.
 
-The connection manifest contains logical credential names only (``file:`` or
-``keychain:``). This process validates and forwards them; the probing
-subprocess resolves the values (see ``dataagent_runtime.policy.secrets``).
-``env:`` is supported by the shared resolver for processes the host launches
-directly, but not through this workbench: the host cannot yet inject a
-credential into the probe child without the workbench reading its value, so
-the manifest rejects that scheme until the host-side mechanism exists.
+The connection manifest contains logical credential names only (``env:``,
+``keychain:`` or ``file:``). This process validates and forwards the names.
+For ``env:`` the child inherits the host-injected environment and resolves the
+value itself; ``file:`` and ``keychain:`` are resolved by the child as well
+(see ``dataagent_runtime.policy.secrets``). No credential value enters stdin.
 """
 import json
 import os
@@ -83,37 +81,78 @@ def _credential_refs(entry):
             validate_ref(ref)
         except InvalidSecretRef:
             raise ValueError('configured source credential must use a logical name') from None
-        if ref.startswith('env:'):
-            raise ValueError(
-                'env: credentials require the trusted host to inject the variable '
-                'into the probe process; use file: or keychain:'
-            )
         refs[name] = ref
     legacy = entry.get('credential_env', {})
     if not isinstance(legacy, dict):
         raise ValueError('configured source credential references are invalid')
-    if legacy:
-        raise ValueError(
-            'env: credentials require the trusted host to inject the variable '
-            'into the probe process; use file: or keychain:'
-        )
+    for name, variable in legacy.items():
+        if not isinstance(name, str) or not name or not isinstance(variable, str):
+            raise ValueError('configured source credential references are invalid')
+        try:
+            refs[name] = validate_ref(f'env:{variable}')
+        except InvalidSecretRef:
+            raise ValueError('configured source credential must use a logical name') from None
     return refs
 
 
-def _credential_options(entry):
+_SSLMODES = {'disable', 'allow', 'prefer', 'require', 'verify-ca', 'verify-full'}
+
+
+def _credential_options(entry, kind):
     options = entry.get('credential_options', {})
     if not isinstance(options, dict):
         raise ValueError('configured source credential options are invalid')
     if any(_is_secret_key(name) for name in options if isinstance(name, str)):
         raise ValueError('source credentials must use logical references, not literal options')
     validate_forwarded(options, 'credential_options')
+    allowed = {'rest': {'auth', 'user'}, 'postgres': {'user', 'sslmode'}}[kind]
+    for name, value in options.items():
+        if not isinstance(name, str) or name not in allowed:
+            raise ValueError(f'unsupported {kind} credential option')
+        if not isinstance(value, str) or not value:
+            raise ValueError(f'unsupported {kind} credential option value')
+    if kind == 'rest' and 'auth' in options and options['auth'] not in {'bearer', 'basic'}:
+        raise ValueError('REST credential_options.auth must be bearer or basic')
+    if kind == 'postgres' and 'sslmode' in options and options['sslmode'] not in _SSLMODES:
+        raise ValueError('unsupported PostgreSQL sslmode')
     return dict(options)
+
+
+def _validate_credential_shape(kind, refs, options):
+    if kind == 'rest':
+        if not refs and not options:
+            return
+        auth = options.get('auth')
+        if auth not in {'bearer', 'basic'}:
+            raise ValueError('REST credentials require auth bearer or basic')
+        if auth == 'bearer':
+            if set(refs) - {'token'} or set(options) - {'auth'}:
+                raise ValueError('bearer authentication accepts only a token reference')
+            if 'token' not in refs:
+                raise ValueError('bearer authentication requires a token reference')
+        else:
+            if set(refs) - {'user', 'password'} or set(options) - {'auth', 'user'}:
+                raise ValueError('basic authentication accepts only user and password')
+            if 'password' not in refs:
+                raise ValueError('basic authentication requires a password reference')
+            if not options.get('user') and 'user' not in refs:
+                raise ValueError('basic authentication requires a user')
+    else:
+        if set(refs) - {'user', 'password'}:
+            raise ValueError('PostgreSQL credentials accept only user and password')
 
 
 class SourceConnections:
     def __init__(self):
         path = os.environ.get('DATAAGENT_SOURCE_CONNECTIONS')
-        self.entries = json.loads(Path(path).read_text()) if path else {}
+        if not path:
+            self.entries = {}
+            return
+        try:
+            self.entries = json.loads(Path(path).read_text())
+        except FileNotFoundError:
+            # A default manifest path may not exist yet; local sources still work.
+            self.entries = {}
 
     def list(self):
         return [{'id': key, 'kind': entry['kind'], 'label': entry.get('label', key)}
@@ -136,13 +175,16 @@ class SourceConnections:
         validate_forwarded(options, 'options')
         validate_forwarded(scope, 'scope')
         _validate_origins(entry.get('allowed_origins'))
+        refs = _credential_refs(entry)
+        credential_options = _credential_options(entry, selection.kind)
+        _validate_credential_shape(selection.kind, refs, credential_options)
         return selection.model_copy(update={
             'locator_ref': locator,
             'options': options,
             'requested_scope': scope,
             'credential_binding_ref': None,
         }), {
-            'credential_refs': _credential_refs(entry),
-            'credential_options': _credential_options(entry),
+            'credential_refs': refs,
+            'credential_options': credential_options,
             'allowed_origins': entry.get('allowed_origins'),
         }

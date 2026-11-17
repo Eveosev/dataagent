@@ -59,29 +59,68 @@ def test_connection_manifest_keeps_only_logical_credential_names(tmp_path, monke
         'kind': 'rest', 'locator': 'http://127.0.0.1:9999/invoices',
         'allowed_origins': ['http://127.0.0.1:9999'], 'options': {'records_path': '/items'},
         'credential_options': {'auth': 'bearer'},
-        'credential_refs': {'token': 'file:rest-token'},
+        'credential_refs': {'token': 'env:T14_REST_TOKEN'},
     }}))
     monkeypatch.setenv('DATAAGENT_SOURCE_CONNECTIONS', str(config))
     selection = SourceSelection(source_id='api', kind='rest', locator_ref='accounting')
     resolved, options = SourceConnections().resolve(selection)
     assert resolved.locator_ref == 'http://127.0.0.1:9999/invoices'
-    assert options['credential_refs'] == {'token': 'file:rest-token'}
+    assert options['credential_refs'] == {'token': 'env:T14_REST_TOKEN'}
     assert options['credential_options'] == {'auth': 'bearer'}
     assert sentinel not in json.dumps(options)
 
 
+def test_legacy_credential_env_becomes_env_logical_name(tmp_path, monkeypatch):
+    config = tmp_path / 'connections.json'
+    config.write_text(json.dumps({'accounting': {
+        'kind': 'rest', 'locator': 'http://127.0.0.1:9999/invoices',
+        'credential_options': {'auth': 'bearer'},
+        'credential_env': {'token': 'T14_REST_TOKEN'},
+    }}))
+    monkeypatch.setenv('DATAAGENT_SOURCE_CONNECTIONS', str(config))
+    _, options = SourceConnections().resolve(
+        SourceSelection(source_id='api', kind='rest', locator_ref='accounting'))
+    assert options['credential_refs'] == {'token': 'env:T14_REST_TOKEN'}
+
+
+def test_missing_manifest_keeps_local_probe_available(tmp_path, monkeypatch):
+    monkeypatch.setenv('DATAAGENT_SOURCE_CONNECTIONS', str(tmp_path / 'missing.json'))
+    (tmp_path / 'input.csv').write_text('number,total\nINV-1,126000\n')
+    package = Path(__file__).resolve().parents[2] / 'dataagent-data'
+    wb = Workbench(tmp_path)
+    profile = LayerClient(package).probe(
+        SourceSelection(source_id='f', kind='file', locator_ref='input.csv'), wb.ctx, tmp_path)
+    assert profile.records[0]['total'] == '126000'
+    with pytest.raises(ValueError, match='configured'):
+        SourceConnections().resolve(
+            SourceSelection(source_id='api', kind='rest', locator_ref='accounting'))
+
+
 @pytest.mark.parametrize('entry', [
-    {'credential_refs': {'token': 'env:T14_REST_TOKEN'}},
-    {'credential_env': {'token': 'T14_REST_TOKEN'}},
+    {'credential_options': {'auth': 'T14-EXAMPLE'},
+     'credential_refs': {'token': 'file:rest-token'}},
+    {'credential_options': {'auth': 'bearer'}},
+    {'credential_options': {'auth': 'basic', 'user': 'reader'}},
 ])
-def test_env_reference_requires_host_injection(tmp_path, monkeypatch, entry):
+def test_rest_credential_options_are_enumerated_and_complete(tmp_path, monkeypatch, entry):
     config = tmp_path / 'connections.json'
     config.write_text(json.dumps({'accounting': {
         'kind': 'rest', 'locator': 'http://127.0.0.1:9999/invoices', **entry,
     }}))
     monkeypatch.setenv('DATAAGENT_SOURCE_CONNECTIONS', str(config))
-    with pytest.raises(ValueError, match='host'):
+    with pytest.raises(ValueError):
         SourceConnections().resolve(SourceSelection(source_id='api', kind='rest', locator_ref='accounting'))
+
+
+def test_postgres_credential_options_are_validated(tmp_path, monkeypatch):
+    config = tmp_path / 'connections.json'
+    config.write_text(json.dumps({'ledger': {
+        'kind': 'postgres', 'locator': 'postgresql://127.0.0.1:5432/invoice',
+        'credential_options': {'auth': 'bearer'},
+    }}))
+    monkeypatch.setenv('DATAAGENT_SOURCE_CONNECTIONS', str(config))
+    with pytest.raises(ValueError):
+        SourceConnections().resolve(SourceSelection(source_id='db', kind='postgres', locator_ref='ledger'))
 
 
 @pytest.mark.parametrize('entry', [

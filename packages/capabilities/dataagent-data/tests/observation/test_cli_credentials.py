@@ -68,3 +68,21 @@ def test_rest_401_is_reported_as_authentication_failure(workspace, ctx, monkeypa
     profile = cli.probe(_rest(), ctx, workspace, {"allowed_origins": ["http://127.0.0.1:9"]})
     assert [gap.code for gap in profile.gaps] == ["authentication_failed"]
     assert profile.coverage == "partial"
+
+
+def test_env_reference_is_resolved_inside_probe(workspace, ctx, monkeypatch):
+    monkeypatch.setenv("T14_TOKEN_ENV", SENTINEL)
+    seen = {}
+
+    def fake_probe(selection, ctx, **options):
+        seen.update(options)
+        return _profile()
+
+    monkeypatch.setattr("dataagent_data.observation.http.probe_rest", fake_probe)
+    profile = cli.probe(_rest(), ctx, workspace, {
+        "allowed_origins": ["http://127.0.0.1:9"],
+        "credential_options": {"auth": "bearer"},
+        "credential_refs": {"token": "env:T14_TOKEN_ENV"},
+    })
+    assert seen["credentials"]["token"] == SENTINEL
+    assert SENTINEL not in profile.model_dump_json()

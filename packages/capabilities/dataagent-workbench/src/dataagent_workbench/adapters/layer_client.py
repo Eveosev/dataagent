@@ -17,20 +17,21 @@ class LayerClient:
         if not python.is_file():raise ValueError('data layer environment missing; run dataagent setup')
         if 'credentials' in operation:
             raise ValueError('plaintext credentials must not cross the process boundary')
-        refs = operation.get('credential_refs')
-        if isinstance(refs, dict) and any(
-            isinstance(ref, str) and ref.startswith('env:') for ref in refs.values()
-        ):
-            raise ValueError('env: credentials require host injection into the probe process')
         validate_forwarded(selection.options, 'source.options')
         validate_forwarded(selection.requested_scope, 'source.scope')
         validate_forwarded(operation.get('credential_options') or {}, 'credential_options')
         workspace=Path(workspace).resolve()
-        # The workbench never reads a credential value. ``env:`` names are
-        # rejected by SourceConnections until the host can inject the variable
-        # into the probe process itself; file:/keychain: names are resolved by
-        # the child below.
-        env={k:v for k,v in os.environ.items() if k in {'PATH','HOME','TMPDIR','LANG','TZ','DATAAGENT_DATA_ROOT'}}
+        # The workbench never reads a credential value. For ``env:`` names the
+        # child inherits the host-injected environment and resolves the value
+        # itself; file:/keychain: names are resolved by the child below.
+        refs = operation.get('credential_refs')
+        env_refs = isinstance(refs, dict) and any(
+            isinstance(ref, str) and ref.startswith('env:') for ref in refs.values()
+        )
+        env = None if env_refs else {
+            k: v for k, v in os.environ.items()
+            if k in {'PATH', 'HOME', 'TMPDIR', 'LANG', 'TZ', 'DATAAGENT_DATA_ROOT'}
+        }
         # The child receives logical names only; it resolves them inside its own process.
         payload={'source':selection.model_dump(mode='json'),'context':ctx.model_dump(mode='json'),**operation}
         try:
