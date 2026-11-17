@@ -1,0 +1,133 @@
+{
+  "baseline": "agent-kernel@ae6c3d5（2026-11-17）；DataAgent feat/p1-intake@9c4c941",
+  "items": [
+    {
+      "id": "IF-01", "title": "工具效果分级", "category": "iface 契约缺口", "module": "tool / policy",
+      "evidence": "ToolSpec 只有名字、描述、参数（kernel/iface/src/tool.rs:35-39）；EffectLevel 三级已有但按 op 类别给值，tool.execute 一律算副作用（session/effect.rs:193、:256）",
+      "need": "只读工具免确认，默认审批下全流程人工确认不超过 3 次（G1.5、V1.5）", "phase": "P1",
+      "contribution": "ToolSpec 增加可选 Option<EffectLevel>（复用现有三级，不另造枚举）；PolicyContract::effect_of 对已声明工具读取它；约定 MCP readOnlyHint/destructiveHint/idempotentHint 到 EffectLevel 的映射。DataAgent 平台层 MCP 框架（T12a）可作参考实现",
+      "mode": "契约 PR", "priority": "P0", "owner": "李奕杉（tool）、李鹏越（policy）；评审 pengyue.li、luyaxi",
+      "links": "03 PR-1；07 T40（暂缓）；盘点 C1"
+    },
+    {
+      "id": "IF-02", "title": "调用元数据下发给 MCP 组件的线上约定", "category": "iface 契约缺口", "module": "types",
+      "evidence": "CallMeta{session_id, call_id, turn}（types/mod.rs:7-11）只在 Kernel 内；Mint 不把它下发给 MCP 服务；_meta 里用原名还是加前缀没有约定",
+      "need": "组件按调用上下文判定权限、留痕（G1.10，T11a 已按原名读取）", "phase": "P1",
+      "contribution": "写一份 MCP _meta 映射约定（键名、类型、缺省时行为），并在 Mint MCP 客户端下发；DataAgent 的 resolve_context() 可作消费方参考实现",
+      "mode": "契约 PR", "priority": "P0", "owner": "李奕杉；评审 luyaxi",
+      "links": "03 PR-2；07 T41（暂缓）；盘点 C4"
+    },
+    {
+      "id": "IF-03", "title": "会话身份（主体、租户）投影给组件", "category": "iface 契约缺口", "module": "session · identity",
+      "evidence": "SessionIdentity 已有 principal、tenant_id（session/identity.rs:37-41），但组件拿不到；CallMeta 没有 #[non_exhaustive]，直接加字段是破坏性变更",
+      "need": "关闭主体自报（S0 评审 X1–X3），访问控制与多人协作", "phase": "P3",
+      "contribution": "定义会话身份的只读投影（SessionIdentityView），随 _meta 下发，不改 CallMeta；约定组件侧校验方式",
+      "mode": "契约 PR", "priority": "P1", "owner": "彭淳毅；评审 pengyue.li",
+      "links": "03 PR-8；盘点 C3"
+    },
+    {
+      "id": "IF-04", "title": "组件进程凭据注入的用途域", "category": "iface 契约缺口", "module": "policy · secret",
+      "evidence": "SecretPurpose 只有 EgressAuth、StateEncryption（policy/secret.rs:137-158），原则是值不出宿主（:161）；01 的 Q1 已拍「拉起 MCP 进程时注入明文」",
+      "need": "数据库、REST、远程 OCR 凭据只按逻辑名进子进程，不进对话、日志、结果（G1.6）", "phase": "P1",
+      "contribution": "二选一后落地：新增 SecretPurpose::ProcessEnv 一类用途域并登记打码规则；或明确只在 Mint MCP 加载器实现、不进契约。DataAgent T14 的逻辑名解析（env:/keychain:/file:）可作参考",
+      "mode": "提需求", "priority": "P0", "owner": "李鹏越",
+      "links": "03 PR-3；07 T42（暂缓）、T14；盘点 C5"
+    },
+    {
+      "id": "IF-05", "title": "后台任务：会话外寿命与定时、变更触发", "category": "iface 契约缺口", "module": "scheduler_protocol",
+      "evidence": "Scheduler 契约有状态机、Wait、取消、幂等键、截止时间（scheduler_protocol/model.rs:31、:139、:234、:287）；会话关闭即取消执行树（kernel/docs/scheduler.md:34）；没有定时或变更触发",
+      "need": "持续接入、监控告警在关闭会话后继续（P5 G5.4）；长探查不受单次调用 60 秒限制", "phase": "P5",
+      "contribution": "起草「脱离会话的执行（detached execution）+ 触发器（定时、数据变更）」契约，复用现有 State、Wait、ControlOutcome；说明与会话关闭语义的关系",
+      "mode": "契约 PR", "priority": "P1", "owner": "pengyue.li",
+      "links": "03 PR-7；盘点 C2、§7.1"
+    },
+    {
+      "id": "IF-06", "title": "进程外组件注册为调度服务", "category": "Kernel 实现", "module": "scheduler_protocol / extension",
+      "evidence": "组件实现只有 native{program, args, sha256}（kernel/host/src/transport/scheduler.rs:50-51），协议是 agentcpm-scheduler/1 NDJSON；子进程 env_clear()（kernel/core/src/scheduler/adapters/native.rs:60）；SDK 只有 Rust；Mint 清单 provides 没有 scheduler 项",
+      "need": "DataAgent 的 Python / MCP 组件把长任务交给 Scheduler", "phase": "P3",
+      "contribution": "增加 mcp 或 command 实现类型（把 MCP 工具桥接成 Capability/Service）；Mint 清单增加 provides.scheduler_bindings；环境变量白名单；脚本本身的校验；Python 版协议 SDK（DataAgent 可贡献）",
+      "mode": "实现 PR", "priority": "P1", "owner": "pengyue.li；Mint 清单找 Mint 负责人",
+      "links": "盘点 §7.1"
+    },
+    {
+      "id": "IF-07", "title": "Scheduler 生产装配接线断开", "category": "Kernel 实现", "module": "scheduler（host）",
+      "evidence": "--components-config → startup/scheduler::install → Server::install_components 一链在生产组合根断线，按 dead_code 留档，只有测试在用（kernel/host/src/transport/scheduler.rs:4-8；kernel/host/src/startup/scheduler.rs:12-13）",
+      "need": "IF-05、IF-06 的前提", "phase": "P3",
+      "contribution": "报告缺陷并确认恢复排期；无需 DataAgent 写代码",
+      "mode": "缺陷报告", "priority": "P1", "owner": "pengyue.li",
+      "links": "盘点 §7.1"
+    },
+    {
+      "id": "IF-08", "title": "组件把后台结果推回会话", "category": "iface 契约缺口", "module": "session · inbox",
+      "evidence": "InboxKind 有 SystemNote（session/inbox.rs:51-60），但契约边界写明 hook/MCP 入口不在范围；宿主 session.deliver（kernel/host/src/transport/session_deliver.rs:4-23）要 Kernel 连接与会话授权，MCP 组件拿不到；cpmrt 没有处理 MCP 通知",
+      "need": "后台探查、OCR、审批等待完成后通知会话并让模型继续（P3 长流程、P5 告警）", "phase": "P3",
+      "contribution": "约定 MCP 服务端通知（notifications/resources/updated 或 notifications/message）到 InboxKind::SystemNote 的映射，可配置「只记下」或「唤起回合」；或给组件发按会话限权的投递凭证。DataAgent 侧先做发件箱加游标（P2）",
+      "mode": "契约 PR", "priority": "P1", "owner": "彭淳毅；Mint 负责人",
+      "links": "盘点 §7.2；推送设计（03 待补）"
+    },
+    {
+      "id": "IF-09", "title": "工具中途向人要输入", "category": "iface 契约缺口", "module": "policy · human",
+      "evidence": "HumanChannel 由独立通道给答复和主体（policy/human.rs:3、:154）；Mint 把 MCP input_required 当错误",
+      "need": "本体审核、令才澄清不必绕回网页（P2）", "phase": "P2",
+      "contribution": "约定 MCP input_required 到 HumanChannel 的接入与答复格式，组件能读到答复主体",
+      "mode": "提需求", "priority": "P1", "owner": "李鹏越",
+      "links": "03 PR-5；盘点 C7"
+    },
+    {
+      "id": "IF-10", "title": "组件事件追加与命名空间", "category": "iface 契约缺口", "module": "store",
+      "evidence": "StoreContract（store.rs:119）只管会话事件；Scheduler 有 Permissions.state_namespace（scheduler_protocol/model.rs:57）；组件写入专用 kind 前缀没有约定",
+      "need": "审核、发布留痕进宿主事件流（P3 G3.4）", "phase": "P3",
+      "contribution": "约定组件事件 kind 前缀（如 ext.<组件>.<事件>）与 Scheduler 状态命名空间统一为一套；StoreContract 接受组件写入的规则",
+      "mode": "契约 PR", "priority": "P1", "owner": "郑达奇、魏耀全；评审 luyaxi",
+      "links": "03 PR-6；盘点 C8"
+    },
+    {
+      "id": "IF-11", "title": "模型端点本机 / 远端标记", "category": "iface 契约缺口", "module": "model",
+      "evidence": "ModelEndpointInfo 只有地址、模型名、超时（model.rs:155），只能从 base_url 推断是否出境",
+      "need": "远端模型下不知情外发样本（S0 评审 X4）；推断请求最小披露（T24）", "phase": "P3",
+      "contribution": "ModelEndpointInfo 增加部署位置标记（local / private_cloud / vendor），或由出网判决给出；DataAgent OCR 的 deployment 字段可作参考",
+      "mode": "契约 PR", "priority": "P1", "owner": "魏耀全；评审 pengyue.li",
+      "links": "01 Q3；盘点 C6"
+    },
+    {
+      "id": "IF-12", "title": "运行期按依赖名定位包、path 依赖发布", "category": "iface 契约缺口", "module": "extension",
+      "evidence": "ExtensionContract 有安装期接口检查（extension/*），运行期按依赖名定位与 path 依赖发布没有约定；分工表写「实施范围空白」",
+      "need": "多包之间互相定位（P6）", "phase": "P6",
+      "contribution": "起草运行期依赖定位约定；DataAgent 的 dataagent-cli 分发器是现有消费方",
+      "mode": "提需求", "priority": "P2", "owner": "李鹏越",
+      "links": "03 PR-8 相关；盘点 §3 extension 行"
+    },
+    {
+      "id": "IF-13", "title": "打包桌面版不装配项目包的 MCP 工具", "category": "Mint 实现", "module": "Mint GUI（kernel-stdio-v1）",
+      "evidence": "Mint Agent 0.1.40 在装了 preset-intake 的项目里能起会话、能加载 4 个 DataAgent 技能，但模型只有 6 个内核工具，没有 dataagent-* MCP 工具；命令行 mint run 同工作区 73 个（16-local-ingestion-workflow-build/gui-channel-check.md）",
+      "need": "GUI 完成一次文件接入和一次数据库或 API 接入（G1.4、T51）", "phase": "P1",
+      "contribution": "kernel-stdio-v1 布局把项目包声明的 MCP 服务接进工具面，或提供非 Kernel 布局 + command 组件通道；DataAgent 可提供复现工作区与验收脚本",
+      "mode": "提需求", "priority": "P0", "owner": "Mint GUI 负责人",
+      "links": "03 PR-4、Q1；07 T02（已核实）、T43、T51"
+    },
+    {
+      "id": "IF-14", "title": "Mint GUI 项目模式启动问题", "category": "Mint 实现", "module": "Mint GUI",
+      "evidence": "Finder / open -a 不打开项目目录（只认 --cwd）；--cwd 含 /var 软链时报安装路径含软链；用户配置 provider=openai-compatible 时 provider_unsupported，报错指向错误的配置文件",
+      "need": "用户能从 GUI 打开 DataAgent 项目", "phase": "P1",
+      "contribution": "缺陷报告与复现脚本（$PRIVATE_DIR/t02-mint-gui-issue.md）",
+      "mode": "缺陷报告", "priority": "P1", "owner": "Mint GUI 负责人",
+      "links": "07 T02"
+    },
+    {
+      "id": "IF-15", "title": "副作用台账与「结果未知只对账」", "category": "DataAgent 可回馈实现", "module": "session · effect",
+      "evidence": "iface 有 EffectLevel、EffectLedger（session/effect.rs:70-81、:167），纯契约、组件无通道；DataAgent operations 动作网关已实现结果未知只对账、不重复提交（dataagent_operations/action_gateway.py:49-50、:119）",
+      "need": "写回业务系统时不重复提交（P6 G6.2）", "phase": "P6",
+      "contribution": "把 operations 动作网关作为 EffectLedger 的组件侧参考实现，字段与状态名对齐后回馈；同时提出组件写台账的通道需求",
+      "mode": "参考实现", "priority": "P2", "owner": "彭淳毅",
+      "links": "盘点 §5 第 5 条"
+    },
+    {
+      "id": "IF-16", "title": "出网判决与审计记录的组件侧实现", "category": "DataAgent 可回馈实现", "module": "policy · egress / audit",
+      "evidence": "iface 有 EgressRequest（policy/egress.rs:15）、AuditEvent（audit.rs）；组件只有进程级出网，没有通道；DataAgent runtime 有 egress_check（dataagent_runtime/enforcement.py:255）与 OCR 的 EgressDecision",
+      "need": "远程 OCR、REST 出网可审计（P3 G3.3、T15）", "phase": "P3",
+      "contribution": "DataAgent 的出网闸门按 EgressRequest 字段对齐后，作为 Python 组件侧参考实现；提出组件把出网请求交给宿主判决的通道需求",
+      "mode": "参考实现", "priority": "P2", "owner": "李鹏越",
+      "links": "07 T15；盘点 §5 第 7 条"
+    }
+  ]
+}
