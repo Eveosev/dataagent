@@ -136,7 +136,7 @@ def create_app(wb):
     async def upload(request: Request):
         name=Path(unquote(request.headers.get('x-file-name','input'))).name
         suffix=Path(name).suffix.lower()
-        if suffix not in {'.pdf','.csv','.tsv','.xlsx','.xlsm','.json','.jsonl','.sqlite','.sqlite3','.db'}:
+        if suffix not in {'.pdf','.csv','.tsv','.xlsx','.xlsm','.json','.jsonl','.docx','.sqlite','.sqlite3','.db'}:
             raise ValueError('unsupported file type')
         sid=uuid4().hex
         path=wb.root/'uploads'/(sid+suffix);path.parent.mkdir(exist_ok=True)
