@@ -72,13 +72,41 @@ class IntakeService:
         s=wb.sessions.update(s.id,s.revision,{'phase':'needs_input','issues':errors,
             'next_actions':['retry_probe'] if retry else [next_action]},ctx,
             extra_writes=[Write('job',s.job_ref,wb.scope,{**job['body'],'state':'needs_input','checkpoint':'profiles'},job['revision'])])
-        if not is_discovery(s) and len(profiles)==1 and profiles[0].coverage=='full' and not errors:
-            key=digest([wb.scope,profiles[0].metadata['structure_fingerprint'],f'{wb.definition.id}@{wb.definition.revision}'])
-            cached=wb.store.current('verified_mapping',key,scope=wb.scope)
-            if cached:
-                p=self.submit_proposal(s.id,MappingSpec.model_validate(cached['body']['mapping']),s.revision,ctx,reused=True)
+        if not is_discovery(s) and profiles and not errors and all(p.coverage=='full' for p in profiles):
+            cached=self._verified_mapping(profiles)
+            if cached is not None and self._reuse_verified_mapping(s,profiles,cached,ctx):
                 return wb.sessions.get(s.id,ctx)
         return s
+
+    def _fingerprints(self,profiles):
+        """Order-independent fingerprint set identifying the source combination."""
+        return sorted({profile.metadata['structure_fingerprint'] for profile in profiles})
+
+    def _verified_mapping(self,profiles):
+        wb=self.wb
+        key=digest([wb.scope,self._fingerprints(profiles),f'{wb.definition.id}@{wb.definition.revision}'])
+        return wb.store.current('verified_mapping',key,scope=wb.scope)
+
+    def _reuse_verified_mapping(self,session,profiles,cached,ctx):
+        body=cached['body']
+        entries=body.get('mappings')
+        if entries is None:entries=[body['mapping']] if 'mapping' in body else []
+        try:mappings=[MappingSpec.model_validate(entry) for entry in entries]
+        except (KeyError,ValueError):return False
+        if len(mappings)!=len(profiles):return False
+        remaining={}
+        for mapping in mappings:remaining.setdefault(mapping.source_fingerprint,[]).append(mapping)
+        proposals={}
+        for profile in profiles:
+            bucket=remaining.get(profile.metadata['structure_fingerprint'])
+            if not bucket:return False
+            proposals[profile.source_id]=bucket.pop()
+        if any(remaining.values()):return False
+        if len(profiles)==1:
+            self.submit_proposal(session.id,proposals[profiles[0].source_id],session.revision,ctx,reused=True)
+        else:
+            self.submit_source_proposals(session.id,proposals,session.revision,ctx,reused=True)
+        return True
 
     def inference_request(self,session_id,ctx):
         s=self.wb.sessions.get(session_id,ctx)
@@ -133,7 +161,7 @@ class IntakeService:
             Write('mapping',mid,wb.scope,proposal.model_dump(mode='json'),prior['revision'] if prior else None)])
         return preview
 
-    def submit_source_proposals(self, session_id, proposals, expected_revision, ctx):
+    def submit_source_proposals(self, session_id, proposals, expected_revision, ctx, *, reused=False):
         wb = self.wb
         session = wb.sessions.get(session_id, ctx)
         if is_discovery(session):
@@ -163,6 +191,7 @@ class IntakeService:
                                 current['revision'] if current else None))
         primary = next(iter(mappings.values()))
         preview, body = wb.ontology.prepare_preview(primary, observations, ctx, source_mappings=mappings)
+        body['mapping_reused'] = reused
         versions.update(preview=preview.id+'@1', mapping=f'{primary.id}@{primary.revision}')
         wb.sessions.update(session_id, expected_revision, {
             'phase': 'preview', 'selected_versions': versions, 'issues': preview.issues,
@@ -200,10 +229,15 @@ class IntakeService:
             versions['release']=release.id+'@'+release.revision
             phase='saved'
             mapping=body['mapping']
-            if len(selected)==1:
-                key=digest([wb.scope,mapping['source_fingerprint'],mapping['ontology_revision']])
+            source_mappings=(body.get('extensions') or {}).get('intake.source_mappings') or {}
+            mappings=list(source_mappings.values()) if source_mappings else [mapping]
+            if len(mappings)==len(selected):
+                fingerprints=sorted({item['source_fingerprint'] for item in mappings})
+                key=digest([wb.scope,fingerprints,f'{wb.definition.id}@{wb.definition.revision}'])
                 cached=wb.store.current('verified_mapping',key,scope=wb.scope)
-                writes.append(Write('verified_mapping',key,wb.scope,{'mapping':mapping,'release_ref':versions['release']},cached['revision'] if cached else None))
+                entry={'source_fingerprints':fingerprints,'mappings':mappings,'release_ref':versions['release']}
+                if len(mappings)==1:entry['mapping']=mappings[0]
+                writes.append(Write('verified_mapping',key,wb.scope,entry,cached['revision'] if cached else None))
             job=wb.store.current('job',s.job_ref,scope=wb.scope)
             writes.append(Write('job',s.job_ref,wb.scope,{**job['body'],'state':'completed','result_ref':versions['release']},job['revision']))
         wb.sessions.update(s.id,s.revision,{'phase':phase,'selected_versions':versions,

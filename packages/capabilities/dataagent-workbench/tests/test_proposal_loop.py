@@ -70,6 +70,106 @@ def test_known_source_reuses_mapping(tmp_path):
     assert wb.intake.view(reused.id,wb.ctx)['mapping_reused']
 
 
+def multi_setup(tmp_path):
+    data=Path(__file__).resolve().parents[2]/'dataagent-data'
+    wb=Workbench(tmp_path,layer_client=LayerClient(data))
+    (tmp_path/'invoice.csv').write_text('number,amount_minor,currency\nINV-1,126000,CNY\n')
+    (tmp_path/'ledger.csv').write_text('number,total,currency\nINV-1,1260,CNY\n')
+    return wb
+
+
+def multi_sources(*source_ids):
+    selections={'invoice':SourceSelection(source_id='invoice',kind='file',locator_ref='invoice.csv'),
+                'ledger':SourceSelection(source_id='ledger',kind='file',locator_ref='ledger.csv')}
+    return [selections[source_id].model_copy() for source_id in source_ids]
+
+
+def start_multi(wb,source_ids,goal_id):
+    goal=WorkSpec(id=goal_id,goal='接入采购单',acceptance_criteria=['来源可核对'],authorization_ref=wb.authorization)
+    return wb.sessions.start(multi_sources(*source_ids),goal,wb.ctx)
+
+
+def multi_proposals(session,wb):
+    bindings={
+        'invoice':{'number':{'source_field':'number'},'amount':{'source_field':'amount_minor','transform':'minor_to_major'},
+                   'currency':{'source_field':'currency'}},
+        'ledger':{'number':{'source_field':'number'},'amount':{'source_field':'total','transform':'decimal'},
+                  'currency':{'source_field':'currency'}},
+    }
+    request=wb.intake.inference_request(session.id,wb.ctx)
+    return {source['source_id']:MappingSpec(id='candidate',revision='1',ontology_revision='procurement@1',
+        source_fingerprint=source['structure_fingerprint'],bindings=bindings[source['source_id']])
+        for source in request['sources']}
+
+
+def save_multi(wb,source_ids=('invoice','ledger')):
+    session=wb.intake.advance(start_multi(wb,source_ids,'g1').session_id,wb.ctx)
+    assert session.phase=='needs_input'
+    preview=wb.intake.submit_source_proposals(session.id,multi_proposals(session,wb),session.revision,wb.ctx)
+    session=wb.sessions.get(session.id,wb.ctx)
+    wb.intake.apply(session.id,ReviewDecision(
+        preview_ref=preview.id+'@'+preview.revision,target_scope='mapping'),session.revision,wb.ctx)
+    assert wb.sessions.get(session.id,wb.ctx).phase=='saved'
+
+
+def test_multi_source_combination_reuses_mapping(tmp_path):
+    wb=multi_setup(tmp_path)
+    save_multi(wb)
+    reused=wb.intake.advance(start_multi(wb,('invoice','ledger'),'g2').session_id,wb.ctx)
+    assert reused.phase=='preview'
+    view=wb.intake.view(reused.id,wb.ctx)
+    assert view['mapping_reused']
+    assert set(view['preview']['source_revisions'])=={'invoice','ledger'}
+
+
+def test_multi_source_reuse_is_independent_of_source_order(tmp_path):
+    wb=multi_setup(tmp_path)
+    save_multi(wb,('invoice','ledger'))
+    reused=wb.intake.advance(start_multi(wb,('ledger','invoice'),'g2').session_id,wb.ctx)
+    assert reused.phase=='preview'
+    view=wb.intake.view(reused.id,wb.ctx)
+    assert view['mapping_reused']
+    source_mappings=view['preview']['extensions']['intake.source_mappings']
+    assert source_mappings['invoice']['bindings']['amount']['source_field']=='amount_minor'
+    assert source_mappings['ledger']['bindings']['amount']['source_field']=='total'
+
+
+def test_reused_multi_source_mapping_can_be_saved_and_reused_again(tmp_path):
+    wb=multi_setup(tmp_path)
+    save_multi(wb)
+    reused=wb.intake.advance(start_multi(wb,('invoice','ledger'),'g2').session_id,wb.ctx)
+    view=wb.intake.view(reused.id,wb.ctx)
+    preview_ref=view['preview']['id']+'@'+view['preview']['revision']
+    wb.intake.apply(reused.id,ReviewDecision(preview_ref=preview_ref,target_scope='mapping'),reused.revision,wb.ctx)
+    assert wb.sessions.get(reused.id,wb.ctx).phase=='saved'
+    again=wb.intake.advance(start_multi(wb,('invoice','ledger'),'g3').session_id,wb.ctx)
+    assert again.phase=='preview'
+    assert wb.intake.view(again.id,wb.ctx)['mapping_reused']
+
+
+def test_changed_source_fingerprint_does_not_reuse_mapping(tmp_path):
+    wb=multi_setup(tmp_path)
+    save_multi(wb)
+    (tmp_path/'ledger.csv').write_text('number,total,currency,note\nINV-1,1260,CNY,added\n')
+    current=wb.intake.advance(start_multi(wb,('invoice','ledger'),'g2').session_id,wb.ctx)
+    assert current.phase=='needs_input'
+    assert current.issues==[] and current.next_actions==['propose_mapping']
+    assert 'preview' not in current.selected_versions
+    assert not wb.intake.view(current.id,wb.ctx)['mapping_reused']
+
+
+def test_changed_ontology_revision_does_not_reuse_mapping(tmp_path):
+    wb=multi_setup(tmp_path)
+    save_multi(wb)
+    revised=wb.definition.model_copy(update={'revision':'2'})
+    wb.ontology.register(revised,wb.ctx)
+    wb.definition=revised
+    current=wb.intake.advance(start_multi(wb,('invoice','ledger'),'g2').session_id,wb.ctx)
+    assert current.phase=='needs_input'
+    assert current.issues==[] and current.next_actions==['propose_mapping']
+    assert not wb.intake.view(current.id,wb.ctx)['mapping_reused']
+
+
 def test_disallowed_context_is_not_in_inference_request(tmp_path):
     wb,s=setup(tmp_path,allowed_model_fields={'f':['number']})
     request=wb.intake.inference_request(s.id,wb.ctx)
