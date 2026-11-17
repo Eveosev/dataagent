@@ -614,7 +614,7 @@ def test_segmented_multi_source_reuse_waits_for_all_segments(tmp_path):
 def test_intake_budget_seconds_is_configurable_and_clamped(tmp_path, monkeypatch):
     monkeypatch.setenv('DATAAGENT_INTAKE_BUDGET_SECONDS', '99')
     wb = Workbench(tmp_path)
-    assert wb.intake.budget_seconds == 55
+    assert wb.intake.budget_seconds == 50
     monkeypatch.setenv('DATAAGENT_INTAKE_BUDGET_SECONDS', '1.5')
     second_dir = tmp_path / 'second'
     second_dir.mkdir()
@@ -695,3 +695,40 @@ def test_a_repeated_checkpoint_is_reported_as_stalled_not_retried(tmp_path):
     again = wb.intake.advance(stalled.id, wb.ctx)
     assert again.next_actions == ['repair_source']
     assert len(client.calls) == 2
+
+
+def test_advance_reserves_persistence_headroom_from_the_configured_budget(tmp_path):
+    full = contract_profile('f', [{'number': 'INV-1', 'amount_minor': '126000', 'currency': 'CNY'}])
+    client = ScriptedProbeClient({'f': [full]})
+    wb = Workbench(tmp_path, layer_client=client)
+    (tmp_path / 'invoice.csv').write_text('number,amount_minor,currency\nINV-1,126000,CNY\n')
+    wb.intake.budget_seconds = 50
+    started = start_one(wb)
+    session = wb.intake.advance(started.session_id, wb.ctx)
+    assert session.next_actions == ['propose_mapping']
+    allowance = client.calls[0]['budget_seconds']
+    assert allowance is not None and 40 < allowance <= 45.0
+
+
+def test_multi_source_stops_before_the_deadline_and_the_next_call_continues(tmp_path):
+    wb = multi_setup(tmp_path)
+    invoice = contract_profile('invoice', [{'number': 'INV-1', 'amount_minor': '126000',
+                                            'currency': 'CNY'}])
+    ledger = contract_profile('ledger', [{'number': 'INV-1', 'total': '1260', 'currency': 'CNY'}])
+    client = ScriptedProbeClient({'invoice': [invoice], 'ledger': [ledger]},
+                                 delays={'invoice': 0.1, 'ledger': 0.1})
+    wb.layer_client = client
+    wb.intake.budget_seconds = 0.25
+    started = wb.sessions.start(multi_sources('invoice', 'ledger'),
+        WorkSpec(id='g3', goal='接两个来源', acceptance_criteria=['来源可核对'],
+                 authorization_ref=wb.authorization), wb.ctx)
+    began = time.monotonic()
+    first = wb.intake.advance(started.session_id, wb.ctx)
+    first_wall = time.monotonic() - began
+    assert first.next_actions == ['retry_probe']
+    assert [call['source_id'] for call in client.calls] == ['invoice']
+    assert client.calls[0]['budget_seconds'] <= 0.23
+    assert first_wall < 2.0
+    second = wb.intake.advance(first.id, wb.ctx)
+    assert second.next_actions == ['propose_mapping']
+    assert [call['source_id'] for call in client.calls] == ['invoice', 'ledger']

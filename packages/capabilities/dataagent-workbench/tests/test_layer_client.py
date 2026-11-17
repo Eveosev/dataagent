@@ -104,7 +104,7 @@ def test_probe_forwards_budget_and_segment_settings(tmp_path, monkeypatch):
     assert captured['input']['segment_rows']==500
     assert captured['input']['segment_pages']==3
     assert captured['input']['budget_seconds']==12.5
-    assert captured['timeout']==14.5
+    assert captured['timeout']==13.0
 
 
 def test_probe_failure_payload_preserves_code_for_local_sources(tmp_path, monkeypatch):
@@ -156,3 +156,26 @@ def test_probe_failure_without_json_still_has_a_code(tmp_path, monkeypatch):
         LayerClient(tmp_path).probe(SourceSelection(source_id='f',kind='file',
             locator_ref='x.csv'),wb.ctx,tmp_path)
     assert exc.value.code=='probe_failed'
+
+
+def test_probe_child_timeout_is_strictly_bounded(tmp_path, monkeypatch):
+    (tmp_path / '.venv/bin').mkdir(parents=True)
+    (tmp_path / '.venv/bin/python').write_text('')
+    timeouts = []
+    def fake_run(argv, **kwargs):
+        timeouts.append(kwargs['timeout'])
+        directory = tmp_path / '.dataagent/results'; directory.mkdir(parents=True, exist_ok=True)
+        profile = SourceProfile(source_id='f', source_revision='sha256:' + '0' * 64,
+            kind='csv', records=[{'number': 'INV-1'}], fields=['number'], anchors={},
+            total_partitions=1, completed_partitions=[1],
+            metadata={'structure_fingerprint': 'sha256:' + '1' * 64})
+        (directory / 'probe-test.json').write_text(profile.model_dump_json())
+        return SimpleNamespace(returncode=0, stderr='',
+            stdout=json.dumps({'result_path': '.dataagent/results/probe-test.json'}))
+    monkeypatch.setattr('dataagent_workbench.adapters.layer_client.subprocess.run', fake_run)
+    wb = Workbench(tmp_path)
+    client = LayerClient(tmp_path)
+    selection = SourceSelection(source_id='f', kind='file', locator_ref='x.csv')
+    client.probe(selection, wb.ctx, tmp_path, budget_seconds=50)
+    client.probe(selection, wb.ctx, tmp_path, budget_seconds=0.05)
+    assert timeouts == [50.5, 2.0]

@@ -7,6 +7,9 @@ from dataagent_contracts.intake import SourceProfile
 from .source_connections import SourceConnections, validate_forwarded
 
 _PROBE_ENV = {'PATH', 'HOME', 'TMPDIR', 'LANG', 'TZ'}
+_CHILD_MIN_TIMEOUT = 2.0
+_CHILD_GRACE_SECONDS = 0.5
+_MAX_CHILD_TIMEOUT = 50.5
 _SEGMENT_ENV = {
     'budget_rows': ('DATAAGENT_PROBE_ROW_BUDGET', 10000),
     'segment_rows': ('DATAAGENT_PROBE_SEGMENT_ROWS', 100000),
@@ -85,7 +88,11 @@ class LayerClient:
         budget = operation.get('budget_seconds')
         timeout = 120.0
         if isinstance(budget, (int, float)) and not isinstance(budget, bool) and budget > 0:
-            timeout = min(120.0, max(5.0, float(budget) + 2.0))
+            # The coordinator already reserved persistence/transport headroom.
+            # Give the child only a small startup grace, and never let a
+            # single probe outlive the 55s wall-clock requirement.
+            timeout = min(_MAX_CHILD_TIMEOUT,
+                          max(_CHILD_MIN_TIMEOUT, float(budget) + _CHILD_GRACE_SECONDS))
         try:
             result=subprocess.run([str(python),'-m','dataagent_data.observation.cli','--workspace',str(workspace)],
                 input=json.dumps(payload),

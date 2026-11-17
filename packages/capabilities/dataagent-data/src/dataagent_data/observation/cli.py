@@ -112,7 +112,13 @@ def _segmented_rest(selection, ctx, workspace, *, budget_rows, credentials,
         if (previous.source_id != selection.source_id or previous.kind != 'rest'
                 or metadata.get('row_offset') != 0
                 or not metadata.get('cursor')
-                or metadata.get('source_version') is None):
+                # A version is preferred, but a versionless source can still
+                # resume by its cursor; probe_rest marks the resulting
+                # multi-page observation as snapshot-unverified.
+                or 'source_version' not in metadata
+                or not metadata.get('connection_revision')
+                or not isinstance(metadata.get('pages'), list)
+                or not isinstance(metadata.get('record_keys'), list)):
             # Not a verifiable page checkpoint: observe the source afresh.
             previous = None
     original = http_module.fetch

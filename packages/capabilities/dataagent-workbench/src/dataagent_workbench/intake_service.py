@@ -18,6 +18,10 @@ _REST_RETRY_GAPS = {'connection_failed','rate_limited','http_error'}
 _MIN_SEGMENT_SECONDS = 0.25
 _MAX_SEGMENTS = 500
 _DEFAULT_BUDGET_SECONDS = 50.0
+_BUDGET_CAP_SECONDS = 50.0
+_MAX_BUDGET_RESERVE_SECONDS = 5.0
+_BUDGET_RESERVE_RATIO = 0.1
+_MIN_PROBE_SECONDS = 0.01
 
 
 def _rest_retryable(profile):
@@ -62,9 +66,21 @@ def _segment_budget(value):
         seconds = _DEFAULT_BUDGET_SECONDS if value is None else float(value)
     except (TypeError, ValueError):
         seconds = _DEFAULT_BUDGET_SECONDS
-    # The host gives a tool call 60s. Keep headroom for transport/process
-    # start-up and for writing the profile back before returning.
-    return min(55.0, max(0.1, seconds))
+    # The host gives a tool call 60s. Keep the configured allowance at 50s or
+    # less; _probe_deadline spends part of it on persistence/transport.
+    return min(_BUDGET_CAP_SECONDS, max(0.1, seconds))
+
+
+def _probe_deadline(seconds):
+    """Wall deadline for probe work, reserving time to persist the result.
+
+    The reserve grows with the allowance up to a fixed cap, so a small
+    configured budget still performs useful work while a 50s budget leaves
+    enough room for profile/session writes and the MCP round trip.
+    """
+    budget = min(_BUDGET_CAP_SECONDS, max(0.1, float(seconds)))
+    reserve = min(_MAX_BUDGET_RESERVE_SECONDS, budget * _BUDGET_RESERVE_RATIO)
+    return time.monotonic() + max(_MIN_PROBE_SECONDS, budget - reserve)
 
 
 def _deadline_key(profile):
@@ -169,7 +185,7 @@ class IntakeService:
         s=wb.sessions.update(s.id,s.revision,{'phase':'probing','issues':[]},ctx,
             extra_writes=[Write('job',s.job_ref,wb.scope,{**job['body'],'state':'running'},job['revision'])])
         errors=[];budget_exhausted=False;probed_any=False
-        deadline=time.monotonic()+self.budget_seconds
+        deadline=_probe_deadline(self.budget_seconds)
         for source in s.sources:
             if budget_exhausted:break
             previous = prior_profiles.get(source.source_id)
