@@ -53,7 +53,7 @@
 
 - 先按 gold mapping 做连通分量，再对分量键做固定 sha256 60/20/20；同一实体的记录不跨 split。
 - 候选只从同 split 的右表记录里取；未进 gold mapping 的右记录按自身 id 哈希分配 split。
-- `tools/build_cases.py` 的默认上限 120/60/60 再按 case_id 哈希截取；两次构建的用例内容一致（manifest `build.version` 单独递增）。
+- `tools/build_cases.py` 的默认上限 120/60/60 再按 case_id 哈希截取；两次构建的用例内容一致，内容摘要不变时 revision / build.version 保持不变。
 - 3 个源的可用用例：development 2,623 / regression 906 / unseen_acceptance 889；取 240 条入册。
 
 ## 判分口径
@@ -81,7 +81,8 @@
 <!-- data-build:start -->
 ## 数据构建摘要
 
-- 构建：`tools/build_cases.py --task B16`（转换器 `tools/converters/B16.py`），manifest `v0.10`
+- 构建：`tools/build_cases.py --task B16`（转换器 `tools/converters/B16.py`）；当前版本以 `dataset/manifest.json` 为准
+- 版本：`build_cases.py` 对 cases、expected、fixtures 与 sources 算内容摘要；摘要不变时重复构建不升 `revision`
 - 原始数据：`leipzig-dblp-acm`、`leipzig-amazon-google`、`leipzig-abt-buy`，落在 `workspace/benchmark-data/B16/`
 - 当前用例：development 120 / regression 60 / unseen 60（共 240）
 - 金标：数据集自带 `perfectMapping.csv`；非金标候选按排他性视为非匹配
@@ -95,13 +96,18 @@
 | x424 / x929 | oracle F1=0（适配器缺 B16 分支），empty F1=0；240/240 全部产出；FMR 按预测对 pooled，无合并时 value=null | 修复聚类传递闭包与 FMR 汇总；数据 v0.7（历史） |
 | x506 / x009 | oracle 三切分 F1=1、FMR=0；empty 三切分 F1=0；240/240 全部产出 | 补 oracle B16 分支；聚类候选集外成员计 FP；数据 v0.8（历史） |
 | x816 / x320 | oracle 三切分 F1=1、FMR=0；empty 三切分 F1=0；240/240 全部产出 | 数据 v0.9（历史） |
-| x434 / x938 | oracle 三切分 F1=1、FMR=0；empty 三切分 F1=0；240/240 全部产出 | 当前验收轮；数据 v0.10；补许可证据 |
+| x434 / x938 | oracle 三切分 F1=1、FMR=0；empty 三切分 F1=0；240/240 全部产出 | 数据 v0.10（历史）；补许可证据 |
+| x544 / x045 | oracle 三切分 F1=1、FMR=0；empty 三切分 F1=0；240/240 全部产出 | 补充验收轮；版本见验证记录 |
 
 ## 验证记录
+
+版本列只记录该轮构建的数据版本；当前版本以 `dataset/manifest.json` 为准。
 
 | run_id | 适配器 | development F1 / FMR | regression F1 / FMR | unseen_acceptance F1 / FMR | 数据 |
 |-|-|-|-|-|-|
 | `x434-2026-11-17` | oracle | 1.000 / 0.000 | 1.000 / 0.000 | 1.000 / 0.000 | v0.10 |
 | `x938-2026-11-17` | empty | 0.000 / null | 0.000 / null | 0.000 / null | v0.10 |
+| `x544-2026-11-17` | oracle | 1.000 / 0.000 | 1.000 / 0.000 | 1.000 / 0.000 | v0.11 |
+| `x045-2026-11-17` | empty | 0.000 / null | 0.000 / null | 0.000 / null | v0.11 |
 
 FMR 的 `null` 表示该切分没有预测合并，pooled 分母为 0；不是 missing，也不是 0 分。本轮运行产物在 `history/runs/`，按 `.gitignore` 排除；验证结论以上表为准。

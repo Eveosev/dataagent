@@ -206,7 +206,7 @@ docs/research/.../09-benchmark/
 | 金标 | 与输入分离：`dataset/expected/<case_id>.json`，`case.expected.ref` 指向它，不内联进提示 |
 | 校验和 | 每个 fixture 与来源目录记 sha256；`manifest.sources[].digest` 存数据集级 digest |
 | 许可 | 外部 benchmark 记名称、版本、许可；客户样本必须脱敏并记来源与授权依据 |
-| 不可变 | `manifest.status=frozen` 后不得改动；变更走 revision（`build_cases.py` 每次 +1，形如 `v0.N`） |
+| 不可变 | `manifest.status=frozen` 后不得改动；变更走 revision（`build_cases.py` 内容摘要不变时保持不变，内容变化才 +1，形如 `v0.N`） |
 | 覆盖诚实 | 转换器在 manifest `build.coverage` 写明「已覆盖 / 部分覆盖 / 缺失」的指标；缺数据不得用假金标补 |
 
 ### 9.2 不可得来源与所需动作
@@ -239,7 +239,7 @@ python3 -I docs/research/dataagent-2026-11-03/09-benchmark/tools/report.py
 ```
 
 - 抓取器幂等：`FETCH.json` 标记 `ok` 的源默认跳过；`--force` 重抓。
-- 构建器幂等：先清空本任务 `cases/`、`expected/`、`fixtures/`，再按固定哈希切分重写；同一份原始数据两次构建结果一致。
+- 构建器幂等：先清空本任务 `cases/`、`expected/`、`fixtures/`，再按固定哈希切分重写；同一份原始数据两次构建结果一致。`manifest.build.content_digest` 记录 cases、expected、fixtures 与 sources 的内容摘要；摘要不变时保持原 `revision` 和 `updated`，内容变化才升版本。
 - `gated` 源（DocILE、BEAVER、Spider2 全量）需人工接受条款并配置 HF token，`fetch.py` 会跳过并在 `fetch-report.json` 里写 `remedy`；这类缺口要如实留在 manifest，不得用替身数据充数。
 
 ## 10. 维护
@@ -264,7 +264,7 @@ python3 -I docs/research/dataagent-2026-11-03/09-benchmark/tools/report.py
 | 判分链路 | `harness/grade.py` 可跑通：金标回填 240 条得满分（B03/B16），扰动 20% 后掉分；scorecard 通过 schema 校验 |
 | B16 判分自检 | oracle 三切分 F1=1、FMR=0；empty 三切分 F1=0；手工金标回填 F1=1、FMR=0；聚类 `[[L,R1],[R1,R2]]` 经传递闭包得 F1=1、FMR=0；`[[L,R1,OUTSIDE]]` 把 OUTSIDE 计 FP，得 F1=2/3、FMR=0.5；FMR `1/1`+`3/4` 按预测对 pooled=0.8；全程无合并时 value=null、denominator=0 |
 | 适配器 | `dataagent-cli` / `oracle` / `empty` 三个，见 `harness/adapters/README.md`；`harness/run.py` 一键产出 run.json + cases.jsonl + scorecard。B16 的 oracle 分支已补，三切分 F1=1、FMR=0 |
-| 已跑通的探索轮 | B02 `x001`（oracle，满分）、B02 `x002`（empty，地板）、B02 `x003`（CLI 缺失，如实 failed）、B03/B04 `x001`（oracle）、B16 `x434`（oracle，三切分 F1=1、FMR=0）、B16 `x938`（empty，三切分 F1=0）；本轮运行产物不入库，明细见 B16 NOTES 验证记录 |
+| 已跑通的探索轮 | B02 `x001`（oracle，满分）、B02 `x002`（empty，地板）、B02 `x003`（CLI 缺失，如实 failed）、B03/B04 `x001`（oracle）、B16 `x544`（oracle，三切分 F1=1、FMR=0）、B16 `x045`（empty，三切分 F1=0）；本轮运行产物不入库，明细见 B16 NOTES 验证记录 |
 | 基线 | 未建立，16 个 `baseline.json` 的 `run_id` 为 null |
 | 门槛 | 仅 2 条绝对门槛（B01 行保留率、B12 外泄率），其余待首轮回填 |
 
@@ -285,9 +285,9 @@ python3 -I docs/research/dataagent-2026-11-03/09-benchmark/tools/report.py
 | B13 记忆与经验召回 | 240 | v0.2 | collecting | 已构建 |
 | B14 数据建模与物化 | 224 | v0.1 | collecting | 已构建 |
 | B15 FDE 交付效果 | 0 | v0.0 | planned | 待下载/待建 |
-| B16 多源对齐与实体解析 | 240 | v0.10 | collecting | 已构建 |
+| B16 多源对齐与实体解析 | 240 | 当前版本以 dataset/manifest.json 为准 | collecting | 已构建 |
 
-数据构建命令与引用规则见 §9；不可得来源的原因与所需动作见 §9.2；每个任务的指标覆盖写在 `manifest.build.coverage` 与 `tasks/<task>/NOTES.md`「数据构建」。
+B16 当前版本以 dataset/manifest.json 为准。数据构建命令与引用规则见 §9；不可得来源的原因与所需动作见 §9.2；每个任务的指标覆盖写在 `manifest.build.coverage` 与 `tasks/<task>/NOTES.md`「数据构建」。
 
 首个 `r` 轮次（`r001`）范围定为 **B02–B04**：三项的主指标（`text_ned`、`value_f1`、`rule_selection_accuracy`）都有可判分金标，且原子有实现。B01 暂不纳入：它的主指标 `header_cell_accuracy` 需要表头结构标注，公开数据只有问答答案；按严格规则从原始工作簿派生表头只覆盖 15/240 条，样本量不足以支撑 block 门槛，待人工标注 60 条后再进轮次。
 
