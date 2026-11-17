@@ -1,0 +1,36 @@
+{
+  "version": "v0.1",
+  "_note": "Local exploration config. cli is relative to $BENCH (the harness working directory): ../../../../ is the repository root, and build/local is the install product made by scripts/prepare_acceptance.sh.",
+  "adapters": {
+    "default": "dataagent-cli",
+    "available": [
+      "dataagent-cli",
+      "oracle",
+      "empty"
+    ]
+  },
+  "cli": [
+    "../../../../build/local/cli/bin/dataagent",
+    "run"
+  ],
+  "run": {
+    "timeout_s": 900,
+    "concurrency": 1,
+    "retries": 0,
+    "seed": 0
+  },
+  "budget": {
+    "max_usd_per_round": null,
+    "max_tokens_per_case": null
+  },
+  "env": {
+    "model": null,
+    "agent_kernel": null,
+    "dataagent": "build/local",
+    "harness": "09-benchmark@v0.1"
+  },
+  "artifacts": {
+    "keep_prompts": false,
+    "keep_traces": false
+  }
+}
