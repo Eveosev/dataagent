@@ -26,13 +26,12 @@ def test_missing_worker_does_not_return_empty_success(tmp_path):
 
 def test_probe_passes_logical_credential_names_only(tmp_path, monkeypatch):
     sentinel='T14-SENTINEL-5f0c9a7d2b8e4c61'
-    monkeypatch.setenv('T14_SENTINEL_TOKEN', sentinel)
     config=tmp_path/'connections.json'
     config.write_text(json.dumps({'accounting':{
         'kind':'rest','locator':'http://127.0.0.1:9999/invoices',
         'allowed_origins':['http://127.0.0.1:9999'],'options':{'records_path':'/items'},
         'credential_options':{'auth':'bearer'},
-        'credential_refs':{'token':'env:T14_SENTINEL_TOKEN'},
+        'credential_refs':{'token':'file:rest-token'},
     }}))
     monkeypatch.setenv('DATAAGENT_SOURCE_CONNECTIONS',str(config))
     (tmp_path/'.venv/bin').mkdir(parents=True)
@@ -51,11 +50,13 @@ def test_probe_passes_logical_credential_names_only(tmp_path, monkeypatch):
     wb=Workbench(tmp_path)
     profile=LayerClient(tmp_path).probe(SourceSelection(source_id='api',kind='rest',locator_ref='accounting'),wb.ctx,tmp_path)
     payload=json.loads(captured['input'])
-    assert payload['credential_refs']=={'token':'env:T14_SENTINEL_TOKEN'}
+    assert payload['credential_refs']=={'token':'file:rest-token'}
     assert payload['credential_options']=={'auth':'bearer'}
     assert 'credentials' not in payload
     assert sentinel not in captured['input']
-    assert captured['env'] is None
+    assert isinstance(captured['env'],dict)
+    assert 'T14_SENTINEL_TOKEN' not in captured['env']
+    assert 'DATAAGENT_DATA_ROOT' not in captured['env']
     assert profile.records==[{'/id':1}]
 
 

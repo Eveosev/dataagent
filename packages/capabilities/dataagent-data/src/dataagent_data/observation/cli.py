@@ -8,7 +8,6 @@ from uuid import uuid4
 from dataagent_contracts.core import CallContext
 from dataagent_contracts.intake import SourceProfile, SourceSelection
 from dataagent_runtime.policy.secrets import SecretError, resolve as resolve_secret
-from dataagent_runtime.runtime import resolve_roots
 from .files import probe_file,_safe_path
 
 
@@ -38,7 +37,9 @@ def _credentials(selection, workspace, request):
         if refs:
             raise ValueError('this source kind does not accept credentials')
         return None
-    _, data_root = resolve_roots(workspace)
+    # Credential files are scoped to this workspace; a host environment
+    # variable must not redirect them to another data root.
+    data_root = Path(workspace).resolve() / '.dataagent'
     for name, ref in refs.items():
         if not isinstance(name, str) or not isinstance(ref, str):
             raise ValueError('unsupported credential configuration')

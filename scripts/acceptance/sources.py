@@ -41,16 +41,20 @@ def _assert_no_credentials(value, path='intake'):
 
 
 def _read_contains(path, needles):
+    overlap = max((len(needle) for needle in needles), default=1) - 1
+    tail = b''
     try:
         with path.open('rb') as handle:
             while True:
                 chunk = handle.read(1024 * 1024)
                 if not chunk:
                     return False
-                if any(needle in chunk for needle in needles):
+                data = tail + chunk
+                if any(needle in data for needle in needles):
                     return True
-    except OSError:
-        return False
+                tail = data[-overlap:] if overlap else b''
+    except OSError as exc:
+        raise RuntimeError(f'credential scan could not read {path}: {exc}') from None
 
 
 def _mint_log_roots(project):
@@ -86,8 +90,8 @@ def _scan_for_credentials(project, output, report, *, extra_roots=(), since=0.0)
                     continue
                 if fresh_only and since and path.stat().st_mtime < since - 2:
                     continue
-            except OSError:
-                continue
+            except OSError as exc:
+                raise RuntimeError(f'credential scan could not inspect {path}: {exc}') from None
             if _read_contains(resolved, needles):
                 hits.append(str(path))
     rendered = json.dumps(report, ensure_ascii=False)

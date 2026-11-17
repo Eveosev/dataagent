@@ -86,3 +86,24 @@ def test_env_reference_is_resolved_inside_probe(workspace, ctx, monkeypatch):
     })
     assert seen["credentials"]["token"] == SENTINEL
     assert SENTINEL not in profile.model_dump_json()
+
+
+def test_file_reference_is_scoped_to_workspace_not_data_root_env(workspace, ctx, tmp_path, monkeypatch):
+    inside = secrets.store_file_secret(workspace / ".dataagent", "rest-token", "INSIDE-VALUE")
+    outside = tmp_path / "outside"
+    secrets.store_file_secret(outside, "rest-token", SENTINEL)
+    monkeypatch.setenv("DATAAGENT_DATA_ROOT", str(outside))
+    seen = {}
+
+    def fake_probe(selection, ctx, **options):
+        seen.update(options)
+        return _profile()
+
+    monkeypatch.setattr("dataagent_data.observation.http.probe_rest", fake_probe)
+    cli.probe(_rest(), ctx, workspace, {
+        "allowed_origins": ["http://127.0.0.1:9"],
+        "credential_options": {"auth": "bearer"},
+        "credential_refs": {"token": inside},
+    })
+    assert seen["credentials"]["token"] == "INSIDE-VALUE"
+    assert seen["credentials"]["token"] != SENTINEL

@@ -1,10 +1,12 @@
 """Resolve user-selected connection references with host-owned settings.
 
-The connection manifest contains logical credential names only (``env:``,
-``keychain:`` or ``file:``). This process validates and forwards the names.
-For ``env:`` the child inherits the host-injected environment and resolves the
-value itself; ``file:`` and ``keychain:`` are resolved by the child as well
-(see ``dataagent_runtime.policy.secrets``). No credential value enters stdin.
+The connection manifest contains logical credential names only (``file:`` or
+``keychain:``). This process validates and forwards the names; the probing
+subprocess resolves the values (see ``dataagent_runtime.policy.secrets``).
+``env:`` is supported by the shared resolver for processes the host launches
+directly, but not through this workbench: the host cannot yet inject a
+credential into the probe child without the workbench receiving it, so the
+manifest rejects that scheme until the host-side mechanism exists.
 """
 import json
 import os
@@ -81,17 +83,20 @@ def _credential_refs(entry):
             validate_ref(ref)
         except InvalidSecretRef:
             raise ValueError('configured source credential must use a logical name') from None
+        if ref.startswith('env:'):
+            raise ValueError(
+                'env: credentials require the trusted host to inject the variable '
+                'directly into the probe process; use file: or keychain:'
+            )
         refs[name] = ref
     legacy = entry.get('credential_env', {})
     if not isinstance(legacy, dict):
         raise ValueError('configured source credential references are invalid')
-    for name, variable in legacy.items():
-        if not isinstance(name, str) or not name or not isinstance(variable, str):
-            raise ValueError('configured source credential references are invalid')
-        try:
-            refs[name] = validate_ref(f'env:{variable}')
-        except InvalidSecretRef:
-            raise ValueError('configured source credential must use a logical name') from None
+    if legacy:
+        raise ValueError(
+            'env: credentials require the trusted host to inject the variable '
+            'directly into the probe process; use file: or keychain:'
+        )
     return refs
 
 
