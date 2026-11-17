@@ -31,6 +31,15 @@ def workspace(tmp_path):
     return path
 
 
+@pytest.fixture(autouse=True)
+def _trusted_host_authority(monkeypatch):
+    # R1: subject/purpose are trusted-host fields, never read from the
+    # caller-writable argument context.  These tests exercise the access gate,
+    # so stamp the same host authority that the MCP/CLI entry points use.
+    monkeypatch.setenv("DATAAGENT_HOST_SUBJECT_REF", "user:alice")
+    monkeypatch.setenv("DATAAGENT_HOST_PURPOSE", "monthly_report")
+
+
 def _ctx(authorization: str = "policy:test-read") -> dict:
     return {
         "request_id": "req:gate",
@@ -212,11 +221,14 @@ def test_non_resource_operations_are_not_gated(workspace, tmp_path):
     assert result.status.value == "ok", result.issues
 
 
-def test_mcp_context_schema_carries_subject_and_purpose():
+def test_mcp_context_schema_is_a_hint_without_authority_fields():
     from dataagent_data.interfaces.mcp_server import CONTEXT_SCHEMA
 
     props = CONTEXT_SCHEMA["properties"]
-    assert "subject_ref" in props and "purpose" in props
+    # R1: the caller-writable context hint may carry requester/capability
+    # fields; subject, purpose and scope come from the trusted host channel.
+    assert "requester_ref" in props and "task_ref" in props
+    assert "subject_ref" not in props and "purpose" not in props
 
 
 # --- r28 B1: a profile asset separated from its field stats is a fabricated
