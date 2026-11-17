@@ -1,6 +1,6 @@
 {
-  "version": "v0.2",
-  "date": "2026-11-17",
+  "version": "v0.3",
+  "date": "2026-11-18",
   "plan_ref": "../09-benchmark-plan.md",
   "catalog_ref": "../catalog/atomic-capability-catalog.json",
   "tasks": [
@@ -238,6 +238,21 @@
       "layer_atoms": 6,
       "slice": "S0",
       "primary_metric": "entity_pair_f1",
+      "gate_tier": "warn",
+      "in_ci": true,
+      "status": "collecting",
+      "baseline_run": null,
+      "last_run": null
+    },
+    {
+      "id": "B17",
+      "slug": "schema-matching",
+      "title": "字段映射 / schema matching",
+      "path": "tasks/B17-schema-matching",
+      "plan_row": 17,
+      "layer_atoms": 5,
+      "slice": "S0",
+      "primary_metric": "mapping_top1",
       "gate_tier": "warn",
       "in_ci": true,
       "status": "collecting",

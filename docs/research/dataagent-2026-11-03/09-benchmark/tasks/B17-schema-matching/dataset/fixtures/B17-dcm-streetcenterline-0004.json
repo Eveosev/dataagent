@@ -1,0 +1,153 @@
+{
+  "task": "schema_matching_top1",
+  "instruction": "给定源表、目标表和 source_field，只返回该源字段的 top-1 目标列名。没有对应字段时显式返回 null（或空数组），不要猜测；不要为其他源字段作答。",
+  "source_table": {
+    "name": "City_Government__DCM_StreetCenterLine/source_table.csv",
+    "row_count": 33793,
+    "columns": [
+      {
+        "name": "route_type",
+        "samples": [
+          "Gen_use",
+          "Other"
+        ]
+      },
+      {
+        "name": "cco_st",
+        "samples": []
+      },
+      {
+        "name": "streetwidt",
+        "samples": [
+          "60",
+          "70"
+        ]
+      },
+      {
+        "name": "roadway_typ",
+        "samples": [
+          "Surface St"
+        ]
+      },
+      {
+        "name": "edit_date",
+        "samples": []
+      },
+      {
+        "name": "STAIR_ST",
+        "samples": []
+      },
+      {
+        "name": "st",
+        "samples": []
+      },
+      {
+        "name": "marg_wharf",
+        "samples": [
+          "No"
+        ]
+      },
+      {
+        "name": "feat_type_id",
+        "samples": [
+          "1",
+          "0"
+        ]
+      },
+      {
+        "name": "record_st",
+        "samples": []
+      },
+      {
+        "name": "street_nm",
+        "samples": [
+          "62 Avenue",
+          "West 45 Street"
+        ]
+      },
+      {
+        "name": "build_stat",
+        "samples": [
+          "Improved"
+        ]
+      },
+      {
+        "name": "borough",
+        "samples": [
+          "Queens",
+          "Manhattan"
+        ]
+      }
+    ]
+  },
+  "target_table": {
+    "name": "City_Government__DCM_StreetCenterLine/target_table.csv",
+    "row_count": 33794,
+    "columns": [
+      {
+        "name": "paper_st",
+        "samples": [
+          "N"
+        ]
+      },
+      {
+        "name": "honorary_nm",
+        "samples": []
+      },
+      {
+        "name": "record_st",
+        "samples": []
+      },
+      {
+        "name": "stair_st",
+        "samples": []
+      },
+      {
+        "name": "feat_type",
+        "samples": [
+          "Mapped_St",
+          "Not_mapped"
+        ]
+      },
+      {
+        "name": "borough",
+        "samples": [
+          "Queens",
+          "Manhattan"
+        ]
+      },
+      {
+        "name": "roadway_typ",
+        "samples": [
+          "Surface_ST"
+        ]
+      },
+      {
+        "name": "street_nm",
+        "samples": [
+          "62 Avenue",
+          "West 45 Street"
+        ]
+      },
+      {
+        "name": "feat_statu",
+        "samples": [
+          "City_St",
+          "Way_on_record"
+        ]
+      },
+      {
+        "name": "the_geom",
+        "samples": [
+          "{'type': 'MultiLineString', 'coordinates': [[[-73.88814296819437, 40.7182545930…",
+          "{'type': 'MultiLineString', 'coordinates': [[[-73.99691343077386, 40.7627488359…"
+        ]
+      },
+      {
+        "name": "old_st_nm",
+        "samples": []
+      }
+    ]
+  },
+  "source_field": "roadway_typ"
+}

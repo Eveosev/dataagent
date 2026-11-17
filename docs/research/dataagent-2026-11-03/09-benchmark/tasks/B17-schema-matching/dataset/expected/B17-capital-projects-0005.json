@@ -1,0 +1,35 @@
+{
+  "source_dataset": "valentine-schema-matching",
+  "source_table": "City_Government__Capital_Projects/source_table.csv",
+  "target_table": "City_Government__Capital_Projects/target_table.csv",
+  "source_field": "description",
+  "target_field": null,
+  "license": "Apache-2.0",
+  "license_url": "https://github.com/delftdata/valentine/blob/v1.1.1/LICENSE",
+  "attribution": "Valentine (Delft University of Technology); data curated by Yurong Liu from NYC Open Data",
+  "case_id": "B17-capital-projects-0005",
+  "expected": {
+    "kind": "schema_mapping_top1",
+    "source_dataset": "valentine-schema-matching",
+    "license": "Apache-2.0",
+    "license_url": "https://github.com/delftdata/valentine/blob/v1.1.1/LICENSE",
+    "attribution": "Valentine (Delft University of Technology); data curated by Yurong Liu from NYC Open Data",
+    "source_table": "City_Government__Capital_Projects/source_table.csv",
+    "target_table": "City_Government__Capital_Projects/target_table.csv",
+    "source_field": "description",
+    "target_field": null,
+    "candidate_targets": [
+      "borough",
+      "project_name",
+      "total_schedule_changes",
+      "latest_schedule_changes",
+      "date_reported_as_of",
+      "total_budget_changes",
+      "pid",
+      "forecast_completion",
+      "category",
+      "current_phase"
+    ],
+    "annotation": "ground_truth.json.matches 的正例；未出现在 matches 的源字段按 meta.has_false_positives=false 视为无对应字段"
+  }
+}

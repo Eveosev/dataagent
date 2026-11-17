@@ -1,0 +1,385 @@
+{
+  "task": "schema_matching_top1",
+  "instruction": "给定源表、目标表和 source_field，只返回该源字段的 top-1 目标列名。没有对应字段时显式返回 null（或空数组），不要猜测；不要为其他源字段作答。",
+  "source_table": {
+    "name": "City_Government__DPR_AthleticFacilities_001/source_table.csv",
+    "row_count": 4152,
+    "columns": [
+      {
+        "name": "hockey",
+        "samples": [
+          "0"
+        ]
+      },
+      {
+        "name": "starea",
+        "samples": [
+          "1119.522216796875",
+          "1408.0078125"
+        ]
+      },
+      {
+        "name": "department",
+        "samples": [
+          "M-11",
+          "Q-14"
+        ]
+      },
+      {
+        "name": "netball",
+        "samples": [
+          "False"
+        ]
+      },
+      {
+        "name": "communityboard",
+        "samples": [
+          "111.0",
+          "414.0"
+        ]
+      },
+      {
+        "name": "maintenanceagreement",
+        "samples": [
+          "0",
+          "1"
+        ]
+      },
+      {
+        "name": "kickball",
+        "samples": [
+          "False"
+        ]
+      },
+      {
+        "name": "primary_sport",
+        "samples": [
+          "BKB",
+          "HDB"
+        ]
+      },
+      {
+        "name": "adult_softball",
+        "samples": [
+          "False",
+          "True"
+        ]
+      },
+      {
+        "name": "frisbee",
+        "samples": [
+          "False"
+        ]
+      },
+      {
+        "name": "ll_softball",
+        "samples": [
+          "False",
+          "True"
+        ]
+      },
+      {
+        "name": "adult_baseball",
+        "samples": [
+          "False",
+          "True"
+        ]
+      },
+      {
+        "name": "bocce",
+        "samples": [
+          "False"
+        ]
+      },
+      {
+        "name": "zipcode",
+        "samples": [
+          "10029.0",
+          "11691.0"
+        ]
+      },
+      {
+        "name": "rugby",
+        "samples": [
+          "False"
+        ]
+      },
+      {
+        "name": "handball",
+        "samples": [
+          "False",
+          "True"
+        ]
+      },
+      {
+        "name": "tennis",
+        "samples": [
+          "False",
+          "True"
+        ]
+      },
+      {
+        "name": "adult_football_id",
+        "samples": [
+          "NONE",
+          "AFB"
+        ]
+      },
+      {
+        "name": "field_lighted_new",
+        "samples": [
+          "False",
+          "True"
+        ]
+      },
+      {
+        "name": "dimensions",
+        "samples": [
+          "Half Court",
+          "Handball"
+        ]
+      },
+      {
+        "name": "gispropnum",
+        "samples": [
+          "M111",
+          "Q007"
+        ]
+      },
+      {
+        "name": "youth_football",
+        "samples": [
+          "False",
+          "True"
+        ]
+      },
+      {
+        "name": "accessible_code",
+        "samples": [
+          "0"
+        ]
+      },
+      {
+        "name": "Volly",
+        "samples": [
+          "0"
+        ]
+      },
+      {
+        "name": "basketball",
+        "samples": [
+          "True",
+          "False"
+        ]
+      },
+      {
+        "name": "tbl_track_and_field",
+        "samples": [
+          "0"
+        ]
+      },
+      {
+        "name": "nonregulation_soccer",
+        "samples": [
+          "False",
+          "True"
+        ]
+      },
+      {
+        "name": "LnMeters",
+        "samples": [
+          "133 days, 21:39:58.230303",
+          "151 days, 9:45:16.757793"
+        ]
+      },
+      {
+        "name": "featurestatus",
+        "samples": [
+          "Removed",
+          "Active"
+        ]
+      },
+      {
+        "name": "SysRef",
+        "samples": [
+          "M111-BASKETBALL-4",
+          "Q007-01-HANDBALL-6"
+        ]
+      }
+    ]
+  },
+  "target_table": {
+    "name": "City_Government__DPR_AthleticFacilities_001/target_table.csv",
+    "row_count": 4153,
+    "columns": [
+      {
+        "name": "gispropnum",
+        "samples": [
+          "M111",
+          "Q007"
+        ]
+      },
+      {
+        "name": "regulation_soccer",
+        "samples": [
+          "False",
+          "True"
+        ]
+      },
+      {
+        "name": "t_ball",
+        "samples": [
+          "False",
+          "True"
+        ]
+      },
+      {
+        "name": "field_lighted",
+        "samples": [
+          "False",
+          "True"
+        ]
+      },
+      {
+        "name": "volleyball",
+        "samples": [
+          "False"
+        ]
+      },
+      {
+        "name": "wheelchairfootball",
+        "samples": [
+          "False"
+        ]
+      },
+      {
+        "name": "field_number",
+        "samples": [
+          "04",
+          "06"
+        ]
+      },
+      {
+        "name": "accessible",
+        "samples": [
+          "False"
+        ]
+      },
+      {
+        "name": "adult_football",
+        "samples": [
+          "False",
+          "True"
+        ]
+      },
+      {
+        "name": "borough",
+        "samples": [
+          "M",
+          "Q"
+        ]
+      },
+      {
+        "name": "track_and_field",
+        "samples": [
+          "False"
+        ]
+      },
+      {
+        "name": "maintenanceagreement",
+        "samples": [
+          "False",
+          "True"
+        ]
+      },
+      {
+        "name": "the_geom",
+        "samples": [
+          "{'type': 'MultiPolygon', 'coordinates': [[[[-73.94169211423176, 40.797015725515…",
+          "{'type': 'MultiPolygon', 'coordinates': [[[[-73.7673420537853, 40.5995738019495…"
+        ]
+      },
+      {
+        "name": "system",
+        "samples": [
+          "M111-BASKETBALL-4",
+          "Q007-01-HANDBALL-6"
+        ]
+      },
+      {
+        "name": "ll_baseb_13andolder",
+        "samples": [
+          "False",
+          "True"
+        ]
+      },
+      {
+        "name": "surface_type",
+        "samples": [
+          "Asphalt",
+          "Rubber"
+        ]
+      },
+      {
+        "name": "lacrosse",
+        "samples": [
+          "False",
+          "True"
+        ]
+      },
+      {
+        "name": "precinct",
+        "samples": [
+          "23.0",
+          "101.0"
+        ]
+      },
+      {
+        "name": "ll_baseb_12andunder",
+        "samples": [
+          "False",
+          "True"
+        ]
+      },
+      {
+        "name": "cricket",
+        "samples": [
+          "False"
+        ]
+      },
+      {
+        "name": "flagfootball",
+        "samples": [
+          "False"
+        ]
+      },
+      {
+        "name": "councildistrict",
+        "samples": [
+          "8.0",
+          "31.0"
+        ]
+      },
+      {
+        "name": "hockey",
+        "samples": [
+          "False"
+        ]
+      },
+      {
+        "name": "stlength",
+        "samples": [
+          "133.90275729517788",
+          "151.40644395594"
+        ]
+      },
+      {
+        "name": "pickleball",
+        "samples": [
+          "False"
+        ]
+      }
+    ]
+  },
+  "source_field": "gispropnum"
+}

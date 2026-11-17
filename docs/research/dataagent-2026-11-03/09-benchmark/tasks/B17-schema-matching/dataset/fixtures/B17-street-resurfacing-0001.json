@@ -1,0 +1,140 @@
+{
+  "task": "schema_matching_top1",
+  "instruction": "给定源表、目标表和 source_field，只返回该源字段的 top-1 目标列名。没有对应字段时显式返回 null（或空数组），不要猜测；不要为其他源字段作答。",
+  "source_table": {
+    "name": "Transportation__DOT_In-house_Street_Resurfacing_Projects/source_table.csv",
+    "row_count": 62293,
+    "columns": [
+      {
+        "name": "Thoroughfare",
+        "samples": [
+          "Emerson Drive",
+          "Mosel Avenue"
+        ]
+      },
+      {
+        "name": "project_id",
+        "samples": [
+          "S2016-02-73",
+          "S2017-01-20"
+        ]
+      },
+      {
+        "name": "location_segment_id",
+        "samples": [
+          "9059.0",
+          "10605.0"
+        ]
+      },
+      {
+        "name": "ProjClass",
+        "samples": [
+          "Intersection"
+        ]
+      },
+      {
+        "name": "StatFlag",
+        "samples": [
+          "Ready for Milling"
+        ]
+      },
+      {
+        "name": "oft_code",
+        "samples": [
+          "523900527547000000",
+          "536130539693000000"
+        ]
+      },
+      {
+        "name": "location_community_board",
+        "samples": [
+          "502.0",
+          "501.0"
+        ]
+      }
+    ]
+  },
+  "target_table": {
+    "name": "Transportation__DOT_In-house_Street_Resurfacing_Projects/target_table.csv",
+    "row_count": 62294,
+    "columns": [
+      {
+        "name": "location_from_street",
+        "samples": [
+          "EMERSON DRIVE",
+          "MOSEL AVENUE"
+        ]
+      },
+      {
+        "name": "project_speed_bumps",
+        "samples": [
+          "0.0",
+          "2.0"
+        ]
+      },
+      {
+        "name": "location_actual_lane_miles",
+        "samples": []
+      },
+      {
+        "name": "project_id",
+        "samples": [
+          "S2016-02-73",
+          "S2017-01-20"
+        ]
+      },
+      {
+        "name": "location_wkt",
+        "samples": [
+          "MULTIPOINT ((957234.36290000379 161630.2228000015), (957181.87809999287 161625.…",
+          "MULTIPOINT ((962287.79709999263 161867.9062999934), (962085.986499995 161425.35…"
+        ]
+      },
+      {
+        "name": "location_segment_id",
+        "samples": [
+          "9059.0",
+          "10605.0"
+        ]
+      },
+      {
+        "name": "project_type",
+        "samples": [
+          "Intersection"
+        ]
+      },
+      {
+        "name": "location_status",
+        "samples": [
+          "Ready for Milling"
+        ]
+      },
+      {
+        "name": "location_on_street",
+        "samples": [
+          "CLOVE ROAD",
+          "LEEWOOD LOOP"
+        ]
+      },
+      {
+        "name": "borough_code",
+        "samples": [
+          "S",
+          "Q"
+        ]
+      },
+      {
+        "name": "location_actual_paving_square",
+        "samples": []
+      },
+      {
+        "name": "project_status",
+        "samples": [
+          "Completed Project",
+          "Paving Completed"
+        ]
+      }
+    ]
+  },
+  "source_field": "Thoroughfare"
+}

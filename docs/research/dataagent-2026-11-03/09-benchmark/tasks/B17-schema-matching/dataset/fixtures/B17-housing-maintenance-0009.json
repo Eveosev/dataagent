@@ -1,0 +1,330 @@
+{
+  "task": "schema_matching_top1",
+  "instruction": "给定源表、目标表和 source_field，只返回该源字段的 top-1 目标列名。没有对应字段时显式返回 null（或空数组），不要猜测；不要为其他源字段作答。",
+  "source_table": {
+    "name": "Housing_&_Development__Housing_Maintenance_Code_Complaints_and_Problems/source_table.csv",
+    "row_count": 60213,
+    "columns": [
+      {
+        "name": "complaint_id",
+        "samples": [
+          "12292744",
+          "12167860"
+        ]
+      },
+      {
+        "name": "unique_key",
+        "samples": [
+          "58657001.0",
+          "57579048.0"
+        ]
+      },
+      {
+        "name": "borough",
+        "samples": [
+          "BROOKLYN",
+          "BRONX"
+        ]
+      },
+      {
+        "name": "post_code",
+        "samples": [
+          "11212.0",
+          "10469.0"
+        ]
+      },
+      {
+        "name": "apartment",
+        "samples": [
+          "4D",
+          "3"
+        ]
+      },
+      {
+        "name": "problem_status_date",
+        "samples": [
+          "2023-09-09T08:45:16.000",
+          "2023-05-12T07:10:09.000"
+        ]
+      },
+      {
+        "name": "space_type",
+        "samples": [
+          "ENTIRE APARTMENT",
+          "KITCHEN"
+        ]
+      },
+      {
+        "name": "complaint_status",
+        "samples": [
+          "CLOSE"
+        ]
+      },
+      {
+        "name": "nta",
+        "samples": [
+          "Brownsville",
+          "Eastchester-Edenwald-Baychester"
+        ]
+      },
+      {
+        "name": "problem_status",
+        "samples": [
+          "CLOSE"
+        ]
+      },
+      {
+        "name": "block",
+        "samples": [
+          "1910-03-14",
+          "1912-12-04"
+        ]
+      },
+      {
+        "name": "STAT_TS",
+        "samples": [
+          "2023-09-10",
+          "2023-05-13"
+        ]
+      },
+      {
+        "name": "ISSUE_ID",
+        "samples": [
+          "24391973",
+          "24100993"
+        ]
+      },
+      {
+        "name": "bin",
+        "samples": [
+          "3083891.0",
+          "2087331.0"
+        ]
+      },
+      {
+        "name": "unit_type",
+        "samples": [
+          "APARTMENT",
+          "BUILDING"
+        ]
+      },
+      {
+        "name": "BUILDING_ID",
+        "samples": [
+          "809170",
+          "806748"
+        ]
+      },
+      {
+        "name": "LNG_AXIS",
+        "samples": [
+          "-73.9065",
+          "-73.8481"
+        ]
+      },
+      {
+        "name": "received_date",
+        "samples": [
+          "2023-08-29T12:57:59.000",
+          "2023-05-11T14:33:52.000"
+        ]
+      },
+      {
+        "name": "problem_duplicate_flag",
+        "samples": [
+          "False",
+          "True"
+        ]
+      },
+      {
+        "name": "CNL_SECT",
+        "samples": [
+          "Zone-41",
+          "Zone-12"
+        ]
+      },
+      {
+        "name": "bbl",
+        "samples": [
+          "3037260013",
+          "2047220067"
+        ]
+      }
+    ]
+  },
+  "target_table": {
+    "name": "Housing_&_Development__Housing_Maintenance_Code_Complaints_and_Problems/target_table.csv",
+    "row_count": 60214,
+    "columns": [
+      {
+        "name": "block",
+        "samples": [
+          "3726",
+          "4722"
+        ]
+      },
+      {
+        "name": "complaint_id",
+        "samples": [
+          "12292744",
+          "12167860"
+        ]
+      },
+      {
+        "name": "council_district",
+        "samples": [
+          "41.0",
+          "12.0"
+        ]
+      },
+      {
+        "name": "type",
+        "samples": [
+          "NON EMERGENCY",
+          "EMERGENCY"
+        ]
+      },
+      {
+        "name": "lot",
+        "samples": [
+          "13",
+          "67"
+        ]
+      },
+      {
+        "name": "building_id",
+        "samples": [
+          "809170",
+          "806748"
+        ]
+      },
+      {
+        "name": "census_tract",
+        "samples": [
+          "908.0",
+          "386.0"
+        ]
+      },
+      {
+        "name": "minor_category",
+        "samples": [
+          "PESTS",
+          "ELECTRIC/GAS RANGE"
+        ]
+      },
+      {
+        "name": "bin",
+        "samples": [
+          "3083891.0",
+          "2087331.0"
+        ]
+      },
+      {
+        "name": "complaint_anonymous_flag",
+        "samples": [
+          "N",
+          "Y"
+        ]
+      },
+      {
+        "name": "bbl",
+        "samples": [
+          "3037260013.0",
+          "2047220067.0"
+        ]
+      },
+      {
+        "name": "longitude",
+        "samples": [
+          "-73.90654399999998",
+          "-73.848059"
+        ]
+      },
+      {
+        "name": "community_board",
+        "samples": [
+          "16",
+          "12"
+        ]
+      },
+      {
+        "name": "problem_id",
+        "samples": [
+          "24391973",
+          "24100993"
+        ]
+      },
+      {
+        "name": "street_name",
+        "samples": [
+          "PITKIN AVENUE",
+          "HICKS STREET"
+        ]
+      },
+      {
+        "name": "complaint_status_date",
+        "samples": [
+          "2023-09-10T05:20:12.000",
+          "2023-05-13T05:20:21.000"
+        ]
+      },
+      {
+        "name": "problem_duplicate_flag",
+        "samples": [
+          "N",
+          "Y"
+        ]
+      },
+      {
+        "name": "nta",
+        "samples": [
+          "Brownsville",
+          "Eastchester-Edenwald-Baychester"
+        ]
+      },
+      {
+        "name": "status_description",
+        "samples": [
+          "The Department of Housing Preservation and Development inspected the following …",
+          "The Department of Housing Preservation and Development responded to a complaint…"
+        ]
+      },
+      {
+        "name": "latitude",
+        "samples": [
+          "40.670299",
+          "40.8793"
+        ]
+      },
+      {
+        "name": "house_number",
+        "samples": [
+          "1800",
+          "1488"
+        ]
+      },
+      {
+        "name": "major_category",
+        "samples": [
+          "UNSANITARY CONDITION",
+          "APPLIANCE"
+        ]
+      },
+      {
+        "name": "problem_code",
+        "samples": [
+          "MICE",
+          "NO GAS OR ELECTRICITY"
+        ]
+      },
+      {
+        "name": "unique_key",
+        "samples": [
+          "58657001.0",
+          "57579048.0"
+        ]
+      }
+    ]
+  },
+  "source_field": "nta"
+}

@@ -1,0 +1,81 @@
+{
+  "id": "B17",
+  "slug": "schema-matching",
+  "title": "字段映射 / schema matching",
+  "plan_row": 17,
+  "plan_ref": "../../../09-benchmark-plan.md",
+  "catalog_atoms": [
+    "DA02.4.2",
+    "DA02.4.3",
+    "DA02.9.1",
+    "DA02.9.3",
+    "DA03.6.2"
+  ],
+  "slice": "S0",
+  "unit": "case",
+  "why_not_unit_tested": "字段映射依赖真实表结构中的同义列名、缩写、脏值与无匹配字段；单测只能钉住 top-1 口径，不能替代真实表对上的映射准确率",
+  "reference_benchmarks": [
+    {
+      "name": "Valentine",
+      "url": "https://github.com/delftdata/valentine",
+      "scale_note": "schema matching 框架与公开评测；本轮采用官方仓库 v1.1.1 的 NYU 子集 10 对表、146 个源字段"
+    },
+    {
+      "name": "Valentine: Evaluating Matching Techniques for Dataset Discovery (ICDE 2021)",
+      "url": "https://ieeexplore.ieee.org/abstract/document/9458921",
+      "scale_note": "schema matching 的评测方法与指标来源；原始论文数据集归档已不可用，改用官方仓库公开子集"
+    }
+  ],
+  "dataset": {
+    "sources": [
+      "valentine-schema-matching"
+    ],
+    "composition": "每条用例给一个源表、一个目标表和源字段，要求在目标表列中给出该源字段的 top-1 对应列；无对应字段时显式返回 null/空数组。金标只取 Valentine 数据自带的 ground_truth.json.matches，未出现的源字段按 has_false_positives=false 记为无对应字段",
+    "manifest_ref": "dataset/manifest.json",
+    "refresh": {
+      "unseen_acceptance_every_rounds": 6,
+      "replace_ratio": 0.25,
+      "rule": "表对一经暴露即整体降级为 regression；unseen_acceptance 不得参与调参"
+    }
+  },
+  "graders": [
+    "mapping_top1",
+    "mapping_top1:no_match"
+  ],
+  "metrics": [
+    {
+      "id": "mapping_top1",
+      "label": "源字段 top-1 映射准确率",
+      "direction": "higher",
+      "primary": true,
+      "unit": "ratio",
+      "aggregation": "pooled",
+      "grader": "mapping_top1",
+      "threshold_status": "pending_baseline"
+    },
+    {
+      "id": "no_match_accuracy",
+      "label": "无对应字段识别准确率",
+      "direction": "higher",
+      "primary": false,
+      "unit": "ratio",
+      "aggregation": "pooled",
+      "grader": "mapping_top1:no_match",
+      "threshold_status": "pending_baseline"
+    }
+  ],
+  "gate": {
+    "tier": "warn",
+    "in_ci": true,
+    "blocking_metrics": [
+      "mapping_top1",
+      "no_match_accuracy"
+    ],
+    "ref": "../../monitor/thresholds.json"
+  },
+  "status": "collecting",
+  "owner": "TBD",
+  "notes_ref": "NOTES.md",
+  "created": "2026-11-18",
+  "scope_note": "评测单源字段 → 单目标字段的 top-1 映射；多对多映射、复合键、Join 计划与值转换不在本轮。计划行中的 DA02.3 结构转换（转置/宽长表/嵌套展开）不在本轮，故未登记为已覆盖原子；当前 5 个原子只对应 schema/字段映射。私有子集（令才字段目录与报文）与业务数据按缺口登记，由 T34b 及后续现场交付补，不编造金标。"
+}

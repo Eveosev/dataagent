@@ -1,0 +1,389 @@
+{
+  "task": "schema_matching_top1",
+  "instruction": "给定源表、目标表和 source_field，只返回该源字段的 top-1 目标列名。没有对应字段时显式返回 null（或空数组），不要猜测；不要为其他源字段作答。",
+  "source_table": {
+    "name": "Housing_&_Development__Public_Design_Commission_Outdoor_Public_Art_Invent/source_table.csv",
+    "row_count": 434,
+    "columns": [
+      {
+        "name": "architect",
+        "samples": []
+      },
+      {
+        "name": "ApproxDate",
+        "samples": [
+          "True",
+          "False"
+        ]
+      },
+      {
+        "name": "RecordIDs",
+        "samples": [
+          "177",
+          "5177"
+        ]
+      },
+      {
+        "name": "ArchMiddle",
+        "samples": [
+          "George"
+        ]
+      },
+      {
+        "name": "artists_keyword",
+        "samples": [
+          "American",
+          "Woman, American"
+        ]
+      },
+      {
+        "name": "primary_architect_last",
+        "samples": [
+          "Embury II",
+          "Puma"
+        ]
+      },
+      {
+        "name": "primary_artist_middle",
+        "samples": [
+          "George Richard",
+          "Howard"
+        ]
+      },
+      {
+        "name": "SubjectTags",
+        "samples": [
+          "animals, wpa, bathhouse",
+          "animals"
+        ]
+      },
+      {
+        "name": "EngravingText",
+        "samples": [
+          "GROUP OF BEARS / PAUL MANSHIP 1885-1966 / ORIGINAL BRONZE CAST 1932 / THIS BRON…",
+          "MOSAIC DESIGNS BY ANN EVANS 1981 / PRODUCED BY CITYARTS WORKSHOP INC. / WITH A …"
+        ]
+      },
+      {
+        "name": "longitude",
+        "samples": [
+          "-73.898056",
+          "-73.963956"
+        ]
+      },
+      {
+        "name": "state",
+        "samples": [
+          "NY"
+        ]
+      },
+      {
+        "name": "BlkNum",
+        "samples": [
+          "2941",
+          "1111"
+        ]
+      },
+      {
+        "name": "acquisition",
+        "samples": [
+          "Purchased with Works Progress Administration Funds",
+          "Gift of Samuel Friedman"
+        ]
+      },
+      {
+        "name": "architecture_firm",
+        "samples": [
+          "Bruce Kelly/David Varnell",
+          "S. Puma Co. Inc."
+        ]
+      },
+      {
+        "name": "borough_x",
+        "samples": [
+          "Bronx",
+          "Manhattan"
+        ]
+      },
+      {
+        "name": "ArtForm",
+        "samples": [
+          "Bas-Relief Roundel",
+          "Statue"
+        ]
+      },
+      {
+        "name": "zip_code",
+        "samples": [
+          "10457",
+          "10028"
+        ]
+      },
+      {
+        "name": "ArtistGiven",
+        "samples": [
+          "Frederick",
+          "Paul"
+        ]
+      },
+      {
+        "name": "landscape_architect",
+        "samples": [
+          "Winslow"
+        ]
+      },
+      {
+        "name": "Medium",
+        "samples": [
+          "Stone",
+          "Bronze"
+        ]
+      },
+      {
+        "name": "secondary_artist_middle",
+        "samples": []
+      },
+      {
+        "name": "LotID",
+        "samples": [
+          "1.0",
+          "150.0"
+        ]
+      },
+      {
+        "name": "foundry",
+        "samples": [
+          "Paul King Foundry",
+          "M.H. Mosman, Chicopee, MA"
+        ]
+      },
+      {
+        "name": "managing_city_agency",
+        "samples": [
+          "Department of Parks and Recreation"
+        ]
+      }
+    ]
+  },
+  "target_table": {
+    "name": "Housing_&_Development__Public_Design_Commission_Outdoor_Public_Art_Invent/target_table.csv",
+    "row_count": 434,
+    "columns": [
+      {
+        "name": "city",
+        "samples": [
+          "Bronx",
+          "New York"
+        ]
+      },
+      {
+        "name": "borough",
+        "samples": [
+          "Bronx",
+          "Manhattan"
+        ]
+      },
+      {
+        "name": "title",
+        "samples": [
+          "Poor Fish",
+          "Group of Bears"
+        ]
+      },
+      {
+        "name": "foundry",
+        "samples": [
+          "Paul King Foundry",
+          "M.H. Mosman, Chicopee, MA"
+        ]
+      },
+      {
+        "name": "fabricator",
+        "samples": [
+          "City Arts Workshop",
+          "General Bronze Corporation"
+        ]
+      },
+      {
+        "name": "primary_architect_first",
+        "samples": [
+          "Aymar",
+          "Al"
+        ]
+      },
+      {
+        "name": "landscape_architect_last",
+        "samples": [
+          "Winslow"
+        ]
+      },
+      {
+        "name": "artwork_type1",
+        "samples": [
+          "Bas-relief roundel",
+          "Statue"
+        ]
+      },
+      {
+        "name": "location_name",
+        "samples": [
+          "Crotona Pool Bath House",
+          "Central Park"
+        ]
+      },
+      {
+        "name": "landscape_architect_middle",
+        "samples": [
+          "N."
+        ]
+      },
+      {
+        "name": "lot",
+        "samples": [
+          "1.0",
+          "150.0"
+        ]
+      },
+      {
+        "name": "date_created_approximation",
+        "samples": [
+          "Y",
+          "N"
+        ]
+      },
+      {
+        "name": "primary_artist_first",
+        "samples": [
+          "Frederick",
+          "Paul"
+        ]
+      },
+      {
+        "name": "date_dedicated",
+        "samples": [
+          "1936",
+          "1990"
+        ]
+      },
+      {
+        "name": "date_dedicated_approximation",
+        "samples": [
+          "N"
+        ]
+      },
+      {
+        "name": "secondary_artist_first",
+        "samples": []
+      },
+      {
+        "name": "inscription",
+        "samples": [
+          "GROUP OF BEARS / PAUL MANSHIP 1885-1966 / ORIGINAL BRONZE CAST 1932 / THIS BRON…",
+          "MOSAIC DESIGNS BY ANN EVANS 1981 / PRODUCED BY CITYARTS WORKSHOP INC. / WITH A …"
+        ]
+      },
+      {
+        "name": "pdc_records",
+        "samples": [
+          "177",
+          "5177"
+        ]
+      },
+      {
+        "name": "secondary_artist_last",
+        "samples": []
+      },
+      {
+        "name": "material",
+        "samples": [
+          "Stone",
+          "Bronze, granite"
+        ]
+      },
+      {
+        "name": "subject_keyword",
+        "samples": [
+          "Animals, WPA, Bathhouse",
+          "Animals"
+        ]
+      },
+      {
+        "name": "primary_architect_middle",
+        "samples": [
+          "George"
+        ]
+      },
+      {
+        "name": "date_created",
+        "samples": [
+          "1936",
+          "1989"
+        ]
+      },
+      {
+        "name": "landscape_architect_first",
+        "samples": [
+          "Philip"
+        ]
+      },
+      {
+        "name": "primary_artist_last",
+        "samples": [
+          "Roth",
+          "Manship"
+        ]
+      },
+      {
+        "name": "block",
+        "samples": [
+          "2941",
+          "1111"
+        ]
+      },
+      {
+        "name": "secondary_architect_last",
+        "samples": []
+      },
+      {
+        "name": "address",
+        "samples": [
+          "173rd Street and Fulton Avenue",
+          "Fifth Avenue and 79th Street"
+        ]
+      },
+      {
+        "name": "secondary_architect_middle",
+        "samples": []
+      },
+      {
+        "name": "artwork_type2",
+        "samples": [
+          "Artwork",
+          "Artwork/Memorial"
+        ]
+      },
+      {
+        "name": "alternate_title",
+        "samples": []
+      },
+      {
+        "name": "secondary_architect_first",
+        "samples": []
+      },
+      {
+        "name": "latitude",
+        "samples": [
+          "40.839942",
+          "40.777487"
+        ]
+      },
+      {
+        "name": "state",
+        "samples": [
+          "NY"
+        ]
+      }
+    ]
+  },
+  "source_field": "borough_x"
+}

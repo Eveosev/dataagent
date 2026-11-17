@@ -1,0 +1,128 @@
+{
+  "task": "schema_matching_top1",
+  "instruction": "给定源表、目标表和 source_field，只返回该源字段的 top-1 目标列名。没有对应字段时显式返回 null（或空数组），不要猜测；不要为其他源字段作答。",
+  "source_table": {
+    "name": "Education__COVID-19_Free_Meals_Locations/source_table.csv",
+    "row_count": 187,
+    "columns": [
+      {
+        "name": "UrbanZone",
+        "samples": [
+          "Brooklyn",
+          "Queens"
+        ]
+      },
+      {
+        "name": "accessibility",
+        "samples": [
+          "Partially Accessible",
+          "Fully Accessible"
+        ]
+      },
+      {
+        "name": "schoolname",
+        "samples": [
+          "P.S. 250 George H. Lindsay",
+          "Helen M. Marshall School"
+        ]
+      },
+      {
+        "name": "SanFacID",
+        "samples": [
+          "14250",
+          "24330"
+        ]
+      },
+      {
+        "name": "bldgcode",
+        "samples": [
+          "K250",
+          "Q287"
+        ]
+      },
+      {
+        "name": "district",
+        "samples": [
+          "District 14",
+          "District 24"
+        ]
+      },
+      {
+        "name": "location",
+        "samples": [
+          "108 MONTROSE AVENUE",
+          "110-08 NORTHERN BOULEVARD"
+        ]
+      }
+    ]
+  },
+  "target_table": {
+    "name": "Education__COVID-19_Free_Meals_Locations/target_table.csv",
+    "row_count": 187,
+    "columns": [
+      {
+        "name": "zip",
+        "samples": [
+          "11206",
+          "11368"
+        ]
+      },
+      {
+        "name": "bldgcode",
+        "samples": [
+          "K250",
+          "Q287"
+        ]
+      },
+      {
+        "name": "sfcode",
+        "samples": [
+          "14250",
+          "24330"
+        ]
+      },
+      {
+        "name": "koshermealtype",
+        "samples": [
+          "non-kosher"
+        ]
+      },
+      {
+        "name": "latitude",
+        "samples": [
+          "40.706708",
+          "40.757888"
+        ]
+      },
+      {
+        "name": "longitude",
+        "samples": [
+          "-73.945659",
+          "-73.859202"
+        ]
+      },
+      {
+        "name": "siteaddress",
+        "samples": [
+          "108 MONTROSE AVENUE",
+          "110-08 NORTHERN BOULEVARD"
+        ]
+      },
+      {
+        "name": "city",
+        "samples": [
+          "Brooklyn",
+          "Queens"
+        ]
+      },
+      {
+        "name": "district",
+        "samples": [
+          "14",
+          "24"
+        ]
+      }
+    ]
+  },
+  "source_field": "UrbanZone"
+}

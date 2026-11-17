@@ -30,6 +30,9 @@ REGISTRY = {
     # B16：同一判分模块的两个入口，实体对 F1 与错误合并率分别出分
     "entity_pair_f1": "entity_pair_f1",
     "entity_pair_f1:false_merge": "false_merge_rate",
+    # B17：同一判分模块的两个入口，top-1 准确率与无匹配子集准确率分别出分
+    "mapping_top1": "mapping_top1",
+    "mapping_top1:no_match": "no_match_accuracy",
 }
 
 

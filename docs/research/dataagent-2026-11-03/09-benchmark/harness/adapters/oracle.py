@@ -28,6 +28,21 @@ def _map(task_id: str, expected: dict) -> dict:
         return {"label": expected.get("value")}
     if task_id == "B16":
         return {"pairs": expected.get("pairs") or []}
+    if task_id == "B17":
+        if "fields" in expected:
+            return {
+                "mappings": [
+                    {
+                        "source_field": item.get("source_field") or item.get("source"),
+                        "target_field": item.get("target_field", item.get("target")),
+                    }
+                    for item in expected.get("fields") or []
+                ]
+            }
+        return {
+            "source_field": expected.get("source_field"),
+            "target_field": expected.get("target_field"),
+        }
     return {}
 
 

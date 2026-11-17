@@ -1,0 +1,136 @@
+{
+  "task": "schema_matching_top1",
+  "instruction": "给定源表、目标表和 source_field，只返回该源字段的 top-1 目标列名。没有对应字段时显式返回 null（或空数组），不要猜测；不要为其他源字段作答。",
+  "source_table": {
+    "name": "City_Government__NYC_Municipal_Building_Energy_Benchmarking_Results/source_table.csv",
+    "row_count": 1525,
+    "columns": [
+      {
+        "name": "src_block",
+        "samples": [
+          "1044.0",
+          "16.0"
+        ]
+      },
+      {
+        "name": "_2010source_eui_kbtu_ft",
+        "samples": [
+          "Not Available",
+          "182.2"
+        ]
+      },
+      {
+        "name": "_2014_source_eui_kbtu_ft",
+        "samples": [
+          "86.5",
+          "181.7"
+        ]
+      },
+      {
+        "name": "building",
+        "samples": [
+          "Midtown Community Court",
+          "Battery Park City Branch"
+        ]
+      },
+      {
+        "name": "LOT",
+        "samples": [
+          "1900-01-21",
+          "1920-07-29"
+        ]
+      },
+      {
+        "name": "BRGH_CD",
+        "samples": [
+          "1.0",
+          "3.0"
+        ]
+      },
+      {
+        "name": "ghg_emissions_intensity",
+        "samples": [
+          "2.5",
+          "4.8"
+        ]
+      },
+      {
+        "name": "bin",
+        "samples": [
+          "1025397.0",
+          "1087518.0"
+        ]
+      },
+      {
+        "name": "agency",
+        "samples": [
+          "DCAS",
+          "NYPL"
+        ]
+      }
+    ]
+  },
+  "target_table": {
+    "name": "City_Government__NYC_Municipal_Building_Energy_Benchmarking_Results/target_table.csv",
+    "row_count": 1526,
+    "columns": [
+      {
+        "name": "_2014_score",
+        "samples": [
+          "97",
+          "Not Available"
+        ]
+      },
+      {
+        "name": "borough",
+        "samples": [
+          "1.0",
+          "3.0"
+        ]
+      },
+      {
+        "name": "_2010_score",
+        "samples": [
+          "Not Available",
+          "64"
+        ]
+      },
+      {
+        "name": "block",
+        "samples": [
+          "1044.0",
+          "16.0"
+        ]
+      },
+      {
+        "name": "_2014_ghg_emissions_intensity_kgco2e_ft",
+        "samples": [
+          "2.5",
+          "4.8"
+        ]
+      },
+      {
+        "name": "lot",
+        "samples": [
+          "22.0",
+          "7516.0"
+        ]
+      },
+      {
+        "name": "bin",
+        "samples": [
+          "1025397.0",
+          "1087518.0"
+        ]
+      },
+      {
+        "name": "_2010_ghg_emissions_intensity_kgco2e_ft",
+        "samples": [
+          "Not Available",
+          "4.7"
+        ]
+      }
+    ]
+  },
+  "source_field": "bin"
+}
