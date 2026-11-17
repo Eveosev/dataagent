@@ -129,6 +129,11 @@ class IntakeService:
                             if record['locator_ref'] is not None and record['locator_ref']==selection.locator_ref
                             and record['kind']==selection.kind]
             if len(by_id)>1 or len(by_locator)>1:return None
+            if by_id:
+                record=records[by_id[0]]
+                if record['locator_ref'] is not None or record['kind'] is not None:
+                    if (selection is None or record['locator_ref']!=selection.locator_ref
+                            or record['kind']!=selection.kind):return None
             if by_id and by_locator and by_id[0]!=by_locator[0]:return None
             matches=by_id or by_locator
             if not matches or matches[0] in used:return None

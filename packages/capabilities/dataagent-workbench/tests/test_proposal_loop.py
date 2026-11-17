@@ -1,6 +1,6 @@
 from pathlib import Path
 import pytest
-from dataagent_contracts.intake import SourceSelection,WorkSpec
+from dataagent_contracts.intake import CoverageGap,SourceProfile,SourceSelection,WorkSpec
 from dataagent_contracts.ontology import MappingSpec,ReviewDecision
 from dataagent_ontology.identity import digest
 from dataagent_runtime.ports.workbench_store import ChangeSet,VersionConflict,Write
@@ -122,6 +122,22 @@ def save_multi(wb,source_ids=('invoice','ledger')):
     wb.intake.apply(session.id,ReviewDecision(
         preview_ref=preview.id+'@'+preview.revision,target_scope='mapping'),session.revision,wb.ctx)
     assert wb.sessions.get(session.id,wb.ctx).phase=='saved'
+    return session.id
+
+
+class StubProbeClient:
+    def __init__(self,profiles):self.profiles=profiles
+    def probe(self,selection,ctx,workspace,*,previous=None):return self.profiles[selection.source_id]
+
+
+def saved_profiles(wb,session_id):
+    return [SourceProfile.model_validate(profile) for profile in wb.intake.view(session_id,wb.ctx)['profiles']]
+
+
+def with_partial_gap(profile,code):
+    return profile.model_copy(update={
+        'gaps':[CoverageGap(partition=2,code=code)],'total_partitions':2,'completed_partitions':[1],
+        'source_revision':profile.source_revision+':partial'})
 
 
 def test_multi_source_combination_reuses_mapping(tmp_path):
@@ -157,6 +173,33 @@ def test_reused_multi_source_mapping_can_be_saved_and_reused_again(tmp_path):
     again=wb.intake.advance(start_multi(wb,('invoice','ledger'),'g3').session_id,wb.ctx)
     assert again.phase=='preview'
     assert wb.intake.view(again.id,wb.ctx)['mapping_reused']
+
+
+def test_reuse_requires_all_sources_probed_complete(tmp_path):
+    wb=multi_setup(tmp_path)
+    session_id=save_multi(wb)
+    full={profile.source_id:profile for profile in saved_profiles(wb,session_id)}
+    wb.layer_client=StubProbeClient({
+        'invoice':full['invoice'],
+        'ledger':with_partial_gap(full['ledger'],'row_budget_exceeded')})
+    current=wb.intake.advance(start_multi(wb,('invoice','ledger'),'g2').session_id,wb.ctx)
+    assert current.phase=='needs_input'
+    assert current.issues==[]
+    assert not wb.intake.view(current.id,wb.ctx)['mapping_reused']
+
+
+def test_reuse_skips_rest_429_continuation(tmp_path):
+    wb=multi_setup(tmp_path)
+    session_id=save_multi(wb)
+    full={profile.source_id:profile for profile in saved_profiles(wb,session_id)}
+    metadata={**full['ledger'].metadata,'source_version':'fixture-1','row_offset':0,'cursor':'next-page'}
+    retry=with_partial_gap(full['ledger'].model_copy(update={'kind':'rest','metadata':metadata}),'rate_limited')
+    wb.layer_client=StubProbeClient({'invoice':full['invoice'],'ledger':retry})
+    current=wb.intake.advance(start_multi(wb,('invoice','ledger'),'g2').session_id,wb.ctx)
+    assert current.phase=='needs_input'
+    assert current.issues==[]
+    assert current.next_actions==['retry_probe']
+    assert not wb.intake.view(current.id,wb.ctx)['mapping_reused']
 
 
 def same_fingerprint_setup(tmp_path):
@@ -213,6 +256,18 @@ def test_same_fingerprint_sources_keep_their_mapping_on_reuse(tmp_path):
     assert source_mappings['major']['bindings']['amount']['transform']=='decimal'
 
 
+def test_same_fingerprint_group_reuse_is_order_independent(tmp_path):
+    wb=same_fingerprint_setup(tmp_path)
+    save_same_fingerprint(wb,('minor','major'))
+    reused=wb.intake.advance(start_selected(wb,same_fingerprint_sources('major','minor'),'g2').session_id,wb.ctx)
+    assert reused.phase=='preview'
+    view=wb.intake.view(reused.id,wb.ctx)
+    assert view['mapping_reused']
+    source_mappings=view['preview']['extensions']['intake.source_mappings']
+    assert source_mappings['minor']['bindings']['amount']['transform']=='minor_to_major'
+    assert source_mappings['major']['bindings']['amount']['transform']=='decimal'
+
+
 def test_same_fingerprint_reuse_declines_without_source_correspondence(tmp_path):
     wb=same_fingerprint_setup(tmp_path)
     save_same_fingerprint(wb)
@@ -243,6 +298,18 @@ def test_same_fingerprint_reuse_declines_on_id_locator_conflict(tmp_path):
     save_same_fingerprint(wb)
     sources=[SourceSelection(source_id='minor',kind='file',locator_ref='major.csv'),
              SourceSelection(source_id='major',kind='file',locator_ref='minor.csv')]
+    current=wb.intake.advance(start_selected(wb,sources,'g2').session_id,wb.ctx)
+    assert current.phase=='needs_input'
+    assert current.issues==[] and current.next_actions==['propose_mapping']
+    assert not wb.intake.view(current.id,wb.ctx)['mapping_reused']
+
+
+def test_same_fingerprint_reuse_declines_when_id_locator_changes(tmp_path):
+    wb=same_fingerprint_setup(tmp_path)
+    save_same_fingerprint(wb)
+    (tmp_path/'other.csv').write_text('number,amount,currency\nINV-1,1260,CNY\n')
+    sources=[SourceSelection(source_id='minor',kind='file',locator_ref='other.csv'),
+             SourceSelection(source_id='major',kind='file',locator_ref='major.csv')]
     current=wb.intake.advance(start_selected(wb,sources,'g2').session_id,wb.ctx)
     assert current.phase=='needs_input'
     assert current.issues==[] and current.next_actions==['propose_mapping']
