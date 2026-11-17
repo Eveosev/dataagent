@@ -34,7 +34,10 @@ spelling.
 from __future__ import annotations
 
 import hashlib
+import hmac
+import json
 import os
+import secrets
 import uuid
 from pathlib import Path
 from typing import Any, Mapping
@@ -63,6 +66,7 @@ __all__ = [
     "ContextResolutionError",
     "resolve_context",
     "resolved_context",
+    "verify_resolved",
     "with_authorization",
     "workspace_scope",
 ]
@@ -103,6 +107,49 @@ _AUTHORITY_FIELDS = frozenset(
 
 class ContextResolutionError(ValueError):
     """The trusted channels carried a malformed context; fail closed."""
+
+
+# A per-process seal over the resolved envelope. Entry points hand
+# ``ResolvedContext`` objects to ``invoke``; without this, a caller could
+# build one with ``source=HOST_META`` and an arbitrary subject (r41 X1).
+# The key is process-local, so a context cannot be forged from another
+# process; within this process ``verify_resolved`` makes an edited or
+# hand-built envelope fail closed instead of being trusted.
+_SEAL_KEY = secrets.token_bytes(32)
+
+
+def _seal_payload(resolved: ResolvedContext) -> dict[str, Any]:
+    return {
+        "context": resolved.context.model_dump(mode="json"),
+        "meta": resolved.meta.model_dump(mode="json"),
+        "source": resolved.source.value,
+        "hints_ignored": list(resolved.hints_ignored),
+        "host_fields": list(resolved.host_fields),
+    }
+
+
+def _seal_digest(resolved: ResolvedContext) -> str:
+    payload = json.dumps(
+        _seal_payload(resolved),
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    ).encode("utf-8")
+    return hmac.new(_SEAL_KEY, payload, hashlib.sha256).hexdigest()
+
+
+def _reseal(resolved: ResolvedContext) -> ResolvedContext:
+    """Sign a resolved envelope after a trusted field update."""
+
+    return resolved.model_copy(update={"seal": _seal_digest(resolved)})
+
+
+def verify_resolved(resolved: ResolvedContext) -> bool:
+    """Whether ``resolved`` came from ``resolve_context`` unmodified."""
+
+    if not resolved.seal:
+        return False
+    return hmac.compare_digest(resolved.seal, _seal_digest(resolved))
 
 
 def workspace_scope(workspace_root: str | os.PathLike[str] | None = None) -> str:
@@ -241,67 +288,81 @@ def _context_from_values(values: dict[str, Any]) -> CallContext:
         ) from exc
 
 
+def _has_host_context(host_meta: Mapping[str, Any] | None) -> bool:
+    """Whether the host supplied a ``_meta`` context at all.
+
+    Mirrors the old ``mcp_server._context``: a nested ``context`` map (even
+    an empty one) or a flat map with the three required CallContext fields
+    is authoritative and suppresses ``arguments.context``.
+    """
+
+    if isinstance(host_meta, CallContext):
+        return True
+    if not isinstance(host_meta, Mapping):
+        return False
+    if isinstance(host_meta.get("context"), Mapping):
+        return True
+    return {"request_id", "scope_ref", "authorization_ref"} <= set(host_meta)
+
+
 def _legacy(
     *,
     host_context: dict[str, Any],
+    host_context_present: bool,
     host_meta: dict[str, Any],
     hint: dict[str, Any],
     runtime: Any,
     environ: Mapping[str, str],
 ) -> ResolvedContext:
-    """The one-release rollback path: old precedence and old scope spelling."""
+    """The one-release rollback path: old precedence and old scope spelling.
 
-    base: dict[str, Any] = {}
-    base.update(hint)
-    if host_context:
-        # Old ``_context``: ``_meta`` is authoritative over arguments.
-        base.update(host_context)
-    if not base:
-        if runtime is None:
-            raise ContextResolutionError(
-                "CallContext is required in arguments.context or _meta"
-            )
+    Old entries differed: MCP/CLI took ``_meta.context`` if present, else
+    ``arguments.context``, and never merged the two; the unified CLI built a
+    context from the host wiring. Old ``invoke`` stamped the host
+    subject/purpose only on the resource-recheck path, so this function does
+    not do it for a host/hint context either (``invoke`` restores that for
+    resource operations).
+    """
+
+    if host_context_present:
+        # Old ``_context``: a host context replaces arguments.context; it is
+        # not merged field-by-field.
+        base = dict(host_context)
+    elif hint:
+        base = dict(hint)
+    elif runtime is not None:
         # The unified CLI never took a context argument: it built one from
-        # the host wiring. Keep that shape on the rollback path only when a
-        # runtime is in hand; MCP/CLI (no runtime at resolution time) keep
-        # their old "context is required" behaviour.
+        # the host wiring. Keep that shape on the rollback path only.
         base = {
             "request_id": f"cli:{uuid.uuid4().hex[:12]}",
             "scope_ref": _env(environ, OLD_SCOPE_ENV) or OLD_DEFAULT_SCOPE,
             "authorization_ref": _env(environ, AUTHORIZATION_ENV)
             or OLD_DEFAULT_AUTHORIZATION,
+            "subject_ref": _pick(
+                _runtime_value(runtime, "host_subject_ref"),
+                _env(environ, HOST_SUBJECT_ENV),
+            ),
+            "purpose": _pick(
+                _runtime_value(runtime, "host_purpose"),
+                _env(environ, HOST_PURPOSE_ENV),
+            ),
         }
+    else:
+        raise ContextResolutionError(
+            "CallContext is required in arguments.context or _meta"
+        )
 
-    subject = _pick(
-        _runtime_value(runtime, "host_subject_ref"),
-        _env(environ, HOST_SUBJECT_ENV),
-        base.get("subject_ref"),
-    )
-    purpose = _pick(
-        _runtime_value(runtime, "host_purpose"),
-        _env(environ, HOST_PURPOSE_ENV),
-        base.get("purpose"),
-    )
-    scope_ref = _pick(base.get("scope_ref"), _env(environ, OLD_SCOPE_ENV), OLD_DEFAULT_SCOPE)
-    authorization_ref = _pick(
-        base.get("authorization_ref"),
-        _env(environ, AUTHORIZATION_ENV),
-        OLD_DEFAULT_AUTHORIZATION,
-    )
-    request_id = _pick(base.get("request_id"), f"req:{uuid.uuid4().hex[:12]}")
     values: dict[str, Any] = {
         key: value for key, value in base.items() if key in _CONTEXT_FIELDS
     }
-    values.update(
-        request_id=request_id,
-        scope_ref=scope_ref,
-        authorization_ref=authorization_ref,
-        subject_ref=subject,
-        purpose=purpose,
-    )
+    # Do not manufacture required fields for a host/hint context: the old
+    # invoke validated the mapping as-is and failed when they were absent.
+    context = _context_from_values(values)
+
+    scope_ref = context.scope_ref
     scope_hash = hashlib.sha256(str(scope_ref).encode("utf-8")).hexdigest()[:24]
-    session = _pick(host_meta.get("session_id"), values.get("kernel_session_id"))
-    call = _pick(host_meta.get("call_id"), values.get("kernel_call_id"))
+    session = _pick(host_meta.get("session_id"), context.kernel_session_id)
+    call = _pick(host_meta.get("call_id"), context.kernel_call_id)
     if session is not None:
         session = _call_meta_value(session, field="session_id")
     if call is not None:
@@ -312,14 +373,14 @@ def _legacy(
     # unset. ``access_recheck`` treats any kernel_session_id as a kernel call
     # when the host declares the guard, so a synthetic one would bypass the
     # full recheck (X1).
-    values.update(kernel_session_id=session, kernel_call_id=call)
-    context = _context_from_values(values)
     meta = CallMeta(
         session_id=session or f"local:{scope_hash}",
         call_id=call or f"call:{uuid.uuid4().hex[:12]}",
         turn=turn,
     )
-    return ResolvedContext(context=context, meta=meta, source=ContextSource.LEGACY)
+    return _reseal(
+        ResolvedContext(context=context, meta=meta, source=ContextSource.LEGACY)
+    )
 
 
 def resolve_context(
@@ -346,6 +407,7 @@ def resolve_context(
     if _resolver_mode(runtime, environment, legacy) == LEGACY:
         return _legacy(
             host_context=host_context,
+            host_context_present=_has_host_context(host_meta),
             host_meta=host_meta_values,
             hint=hint,
             runtime=runtime,
@@ -485,12 +547,14 @@ def resolve_context(
         host_fields.append("call_id")
     if host_meta_values.get("turn") is not None:
         host_fields.append("turn")
-    return ResolvedContext(
-        context=context,
-        meta=meta,
-        source=source,
-        hints_ignored=tuple(ignored),
-        host_fields=tuple(host_fields),
+    return _reseal(
+        ResolvedContext(
+            context=context,
+            meta=meta,
+            source=source,
+            hints_ignored=tuple(ignored),
+            host_fields=tuple(host_fields),
+        )
     )
 
 
@@ -506,6 +570,10 @@ def resolved_context(
     """
 
     if isinstance(value, ResolvedContext):
+        if not verify_resolved(value):
+            raise ContextResolutionError(
+                "ResolvedContext was not produced by resolve_context or was modified"
+            )
         return value
     return resolve_context(
         argument_context=value, runtime=runtime, environ=environ
@@ -519,5 +587,9 @@ def with_authorization(
 
     if not authorization_ref:
         raise ContextResolutionError("authorization_ref must not be blank")
+    if not verify_resolved(resolved):
+        raise ContextResolutionError(
+            "ResolvedContext was not produced by resolve_context or was modified"
+        )
     context = resolved.context.model_copy(update={"authorization_ref": authorization_ref})
-    return resolved.with_context(context)
+    return _reseal(resolved.with_context(context))

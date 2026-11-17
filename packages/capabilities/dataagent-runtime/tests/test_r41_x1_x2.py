@@ -40,10 +40,11 @@ from dataagent_runtime.interfaces import mcp_server
 from dataagent_runtime.policy.context import (
     ContextResolutionError,
     resolve_context,
+    with_authorization,
     workspace_scope,
 )
 from dataagent_runtime.runtime import Runtime
-from dataagent_runtime.types import CallMeta, ContextSource
+from dataagent_runtime.types import CallMeta, ContextSource, ResolvedContext
 
 FUTURE = "2030-01-01T00:00:00Z"
 RESOURCE = VersionedRef(id="table:secret", revision="r1")
@@ -214,6 +215,56 @@ def test_x1_local_fallback_does_not_look_like_a_kernel_call(ops, tmp_path):
     assert result.status == "failed"
     assert result.issues[0].code == "da12.access_denied"
     assert "subject mismatch" in result.issues[0].message
+
+
+def test_x1_caller_built_resolved_envelope_is_rejected(ops, tmp_path):
+    """A forged envelope must not be trusted as host ``_meta`` authority."""
+
+    rt = _runtime(tmp_path, host_subject_ref="user:alice", host_purpose="report")
+    rt.decisions.save_access(_decision(subject="user:alice", purpose="report"))
+    forged = ResolvedContext(
+        context=_forged_context(subject_ref="user:alice", purpose="report"),
+        meta=CallMeta(session_id="ks:forged", call_id="kc:forged", turn=0),
+        source=ContextSource.HOST_META,
+        host_fields=("subject_ref", "purpose"),
+    )
+    result = shared_invoke(
+        "t11a_read",
+        {"source": "table:secret@r1"},
+        forged,
+        runtime=rt,
+        resolver=rt.decisions.get_access,
+    )
+    assert result.status == "failed"
+    assert result.issues[0].code == "invalid_input"
+    assert "not produced by resolve_context" in result.issues[0].message
+    with pytest.raises(ContextResolutionError, match="not produced by resolve_context"):
+        with_authorization(forged, "ad:forged")
+
+
+def test_x1_edited_resolved_envelope_is_rejected(ops, tmp_path):
+    """The seal covers the envelope fields, not just its constructor."""
+
+    rt = _runtime(tmp_path, host_subject_ref="user:alice", host_purpose="report")
+    rt.decisions.save_access(_decision(subject="user:alice", purpose="report"))
+    resolved = resolve_context(argument_context=_forged_context(), runtime=rt, environ={})
+    tampered = resolved.model_copy(
+        update={
+            "context": resolved.context.model_copy(
+                update={"subject_ref": "user:admin", "purpose": "exfil"}
+            )
+        }
+    )
+    result = shared_invoke(
+        "t11a_read",
+        {"source": "table:secret@r1"},
+        tampered,
+        runtime=rt,
+        resolver=rt.decisions.get_access,
+    )
+    assert result.status == "failed"
+    assert result.issues[0].code == "invalid_input"
+    assert "not produced by resolve_context" in result.issues[0].message
 
 
 def test_x1_missing_subject_no_longer_skips_the_check(ops, tmp_path):
@@ -465,6 +516,68 @@ def test_legacy_without_context_still_requires_it(ops):
         resolve_context(environ={"DATAAGENT_CONTEXT_RESOLVER": "legacy"})
 
 
+def test_x1_legacy_nested_host_context_does_not_merge_arguments(ops):
+    """Old ``_context`` ignored arguments entirely when ``_meta.context`` existed."""
+
+    resolved = resolve_context(
+        host_meta={
+            "context": {
+                "request_id": "req:host",
+                "scope_ref": "tenant:host",
+                "authorization_ref": "ad:host",
+            }
+        },
+        argument_context={
+            "request_id": "req:args",
+            "scope_ref": "tenant:args",
+            "authorization_ref": "ad:args",
+            "subject_ref": "user:admin",
+            "purpose": "exfil",
+        },
+        environ={"DATAAGENT_CONTEXT_RESOLVER": "legacy"},
+    )
+    assert resolved.context.request_id == "req:host"
+    assert resolved.context.scope_ref == "tenant:host"
+    assert resolved.context.authorization_ref == "ad:host"
+    assert resolved.context.subject_ref is None
+    assert resolved.context.purpose is None
+
+
+def test_x1_legacy_no_resource_keeps_the_caller_context(ops, tmp_path):
+    """Old invoke stamped host authority only on the resource path."""
+
+    rt = _runtime(tmp_path, host_subject_ref="user:host", host_purpose="ops")
+    resolved = resolve_context(
+        argument_context=_forged_context(),
+        runtime=rt,
+        environ={"DATAAGENT_CONTEXT_RESOLVER": "legacy"},
+    )
+    result = shared_invoke("t11a_whoami", {}, resolved, runtime=rt)
+    assert result.status == "ok"
+    assert result.data.subject == "user:admin"
+    assert result.data.purpose == "exfil"
+
+
+def test_x1_legacy_resource_path_still_gets_host_authority(ops, tmp_path):
+    rt = _runtime(
+        tmp_path, host_subject_ref="user:alice", host_purpose="report"
+    )
+    rt.decisions.save_access(_decision(subject="user:alice", purpose="report"))
+    resolved = resolve_context(
+        argument_context=_forged_context(),
+        runtime=rt,
+        environ={"DATAAGENT_CONTEXT_RESOLVER": "legacy"},
+    )
+    result = shared_invoke(
+        "t11a_read",
+        {"source": "table:secret@r1"},
+        resolved,
+        runtime=rt,
+        resolver=rt.decisions.get_access,
+    )
+    assert result.status == "ok", result.issues
+
+
 def test_x1_legacy_unified_context_is_synthesized(ops, tmp_path):
     """The old unified CLI had no context input; legacy keeps that shape."""
 
@@ -549,6 +662,68 @@ class AssetStrInput(BaseModel):
 
 class AssetStrWrapper(BaseModel):
     source: AssetStrInput
+
+
+class OptionalKindRef(BaseModel):
+    id: str
+    revision: str
+    kind: str | None = None
+
+
+class OptionalKindInput(BaseModel):
+    source: OptionalKindRef
+
+
+class EmptyKindRef(BaseModel):
+    id: str
+    revision: str
+    kind: str = ""
+
+
+class EmptyKindInput(BaseModel):
+    source: EmptyKindRef
+
+
+def test_x2_optional_kind_is_rejected_at_registration(ops):
+    """``kind: str | None = None`` passes a field-presence check but skips."""
+
+    with pytest.raises(RuntimeError, match="does not carry"):
+
+        @operation(
+            "T11A.X2.11",
+            input_model=OptionalKindInput,
+            output_model=ReadOutput,
+            resource_fields=("source",),
+        )
+        def x2_optional_kind(input_obj, ctx, runtime):  # noqa: ANN001
+            return ReadOutput(value=input_obj.source.id)
+
+
+def test_x2_unconvertible_runtime_value_is_rejected(ops, tmp_path):
+    """A registered shape can still carry an empty identity at call time."""
+
+    @operation(
+        "T11A.X2.12",
+        input_model=EmptyKindInput,
+        output_model=ReadOutput,
+        resource_fields=("source",),
+    )
+    def x2_empty_kind(input_obj, ctx, runtime):  # noqa: ANN001
+        return ReadOutput(value=input_obj.source.id)
+
+    rt = _runtime(tmp_path, host_subject_ref="user:alice", host_purpose="report")
+    rt.decisions.save_access(_decision(resource=PUBLIC))
+    # ``t11a_read`` uses VersionedRef, so exercise the empty-kind operation.
+    result = shared_invoke(
+        "x2_empty_kind",
+        {"source": {"id": "table:secret", "revision": "r1"}},
+        _forged_context(subject_ref="user:alice", purpose="report"),
+        runtime=rt,
+        resolver=rt.decisions.get_access,
+    )
+    assert result.status == "failed"
+    assert result.issues[0].code == "invalid_input"
+    assert "cannot be verified" in result.issues[0].message
 
 
 def test_x2_flat_asset_without_kind_is_rejected(ops):

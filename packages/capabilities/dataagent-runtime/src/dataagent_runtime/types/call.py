@@ -86,6 +86,9 @@ class ResolvedContext(BaseModel):
     # ``invoke`` may let the runtime's configured host authority fill the
     # rest, but never overwrite these.
     host_fields: tuple[str, ...] = ()
+    # Per-process integrity seal written by the resolver. ``invoke`` rejects
+    # a hand-built or edited envelope; the field never leaves the process.
+    seal: str = Field(default="", exclude=True, repr=False)
 
     @property
     def call_context(self) -> CallContext:

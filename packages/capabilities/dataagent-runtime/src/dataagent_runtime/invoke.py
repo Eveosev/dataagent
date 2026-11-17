@@ -34,7 +34,9 @@ from dataagent_runtime.errors import CapabilityError, NeedsInputError
 from dataagent_runtime.policy.context import (
     ContextResolutionError,
     ResolvedContext,
+    _reseal,
     resolve_context,
+    verify_resolved,
     workspace_scope,
 )
 from dataagent_runtime.types import ContextSource
@@ -94,21 +96,47 @@ def _to_versioned_ref(value: Any) -> VersionedRef | None:
     return None
 
 
+class UnverifiableResourceError(ValueError):
+    """A declared resource field produced no verifiable ``VersionedRef``."""
+
+    def __init__(self, field: str, detail: str) -> None:
+        self.field = field
+        self.detail = detail
+        super().__init__(f"resource field {field!r} {detail}")
+
+
 def _resource_refs(spec_input: BaseModel, resource_fields: tuple[str, ...]) -> list[VersionedRef]:
+    """Extract refs, refusing a declared field that cannot be verified.
+
+    A present declared value that does not carry id/kind/revision used to be
+    skipped silently; the recheck then saw an empty list and compared no
+    resource at all (r41 X2 follow-up). An absent optional resource is left
+    absent, matching the old skip.
+    """
+
     refs: list[VersionedRef] = []
     for name in resource_fields:
         value = getattr(spec_input, name, None)
         if value is None:
+            # An absent optional resource is not a resource to check; old
+            # invoke skipped it. A *present* value must still convert.
             continue
         if isinstance(value, (list, tuple)):
-            for item in value:
+            for index, item in enumerate(value):
                 ref = _to_versioned_ref(item)
-                if ref is not None:
-                    refs.append(ref)
+                if ref is None:
+                    raise UnverifiableResourceError(
+                        name,
+                        f"item {index} does not carry an id/kind/revision reference",
+                    )
+                refs.append(ref)
         else:
             ref = _to_versioned_ref(value)
-            if ref is not None:
-                refs.append(ref)
+            if ref is None:
+                raise UnverifiableResourceError(
+                    name, "does not carry an id/kind/revision reference"
+                )
+            refs.append(ref)
     return refs
 
 
@@ -280,6 +308,23 @@ def _closure_errors(spec_input: BaseModel, resource_fields: tuple[str, ...]) -> 
     return errors
 
 
+def _legacy_host_context(rt: Any, ctx: CallContext) -> CallContext:
+    """Old ``_host_context``: stamp runtime host authority, resource path only."""
+
+    subject = getattr(rt, "host_subject_ref", None)
+    purpose = getattr(rt, "host_purpose", None)
+    if not subject and not purpose:
+        return ctx
+    updates: dict[str, str | None] = {}
+    if subject and ctx.subject_ref != subject:
+        updates["subject_ref"] = subject
+    if purpose and ctx.purpose != purpose:
+        updates["purpose"] = purpose
+    if not updates:
+        return ctx
+    return ctx.model_copy(update=updates)
+
+
 def _resolve_call_context(rt: Any, context: Any) -> ResolvedContext:
     """Resolve one trusted context for the whole call (R1, S0 X1).
 
@@ -291,11 +336,21 @@ def _resolve_call_context(rt: Any, context: Any) -> ResolvedContext:
     """
 
     if isinstance(context, ResolvedContext):
+        if not verify_resolved(context):
+            raise ContextResolutionError(
+                "ResolvedContext was not produced by resolve_context or was modified; "
+                "the caller must pass a hint, not a trusted envelope"
+            )
         resolved = context
+        # The legacy path is deliberately frozen: old ``invoke`` stamped the
+        # host authority only on the resource-recheck path, never on
+        # no-resource operations. Do not apply the new host authority here.
+        if resolved.source is ContextSource.LEGACY:
+            return resolved
         # The runtime's workspace is authoritative for scope spelling even
         # when an entry point resolved against its own cwd.
         workspace = getattr(rt, "workspace_root", None)
-        if workspace is not None and resolved.source is not ContextSource.LEGACY:
+        if workspace is not None:
             scope_ref = workspace_scope(workspace)
             if resolved.context.scope_ref != scope_ref:
                 resolved = resolved.model_copy(
@@ -364,7 +419,7 @@ def _resolve_call_context(rt: Any, context: Any) -> ResolvedContext:
             resolved = resolved.model_copy(
                 update={"meta": resolved.meta.model_copy(update={"turn": turn})}
             )
-        return resolved
+        return _reseal(resolved)
     return resolve_context(argument_context=context, runtime=rt)
 
 
@@ -450,10 +505,30 @@ def invoke(
             target=location or None,
         )
 
+    # A declared resource field must always produce a verifiable ref, even
+    # under ``mode=off``: otherwise an optional/empty/opaque value would make
+    # the recheck compare an empty resource list (r41 X2 follow-up).
+    resource_refs: list[VersionedRef] | None = None
+    if spec.resource_fields:
+        try:
+            resource_refs = _resource_refs(input_obj, spec.resource_fields)
+        except UnverifiableResourceError as exc:
+            return _failure(
+                StandardErrorCode.invalid_input,
+                f"declared resource field cannot be verified: {exc}",
+                operation=operation,
+                capability_id=spec.capability_id,
+                target=exc.field,
+            )
+
     # DA12.1 access recheck in front of any resource read (08 §4.3).
     # ``off`` disables the hook outright; ``warn`` keeps the call running with
     # a warning (development default); ``enforce`` denies before any read.
     if spec.resource_fields and config.mode != "off":
+        if resolved.source is ContextSource.LEGACY:
+            # Old invoke applied the host authority only here (resource
+            # recheck), not to no-resource operations or mode=off calls.
+            ctx = _legacy_host_context(rt, ctx)
         resolve = resolver or getattr(rt, "access_resolver", None)
         if resolve is None:
             result = _failure(
@@ -482,7 +557,10 @@ def invoke(
                 )
                 if reasons
                 else access_recheck(
-                    ctx, resolve, _resource_refs(input_obj, spec.resource_fields), config=config
+                    ctx,
+                    resolve,
+                    resource_refs or [],
+                    config=config,
                 )
             )
             if outcome.ok:

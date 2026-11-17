@@ -81,24 +81,53 @@ def _is_resource_annotation(annotation: Any) -> bool:
         args = [arg for arg in get_args(annotation) if arg is not type(None)]
         return bool(args) and all(_is_resource_annotation(arg) for arg in args)
     if isinstance(annotation, type) and issubclass(annotation, BaseModel):
-        fields = set(annotation.model_fields)
+        fields = annotation.model_fields
         if "asset" in fields:
             # A wrapper names the asset it reads (TableRef/DocumentRef/...).
-            asset = _unwrap_annotation(annotation.model_fields["asset"].annotation)
+            asset_field = fields["asset"]
+            if not asset_field.is_required():
+                return False
+            asset = _unwrap_annotation(asset_field.annotation)
             return _is_asset_ref_annotation(asset)
         # A flat asset carries the identity itself (AssetRef/FileRef); the
-        # recheck's ``_to_versioned_ref`` needs all three of id/kind/revision.
-        return {"id", "kind", "revision"} <= fields
+        # recheck's ``_to_versioned_ref`` needs all three of id/kind/revision
+        # *at call time*, so optional/None-typed identity fields are rejected
+        # here rather than silently producing no refs (r41 X2 follow-up).
+        id_field = fields.get("id")
+        kind_field = fields.get("kind")
+        revision_field = fields.get("revision")
+        return bool(
+            id_field is not None
+            and revision_field is not None
+            and kind_field is not None
+            and _is_required_text_field(id_field)
+            and _is_required_text_field(revision_field)
+            and _is_text_field(kind_field)
+        )
     return False
+
+
+def _is_text_field(field: Any) -> bool:
+    return _unwrap_annotation(field.annotation) is str
+
+
+def _is_required_text_field(field: Any) -> bool:
+    return field.is_required() and _is_text_field(field)
 
 
 def _is_asset_ref_annotation(annotation: Any) -> bool:
     if annotation is VersionedRef:
         return True
+    if not (isinstance(annotation, type) and issubclass(annotation, BaseModel)):
+        return False
+    fields = annotation.model_fields
+    id_field = fields.get("id")
+    revision_field = fields.get("revision")
     return bool(
-        isinstance(annotation, type)
-        and issubclass(annotation, BaseModel)
-        and {"id", "revision"} <= set(annotation.model_fields)
+        id_field is not None
+        and revision_field is not None
+        and _is_required_text_field(id_field)
+        and _is_required_text_field(revision_field)
     )
 
 
