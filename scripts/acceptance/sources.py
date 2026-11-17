@@ -4,11 +4,14 @@ The REST fixture requires ``Authorization: Bearer <token>``. Its token is a
 sentinel injected through the connection manifest's logical name
 (``file:rest-token``), never written to the manifest or the report. After the
 phase the temporary workspace (except ``.dataagent/secrets/``), the output
-directory and the report are scanned for the sentinel; any hit fails the phase.
+directory, Mint session logs and the report are scanned for the sentinel; any
+hit fails the phase.
 """
 
 import json
 import os
+from pathlib import Path
+import time
 
 from .common import call_workbench, loopback, remove_not_verified
 
@@ -50,13 +53,27 @@ def _read_contains(path, needles):
         return False
 
 
-def _scan_for_credentials(project, output, report):
+def _mint_log_roots(project):
+    """Where Mint keeps session logs.
+
+    Mint writes project-session logs under ``<project>/.mint/logs`` (already
+    covered by the project walk); ``MINT_HOME/logs`` is the other location.
+    """
+
+    mint_home = os.environ.get('MINT_HOME')
+    return [project / '.mint/logs',
+            (Path(mint_home).expanduser() if mint_home else Path.home() / '.mint') / 'logs']
+
+
+def _scan_for_credentials(project, output, report, *, extra_roots=(), since=0.0):
     """Fail when a sentinel appears outside ``.dataagent/secrets/`` or the report."""
 
     needles = [SENTINEL.encode(), WRONG_TOKEN.encode()]
     secrets_dir = (project / '.dataagent/secrets').resolve()
     hits = []
-    for root in (project, output):
+    roots = [(project, False), (output, False)]
+    roots.extend((root, True) for root in extra_roots)
+    for root, fresh_only in roots:
         if not root.exists():
             continue
         paths = [root] if root.is_file() else root.rglob('*')
@@ -66,6 +83,8 @@ def _scan_for_credentials(project, output, report):
             try:
                 resolved = path.resolve()
                 if resolved == secrets_dir or secrets_dir in resolved.parents:
+                    continue
+                if fresh_only and since and path.stat().st_mtime < since - 2:
                     continue
             except OSError:
                 continue
@@ -204,6 +223,8 @@ def verify_sources(project, postgres_locator, postgres_user):
 
 
 def apply(report, project, args, context):
+    started = time.time()
     report['sources'] = verify_sources(project, args.postgres_locator, args.postgres_user)
-    _scan_for_credentials(project, args.output, report)
+    _scan_for_credentials(project, args.output, report,
+                          extra_roots=_mint_log_roots(project), since=started)
     remove_not_verified(report, 'file processing')

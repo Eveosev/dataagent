@@ -13,6 +13,14 @@ from .files import probe_file,_safe_path
 
 
 _SECRET_OPTION_KEYS = {'token', 'password', 'secret', 'api_key', 'apikey', 'authorization'}
+_SECRET_FRAGMENTS = ('token', 'secret', 'password', 'apikey', 'api_key',
+                     'authorization', 'credential', 'private_key', 'cookie')
+
+
+def _is_secret_option(name):
+    normalized = str(name).strip().lower().replace('-', '_')
+    return (normalized in _SECRET_OPTION_KEYS
+            or any(fragment in normalized for fragment in _SECRET_FRAGMENTS))
 
 
 def _credentials(selection, workspace, request):
@@ -23,7 +31,7 @@ def _credentials(selection, workspace, request):
     refs = request.get('credential_refs') or {}
     if not isinstance(options, dict) or not isinstance(refs, dict):
         raise ValueError('unsupported credential configuration')
-    if any(str(name).lower() in _SECRET_OPTION_KEYS for name in options):
+    if any(_is_secret_option(name) for name in options):
         raise ValueError('plaintext credentials are not accepted; pass logical references')
     values = dict(options)
     if selection.kind not in {'postgres', 'rest'}:
