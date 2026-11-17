@@ -239,7 +239,7 @@ python3 -I docs/research/dataagent-2026-11-03/09-benchmark/tools/report.py
 ```
 
 - 抓取器幂等：`FETCH.json` 标记 `ok` 的源默认跳过；`--force` 重抓。
-- 构建器幂等：先清空本任务 `cases/`、`expected/`、`fixtures/`，再按固定哈希切分重写；同一份原始数据两次构建结果一致。`manifest.build.content_digest` 记录 cases、expected、fixtures 与 sources 的内容摘要；摘要不变时保持原 `revision` 和 `updated`，内容变化才升版本。
+- 构建器幂等：先清空本任务 `cases/`、`expected/`、`fixtures/`，再按固定哈希切分重写；同一份原始数据两次构建结果一致。`manifest.build.content_digest` 记录 cases、expected、fixtures 与来源内容标识（source id + 内容 digest，不计 `fetched_at` 等抓取元数据）的摘要，摘要方案记在 `build.content_digest_version`；摘要不变时保持原 `revision` 和 `updated`，内容变化才升版本。
 - `gated` 源（DocILE、BEAVER、Spider2 全量）需人工接受条款并配置 HF token，`fetch.py` 会跳过并在 `fetch-report.json` 里写 `remedy`；这类缺口要如实留在 manifest，不得用替身数据充数。
 
 ## 10. 维护

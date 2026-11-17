@@ -82,7 +82,7 @@
 ## 数据构建摘要
 
 - 构建：`tools/build_cases.py --task B16`（转换器 `tools/converters/B16.py`）；当前版本以 `dataset/manifest.json` 为准
-- 版本：`build_cases.py` 对 cases、expected、fixtures 与 sources 算内容摘要；摘要不变时重复构建不升 `revision`
+- 版本：`build_cases.py` 对 cases、expected、fixtures 与来源内容标识（source id + 内容 digest，不计 `fetched_at` 等抓取元数据）算内容摘要；摘要不变时重复构建不升 `revision`
 - 原始数据：`leipzig-dblp-acm`、`leipzig-amazon-google`、`leipzig-abt-buy`，落在 `workspace/benchmark-data/B16/`
 - 当前用例：development 120 / regression 60 / unseen 60（共 240）
 - 金标：数据集自带 `perfectMapping.csv`；非金标候选按排他性视为非匹配
@@ -109,5 +109,7 @@
 | `x938-2026-11-17` | empty | 0.000 / null | 0.000 / null | 0.000 / null | v0.10 |
 | `x544-2026-11-17` | oracle | 1.000 / 0.000 | 1.000 / 0.000 | 1.000 / 0.000 | v0.11 |
 | `x045-2026-11-17` | empty | 0.000 / null | 0.000 / null | 0.000 / null | v0.11 |
+
+- 构建版本测试：`tests/test_build_digest.py` 覆盖 fetched_at 变化不升 revision、用例变化升一版。
 
 FMR 的 `null` 表示该切分没有预测合并，pooled 分母为 0；不是 missing，也不是 0 分。本轮运行产物在 `history/runs/`，按 `.gitignore` 排除；验证结论以上表为准。

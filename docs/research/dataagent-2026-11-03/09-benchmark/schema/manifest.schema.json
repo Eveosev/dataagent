@@ -212,6 +212,10 @@
         "content_digest": {
           "type": "string",
           "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "content_digest_version": {
+          "type": "integer",
+          "minimum": 1
         }
       }
     }

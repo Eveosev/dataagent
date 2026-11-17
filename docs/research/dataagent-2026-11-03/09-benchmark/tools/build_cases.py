@@ -8,7 +8,7 @@
 
 每个任务一个转换器：tools/converters/<TASK>.py，暴露 `build(ctx)`。
 转换器只声明「用例长什么样」，切分、落盘、计数、manifest 回填由本脚本统一做。
-manifest.build.content_digest 记录 cases、expected、fixtures 与 sources 的内容摘要；
+manifest.build.content_digest 记录 cases、expected、fixtures 与来源内容标识（source id + digest）的摘要；
 摘要不变时重复构建保持原 revision / updated，内容变化才升版本。
 
 依赖：文本类源用标准库；parquet 源需要 workspace/benchmark-data/.pydeps（fetch.py 说明里给安装命令）。
@@ -32,7 +32,8 @@ DEPS = RAW / ".pydeps"
 SPLITS = ("development", "regression", "unseen_acceptance")
 RATIOS = {"development": 60, "regression": 20, "unseen_acceptance": 20}
 DEFAULT_CAPS = {"development": 120, "regression": 60, "unseen_acceptance": 60}
-DIGEST_PREFIX = "benchmark-content-v1"
+DIGEST_VERSION = 2
+DIGEST_PREFIX = f"benchmark-content-v{DIGEST_VERSION}"
 
 
 def _update_tree_digest(digest, label: str, root: Path) -> None:
@@ -55,8 +56,13 @@ def _update_tree_digest(digest, label: str, root: Path) -> None:
         digest.update(data)
 
 
+def _source_content_id(source: dict) -> dict:
+    """来源的稳定内容标识：只保留 id 与内容 digest，排除 fetched_at 等抓取元数据。"""
+    return {"name": source.get("name"), "digest": source.get("digest")}
+
+
 def content_digest(task_dir: Path, sources: list[dict]) -> str:
-    """cases、expected、fixtures 与 sources 的稳定内容摘要。"""
+    """cases、expected、fixtures 与来源内容标识的稳定摘要。"""
     digest = hashlib.sha256()
     digest.update(DIGEST_PREFIX.encode("ascii") + b"\0")
     dataset = task_dir / "dataset"
@@ -64,12 +70,12 @@ def content_digest(task_dir: Path, sources: list[dict]) -> str:
     _update_tree_digest(digest, "expected", dataset / "expected")
     _update_tree_digest(digest, "fixtures", dataset / "fixtures")
     canonical = json.dumps(
-        sorted(sources, key=lambda item: item.get("name", "")),
+        [_source_content_id(source) for source in sorted(sources, key=lambda item: item.get("name", ""))],
         ensure_ascii=False,
         sort_keys=True,
         separators=(",", ":"),
     ).encode("utf-8")
-    digest.update(b"sources\0")
+    digest.update(b"sources-content\0")
     digest.update(str(len(canonical)).encode("ascii") + b"\0")
     digest.update(canonical)
     return "sha256:" + digest.hexdigest()
@@ -228,11 +234,13 @@ class Context:
         digest = content_digest(self.task_dir, self.sources)
         previous_build = manifest.get("build") or {}
         previous_digest = previous_build.get("content_digest") or self.previous_digest
+        previous_digest_version = previous_build.get("content_digest_version")
         previous_version = _manifest_version(manifest)
         today = date.today().isoformat()
+        migrated = previous_digest is None or previous_digest_version != DIGEST_VERSION
 
-        if previous_digest is None:
-            # 首次引入摘要：内容未变，沿用原 revision，避免迁移本身制造新版本。
+        if migrated:
+            # 首次引入摘要或摘要方案迁移：内容未变，沿用原 revision，避免迁移本身制造新版本。
             build_no = previous_version
             revision = manifest.get("revision") or f"v0.{build_no}"
             updated = manifest.get("updated") or today
@@ -271,13 +279,14 @@ class Context:
         }
         build.update(extra or {})
         build["content_digest"] = digest
+        build["content_digest_version"] = DIGEST_VERSION
         manifest["build"] = build
         manifest["notes"] = "由 build_cases.py 从 workspace/benchmark-data 构建；原始数据不入库"
         mpath.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
         print(
             f"{self.task_id}: {stats['selected']} cases  building={build_no}  changed={changed}  "
-            f"digest={digest[:19]}  sources={len(self.sources)}"
+            f"migrated={migrated}  digest={digest[:19]}  sources={len(self.sources)}"
         )
 
 
