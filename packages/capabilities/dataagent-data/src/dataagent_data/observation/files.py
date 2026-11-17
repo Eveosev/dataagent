@@ -118,8 +118,14 @@ def probe_file(selection, ctx, *, workspace, budget_rows=200, engine=None):
                             # the caller pinned the header at an absolute sheet
                             # row; rows above it are layout, not a multi-row header
                             block=block[hint-origin_row:];origin_row=hint
+                        detected=header_row_count(block,sheet.merged_ranges,origin_row,origin_col)
+                        if detected>=len(block):
+                            # header-only region (a lone title row, a header-only
+                            # sheet, or header_row pinned at the region's last
+                            # row): no data rows, skip instead of erroring
+                            continue
                         recovered=recover_header_block(block,
-                            header_rows=header_row_count(block,sheet.merged_ranges,origin_row,origin_col),
+                            header_rows=detected,
                             merged_ranges=sheet.merged_ranges,origin_row=origin_row,origin_col=origin_col)
                         if not recovered.columns:continue
                         for values,source_row in zip(recovered.rows,recovered.source_rows):

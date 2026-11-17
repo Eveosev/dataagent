@@ -94,6 +94,26 @@ def test_header_row_option_selects_the_header(workspace,ctx):
     assert profile.anchors['0.amount'][0].selector.range=='B3'
 
 
+def test_header_only_regions_are_skipped_not_an_error(workspace,ctx):
+    # A header-only sheet and a lone title row each form a 1-row region with
+    # no data rows; both must be skipped instead of raising CapabilityError.
+    build_xlsx(workspace/'headers.xlsx',{'S':[['id','amount']]})
+    only_headers=probe_file(selection('headers.xlsx'),ctx,workspace=workspace)
+    assert only_headers.coverage=='full' and only_headers.completed_partitions==[1]
+    assert only_headers.records==[] and only_headers.metadata['total_rows']==0
+    build_xlsx(workspace/'title.xlsx',{'S':[['id','amount'],[],[],['2026 报销明细']]})
+    with_title=probe_file(selection('title.xlsx'),ctx,workspace=workspace)
+    assert with_title.coverage=='full' and with_title.gaps==[]
+    assert with_title.records==[] and with_title.metadata['total_rows']==0
+
+
+def test_header_row_pinned_at_last_row_yields_no_records(workspace,ctx):
+    build_xlsx(workspace/'in.xlsx',{'S':[['skip','col'],['id','amount']]})
+    chosen=selection('in.xlsx').model_copy(update={'options':{'header_row':2}})
+    profile=probe_file(chosen,ctx,workspace=workspace)
+    assert profile.coverage=='full' and profile.records==[]
+
+
 def test_path_escape_and_content_mismatch_are_rejected(workspace,ctx,tmp_path):
     (tmp_path/'outside.csv').write_text('id\nx\n')
     (workspace/'link.csv').symlink_to(tmp_path/'outside.csv')

@@ -26,22 +26,6 @@ P1_FILES = INTAKE/'p1-files'
 SAMPLE_ORDER = ['invoices.csv', 'invoices.tsv', 'invoices-regions.xlsx', 'invoices.json',
                 'invoices.jsonl', 'invoice-lines.pdf', 'mixed-pages.pdf', 'scan.pdf']
 
-# Diffs that conflict with an assumption the expectation files document
-# (p1-files/README.md 需要评审确认的假设). The resolution is outside this
-# task's file scope and is left for review; the comparator stays faithful to
-# the expectations as written.
-CONFLICT_NOTES = {
-    'invoices-regions.xlsx': (
-        '冲突：README 假设 4 / regions 判断依据 1 —— 数据层探查用单一 header_row 整表平铺'
-        '（dataagent-data observation/files.py），子表头行与表区 2 表头成为记录；'
-        '修复需改 observation/files.py（接入 ingestion 的区域检测），超出本卡文件范围'),
-    'mixed-pages.pdf': (
-        '冲突：README 假设 1、2 / mixed 判断依据 3、4 —— RapidOCR 对该退化页的块置信度'
-        '高于 0.6 阈值但金额读错（4580→4560），intake.low_ocr_confidence 不会触发；'
-        '按 README 假设 2 的处置应由样本作者加重退化参数重新生成样本（样本须与独立'
-        '原件逐字节一致，实现方不能改），阈值改动在 documents.py，也超出本卡范围'),
-}
-
 
 def installed_cli(project):
     cli, = (project/'.mint/packages/dataagent').glob('cli@*/bin/dataagent')
@@ -599,12 +583,6 @@ def apply(report, project, args, context):
             json.dumps(report, ensure_ascii=False, indent=2))
         lines = [f'{item["sample"]} | {item["check"]} | expected {item["expected"]!r} '
                  f'| actual {item["actual"]!r}' for item in diffs.items]
-        notes = [f'[{sample}] {CONFLICT_NOTES[sample]}' for sample in
-                 dict.fromkeys(item['sample'] for item in diffs.items
-                               if item['sample'] in CONFLICT_NOTES)]
         raise RuntimeError(f'p1-files 比对失败，{len(lines)} 处差异（样本 | 检查项 | '
-                           '期望 | 实际）：\n' + '\n'.join(lines)
-                           + ('\n与期望文件假设的冲突（详见 p1-files/README.md，'
-                              '修复超出本卡文件范围，留审核方裁定）：\n' + '\n'.join(notes)
-                              if notes else ''))
+                           '期望 | 实际）：\n' + '\n'.join(lines))
     remove_not_verified(report, 'file processing')
