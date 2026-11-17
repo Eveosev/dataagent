@@ -1,0 +1,941 @@
+"""``dataagent run --case``: the 09-benchmark CLI adapter entry point.
+
+Contract (``$BENCH/harness/adapters/dataagent-cli.py:29-33``)::
+
+    dataagent run --case <case.json> --out <run_dir>/artifacts/<case_id> \
+                  --config <cfg.json>
+
+The command reads one normalized case, calls the capability that the case
+belongs to, and always writes ``<out>/result.json``::
+
+    {"status": "ok" | "failed",
+     "output": {...} | null,
+     "error": null | "...",
+     "usage": {"tokens": 0, "cost_usd": 0.0},
+     "case_id": "...", "task_id": "..."}
+
+``status=ok`` means the case ran; ``output`` may still be a partial or
+``needs_input`` capability result (for example field extraction without a
+model proposal). ``status=failed`` always carries ``error`` and the process
+exits 1, so the harness records a missing case instead of a fake empty
+success (``harness/README.md`` §2).
+
+B02 calls the OCR capability; B03 calls OCR and then the field-extraction
+capability. OCR is always the locally pinned engine under ``$OCR_ROOT`` (or
+``$DATAAGENT_OCR_ROOT``); a remote pin is refused because the egress gate
+(T15) does not cover the CLI path yet.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import shutil
+import sys
+import traceback
+from pathlib import Path
+from typing import Any, Callable, Iterable, Sequence
+
+TASKS = ("B02", "B03")
+
+# Images the data layer's OCR atom can decode with Pillow.
+IMAGE_SUFFIXES = frozenset({".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff", ".webp"})
+
+# Which case input is the document to parse.
+DOCUMENT_KINDS = frozenset({"file", "image", "pdf"})
+
+
+class BenchError(RuntimeError):
+    """A case could not be executed; the CLI still writes result.json."""
+
+
+def _json_default(value: Any) -> Any:
+    """Keep result.json parseable when a capability returns a rich value."""
+
+    for method in ("model_dump", "to_plain"):
+        dump = getattr(value, method, None)
+        if callable(dump):
+            try:
+                return dump(mode="json")
+            except TypeError:
+                return dump()
+    return str(value)
+
+
+def write_result(
+    out_dir: str | os.PathLike[str],
+    *,
+    case_id: str | None,
+    task_id: str | None,
+    status: str,
+    output: Any = None,
+    error: str | None = None,
+    usage: dict[str, Any] | None = None,
+    capability_status: str | None = None,
+    issues: Sequence[dict[str, Any]] | None = None,
+) -> Path:
+    """Write ``<out>/result.json`` atomically and return its path."""
+
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "status": status,
+        "output": output,
+        "error": error,
+        "usage": usage or {"tokens": 0, "cost_usd": 0.0},
+        "case_id": case_id,
+        "task_id": task_id,
+        "capability_status": capability_status,
+        "issues": list(issues or []),
+    }
+    path = out / "result.json"
+    tmp = out / "result.json.tmp"
+    tmp.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2, default=_json_default) + "\n",
+        encoding="utf-8",
+    )
+    tmp.replace(path)
+    return path
+
+
+def load_case(case_path: str | os.PathLike[str]) -> dict[str, Any]:
+    """Read a normalized case and validate the fields the adapter relies on."""
+
+    path = Path(case_path)
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise BenchError(f"cannot read case {path}: {exc}") from exc
+    try:
+        case = json.loads(text)
+    except json.JSONDecodeError as exc:
+        raise BenchError(f"case is not valid JSON: {path}: {exc}") from exc
+    if not isinstance(case, dict):
+        raise BenchError(f"case must be a JSON object: {path}")
+    if not str(case.get("case_id") or "").strip():
+        raise BenchError(f"case has no case_id: {path}")
+    return case
+
+
+def find_bench_root(case_path: str | os.PathLike[str]) -> Path:
+    """Return ``$BENCH`` by walking up from ``tasks/<task>/dataset/cases/...``."""
+
+    path = Path(case_path).resolve()
+    for parent in path.parents:
+        if (parent / "datasets.lock.json").is_file() and (parent / "harness").is_dir():
+            return parent
+    raise BenchError(f"cannot locate the 09-benchmark root from case path: {path}")
+
+
+def repo_root_for(bench_root: str | os.PathLike[str]) -> Path:
+    """Return the DataAgent checkout that owns ``$BENCH``."""
+
+    root = Path(bench_root).resolve()
+    for parent in root.parents:
+        if (parent / ".git").exists():
+            return parent
+    if len(root.parents) > 3:
+        return root.parents[3]
+    return root
+
+
+def dataset_dir_for(case_path: str | os.PathLike[str]) -> Path:
+    """``.../tasks/<task>/dataset`` for a case file."""
+
+    path = Path(case_path).resolve()
+    for parent in path.parents:
+        if parent.name == "dataset":
+            return parent
+    raise BenchError(f"cannot locate the dataset directory from case path: {path}")
+
+
+def resolve_raw_root(
+    bench_root: str | os.PathLike[str],
+    repo_root: str | os.PathLike[str],
+    environ: dict[str, str] | None = None,
+) -> Path:
+    """Resolve ``$BENCH/datasets.lock.json``'s ``raw_root`` (or its override).
+
+    ``DATAAGENT_BENCH_RAW_ROOT`` wins when set; it may be absolute or relative
+    to the repository root. No machine-specific path is hard-coded.
+    """
+
+    env = os.environ if environ is None else environ
+    bench = Path(bench_root).resolve()
+    repo = Path(repo_root).resolve()
+    override = (env.get("DATAAGENT_BENCH_RAW_ROOT") or "").strip()
+    if override:
+        path = Path(override).expanduser()
+        return (path if path.is_absolute() else repo / path).resolve()
+    lock_path = bench / "datasets.lock.json"
+    raw = ""
+    if lock_path.is_file():
+        try:
+            lock = json.loads(lock_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            raise BenchError(f"datasets.lock.json is not valid JSON: {exc}") from exc
+        raw = str(lock.get("raw_root") or "").strip()
+    return (repo / (raw or "workspace/benchmark-data")).resolve()
+
+
+def _relative_parts(value: str) -> tuple[str, ...]:
+    parts = Path(value).parts
+    if not parts or any(part in {"..", ""} for part in parts):
+        raise BenchError(f"input reference escapes its root: {value}")
+    return tuple(parts)
+
+
+def resolve_ref(
+    ref: str,
+    *,
+    task_id: str,
+    dataset_dir: str | os.PathLike[str],
+    raw_root: str | os.PathLike[str],
+) -> Path:
+    """Map a case input reference to a file on this machine."""
+
+    dataset = Path(dataset_dir)
+    raw = Path(raw_root)
+    if ref.startswith("bench://"):
+        source, _, rest = ref[len("bench://") :].partition("/")
+        if not source or not rest:
+            raise BenchError(f"malformed bench:// reference: {ref}")
+        target = raw.joinpath(task_id, source, *_relative_parts(rest))
+    elif ref.startswith("fixtures/"):
+        target = dataset.joinpath(*_relative_parts(ref))
+    else:
+        target = dataset.joinpath(*_relative_parts(ref))
+    if not target.is_file():
+        hint = ""
+        if ref.startswith("bench://"):
+            hint = (
+                " (raw benchmark data is not staged; set DATAAGENT_BENCH_RAW_ROOT "
+                "or run tools/fetch.py for this task)"
+            )
+        raise BenchError(f"input not found: {ref} -> {target}{hint}")
+    return target
+
+
+def resolve_inputs(
+    case: dict[str, Any],
+    *,
+    task_id: str,
+    dataset_dir: str | os.PathLike[str],
+    raw_root: str | os.PathLike[str],
+) -> list[tuple[dict[str, Any], Path]]:
+    """Resolve every declared input once, preserving declaration order."""
+
+    resolved: list[tuple[dict[str, Any], Path]] = []
+    for item in case.get("inputs") or []:
+        if not isinstance(item, dict):
+            continue
+        ref = str(item.get("ref") or "").strip()
+        if not ref:
+            continue
+        resolved.append(
+            (
+                item,
+                resolve_ref(
+                    ref,
+                    task_id=task_id,
+                    dataset_dir=dataset_dir,
+                    raw_root=raw_root,
+                ),
+            )
+        )
+    if not resolved:
+        raise BenchError(f"case {case.get('case_id')} declares no inputs")
+    return resolved
+
+
+def _status_value(status: Any) -> str:
+    return str(getattr(status, "value", status))
+
+
+def _issue_text(issues: Iterable[Any]) -> str:
+    parts = []
+    for issue in issues or []:
+        code = getattr(issue, "code", "")
+        message = getattr(issue, "message", "")
+        parts.append(f"{code}: {message}" if code else str(message))
+    return "; ".join(part for part in parts if part)
+
+
+def _invoke(operation: str, payload: dict[str, Any], ctx: Any, runtime: Any) -> Any:
+    from dataagent_data.invoke import invoke
+
+    return invoke(operation, payload, ctx, runtime=runtime)
+
+
+def _require_result(result: Any, operation: str) -> Any:
+    status = _status_value(getattr(result, "status", ""))
+    if status == "failed":
+        raise BenchError(
+            f"{operation} failed: {_issue_text(getattr(result, 'issues', [])) or 'unknown error'}"
+        )
+    if getattr(result, "data", None) is None:
+        raise BenchError(f"{operation} returned no data (status={status})")
+    return result
+
+
+def _load_content(runtime: Any, document: Any) -> Any:
+    from dataagent_data.preparation.documents import load_document_content
+
+    return load_document_content(runtime, document)
+
+
+def _make_runtime(workspace: Path, data_root: Path, ocr_engine: Any) -> Any:
+    from dataagent_data.runtime import create
+
+    return create(workspace_root=workspace, data_root=data_root, ocr_engine=ocr_engine)
+
+
+def _make_context(runtime: Any, workspace: Path) -> Any:
+    from dataagent_runtime.policy.context import resolve_context
+
+    return resolve_context(runtime=runtime, workspace_root=workspace).context
+
+
+def _ocr_source_dir(
+    *,
+    repo_root: Path,
+    bench_root: Path,
+    environ: dict[str, str] | None = None,
+) -> Path | None:
+    """The verified OCR directory (the one holding ``active.json``)."""
+
+    env = os.environ if environ is None else environ
+    explicit = (env.get("OCR_ROOT") or env.get("DATAAGENT_OCR_ROOT") or "").strip()
+    candidates: list[Path] = []
+    if explicit:
+        directory = Path(explicit).expanduser()
+        if directory.name != "ocr":
+            directory = directory / "ocr"
+        if not (directory / "active.json").is_file():
+            raise BenchError(
+                "OCR_ROOT is not a verified OCR directory (active.json missing): "
+                f"{directory}"
+            )
+        return directory.resolve()
+    candidates.extend(
+        [
+            Path(os.path.expanduser("~")) / ".dataagent" / "ocr",
+            repo_root / ".dataagent" / "ocr",
+            bench_root / ".dataagent" / "ocr",
+        ]
+    )
+    for candidate in candidates:
+        directory = candidate
+        if directory.name != "ocr":
+            directory = directory / "ocr"
+        if (directory / "active.json").is_file():
+            return directory.resolve()
+    return None
+
+
+def _mirror_ocr_root(source: Path, scratch: Path) -> Path:
+    """Give the pinned engine a writable quality/event directory.
+
+    The verified OCR directory is an input: copying its pin and symlinking the
+    immutable profile/engine trees keeps ``usage.jsonl`` writes out of it while
+    the engine still resolves its worker through the pin's own paths.
+    """
+
+    scratch.mkdir(parents=True, exist_ok=True)
+    data_root = scratch / "ocr-data"
+    dest = data_root / "ocr"
+    if dest.exists():
+        shutil.rmtree(dest)
+    dest.mkdir(parents=True)
+    shutil.copy2(source / "active.json", dest / "active.json")
+    for name in ("profiles", "verifications", "engines"):
+        origin = source / name
+        if origin.is_dir():
+            os.symlink(origin.resolve(), dest / name, target_is_directory=True)
+    (dest / "quality").mkdir()
+    (dest / "events.jsonl").touch()
+    return data_root
+
+
+def _load_local_engine(
+    *,
+    repo_root: Path,
+    bench_root: Path,
+    scratch: Path,
+    environ: dict[str, str] | None = None,
+) -> Any:
+    source = _ocr_source_dir(repo_root=repo_root, bench_root=bench_root, environ=environ)
+    if source is None:
+        raise BenchError(
+            "no local OCR engine: set OCR_ROOT to a verified OCR directory "
+            "(dataagent setup --ocr-root <dir>)"
+        )
+    try:
+        from dataagent_ocr.adapter import load_active_engine
+    except Exception as exc:  # noqa: BLE001 - optional component, must be explicit
+        raise BenchError(f"OCR component is not installed: {type(exc).__name__}: {exc}") from exc
+    data_root = _mirror_ocr_root(source, scratch)
+    try:
+        engine = load_active_engine(data_root)
+    except Exception as exc:  # noqa: BLE001 - pin/profile/engine problems
+        raise BenchError(f"local OCR pin under {source} is not usable: {exc}") from exc
+    if getattr(engine, "remote", False):
+        engine.close()
+        raise BenchError(
+            f"OCR pin under {source} is remote; the benchmark entry needs the "
+            "local engine (the egress gate does not cover the CLI path)"
+        )
+    return engine
+
+
+def _stage_documents(
+    inputs: Sequence[tuple[dict[str, Any], Path]],
+    workspace: Path,
+) -> list[tuple[dict[str, Any], Path, str]]:
+    """Copy OCR inputs into the runtime workspace (paths must be relative)."""
+
+    staged: list[tuple[dict[str, Any], Path, str]] = []
+    for index, (item, path) in enumerate(inputs):
+        if str(item.get("kind") or "") not in DOCUMENT_KINDS:
+            continue
+        suffix = path.suffix.lower()
+        if suffix != ".pdf" and suffix not in IMAGE_SUFFIXES:
+            raise BenchError(f"unsupported document input: {path.name}")
+        rel = f"input-{index}{suffix}"
+        shutil.copyfile(path, workspace / rel)
+        staged.append((item, path, rel))
+    return staged
+
+
+def _ocr_document(
+    *,
+    runtime: Any,
+    ctx: Any,
+    workspace: Path,
+    path: Path,
+    rel: str,
+) -> Any:
+    from dataagent_data import helpers
+
+    file_ref = helpers.file_ref(runtime, rel, scope_ref=ctx.scope_ref)
+    operation = "ocr_pdf" if path.suffix.lower() == ".pdf" else "ocr_image"
+    result = _invoke(operation, {"file_ref": file_ref.model_dump(mode="json")}, ctx, runtime)
+    _require_result(result, operation)
+    return result.data.document
+
+
+def _b02_output(contents: Sequence[Any]) -> dict[str, Any]:
+    """Map OCR document content to the harness output shape.
+
+    ``text_ned`` reads ``text``; ``reading_order_accuracy`` reads ``blocks``
+    (``order`` + ``text``); ``table_teds`` reads ``tables``. OCR does not infer
+    table structure, so ``tables`` stays empty instead of being invented.
+    """
+
+    blocks: list[dict[str, Any]] = []
+    texts: list[str] = []
+    order = 0
+    for content in contents:
+        text = getattr(content, "full_text", "") or ""
+        if text:
+            texts.append(text)
+        for page in getattr(content, "pages", []) or []:
+            for block in getattr(page, "blocks", []) or []:
+                order += 1
+                item: dict[str, Any] = {
+                    "order": order,
+                    "text": getattr(block, "text", ""),
+                    "page": getattr(page, "page", 1),
+                }
+                bbox = getattr(block, "bbox", None)
+                if bbox:
+                    item["bbox"] = list(bbox)
+                blocks.append(item)
+    return {"text": "\n".join(texts), "blocks": blocks, "tables": []}
+
+
+def _schema_type(node: Any) -> str:
+    if not isinstance(node, dict):
+        return "string"
+    value = node.get("type")
+    if isinstance(value, str) and value != "null":
+        return value
+    if isinstance(value, list):
+        for item in value:
+            if isinstance(item, str) and item != "null":
+                return item
+    for key in ("anyOf", "oneOf", "allOf"):
+        items = node.get(key)
+        if isinstance(items, list):
+            for item in items:
+                picked = _schema_type(item)
+                if picked != "null":
+                    return picked
+    return "string"
+
+
+def _resolve_schema_ref(node: Any, root: dict[str, Any]) -> Any:
+    if not isinstance(node, dict):
+        return node
+    ref = node.get("$ref")
+    if not isinstance(ref, str) or not ref.startswith("#/"):
+        return node
+    current: Any = root
+    for token in ref[2:].split("/"):
+        token = token.replace("~1", "/").replace("~0", "~")
+        if not isinstance(current, dict) or token not in current:
+            return node
+        current = current[token]
+    return current
+
+
+def _fields_from_schema(schema: dict[str, Any]) -> list[tuple[str, str, str, str]]:
+    """Flatten a JSON Schema into ``(field_id, name, path, value_type)``."""
+
+    out: list[tuple[str, str, str, str]] = []
+    seen: set[str] = set()
+
+    def add(path: str, value_type: str) -> None:
+        if len(out) >= 200 or path in seen:
+            return
+        seen.add(path)
+        out.append((path, path.rsplit(".", 1)[-1], path, value_type))
+
+    def walk(node: Any, prefix: str) -> None:
+        node = _resolve_schema_ref(node, schema)
+        if not isinstance(node, dict):
+            return
+        properties = node.get("properties")
+        if isinstance(properties, dict):
+            for name, child in properties.items():
+                child = _resolve_schema_ref(child, schema)
+                path = f"{prefix}.{name}" if prefix else str(name)
+                if isinstance(child, dict) and isinstance(child.get("properties"), dict):
+                    walk(child, path)
+                else:
+                    add(path, _schema_type(child))
+            return
+        if prefix:
+            add(prefix, _schema_type(node))
+
+    walk(schema, "")
+    return out
+
+
+def _fields_from_rules(text: str) -> list[tuple[str, str, str, str]]:
+    """Extract value paths from an ExtractBench-style field-rules fixture."""
+
+    start = text.find("{")
+    if start < 0:
+        return []
+    try:
+        rules = json.loads(text[start:])
+    except json.JSONDecodeError:
+        return []
+    if not isinstance(rules, dict):
+        return []
+    out: list[tuple[str, str, str, str]] = []
+    seen: set[str] = set()
+    for key, spec in rules.items():
+        if not isinstance(key, str) or not key or key in seen:
+            continue
+        value_type = "string"
+        if isinstance(spec, dict):
+            comparator = spec.get("comparator")
+            if isinstance(comparator, dict):
+                # A container node (e.g. ``line_items``), not a value path.
+                continue
+            if comparator in {"number", "amount", "money", "percent"}:
+                value_type = "number"
+            elif comparator is True:
+                value_type = "boolean"
+        seen.add(key)
+        out.append((key, key.rsplit(".", 1)[-1], key, value_type))
+        if len(out) >= 200:
+            break
+    return out
+
+
+_IDENTIFIER = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
+
+
+def _fields_from_instruction(text: str) -> list[tuple[str, str, str, str]]:
+    """Read the ``- <object>：<field names>`` structure of an instruction."""
+
+    out: list[tuple[str, str, str, str]] = []
+    seen: set[str] = set()
+    for line in text.splitlines():
+        match = re.match(r"\s*[-*]\s*([A-Za-z_][A-Za-z0-9_]*)\s*[：:]\s*(.*)", line)
+        if not match:
+            continue
+        parent, rest = match.group(1), match.group(2)
+        names: list[str] = []
+        for group in re.findall(r"[（(]([^）)]*)[）)]", rest):
+            names.extend(_IDENTIFIER.findall(group))
+        if not names:
+            names = _IDENTIFIER.findall(rest)
+        names = [
+            name
+            for name in dict.fromkeys(names)
+            if name.lower() not in {"and", "or", "the", "etc"}
+        ]
+        if not names:
+            names = [parent]
+        for name in names:
+            if len(out) >= 200:
+                break
+            path = parent if name == parent else f"{parent}.{name}"
+            if path in seen:
+                continue
+            seen.add(path)
+            out.append((path, name, path, "string"))
+    return out
+
+
+def _fields_for_case(
+    inputs: Sequence[tuple[dict[str, Any], Path]],
+) -> list[Any]:
+    """Build the extraction field list from schema/rules/instruction inputs."""
+
+    from dataagent_contracts.core import FieldSpec
+
+    specs: list[tuple[str, str, str, str]] = []
+    for wanted in ("rules", "schema", "instruction"):
+        for item, path in inputs:
+            if str(item.get("kind") or "") != wanted:
+                continue
+            try:
+                text = path.read_text(encoding="utf-8")
+            except OSError as exc:
+                raise BenchError(f"cannot read {wanted} input {path}: {exc}") from exc
+            if wanted == "schema":
+                try:
+                    schema = json.loads(text)
+                except json.JSONDecodeError:
+                    continue
+                specs.extend(_fields_from_schema(schema) if isinstance(schema, dict) else [])
+            elif wanted == "rules":
+                specs.extend(_fields_from_rules(text))
+            else:
+                specs.extend(_fields_from_instruction(text))
+            if specs:
+                break
+        if specs:
+            break
+    if not specs:
+        # Keep the capability call honest: ask for one generic value rather
+        # than inventing a field table. With no proposal it returns
+        # needs_input and the output records why there are no values.
+        specs = [("content", "content", "content", "string")]
+    fields = []
+    seen: set[str] = set()
+    for field_id, name, path, value_type in specs:
+        if field_id in seen:
+            continue
+        seen.add(field_id)
+        fields.append(
+            FieldSpec(
+                field_id=field_id,
+                name=name or field_id,
+                path=path or field_id,
+                value_type=value_type or "string",
+                nullable=True,
+            )
+        )
+    return fields
+
+
+def _path_parts(path: str) -> list[str | int]:
+    parts: list[str | int] = []
+    for chunk in str(path).split("."):
+        if not chunk:
+            continue
+        match = re.fullmatch(r"([^\[]+)((?:\[\d+\])*)", chunk)
+        if not match:
+            parts.append(chunk)
+            continue
+        parts.append(match.group(1))
+        for index in re.findall(r"\[(\d+)\]", match.group(2)):
+            parts.append(int(index))
+    return parts
+
+
+def _set_path(root: dict[str, Any], path: str, value: Any) -> None:
+    """Set a dotted/indexed path such as ``line_items[0].description``."""
+
+    parts = _path_parts(path)
+    if not parts or not isinstance(parts[0], str):
+        return
+    current: Any = root
+    for index, part in enumerate(parts[:-1]):
+        following = parts[index + 1]
+        if isinstance(part, int):
+            if not isinstance(current, list):
+                return
+            while len(current) <= part:
+                current.append(None)
+            if current[part] is None:
+                current[part] = [] if isinstance(following, int) else {}
+            current = current[part]
+        else:
+            if not isinstance(current, dict):
+                return
+            if current.get(part) is None:
+                current[part] = [] if isinstance(following, int) else {}
+            current = current[part]
+    last = parts[-1]
+    if isinstance(last, int):
+        if not isinstance(current, list):
+            return
+        while len(current) <= last:
+            current.append(None)
+        current[last] = value
+    elif isinstance(current, dict):
+        current[last] = value
+
+
+def _field_value(field_value: Any) -> Any:
+    status = _status_value(getattr(field_value, "status", ""))
+    if status in {"extracted", "low_confidence"}:
+        return getattr(field_value, "value", None)
+    return None
+
+
+def _evidence(field_value: Any, content: Any) -> tuple[int | None, str | None]:
+    evidence = list(getattr(field_value, "evidence", []) or [])
+    if not evidence:
+        return None, None
+    anchor = evidence[0]
+    page = getattr(getattr(anchor, "selector", None), "page", None)
+    try:
+        from dataagent_data.anchors import AnchorResolver
+
+        resolved = AnchorResolver(content).resolve(anchor)
+    except Exception:  # noqa: BLE001 - evidence is best effort, never a failure
+        return page, None
+    return page, resolved.text
+
+
+def _b03_output(result: Any, fields: Sequence[Any], content: Any) -> dict[str, Any]:
+    """Map the extraction capability result to the harness output shape.
+
+    ``value_f1``/``record_completeness`` read ``json``; ``evidence_span_f1``
+    reads ``spans``; ``evidence_page_f1`` reads ``pages``. When there is no
+    model proposal the capability returns ``needs_input``: the output carries
+    the candidate spans and the issue, but no invented field values.
+    """
+
+    out: dict[str, Any] = {
+        "json": {},
+        "spans": [],
+        "pages": {},
+        "fields": [
+            {"field_id": field.field_id, "path": field.path} for field in fields
+        ],
+        "capability_status": _status_value(getattr(result, "status", "")),
+        "issues": [
+            {
+                "code": getattr(issue, "code", ""),
+                "severity": _status_value(getattr(issue, "severity", "")),
+                "message": getattr(issue, "message", ""),
+            }
+            for issue in getattr(result, "issues", []) or []
+        ],
+    }
+    data = getattr(result, "data", None)
+    candidates = list(getattr(data, "candidate_spans", []) or []) if data is not None else []
+    if candidates:
+        out["candidate_spans"] = [
+            {
+                "page": span.page,
+                "text": span.text,
+                "char_start": span.char_start,
+                "char_end": span.char_end,
+            }
+            for span in candidates
+        ]
+    record = getattr(data, "record", None) if data is not None else None
+    if record is None:
+        return out
+    paths = {field.field_id: field.path for field in fields}
+    values: dict[str, Any] = {}
+    for field_value in getattr(record, "fields", []) or []:
+        value = _field_value(field_value)
+        if value is None:
+            continue
+        path = paths.get(getattr(field_value, "field_id", ""), getattr(field_value, "field_id", ""))
+        if not path:
+            continue
+        _set_path(values, path, value)
+        page, text = _evidence(field_value, content)
+        if page is not None:
+            out["pages"][path] = page
+        if text:
+            out["spans"].append({"field": path, "text": text, "page": page or 1})
+    out["json"] = values
+    return out
+
+
+def _execute_task(
+    *,
+    task_id: str,
+    case: dict[str, Any],
+    inputs: list[tuple[dict[str, Any], Path]],
+    bench_root: Path,
+    repo_root: Path,
+    scratch: Path,
+) -> tuple[dict[str, Any], str | None, list[dict[str, Any]]]:
+    """Run the task's capability chain; return (output, status, issues)."""
+
+    workspace = scratch / "workspace"
+    data_root = scratch / "data"
+    workspace.mkdir(parents=True, exist_ok=True)
+    data_root.mkdir(parents=True, exist_ok=True)
+    staged = _stage_documents(inputs, workspace)
+    if not staged:
+        raise BenchError(f"{task_id} case has no file/image input to parse")
+
+    engine = _load_local_engine(
+        repo_root=repo_root, bench_root=bench_root, scratch=scratch
+    )
+    runtime = None
+    try:
+        runtime = _make_runtime(workspace, data_root, engine)
+        ctx = _make_context(runtime, workspace)
+        if task_id == "B02":
+            contents = []
+            for _item, path, rel in staged:
+                document = _ocr_document(
+                    runtime=runtime, ctx=ctx, workspace=workspace, path=path, rel=rel
+                )
+                contents.append(_load_content(runtime, document))
+            return _b02_output(contents), "ok", []
+        document = _ocr_document(
+            runtime=runtime,
+            ctx=ctx,
+            workspace=workspace,
+            path=staged[0][1],
+            rel=staged[0][2],
+        )
+        content = _load_content(runtime, document)
+        fields = _fields_for_case(inputs)
+        result = _invoke(
+            "extract_fields_to_schema",
+            {
+                "document_ref": document.model_dump(mode="json"),
+                "fields": [field.model_dump(mode="json") for field in fields],
+            },
+            ctx,
+            runtime,
+        )
+        _require_result(result, "extract_fields_to_schema")
+        output = _b03_output(result, fields, content)
+        issues = output.get("issues") or []
+        return output, _status_value(result.status), issues
+    finally:
+        if runtime is not None:
+            close = getattr(runtime, "close", None)
+            if callable(close):
+                close()
+        engine.close()
+
+
+def _execute_task_dispatch(
+    **kwargs: Any,
+) -> tuple[dict[str, Any], str | None, list[dict[str, Any]]]:
+    return _execute_task(**kwargs)
+
+
+def run_case(
+    case_path: str | os.PathLike[str],
+    out_dir: str | os.PathLike[str],
+    config_path: str | os.PathLike[str] | None = None,
+    *,
+    dispatch: Callable[..., tuple[dict[str, Any], str | None, list[dict[str, Any]]]] | None = None,
+) -> int:
+    """Execute one case, always write result.json, and return the exit code."""
+
+    out = Path(out_dir)
+    case_id: str | None = None
+    task_id: str | None = None
+    capability_status: str | None = None
+    issues: list[dict[str, Any]] = []
+    try:
+        out.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        print(f"dataagent run: cannot create output directory {out}: {exc}", file=sys.stderr)
+        return 2
+
+    scratch = out / ".bench"
+    try:
+        if scratch.exists():
+            shutil.rmtree(scratch)
+        case = load_case(case_path)
+        case_id = str(case.get("case_id"))
+        task_id = str(case.get("task_id") or "").strip() or None
+        if task_id not in TASKS:
+            raise BenchError(f"unsupported task_id: {task_id or '<missing>'} (expected B02 or B03)")
+        bench_root = find_bench_root(case_path)
+        repo_root = repo_root_for(bench_root)
+        dataset_dir = dataset_dir_for(case_path)
+        raw_root = resolve_raw_root(bench_root, repo_root)
+        inputs = resolve_inputs(
+            case, task_id=task_id, dataset_dir=dataset_dir, raw_root=raw_root
+        )
+        output, capability_status, issues = (dispatch or _execute_task_dispatch)(
+            task_id=task_id,
+            case=case,
+            inputs=inputs,
+            bench_root=bench_root,
+            repo_root=repo_root,
+            scratch=scratch,
+        )
+        write_result(
+            out,
+            case_id=case_id,
+            task_id=task_id,
+            status="ok",
+            output=output,
+            error=None,
+            capability_status=capability_status,
+            issues=issues,
+        )
+        return 0
+    except BenchError as exc:
+        error = str(exc)
+        print(f"dataagent run: {case_id or case_path}: {error}", file=sys.stderr)
+    except Exception as exc:  # noqa: BLE001 - the harness needs an explicit failure
+        error = f"{type(exc).__name__}: {exc}"
+        if os.environ.get("DATAAGENT_BENCH_DEBUG"):
+            traceback.print_exc()
+        print(f"dataagent run: {case_id or case_path}: {error}", file=sys.stderr)
+
+    write_result(
+        out,
+        case_id=case_id,
+        task_id=task_id,
+        status="failed",
+        output=None,
+        error=error,
+        capability_status=capability_status,
+        issues=issues,
+    )
+    return 1
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        prog="dataagent run",
+        description="Run one normalized 09-benchmark case and write <out>/result.json.",
+    )
+    parser.add_argument("--case", required=True, help="normalized case JSON")
+    parser.add_argument("--out", required=True, help="output directory for result.json")
+    parser.add_argument("--config", help="adapter config JSON")
+    args = parser.parse_args(argv)
+    return run_case(args.case, args.out, args.config)
+
+
+if __name__ == "__main__":  # pragma: no cover - exercised through the CLI
+    raise SystemExit(main())

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -376,6 +377,109 @@ class DispatcherTests(unittest.TestCase):
             '{"profile_id": "old"}\n',
         )
 
+
+
+    def test_run_dispatches_case_to_data_layer_bench(self):
+        """07 T30: `run --case` executes the benchmark entry point from the
+        data layer, preserving every adapter flag."""
+        _make_layer(self.project, "data-layer", "0.1.0")
+        result = self._run(
+            "run",
+            "--case",
+            "case.json",
+            "--out",
+            "out/B02-od-0005",
+            "--config",
+            "cfg.json",
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        args = (self.out / "args").read_text().splitlines()
+        self.assertEqual(args[0], "-m")
+        self.assertEqual(args[1], "dataagent_runtime.interfaces.bench")
+        self.assertEqual(
+            args[2:],
+            [
+                "--case",
+                "case.json",
+                "--out",
+                "out/B02-od-0005",
+                "--config",
+                "cfg.json",
+            ],
+        )
+
+    def test_run_uses_sibling_bundle_without_mint(self):
+        """The build/local install product has sibling package directories;
+        `run` must use them when the project has no .mint tree (T30)."""
+        bundle = self.project / "bundle"
+        (bundle / "cli" / "bin").mkdir(parents=True)
+        copied = bundle / "cli" / "bin" / "dataagent"
+        shutil.copy2(BIN, copied)
+        layer = bundle / "data-layer"
+        (layer / ".venv" / "bin").mkdir(parents=True)
+        py = layer / ".venv" / "bin" / "python"
+        py.write_text(FAKE_PYTHON, encoding="utf-8")
+        py.chmod(0o755)
+        result = subprocess.run(
+            [str(copied), "run", "--case", "case.json", "--out", "out", "--config", "cfg.json"],
+            capture_output=True,
+            text=True,
+            env=self.env,
+            cwd=str(self.out),
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        args = (self.out / "args").read_text().splitlines()
+        self.assertEqual(args[1], "dataagent_runtime.interfaces.bench")
+        self.assertIn("bundle/data-layer", (self.out / "cwd").read_text())
+
+    def test_run_without_data_layer_exits_3(self):
+        result = self._run("run", "--case", "case.json", "--out", "out")
+        self.assertEqual(result.returncode, 3)
+        self.assertIn("dataagent/data-layer is not installed", result.stderr)
+        self.assertFalse((self.out / "args").exists())
+
+    def test_run_auto_syncs_a_bundle_without_venv(self):
+        """build/local ships a frozen lock but not a .venv; first use installs
+        it instead of failing with the layer command's "run setup" error."""
+        layer = _make_layer(self.project, "data-layer", "0.1.0")
+        (layer / ".venv" / "bin" / "python").unlink()
+        bin_dir = self.out / "bin"
+        bin_dir.mkdir()
+        fake_python = self.out / "fake-python"
+        fake_python.write_text(FAKE_PYTHON, encoding="utf-8")
+        fake_python.chmod(0o755)
+        uv_log = self.out / "uv-log"
+        shim = bin_dir / "uv"
+        shim.write_text(
+            "#!/bin/sh\n"
+            'printf "%s\\n" "$@" > "$DATAAGENT_FAKE_UV_LOG"\n'
+            "mkdir -p .venv/bin\n"
+            'cp "$DATAAGENT_FAKE_PYTHON" .venv/bin/python\n'
+            "chmod +x .venv/bin/python\n",
+            encoding="utf-8",
+        )
+        shim.chmod(0o755)
+        self.env["PATH"] = f"{bin_dir}:{self.env['PATH']}"
+        self.env["DATAAGENT_FAKE_PYTHON"] = str(fake_python)
+        self.env["DATAAGENT_FAKE_UV_LOG"] = str(uv_log)
+        result = self._run("run", "--case", "case.json", "--out", "out")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(uv_log.read_text().splitlines(), ["sync", "--frozen"])
+        self.assertEqual(
+            (self.out / "args").read_text().splitlines()[1],
+            "dataagent_runtime.interfaces.bench",
+        )
+
+    def test_run_keeps_ocr_root_after_environment_scrub(self):
+        _make_layer(self.project, "data-layer", "0.1.0")
+        self.env["OCR_ROOT"] = "/tmp/verified-ocr"
+        result = self._run("run", "--case", "case.json", "--out", "out")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        env = (self.out / "env").read_text()
+        self.assertIn("OCR_ROOT=/tmp/verified-ocr", env)
+        self.assertIn("DATAAGENT_OCR_ROOT=/tmp/verified-ocr", env)
+        self.assertNotIn("MINT_MODEL_API_KEY", env)
+        self.assertNotIn("secret-token", env)
 
 
 if __name__ == "__main__":

@@ -10,6 +10,10 @@
 #
 # Commands:
 #   dataagent <data|app|gov> ...    layer dispatch (list / run / --help / ...)
+#   dataagent run --case <case.json> --out <dir> --config <cfg.json>
+#                                  run one 09-benchmark case (07 T30) through
+#                                  dataagent_runtime.interfaces.bench in the
+#                                  data layer's installed interpreter
 #   dataagent link                 generate ./dataagent in the project root
 #   dataagent setup [--ocr-root <dir>]
 #                                  uv sync --frozen for all layers; with
@@ -88,6 +92,52 @@ python_of() {
     dir=$1
     py="$dir/.venv/bin/python"
     [ -x "$py" ] || die "no .venv in $dir (run: dataagent setup)"
+    printf '%s\n' "$py"
+}
+
+# `dataagent run --case` (07 T30) executes dataagent_runtime.interfaces.bench
+# in the data layer: it is the layer that ships dataagent_data's parsing and
+# OCR atoms. Look next to this script first — the build/local install product
+# and a Mint package tree both place sibling package directories there — then
+# fall back to the project's .mint tree.
+run_layer_dir() {
+    pkg=$1
+    self=$0
+    case $self in
+        */*) ;;
+        *) self=$(command -v "$self" 2>/dev/null || printf '%s\n' "$self") ;;
+    esac
+    base=$(CDPATH= cd -- "$(dirname -- "$self")/../.." 2>/dev/null && pwd) || base=""
+    if [ -n "$base" ]; then
+        dirs=$(for d in "$base/$pkg" "$base/$pkg"@*; do
+            if [ -d "$d" ]; then printf '%s\n' "$d"; fi
+        done)
+        n=$(count_lines "$dirs")
+        [ "$n" -le 1 ] || die "dataagent/$pkg has $n installed versions; run \`mint sync\` to match mint.lock"
+        if [ "$n" -eq 1 ]; then
+            printf '%s\n' "$dirs"
+            return 0
+        fi
+    fi
+    dirs=$(installed_dirs "$pkg")
+    n=$(count_lines "$dirs")
+    [ "$n" -ne 0 ] || die "package dataagent/$pkg is not installed (build/local or .mint/packages is missing)"
+    [ "$n" -eq 1 ] || die "dataagent/$pkg has $n installed versions; run \`mint sync\` to match mint.lock"
+    printf '%s\n' "$dirs"
+}
+
+# The build/local product is shipped as a lockfile bundle, not a Mint project,
+# so its first run may not have a .venv yet. Install it from the frozen lock
+# before handing the process to it; a real Mint install always has one.
+python_for_run() {
+    dir=$1
+    py="$dir/.venv/bin/python"
+    if [ ! -x "$py" ]; then
+        command -v uv >/dev/null 2>&1 || die "no .venv in $dir and uv is not on PATH (run: dataagent setup)"
+        echo "run: installing $dir (uv sync --frozen)" >&2
+        (cd "$dir" && uv sync --frozen) || die "uv sync --frozen failed in $dir"
+    fi
+    [ -x "$py" ] || die "uv sync did not create $py in $dir"
     printf '%s\n' "$py"
 }
 
@@ -188,6 +238,21 @@ dispatch() {
     py=$(python_of "$dir")
     scrub_env
     exec "$py" -m "$module.interfaces.cli" "$@"
+}
+
+# run --case (07 T30): the OCR path is part of the call, so carry OCR_ROOT
+# across the scrub explicitly instead of widening the shared whitelist.
+run_cmd() {
+    dir=$(run_layer_dir data-layer)
+    py=$(python_for_run "$dir")
+    ocr_root=${OCR_ROOT:-}
+    scrub_env
+    if [ -n "$ocr_root" ]; then
+        OCR_ROOT=$ocr_root
+        DATAAGENT_OCR_ROOT=${DATAAGENT_OCR_ROOT:-$ocr_root}
+        export OCR_ROOT DATAAGENT_OCR_ROOT
+    fi
+    exec "$py" -m dataagent_runtime.interfaces.bench "$@"
 }
 
 link_cmd() {
@@ -355,6 +420,7 @@ except Exception:
 usage() {
     cat >&2 <<'EOF'
 usage: dataagent <layer> <command> [flags]
+       dataagent run --case <case.json> --out <dir> --config <cfg.json>
        dataagent link
        dataagent setup [--ocr-root <verified ocr dir>]
        dataagent doctor
@@ -367,6 +433,8 @@ layer commands (see `dataagent <layer> <op> --help` for the parameter table):
   dataagent <layer> run <op> --file <path>         build a FileRef from bytes
   dataagent <layer> run <op> --ref f=<id@rev>      reuse an earlier result
   dataagent <layer> run <op> --authorize           fill authorization_ref
+  dataagent run --case <case.json> --out <dir> --config <cfg.json>
+                                                  run one 09-benchmark case
   dataagent gov policy apply <file>                write an access policy
   dataagent gov confirm <file>                     confirm acceptance criteria
 
@@ -390,6 +458,7 @@ active_layers() {
 [ $# -ge 1 ] || usage
 case $1 in
     data|app|gov|workbench|ops) dispatch "$@" ;;
+    run) shift; run_cmd "$@" ;;
     link) [ $# -eq 1 ] && link_cmd || usage ;;
     setup) shift; setup_cmd "$@" ;;
     doctor) [ $# -eq 1 ] && doctor_cmd || usage ;;
