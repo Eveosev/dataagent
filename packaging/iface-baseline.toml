@@ -1,0 +1,64 @@
+# DataAgent iface identity baseline.
+#
+# The contract identity packages live in the agent-kernel repository under
+# products/iface-identity/ (read-only for DataAgent). This file pins the ten
+# iface/<name> packages that DataAgent compares against, together with the
+# agent-kernel commit they were read from. Update it only after pulling
+# agent-kernel and re-reading that directory; `packages/iface-*` is no longer
+# maintained and is not a baseline.
+schema_version = "dataagent.iface-baseline/v1"
+recorded_at = "2026-11-17T13:06:16Z"
+
+[agent_kernel]
+commit = "ae6c3d549244030c790ca5a7e1713484edb7413d"
+source = "products/iface-identity"
+
+[[packages]]
+name = "iface/context"
+version = "0.1.5"
+provides = ["context"]
+
+[[packages]]
+name = "iface/env"
+version = "0.1.7"
+provides = ["env"]
+
+[[packages]]
+name = "iface/extension"
+version = "0.1.7"
+provides = ["extension"]
+
+[[packages]]
+name = "iface/loop"
+version = "0.1.4"
+provides = ["loop"]
+
+[[packages]]
+name = "iface/model"
+version = "0.1.5"
+provides = ["model"]
+
+[[packages]]
+name = "iface/policy"
+version = "0.1.13"
+provides = ["policy"]
+
+[[packages]]
+name = "iface/session"
+version = "0.1.15"
+provides = ["session"]
+
+[[packages]]
+name = "iface/store"
+version = "0.1.4"
+provides = ["store"]
+
+[[packages]]
+name = "iface/tool"
+version = "0.1.3"
+provides = ["tool"]
+
+[[packages]]
+name = "iface/types"
+version = "0.1.11"
+provides = ["types"]

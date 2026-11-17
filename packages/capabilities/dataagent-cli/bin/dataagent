@@ -106,9 +106,6 @@ dispatch() {
     dir=$(resolve_dir "$pkg")
     py=$(python_of "$dir")
     scrub_env
-    if [ "$layer" = ops ]; then
-        exec "$py" -m "$module" "$@"
-    fi
     exec "$py" -m "$module.interfaces.cli" "$@"
 }
 
