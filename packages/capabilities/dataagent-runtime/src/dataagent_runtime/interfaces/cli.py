@@ -1,4 +1,10 @@
-"""CLI skeleton: argv operation + stdin JSON, stdout CapabilityResult."""
+"""CLI skeleton: argv operation + stdin JSON, stdout CapabilityResult.
+
+The stdin body may carry ``context``; it is a hint and is resolved through
+the shared context resolver (host environment, then local-owner when no
+context is supplied). The old ``context is required`` behaviour remains
+only under ``DATAAGENT_CONTEXT_RESOLVER=legacy``.
+"""
 
 from __future__ import annotations
 
@@ -8,10 +14,16 @@ from typing import Any, Callable
 
 from dataagent_contracts.core import CapabilityStatus
 
+from dataagent_runtime.policy.context import (
+    ContextResolutionError,
+    resolve_context,
+)
+
 USAGE = """usage: python -m <package>.interfaces.cli <operation>
        python -m <package>.interfaces.cli --list
 
 stdin: {"input": {...}, "context": {...}} or {"...input fields...", "context": {...}}
+context is optional; the host environment, then local-owner, supplies authority
 stdout: CapabilityResult JSON
 exit: 0 for ok/partial/needs_input, 1 for failed, 2 for usage errors
 """
@@ -49,7 +61,7 @@ def main(
     argv: list[str] | None = None,
     *,
     list_operations: Callable[[], list[Any]],
-    invoke: Callable[[str, dict[str, Any] | None, dict[str, Any]], Any],
+    invoke: Callable[[str, dict[str, Any] | None, Any], Any],
     validate: Callable[[], None] | None = None,
     usage: str = USAGE,
     program: str = "dataagent",
@@ -96,7 +108,9 @@ def main(
         )
         return 1
     payload, context = _split_body(body)
-    if context is None:
+    try:
+        resolved = resolve_context(argument_context=context)
+    except ContextResolutionError as exc:
         print(
             json.dumps(
                 {
@@ -105,7 +119,7 @@ def main(
                         {
                             "code": "invalid_input",
                             "severity": "error",
-                            "message": "CallContext is required in the 'context' field",
+                            "message": f"context resolution failed: {exc}",
                             "retryable": False,
                         }
                     ],
@@ -114,6 +128,6 @@ def main(
             )
         )
         return 1
-    result = invoke(operation, payload, context)
+    result = invoke(operation, payload, resolved)
     print(json.dumps(result.model_dump(mode="json"), ensure_ascii=False))
     return 1 if result.status is CapabilityStatus.failed else 0

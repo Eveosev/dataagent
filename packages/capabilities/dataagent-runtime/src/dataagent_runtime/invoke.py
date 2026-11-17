@@ -31,6 +31,15 @@ from dataagent_runtime.enforcement import (
     access_recheck,
 )
 from dataagent_runtime.errors import CapabilityError, NeedsInputError
+from dataagent_runtime.policy.context import (
+    ContextResolutionError,
+    ResolvedContext,
+    _reseal,
+    resolve_context,
+    verify_resolved,
+    workspace_scope,
+)
+from dataagent_runtime.types import ContextSource
 from dataagent_runtime.registry import IMPLEMENTATION_REF, get_spec
 
 
@@ -87,21 +96,69 @@ def _to_versioned_ref(value: Any) -> VersionedRef | None:
     return None
 
 
-def _resource_refs(spec_input: BaseModel, resource_fields: tuple[str, ...]) -> list[VersionedRef]:
+class UnverifiableResourceError(ValueError):
+    """A declared resource field produced no verifiable ``VersionedRef``."""
+
+    def __init__(self, field: str, detail: str) -> None:
+        self.field = field
+        self.detail = detail
+        super().__init__(f"resource field {field!r} {detail}")
+
+
+def _resource_refs(
+    spec_input: BaseModel,
+    resource_fields: tuple[str, ...],
+    *,
+    strict: bool = True,
+) -> list[VersionedRef]:
+    """Extract refs, refusing a declared field that cannot be verified.
+
+    A present declared value that does not carry id/kind/revision used to be
+    skipped silently; the recheck then saw an empty list and compared no
+    resource at all (r41 X2 follow-up). An absent optional resource is left
+    absent, matching the old skip. With ``strict=False`` (the legacy
+    rollback path) an unconvertible value is skipped like the old recheck
+    instead of rejecting the call.
+    """
+
+    def convert(value: Any, label: str) -> VersionedRef | None:
+        try:
+            return _to_versioned_ref(value)
+        except Exception as exc:  # pydantic ValidationError, TypeError, ...
+            # A conversion error is never a reason to skip the recheck: map
+            # it to the caller-visible invalid_input path even on legacy.
+            raise UnverifiableResourceError(
+                name,
+                f"{label} cannot be converted to a VersionedRef: {exc}",
+            ) from exc
+
     refs: list[VersionedRef] = []
     for name in resource_fields:
         value = getattr(spec_input, name, None)
         if value is None:
+            # An absent optional resource is not a resource to check; old
+            # invoke skipped it. A *present* value must still convert.
             continue
         if isinstance(value, (list, tuple)):
-            for item in value:
-                ref = _to_versioned_ref(item)
-                if ref is not None:
-                    refs.append(ref)
-        else:
-            ref = _to_versioned_ref(value)
-            if ref is not None:
+            for index, item in enumerate(value):
+                ref = convert(item, f"item {index}")
+                if ref is None:
+                    if strict:
+                        raise UnverifiableResourceError(
+                            name,
+                            f"item {index} does not carry an id/kind/revision reference",
+                        )
+                    continue
                 refs.append(ref)
+        else:
+            ref = convert(value, "value")
+            if ref is None:
+                if strict:
+                    raise UnverifiableResourceError(
+                        name, "does not carry an id/kind/revision reference"
+                    )
+                continue
+            refs.append(ref)
     return refs
 
 
@@ -273,14 +330,8 @@ def _closure_errors(spec_input: BaseModel, resource_fields: tuple[str, ...]) -> 
     return errors
 
 
-def _host_context(rt: Any, ctx: CallContext) -> CallContext:
-    """Stamp the trusted-host authority over the caller-supplied context.
-
-    ``host_subject_ref`` / ``host_purpose`` come from configuration (or the
-    host-injected environment), never from call arguments: when they are
-    set they are authoritative for every hook in this call (review B7) —
-    the recheck, the handlers and the decisions they mint.
-    """
+def _legacy_host_context(rt: Any, ctx: CallContext) -> CallContext:
+    """Old ``_host_context``: stamp runtime host authority, resource path only."""
 
     subject = getattr(rt, "host_subject_ref", None)
     purpose = getattr(rt, "host_purpose", None)
@@ -296,10 +347,112 @@ def _host_context(rt: Any, ctx: CallContext) -> CallContext:
     return ctx.model_copy(update=updates)
 
 
+def _resolve_call_context(rt: Any, context: Any) -> ResolvedContext:
+    """Resolve one trusted context for the whole call (R1, S0 X1).
+
+    Entry points hand over a :class:`ResolvedContext`; older callers hand
+    over a bare ``CallContext``/mapping, which is treated as a *hint* and
+    resolved against the trusted channels. Either way the result is the
+    context the recheck and every handler see — no-resource handlers
+    included, which is what closes the B7 gap on non-resource operations.
+    """
+
+    if isinstance(context, ResolvedContext):
+        if not verify_resolved(context):
+            raise ContextResolutionError(
+                "ResolvedContext was not produced by resolve_context or was modified; "
+                "the caller must pass a hint, not a trusted envelope"
+            )
+        resolved = context
+        # The legacy path is deliberately frozen: old ``invoke`` stamped the
+        # host authority only on the resource-recheck path, never on
+        # no-resource operations. Do not apply the new host authority here.
+        if resolved.source is ContextSource.LEGACY:
+            return resolved
+        # The runtime's workspace is authoritative for scope spelling even
+        # when an entry point resolved against its own cwd.
+        workspace = getattr(rt, "workspace_root", None)
+        if workspace is not None:
+            scope_ref = workspace_scope(workspace)
+            if resolved.context.scope_ref != scope_ref:
+                resolved = resolved.model_copy(
+                    update={
+                        "context": resolved.context.model_copy(
+                            update={"scope_ref": scope_ref}
+                        )
+                    }
+                )
+        # Host ``_meta`` fields are final. For every field the host did not
+        # set, the runtime's configured host authority (explicit or
+        # environment) outranks the local-owner/environment value an entry
+        # point may have used before a runtime was in hand.
+        host_fields = set(resolved.host_fields)
+        context_updates: dict[str, Any] = {}
+        subject = getattr(rt, "host_subject_ref", None)
+        purpose = getattr(rt, "host_purpose", None)
+        if (
+            subject
+            and "subject_ref" not in host_fields
+            and resolved.context.subject_ref != subject
+        ):
+            context_updates["subject_ref"] = subject
+        if (
+            purpose
+            and "purpose" not in host_fields
+            and resolved.context.purpose != purpose
+        ):
+            context_updates["purpose"] = purpose
+        session = getattr(rt, "host_session_id", None)
+        call = getattr(rt, "host_call_id", None)
+        if (
+            session
+            and "session_id" not in host_fields
+            and resolved.context.kernel_session_id != session
+        ):
+            context_updates["kernel_session_id"] = session
+        if (
+            call
+            and "call_id" not in host_fields
+            and resolved.context.kernel_call_id != call
+        ):
+            context_updates["kernel_call_id"] = call
+        if context_updates:
+            resolved = resolved.model_copy(
+                update={
+                    "context": resolved.context.model_copy(
+                        update=context_updates
+                    )
+                }
+            )
+        if session and "session_id" not in host_fields and resolved.meta.session_id != session:
+            resolved = resolved.model_copy(
+                update={"meta": resolved.meta.model_copy(update={"session_id": session})}
+            )
+        if call and "call_id" not in host_fields and resolved.meta.call_id != call:
+            resolved = resolved.model_copy(
+                update={"meta": resolved.meta.model_copy(update={"call_id": call})}
+            )
+        turn = getattr(rt, "host_turn", None)
+        if (
+            turn is not None
+            and "turn" not in host_fields
+            and resolved.meta.turn != turn
+        ):
+            resolved = resolved.model_copy(
+                update={"meta": resolved.meta.model_copy(update={"turn": turn})}
+            )
+        return _reseal(resolved)
+    return resolve_context(
+        argument_context=context,
+        runtime=rt,
+        allow_legacy_synthesis=False,
+    )
+
+
 def invoke(
     operation: str,
     payload: dict[str, Any] | None,
-    context: CallContext | dict[str, Any],
+    context: CallContext | dict[str, Any] | ResolvedContext,
     *,
     runtime: Any = None,
     resolver: Any = None,
@@ -312,6 +465,11 @@ def invoke(
     ``resolver`` resolves ``authorization_ref`` to an ``AccessDecision``;
     when omitted, the runtime's ``access_resolver`` is used, and if that is
     missing too the recheck fails closed for resource-reading operations.
+
+    ``context`` is a resolved envelope from an entry point or a bare
+    ``CallContext``/mapping. The bare form is a caller hint: it is resolved
+    through :func:`dataagent_runtime.policy.context.resolve_context` before
+    the recheck and before any handler runs (R1).
     """
 
     spec = get_spec(operation)
@@ -323,16 +481,22 @@ def invoke(
             suggested_action="tools/list shows the implemented operations",
         )
 
+    rt = runtime
+    if rt is None:
+        from dataagent_runtime.runtime import default_runtime
+
+        rt = default_runtime()
     try:
-        ctx = context if isinstance(context, CallContext) else CallContext.model_validate(context)
-    except ValidationError as exc:
+        resolved = _resolve_call_context(rt, context)
+    except ContextResolutionError as exc:
         return _failure(
             StandardErrorCode.invalid_input,
-            f"invalid CallContext: {exc.errors()[0]['msg']}",
+            f"invalid CallContext: {exc}",
             operation=operation,
             capability_id=spec.capability_id,
             target="context",
         )
+    ctx = resolved.context
     if not ctx.authorization_ref.strip():
         return _failure(
             StandardErrorCode.invalid_input,
@@ -342,11 +506,6 @@ def invoke(
             target="context.authorization_ref",
         )
 
-    rt = runtime
-    if rt is None:
-        from dataagent_runtime.runtime import default_runtime
-
-        rt = default_runtime()
     config = enforcement or getattr(rt, "enforcement", None) or EnforcementConfig()
 
     started = now()
@@ -372,11 +531,36 @@ def invoke(
             target=location or None,
         )
 
+    # In v1 a declared resource field must produce a verifiable ref, even
+    # under ``mode=off``: otherwise an optional/opaque value would make the
+    # recheck compare an empty resource list (r41 X2 follow-up). The legacy
+    # path keeps the old skip for a value that yields no ref, and old invoke
+    # did not even extract resources when the hook was off: it ran the
+    # handler directly (codex r5).
+    legacy_path = resolved.source is ContextSource.LEGACY
+    resource_refs: list[VersionedRef] | None = None
+    if spec.resource_fields and not (legacy_path and config.mode == "off"):
+        try:
+            resource_refs = _resource_refs(
+                input_obj, spec.resource_fields, strict=not legacy_path
+            )
+        except UnverifiableResourceError as exc:
+            return _failure(
+                StandardErrorCode.invalid_input,
+                f"declared resource field cannot be verified: {exc}",
+                operation=operation,
+                capability_id=spec.capability_id,
+                target=exc.field,
+            )
+
     # DA12.1 access recheck in front of any resource read (08 §4.3).
     # ``off`` disables the hook outright; ``warn`` keeps the call running with
     # a warning (development default); ``enforce`` denies before any read.
     if spec.resource_fields and config.mode != "off":
-        ctx = _host_context(rt, ctx)
+        if legacy_path:
+            # Old invoke applied the host authority only here (resource
+            # recheck), not to no-resource operations or mode=off calls.
+            ctx = _legacy_host_context(rt, ctx)
         resolve = resolver or getattr(rt, "access_resolver", None)
         if resolve is None:
             result = _failure(
@@ -405,7 +589,11 @@ def invoke(
                 )
                 if reasons
                 else access_recheck(
-                    ctx, resolve, _resource_refs(input_obj, spec.resource_fields), config=config
+                    ctx,
+                    resolve,
+                    resource_refs or [],
+                    config=config,
+                    legacy=legacy_path,
                 )
             )
             if outcome.ok:

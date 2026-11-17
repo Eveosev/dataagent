@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from typing import Any
-
 import pytest
 from pydantic import BaseModel
 
 from dataagent_contracts.core import (
     AccessDecision,
     AccessOutcome,
+    AssetRef,
     CallContext,
     VersionedRef,
 )
@@ -84,11 +83,21 @@ def registered():
     reset_registry()
 
 
-def _runtime(enforcement: EnforcementConfig, tmp_path):
+def _runtime(
+    enforcement: EnforcementConfig,
+    tmp_path,
+    *,
+    host_subject_ref: str | None = "user:alice",
+    host_purpose: str | None = "report",
+):
     from dataagent_runtime.runtime import Runtime
 
     return Runtime.create(
-        workspace_root=tmp_path, data_root=tmp_path / "data", enforcement=enforcement
+        workspace_root=tmp_path,
+        data_root=tmp_path / "data",
+        enforcement=enforcement,
+        host_subject_ref=host_subject_ref,
+        host_purpose=host_purpose,
     )
 
 
@@ -293,53 +302,75 @@ def test_host_authority_env_fallback(tmp_path, monkeypatch):
     assert rt.host_purpose == "ops"
 
 
-def test_meta_context_beats_arguments_context():
-    """B7 (MCP): the server-supplied ``_meta`` context is authoritative."""
+def test_meta_context_beats_arguments_context(monkeypatch):
+    """B7 (MCP): host ``_meta`` authority wins; arguments are only a hint."""
 
     from dataagent_runtime.interfaces.mcp_server import _context
 
+    for key in (
+        "DATAAGENT_HOST_SUBJECT_REF",
+        "DATAAGENT_HOST_PURPOSE",
+        "DATAAGENT_CONTEXT_RESOLVER",
+        "AGENTCPM_TOOL_BROKER_SESSION",
+        "AGENTCPM_TOOL_BROKER_TURN",
+    ):
+        monkeypatch.delenv(key, raising=False)
     meta = _context(
         {"_meta": {"context": {"request_id": "req:meta", "scope_ref": "tenant:demo",
                                "authorization_ref": "ad:1", "subject_ref": "user:mallory"}}},
         {"context": {"request_id": "req:args", "scope_ref": "tenant:demo",
                      "authorization_ref": "ad:1", "subject_ref": "user:alice"}},
     )
-    assert meta["request_id"] == "req:meta"
-    assert meta["subject_ref"] == "user:mallory"
+    assert meta is not None
+    assert meta.request_id == "req:meta"
+    assert meta.subject_ref == "user:mallory"
+    assert meta.authorization_ref == "ad:1"
+    assert meta.scope_ref.startswith("workspace:")
     fallback = _context(
         {},
         {"context": {"request_id": "req:args", "scope_ref": "tenant:demo",
                      "authorization_ref": "ad:1", "subject_ref": "user:alice"}},
     )
-    assert fallback["request_id"] == "req:args"
+    assert fallback is not None
+    assert fallback.request_id == "req:args"
+    # The caller-writable subject never becomes the executing subject.
+    assert fallback.subject_ref.startswith("local-owner:")
+    assert fallback.scope_ref.startswith("workspace:")
 
 
 # --- r28 B1: profile field_stats_ref must be the bound asset's content ------- #
 
 
+class ProfileRefShape(BaseModel):
+    """ProfileRef-shaped local model (contracts differ per layer)."""
+
+    asset: AssetRef
+    field_stats_ref: str
+
+
 class ProfileInput(BaseModel):
-    profile_ref: Any
+    profile_ref: ProfileRefShape
 
 
-def _profile(field_stats_ref: str, *, revision: str, digest: str | None = None):
-    """A ProfileRef-shaped payload (duck-typed; contracts differ per layer)."""
-
-    class _Asset:
-        def __init__(self) -> None:
-            self.id = "profile:allowed"
-            self.kind = "profile"
-            self.revision = revision
-            self.resolver = "local_content"
-            self.locator = revision
-            self.digest = digest
-
-    class _Profile:
-        def __init__(self) -> None:
-            self.asset = _Asset()
-            self.dataset_ref = "table:allowed"
-            self.field_stats_ref = field_stats_ref
-
-    return _Profile()
+def _profile(
+    field_stats_ref: str,
+    *,
+    revision: str,
+    digest: str | None = None,
+    resolver: str = "local_content",
+) -> ProfileRefShape:
+    return ProfileRefShape(
+        asset=AssetRef(
+            id="profile:allowed",
+            kind="profile",
+            scope_ref="tenant:demo",
+            revision=revision,
+            resolver=resolver,
+            locator=revision,
+            digest=digest,
+        ),
+        field_stats_ref=field_stats_ref,
+    )
 
 
 def test_invoke_enforce_denies_profile_stats_rebound_to_a_covered_asset(
@@ -597,8 +628,7 @@ def test_invoke_enforce_denies_resolver_spoofed_profile_stats(registered, tmp_pa
     rt.decisions.save_access(
         _decision(resource_ref=VersionedRef(id="profile:allowed", revision="r1"))
     )
-    spoofed = _profile("sha256:forbidden", revision="r1")
-    spoofed.asset.resolver = "workspace"  # type: ignore[attr-defined]
+    spoofed = _profile("sha256:forbidden", revision="r1", resolver="workspace")
     result = invoke(
         "profile_echo",
         {"profile_ref": spoofed},

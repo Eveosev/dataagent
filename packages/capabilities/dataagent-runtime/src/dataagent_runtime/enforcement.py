@@ -39,6 +39,7 @@ from dataagent_contracts.core import (
 
 from dataagent_runtime.adapters.local_content import canonical_bytes, digest_bytes
 from dataagent_runtime.errors import NeedsInputError
+from dataagent_runtime.policy.context import is_legacy_context
 
 EnforcementMode = Literal["off", "warn", "enforce"]
 
@@ -72,6 +73,8 @@ class EnforcementConfig:
     mode: EnforcementMode = "warn"
     # Trusted-host declaration that the kernel guard is wired and effective.
     # Mere presence of ``kernel_session_id`` never suffices (review §7.3).
+    # Only the legacy rollback path may use it to skip the per-decision
+    # checks; v1 has no call-bound proof and rechecks in full (codex r8).
     kernel_guard_declared: bool = False
 
 
@@ -142,9 +145,24 @@ def access_recheck(
     *,
     config: EnforcementConfig = EnforcementConfig(),
     at: datetime | None = None,
+    legacy: bool | None = None,
 ) -> RecheckOutcome:
-    """Recheck ``authorization_ref`` against the resources this call reads."""
+    """Recheck ``authorization_ref`` against the resources this call reads.
 
+    ``legacy=True`` restores the old behavior for the one-release rollback:
+    the ``None``-subject skip and the kernel-guard shortcut. ``invoke``
+    passes it from the resolved source.
+
+    The kernel-guard shortcut is rollback-only. It trusts
+    ``kernel_guard_declared`` and verifies only that the decision exists,
+    which lets a caller-supplied ``authorization_ref`` bypass a deny, an
+    expired decision, a subject mismatch and resource coverage. v1 therefore
+    rechecks the decision outcome, subject and resources even when a host
+    ``session_id`` is present (codex r8).
+    """
+
+    if legacy is None:
+        legacy = is_legacy_context()
     if config.mode == "off":
         return RecheckOutcome(ok=True)
     decision = resolver(ctx.authorization_ref)
@@ -152,9 +170,12 @@ def access_recheck(
         return _deny(
             [f"authorization_ref {ctx.authorization_ref!r} does not resolve to an AccessDecision"]
         )
-    kernel_path = bool(ctx.kernel_session_id) and config.kernel_guard_declared
+    kernel_path = (
+        bool(ctx.kernel_session_id) and config.kernel_guard_declared and bool(legacy)
+    )
     if kernel_path:
-        # Guard is authoritative; existence of the decision is all we verify.
+        # Old behavior, rollback only: the declared guard is authoritative and
+        # existence of the decision is all that is verified.
         return RecheckOutcome(ok=True, kernel_path=True)
 
     reasons: list[str] = []
@@ -170,7 +191,30 @@ def access_recheck(
             f"purpose mismatch: call purpose {ctx.purpose!r} != decision purpose "
             f"{decision.purpose!r}"
         )
-    if ctx.subject_ref is not None and ctx.subject_ref != decision.subject_ref:
+    if ctx.subject_ref is None:
+        # r41 X1: a missing subject used to skip the comparison entirely
+        # (fail-open). The resolved context always carries a subject (host,
+        # environment or local-owner); an empty one means a caller bypassed
+        # resolution, so fail closed. The legacy switch restores the old
+        # ``None`` skip for the one-release rollback.
+        if not legacy:
+            reasons.append(
+                "CallContext.subject_ref is missing; the trusted host must fix the subject"
+            )
+    elif not str(ctx.subject_ref).strip():
+        if legacy:
+            # Old code only skipped ``None``; an empty string was compared and
+            # rejected as a mismatch.
+            if decision.subject_ref != ctx.subject_ref:
+                reasons.append(
+                    f"subject mismatch: executing subject {ctx.subject_ref!r} != "
+                    f"decision subject {decision.subject_ref!r}"
+                )
+        else:
+            reasons.append(
+                "CallContext.subject_ref is missing; the trusted host must fix the subject"
+            )
+    elif ctx.subject_ref != decision.subject_ref:
         reasons.append(
             f"subject mismatch: executing subject {ctx.subject_ref!r} != decision subject "
             f"{decision.subject_ref!r}"

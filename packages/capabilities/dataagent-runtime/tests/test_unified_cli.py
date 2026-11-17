@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 import pytest
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from dataagent_contracts.core import (
     AccessDecision,
@@ -39,8 +39,20 @@ class PingOutput(BaseModel):
     value: int
 
 
+class HandleRef(BaseModel):
+    """A resource-shaped handle: id/revision plus optional rich fields."""
+
+    model_config = {"extra": "allow"}
+
+    id: str
+    revision: str
+    # Required by the recheck's flat-asset branch, but not part of the
+    # observable handle shape in these tests.
+    kind: str = Field(default="table")
+
+
 class HandleInput(BaseModel):
-    table: dict
+    table: HandleRef
 
 
 class HandleOutput(BaseModel):
@@ -100,7 +112,7 @@ def _register():
     )
     def take_handle(input_obj, ctx, runtime):  # noqa: ANN001
         CAPTURED["payload"] = input_obj.model_dump()
-        return HandleOutput(got=input_obj.table)
+        return HandleOutput(got=input_obj.table.model_dump())
 
     @operation("TEST.1.3", input_model=TwoPhaseInput, output_model=TwoPhaseOutput, description="2p")
     def two_phase(input_obj, ctx, runtime):  # noqa: ANN001
@@ -153,6 +165,9 @@ def env(tmp_path, monkeypatch):
     monkeypatch.delenv("DATAAGENT_HOST_SUBJECT_REF", raising=False)
     monkeypatch.delenv("DATAAGENT_HOST_PURPOSE", raising=False)
     monkeypatch.delenv("DATAAGENT_ENFORCEMENT_MODE", raising=False)
+    monkeypatch.delenv("DATAAGENT_CONTEXT_RESOLVER", raising=False)
+    monkeypatch.delenv("AGENTCPM_TOOL_BROKER_SESSION", raising=False)
+    monkeypatch.delenv("AGENTCPM_TOOL_BROKER_TURN", raising=False)
     Runtime._DEFAULT = None
     yield workspace
     Runtime._DEFAULT = None
@@ -241,7 +256,7 @@ def test_run_set_json(env, capsys):
     )
     assert code == 0
     summary = json.loads(out)
-    assert summary["data"]["got"] == {"id": "table:t", "revision": "r1"}
+    assert summary["data"]["got"] == {"id": "table:t", "revision": "r1", "kind": "table"}
     assert "table:t@r1" in summary["handles"]
 
 

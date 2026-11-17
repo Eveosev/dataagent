@@ -61,12 +61,30 @@ class Runtime:
     # (DATAAGENT_HOST_SUBJECT_REF / DATAAGENT_HOST_PURPOSE).
     host_subject_ref: str | None = None
     host_purpose: str | None = None
+    # Host call metadata, same names as the iface ``CallMeta``. The session
+    # id is read from the Kernel tool-broker environment unless explicitly
+    # passed; the turn is resolved per call so ``_meta.turn`` can outrank a
+    # malformed environment value. The MCP ``_meta`` channel is resolved per
+    # call, not stored on the runtime.
+    host_session_id: str | None = None
+    host_call_id: str | None = None
+    host_turn: int | None = None
+    # One-release rollback: ``DATAAGENT_CONTEXT_RESOLVER=legacy``.
+    context_resolver: str = "v1"
     inference: Any | None = None
     # Layer-owned extras (W1b): the data layer wires its trace repository
     # and optional OCR engine here; other layers leave them unset.
     traces: Any | None = None
     ocr_engine: Any | None = None
     extras: dict[str, Any] = field(default_factory=dict)
+
+    @property
+    def scope_ref(self) -> str:
+        """The one scope spelling: ``workspace:<sha256(path)[:24]>``."""
+
+        from dataagent_runtime.policy.context import workspace_scope
+
+        return workspace_scope(self.workspace_root)
 
     def access_resolver(self, authorization_ref: str):
         """Resolve ``authorization_ref`` for the DA12.1 access recheck.
@@ -87,6 +105,10 @@ class Runtime:
         enforcement: EnforcementConfig | None = None,
         host_subject_ref: str | None = None,
         host_purpose: str | None = None,
+        host_session_id: str | None = None,
+        host_call_id: str | None = None,
+        host_turn: int | None = None,
+        context_resolver: str | None = None,
         inference: Any | None = None,
         ocr_engine: Any | None = None,
         versions: Any | None = None,
@@ -102,6 +124,25 @@ class Runtime:
         content store, gold-exposure ledger, enforcement, host authority.
         """
 
+        from dataagent_runtime.policy.context import ContextResolutionError
+
+        # The environment turn is deliberately not parsed here: it is the
+        # lowest-priority metadata source, so a malformed value must not
+        # abort composition when a per-call ``_meta.turn`` (or an explicit
+        # host_turn) wins. The resolver validates the selected value.
+        turn = host_turn
+        if turn is not None and (
+            isinstance(turn, bool)
+            or not isinstance(turn, int)
+            or not 0 <= turn <= 2**64 - 1
+        ):
+            raise ContextResolutionError("host_turn must be an unsigned integer")
+        mode = context_resolver or os.environ.get("DATAAGENT_CONTEXT_RESOLVER", "v1")
+        mode = str(mode).strip().lower()
+        if mode not in {"v1", "legacy"}:
+            raise ContextResolutionError(
+                "DATAAGENT_CONTEXT_RESOLVER must be 'v1' or 'legacy'"
+            )
         workspace, root = resolve_roots(workspace_root, data_root)
         (root / "content").mkdir(parents=True, exist_ok=True)
         (root / "db").mkdir(parents=True, exist_ok=True)
@@ -131,6 +172,11 @@ class Runtime:
             # descriptor reach here). Call arguments never set these.
             host_subject_ref=host_subject_ref or os.environ.get("DATAAGENT_HOST_SUBJECT_REF"),
             host_purpose=host_purpose or os.environ.get("DATAAGENT_HOST_PURPOSE"),
+            host_session_id=host_session_id
+            or os.environ.get("AGENTCPM_TOOL_BROKER_SESSION"),
+            host_call_id=host_call_id,
+            host_turn=turn,
+            context_resolver=mode,
             inference=inference,
             ocr_engine=ocr_engine,
             traces=traces,
