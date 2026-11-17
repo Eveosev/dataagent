@@ -1,15 +1,17 @@
 import {useEffect,useRef,useState} from 'react';
-import {api,display,locate} from '../client';
+import {api,ApiError,display,locate} from '../client';
 import type {ObjectView,SourceProfile} from '../client';
 import {SourceViewer} from '../components/SourceViewer';
 
 const ranges=[['instance','纠正当前对象的值'],['mapping','修改这类来源的映射'],['ontology','提出本体草案']] as const;
+const scopeIds=['instance','mapping','ontology'];
 
 export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:()=>void;onError:(e:unknown)=>void}){
  const [view,setView]=useState<ObjectView|null>(null),[index,setIndex]=useState(0),[field,setField]=useState('');
  const [range,setRange]=useState('instance'),[value,setValue]=useState(''),[reason,setReason]=useState('');
- const [name,setName]=useState(''),[type,setType]=useState('string'),[busy,setBusy]=useState(false);
+ const [name,setName]=useState(''),[type,setType]=useState('string'),[busy,setBusy]=useState(false),[conflict,setConflict]=useState(false);
  const revision=useRef(''),base=useRef(''),editing=useRef(false),initialized=useRef(false),running=useRef(false);
+ const objectRef=useRef(''),editObject=useRef(''),idxRef=useRef(0);
  const base_url=`/api/sessions/${sessionId}`;
  const localKey=`dataagent-object-draft:${sessionId}`;
  async function load(){
@@ -24,11 +26,20 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
    const pending=sessionStorage.getItem(localKey);
    if(pending&&data.session.phase!=='saved'){
     try{
-     const saved=JSON.parse(pending) as {property:string;value:string;reason:string};
-     if(saved.value||saved.reason){
-      setValue(saved.value);setReason(saved.reason);
-      if(saved.property&&properties.includes(saved.property))setField(saved.property);
-      editing.current=true;
+     const saved=JSON.parse(pending) as {object:string;range:string;property:string;value:string;reason:string;name:string;type:string};
+     if(saved.value||saved.reason||saved.name){
+      const pos=saved.object?data.objects.findIndex(o=>o.id===saved.object):-1;
+      if(saved.object&&pos<0){sessionStorage.removeItem(localKey);}
+      else{
+       if(pos>=0)setIndex(pos);
+       setValue(saved.value||'');setReason(saved.reason||'');
+       if(saved.property&&properties.includes(saved.property))setField(saved.property);
+       if(scopeIds.includes(saved.range))setRange(saved.range);
+       if(saved.name)setName(saved.name);
+       if(saved.type)setType(saved.type);
+       editObject.current=saved.object||'';
+       editing.current=true;
+      }
      }
     }catch{sessionStorage.removeItem(localKey);}
    }
@@ -36,9 +47,22 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
  }
  useEffect(()=>{load().catch(onError);const timer=setInterval(()=>load().catch(onError),1500);return()=>clearInterval(timer);},[sessionId]);
  function touch(next:{property?:string;value?:string;reason?:string}={}){
-  if(!editing.current){editing.current=true;base.current=revision.current;}
-  sessionStorage.setItem(localKey,JSON.stringify({property:next.property??field,
-   value:next.value??value,reason:next.reason??reason,revision:base.current}));
+  if(!editing.current){editing.current=true;base.current=revision.current;editObject.current=objectRef.current;}
+  sessionStorage.setItem(localKey,JSON.stringify({object:editObject.current||objectRef.current,range,
+   property:next.property??field,value:next.value??value,reason:next.reason??reason,
+   name,type,revision:base.current}));
+ }
+ // A correction is bound to one object: switching objects starts a clean edit.
+ function selectObject(i:number){
+  if(i===idxRef.current)return;
+  setIndex(i);setValue('');setReason('');setConflict(false);
+  editing.current=false;editObject.current='';
+  sessionStorage.removeItem(localKey);
+ }
+ async function confirmConflict(){
+  setBusy(true);setConflict(false);editing.current=false;
+  await load().catch(()=>{});
+  editing.current=true;setBusy(false);
  }
  async function submit(){
   if(running.current)return;
@@ -47,25 +71,38 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
    if(!active||!object||!active.preview_ref)throw new Error('请先生成映射预览');
    if(range==='instance'){
     if(!field||!value.trim()||!reason.trim())throw new Error('请填写纠正值与原因');
+    if(editObject.current&&editObject.current!==object.id)throw new Error('纠正目标已切换，请核对当前对象后重新输入');
     await api(base_url+'/review','POST',{expected_revision:base.current,decision:{preview_ref:active.preview_ref,
      target_scope:'instance',changes:{entity_id:object.id,property:field,value,reason},decision:'save'}});
-    editing.current=false;await load();
-    await api(base_url+'/revalidate','POST',{expected_revision:revision.current});
+    editing.current=false;editObject.current='';
+    await load();
+    try{await api(base_url+'/revalidate','POST',{expected_revision:revision.current});}
+    catch(error){onError(error);}
    }else{
     if(!name.trim()||!reason.trim())throw new Error('请填写属性名与原因');
     await api(base_url+'/review','POST',{expected_revision:base.current,decision:{preview_ref:active.preview_ref,
      target_scope:'ontology',changes:{property:name,value_type:type,reason},decision:'save'}});
+    editing.current=false;editObject.current='';
    }
-   setValue('');setReason('');editing.current=false;
+   setValue('');setReason('');setName('');setConflict(false);
    sessionStorage.removeItem(localKey);
    await load();
-  }catch(error){onError(error);editing.current=false;await load().catch(()=>{});}finally{running.current=false;setBusy(false);}
+  }catch(error){
+   onError(error);
+   if(error instanceof ApiError&&error.status===409){
+    // A stale decision stays blocked until the user explicitly re-checks; the
+    // edit and its baseline revision are kept as they were.
+    setConflict(true);
+   }else{editing.current=false;await load().catch(()=>{});}
+  }finally{running.current=false;setBusy(false);}
  }
+ const idx=Math.min(index,Math.max(0,(view?.objects.length||0)-1));
+ idxRef.current=idx;
  if(!view)return <main className="loading">正在恢复任务…</main>;
  const properties=Object.keys(view.ontology.properties);
  const done=view.session.phase==='saved';
- const idx=Math.min(index,Math.max(0,view.objects.length-1));
  const object=view.objects[idx];
+ objectRef.current=object?.id||'';
  const proof=object&&field?object.evidence[field]||[]:[];
  const current=proof[0];
  const profile=(current?view.sources.find(s=>s.source_id===current.source_id):undefined)||view.sources[0];
@@ -74,9 +111,11 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
  const sourceRow=direct?Number(direct[0].split('.',1)[0]):0;
  const sourceField=direct?direct[0].split('.').slice(1).join('.'):field;
  const corrections=view.corrections.filter(c=>object&&c.entity_id===object.id);
+ const submitButton=(label:string)=><button className="secondary" disabled={busy||!object}
+  onClick={conflict?confirmConflict:submit}>{conflict?'已核对，重新提交':label}</button>;
  return <main className="workspace"><div className="task-header"><div><div className="eyebrow">采购资料 / 对象页</div><h1>核对业务对象</h1><p className="muted">每个值都带来源定位；三种修改范围分别生效。{done?'接入已保存，对象为只读。':''}</p></div><div className="save-buttons"><button className="secondary" onClick={onBack}>返回映射页</button></div></div>
  <div className="work-grid"><section className="source-panel"><div className="panel-heading"><strong>对象</strong><span className="badge">{view.objects.length} 个对象</span></div>
-  <div className="source-tabs">{view.objects.map((entry,i)=><button key={entry.id} className={(i===idx?'active ':'')+'source-tab'} onClick={()=>setIndex(i)}>
+  <div className="source-tabs">{view.objects.map((entry,i)=><button key={entry.id} className={(i===idx?'active ':'')+'source-tab'} onClick={()=>selectObject(i)}>
    <span>▤</span><span>{String(entry.values[view.ontology.identity_fields?.[0]||'number']??entry.id)}</span>
    {entry.unresolved.length>0&&<span className="badge">{entry.unresolved.length} 项未解决</span>}</button>)}</div>
   {view.objects.length===0&&<div className="empty">生成映射预览后，在这里查看对象。</div>}
@@ -102,8 +141,8 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
    <select id="correction-property" value={field} onChange={e=>{setField(e.target.value);touch({property:e.target.value});}}>{properties.map(prop=><option key={prop} value={prop}>{prop}</option>)}</select>
    <label className="label" htmlFor="correction-value">纠正后的值</label><input id="correction-value" aria-label="纠正后的值" value={value} onChange={e=>{setValue(e.target.value);touch({value:e.target.value});}}/>
    <label className="label" htmlFor="correction-reason">修改原因</label><textarea id="correction-reason" rows={3} value={reason} onChange={e=>{setReason(e.target.value);touch({reason:e.target.value});}}/>
-   <p className="help">保留来源原值，将本次纠正作为用户证据保存并重新校验。并发修改时过期决定会被拒绝，编辑保留；重新载入后可再提交。</p>
-   <button className="secondary" disabled={busy||!object} onClick={submit}>保存当前值并校验</button>
+   <p className="help">{conflict?'任务已有更新，本编辑已保留。请核对最新值后确认重新提交，或重新载入页面。':'保留来源原值，将本次纠正作为用户证据保存并重新校验。并发修改时过期决定会被拒绝，编辑保留。'}</p>
+   {submitButton('保存当前值并校验')}
   </div>:range==='mapping'?<div className="edit-current">
    <p className="help">映射修订作用于同类来源：修改绑定后生成新预览，经核对后保存为新映射修订，不影响已保存的其他对象。</p>
    <dl className="field-comparison"><div><dt>当前映射修订</dt><dd>{view.mapping_revision||'—'}</dd></div><div><dt>对象数</dt><dd>{view.objects.length}</dd></div></dl>
@@ -114,7 +153,7 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
    <select id="draft-type" aria-label="值类型" value={type} onChange={e=>{setType(e.target.value);touch();}}>{['string','decimal','integer','boolean','date','datetime'].map(kind=><option key={kind} value={kind}>{kind}</option>)}</select>
    <label className="label" htmlFor="draft-reason">修改原因</label><textarea id="draft-reason" rows={3} value={reason} onChange={e=>{setReason(e.target.value);touch({reason:e.target.value});}}/>
    <p className="help">生成本体草案，未经审核不改正式本体（当前 {view.ontology_revision}）。</p>
-   <button className="secondary" disabled={busy||!object} onClick={submit}>提交本体草案</button>
+   {submitButton('提交本体草案')}
   </div>}
   {view.ontology_draft&&<div className="notice"><strong>本体草案待审核</strong><ul>
    <li>{display(view.ontology_draft.property)} · {display(view.ontology_draft.value_type)}</li>

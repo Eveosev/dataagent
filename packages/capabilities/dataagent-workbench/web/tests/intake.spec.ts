@@ -22,6 +22,13 @@ test('对象页完成当前值纠正、映射修订与本体草案',async({page}
  await expect(page.getByTestId('object-amount')).toHaveText('1260');
  // 当前值纠正：只更新本对象并重验，保留来源原值。
  await page.getByLabel('纠正的属性').selectOption('amount');
+ // 切换对象会清空编辑，前一对象的纠正不会写到当前对象。
+ await page.getByLabel('纠正后的值').fill('1250');
+ await page.getByRole('button',{name:/INV-002/}).click();
+ await expect(page.getByTestId('object-number')).toHaveText('INV-002');
+ await expect(page.getByLabel('纠正后的值')).toHaveValue('');
+ await page.getByRole('button',{name:/INV-001/}).click();
+ await expect(page.getByTestId('object-number')).toHaveText('INV-001');
  await page.getByLabel('纠正后的值').fill('1250');
  await page.getByLabel('修改原因').fill('用户核对金额');
  await page.getByRole('button',{name:'保存当前值并校验'}).click();
@@ -49,8 +56,7 @@ test('对象页完成当前值纠正、映射修订与本体草案',async({page}
  await expect(page.getByTestId('object-amount')).toHaveText('126000');
 });
 
-test('聊天与页面并发修改同一任务时保留编辑并拒绝过期决定',async({page,request})=>{
- test.setTimeout(40000);
+async function openObjectPageWithPreview(page:import('@playwright/test').Page){
  await page.goto('/');
  await page.getByLabel('接入目标').fill('并发核对同一份发票');
  await page.getByLabel('选择材料').setInputFiles(path.resolve('../../dataagent-scenarios/fixtures/intake/invoices.csv'));
@@ -62,26 +68,54 @@ test('聊天与页面并发修改同一任务时保留编辑并拒绝过期决�
  await expect(page.getByTestId('preview-amount')).toHaveText('1260');
  await page.getByRole('button',{name:'打开对象页'}).click();
  await expect(page.getByTestId('object-amount')).toHaveText('1260');
- // 页面开始编辑，基准修订冻结。
  await page.getByLabel('纠正的属性').selectOption('amount');
- await page.getByLabel('纠正后的值').fill('1250');
- const sid=sessionId(page,'object');
+}
+
+async function chatSideCorrection(request:import('@playwright/test').APIRequestContext,sid:string){
  const view=await (await request.get(`/api/sessions/${sid}/objects`)).json();
- // 聊天一侧（Agent 工具同一服务）先以同一修订提交了决定。
  const chat=await request.post(`/api/sessions/${sid}/review`,{data:{expected_revision:view.session.revision,
   decision:{preview_ref:view.preview_ref,target_scope:'instance',decision:'save',changes:{
    entity_id:view.objects[0].id,property:'currency',value:'USD',reason:'聊天侧核对'}}}});
  expect(chat.ok()).toBeTruthy();
+}
+
+test('聊天与页面并发修改同一任务时保留编辑并拒绝过期决定',async({page,request})=>{
+ test.setTimeout(40000);
+ await openObjectPageWithPreview(page);
+ // 页面开始编辑，基准修订冻结。
+ await page.getByLabel('纠正后的值').fill('1250');
+ const sid=sessionId(page,'object');
+ await chatSideCorrection(request,sid);
  // 页面的过期决定被拒绝，编辑保留。
  await page.getByLabel('修改原因').fill('页面核对金额');
  await page.getByRole('button',{name:'保存当前值并校验'}).click();
  await expect(page.getByRole('alert')).toContainText('当前编辑已保留');
  await expect(page.getByLabel('纠正后的值')).toHaveValue('1250');
+ // 冲突期间提交入口被替换为显式核对，立即再点无法用过期编辑换新修订提交。
+ await expect(page.getByRole('button',{name:'保存当前值并校验'})).toHaveCount(0);
+ await expect(page.getByRole('button',{name:'已核对，重新提交'})).toBeVisible();
  // 按提示重新载入，本地编辑恢复后可以再提交。
  await page.reload();
  await expect(page.getByTestId('object-amount')).toHaveText('1260');
  await expect(page.getByLabel('纠正后的值')).toHaveValue('1250');
  await expect(page.getByLabel('修改原因')).toHaveValue('页面核对金额');
+ await page.getByRole('button',{name:'保存当前值并校验'}).click();
+ await expect(page.getByTestId('object-amount')).toHaveText('1250');
+ await expect(page.getByTestId('object-currency')).toHaveText('USD');
+});
+
+test('冲突后在页面上显式核对才能重新提交',async({page,request})=>{
+ test.setTimeout(40000);
+ await openObjectPageWithPreview(page);
+ await page.getByLabel('纠正后的值').fill('1250');
+ const sid=sessionId(page,'object');
+ await chatSideCorrection(request,sid);
+ await page.getByLabel('修改原因').fill('页面核对金额');
+ await page.getByRole('button',{name:'保存当前值并校验'}).click();
+ await expect(page.getByRole('alert')).toContainText('当前编辑已保留');
+ // 核对最新值后显式确认，同一编辑以最新修订重新提交。
+ await expect(page.getByTestId('object-currency')).toHaveText('USD');
+ await page.getByRole('button',{name:'已核对，重新提交'}).click();
  await page.getByRole('button',{name:'保存当前值并校验'}).click();
  await expect(page.getByTestId('object-amount')).toHaveText('1250');
  await expect(page.getByTestId('object-currency')).toHaveText('USD');
