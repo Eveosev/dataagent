@@ -79,13 +79,18 @@ class McpServer:
         response = self.request({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
         return response["result"]["tools"]
 
-    def call(self, name: str, arguments: dict) -> dict:
+    def call(self, name: str, arguments: dict, *, meta: dict | None = None) -> dict:
+        params: dict = {"name": name, "arguments": arguments}
+        if meta is not None:
+            # R1: ``_meta`` is the trusted host-context channel (the test
+            # acts as the host); arguments.context stays a caller hint.
+            params["_meta"] = meta
         response = self.request(
             {
                 "jsonrpc": "2.0",
                 "id": 3,
                 "method": "tools/call",
-                "params": {"name": name, "arguments": arguments},
+                "params": params,
             }
         )
         assert "result" in response, response
@@ -158,6 +163,10 @@ def servers(workspace):
                 "DATAAGENT_WORKSPACE": str(workspace),
                 "DATAAGENT_DATA_ROOT": str(workspace / ".dataagent-gov"),
                 "DATAAGENT_ENFORCEMENT_MODE": "enforce",
+                # R1: the trusted host-injected identity. arguments.context
+                # cannot supply the subject/purpose any more.
+                "DATAAGENT_HOST_SUBJECT_REF": "user:alice",
+                "DATAAGENT_HOST_PURPOSE": "monthly_report",
             },
         ),
         "data": McpServer(
@@ -170,6 +179,8 @@ def servers(workspace):
                 # governance server minted into the same db/decisions.sqlite3
                 "DATAAGENT_DATA_ROOT": str(workspace / ".dataagent-gov"),
                 "DATAAGENT_ENFORCEMENT_MODE": "enforce",
+                "DATAAGENT_HOST_SUBJECT_REF": "user:alice",
+                "DATAAGENT_HOST_PURPOSE": "monthly_report",
             },
         ),
         "application": McpServer(
@@ -266,10 +277,8 @@ def test_three_bundles_over_mcp_in_skill_order(servers, workspace):
     # governance server (enforce) refuses to mint an allow for another subject
     stranger = servers["governance"].call(
         "check_access_scope",
-        {
-            "resource_ref": "file@*",
-            "context": {**CONTEXT, "subject_ref": "user:mallory"},
-        },
+        {"resource_ref": "file@*"},
+        meta={"context": {**CONTEXT, "subject_ref": "user:mallory"}},
     )
     assert stranger["status"] == "ok"  # business conclusion...
     # ...but no allow: no matching rule is indeterminate (folded to deny)

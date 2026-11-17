@@ -79,9 +79,14 @@ def governance(tmp_path):
 
 
 @pytest.fixture()
-def data(tmp_path):
+def data(tmp_path, monkeypatch):
     from dataagent_data.runtime import create as create_data_runtime
 
+    # R1: the data runtime gets the same trusted host identity as the
+    # governance fixture (host-injected environment), so the data-layer
+    # product recheck compares against the decisions governance minted.
+    monkeypatch.setenv("DATAAGENT_HOST_SUBJECT_REF", "user:alice")
+    monkeypatch.setenv("DATAAGENT_HOST_PURPOSE", "monthly_report")
     # same data_root as the governance runtime: the S0 composition shares
     # the decisions store (08 §2), so AccessDecisions minted by governance
     # resolve on the data layer's own product path

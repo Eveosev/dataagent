@@ -9,10 +9,12 @@ model-visibility (egress) check on the way out. The layer provides hooks:
 registry/invoke wiring, a runtime factory and — where the layer has file
 inputs — a FileRef builder.
 
-Identity (12 §5.4): the executing subject and purpose come only from the
-host environment (``DATAAGENT_HOST_SUBJECT_REF`` / ``DATAAGENT_HOST_PURPOSE``
-via the layer runtime); call arguments can never set or override them. A
-``context`` key inside ``--input-file`` is a usage error, not a context.
+Identity (12 §5.4): the executing subject and purpose come from the host
+first (``_meta`` when the entry point has it, then
+``DATAAGENT_HOST_SUBJECT_REF`` / ``DATAAGENT_HOST_PURPOSE`` via the layer
+runtime), then the local-owner fallback; call arguments can never set or
+override them. A ``context`` key inside ``--input-file`` is a usage error,
+not a context.
 
 The legacy stdin mode (``python -m <pkg>.interfaces.cli <op>`` with a JSON
 body on stdin) is retained unchanged for the existing black-box acceptance
@@ -22,7 +24,6 @@ flows; it is only taken when the operation name appears alone.
 from __future__ import annotations
 
 import json
-import os
 import sys
 import uuid
 from dataclasses import dataclass, field
@@ -32,13 +33,19 @@ from typing import Any, Callable, Union, get_args, get_origin
 
 from pydantic import ValidationError
 
-from dataagent_contracts.core import CallContext, CapabilityStatus
+from dataagent_contracts.core import CapabilityStatus
 
 # W0 seam spec §5: the content keys of an inference_request are the only
 # model-visible content channel; structure keys are never stripped. The
 # canonical tuple lives in ``dataagent_runtime.enforcement`` (the egress
 # gate) and is re-exported here for the layer CLI kernels.
 from dataagent_runtime.enforcement import EGRESS_CONTENT_KEYS  # noqa: F401
+from dataagent_runtime.policy.context import (
+    ContextResolutionError,
+    ResolvedContext,
+    resolve_context,
+    with_authorization,
+)
 
 EXIT_OK = 0
 EXIT_FAILED = 1
@@ -79,7 +86,7 @@ class Parsed:
 class LayerHooks:
     layer: str  # "data" | "app" | "gov"
     list_operations: Callable[[], list[Any]]
-    invoke: Callable[[str, dict[str, Any] | None, dict[str, Any]], Any]
+    invoke: Callable[[str, dict[str, Any] | None, Any], Any]
     validate: Callable[[], None]
     runtime_factory: Callable[[], Any]
     # Layer-specific FileRef builder (data layer: real digest of the bytes).
@@ -423,34 +430,36 @@ def _collect_handles(node: Any, out: list[str]) -> None:
             _collect_handles(value, out)
 
 
-def _build_context(runtime: Any, parsed: Parsed) -> CallContext:
-    # 12 §5.4: subject/purpose come from the trusted host wiring (runtime
-    # configuration, then the host environment); call arguments never set them.
-    subject = getattr(runtime, "host_subject_ref", None) or os.environ.get(
-        "DATAAGENT_HOST_SUBJECT_REF"
-    )
-    purpose = getattr(runtime, "host_purpose", None) or os.environ.get("DATAAGENT_HOST_PURPOSE")
-    authorization_ref = os.environ.get("DATAAGENT_AUTHORIZATION_REF")
+def _build_context(runtime: Any, parsed: Parsed) -> ResolvedContext:
+    # R1: one resolver for every entry point. Subject/purpose come from the
+    # host _meta (not available in argv) -> host configuration/environment
+    # -> local-owner. The old argv-only context path is reached with
+    # DATAAGENT_CONTEXT_RESOLVER=legacy.
+    try:
+        resolved = resolve_context(runtime=runtime, allow_legacy_synthesis=True)
+    except ContextResolutionError as exc:
+        raise _ContextError(str(exc)) from exc
     if parsed.authorize:
-        decision = runtime.decisions.latest_allow(subject, purpose)
+        decision = runtime.decisions.latest_allow(
+            resolved.context.subject_ref, resolved.context.purpose
+        )
         if decision is None:
             raise _AuthorizeError(
                 "no allow AccessDecision for "
-                f"subject={subject!r} purpose={purpose!r}; mint one first "
+                f"subject={resolved.context.subject_ref!r} "
+                f"purpose={resolved.context.purpose!r}; mint one first "
                 "(dataagent gov run check_access_scope) or apply a policy"
             )
-        authorization_ref = decision.decision_id
-    return CallContext(
-        request_id=f"cli:{uuid.uuid4().hex[:12]}",
-        scope_ref=os.environ.get("DATAAGENT_SCOPE_REF", "tenant:local"),
-        authorization_ref=authorization_ref or "cli:unauthorized",
-        subject_ref=subject,
-        purpose=purpose,
-    )
+        resolved = with_authorization(resolved, decision.decision_id)
+    return resolved
 
 
 class _AuthorizeError(Exception):
     """`--authorize` found no usable decision: environment/policy missing (3)."""
+
+
+class _ContextError(Exception):
+    """The trusted context channels are malformed: environment error (3)."""
 
 
 def _egress_scrub(summary: dict[str, Any], mode: str) -> dict[str, Any]:
@@ -509,7 +518,9 @@ def _op_help(spec: Any, hooks: LayerHooks) -> str:
         "  --detail summary|full      print the full result instead of the summary",
         "",
         "context comes from the host environment (DATAAGENT_HOST_SUBJECT_REF,",
-        "DATAAGENT_HOST_PURPOSE); it cannot be passed as an argument.",
+        "DATAAGENT_HOST_PURPOSE), then the local-owner fallback; it cannot be",
+        "passed as an argument. DATAAGENT_CONTEXT_RESOLVER=legacy restores the",
+        "old precedence for one release.",
     ]
     return "\n".join(lines)
 
@@ -631,8 +642,11 @@ def _run(op: str, params: list[str], hooks: LayerHooks) -> int:
     except _AuthorizeError as exc:
         _stderr(str(exc))
         return EXIT_ENV
+    except _ContextError as exc:
+        _stderr(f"context error: {exc}")
+        return EXIT_ENV
 
-    result = hooks.invoke(op, payload, context.model_dump(mode="json"))
+    result = hooks.invoke(op, payload, context)
     return _emit(result, parsed, hooks, op, runtime, payload)
 
 

@@ -6,11 +6,12 @@ from typing import Literal
 
 from pydantic import Field, JsonValue, RootModel, ValidationError
 
-from dataagent_contracts.core import CallContext, CapabilityResult, CapabilityStatus, Continuation, Issue
+from dataagent_contracts.core import CapabilityResult, CapabilityStatus, Continuation, Issue
 from dataagent_contracts.environment import EnvironmentSnapshot, UIObservation
 from dataagent_contracts.workflow import ActionRecord, WaitRecord, WorkflowDraft, WorkflowRun, WorkflowValidationReport
 from dataagent_runtime.adapters.workbench_sqlite import SqliteWorkbenchStore
 from dataagent_runtime.interfaces.mcp_server import serve
+from dataagent_runtime.policy.context import ContextResolutionError, resolved_context
 from dataagent_runtime.registry import OperationSpec
 
 from .bindings import ConfigModel, HostConfig
@@ -141,16 +142,22 @@ def invoke(operation, payload, context):
     if spec is None:
         return CapabilityResult.failure(Issue.standard("not_found", "Unknown operations capability"))
     try:
-        ctx = CallContext.model_validate(context)
+        # R1: resolve through the one context resolver. A ResolvedContext from
+        # the shared MCP entry passes through sealed; an older bare
+        # CallContext/mapping is a hint (host _meta/environment -> local-owner).
+        ctx = resolved_context(context).context
         args = spec.input_model.model_validate(payload)
-    except ValidationError:
+    except (ContextResolutionError, ValidationError):
         return CapabilityResult.failure(Issue.standard("invalid_input", "Invalid operations input or CallContext"))
     try:
         service = load_service()
     except (OSError, ValidationError, ValueError):
         return CapabilityResult.failure(Issue.standard("dependency_unavailable", "Trusted operations host configuration is unavailable"))
-    if ctx.scope_ref != service.config.scope_ref or ctx.authorization_ref != service.config.authorization_ref:
-        return CapabilityResult.failure(Issue.standard("unauthorized", "CallContext does not match trusted operations scope"))
+    # R1: ``scope_ref`` is now the one workspace spelling, not the
+    # operations host's business scope; the trusted capability handle in the
+    # host config remains the authorization gate.
+    if ctx.authorization_ref != service.config.authorization_ref:
+        return CapabilityResult.failure(Issue.standard("unauthorized", "CallContext does not match trusted operations authorization"))
     try:
         value = spec.handler(service, **args.model_dump(mode="json"))
     except AuthorityRevoked as exc:

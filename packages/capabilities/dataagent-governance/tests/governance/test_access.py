@@ -65,10 +65,9 @@ def test_no_matching_rule_is_indeterminate_effective_deny(rt):
 
 
 def test_explicit_deny_wins_over_allow(rt):
-    # no fixed host authority in this test: the wire identity (bob) is the
-    # acting subject, so the explicit deny rule for bob must win
-    rt.host_subject_ref = None
-    rt.host_purpose = None
+    # the trusted host fixes bob as the acting subject; the explicit deny
+    # rule for bob must win over the table:orders allow rule
+    rt.host_subject_ref = "user:bob"
     result = invoke(
         "check_access_scope",
         {"resource_ref": "table:orders@r1"},
@@ -96,21 +95,25 @@ def test_subject_and_purpose_come_from_context_not_arguments(rt):
     assert result.data.decision.purpose == "monthly_report"
 
 
-def test_no_authority_at_all_is_invalid_input(rt):
+def test_no_host_authority_falls_back_to_local_owner_not_call_arguments(rt):
+    # R1: with no host authority the resolver supplies the local-owner
+    # subject. A caller-supplied subject/purpose in arguments.context is a
+    # hint only and must not become the executing identity (S0 X1).
     rt.host_subject_ref = None
     rt.host_purpose = None
     result = invoke(
         "check_access_scope",
         {"resource_ref": "table:orders@r1"},
-        {
-            "request_id": "req:3",
-            "scope_ref": "tenant:demo",
-            "authorization_ref": "seed",
-        },
+        ctx(subject_ref="user:mallory", purpose="exfiltrate"),
         runtime=rt,
     )
-    assert result.status == "failed"
-    assert result.issues[0].code == "invalid_input"
+    assert result.status == "ok"  # business conclusion, not a runtime failure
+    decision = result.data.decision
+    assert decision.subject_ref.startswith("local-owner:")
+    assert decision.subject_ref != "user:mallory"
+    assert decision.purpose == "local_owner"
+    # no policy rule covers the local owner: indeterminate (folded to deny)
+    assert decision.decision is AccessOutcome.indeterminate
 
 
 def _mint_access(rt, resource="table:orders@r1", **ctx_over):
@@ -274,11 +277,12 @@ def test_access_and_egress_operations_declare_writes(rt):
 
 
 def test_egress_basis_binds_subject_and_purpose(rt):
-    # no fixed host authority: the wire identity (bob/fraud_scan) must be
-    # compared against the decision minted for alice
-    rt.host_subject_ref = None
-    rt.host_purpose = None
+    # the decision is minted for the fixture host authority (alice/
+    # monthly_report); the trusted host then switches to bob/fraud_scan, so
+    # the basis decision must be rejected for the new executing identity
     access = _mint_access(rt)
+    rt.host_subject_ref = "user:bob"
+    rt.host_purpose = "fraud_scan"
     ref = content_ref(rt, orders_table())
     result = invoke(
         "check_model_context_egress",
