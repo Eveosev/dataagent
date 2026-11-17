@@ -1,0 +1,164 @@
+{
+  "task": "schema_matching_top1",
+  "instruction": "给定源表、目标表和 source_field，只返回该源字段的 top-1 目标列名。没有对应字段时显式返回 null（或空数组），不要猜测；不要为其他源字段作答。",
+  "source_table": {
+    "name": "City_Government__Capital_Projects/source_table.csv",
+    "row_count": 1962,
+    "columns": [
+      {
+        "name": "total_changes",
+        "samples": [
+          "1477.0",
+          "1215.0"
+        ]
+      },
+      {
+        "name": "pid",
+        "samples": [
+          "1901-06-24",
+          "1901-05-30"
+        ]
+      },
+      {
+        "name": "date_reported_as_of",
+        "samples": [
+          "2023-01-01",
+          "2017-09-01"
+        ]
+      },
+      {
+        "name": "design_start",
+        "samples": [
+          "2017-06-30T00:00:00.000",
+          "2014-03-17T00:00:00.000"
+        ]
+      },
+      {
+        "name": "description",
+        "samples": [
+          "Replace the Shore Road Bridge over the Hutchinson River with a new bridge.",
+          "Reconstruction of Storm and Sanitary sewers, Trunk and Distribution Water Main …"
+        ]
+      },
+      {
+        "name": "latest_budget_changes",
+        "samples": [
+          "-1091765.0",
+          "0.0"
+        ]
+      },
+      {
+        "name": "forecast_completion",
+        "samples": [
+          "2030-01-02",
+          "2021-09-06"
+        ]
+      },
+      {
+        "name": "managing_agency",
+        "samples": [
+          "DOT",
+          "DDC"
+        ]
+      },
+      {
+        "name": "changes",
+        "samples": [
+          "-19049921.84",
+          "25273000.0"
+        ]
+      },
+      {
+        "name": "client_agency",
+        "samples": [
+          "DOT",
+          "Environmental Protection"
+        ]
+      },
+      {
+        "name": "budget_forecast",
+        "samples": [
+          "339641078.0",
+          "39427000.0"
+        ]
+      }
+    ]
+  },
+  "target_table": {
+    "name": "City_Government__Capital_Projects/target_table.csv",
+    "row_count": 1963,
+    "columns": [
+      {
+        "name": "borough",
+        "samples": [
+          "Brooklyn",
+          "Manhattan"
+        ]
+      },
+      {
+        "name": "project_name",
+        "samples": [
+          "Shore Road Bridge over Hutchinson River",
+          "Coney Island Area, Phase 3A"
+        ]
+      },
+      {
+        "name": "total_schedule_changes",
+        "samples": [
+          "1477.0",
+          "1215.0"
+        ]
+      },
+      {
+        "name": "latest_schedule_changes",
+        "samples": [
+          "162.0",
+          "60.0"
+        ]
+      },
+      {
+        "name": "date_reported_as_of",
+        "samples": [
+          "2023-01-01T00:00:00.000",
+          "2017-09-01T00:00:00.000"
+        ]
+      },
+      {
+        "name": "total_budget_changes",
+        "samples": [
+          "-19049921.84",
+          "25273000.0"
+        ]
+      },
+      {
+        "name": "pid",
+        "samples": [
+          "541",
+          "516"
+        ]
+      },
+      {
+        "name": "forecast_completion",
+        "samples": [
+          "2030-01-02T00:00:00.000",
+          "2021-09-06T00:00:00.000"
+        ]
+      },
+      {
+        "name": "category",
+        "samples": [
+          "Bridges, Streets and Roadways",
+          "Industrial Development"
+        ]
+      },
+      {
+        "name": "current_phase",
+        "samples": [
+          "Design",
+          "Construction Procurement"
+        ]
+      }
+    ]
+  },
+  "source_field": "changes"
+}

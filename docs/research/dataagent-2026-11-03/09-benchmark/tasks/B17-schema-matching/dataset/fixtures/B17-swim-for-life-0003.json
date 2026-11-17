@@ -1,0 +1,140 @@
+{
+  "task": "schema_matching_top1",
+  "instruction": "给定源表、目标表和 source_field，只返回该源字段的 top-1 目标列名。没有对应字段时显式返回 null（或空数组），不要猜测；不要为其他源字段作答。",
+  "source_table": {
+    "name": "Recreation__Swim_for_Life__2016_to_2020/source_table.csv",
+    "row_count": 11044,
+    "columns": [
+      {
+        "name": "session_date_range",
+        "samples": [
+          "October - December",
+          "April - June"
+        ]
+      },
+      {
+        "name": "session_x",
+        "samples": [
+          "Session #1",
+          "Session #3"
+        ]
+      },
+      {
+        "name": "adaptive_class",
+        "samples": [
+          "False"
+        ]
+      },
+      {
+        "name": "CLS_ID",
+        "samples": [
+          "309",
+          "221"
+        ]
+      },
+      {
+        "name": "borough",
+        "samples": [
+          "Manhattan",
+          "Queens"
+        ]
+      },
+      {
+        "name": "training_site",
+        "samples": [
+          "River Bank",
+          "FMCP"
+        ]
+      },
+      {
+        "name": "tbl_school_year",
+        "samples": [
+          "2019-2020",
+          "2016-2017"
+        ]
+      },
+      {
+        "name": "training_entity_code",
+        "samples": [
+          "NYC Parks"
+        ]
+      }
+    ]
+  },
+  "target_table": {
+    "name": "Recreation__Swim_for_Life__2016_to_2020/target_table.csv",
+    "row_count": 11045,
+    "columns": [
+      {
+        "name": "school",
+        "samples": [
+          "Riverton Street Charter School",
+          "P.S. 195"
+        ]
+      },
+      {
+        "name": "session",
+        "samples": [
+          "Session #1",
+          "Session #3"
+        ]
+      },
+      {
+        "name": "district",
+        "samples": [
+          "29.0",
+          "18.0"
+        ]
+      },
+      {
+        "name": "gender",
+        "samples": [
+          "Male",
+          "Female"
+        ]
+      },
+      {
+        "name": "class_number",
+        "samples": [
+          "309",
+          "221"
+        ]
+      },
+      {
+        "name": "training_entity",
+        "samples": [
+          "NYC Parks"
+        ]
+      },
+      {
+        "name": "school_year",
+        "samples": [
+          "2019-2020",
+          "2016-2017"
+        ]
+      },
+      {
+        "name": "number_of_sessions_attended",
+        "samples": [
+          "5.0",
+          "10.0"
+        ]
+      },
+      {
+        "name": "training_site",
+        "samples": [
+          "River Bank",
+          "FMCP"
+        ]
+      },
+      {
+        "name": "first_day_of_class",
+        "samples": [
+          "2019-10-11T00:00:00.000",
+          "2016-10-19T00:00:00.000"
+        ]
+      }
+    ]
+  },
+  "source_field": "adaptive_class"
+}

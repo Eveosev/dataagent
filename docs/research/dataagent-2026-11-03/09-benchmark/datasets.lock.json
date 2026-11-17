@@ -1,10 +1,10 @@
 {
-  "version": "v0.2",
-  "date": "2026-11-17",
+  "version": "v0.3",
+  "date": "2026-11-18",
   "raw_root": "workspace/benchmark-data",
   "ref_scheme": "bench://<source-id>/<path-within-source>",
   "summary": {
-    "available": 42,
+    "available": 43,
     "gated": 0,
     "note": "gated 源需人工接受条款并配置 HF token；fetch.py 会跳过并打印 remedy",
     "deferred": 1
@@ -545,6 +545,19 @@
       "notes": "DeepMatcher 基准集 Abt-Buy 的 Leipzig 原始发布；文本型商品描述，CC BY 4.0，署名同上；发布页 2019-01 声明链接到 CC BY 4.0（2026-11-17 核对）",
       "license_url": "https://creativecommons.org/licenses/by/4.0/",
       "license_evidence": "https://dbs.uni-leipzig.de/research/projects/object_matching/benchmark_datasets_for_entity_resolution"
+    },
+    {
+      "id": "valentine-schema-matching",
+      "task": "B17",
+      "kind": "git",
+      "locator": "https://github.com/delftdata/valentine.git",
+      "revision": "v1.1.1",
+      "license": "Apache-2.0",
+      "est_mb": 140.0,
+      "status": "available",
+      "notes": "Valentine 官方仓库 v1.1.1 的 experiments/data（10 对 NYC Open Data 表，含 source_table.csv / target_table.csv / ground_truth.json）；仓库 LICENSE 为 Apache-2.0，数据由 Yurong Liu 整理并以 LLM 做 schema/value 扰动（2026-11-18 核对）",
+      "license_url": "https://github.com/delftdata/valentine/blob/v1.1.1/LICENSE",
+      "license_evidence": "https://github.com/delftdata/valentine/blob/v1.1.1/experiments/README.md"
     }
   ]
 }

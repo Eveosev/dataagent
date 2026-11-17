@@ -1,0 +1,284 @@
+{
+  "dataset_id": "B17.dataset",
+  "task_id": "B17",
+  "revision": "v0.4",
+  "status": "collecting",
+  "unit": "case",
+  "sources": [
+    {
+      "name": "valentine-schema-matching",
+      "locator": "https://github.com/delftdata/valentine.git",
+      "license": "Apache-2.0",
+      "digest": "sha256:4a54d50c6a3f653d62879eb745894a1db26b26e65e9b4aa048e7d15f3fa5ba0c",
+      "revision": "19029e3c9b1c3d5fc514ab601f658307c37c8e1c",
+      "files": 202,
+      "mb": 140.0,
+      "fetched_at": "2026-11-18T01:49:32+08:00",
+      "license_url": "https://github.com/delftdata/valentine/blob/v1.1.1/LICENSE",
+      "license_evidence": "https://github.com/delftdata/valentine/blob/v1.1.1/experiments/README.md",
+      "license_checked_at": "2026-11-18",
+      "attribution": "Valentine (Delft University of Technology); data curated by Yurong Liu from NYC Open Data",
+      "revision_requested": "v1.1.1"
+    }
+  ],
+  "splits": {
+    "development": {
+      "count": 93,
+      "frozen": false
+    },
+    "regression": {
+      "count": 28,
+      "frozen": false
+    },
+    "unseen_acceptance": {
+      "count": 25,
+      "frozen": false
+    }
+  },
+  "exposure": {
+    "ledger_ref": "exposure.jsonl",
+    "entries": 0
+  },
+  "fixtures": {
+    "storage": "local",
+    "path": "fixtures/",
+    "limits": "单文件 <= 2 MB；超出走对象存储并在 digest 记录"
+  },
+  "updated": "2026-11-18",
+  "notes": "由 build_cases.py 从 workspace/benchmark-data 构建；原始数据不入库",
+  "build": {
+    "version": 4,
+    "script": "tools/build_cases.py",
+    "built_at": "2026-11-18",
+    "policy": "一条用例一个源字段；fixture 只含两表列名、行数与每列至多 2 个截断样例值，不含完整行；金标只取 Valentine 数据的 ground_truth.json.matches，未出现的源字段按 has_false_positives=false 记为无对应字段；按表对固定 sha256 60/20/20 切分，同一表对不跨 split；top-1 判分，无对应字段必须显式返回 null/空。",
+    "available": {
+      "development": 93,
+      "regression": 28,
+      "unseen_acceptance": 25
+    },
+    "selected": {
+      "development": 93,
+      "regression": 28,
+      "unseen_acceptance": 25
+    },
+    "caps": {
+      "development": 120,
+      "regression": 60,
+      "unseen_acceptance": 60
+    },
+    "coverage": {
+      "covered_metrics": [
+        "mapping_top1",
+        "no_match_accuracy"
+      ],
+      "partial_metrics": [],
+      "missing_metrics": [],
+      "coverage_gaps": [
+        {
+          "id": "private_lingcai_subset",
+          "status": "deferred",
+          "description": "私有子集（令才字段目录与报文映射）不在公开用例中；本轮只用 Valentine 公开子集。",
+          "impact": "无法衡量模型在令才真实字段名、别名和报文结构上的 top-1 映射效果；公开子集的分数不能替代私有子集验收。",
+          "next_step": "由 T34b 接入令才字段目录与人工确认的映射后，按 private:// 解析补私有子集，不把私有数据写进 Git 或日志正文。"
+        },
+        {
+          "id": "business_data",
+          "status": "deferred",
+          "description": "业务数据（客户字段目录、人工映射与值域）尚未提供；当前 10 对表全部来自 NYC Open Data。",
+          "impact": "跨行业、中文业务字段与客户命名习惯未覆盖；结论只适用于公开英文表结构。",
+          "next_step": "由客户授权并脱敏后登记为独立来源，补 development/regression 用例；unseen_acceptance 只放未暴露样本。"
+        }
+      ],
+      "note": "公开子集覆盖 10 对表、146 个源字段，其中 77 个有目标字段、69 个无对应字段；三个 split 都同时含正例与无匹配字段。按 Valentine 评测口径，ground_truth.matches 之外的预测对计 FP，因此未列入 matches 的源字段按无匹配处理；has_false_positives=false 进一步说明 matches 内没有错标。Valentine 原始论文数据集归档（surfdrive）链接已 404，Wayback 快照只有 1 MB 截断 zip，不作来源；改用官方仓库 v1.1.1 的 experiments/data 公开子集。",
+      "license_audit": [
+        {
+          "candidate": "Valentine 官方仓库 v1.1.1 experiments/data（10 对表）",
+          "license": "Apache-2.0",
+          "decision": "采用；manifest 记 attribution",
+          "evidence": "https://github.com/delftdata/valentine/blob/v1.1.1/LICENSE",
+          "evidence_quote": "Copyright 2021-2026 Delft University of Technology ... Licensed under the Apache License, Version 2.0",
+          "data_evidence": "https://github.com/delftdata/valentine/blob/v1.1.1/experiments/README.md",
+          "data_evidence_quote": "The dataset pairs under `data/` were prepared by Yurong Liu. They are sourced from NYC Open Data with schema and value perturbations based on LLMs to create pairs of diverse matching difficulty levels. Each subdirectory contains a `source_table.csv`, `target_table.csv`, and `ground_truth.json`.",
+          "evidence_checked_at": "2026-11-18",
+          "datasets": [
+            "City_Government__Capital_Projects",
+            "City_Government__DCM_StreetCenterLine",
+            "City_Government__DPR_AthleticFacilities_001",
+            "City_Government__DSNY_Districts_With_Disposal_Vendor_Assignments",
+            "City_Government__NYC_Municipal_Building_Energy_Benchmarking_Results",
+            "Education__COVID-19_Free_Meals_Locations",
+            "Housing_&_Development__Housing_Maintenance_Code_Complaints_and_Problems",
+            "Housing_&_Development__Public_Design_Commission_Outdoor_Public_Art_Invent",
+            "Recreation__Swim_for_Life__2016_to_2020",
+            "Transportation__DOT_In-house_Street_Resurfacing_Projects"
+          ]
+        },
+        {
+          "candidate": "Valentine 原始论文数据集归档（surfdrive 分享）",
+          "license": "未声明；分享页已不可用",
+          "decision": "不采用；2026-11-18 访问返回 404，Wayback 快照 zip 截断为 1 MB",
+          "evidence": "https://surfdrive.surf.nl/files/index.php/s/QU5oxyNMuVguEku",
+          "evidence_checked_at": "2026-11-18"
+        },
+        {
+          "candidate": "valentine-paper-results 仓库",
+          "license": "仓库含结果与可视化，未声明原始数据许可",
+          "decision": "不采用；只有算法输出，没有可直接判分的原始表对与金标",
+          "evidence": "https://github.com/delftdata/valentine-paper-results",
+          "evidence_checked_at": "2026-11-18"
+        },
+        {
+          "candidate": "valentine-generator 仓库",
+          "license": "代码仓库，数据集不随仓库分发",
+          "decision": "不采用；生成器需要外部基础表，不能独立产出一致的数据快照",
+          "evidence": "https://github.com/delftdata/valentine-generator",
+          "evidence_checked_at": "2026-11-18"
+        },
+        {
+          "candidate": "NYC Open Data（原始数据来源）",
+          "license": "NYC Open Data Terms of Use；作为来源署名，实际再分发许可以 Valentine 仓库 Apache-2.0 为准",
+          "decision": "作为 provenance 记录，不单独作为再分发许可",
+          "evidence": "https://opendata.cityofnewyork.us/overview/",
+          "evidence_checked_at": "2026-11-18"
+        }
+      ]
+    },
+    "counts": {
+      "pairs": 10,
+      "source_fields": 146,
+      "positive_fields": 77,
+      "no_match_fields": 69,
+      "per_pair": {
+        "capital-projects": {
+          "source_columns": 11,
+          "target_columns": 10,
+          "source_fields": 11,
+          "positive_fields": 5,
+          "no_match_fields": 6,
+          "invalid_matches": {
+            "source_not_in_header": [],
+            "target_not_in_header": []
+          }
+        },
+        "dcm-streetcenterline": {
+          "source_columns": 13,
+          "target_columns": 11,
+          "source_fields": 13,
+          "positive_fields": 7,
+          "no_match_fields": 6,
+          "invalid_matches": {
+            "source_not_in_header": [],
+            "target_not_in_header": []
+          }
+        },
+        "dpr-athletic-facilities": {
+          "source_columns": 30,
+          "target_columns": 25,
+          "source_fields": 30,
+          "positive_fields": 10,
+          "no_match_fields": 20,
+          "invalid_matches": {
+            "source_not_in_header": [],
+            "target_not_in_header": []
+          }
+        },
+        "dsny-districts": {
+          "source_columns": 16,
+          "target_columns": 17,
+          "source_fields": 16,
+          "positive_fields": 8,
+          "no_match_fields": 8,
+          "invalid_matches": {
+            "source_not_in_header": [],
+            "target_not_in_header": []
+          }
+        },
+        "nyc-energy-benchmarking": {
+          "source_columns": 9,
+          "target_columns": 8,
+          "source_fields": 9,
+          "positive_fields": 5,
+          "no_match_fields": 4,
+          "invalid_matches": {
+            "source_not_in_header": [],
+            "target_not_in_header": []
+          }
+        },
+        "covid-free-meals": {
+          "source_columns": 7,
+          "target_columns": 9,
+          "source_fields": 7,
+          "positive_fields": 5,
+          "no_match_fields": 2,
+          "invalid_matches": {
+            "source_not_in_header": [],
+            "target_not_in_header": []
+          }
+        },
+        "housing-maintenance": {
+          "source_columns": 21,
+          "target_columns": 24,
+          "source_fields": 21,
+          "positive_fields": 12,
+          "no_match_fields": 9,
+          "invalid_matches": {
+            "source_not_in_header": [],
+            "target_not_in_header": []
+          }
+        },
+        "public-art-inventory": {
+          "source_columns": 24,
+          "target_columns": 34,
+          "source_fields": 24,
+          "positive_fields": 15,
+          "no_match_fields": 9,
+          "invalid_matches": {
+            "source_not_in_header": [],
+            "target_not_in_header": []
+          }
+        },
+        "swim-for-life": {
+          "source_columns": 8,
+          "target_columns": 10,
+          "source_fields": 8,
+          "positive_fields": 5,
+          "no_match_fields": 3,
+          "invalid_matches": {
+            "source_not_in_header": [],
+            "target_not_in_header": []
+          }
+        },
+        "street-resurfacing": {
+          "source_columns": 7,
+          "target_columns": 12,
+          "source_fields": 7,
+          "positive_fields": 5,
+          "no_match_fields": 2,
+          "invalid_matches": {
+            "source_not_in_header": [],
+            "target_not_in_header": []
+          }
+        }
+      },
+      "splits": {
+        "development": {
+          "fields": 93,
+          "positive": 47,
+          "no_match": 46
+        },
+        "regression": {
+          "fields": 28,
+          "positive": 17,
+          "no_match": 11
+        },
+        "unseen_acceptance": {
+          "fields": 25,
+          "positive": 13,
+          "no_match": 12
+        }
+      }
+    },
+    "content_digest": "sha256:723ded0e01838835d56c4078dd20c730820b1c993444dda9339f1e4417fc925e",
+    "content_digest_version": 3
+  }
+}

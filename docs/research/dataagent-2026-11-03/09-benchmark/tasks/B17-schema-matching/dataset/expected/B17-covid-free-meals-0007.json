@@ -1,0 +1,34 @@
+{
+  "source_dataset": "valentine-schema-matching",
+  "source_table": "Education__COVID-19_Free_Meals_Locations/source_table.csv",
+  "target_table": "Education__COVID-19_Free_Meals_Locations/target_table.csv",
+  "source_field": "location",
+  "target_field": "siteaddress",
+  "license": "Apache-2.0",
+  "license_url": "https://github.com/delftdata/valentine/blob/v1.1.1/LICENSE",
+  "attribution": "Valentine (Delft University of Technology); data curated by Yurong Liu from NYC Open Data",
+  "case_id": "B17-covid-free-meals-0007",
+  "expected": {
+    "kind": "schema_mapping_top1",
+    "source_dataset": "valentine-schema-matching",
+    "license": "Apache-2.0",
+    "license_url": "https://github.com/delftdata/valentine/blob/v1.1.1/LICENSE",
+    "attribution": "Valentine (Delft University of Technology); data curated by Yurong Liu from NYC Open Data",
+    "source_table": "Education__COVID-19_Free_Meals_Locations/source_table.csv",
+    "target_table": "Education__COVID-19_Free_Meals_Locations/target_table.csv",
+    "source_field": "location",
+    "target_field": "siteaddress",
+    "candidate_targets": [
+      "zip",
+      "bldgcode",
+      "sfcode",
+      "koshermealtype",
+      "latitude",
+      "longitude",
+      "siteaddress",
+      "city",
+      "district"
+    ],
+    "annotation": "ground_truth.json.matches 的正例；未出现在 matches 的源字段按 meta.has_false_positives=false 视为无对应字段"
+  }
+}
