@@ -15,11 +15,13 @@ from dataagent_contracts.intake import SourceSelection, WorkSpec
 from dataagent_contracts.ontology import MappingSpec,ReviewDecision
 from dataagent_runtime.ports.workbench_store import VersionConflict
 from ..ontology_discovery import DiscoveryReview
+from ..view_service import ViewService
 
 
 def create_app(wb):
     app = FastAPI(docs_url=None,redoc_url=None,openapi_url=None)
     launch_nonces={}
+    views=ViewService(wb)
 
     @app.middleware('http')
     async def local_access(request: Request, call_next):
@@ -154,6 +156,9 @@ def create_app(wb):
 
     @app.get('/api/sessions/{sid}/view')
     def view(sid:str):return wb.intake.view(sid,wb.ctx)
+
+    @app.get('/api/sessions/{sid}/objects')
+    def objects(sid:str):return views.object_page(sid,wb.ctx)
 
     @app.post('/api/sessions/{sid}/advance')
     def advance(sid:str):return wb.intake.advance(sid,wb.ctx)
