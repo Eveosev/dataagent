@@ -1,0 +1,52 @@
+{
+  "source": "leipzig-amazon-google",
+  "source_label": "Amazon → Google Products",
+  "license": "CC BY 4.0",
+  "license_url": "https://creativecommons.org/licenses/by/4.0/",
+  "attribution": "Leipzig DBS group; Köpcke et al., VLDB 2010",
+  "left_id": "b000o39u3q",
+  "gold_right_ids": [
+    "http://www.google.com/base/feeds/snippets/18195210518723634061",
+    "http://www.google.com/base/feeds/snippets/18386729116244999637"
+  ],
+  "candidate_ids": [
+    "http://www.google.com/base/feeds/snippets/13023052343955574084",
+    "http://www.google.com/base/feeds/snippets/18395874674910243298",
+    "http://www.google.com/base/feeds/snippets/18386729116244999637",
+    "http://www.google.com/base/feeds/snippets/13718013650982127815",
+    "http://www.google.com/base/feeds/snippets/18195210518723634061",
+    "http://www.google.com/base/feeds/snippets/17453432506391757198"
+  ],
+  "distractor_ids": [
+    "http://www.google.com/base/feeds/snippets/13023052343955574084",
+    "http://www.google.com/base/feeds/snippets/17453432506391757198",
+    "http://www.google.com/base/feeds/snippets/18395874674910243298",
+    "http://www.google.com/base/feeds/snippets/13718013650982127815"
+  ],
+  "negative_policy": "候选集中除 gold_right_ids 外的记录按数据集 gold mapping 的排他性视为非匹配",
+  "case_id": "B16-amazon-0379",
+  "expected": {
+    "kind": "entity_pairs",
+    "source_dataset": "leipzig-amazon-google",
+    "license": "CC BY 4.0",
+    "left_id": "b000o39u3q",
+    "candidate_ids": [
+      "http://www.google.com/base/feeds/snippets/13023052343955574084",
+      "http://www.google.com/base/feeds/snippets/18395874674910243298",
+      "http://www.google.com/base/feeds/snippets/18386729116244999637",
+      "http://www.google.com/base/feeds/snippets/13718013650982127815",
+      "http://www.google.com/base/feeds/snippets/18195210518723634061",
+      "http://www.google.com/base/feeds/snippets/17453432506391757198"
+    ],
+    "pairs": [
+      {
+        "left_id": "b000o39u3q",
+        "right_id": "http://www.google.com/base/feeds/snippets/18195210518723634061"
+      },
+      {
+        "left_id": "b000o39u3q",
+        "right_id": "http://www.google.com/base/feeds/snippets/18386729116244999637"
+      }
+    ]
+  }
+}

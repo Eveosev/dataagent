@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/sigmod/AilamakiFFSV03",
+    "title": "An environmental sensor network to determine drinking water quality and security",
+    "authors": "Jeanne VanBriesen, Paul S. Fischbeck, Christos Faloutsos, Anastassia Ailamaki, Mitchell J. Small",
+    "venue": "SIGMOD Record",
+    "year": "2003"
+  },
+  "right_candidates": [
+    {
+      "id": "765563",
+      "title": "EXACT: an extensible approach to active object-oriented databases",
+      "authors": "Oscar D&#237;az, Arturo Jaime",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "1997"
+    },
+    {
+      "id": "673139",
+      "title": "The Fittest Survives: An Adaptive Approach to Query Optimization",
+      "authors": "Hongjun Lu, Kian-Lee Tan, Son Dao",
+      "venue": "Very Large Data Bases",
+      "year": "1995"
+    },
+    {
+      "id": "959069",
+      "title": "An environmental sensor network to determine drinking water quality and security",
+      "authors": "Anastassia Ailamaki, Christos Faloutos, Paul S. Fischbeck, Mitchell J. Small, Jeanne VanBriesen",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2003"
+    },
+    {
+      "id": "306112",
+      "title": "ADEPT: an agent-based approach to business process management",
+      "authors": "N. R. Jennings, T. J. Norman, P. Faratin",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1998"
+    },
+    {
+      "id": "601861",
+      "title": "The cougar approach to in-network query processing in sensor networks",
+      "authors": "Yong Yao, Johannes Gehrke",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2002"
+    }
+  ]
+}

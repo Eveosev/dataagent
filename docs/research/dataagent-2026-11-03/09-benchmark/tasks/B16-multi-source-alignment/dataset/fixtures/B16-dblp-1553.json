@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/BertinoCF01",
+    "title": "Securing XML Documents: the Author-X Project Demonstration",
+    "authors": "Elisa Bertino, Elena Ferrari, Silvana Castano",
+    "venue": "SIGMOD Conference",
+    "year": "2001"
+  },
+  "right_candidates": [
+    {
+      "id": "872762",
+      "title": "XRANK: ranked keyword search over XML documents",
+      "authors": "Lin Guo, Feng Shao, Chavdar Botev, Jayavel Shanmugasundaram",
+      "venue": "International Conference on Management of Data",
+      "year": "2003"
+    },
+    {
+      "id": "673486",
+      "title": "The Structured Information Manager: A Database System for SGML Documents",
+      "authors": "Ron Sacks-Davis",
+      "venue": "Very Large Data Bases",
+      "year": "1996"
+    },
+    {
+      "id": "872854",
+      "title": "STREAM: the stanford stream data manager (demonstration description)",
+      "authors": "Arvind Arasu, Brian Babcock, Shivnath Babu, Mayur Datar, Keith Ito, Itaru Nishizawa, Justin Rosenstein, Jennifer Widom",
+      "venue": "International Conference on Management of Data",
+      "year": "2003"
+    },
+    {
+      "id": "507360",
+      "title": "The XML typechecking problem",
+      "authors": "Dan Suciu",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2002"
+    },
+    {
+      "id": "375764",
+      "title": "Securing XML documents: the author-X project demonstration",
+      "authors": "Elisa Bertino, Silvana Castano, Elena Ferrari",
+      "venue": "International Conference on Management of Data",
+      "year": "2001"
+    }
+  ]
+}

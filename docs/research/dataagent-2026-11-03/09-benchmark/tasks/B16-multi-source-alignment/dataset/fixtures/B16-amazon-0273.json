@@ -1,0 +1,44 @@
+{
+  "task": "entity_alignment",
+  "source": "Amazon → Google Products",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "b000bs5ibm",
+    "title": "totally spies: total swamp romp (pc & mac)",
+    "description": "in totally spies you'll control the girls of woohp: the world organization of human protection. just like in the cartoons you'll lead these beverly hills girls on a mission to stop a global crisis. infiltrate chemical sites pursue criminals on a snow bike save hostages and protect celebrities -- all without breaking a nail.",
+    "manufacturer": "brighter minds media inc.",
+    "price": "19.99"
+  },
+  "right_candidates": [
+    {
+      "id": "http://www.google.com/base/feeds/snippets/13540884315258409885",
+      "name": "mavis beacon teaches typing v17 deluxe pc/mac",
+      "description": "overview the leader in typing tutorial software for 11 years running mavis beacon teaches typing v.17 is the only typing software delivering the customized training you need in a motivating engaging format. work at your own pace with lesson ...",
+      "price": "29.9"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/15944513620809178120",
+      "name": "totally spies total swamp romp by brighter minds",
+      "description": "macintosh system requirements: max os x 10.1.5 or higher 400mhz powerpc® g4 processor 150mb free hard drive space 64mb ram 16-bit color video card 8x cd-rom drive mouse",
+      "price": "19.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/18407763828897928168",
+      "name": "iaudioize magnetic time for pc and mac",
+      "description": "hobby software; for pc mac media format cd listen to your emails or word documents on your ipod pda phone or any mp3 player. bring everyday information from the pc desktop to your portable audio devices in mp3 format. create your own ...",
+      "price": "39.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/12881520717684354638",
+      "name": "books by you (pc/mac) knowledge adventure",
+      "description": "key features: four exciting story lines expand your vocabulary import photos design a cover dedicate the book share your creation ...",
+      "price": "19.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/10105070429318394420",
+      "name": "elementary school english - literature basics (pc/mac) fogware",
+      "description": "learn analytical and expository and sensory and descriptive writing through classic works of literature. study greek mythology including myths legends and gods. system requirements: windows 2000/xp sound card cd drive mac os x ...",
+      "price": "9.99"
+    }
+  ]
+}

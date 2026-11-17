@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/tods/HsuSY01",
+    "title": "I/O reference behavior of production database workloads and the TPC benchmarks - an analysis at the logical level",
+    "authors": "Windsor W. Hsu, Alan Jay Smith, Honesty C. Young",
+    "venue": "ACM Trans. Database Syst.",
+    "year": "2001"
+  },
+  "right_candidates": [
+    {
+      "id": "331984",
+      "title": "Improving database design through the analysis of relationships",
+      "authors": "Debabrata Dey, Veda C. Storey, Terence M. Barron",
+      "venue": "ACM Transactions on Database Systems (TODS) ",
+      "year": "1999"
+    },
+    {
+      "id": "383737",
+      "title": "I/O reference behavior of production database workloads and the TPC benchmarks-an analysis at the logical level",
+      "authors": "Windsor W. Hsu, Alan Jay Smith, Honesty C. Young",
+      "venue": "ACM Transactions on Database Systems (TODS) ",
+      "year": "2001"
+    },
+    {
+      "id": "333616",
+      "title": "Database research at the University of Oklahoma",
+      "authors": "Le Gruenwald, Leonard Brown, Ravi Dirckze, Sylvain Guinepain, Carlos Sanchez, Brian Summers, Sirirut Vanichayobon",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1999"
+    },
+    {
+      "id": "271096",
+      "title": "The database and information system research group at the University of ULM",
+      "authors": "Peter Dadam, Wolfgang Klas",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1997"
+    },
+    {
+      "id": "640997",
+      "title": "Analysis of existing databases at the logical level: the DBA companion project",
+      "authors": "Fabien De Marchi, St&#233;phane Lopes, Jean-Marc Petit, Farouk Toumani",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2003"
+    }
+  ]
+}

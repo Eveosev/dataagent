@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/vldb/Ladin00",
+    "title": "The Zero Latency Enterprise",
+    "authors": "Dave Liles",
+    "venue": "VLDB",
+    "year": "2000"
+  },
+  "right_candidates": [
+    {
+      "id": "202667",
+      "title": "The third manifesto",
+      "authors": "Hugh Darwen, C. J. Date",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1995"
+    },
+    {
+      "id": "280363",
+      "title": "The Garlic project",
+      "authors": "M. Tork Roth, M. Arya, L. Haas, M. Carey, W. Cody, R. Fagin, P. Schwarz, J. Thomas, E. Wimmers",
+      "venue": "International Conference on Management of Data",
+      "year": "1996"
+    },
+    {
+      "id": "671171",
+      "title": "The Drill Down Benchmark",
+      "authors": "Peter A. Boncz, Tim R&#252;hl, Fred Kwakkel",
+      "venue": "Very Large Data Bases",
+      "year": "1998"
+    },
+    {
+      "id": "872873",
+      "title": "The Lowell report",
+      "authors": "Jim Gray, Hans Schek, Michael Stonebraker, Jeff Ullman",
+      "venue": "International Conference on Management of Data",
+      "year": "2003"
+    },
+    {
+      "id": "671856",
+      "title": "The Zero Latency Enterprise",
+      "authors": "Dave Liles",
+      "venue": "Very Large Data Bases",
+      "year": "2000"
+    }
+  ]
+}

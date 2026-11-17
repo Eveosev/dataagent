@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/vldb/RiedelGF98",
+    "title": "Active Storage for Large-Scale Data Mining and Multimedia",
+    "authors": "Garth A. Gibson, Erik Riedel, Christos Faloutsos",
+    "venue": "VLDB",
+    "year": "1998"
+  },
+  "right_candidates": [
+    {
+      "id": "671345",
+      "title": "Active Storage for Large-Scale Data Mining and Multimedia",
+      "authors": "Erik Riedel, Garth A. Gibson, Christos Faloutsos",
+      "venue": "Very Large Data Bases",
+      "year": "1998"
+    },
+    {
+      "id": "223812",
+      "title": "FastMap: a fast algorithm for indexing, data-mining and visualization of traditional and multimedia datasets",
+      "authors": "Christos Faloutsos, King-Ip Lin",
+      "venue": "International Conference on Management of Data",
+      "year": "1995"
+    },
+    {
+      "id": "304571",
+      "title": "DBIS-toolkit: adaptable middleware for large scale data delivery",
+      "authors": "Mehmet Altinel, Demet Aksoy, Thomas Baby, Michael Franklin, William Shapiro, Stan Zdonik",
+      "venue": "International Conference on Management of Data",
+      "year": "1999"
+    },
+    {
+      "id": "758382",
+      "title": "NetCube: A Scalable Tool for Fast Data Mining and Compression",
+      "authors": "Dimitris Margaritis, Christos Faloutsos, Sebastian Thrun",
+      "venue": "Very Large Data Bases",
+      "year": "2001"
+    },
+    {
+      "id": "671863",
+      "title": "The 3W Model and Algebra for Unified Data Mining",
+      "authors": "Theodore Johnson, Laks V. S. Lakshmanan, Raymond T. Ng",
+      "venue": "Very Large Data Bases",
+      "year": "2000"
+    }
+  ]
+}

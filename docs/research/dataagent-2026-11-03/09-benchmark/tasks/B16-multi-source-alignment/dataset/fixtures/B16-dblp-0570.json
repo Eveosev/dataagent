@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/vldb/ShanmugasundaramKSFF01",
+    "title": "Querying XML Views of Relational Data",
+    "authors": "Jerry Kiernan, Jayavel Shanmugasundaram, Catalina Fan, Eugene J. Shekita, John Funderburk",
+    "venue": "VLDB",
+    "year": "2001"
+  },
+  "right_candidates": [
+    {
+      "id": "673628",
+      "title": "Querying Multiple Features of Groups in Relational Databases",
+      "authors": "Damianos Chatziantoniou, Kenneth A. Ross",
+      "venue": "Very Large Data Bases",
+      "year": "1996"
+    },
+    {
+      "id": "767144",
+      "title": "Efficiently publishing relational data as XML documents",
+      "authors": "Jayavel Shanmugasundaram, Eugene Shekita, Rimon Barr, Michael Carey, Bruce Lindsay, Hamid Pirahesh, Berthold Reinwald",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "2001"
+    },
+    {
+      "id": "672203",
+      "title": "Querying XML Views of Relational Data",
+      "authors": "Jayavel Shanmugasundaram, Jerry Kiernan, Eugene J. Shekita, Catalina Fan, John Funderburk",
+      "venue": "Very Large Data Bases",
+      "year": "2001"
+    },
+    {
+      "id": "671695",
+      "title": "Efficiently Publishing Relational Data as XML Documents",
+      "authors": "Jayavel Shanmugasundaram, Eugene J. Shekita, Rimon Barr, Michael J. Carey, Bruce G. Lindsay, Hamid Pirahesh, Berthold Reinwald",
+      "venue": "Very Large Data Bases",
+      "year": "2000"
+    },
+    {
+      "id": "671672",
+      "title": "Capturing and Querying Multiple Aspects of Semistructured Data",
+      "authors": "Curtis E. Dyreson, Michael H. B&#246;hlen, Christian S. Jensen",
+      "venue": "Very Large Data Bases",
+      "year": "1999"
+    }
+  ]
+}

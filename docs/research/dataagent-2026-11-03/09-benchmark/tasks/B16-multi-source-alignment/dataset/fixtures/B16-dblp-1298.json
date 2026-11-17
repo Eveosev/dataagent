@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/vldb/CuiW01",
+    "title": "Lineage Tracing for General Data Warehouse Transformations",
+    "authors": "Yingwei Cui, Jennifer Widom",
+    "venue": "VLDB",
+    "year": "2001"
+  },
+  "right_candidates": [
+    {
+      "id": "253405",
+      "title": "The WHIPS prototype for data warehouse creation and maintenance",
+      "authors": "Wilburt J. Labio, Yue Zhuge, Janet L. Wiener, Himanshu Gupta, H&#233;ctor Garc&#237;a-Molina, Jennifer Widom",
+      "venue": "International Conference on Management of Data",
+      "year": "1997"
+    },
+    {
+      "id": "357777",
+      "title": "Tracing the lineage of view data in a warehousing environment",
+      "authors": "Yingwei Cui, Jennifer Widom, Janet L. Wiener",
+      "venue": "ACM Transactions on Database Systems (TODS) ",
+      "year": "2000"
+    },
+    {
+      "id": "304186",
+      "title": "Snakes and sandwiches: optimal clustering strategies for a data warehouse",
+      "authors": "H. V. Jagadish, Laks V. S. Lakshmanan, Divesh Srivastava",
+      "venue": "International Conference on Management of Data",
+      "year": "1999"
+    },
+    {
+      "id": "672029",
+      "title": "Lineage Tracing for General Data Warehouse Transformations",
+      "authors": "Yingwei Cui, Jennifer Widom",
+      "venue": "Very Large Data Bases",
+      "year": "2001"
+    },
+    {
+      "id": "673656",
+      "title": "Data Warehouse Configuration",
+      "authors": "Dimitri Theodoratos, Timos K. Sellis",
+      "venue": "Very Large Data Bases",
+      "year": "1997"
+    }
+  ]
+}

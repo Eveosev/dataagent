@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/vldb/GoldsteinR00",
+    "title": "Contrast Plots and P-Sphere Trees: Space vs. Time in Nearest Neighbour Searches",
+    "authors": "Jonathan Goldstein, Raghu Ramakrishnan",
+    "venue": "VLDB",
+    "year": "2000"
+  },
+  "right_candidates": [
+    {
+      "id": "673155",
+      "title": "Fast Similarity Search in the Presence of Noise, Scaling, and Translation in Time-Series Databases",
+      "authors": "Rakesh Agrawal, King-Ip Lin, Harpreet S. Sawhney, Kyuseok Shim",
+      "venue": "Very Large Data Bases",
+      "year": "1995"
+    },
+    {
+      "id": "202666",
+      "title": "Implementing deletion in B+-trees",
+      "authors": "Jan Jannink",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1995"
+    },
+    {
+      "id": "381878",
+      "title": "Enhancing external consistency in real-time transactions",
+      "authors": "Kwei-Jay Lin, Ching-Shan Peng",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1996"
+    },
+    {
+      "id": "671849",
+      "title": "Contrast Plots and P-Sphere Trees: Space vs. Time in Nearest Neighbour Searches",
+      "authors": "Jonathan Goldstein, Raghu Ramakrishnan",
+      "venue": "Very Large Data Bases",
+      "year": "2000"
+    },
+    {
+      "id": "304248",
+      "title": "Versions and workspaces in Microsoft repository",
+      "authors": "Thomas Bergstraesser, Philip A. Bernstein, Shankar Pal, David Shutt",
+      "venue": "International Conference on Management of Data",
+      "year": "1999"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "task": "entity_alignment",
+  "source": "Amazon → Google Products",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "b000nknb8k",
+    "title": "discrete drums: vol.1",
+    "manufacturer": "sony media software",
+    "price": "59.95"
+  },
+  "right_candidates": [
+    {
+      "id": "http://www.google.com/base/feeds/snippets/17670658966079855742",
+      "name": "isong classical guitar standards - vol. 1 - isong cd-rom",
+      "description": "isong is the only teaching tool that actually syncs to the original recordings of legendary musicians and today's top stars! each isong pack includes arrrangements ranging from very simple to note-accurate transcriptions a performance video and a ...",
+      "price": "18.5"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/12415174468260360116",
+      "name": "easy drums",
+      "description": "covers what the basic beginner needs to know about playing the drums. step-by-step video lessons and a guide to reading music! the interactive guide will show you how to get started from selecting the right drum set to playing beats and rolls that ...",
+      "price": "12.95"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/17333018247606173982",
+      "name": "sony media software discrete drums: vol.1 - sony sound series",
+      "description": "when you need audio content you want to cut through the clutter and locate unique materials that won?t blow your budget. the sony® sound series? catalog contains over 125 royalty-free content libraries?from single instrument libraries and song",
+      "price": "24.91"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/3518997692511645502",
+      "name": "madison media software ssda3000 - sony sound effects series vol 1 through 10",
+      "description": "madison media software ssda3000 : madison media software sony sound effects series vol 1 through 10 - ssda3000",
+      "price": "370.97"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/18353122537501658096",
+      "name": "the sims expansion collection vol 1",
+      "price": "8.72"
+    }
+  ]
+}

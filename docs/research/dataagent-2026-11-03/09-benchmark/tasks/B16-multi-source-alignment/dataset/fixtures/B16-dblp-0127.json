@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/vldb/ChidlovskiiB00",
+    "title": "Semantic Caching of Web Queries",
+    "authors": "Boris Chidlovskii, Uwe M. Borghoff",
+    "venue": "VLDB J.",
+    "year": "2000"
+  },
+  "right_candidates": [
+    {
+      "id": "637422",
+      "title": "The Grid: an application of the semantic web",
+      "authors": "Carole Goble, David De Roure",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2002"
+    },
+    {
+      "id": "276328",
+      "title": "Caching multidimensional queries using chunks",
+      "authors": "Prasad M. Deshpande, Karthikeyan Ramasamy, Amit Shukla, Jeffrey F. Naughton",
+      "venue": "International Conference on Management of Data",
+      "year": "1998"
+    },
+    {
+      "id": "765220",
+      "title": "Semantic caching of Web queries",
+      "authors": "Boris Chidlovskii, Uwe M. Borghoff",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "2000"
+    },
+    {
+      "id": "671003",
+      "title": "Groupwise Processing of Relational Queries",
+      "authors": "Damianos Chatziantoniou, Kenneth A. Ross",
+      "venue": "Very Large Data Bases",
+      "year": "1997"
+    },
+    {
+      "id": "564771",
+      "title": "XCache: a semantic caching system for XML queries",
+      "authors": "Li Chen, Elke A. Rundensteiner, Song Wang",
+      "venue": "International Conference on Management of Data",
+      "year": "2002"
+    }
+  ]
+}

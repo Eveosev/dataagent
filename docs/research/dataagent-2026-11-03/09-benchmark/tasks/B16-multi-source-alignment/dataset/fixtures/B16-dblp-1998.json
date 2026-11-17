@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/KornJF97",
+    "title": "Efficiently Supporting Ad Hoc Queries in Large Datasets of Time Sequences",
+    "authors": "H. V. Jagadish, Christos Faloutsos, Flip Korn",
+    "venue": "SIGMOD Conference",
+    "year": "1997"
+  },
+  "right_candidates": [
+    {
+      "id": "212014",
+      "title": "On the issue of valid time(s) in temporal databases",
+      "authors": "Stavros Kokkotos, Efstathios V. Ioannidis, Themis Panayiotopoulos, Constantine D. Spyropoulos",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1995"
+    },
+    {
+      "id": "672376",
+      "title": "Walking Through a Very Large Virtual Environment in Real-time",
+      "authors": "Lidan Shou, Jason Chionh, Zhiyong Huang, Yixin Ruan, Kian-Lee Tan",
+      "venue": "Very Large Data Bases",
+      "year": "2001"
+    },
+    {
+      "id": "253332",
+      "title": "Efficiently supporting ad hoc queries in large datasets of time sequences",
+      "authors": "Flip Korn, H. V. Jagadish, Christos Faloutsos",
+      "venue": "International Conference on Management of Data",
+      "year": "1997"
+    },
+    {
+      "id": "615233",
+      "title": "Historical queries along multiple lines of time evolution",
+      "authors": "Gad M. Landau, Jeanette P. Schmidt, Vassilis J. Tsotras",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "1995"
+    },
+    {
+      "id": "564730",
+      "title": "Time-parameterized queries in spatio-temporal databases",
+      "authors": "Yufei Tao, Dimitris Papadias",
+      "venue": "International Conference on Management of Data",
+      "year": "2002"
+    }
+  ]
+}

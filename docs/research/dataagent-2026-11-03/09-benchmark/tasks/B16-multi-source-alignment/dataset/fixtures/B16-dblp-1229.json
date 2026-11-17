@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/vldb/BunkerCCMMW01",
+    "title": "Aggregate Maintenance for Data Warehousing in Informix Red Brick Vista",
+    "authors": "Latha S. Colby, Gopal Mulagund, Richard L. Cole, Craig J. Bunker, William J. McKenna, David Wilhite",
+    "venue": "VLDB",
+    "year": "2001"
+  },
+  "right_candidates": [
+    {
+      "id": "671013",
+      "title": "Incremental Organization for Data Recording and Warehousing",
+      "authors": "H. V. Jagadish, P. P. S. Narayan, S. Seshadri, S. Sudarshan, Rama Kanneganti",
+      "venue": "Very Large Data Bases",
+      "year": "1997"
+    },
+    {
+      "id": "191931",
+      "title": "DEC data distributor: for data replication and data warehousing",
+      "authors": "Daniel J. Dietterich",
+      "venue": "International Conference on Management of Data",
+      "year": "1994"
+    },
+    {
+      "id": "673644",
+      "title": "Multiple-View Self-Maintenance in Data Warehousing Environments",
+      "authors": "Nam Huyn",
+      "venue": "Very Large Data Bases",
+      "year": "1997"
+    },
+    {
+      "id": "673150",
+      "title": "Aggregate-Query Processing in Data Warehousing Environments",
+      "authors": "Ashish Gupta, Venky Harinarayan, Dallan Quass",
+      "venue": "Very Large Data Bases",
+      "year": "1995"
+    },
+    {
+      "id": "672182",
+      "title": "Aggregate Maintenance for Data Warehousing in Informix Red Brick Vista",
+      "authors": "Craig J. Bunker, Latha S. Colby, Richard L. Cole, William J. McKenna, Gopal Mulagund, David Wilhite",
+      "venue": "Very Large Data Bases",
+      "year": "2001"
+    }
+  ]
+}

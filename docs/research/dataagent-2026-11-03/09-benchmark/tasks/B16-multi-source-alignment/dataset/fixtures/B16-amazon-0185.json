@@ -1,0 +1,44 @@
+{
+  "task": "entity_alignment",
+  "source": "Amazon → Google Products",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "b000056b63",
+    "title": "dvo cook'n deluxe 6.0 - ultimate recipe organizer",
+    "description": "cook'n deluxe offers over 6 000 recipes and a host of features to make entertaining easier. simply select the number of guests you will be serving and enter it into your favorite recipe. cook'n calculates the new ingredient amounts for you. and a simple and drag-and-drop selection system allows you to compile weekly and monthly menus.you can also search thousands of recipes in seconds. enter the ingredients you have on hand and the software will produce appropriate recipe choices. or use the recipe browser feature to page through pictures of finished dishes to look for ideas. download new recipes every week from the dvo web site and import recipes from other web sites or other cooking software.the recipe manager allows you to add your own recipes adjust recipe serving sizes and print recipes on 3-by-5 cards. quick-fill editing does much of the typing for you. menu planning instructions teach you how to cut preparation time in half by using dovetailing techniques when preparing your menus. the grocery shopping assistant compiles your family's shopping list automatically organizes shopping list items by aisle converts to package sizes (i.e. tablespoon tomato paste to 8-ounce cans) and calculates your grocery cost. the personalhome nutritionist analyzes the nutritional elements of recipes and menus and lets you choose between brands to satisfy dietary needs. cook'n has nutrition facts from the labels of 10 000 food products so you can plan menus based on dietary needs and tastes.",
+    "manufacturer": "dvo enterprises",
+    "price": "39.99"
+  },
+  "right_candidates": [
+    {
+      "id": "http://www.google.com/base/feeds/snippets/17529354471116146619",
+      "name": "art explosion(r) greeting card factory(r) deluxe 6.0",
+      "description": "personalize and send store-quality greeting cards with just one software product. this new version of greeting card factory deluxe has everything you need to help you express your feelings including a wide selection of greeting cards featuring ...",
+      "price": "49.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/17180557293748751234",
+      "name": "dvo enterprises inc. cookn deluxe 6.0",
+      "description": "enjoy home cookin' in just minutes. over 20 years ago miriam loo founded the current test kitchen and developed hundreds of delicious dishes. in the tradition of good taste and healthy living she offers hundreds of her personally tested treats in",
+      "price": "34.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/10902155796053790562",
+      "name": "checkmark multiledger 6.0",
+      "description": "system requirements: ? 10 mb available disk space ? 5 mb ram ? power pc running os 8.6 or higher (includes imacs g3s g4s etc) ? runs natively on os x ? cd-rom drive product datasheet (pdf: 204kb)",
+      "price": "299.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/18114364420900714116",
+      "name": "kaspersky(r) internet security 6.0",
+      "description": "kaspersky internet security 6.0 combines reactive detection methods with the latest proactive technologies protecting your pc from viruses hacker attacks spam and spyware. with automatic updates directly from the lab every hour you are never ...",
+      "price": "76.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/18373688292230003205",
+      "name": "t-shirt factory deluxe 3.0",
+      "description": "art explosion t-shirt factory deluxe 3.0 is the fast and easy way to create one-of-a-kind custom t-shirts and apparel. whether youære looking to support a function of your club or organization promote your business or create a unique gift for fami",
+      "price": "27.99"
+    }
+  ]
+}

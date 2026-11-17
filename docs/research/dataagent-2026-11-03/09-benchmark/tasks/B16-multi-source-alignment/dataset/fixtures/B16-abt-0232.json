@@ -1,0 +1,39 @@
+{
+  "task": "entity_alignment",
+  "source": "Abt → Buy",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "35183",
+    "name": "LG 24' LDF6920WW Fully Integrated Built In White Dishwasher - LDF6920WH",
+    "description": "LG 24' LDF6920WW Fully Integrated Built In White Dishwasher - LDF6920WH/ XL Tall Tub Cleans Up To 16 Place Settings At Once/ Adjustable Upper Rack/ LoDecibel Quiet Operation/ SenseClean Wash System/ 5 Wash Cycles With 3 Spray Arms/ Multi-Level Water Direction/ Slim Direct Drive Motor/ Fully Integrated Electronic Control Panel/ White Finish"
+  },
+  "right_candidates": [
+    {
+      "id": "208117920",
+      "name": "LG Dishwasher",
+      "manufacturer": "LG Electronics"
+    },
+    {
+      "id": "203915639",
+      "name": "PLD4375RFC Professional SpeedClean 24-in. Under Counter Dishwasher (14 Place Settings, Stainless Steel)",
+      "manufacturer": "Frigidaire",
+      "price": "$543.29"
+    },
+    {
+      "id": "208294904",
+      "name": "Frigidaire FDB130RGS 24' Built-In Dishwasher (White)",
+      "manufacturer": "Frigidaire",
+      "price": "$246.54"
+    },
+    {
+      "id": "203131412",
+      "name": "LG Electronics 24' Front-Load All-In-One Washer and Dryer: Titanium",
+      "manufacturer": "LG Electronics"
+    },
+    {
+      "id": "203131413",
+      "name": "LG Electronics 24' Washer/Dryer Combo: White",
+      "manufacturer": "LG Electronics"
+    }
+  ]
+}

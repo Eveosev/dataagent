@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/MankuRL99",
+    "title": "Random Sampling Techniques for Space Efficient Online Computation of Order Statistics of Large Datasets",
+    "authors": "Sridhar Rajagopalan, Bruce G. Lindsay, Gurmeet Singh Manku",
+    "venue": "SIGMOD Conference",
+    "year": "1999"
+  },
+  "right_candidates": [
+    {
+      "id": "335436",
+      "title": "Efficient and cost-effective techniques for browsing and indexing large video databases",
+      "authors": "JungHwan Oh, Kien A. Hua",
+      "venue": "International Conference on Management of Data",
+      "year": "2000"
+    },
+    {
+      "id": "234891",
+      "title": "Guidelines for presentation and comparison of indexing techniques",
+      "authors": "Justin Zobel, Alistair Moffat, Kotagiri Ramamohanarao",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1996"
+    },
+    {
+      "id": "671330",
+      "title": "RainForest - A Framework for Fast Decision Tree Construction of Large Datasets",
+      "authors": "Johannes Gehrke, Raghu Ramakrishnan, Venkatesh Ganti",
+      "venue": "Very Large Data Bases",
+      "year": "1998"
+    },
+    {
+      "id": "233320",
+      "title": "Fundamental techniques for order optimization",
+      "authors": "David Simmen, Eugene Shekita, Timothy Malkemus",
+      "venue": "International Conference on Management of Data",
+      "year": "1996"
+    },
+    {
+      "id": "304204",
+      "title": "Random sampling techniques for space efficient online computation of order statistics of large datasets",
+      "authors": "Gurmeet Singh Manku, Sridhar Rajagopalan, Bruce G. Lindsay",
+      "venue": "International Conference on Management of Data",
+      "year": "1999"
+    }
+  ]
+}

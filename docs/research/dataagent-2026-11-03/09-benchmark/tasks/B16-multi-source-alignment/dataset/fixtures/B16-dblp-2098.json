@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/sigmod/Baeza-YatesN96",
+    "title": "Integrating Contents and Structure in Text Retrieval",
+    "authors": "Gonzalo Navarro, Ricardo A. Baeza-Yates",
+    "venue": "SIGMOD Record",
+    "year": "1996"
+  },
+  "right_candidates": [
+    {
+      "id": "673659",
+      "title": "Using Taxonomy, Discriminants, and Signatures for Navigating in Text Databases",
+      "authors": "Soumen Chakrabarti, Byron Dom, Rakesh Agrawal, Prabhakar Raghavan",
+      "venue": "Very Large Data Bases",
+      "year": "1997"
+    },
+    {
+      "id": "381890",
+      "title": "Integrating contents and structure in text retrieval",
+      "authors": "Ricardo Baeza-Yates, Gonzalo Navarro",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1996"
+    },
+    {
+      "id": "271084",
+      "title": "Inferring structure in semistructured data",
+      "authors": "Svetlozer Nestorov, Serge Abiteboul, Rajeev Motwani",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1997"
+    },
+    {
+      "id": "673498",
+      "title": "Integrating Triggers and Declarative Constraints in SQL Database Sytems",
+      "authors": "Roberta Cochrane, Hamid Pirahesh, Nelson Mendon&#231;a Mattos",
+      "venue": "Very Large Data Bases",
+      "year": "1996"
+    },
+    {
+      "id": "672964",
+      "title": "Integrating a Structured-Text Retrieval System with an Object-Oriented Database System",
+      "authors": "Tak W. Yan, Jurgen Annevelink",
+      "venue": "Very Large Data Bases",
+      "year": "1994"
+    }
+  ]
+}

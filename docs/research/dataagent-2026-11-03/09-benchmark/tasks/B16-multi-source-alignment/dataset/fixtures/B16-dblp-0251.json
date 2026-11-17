@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/vldb/PoosalaI96",
+    "title": "Estimation of Query-Result Distribution and its Application in Parallel-Join Load Balancing",
+    "authors": "Viswanath Poosala, Yannis E. Ioannidis",
+    "venue": "VLDB",
+    "year": "1996"
+  },
+  "right_candidates": [
+    {
+      "id": "872777",
+      "title": "Containment join size estimation: models and methods",
+      "authors": "Wei Wang, Haifeng Jiang, Hongjun Lu, Jeffrey Xu Yu",
+      "venue": "International Conference on Management of Data",
+      "year": "2003"
+    },
+    {
+      "id": "673321",
+      "title": "Estimation of Query-Result Distribution and its Application in Parallel-Join Load Balancing",
+      "authors": "Viswanath Poosala, Yannis E. Ioannidis",
+      "venue": "Very Large Data Bases",
+      "year": "1996"
+    },
+    {
+      "id": "234894",
+      "title": "Open issues in parallel query optimization",
+      "authors": "Waqar Hasan, Daniela Florescu, Patrick Valduriez",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1996"
+    },
+    {
+      "id": "673330",
+      "title": "Dynamic Load Balancing in Hierarchical Parallel Database Systems",
+      "authors": "Luc Bouganim, Daniela Florescu, Patrick Valduriez",
+      "venue": "Very Large Data Bases",
+      "year": "1996"
+    },
+    {
+      "id": "223841",
+      "title": "Balancing histogram optimality and practicality for query result size estimation",
+      "authors": "Yannis E. Ioannidis, Viswanath Poosala",
+      "venue": "International Conference on Management of Data",
+      "year": "1995"
+    }
+  ]
+}

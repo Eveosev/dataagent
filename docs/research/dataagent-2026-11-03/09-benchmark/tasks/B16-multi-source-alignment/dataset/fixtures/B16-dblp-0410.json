@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/vldb/TheodoratosS97",
+    "title": "Data Warehouse Configuration",
+    "authors": "Timos K. Sellis, Dimitri Theodoratos",
+    "venue": "VLDB",
+    "year": "1997"
+  },
+  "right_candidates": [
+    {
+      "id": "304568",
+      "title": "Improving OLTP data quality using data warehouse mechanisms",
+      "authors": "Matthias Jarke, Christoph Quix, Guido Blees, Dirk Lehmann, Gunter Michalk, Stefan Stierl",
+      "venue": "International Conference on Management of Data",
+      "year": "1999"
+    },
+    {
+      "id": "672029",
+      "title": "Lineage Tracing for General Data Warehouse Transformations",
+      "authors": "Yingwei Cui, Jennifer Widom",
+      "venue": "Very Large Data Bases",
+      "year": "2001"
+    },
+    {
+      "id": "673656",
+      "title": "Data Warehouse Configuration",
+      "authors": "Dimitri Theodoratos, Timos K. Sellis",
+      "venue": "Very Large Data Bases",
+      "year": "1997"
+    },
+    {
+      "id": "673631",
+      "title": "DWMS: Data Warehouse Management System",
+      "authors": "Narendra Mohan",
+      "venue": "Very Large Data Bases",
+      "year": "1996"
+    },
+    {
+      "id": "671164",
+      "title": "Expiring Data in a Warehouse",
+      "authors": "Hector Garcia-Molina, Wilburt Labio, Jun Yang",
+      "venue": "Very Large Data Bases",
+      "year": "1998"
+    }
+  ]
+}

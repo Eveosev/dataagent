@@ -1,0 +1,44 @@
+{
+  "task": "entity_alignment",
+  "source": "Amazon → Google Products",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "b0000959kx",
+    "title": "marine aquarium 2.5 virtual undersea paradise win/mac",
+    "description": "marine aquarium 2.0 is like having a small piece of an aquatic paradise in your home -- without having to take care of actual fish!",
+    "manufacturer": "encore software",
+    "price": "19.99"
+  },
+  "right_candidates": [
+    {
+      "id": "http://www.google.com/base/feeds/snippets/18382903514613113420",
+      "name": "marine aquarium + sharks (win 98 me 2000 xp)",
+      "description": "see this amazing virtual phenomenon for yourself! view marine life so vibrant you won t believe your eyes! gorgeous details have gone into creating the high-resolution 3d fish models and reef tank for an indescribably realistic effect. achieve ...",
+      "price": "9.95"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/15315822485835000773",
+      "name": "marine aquarium & goldfish aquarium",
+      "description": "2 captivating screensavers in one! marine aquarium is an aquatic-themed screensaver offering highly realistic 3d fish models and a reef tank. vibrant images recreate the serenity of a marine habitat without the expense or maintenance of the real ...",
+      "price": "19.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/1347968736695236641",
+      "name": "apple web objects 5.2 software apple & mac software",
+      "description": "web objects 5.2 software apple's webobjects allows you to quickly develop and deploy java server applications and standards-based web services. a powerful rapid application development environment that extends the reach of developers and reduces the ...",
+      "price": "689.95"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/4441393199380874556",
+      "name": "encore marine aquarium 2.0",
+      "description": "os9: 9.0 or higher; osx: 10.1.5 or higher g3 350 mhz or higher 48mb ram (3mb free) opengl accelerated video drivers with 8mb vram (16mb vram for larger than 1024x768) 2mb of free hard disk space cd-rom quicktime 2.5 or later",
+      "price": "19.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/6052848636732301170",
+      "name": "encore software 25020 - marine aquarium 2.5 (hybrid) - win 95 98 me 2000 xp/mac 10.1 or higher",
+      "description": "encore software 25020 : marine aquarium 2.5 hybrid discover the virtual fish tank phenomenon that has everyone talking! marine aquarium 2.5 delivers a stunning undersea paradise through your desktop with 26 exotic species of fish. system ...",
+      "price": "19.97"
+    }
+  ]
+}

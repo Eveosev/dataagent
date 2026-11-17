@@ -1,0 +1,43 @@
+{
+  "task": "entity_alignment",
+  "source": "Amazon → Google Products",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "b00062ujhg",
+    "title": "land before time: preschool",
+    "manufacturer": "brighter minds media inc.",
+    "price": "9.99"
+  },
+  "right_candidates": [
+    {
+      "id": "http://www.google.com/base/feeds/snippets/4823291609006887387",
+      "name": "reader rabbit preschool",
+      "description": "overview reader rabbit and sam the lion are on a sparkly adventure! the land of sparkalot has lost its shine and needs your help to re-sparkle everything from the stars to the flowers. your pre-reading counting and matching skills could save the ...",
+      "price": "17.9"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/17110430434010171078",
+      "name": "trudys time & place house",
+      "description": "in five fascinating activities students build early science skills and practice important scientific processes.",
+      "price": "9.9"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/14762714779654278826",
+      "name": "the land before time: preschool adventure",
+      "description": "overview increase shape-matching skills reinforce alphabet and number recognition and mush more. each time children successfully complete a fun and educational activity; they are rewarded with a magical seed to plant. once six seeds are earned ...",
+      "price": "12.9"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/11765669176361549570",
+      "name": "blue's clues preschool",
+      "description": "it?s time for an exciting neighborhood adventure with blue and your friends from blue?s clues including the host ? joe! blue?s teacher miss marigold has a whole checklist of places for you to visit ? the grocery present and music stores the ...",
+      "price": "7.95"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/17602054056835540213",
+      "name": "dreamcatcher interactive sentinel: descendants in time",
+      "description": "the tastan civilization succumbed to extinction many years ago; their only legacy being the mysterious tastan caverns. some believe the caverns hold an invaluable treasure while others say great wealth is attained through the knowledge and ...",
+      "price": "17.55"
+    }
+  ]
+}

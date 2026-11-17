@@ -1,0 +1,66 @@
+{
+  "source": "leipzig-amazon-google",
+  "source_label": "Amazon → Google Products",
+  "license": "CC BY 4.0",
+  "license_url": "https://creativecommons.org/licenses/by/4.0/",
+  "attribution": "Leipzig DBS group; Köpcke et al., VLDB 2010",
+  "left_id": "b0001wn16m",
+  "gold_right_ids": [
+    "http://www.google.com/base/feeds/snippets/10092468528845066077",
+    "http://www.google.com/base/feeds/snippets/14391445631859374347",
+    "http://www.google.com/base/feeds/snippets/18372325427432567642",
+    "http://www.google.com/base/feeds/snippets/18396633258112051350"
+  ],
+  "candidate_ids": [
+    "http://www.google.com/base/feeds/snippets/15832790434131694955",
+    "http://www.google.com/base/feeds/snippets/15800184450191067839",
+    "http://www.google.com/base/feeds/snippets/18396633258112051350",
+    "http://www.google.com/base/feeds/snippets/14391445631859374347",
+    "http://www.google.com/base/feeds/snippets/10092468528845066077",
+    "http://www.google.com/base/feeds/snippets/18369420364697836534",
+    "http://www.google.com/base/feeds/snippets/18372325427432567642",
+    "http://www.google.com/base/feeds/snippets/18396389648150219430"
+  ],
+  "distractor_ids": [
+    "http://www.google.com/base/feeds/snippets/15800184450191067839",
+    "http://www.google.com/base/feeds/snippets/18369420364697836534",
+    "http://www.google.com/base/feeds/snippets/18396389648150219430",
+    "http://www.google.com/base/feeds/snippets/15832790434131694955"
+  ],
+  "negative_policy": "候选集中除 gold_right_ids 外的记录按数据集 gold mapping 的排他性视为非匹配",
+  "case_id": "B16-amazon-0168",
+  "expected": {
+    "kind": "entity_pairs",
+    "source_dataset": "leipzig-amazon-google",
+    "license": "CC BY 4.0",
+    "left_id": "b0001wn16m",
+    "candidate_ids": [
+      "http://www.google.com/base/feeds/snippets/15832790434131694955",
+      "http://www.google.com/base/feeds/snippets/15800184450191067839",
+      "http://www.google.com/base/feeds/snippets/18396633258112051350",
+      "http://www.google.com/base/feeds/snippets/14391445631859374347",
+      "http://www.google.com/base/feeds/snippets/10092468528845066077",
+      "http://www.google.com/base/feeds/snippets/18369420364697836534",
+      "http://www.google.com/base/feeds/snippets/18372325427432567642",
+      "http://www.google.com/base/feeds/snippets/18396389648150219430"
+    ],
+    "pairs": [
+      {
+        "left_id": "b0001wn16m",
+        "right_id": "http://www.google.com/base/feeds/snippets/10092468528845066077"
+      },
+      {
+        "left_id": "b0001wn16m",
+        "right_id": "http://www.google.com/base/feeds/snippets/14391445631859374347"
+      },
+      {
+        "left_id": "b0001wn16m",
+        "right_id": "http://www.google.com/base/feeds/snippets/18372325427432567642"
+      },
+      {
+        "left_id": "b0001wn16m",
+        "right_id": "http://www.google.com/base/feeds/snippets/18396633258112051350"
+      }
+    ]
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/vldb/LometT95",
+    "title": "Redo Recovery after System Crashes",
+    "authors": "Mark R. Tuttle, David B. Lomet",
+    "venue": "VLDB",
+    "year": "1995"
+  },
+  "right_candidates": [
+    {
+      "id": "615195",
+      "title": "The CORAL deductive system",
+      "authors": "Raghu Ramakrishnan, Divesh Srivastava, S. Sudarshan, Praveen Seshadri",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "1994"
+    },
+    {
+      "id": "280348",
+      "title": "Repository system engineering",
+      "authors": "Pillip A. Bernstein",
+      "venue": "International Conference on Management of Data",
+      "year": "1996"
+    },
+    {
+      "id": "765557",
+      "title": "Synchronization and recovery in a client-server storage system",
+      "authors": "E. Panagos, A. Biliris",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "1997"
+    },
+    {
+      "id": "223903",
+      "title": "The ECRC multi database system",
+      "authors": "Willem Jonker, Heribert Sch&#252;tz",
+      "venue": "International Conference on Management of Data",
+      "year": "1995"
+    },
+    {
+      "id": "673170",
+      "title": "Redo Recovery after System Crashes",
+      "authors": "David B. Lomet, Mark R. Tuttle",
+      "venue": "Very Large Data Bases",
+      "year": "1995"
+    }
+  ]
+}

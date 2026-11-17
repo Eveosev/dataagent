@@ -1,0 +1,45 @@
+{
+  "source": "leipzig-dblp-acm",
+  "source_label": "DBLP → ACM",
+  "license": "CC BY 4.0",
+  "license_url": "https://creativecommons.org/licenses/by/4.0/",
+  "attribution": "Leipzig DBS group; Köpcke et al., VLDB 2010",
+  "left_id": "conf/sigmod/Han96",
+  "gold_right_ids": [
+    "280351"
+  ],
+  "candidate_ids": [
+    "335438",
+    "280351",
+    "673464",
+    "764219",
+    "276374"
+  ],
+  "distractor_ids": [
+    "335438",
+    "276374",
+    "673464",
+    "764219"
+  ],
+  "negative_policy": "候选集中除 gold_right_ids 外的记录按数据集 gold mapping 的排他性视为非匹配",
+  "case_id": "B16-dblp-1456",
+  "expected": {
+    "kind": "entity_pairs",
+    "source_dataset": "leipzig-dblp-acm",
+    "license": "CC BY 4.0",
+    "left_id": "conf/sigmod/Han96",
+    "candidate_ids": [
+      "335438",
+      "280351",
+      "673464",
+      "764219",
+      "276374"
+    ],
+    "pairs": [
+      {
+        "left_id": "conf/sigmod/Han96",
+        "right_id": "280351"
+      }
+    ]
+  }
+}

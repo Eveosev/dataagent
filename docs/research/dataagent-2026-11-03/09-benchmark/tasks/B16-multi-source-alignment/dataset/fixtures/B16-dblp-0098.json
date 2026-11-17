@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/vldb/ChaudhuriW00",
+    "title": "Rethinking Database System Architecture: Towards a Self-Tuning RISC-Style Database System",
+    "authors": "Surajit Chaudhuri, Gerhard Weikum",
+    "venue": "VLDB",
+    "year": "2000"
+  },
+  "right_candidates": [
+    {
+      "id": "223898",
+      "title": "Paradise: a database system for GIS applications",
+      "authors": "CORPORATE The Paradise Team",
+      "venue": "International Conference on Management of Data",
+      "year": "1995"
+    },
+    {
+      "id": "671696",
+      "title": "Rethinking Database System Architecture: Towards a Self-Tuning RISC-Style Database System",
+      "authors": "Surajit Chaudhuri, Gerhard Weikum",
+      "venue": "Very Large Data Bases",
+      "year": "2000"
+    },
+    {
+      "id": "765754",
+      "title": "Mariposa: a wide-area distributed database system",
+      "authors": "Michael Stonebraker, Paul M. Aoki, Witold Litwin, Avi Pfeffer, Adam Sah, Jeff Sidell, Carl Staelin, Andrew Yu",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "1996"
+    },
+    {
+      "id": "640994",
+      "title": "A multi-paradigm querying approach for a generic multimedia database management system",
+      "authors": "Ji-Rong Wen, Qing Li, Wei-Ying Ma, Hong-Jiang Zhang",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2003"
+    },
+    {
+      "id": "262770",
+      "title": "Lore: a database management system for semistructured data",
+      "authors": "Jason McHugh, Serge Abiteboul, Roy Goldman, Dallas Quass, Jennifer Widom",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1997"
+    }
+  ]
+}

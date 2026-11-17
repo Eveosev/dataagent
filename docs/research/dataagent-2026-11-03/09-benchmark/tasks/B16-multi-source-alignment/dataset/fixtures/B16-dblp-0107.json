@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/sigmod/MeltonE01",
+    "title": "SQL Multimedia and Application Packages (SQL/MM)",
+    "authors": "Jim Melton, Andrew Eisenberg",
+    "venue": "SIGMOD Record",
+    "year": "2001"
+  },
+  "right_candidates": [
+    {
+      "id": "373709",
+      "title": "SQL and management of external data",
+      "authors": "Jim Melton, Jan-Eike Michels, Vanja Josifovski, Krishna Kulkarni, Peter Schwarz, Kathy Zeidenstein",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2001"
+    },
+    {
+      "id": "565123",
+      "title": "MPEG-7 and multimedia database systems",
+      "authors": "Harald Kosch",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2002"
+    },
+    {
+      "id": "604280",
+      "title": "SQL multimedia and application packages (SQL/MM)",
+      "authors": "Jim Melton, Andrew Eisenberg",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2001"
+    },
+    {
+      "id": "564796",
+      "title": "Tutorial: application servers and associated technologies",
+      "authors": "C. Mohan",
+      "venue": "International Conference on Management of Data",
+      "year": "2002"
+    },
+    {
+      "id": "223880",
+      "title": "Objects and SQL (panel session): strange relations?",
+      "authors": "Donald R. Deutsch",
+      "venue": "International Conference on Management of Data",
+      "year": "1995"
+    }
+  ]
+}

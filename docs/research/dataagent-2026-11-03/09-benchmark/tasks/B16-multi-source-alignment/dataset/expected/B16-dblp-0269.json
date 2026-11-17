@@ -1,0 +1,45 @@
+{
+  "source": "leipzig-dblp-acm",
+  "source_label": "DBLP → ACM",
+  "license": "CC BY 4.0",
+  "license_url": "https://creativecommons.org/licenses/by/4.0/",
+  "attribution": "Leipzig DBS group; Köpcke et al., VLDB 2010",
+  "left_id": "conf/vldb/BouguettayaEMO01",
+  "gold_right_ids": [
+    "672201"
+  ],
+  "candidate_ids": [
+    "767097",
+    "637414",
+    "373691",
+    "223855",
+    "672201"
+  ],
+  "distractor_ids": [
+    "373691",
+    "637414",
+    "223855",
+    "767097"
+  ],
+  "negative_policy": "候选集中除 gold_right_ids 外的记录按数据集 gold mapping 的排他性视为非匹配",
+  "case_id": "B16-dblp-0269",
+  "expected": {
+    "kind": "entity_pairs",
+    "source_dataset": "leipzig-dblp-acm",
+    "license": "CC BY 4.0",
+    "left_id": "conf/vldb/BouguettayaEMO01",
+    "candidate_ids": [
+      "767097",
+      "637414",
+      "373691",
+      "223855",
+      "672201"
+    ],
+    "pairs": [
+      {
+        "left_id": "conf/vldb/BouguettayaEMO01",
+        "right_id": "672201"
+      }
+    ]
+  }
+}

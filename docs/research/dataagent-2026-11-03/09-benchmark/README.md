@@ -1,13 +1,13 @@
 ---
-version: v0.1
-date: 2026-11-04
-status: 草案；目录与工具已落地，15 个评测集未采集
-basis: 09-benchmark-plan.md §2（15 个核心模块）、§3（评测集与流程）、§4（参考 benchmark）
+version: v0.2
+date: 2026-11-17
+status: 草案；目录与工具已落地，16 个任务已建，B16 数据已构建
+basis: 09-benchmark-plan.md §2（16 个已建任务）、§3（评测集与流程）、§4（参考 benchmark）
 ---
 
 # Benchmark 任务目录
 
-承载 [09-benchmark-plan.md](../09-benchmark-plan.md) 的 15 个核心模块，按「任务 → 轮次 → 运行」三层落盘，供多次迭代横向对比与门禁裁定。
+承载 [09-benchmark-plan.md](../09-benchmark-plan.md) 的 16 个已建任务（B01–B16），按「任务 → 轮次 → 运行」三层落盘，供多次迭代横向对比与门禁裁定。
 
 ## 1. 不变量
 
@@ -24,7 +24,7 @@ basis: 09-benchmark-plan.md §2（15 个核心模块）、§3（评测集与流�
 ```text
 09-benchmark/
 ├── README.md                  # 本文件：目录契约
-├── registry.json              # 15 个任务的唯一索引（状态、主指标、门槛层级、基线与最近轮次）
+├── registry.json              # 16 个任务的唯一索引（状态、主指标、门槛层级、基线与最近轮次）
 ├── schema/                    # task / manifest / case / run / scorecard 的 JSON Schema
 ├── examples/                  # 用例与记分卡的填写样板，不参与统计
 ├── harness/
@@ -33,7 +33,7 @@ basis: 09-benchmark-plan.md §2（15 个核心模块）、§3（评测集与流�
 │   ├── adapters/              # 被测系统入口（CLI / MCP / HTTP）
 │   └── graders/               # 指标实现，按 metric.grader 命名
 ├── tasks/
-│   └── B01-irregular-table/   # 一个任务一个目录，B01–B15
+│   └── B01-irregular-table/   # 一个任务一个目录，B01–B16
 │       ├── task.json          # 任务卡：原子、参考 benchmark、指标、门槛、隔离规则
 │       ├── NOTES.md           # 迭代日志与决策（唯一手写的记录处）
 │       ├── dataset/
@@ -52,7 +52,7 @@ basis: 09-benchmark-plan.md §2（15 个核心模块）、§3（评测集与流�
 │               ├── scorecard.json  # 分 split 指标、Δ、verdict、门禁结论
 │               ├── cases.jsonl     # 逐用例结果（含失败原因）
 │               └── artifacts/      # 输出、日志、轨迹、图表
-├── rounds/<round-id>.json     # 一次迭代：15 个任务的 run 槽位 + 环境 + 汇总裁定
+├── rounds/<round-id>.json     # 一次迭代：16 个任务的 run 槽位 + 环境 + 汇总裁定
 ├── monitor/
 │   ├── thresholds.json        # 绝对门槛 + 相对基线规则 + 告警分级
 │   ├── trend.md               # 由 report.py 生成的趋势看板，勿手改
@@ -60,7 +60,7 @@ basis: 09-benchmark-plan.md §2（15 个核心模块）、§3（评测集与流�
 │   └── incidents/             # P0/P1 告警的归因记录
 └── tools/
     ├── check.py               # 目录契约校验（stdlib，无依赖）
-    ├── new_round.py           # 开一轮，生成 round 与 15 个 run 骨架
+    ├── new_round.py           # 开一轮，生成 round 与 16 个 run 骨架
     └── report.py              # 汇总 rounds/ 与 scorecard 生成 monitor/trend.md
 ```
 
@@ -72,7 +72,7 @@ basis: 09-benchmark-plan.md §2（15 个核心模块）、§3（评测集与流�
 |-|-|-|
 | 任务 | `B` + 两位序号，与计划 §2 行号一致，稳定不复用 | `B07` |
 | 任务目录 | `<id>-<slug>`，slug 建后不改（改 slug 等于换任务） | `B07-e2e-analysis` |
-| 轮次 / 运行 | `rNNN-YYYY-MM-DD` 正式轮；`xNNN-YYYY-MM-DD` 探索轮。同一轮内 15 个任务的 run_id 相同，便于横向 join | `r003-2026-11-18` |
+| 轮次 / 运行 | `rNNN-YYYY-MM-DD` 正式轮；`xNNN-YYYY-MM-DD` 探索轮。同一轮内 16 个任务的 run_id 相同，便于横向 join | `r003-2026-11-18` |
 | 用例 | `<task>-<场景>-<序号>`，文件名与 `case_id` 一致 | `B03-invoice-0042` |
 | 指标 | 小写下划线，与 grader 同名或一一对应 | `evidence_span_f1` |
 
@@ -97,6 +97,7 @@ basis: 09-benchmark-plan.md §2（15 个核心模块）、§3（评测集与流�
 | B13 | 记忆与经验召回 | 11 | LongMemEval v2、MemoryAgentBench | `memory_accuracy` | warn |
 | B14 | 数据建模与物化 | 7 | ELT-Bench（Verified）、Spider 2.0 dbt | `srdel` | warn |
 | B15 | FDE 交付效果 | 15 | —（现场测量） | `time_to_first_trusted_answer` | field |
+| B16 | 多源对齐与实体解析 | 6 | DeepMatcher / Magellan、Leipzig DBS（DBLP-ACM / Amazon-Google / Abt-Buy） | `entity_pair_f1` | warn |
 
 门槛层级：
 
@@ -104,7 +105,7 @@ basis: 09-benchmark-plan.md §2（15 个核心模块）、§3（评测集与流�
 |-|-|-|
 | `block` | 结果进 DA11.9 S2 上线门禁，任一主指标跌破绝对门槛或相对基线超限即阻断 | B01–B05（对应计划 §3「S2 门禁引用第 1–5 项」） |
 | `guard` | 安全硬边界：泄漏类指标为绝对零容忍，其余按 `warn` 处理 | B12 |
-| `warn` | 只告警与归因，不阻断发布 | B06–B11、B13、B14 |
+| `warn` | 只告警与归因，不阻断发布 | B06–B11、B13、B14、B16 |
 | `field` | 不进 CI，按交付 cohort 季度汇总 | B15 |
 
 原子数为 `catalog_atoms` 展开后的条数；同一原子可被多个任务引用（如 DA02.8 同时进 B02 与 B04），这是有意的重叠：前置解析质量会直接反映在下游任务上。
@@ -114,7 +115,7 @@ basis: 09-benchmark-plan.md §2（15 个核心模块）、§3（评测集与流�
 ```bash
 cd docs/research/dataagent-2026-11-03/09-benchmark
 
-# 1. 开轮（生成 rounds/<id>.json 与 15 个 run 骨架）
+# 1. 开轮（生成 rounds/<id>.json 与 16 个 run 骨架）
 python3 tools/new_round.py --label model-swap --model <模型> --kernel agent-kernel@<sha>
 
 # 2. 冻结数据版本；unseen_acceptance 本轮不得调参
@@ -216,6 +217,7 @@ docs/research/.../09-benchmark/
 | Spider 2.0 全量 / dbt 任务 | B14 | 需按官网流程申请；**已决定延后** | 申请后补 `spider2-dbt` 源，B14 暂由 ELT-Bench 覆盖 |
 | LongMemEval m 档 | B13 | 2.7 GB，暂不取 | 需要时补 `longmemeval_m`，用例已用 oracle + s_cleaned |
 | B15 交付数据 | B15 | 无公开 benchmark，需真实客户台账与影子日志 | 见 `tasks/B15-fde-delivery/NOTES.md`「数据构建」 |
+| DeepMatcher UW 镜像 / Magellan 数据 | B16 | 镜像未声明数据集许可；Magellan 当前仓库不再分发基准数据 | 已改用 Leipzig 原始发布（CC BY 4.0），见 `tasks/B16-multi-source-alignment/NOTES.md`「许可核实」 |
 
 
 **原则**：缺数据不编金标。抓不到或未授权时，`manifest.build.coverage` 与 `NOTES.md` 明确写缺口，`fetch-report.json` 记 `status/remedy`；任何「补齐」都必须可复核（`FETCH.json` 有 locator 与 digest）。
@@ -254,15 +256,15 @@ python3 -I docs/research/dataagent-2026-11-03/09-benchmark/tools/report.py
 
 | 项 | 状态 |
 |-|-|
-| 目录、schema、registry | 已建（15 任务 / 185 个原子引用） |
-| 原始数据 | 已落 `workspace/benchmark-data/`，42 个来源（39 可取 / 0 gated / 1 延后 / 1 已替代 / 1 跳过）；版本与摘要见各源 `FETCH.json` |
-| 规范化用例 | 14/15 任务已建，共 3217 条；所有 `fixtures/` 与 `bench://` 引用均已落地（`check.py` 校验） |
+| 目录、schema、registry | 已建（16 任务 / 191 个原子引用） |
+| 原始数据 | 已落 `workspace/benchmark-data/`，45 个来源（42 可取 / 0 gated / 1 延后 / 1 已替代 / 1 跳过）；版本与摘要见各源 `FETCH.json` |
+| 规范化用例 | 15/16 任务已建，共 3457 条；所有 `fixtures/` 与 `bench://` 引用均已落地（`check.py` 校验） |
 | registry/task 状态 | 已建任务 `status=collecting`；B15 保持 `planned`（无公开数据） |
-| grader 实现 | 16/50 已实现（覆盖 B01–B04），其中 11 个可真正判分（`unknown_retention` 只在 unknown 子集上计分）；其余 34 个未实现或金标缺口，见 `harness/graders/README.md` |
-| 判分链路 | `harness/grade.py` 可跑通：金标回填 240 条得满分，扰动 20% 后掉分；scorecard 通过 schema 校验 |
-| 适配器 | `dataagent-cli` / `oracle` / `empty` 三个，见 `harness/adapters/README.md`；`harness/run.py` 一键产出 run.json + cases.jsonl + scorecard |
-| 已跑通的探索轮 | B02 `x001`（oracle，满分）、B02 `x002`（empty，地板）、B02 `x003`（CLI 缺失，如实 failed）、B03/B04 `x001`（oracle） |
-| 基线 | 未建立，15 个 `baseline.json` 的 `run_id` 为 null |
+| grader 实现 | 17 个已实现（覆盖 B01–B04、B16），其中 13 个可真正判分（`unknown_retention` 只在 unknown 子集上计分）；其余 41 个未实现或金标缺口，见 `harness/graders/README.md` |
+| 判分链路 | `harness/grade.py` 可跑通：金标回填 240 条得满分（B03/B16），扰动 20% 后掉分；scorecard 通过 schema 校验 |
+| 适配器 | `dataagent-cli` / `oracle` / `empty` 三个，见 `harness/adapters/README.md`；`harness/run.py` 一键产出 run.json + cases.jsonl + scorecard。B16 的 oracle 分支尚未加（`oracle.py` 不在 T31 改动范围），命令可跑通但 F1 为 0 |
+| 已跑通的探索轮 | B02 `x001`（oracle，满分）、B02 `x002`（empty，地板）、B02 `x003`（CLI 缺失，如实 failed）、B03/B04 `x001`（oracle）、B16 `x323`（oracle，适配器缺 B16 分支，F1=0）、B16 `x827`（empty，地板） |
+| 基线 | 未建立，16 个 `baseline.json` 的 `run_id` 为 null |
 | 门槛 | 仅 2 条绝对门槛（B01 行保留率、B12 外泄率），其余待首轮回填 |
 
 | 任务 | 用例数 | manifest | status | 数据状态 |
@@ -282,6 +284,7 @@ python3 -I docs/research/dataagent-2026-11-03/09-benchmark/tools/report.py
 | B13 记忆与经验召回 | 240 | v0.2 | collecting | 已构建 |
 | B14 数据建模与物化 | 224 | v0.1 | collecting | 已构建 |
 | B15 FDE 交付效果 | 0 | v0.0 | planned | 待下载/待建 |
+| B16 多源对齐与实体解析 | 240 | v0.5 | collecting | 已构建 |
 
 数据构建命令与引用规则见 §9；不可得来源的原因与所需动作见 §9.2；每个任务的指标覆盖写在 `manifest.build.coverage` 与 `tasks/<task>/NOTES.md`「数据构建」。
 

@@ -1,10 +1,10 @@
 {
-  "version": "v0.1",
-  "date": "2026-11-04",
+  "version": "v0.2",
+  "date": "2026-11-17",
   "raw_root": "workspace/benchmark-data",
   "ref_scheme": "bench://<source-id>/<path-within-source>",
   "summary": {
-    "available": 39,
+    "available": 42,
     "gated": 0,
     "note": "gated 源需人工接受条款并配置 HF token；fetch.py 会跳过并打印 remedy",
     "deferred": 1
@@ -506,6 +506,39 @@
         "README.md"
       ],
       "notes": "812 张表的列名/类型/示例行（不含全量数据）；用于补全 SQL 任务的 schema，2026-11-04 已授权"
+    },
+    {
+      "id": "leipzig-dblp-acm",
+      "task": "B16",
+      "kind": "url_zip",
+      "locator": "https://dbs.uni-leipzig.de/files/datasets/DBLP-ACM.zip",
+      "revision": "2023-10-06",
+      "license": "CC BY 4.0",
+      "est_mb": 0.3,
+      "status": "available",
+      "notes": "DeepMatcher 基准集 DBLP-ACM 的 Leipzig 原始发布；数据集页 2019-01 起以 CC BY 4.0 提供，署名 Leipzig DBS group / Köpcke et al. VLDB 2010"
+    },
+    {
+      "id": "leipzig-amazon-google",
+      "task": "B16",
+      "kind": "url_zip",
+      "locator": "https://dbs.uni-leipzig.de/files/datasets/Amazon-GoogleProducts.zip",
+      "revision": "2023-10-06",
+      "license": "CC BY 4.0",
+      "est_mb": 0.9,
+      "status": "available",
+      "notes": "DeepMatcher 基准集 Amazon-Google 的 Leipzig 原始发布；含多对一匹配，CC BY 4.0，署名同上"
+    },
+    {
+      "id": "leipzig-abt-buy",
+      "task": "B16",
+      "kind": "url_zip",
+      "locator": "https://dbs.uni-leipzig.de/files/datasets/Abt-Buy.zip",
+      "revision": "2023-10-06",
+      "license": "CC BY 4.0",
+      "est_mb": 0.2,
+      "status": "available",
+      "notes": "DeepMatcher 基准集 Abt-Buy 的 Leipzig 原始发布；文本型商品描述，CC BY 4.0，署名同上"
     }
   ]
 }

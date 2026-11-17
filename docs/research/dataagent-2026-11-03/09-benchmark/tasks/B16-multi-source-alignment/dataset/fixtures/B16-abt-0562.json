@@ -1,0 +1,43 @@
+{
+  "task": "entity_alignment",
+  "source": "Abt → Buy",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "6742",
+    "name": "Panasonic Yeast Pro Automatic Breadmaker - SDYD250",
+    "description": "Panasonic Yeast Pro Automatic Breadmaker - SDYD250/ Patented Yeast Dispenser/ 2.5 lb To 1.5 lb Loaf/ Choice Of Bread And Baking Modes/ 13 Hour Countdown Digital Timer/ Nonstick Coating For Easy Cleanup"
+  },
+  "right_candidates": [
+    {
+      "id": "202845629",
+      "name": "Panasonic SDYD250 Automatic Bread Maker",
+      "manufacturer": "Panasonic"
+    },
+    {
+      "id": "90138520",
+      "name": "Panasonic KX-TCA92 Headset",
+      "description": "Over-the-head",
+      "manufacturer": "Panasonic",
+      "price": "$18.42"
+    },
+    {
+      "id": "206179525",
+      "name": "Panasonic KX-TG8232B Cordless Phone",
+      "description": "1 x Phone Line(s) - Black",
+      "manufacturer": "Panasonic",
+      "price": "$79.99"
+    },
+    {
+      "id": "202755491",
+      "name": "Panasonic KX-TS600W Basic Telephone",
+      "description": "1 x Phone Line(s) - 1 x Headset, 1 x Data - White",
+      "manufacturer": "Panasonic"
+    },
+    {
+      "id": "90138537",
+      "name": "Panasonic KX-TSC14B Corded Telephone",
+      "description": "2 x Phone Line(s) - Headset - Black",
+      "manufacturer": "Panasonic"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/LaursenOP94",
+    "title": "Oracle Media Server: Providing Consumer Based Interactive Access to Multimedia Data",
+    "authors": "Mark Porter, Andrew Laursen, Jeffrey Olkin",
+    "venue": "SIGMOD Conference",
+    "year": "1994"
+  },
+  "right_candidates": [
+    {
+      "id": "276380",
+      "title": "Providing database-like access to the Web using queries based on textual similarity",
+      "authors": "William W. Cohen",
+      "venue": "International Conference on Management of Data",
+      "year": "1998"
+    },
+    {
+      "id": "191933",
+      "title": "Oracle media server: providing consumer based interactive access to multimedia data",
+      "authors": "Andrew Laursen, Jeffrey Olkin, Mark Porter",
+      "venue": "International Conference on Management of Data",
+      "year": "1994"
+    },
+    {
+      "id": "212015",
+      "title": "A framework for providing consistent and recoverable agent-based access to heterogeneous mobile databases",
+      "authors": "Evaggelia Pitoura, Bharat Bhargava",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1995"
+    },
+    {
+      "id": "248606",
+      "title": "Improving access to environmental data using context information",
+      "authors": "Anthony Tomasic, Eric Simon",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1997"
+    },
+    {
+      "id": "191856",
+      "title": "Data modeling of time-based media",
+      "authors": "Simon Gibbs, Christian Breiteneder, Dennis Tsichritzis",
+      "venue": "International Conference on Management of Data",
+      "year": "1994"
+    }
+  ]
+}

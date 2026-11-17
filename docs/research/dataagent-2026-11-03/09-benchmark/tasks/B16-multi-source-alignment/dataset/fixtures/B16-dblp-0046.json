@@ -1,0 +1,48 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/sigmod/Qian96",
+    "title": "Shutdown, Budget, and Funding",
+    "authors": "Xiaolei Qian",
+    "venue": "SIGMOD Record",
+    "year": "1996"
+  },
+  "right_candidates": [
+    {
+      "id": "381901",
+      "title": "Shutdown, budget, and funding",
+      "authors": "Xiaolei Qian",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1996"
+    },
+    {
+      "id": "604281",
+      "title": "Systems and prototypes",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2001"
+    },
+    {
+      "id": "565138",
+      "title": "Systems and prototypes",
+      "authors": "Jignesh Patel",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2002"
+    },
+    {
+      "id": "212022",
+      "title": "Turmoil at NASA, and numerous funding announcements",
+      "authors": "Xiaolei Qian",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1995"
+    },
+    {
+      "id": "604276",
+      "title": "Information warfare and security",
+      "authors": "H. V. Jagadish",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2001"
+    }
+  ]
+}

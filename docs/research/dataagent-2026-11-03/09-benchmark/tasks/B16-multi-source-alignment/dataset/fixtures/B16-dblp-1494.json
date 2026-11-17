@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/AgrawalCN01",
+    "title": "Materialized View and Index Selection Tool for Microsoft SQL Server 2000",
+    "authors": "Vivek R. Narasayya, Sanjay Agrawal, Surajit Chaudhuri",
+    "venue": "SIGMOD Conference",
+    "year": "2001"
+  },
+  "right_candidates": [
+    {
+      "id": "276378",
+      "title": "Microsoft index turning wizard for SQL Server 7.0",
+      "authors": "Surajit Chaudhuri, Vivek Narasayya",
+      "venue": "International Conference on Management of Data",
+      "year": "1998"
+    },
+    {
+      "id": "671189",
+      "title": "Materialized View Selection for Multidimensional Datasets",
+      "authors": "Amit Shukla, Prasad Deshpande, Jeffrey F. Naughton",
+      "venue": "Very Large Data Bases",
+      "year": "1998"
+    },
+    {
+      "id": "673646",
+      "title": "An Efficient Cost-Driven Index Selection Tool for Microsoft SQL Server",
+      "authors": "Surajit Chaudhuri, Vivek R. Narasayya",
+      "venue": "Very Large Data Bases",
+      "year": "1997"
+    },
+    {
+      "id": "671160",
+      "title": "Hash Joins and Hash Teams in Microsoft SQL Server",
+      "authors": "Goetz Graefe, Ross Bunker, Shaun Cooper",
+      "venue": "Very Large Data Bases",
+      "year": "1998"
+    },
+    {
+      "id": "375769",
+      "title": "Materialized view and index selection tool for Microsoft SQL server 2000",
+      "authors": "Sanjay Agrawal, Surajit Chaudhuri, Vivek Narasayya",
+      "venue": "International Conference on Management of Data",
+      "year": "2001"
+    }
+  ]
+}

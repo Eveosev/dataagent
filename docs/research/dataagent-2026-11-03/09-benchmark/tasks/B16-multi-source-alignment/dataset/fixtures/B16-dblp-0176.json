@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/sigmod/Hammer02",
+    "title": "Report on the ACM Fourth International Workshop on Data Warehousing and OLAP (DOLAP 2001)",
+    "authors": "Joachim Hammer",
+    "venue": "SIGMOD Record",
+    "year": "2002"
+  },
+  "right_candidates": [
+    {
+      "id": "373708",
+      "title": "Report on the fourth international conference on flexible query answering systems (FQAS 2000)",
+      "authors": "Patrick Bosc, Amihai Motro, Gabriella Pasi",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2001"
+    },
+    {
+      "id": "565134",
+      "title": "On building an infrastructure for mobile and wireless systems: report on the NSF workshop on an infrastructure for mobile and wireless systems, Oct. 15, 2001",
+      "authors": "Birgitta K&#246;nig-Ries, Kia Makki, Sam Makki, Charles Perkins, Niki Pissinou, Peter Reiher, Peter Scheuermann, Jari Veijalainen, Ouri Wolfson",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2002"
+    },
+    {
+      "id": "344825",
+      "title": "Design and management of data warehouses report on the DMDW'99 workshop",
+      "authors": "Stella Gatziu, Manfred Jeusfeld, Martin Staudt, Yannis Vassiliou",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1999"
+    },
+    {
+      "id": "344820",
+      "title": "Report on NGITS'99: The fourth international workshop on next generation information technologies and systems",
+      "authors": "Opher Etzion",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1999"
+    },
+    {
+      "id": "565135",
+      "title": "Report on the ACM fourth international workshop on data warehousing and OLAP (DOLAP 2001)",
+      "authors": "Joachim Hammer",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2002"
+    }
+  ]
+}

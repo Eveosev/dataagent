@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/vldb/AndreiV01",
+    "title": "User-Optimizer Communication using Abstract Plans in Sybase ASE",
+    "authors": "Patrick Valduriez, Mihnea Andrei",
+    "venue": "VLDB",
+    "year": "2001"
+  },
+  "right_candidates": [
+    {
+      "id": "673143",
+      "title": "Coloring Away Communication in Parallel Query Optimization",
+      "authors": "Waqar Hasan, Rajeev Motwani",
+      "venue": "Very Large Data Bases",
+      "year": "1995"
+    },
+    {
+      "id": "673654",
+      "title": "Using Probabilistic Information in Data Integration",
+      "authors": "Daniela Florescu, Daphne Koller, Alon Y. Levy",
+      "venue": "Very Large Data Bases",
+      "year": "1997"
+    },
+    {
+      "id": "335451",
+      "title": "Counting, enumerating, and sampling of execution plans in a cost-based query optimizer",
+      "authors": "Florian Waas, C&#233;sar Galindo-Legaria",
+      "venue": "International Conference on Management of Data",
+      "year": "2000"
+    },
+    {
+      "id": "672357",
+      "title": "User-Optimizer Communication using Abstract Plans in Sybase ASE",
+      "authors": "Mihnea Andrei, Patrick Valduriez",
+      "venue": "Very Large Data Bases",
+      "year": "2001"
+    },
+    {
+      "id": "375705",
+      "title": "Generating efficient plans for queries using views",
+      "authors": "Foto N. Afrati, Chen Li, Jeffrey D. Ullman",
+      "venue": "International Conference on Management of Data",
+      "year": "2001"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "task": "entity_alignment",
+  "source": "Abt → Buy",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "36053",
+    "name": "Canon CB-2LV Battery Charger - 9764A001",
+    "description": "Canon CB-2LV Battery Charger - 9764A001/ Compatible With Canon NB-4L Rechargeable Battery"
+  },
+  "right_candidates": [
+    {
+      "id": "90140498",
+      "name": "Canon NB-4L Rechargeable Camera Battery - 9763A001",
+      "description": "Canon NB-4L Lithium Ion Battery",
+      "manufacturer": "Canon",
+      "price": "$36.89"
+    },
+    {
+      "id": "90141687",
+      "name": "Canon CB-2LV Battery Charger - 9764A001",
+      "description": "for NB-4L",
+      "manufacturer": "Canon"
+    },
+    {
+      "id": "90139860",
+      "name": "Olympus B-90SU AA/AAA Size Battery Charger - 200899",
+      "manufacturer": "Olympus"
+    },
+    {
+      "id": "202451162",
+      "name": "Canon Canon CB-2LW Battery Charger - 0763B001",
+      "manufacturer": "Canon"
+    },
+    {
+      "id": "202785722",
+      "name": "Canon NB-5L Lithium-Ion Digital Camera Battery - 1135B001",
+      "description": "Canon NB-5L Lithium Ion Battery",
+      "manufacturer": "Canon",
+      "price": "$36.49"
+    }
+  ]
+}

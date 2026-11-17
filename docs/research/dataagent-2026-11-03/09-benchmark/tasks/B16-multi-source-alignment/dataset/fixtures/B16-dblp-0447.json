@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/vldb/DiligentiCLGG00",
+    "title": "Focused Crawling Using Context Graphs",
+    "authors": "Frans Coetzee, Steve Lawrence, Michelangelo Diligenti, Marco Gori, C. Lee Giles",
+    "venue": "VLDB",
+    "year": "2000"
+  },
+  "right_candidates": [
+    {
+      "id": "671328",
+      "title": "Mining Surprising Patterns Using Temporal Description Length",
+      "authors": "Soumen Chakrabarti, Sunita Sarawagi, Byron Dom",
+      "venue": "Very Large Data Bases",
+      "year": "1998"
+    },
+    {
+      "id": "767151",
+      "title": "Answering queries using views: A survey",
+      "authors": "Alon Y. Halevy",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "2001"
+    },
+    {
+      "id": "276325",
+      "title": "Similarity query processing using disk arrays",
+      "authors": "Apostolos N. Papadopoulos, Yannis Manolopoulos",
+      "venue": "International Conference on Management of Data",
+      "year": "1998"
+    },
+    {
+      "id": "673001",
+      "title": "Hilbert R-tree: An Improved R-tree using Fractals",
+      "authors": "Ibrahim Kamel, Christos Faloutsos",
+      "venue": "Very Large Data Bases",
+      "year": "1994"
+    },
+    {
+      "id": "671854",
+      "title": "Focused Crawling Using Context Graphs",
+      "authors": "Michelangelo Diligenti, Frans Coetzee, Steve Lawrence, C. Lee Giles, Marco Gori",
+      "venue": "Very Large Data Bases",
+      "year": "2000"
+    }
+  ]
+}

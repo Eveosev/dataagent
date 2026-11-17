@@ -1,6 +1,6 @@
 {
-  "version": "v0.1",
-  "date": "2026-11-04",
+  "version": "v0.2",
+  "date": "2026-11-17",
   "plan_ref": "../09-benchmark-plan.md",
   "catalog_ref": "../catalog/atomic-capability-catalog.json",
   "tasks": [
@@ -226,6 +226,21 @@
       "gate_tier": "field",
       "in_ci": false,
       "status": "planned",
+      "baseline_run": null,
+      "last_run": null
+    },
+    {
+      "id": "B16",
+      "slug": "multi-source-alignment",
+      "title": "多源对齐与实体解析",
+      "path": "tasks/B16-multi-source-alignment",
+      "plan_row": 16,
+      "layer_atoms": 6,
+      "slice": "S0",
+      "primary_metric": "entity_pair_f1",
+      "gate_tier": "warn",
+      "in_ci": true,
+      "status": "collecting",
       "baseline_run": null,
       "last_run": null
     }

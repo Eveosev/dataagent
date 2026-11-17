@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/vldb/AgrawalHK03",
+    "title": "Watermarking relational data: framework, algorithms and analysis",
+    "authors": "Peter J. Haas, Rakesh Agrawal, Jerry Kiernan",
+    "venue": "VLDB J.",
+    "year": "2003"
+  },
+  "right_candidates": [
+    {
+      "id": "671329",
+      "title": "Design and Analysis of Parametric Query Optimization Algorithms",
+      "authors": "Sumit Ganguly",
+      "venue": "Very Large Data Bases",
+      "year": "1998"
+    },
+    {
+      "id": "603880",
+      "title": "Data analysis and mining in the life sciences",
+      "authors": "Nam Huyn",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2001"
+    },
+    {
+      "id": "233315",
+      "title": "IDEA: interactive data exploration and analysis",
+      "authors": "Peter G. Selfridge, Divesh Srivastava, Lynn O. Wilson",
+      "venue": "International Conference on Management of Data",
+      "year": "1996"
+    },
+    {
+      "id": "671870",
+      "title": "Telcordia's Database Reconciliation and Data Quality Analysis Tool",
+      "authors": "Francesco Caruso, Munir Cochinwala, Uma Ganapathy, Gail Lalk, Paolo Missier",
+      "venue": "Very Large Data Bases",
+      "year": "2000"
+    },
+    {
+      "id": "950487",
+      "title": "Watermarking relational data: framework, algorithms and analysis",
+      "authors": "Rakesh Agrawal, Peter J. Haas, Jerry Kiernan",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "2003"
+    }
+  ]
+}

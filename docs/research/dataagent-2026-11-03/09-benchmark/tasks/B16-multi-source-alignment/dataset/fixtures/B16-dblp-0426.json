@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/CorralMTV00",
+    "title": "Closest Pair Queries in Spatial Databases",
+    "authors": "Yannis Theodoridis, Yannis Manolopoulos, Antonio Corral, Michael Vassilakopoulos",
+    "venue": "SIGMOD Conference",
+    "year": "2000"
+  },
+  "right_candidates": [
+    {
+      "id": "219056",
+      "title": "Space optimization in deductive databases",
+      "authors": "Divesh Srivastava, S. Sudarshan, Raghu Ramakrishnan, Jeffrey F. Naughton",
+      "venue": "ACM Transactions on Database Systems (TODS) ",
+      "year": "1995"
+    },
+    {
+      "id": "335414",
+      "title": "Closest pair queries in spatial databases",
+      "authors": "Antonio Corral, Yannis Manolopoulos, Yannis Theodoridis, Michael Vassilakopoulos",
+      "venue": "International Conference on Management of Data",
+      "year": "2000"
+    },
+    {
+      "id": "672970",
+      "title": "Data Compression Support in Databases",
+      "authors": "Balakrishna R. Iyer, David Wilhite",
+      "venue": "Very Large Data Bases",
+      "year": "1994"
+    },
+    {
+      "id": "564730",
+      "title": "Time-parameterized queries in spatio-temporal databases",
+      "authors": "Yufei Tao, Dimitris Papadias",
+      "venue": "International Conference on Management of Data",
+      "year": "2002"
+    },
+    {
+      "id": "273257",
+      "title": "Mining fuzzy association rules in databases",
+      "authors": "Chan Man Kuok, Ada Fu, Man Hon Wong",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1998"
+    }
+  ]
+}

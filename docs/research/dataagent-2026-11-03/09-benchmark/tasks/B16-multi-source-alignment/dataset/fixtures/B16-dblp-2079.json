@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/vldb/MorishimaKKT01",
+    "title": "Enabling End-users to Construct Data-intensive Web-sites from XML Repositories: An Example-based Approach",
+    "authors": "Hiroyuki Kitagawa, Satoshi Takano, Seiichi Koizumi, Atsuyuki Morishima",
+    "venue": "VLDB",
+    "year": "2001"
+  },
+  "right_candidates": [
+    {
+      "id": "672209",
+      "title": "Query Engines for Web-Accessible XML Data",
+      "authors": "Leonidas Fegaras, Ramez Elmasri",
+      "venue": "Very Large Data Bases",
+      "year": "2001"
+    },
+    {
+      "id": "959080",
+      "title": "Review of Data on the Web: from relational to semistructured data and XML by Serge Abiteboul, Peter Buneman, and Dan Suciu. Morgan Kaufmann 1999.",
+      "authors": "Fernando Berzal, Nicol&#225;s Mar&#237;n",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2003"
+    },
+    {
+      "id": "764217",
+      "title": "Clustering categorical data: an approach based on dynamical systems",
+      "authors": "David Gibson, Jon Kleinberg, Prabhakar Raghavan",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "2000"
+    },
+    {
+      "id": "672187",
+      "title": "Enabling End-users to Construct Data-intensive Web-sites from XML Repositories: An Example-based Approach",
+      "authors": "Atsuyuki Morishima, Seiichi Koizumi, Hiroyuki Kitagawa, Satoshi Takano",
+      "venue": "Very Large Data Bases",
+      "year": "2001"
+    },
+    {
+      "id": "671202",
+      "title": "Clustering Categorical Data: An Approach Based on Dynamical Systems",
+      "authors": "David Gibson, Jon M. Kleinberg, Prabhakar Raghavan",
+      "venue": "Very Large Data Bases",
+      "year": "1998"
+    }
+  ]
+}

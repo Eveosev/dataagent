@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/vldb/PoulovassilisS96",
+    "title": "Algebraic Query Optimisation for Database Programming Languages",
+    "authors": "Carol Small, Alexandra Poulovassilis",
+    "venue": "VLDB J.",
+    "year": "1996"
+  },
+  "right_candidates": [
+    {
+      "id": "765691",
+      "title": "Algebraic query optimisation for database programming languages",
+      "authors": "Alexandra Poulovassilis, Carol Small",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "1996"
+    },
+    {
+      "id": "195675",
+      "title": "Formal query languages for secure relational databases",
+      "authors": "Marianne Winslett, Kenneth Smith, Xiaolei Qian",
+      "venue": "ACM Transactions on Database Systems (TODS) ",
+      "year": "1994"
+    },
+    {
+      "id": "671661",
+      "title": "Generating Call-Level Interfaces for Advanced Database Application Programming",
+      "authors": "Udo Nink, Theo H&#228;rder, Norbert Ritter",
+      "venue": "Very Large Data Bases",
+      "year": "1999"
+    },
+    {
+      "id": "288088",
+      "title": "Safe query languages for constraint databases",
+      "authors": "Peter Z. Revesz",
+      "venue": "ACM Transactions on Database Systems (TODS) ",
+      "year": "1998"
+    },
+    {
+      "id": "223789",
+      "title": "Towards an effective calculus for object query languages",
+      "authors": "Leonidas Fegaras, David Maier",
+      "venue": "International Conference on Management of Data",
+      "year": "1995"
+    }
+  ]
+}

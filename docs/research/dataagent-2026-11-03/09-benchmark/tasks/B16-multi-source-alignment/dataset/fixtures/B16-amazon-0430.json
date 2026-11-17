@@ -1,0 +1,44 @@
+{
+  "task": "entity_alignment",
+  "source": "Amazon → Google Products",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "b000iz8vqw",
+    "title": "mobi recam camera monitoring and notification software",
+    "manufacturer": "mobi",
+    "price": "119.99"
+  },
+  "right_candidates": [
+    {
+      "id": "http://www.google.com/base/feeds/snippets/6876039072181585655",
+      "name": "software requirements specification design and implementation 9780849319921",
+      "description": "software specification and design: an engineering approach proposes a strategy for software development that emphasizes measurement. it promotes the measurement of every aspect of the software environment from initial testing through test activity ...",
+      "price": "79.95"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/13453828823623738857",
+      "name": "software architectures and component technology 9780792375760",
+      "description": "software architectures have gained wide popularity in the last decade. they generally play a fundamental role in coping with the inherent difficulties of the development of large-scale and complex software systems. component-oriented and ...",
+      "price": "205"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/18349437846240185132",
+      "name": "max levinson virtuoso software max levinson - chopin and brahms",
+      "description": "this disk combines 24 essential preludes of chopin with the moving variations brahms wrote on his original theme in d major opus 21 no. 1 ? all played with max levinson's artful uncompromising approach.",
+      "price": "25.77"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/3000347833164648276",
+      "name": "mobi-cam 70008 monitoring and notification software",
+      "description": "easily set-up and monitor your home or business observation system from anywhere notification of alarm and viewing via e-mail internet or cell phone multiple camera support with simultaneous recording compatible with usb parallel port firewire ...",
+      "manufacturer": "mobi-cam",
+      "price": "89.69"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/13017887935047670097",
+      "name": "individual software professor teaches excel and word",
+      "description": "professor teaches excel and word",
+      "price": "42.99"
+    }
+  ]
+}

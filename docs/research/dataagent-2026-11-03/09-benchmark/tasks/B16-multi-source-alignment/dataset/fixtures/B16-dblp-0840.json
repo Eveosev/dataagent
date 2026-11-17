@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/DattaDTVSR02",
+    "title": "Proxy-based acceleration of dynamically generated content on the world wide web: an approach and implementation",
+    "authors": "Suresha, Kaushik Dutta, Krithi Ramamritham, Anindya Datta, Helen M. Thomas, Debra E. VanderMeer",
+    "venue": "SIGMOD Conference",
+    "year": "2002"
+  },
+  "right_candidates": [
+    {
+      "id": "564703",
+      "title": "Proxy-based acceleration of dynamically generated content on the world wide web: an approach and implementation",
+      "authors": "Anindya Datta, Kaushik Dutta, Helen Thomas, Debra VanderMeer,  Suresha, Krithi Ramamritham",
+      "venue": "International Conference on Management of Data",
+      "year": "2002"
+    },
+    {
+      "id": "671679",
+      "title": "The Evolution of the Web and Implications for an Incremental Crawler",
+      "authors": "Junghoo Cho, Hector Garcia-Molina",
+      "venue": "Very Large Data Bases",
+      "year": "2000"
+    },
+    {
+      "id": "335422",
+      "title": "WSQ/DSQ: a practical approach for combined querying of databases and the Web",
+      "authors": "Roy Goldman, Jennifer Widom",
+      "venue": "International Conference on Management of Data",
+      "year": "2000"
+    },
+    {
+      "id": "306109",
+      "title": "A workflow-based electronic marketplace on the Web",
+      "authors": "Asuman Dogac, Ilker Durusoy, Sena Arpinar, Nesime Tatbul, Pinar Koksal, Ibrahim Cingil, Nazife Dimililer",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1998"
+    },
+    {
+      "id": "765516",
+      "title": "The intrinsic problems of structural heterogeneity and an approach to their solution",
+      "authors": "Theo H&#228;rder, G&#252;nter Sauter, Joachim Thomas",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "1999"
+    }
+  ]
+}

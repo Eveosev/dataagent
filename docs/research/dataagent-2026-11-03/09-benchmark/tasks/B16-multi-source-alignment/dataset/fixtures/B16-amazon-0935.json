@@ -1,0 +1,50 @@
+{
+  "task": "entity_alignment",
+  "source": "Amazon → Google Products",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "b000bo9rt0",
+    "title": "singleclick network now! pro",
+    "description": "network now! pro (win 98 me 2000 xp)",
+    "manufacturer": "encore software",
+    "price": "39.99"
+  },
+  "right_candidates": [
+    {
+      "id": "http://www.google.com/base/feeds/snippets/16192979438201419034",
+      "name": "network magic(tm)",
+      "description": "network magic(tm) offers the tools necessary to set up manage and protect the computers and devices on your home network. this program will not only help you set up your own network but optimize your broadband connection share folders and ...",
+      "price": "29.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/10667383848205761084",
+      "name": "network now! pro (pc) encore",
+      "description": "key features: set-up your home network monitor network health wireless security visual set-up ...",
+      "price": "39.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/9655190978391337484",
+      "name": "quickbooks pro 2007 win",
+      "description": "quickbooks pro 2007 for windows.",
+      "price": "192.26"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/13163659075074253300",
+      "name": "quickbooks(r) pro 2003",
+      "description": "quickbooks pro 2003 includes everything in quickbooks basic plus advanced tools for managing your business finances. includes estimating time tracking and integration with over 100 business applications. multi-user version supporting up to five ...",
+      "price": "299.77"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/3040037286169376262",
+      "name": "encore software 10393 - network now! pro by encore",
+      "description": "encore software 10393 : network now! pro by encore - 10393",
+      "price": "33.97"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/1187936019689259805",
+      "name": "encore software 10392 - network now! pro (win 98 me 2000 xp)",
+      "description": "encore software 10392 : easy visual set up with unique 3d home graphic. share internet connection printers peripherals and files between your pcs. troubleshoot problems. protect network and data. system requirements: windows 2000 sp4/xp sp1*; ...",
+      "price": "34.97"
+    }
+  ]
+}

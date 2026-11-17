@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/vldb/Levy96",
+    "title": "Obtaining Complete Answers from Incomplete Databases",
+    "authors": "Alon Y. Levy",
+    "venue": "VLDB",
+    "year": "1996"
+  },
+  "right_candidates": [
+    {
+      "id": "276313",
+      "title": "Efficiently mining long patterns from databases",
+      "authors": "Roberto J. Bayardo, Jr.",
+      "venue": "International Conference on Management of Data",
+      "year": "1998"
+    },
+    {
+      "id": "233371",
+      "title": "Accessing relational databases from the World Wide Web",
+      "authors": "Tam Nguyen, V. Srinivasan",
+      "venue": "International Conference on Management of Data",
+      "year": "1996"
+    },
+    {
+      "id": "615200",
+      "title": "Efficiently instantiating view-objects from remote relational databases",
+      "authors": "Byung Suk Lee, Gio Wiederhold",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "1994"
+    },
+    {
+      "id": "673326",
+      "title": "Information Retrieval from an Incomplete Data Cube",
+      "authors": "Curtis E. Dyreson",
+      "venue": "Very Large Data Bases",
+      "year": "1996"
+    },
+    {
+      "id": "673332",
+      "title": "Obtaining Complete Answers from Incomplete Databases",
+      "authors": "Alon Y. Levy",
+      "venue": "Very Large Data Bases",
+      "year": "1996"
+    }
+  ]
+}

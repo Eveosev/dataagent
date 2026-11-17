@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/AltinelLKMPLWB02",
+    "title": "DBCache: database caching for web application servers",
+    "authors": "Sailesh Krishnamurthy, C. Mohan, Larry Brown, Hamid Pirahesh, Mehmet Altinel, Honguk Woo, Qiong Luo, Bruce G. Lindsay",
+    "venue": "SIGMOD Conference",
+    "year": "2002"
+  },
+  "right_candidates": [
+    {
+      "id": "564765",
+      "title": "DBCache: database caching for web application servers",
+      "authors": "Mehmet Altinel, Qiong Luo, Sailesh Krishnamurthy, C. Mohan, Hamid Pirahesh, Bruce G. Lindsay, Honguk Woo, Larry Brown",
+      "venue": "International Conference on Management of Data",
+      "year": "2002"
+    },
+    {
+      "id": "672360",
+      "title": "Caching Technologies for Web Applications",
+      "authors": "C. Mohan",
+      "venue": "Very Large Data Bases",
+      "year": "2001"
+    },
+    {
+      "id": "672369",
+      "title": "Architectures for Internal Web Services Deployment",
+      "authors": "Oded Shmueli",
+      "venue": "Very Large Data Bases",
+      "year": "2001"
+    },
+    {
+      "id": "253397",
+      "title": "Languages for multi-database interoperability",
+      "authors": "Fr&#233;d&#233;ric Gingras, Laks V. S. Lakshmanan, Iyer N. Subramanian, Despina Papoulis, Nematollaah Shiri",
+      "venue": "International Conference on Management of Data",
+      "year": "1997"
+    },
+    {
+      "id": "603879",
+      "title": "The Ecobase project: database and web technologies for environmental information systems",
+      "authors": "Luc Bouganim, Maria Claudia Cavalcanti, Fran&#231;oise Fabret, Maria Luiza Campos, Fran&#231;ois Llirbat, Marta Mattoso, Rubens Melo, Ana Maria Moura, Esther Pacitti, Fabio Porto, Margareth Simoes, Eric Simon, Asterio Tanaka, Patrick Valduriez",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2001"
+    }
+  ]
+}

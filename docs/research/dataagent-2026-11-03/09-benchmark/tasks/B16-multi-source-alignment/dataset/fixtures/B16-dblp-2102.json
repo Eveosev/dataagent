@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/Kramer97",
+    "title": "Databases on the Web: Technologies for Federation Architectures and Case Studies (Tutorial)",
+    "authors": "Ralf Kramer",
+    "venue": "SIGMOD Conference",
+    "year": "1997"
+  },
+  "right_candidates": [
+    {
+      "id": "253372",
+      "title": "Databases on the Web: technologies for federation architectures and case studies",
+      "authors": "Ralf Kramer",
+      "venue": "International Conference on Management of Data",
+      "year": "1997"
+    },
+    {
+      "id": "375762",
+      "title": "OminiSearch: a method for searching dynamic content on the Web",
+      "authors": "David Buttler, Ling Liu, Calton Pu, Henrique Paques, Wei Han, Wei Tang",
+      "venue": "International Conference on Management of Data",
+      "year": "2001"
+    },
+    {
+      "id": "369276",
+      "title": "Report on the VLDB workshop on technologies for e-services (TES)",
+      "authors": "Fabio Casati, Umesh Dayal, Ming-Chien Shan",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2000"
+    },
+    {
+      "id": "304589",
+      "title": "World Wide Database-integrating the Web, CORBA and databases",
+      "authors": "Athman Bouguettaya, Boualem Benatallah, Lily Hendra, James Beard, Kevin Smith, Mourad Quzzani",
+      "venue": "International Conference on Management of Data",
+      "year": "1999"
+    },
+    {
+      "id": "637418",
+      "title": "The &#961; operator: discovering and ranking associations on the semantic web",
+      "authors": "Kemafor Anyanwu, Amit Sheth",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2002"
+    }
+  ]
+}

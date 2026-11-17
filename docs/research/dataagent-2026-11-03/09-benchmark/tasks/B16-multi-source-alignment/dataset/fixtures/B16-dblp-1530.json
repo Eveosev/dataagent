@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/ZaharioudakisCLPU00",
+    "title": "Answering Complex SQL Queries Using Automatic Summary Tables",
+    "authors": "Roberta Cochrane, Hamid Pirahesh, Monica Urata, Markos Zaharioudakis, George Lapis",
+    "venue": "SIGMOD Conference",
+    "year": "2000"
+  },
+  "right_candidates": [
+    {
+      "id": "672368",
+      "title": "Answering XML Queries on Heterogeneous Data Sources",
+      "authors": "Ioana Manolescu, Daniela Florescu, Donald Kossmann",
+      "venue": "Very Large Data Bases",
+      "year": "2001"
+    },
+    {
+      "id": "564699",
+      "title": "Processing complex aggregate queries over data streams",
+      "authors": "Alin Dobra, Minos Garofalakis, Johannes Gehrke, Rajeev Rastogi",
+      "venue": "International Conference on Management of Data",
+      "year": "2002"
+    },
+    {
+      "id": "335390",
+      "title": "Answering complex SQL queries using automatic summary tables",
+      "authors": "Markos Zaharioudakis, Roberta Cochrane, George Lapis, Hamid Pirahesh, Monica Urata",
+      "venue": "International Conference on Management of Data",
+      "year": "2000"
+    },
+    {
+      "id": "872802",
+      "title": "Factorizing complex predicates in queries to exploit indexes",
+      "authors": "Surajit Chaudhuri, Prasanna Ganesan, Sunita Sarawagi",
+      "venue": "International Conference on Management of Data",
+      "year": "2003"
+    },
+    {
+      "id": "276324",
+      "title": "The DEDALE system for complex spatial queries",
+      "authors": "St&#233;phane Grumbach, Philippe Rigaux, Luc Segoufin",
+      "venue": "International Conference on Management of Data",
+      "year": "1998"
+    }
+  ]
+}

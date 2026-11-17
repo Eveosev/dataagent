@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/JagadishJOT01",
+    "title": "Global Optimization of Histograms",
+    "authors": "H. V. Jagadish, Kian-Lee Tan, Hui Jin, Beng Chin Ooi",
+    "venue": "SIGMOD Conference",
+    "year": "2001"
+  },
+  "right_candidates": [
+    {
+      "id": "564741",
+      "title": "Dynamic multidimensional histograms",
+      "authors": "Nitin Thaper, Sudipto Guha, Piotr Indyk, Nick Koudas",
+      "venue": "International Conference on Management of Data",
+      "year": "2002"
+    },
+    {
+      "id": "581753",
+      "title": "Fast incremental maintenance of approximate histograms",
+      "authors": "Phillip B. Gibbons, Yossi Matias, Viswanath Poosala",
+      "venue": "ACM Transactions on Database Systems (TODS) ",
+      "year": "2002"
+    },
+    {
+      "id": "375687",
+      "title": "Global optimization of histograms",
+      "authors": "H. V. Jagadish, Hui Jin, Beng Chin Ooi, Kian-Lee Tan",
+      "venue": "International Conference on Management of Data",
+      "year": "2001"
+    },
+    {
+      "id": "233342",
+      "title": "Improved histograms for selectivity estimation of range predicates",
+      "authors": "Viswanath Poosala, Peter J. Haas, Yannis E. Ioannidis, Eugene J. Shekita",
+      "venue": "International Conference on Management of Data",
+      "year": "1996"
+    },
+    {
+      "id": "212011",
+      "title": "An aspect of query optimization in multidatabase systems",
+      "authors": "Chiang Lee, Chia-Jung Chen, Hongjun Lu",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1995"
+    }
+  ]
+}

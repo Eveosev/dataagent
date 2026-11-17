@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/vldb/MedjahedBBNE03",
+    "title": "Business-to-business interactions: issues and enabling technologies",
+    "authors": "Anne H. H. Ngu, Athman Bouguettaya, Brahim Medjahed, Ahmed K. Elmagarmid, Boualem Benatallah",
+    "venue": "VLDB J.",
+    "year": "2003"
+  },
+  "right_candidates": [
+    {
+      "id": "309883",
+      "title": "Semantic video indexing: approach and issues",
+      "authors": "Arun Hampapur",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1999"
+    },
+    {
+      "id": "775457",
+      "title": "Business-to-business interactions: issues and enabling technologies",
+      "authors": "B. Medjahed, B. Benatallah, A. Bouguettaya, A. H. H. Ngu, A. K. Elmagarmid",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "2003"
+    },
+    {
+      "id": "672211",
+      "title": "Business Process Coordination: State of the Art, Trends, and Open Issues",
+      "authors": "Umeshwar Dayal, Meichun Hsu, Rivka Ladin",
+      "venue": "Very Large Data Bases",
+      "year": "2001"
+    },
+    {
+      "id": "564796",
+      "title": "Tutorial: application servers and associated technologies",
+      "authors": "C. Mohan",
+      "venue": "International Conference on Management of Data",
+      "year": "2002"
+    },
+    {
+      "id": "945731",
+      "title": "Design issues and challenges for RDF- and schema-based peer-to-peer systems",
+      "authors": "Wolfgang Nejdl, Wolf Siberski, Michael Sintek",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2003"
+    }
+  ]
+}

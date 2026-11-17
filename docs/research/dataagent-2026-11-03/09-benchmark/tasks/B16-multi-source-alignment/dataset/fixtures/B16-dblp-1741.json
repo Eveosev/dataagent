@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/sigmod/ChakravarthyAEFO03",
+    "title": "Database Research at UT Arlington",
+    "authors": "Sharma Chakravarthy, Y. Alp Aslandogan, Ramez Elmasri, Leonidas Fegaras, Jung-Hwan Oh",
+    "venue": "SIGMOD Record",
+    "year": "2003"
+  },
+  "right_candidates": [
+    {
+      "id": "601881",
+      "title": "Database research at the University of Illinois at Urbana-Champaign",
+      "authors": "M. Winslett, K. Chang, A. Doan, J. Han, C. Zhai, Y. Zhou",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2002"
+    },
+    {
+      "id": "381892",
+      "title": "Database research at Arizona State University",
+      "authors": "Susan D. Urban, Suzanne W. Dietrich, Forouzan Golshani",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1996"
+    },
+    {
+      "id": "333616",
+      "title": "Database research at the University of Oklahoma",
+      "authors": "Le Gruenwald, Leonard Brown, Ravi Dirckze, Sylvain Guinepain, Carlos Sanchez, Brian Summers, Sirirut Vanichayobon",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1999"
+    },
+    {
+      "id": "641006",
+      "title": "Database research at UT Arlington",
+      "authors": "Sharma Chakravarthy, Alp Aslandogan, Ramez Elmasri, Leonidas Fegaras, JungHwan Oh",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2003"
+    },
+    {
+      "id": "290607",
+      "title": "Database research at Columbia University",
+      "authors": "Shih-Fu Chang, Luis Gravano, Gail E. Kaiser, Kenneth A. Ross, Salvatore J. Stolfo",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1998"
+    }
+  ]
+}

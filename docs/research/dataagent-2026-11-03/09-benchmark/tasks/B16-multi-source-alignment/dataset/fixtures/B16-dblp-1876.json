@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/tods/GunopulosKMSTS03",
+    "title": "Discovering all most specific sentences",
+    "authors": "Sanjeev Saluja, Hannu Toivonen, Roni Khardon, Heikki Mannila, Ram Sewak Sharm, Dimitrios Gunopulos",
+    "venue": "ACM Trans. Database Syst.",
+    "year": "2003"
+  },
+  "right_candidates": [
+    {
+      "id": "673318",
+      "title": "Databases and Workflow Management: What is it All About? (Panel)",
+      "authors": "Andreas Reuter, Stefano Ceri, Jim Gray, Betty Salzberg, Gerhard Weikum",
+      "venue": "Very Large Data Bases",
+      "year": "1995"
+    },
+    {
+      "id": "637418",
+      "title": "The &#961; operator: discovering and ranking associations on the semantic web",
+      "authors": "Kemafor Anyanwu, Amit Sheth",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2002"
+    },
+    {
+      "id": "777945",
+      "title": "Discovering all most specific sentences",
+      "authors": "Dimitrios Gunopulos, Roni Khardon, Heikki Mannila, Sanjeev Saluja, Hannu Toivonen, Ram Sewak Sharma",
+      "venue": "ACM Transactions on Database Systems (TODS) ",
+      "year": "2003"
+    },
+    {
+      "id": "375812",
+      "title": "Models and languages for describing and discovering E-services",
+      "authors": "Fabio Casati, Ming-Chien Shan",
+      "venue": "International Conference on Management of Data",
+      "year": "2001"
+    },
+    {
+      "id": "672031",
+      "title": "Discovering Web Services: An Overview",
+      "authors": "Vadim Draluk",
+      "venue": "Very Large Data Bases",
+      "year": "2001"
+    }
+  ]
+}

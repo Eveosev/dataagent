@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/vldb/RamasamyPNK00",
+    "title": "Set Containment Joins: The Good, The Bad and The Ugly",
+    "authors": "Karthikeyan Ramasamy, Jeffrey F. Naughton, Jignesh M. Patel, Raghav Kaushik",
+    "venue": "VLDB",
+    "year": "2000"
+  },
+  "right_candidates": [
+    {
+      "id": "304242",
+      "title": "Daytona and the foruth-generation language cymbal",
+      "authors": "Rick Greer",
+      "venue": "International Conference on Management of Data",
+      "year": "1999"
+    },
+    {
+      "id": "762474",
+      "title": "Adaptive algorithms for set containment joins",
+      "authors": "Sergey Melnik, Hector Garcia-Molina",
+      "venue": "ACM Transactions on Database Systems (TODS) ",
+      "year": "2003"
+    },
+    {
+      "id": "672009",
+      "title": "Set Containment Joins: The Good, The Bad and The Ugly",
+      "authors": "Karthikeyan Ramasamy, Jignesh M. Patel, Jeffrey F. Naughton, Raghav Kaushik",
+      "venue": "Very Large Data Bases",
+      "year": "2000"
+    },
+    {
+      "id": "335479",
+      "title": "Data management in eCommerce (tutorial session): the good, the bad, and the ugly",
+      "authors": "Avigdor Gal",
+      "venue": "International Conference on Management of Data",
+      "year": "2000"
+    },
+    {
+      "id": "375689",
+      "title": "Efficient and tumble similar set retrieval",
+      "authors": "Aristides Gionis, Dimitrios Gunopulos, Nick Koudas",
+      "venue": "International Conference on Management of Data",
+      "year": "2001"
+    }
+  ]
+}

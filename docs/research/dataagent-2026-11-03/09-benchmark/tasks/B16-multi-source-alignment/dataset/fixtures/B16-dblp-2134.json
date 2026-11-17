@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/BerchtoldBK98",
+    "title": "The Pyramid-Technique: Towards Breaking the Curse of Dimensionality",
+    "authors": "Christian Böhm, Hans-Peter Kriegel, Stefan Berchtold",
+    "venue": "SIGMOD Conference",
+    "year": "1998"
+  },
+  "right_candidates": [
+    {
+      "id": "765230",
+      "title": "Checking the temporal integrity of interactive multimedia documents",
+      "authors": "I. Mirbel, B. Pernici, T. Sellis, S. Tserkezoglou, M. Vazirgiannis",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "2000"
+    },
+    {
+      "id": "507351",
+      "title": "The role of B2B engines in B2B integration architectures",
+      "authors": "Christoph Bussler",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2002"
+    },
+    {
+      "id": "673635",
+      "title": "The Role of Integrity Constraints in Database Interoperation",
+      "authors": "Mark W. W. Vermeer, Peter M. G. Apers",
+      "venue": "Very Large Data Bases",
+      "year": "1996"
+    },
+    {
+      "id": "276318",
+      "title": "The pyramid-technique: towards breaking the curse of dimensionality",
+      "authors": "Stefan Berchtold, Christian B&#246;hm, Hans-Peter Kriegal",
+      "venue": "International Conference on Management of Data",
+      "year": "1998"
+    },
+    {
+      "id": "776996",
+      "title": "Peer-to-peer: harnessing the power of disruptive technologies",
+      "authors": "Mario A. Nascimento",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2003"
+    }
+  ]
+}

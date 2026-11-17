@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/vldb/ZurekS99",
+    "title": "Datawarehousing Has More Colours Than Just Black & White",
+    "authors": "Thomas Zurek, Markus Sinnwell",
+    "venue": "VLDB",
+    "year": "1999"
+  },
+  "right_candidates": [
+    {
+      "id": "671665",
+      "title": "Datawarehousing Has More Colours Than Just Black &; White",
+      "authors": "Thomas Zurek, Markus Sinnwell",
+      "venue": "Very Large Data Bases",
+      "year": "1999"
+    },
+    {
+      "id": "375757",
+      "title": "Kweelt: more than just yet another framework to query XML!",
+      "authors": "Arnaud Sahuguet",
+      "venue": "International Conference on Management of Data",
+      "year": "2001"
+    },
+    {
+      "id": "253368",
+      "title": "Lessons from Wall Street: case studies in configuration, tuning, and distribution",
+      "authors": "Dennis Shasha",
+      "venue": "International Conference on Management of Data",
+      "year": "1997"
+    },
+    {
+      "id": "223850",
+      "title": "Efficient maintenance of materialized mediated views",
+      "authors": "James J. Lu, Guido Moerkotte, Joachim Schue, V. S. Subrahmanian",
+      "venue": "International Conference on Management of Data",
+      "year": "1995"
+    },
+    {
+      "id": "335482",
+      "title": "LDAP directory services- just another database application? (tutorial session)",
+      "authors": "Shridhar Shukla, Anand Deshpande",
+      "venue": "International Conference on Management of Data",
+      "year": "2000"
+    }
+  ]
+}

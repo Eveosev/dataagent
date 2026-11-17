@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/sigmod/KarlapalemLS95",
+    "title": "HODFA: An Architectural Framework for Homogenizing Heterogeneous Legacy Database",
+    "authors": "Qing Li, Kamalakar Karlapalem, Chung-Dak Shum",
+    "venue": "SIGMOD Record",
+    "year": "1995"
+  },
+  "right_candidates": [
+    {
+      "id": "765549",
+      "title": "A database model for object dynamics",
+      "authors": "M. P. Papazoglou, B. J. Kr&#228;mer",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "1997"
+    },
+    {
+      "id": "202663",
+      "title": "HODFA: an architectural framework for homogenizing heterogeneous legacy databases",
+      "authors": "Kamalakar Karlapalem, Qing Li, Chung-Dak Shum",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1995"
+    },
+    {
+      "id": "672991",
+      "title": "Implementing Lazy Database Updates for an Object Database System",
+      "authors": "Fabrizio Ferrandina, Thorsten Meyer, Roberto Zicari",
+      "venue": "Very Large Data Bases",
+      "year": "1994"
+    },
+    {
+      "id": "276389",
+      "title": "SuperSQL: an extended SQL for database publishing and presentation",
+      "authors": "Motomichi Toyama",
+      "venue": "International Conference on Management of Data",
+      "year": "1998"
+    },
+    {
+      "id": "637419",
+      "title": "A framework for semantic gossiping",
+      "authors": "Karl Aberer, Philippe Cudr&#233;-Mauroux, Manfred Hauswirth",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2002"
+    }
+  ]
+}

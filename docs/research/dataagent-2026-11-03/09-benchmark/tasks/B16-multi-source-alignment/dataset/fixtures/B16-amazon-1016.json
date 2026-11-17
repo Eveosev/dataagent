@@ -1,0 +1,44 @@
+{
+  "task": "entity_alignment",
+  "source": "Amazon → Google Products",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "b0000dk573",
+    "title": "learn to play chess with fritz and chesster (mac)",
+    "description": "learn to play chess with fritz & chesster lets you be king for a day in a world where chess rules!",
+    "manufacturer": "viva media",
+    "price": "29.99"
+  },
+  "right_candidates": [
+    {
+      "id": "http://www.google.com/base/feeds/snippets/11635038042771617420",
+      "name": "reader rabbit learn to read with phonics! preschool & kindergarten",
+      "description": "join reader rabbit on a joyful journey to build reading confidence and success! develop essential reading skills while exploring 26 letter lands filled with fun phonics activities and engaging storybooks. practice language arts skills while playing ...",
+      "price": "12.95"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/17077922689318325801",
+      "name": "viva media llc learn to play chess with fritz & chesster",
+      "description": "king for a day! fritz is in charge of the castle when his parents go on vacation. it's every kid's dream until the dastardly king black challenges the young stand-in king to a duel! explore the kingdom and discover 7 arcade-style games that explai",
+      "price": "26.14"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/1013779264515164589",
+      "name": "it's about time products learn the switch to mac",
+      "description": "requires intel or 1.25ghz g4 512 ram widescreen(min.1280x720)",
+      "price": "28.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/17695920349455995837",
+      "name": "alfred publishing inc learn to play keyboard",
+      "description": "for beginners of all ages. based on best selling book series from alfred publishing - teaching the world to play music since 1922! system requirements: windows: pentium or compatible 32 mb ram 30 mb hd space 640x480 16-bit color display",
+      "price": "7.22"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/17407485579094223073",
+      "name": "viva media llc learn to play chess with fritz & chesster 2",
+      "description": "jump into chess action move by move to rescue chesster from deep within king black's castle. join fritz and bianca in a thrilling chess adventure where each challenge will help you sharpen your skills and prepare for the ultimate showdown. <l",
+      "price": "26.14"
+    }
+  ]
+}

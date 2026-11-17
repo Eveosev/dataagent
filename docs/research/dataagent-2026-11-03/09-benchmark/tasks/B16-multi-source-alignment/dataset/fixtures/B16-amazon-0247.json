@@ -1,0 +1,43 @@
+{
+  "task": "entity_alignment",
+  "source": "Amazon → Google Products",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "b0008g2bvm",
+    "title": "obscure",
+    "description": "obscure takes the survival-horror gaming you love and sets it in a teenage horror film. tortured screams echo through leafmore high's deserted corridors. faceless creatures lurk in the shadows. five teenagers set out to bring light into the darkness - and experience a night that will scar their souls forever.",
+    "manufacturer": "dreamcatcher interactive",
+    "price": "19.99"
+  },
+  "right_candidates": [
+    {
+      "id": "http://www.google.com/base/feeds/snippets/17938513699320393589",
+      "name": "apple final cut express hd 3.5 video editing software for mac av production software",
+      "description": "final cut express hd 3.5 video editing software for mac the final cut express hd 3.5 video editing software for mac from apple is aimed at intermediate video editors who have outgrown imovie but aren't quite ready for final cut pro. this ...",
+      "price": "299"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/18275035621919457369",
+      "name": "dreamcatcher interactive obscure",
+      "description": "what walks the halls of leafmore high? survival horror hits the high schools - the first action-adventure in the style of american teen slasher movies. tortured screams echo through leafmore high's deserted corridors. faceless creatures lurk",
+      "price": "17.55"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/16878610731216121581",
+      "name": "emc fed id mgr for 10 conn for ct authmgr cust - fimm-10r",
+      "price": "68496"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/17583345769368547021",
+      "name": "christine stevens hal leonard the art and heart of drum circles",
+      "description": "drum circles are not only a great way to have fun reduce stress and meet people but scientific research confirms that recreational drumming contributes measurably to overall health wellness and workplace efficiency. in this unique dvd noted ...",
+      "price": "18.5"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/17449355474741262903",
+      "name": "buddy rich hudson music buddy rich - live at the 1982 montreal jazz festival - dvd",
+      "description": "this dvd features buddy rich and the buddy rich big band at the height of their popularity and influence. contains seven beautiful arrangements that display not only rich's virtuosity but his unsurpassed musicianship as well. these include a rare ...",
+      "price": "22.13"
+    }
+  ]
+}

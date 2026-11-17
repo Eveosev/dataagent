@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/IlyasRLGL03",
+    "title": "Estimating Compilation Time of a Query Optimizer",
+    "authors": "Dengfeng Gao, Eileen Tien Lin, Jun Rao, Ihab F. Ilyas, Guy M. Lohman",
+    "venue": "SIGMOD Conference",
+    "year": "2003"
+  },
+  "right_candidates": [
+    {
+      "id": "673488",
+      "title": "Implementation and Analysis of a Parallel Collection Query Language",
+      "authors": "Dan Suciu",
+      "venue": "Very Large Data Bases",
+      "year": "1996"
+    },
+    {
+      "id": "233318",
+      "title": "SQL query optimization: reordering for a general class of queries",
+      "authors": "Piyush Goel, Bala Iyer",
+      "venue": "International Conference on Management of Data",
+      "year": "1996"
+    },
+    {
+      "id": "564770",
+      "title": "Visual COKO: a debugger for query optimizer development",
+      "authors": "Daniel J. Abadi, Mitch Cherniack",
+      "venue": "International Conference on Management of Data",
+      "year": "2002"
+    },
+    {
+      "id": "872803",
+      "title": "Estimating compilation time of a query optimizer",
+      "authors": "Ihab F. Ilyas, Jun Rao, Guy Lohman, Dengfeng Gao, Eileen Lin",
+      "venue": "International Conference on Management of Data",
+      "year": "2003"
+    },
+    {
+      "id": "335451",
+      "title": "Counting, enumerating, and sampling of execution plans in a cost-based query optimizer",
+      "authors": "Florian Waas, C&#233;sar Galindo-Legaria",
+      "venue": "International Conference on Management of Data",
+      "year": "2000"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/WitkowskiBBDFGSS03",
+    "title": "Spreadsheets in RDBMS for OLAP",
+    "authors": "Nathan Folkert, Abhinav Gupta, Andrew Witkowski, Lei Sheng, Sankar Subramanian, Srikanth Bellamkonda, Gregory Dorman, Tolga Bozkaya",
+    "venue": "SIGMOD Conference",
+    "year": "2003"
+  },
+  "right_candidates": [
+    {
+      "id": "223870",
+      "title": "Real world requirements for decision support-implications for RDBMS",
+      "authors": "Sanju K. Bansal",
+      "venue": "International Conference on Management of Data",
+      "year": "1995"
+    },
+    {
+      "id": "672016",
+      "title": "Hypothetical Queries in an OLAP Environment",
+      "authors": "Andrey Balmin, Thanos Papadimitriou, Yannis Papakonstantinou",
+      "venue": "Very Large Data Bases",
+      "year": "2000"
+    },
+    {
+      "id": "210202",
+      "title": "Fast algorithms for universal quantification in large databases",
+      "authors": "Goetz Graefe, Richard L. Cole",
+      "venue": "ACM Transactions on Database Systems (TODS) ",
+      "year": "1995"
+    },
+    {
+      "id": "872767",
+      "title": "Spreadsheets in RDBMS for OLAP",
+      "authors": "Andrew Witkowski, Srikanth Bellamkonda, Tolga Bozkaya, Gregory Dorman, Nathan Folkert, Abhinav Gupta, Lei Shen, Sankar Subramanian",
+      "venue": "International Conference on Management of Data",
+      "year": "2003"
+    },
+    {
+      "id": "253373",
+      "title": "Data warehousing and OLAP for decision support",
+      "authors": "Surajit Chaudhuri, Umeshwar Dayal",
+      "venue": "International Conference on Management of Data",
+      "year": "1997"
+    }
+  ]
+}

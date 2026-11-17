@@ -1,0 +1,45 @@
+{
+  "source": "leipzig-abt-buy",
+  "source_label": "Abt → Buy",
+  "license": "CC BY 4.0",
+  "license_url": "https://creativecommons.org/licenses/by/4.0/",
+  "attribution": "Leipzig DBS group; Köpcke et al., VLDB 2010",
+  "left_id": "35033",
+  "gold_right_ids": [
+    "208156877"
+  ],
+  "candidate_ids": [
+    "208117938",
+    "208156879",
+    "208156877",
+    "208117925",
+    "204559213"
+  ],
+  "distractor_ids": [
+    "208156879",
+    "208117925",
+    "204559213",
+    "208117938"
+  ],
+  "negative_policy": "候选集中除 gold_right_ids 外的记录按数据集 gold mapping 的排他性视为非匹配",
+  "case_id": "B16-abt-0936",
+  "expected": {
+    "kind": "entity_pairs",
+    "source_dataset": "leipzig-abt-buy",
+    "license": "CC BY 4.0",
+    "left_id": "35033",
+    "candidate_ids": [
+      "208117938",
+      "208156879",
+      "208156877",
+      "208117925",
+      "204559213"
+    ],
+    "pairs": [
+      {
+        "left_id": "35033",
+        "right_id": "208156877"
+      }
+    ]
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "task": "entity_alignment",
+  "source": "Amazon → Google Products",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "b000egidpe",
+    "title": "hoyle puzzle & board games 2007",
+    "description": "over 45 classic puzzle and board games brought to you by hoyle the 1 family entertainment brand. from sudoku to chess to mahjongg there is fun for the whole family. complete with 12 virtual opponents and multiple skill levels.",
+    "manufacturer": "encore software",
+    "price": "19.99"
+  },
+  "right_candidates": [
+    {
+      "id": "http://www.google.com/base/feeds/snippets/17221922176779319047",
+      "name": "bookkeeper 2007",
+      "description": "customize over 95 reports and create monthly budgets with bookkeeper 2007. create general ledger financial statements banking payroll accounts payable and receivable reports. import vendor customer and product information in a variety of ...",
+      "price": "29.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/4555576140890007510",
+      "name": "freeverse software 4015 big bang board games",
+      "description": "finally a suite of board games made just for the mac! checkers reversi mancalla backgammon 4-in-a-row tic-tac-toe. finally a suite of board games made just for the mac! checkers reversi mancalla backgammon 4-in-a-row tic-tac-toe and the ...",
+      "manufacturer": "freeverse software",
+      "price": "18.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/11108319483525132916",
+      "name": "encore software 10676 - encore hoyle casino 2007 - complete product - puzzle game - 1 user - complete product - standard - pc",
+      "description": "encore software 10676 : hoyle casino the best-selling casino game of all time offers excitement and challenge with over 500 variations of 16 of the most popular casino games. specifications : manufacturer : encore inc manufacturer part number : ...",
+      "price": "17.97"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/4998847858583359731",
+      "name": "encore software 10568 - encore hoyle puzzle & board games 2005 - complete product - puzzle game - 1 user - complete product - standard - pc",
+      "description": "encore software 10568 : with old classics and new challenges there is something for every player with hoyle puzzle & board games. this great collection of games includes puzzles that challenge your brain and test your skill and classic table games ...",
+      "price": "17.97"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/14508068127168005992",
+      "name": "act! 2007",
+      "description": "act! 2007 is a contact and customer manager that helps you make contact build relationships and get results. act! enables you to instantly access key contact and customer information manage and prioritize activities and track all contact-related ...",
+      "price": "199.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/381135748290856568",
+      "name": "encore software 10567 - hoyle puzzle games 2007 - win 98 me 2000 xp",
+      "description": "encore software 10567 : 30+ classic puzzle games brought to you by hoyle the 1 family entertainment brand. from sudoku to crosswords to mahjongg there is fun for the whole family. system requirements: windows 98se/me/2000 sp4/xp sp1* pentium iii ...",
+      "price": "18.97"
+    }
+  ]
+}

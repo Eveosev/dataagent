@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/sigmod/Bhashyam96",
+    "title": "TCP-D - The Challenges, Issues and Results",
+    "authors": "Ramesh Bhashyam",
+    "venue": "SIGMOD Record",
+    "year": "1996"
+  },
+  "right_candidates": [
+    {
+      "id": "245908",
+      "title": "TPC-D-the challenges, issues and results",
+      "authors": "Ramesh Bhashyam",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1996"
+    },
+    {
+      "id": "672211",
+      "title": "Business Process Coordination: State of the Art, Trends, and Open Issues",
+      "authors": "Umeshwar Dayal, Meichun Hsu, Rivka Ladin",
+      "venue": "Very Large Data Bases",
+      "year": "2001"
+    },
+    {
+      "id": "304246",
+      "title": "E-commerce database issues and experience: (talk-slides available at at the conference)",
+      "authors": "Anand Rajaraman",
+      "venue": "International Conference on Management of Data",
+      "year": "1999"
+    },
+    {
+      "id": "945731",
+      "title": "Design issues and challenges for RDF- and schema-based peer-to-peer systems",
+      "authors": "Wolfgang Nejdl, Wolf Siberski, Michael Sintek",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2003"
+    },
+    {
+      "id": "673470",
+      "title": "TPC-D: The Challenges, Issues and Results",
+      "authors": "Ramesh Bhashyam",
+      "venue": "Very Large Data Bases",
+      "year": "1996"
+    }
+  ]
+}

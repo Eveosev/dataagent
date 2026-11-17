@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/vldb/WuFSP00",
+    "title": "FALCON: Feedback Adaptive Loop for Content-Based Retrieval",
+    "authors": "Christos Faloutsos, Leejay Wu, Katia P. Sycara, Terry R. Payne",
+    "venue": "VLDB",
+    "year": "2000"
+  },
+  "right_candidates": [
+    {
+      "id": "375710",
+      "title": "Adaptive precision setting for cached approximate values",
+      "authors": "Chris Olston, Boon Thau Loo, Jennifer Widom",
+      "venue": "International Conference on Management of Data",
+      "year": "2001"
+    },
+    {
+      "id": "233321",
+      "title": "A Teradata content-based multimedia object manager for massively parallel architectures",
+      "authors": "W. O'Connell, I. T. Ieong, D. Schrader, C. Watson, G. Au, A. Biliris, S. Choo, P. Colin, G. Linderman, E. Panagos, J. Wang, T. Walter",
+      "venue": "International Conference on Management of Data",
+      "year": "1996"
+    },
+    {
+      "id": "615208",
+      "title": "A semantic modeling approach for image retrieval by content",
+      "authors": "Wesley W. Chu, Ion T. Ieong, Ricky K. Taira",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "1994"
+    },
+    {
+      "id": "671847",
+      "title": "FALCON: Feedback Adaptive Loop for Content-Based Retrieval",
+      "authors": "Leejay Wu, Christos Faloutsos, Katia P. Sycara, Terry R. Payne",
+      "venue": "Very Large Data Bases",
+      "year": "2000"
+    },
+    {
+      "id": "336583",
+      "title": "SPIRE: a progressive content-based spatial image retrieval engine",
+      "authors": "Chung-Sheng Li, Lawrence D. Bergman, Yuan-Chi Chang, Vittorio Castelli, John R. Smith",
+      "venue": "International Conference on Management of Data",
+      "year": "2000"
+    }
+  ]
+}

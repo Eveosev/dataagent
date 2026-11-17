@@ -1,0 +1,43 @@
+{
+  "task": "entity_alignment",
+  "source": "Amazon → Google Products",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "b000in35ho",
+    "title": "close quarters conflict",
+    "manufacturer": "groove media",
+    "price": "19.99"
+  },
+  "right_candidates": [
+    {
+      "id": "http://www.google.com/base/feeds/snippets/4233168214815079628",
+      "name": "aspyr lego star wars ii",
+      "description": "system requirements mac os x v10.4 or later 1.6ghz powerpc or intel processor 512mb ram 64mb vram 3gb free hard-disk space mouse and keyboard dvd drive",
+      "price": "44.95"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/11305609082663670615",
+      "name": "encyclopedia of our living oceans",
+      "description": "this comprehensive resource includes articles on the history of oceanography marine biodiversity and the unique plants and animals that inhabit two-thirds of the planet. the oceans come alive with videos photos text and interviews with marine ...",
+      "price": "8.95"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/7475984506445353918",
+      "name": "fogware hyb places dvd",
+      "description": "macintosh: dvd drive sound card & system no installation required windows: win 2000 xp with minimum memory of 128 megbytes dvd drive sound card & system no installation required",
+      "price": "21.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/17101910436938629162",
+      "name": "groove media inc close quarters conflict",
+      "description": "online multiplayer first person shooter: combat: close quarter battle is 20 levels of class-based team-oriented multiplayer action designed specifically for the value market. join a team pick a class and dive into the action o",
+      "price": "16.37"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/9414264968515515855",
+      "name": "tonka search & rescue 2",
+      "description": "join the ranks of brave police officers firefighters and rescue workers in exciting search and rescue missions. tonka joe needs a tough hero like you to answer the call to fight forest fires break up traffic jams save people stranded by floods ...",
+      "price": "7.95"
+    }
+  ]
+}

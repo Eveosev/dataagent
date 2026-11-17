@@ -1,0 +1,45 @@
+{
+  "task": "entity_alignment",
+  "source": "Amazon → Google Products",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "b000coxs30",
+    "title": "procurve mobility manager 1.0 is a plug-in module for procurve manager plus 2.0",
+    "description": "procurve mobility manager v1.0",
+    "manufacturer": "hewlett packard",
+    "price": "0"
+  },
+  "right_candidates": [
+    {
+      "id": "http://www.google.com/base/feeds/snippets/13851180779356119317",
+      "name": "novell identity manager integration module for mainframe for 900 series mvs - (",
+      "description": "mod3 mainframe lics+1yr mnt vlal1",
+      "price": "179952.95"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/18424464601572004274",
+      "name": "passwords plus ( v. 1.0 ) - complete package",
+      "description": "passwords plus - ( v. 1.0 ) - complete package - 1 user - win palm os - 128-bit",
+      "price": "28.5"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/18397190495511936667",
+      "name": "hp procurve mobility manager - ( v. 1.0 ) - license and media",
+      "description": "hp procurve mobility manager - ( v. 1.0 ) - license and media - 1 user - win",
+      "price": "1537.06"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/4672425011703995374",
+      "name": "apple software m9372z/a final cut express 2.0 upgrade",
+      "description": "now optimized for the power mac g5 and mac os x panther apples feature-rich dv editing software is designed for the complete beginner aspiring filmmaker educator and experienced dv editor alike. create professional-quality video with final cut ...",
+      "manufacturer": "apple software",
+      "price": "79.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/16515799892725508860",
+      "name": "novell identity manager integration module for mainframe for 800 series mvs - (",
+      "description": "mod3 mainframe lics+1yr mnt vlal1",
+      "price": "71726.95"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/vldb/KemperK95",
+    "title": "Adaptable Pointer Swizzling Strategies in Object Bases: Design, Realization, and Quantitative Analysis",
+    "authors": "Alfons Kemper, Donald Kossmann",
+    "venue": "VLDB J.",
+    "year": "1995"
+  },
+  "right_candidates": [
+    {
+      "id": "671329",
+      "title": "Design and Analysis of Parametric Query Optimization Algorithms",
+      "authors": "Sumit Ganguly",
+      "venue": "Very Large Data Bases",
+      "year": "1998"
+    },
+    {
+      "id": "615230",
+      "title": "Adaptable pointer swizzling strategies in object bases: design, realization, and quantitative analysis",
+      "authors": "Alfons Kemper, Donald Kossmann",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "1995"
+    },
+    {
+      "id": "603880",
+      "title": "Data analysis and mining in the life sciences",
+      "authors": "Nam Huyn",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2001"
+    },
+    {
+      "id": "672977",
+      "title": "Dual-Buffering Strategies in Object Bases",
+      "authors": "Alfons Kemper, Donald Kossmann",
+      "venue": "Very Large Data Bases",
+      "year": "1994"
+    },
+    {
+      "id": "191844",
+      "title": "Sleepers and workaholics: caching strategies in mobile environments",
+      "authors": "Daniel Barbar&#225;, Tomasz Imieli&#324;ski",
+      "venue": "International Conference on Management of Data",
+      "year": "1994"
+    }
+  ]
+}

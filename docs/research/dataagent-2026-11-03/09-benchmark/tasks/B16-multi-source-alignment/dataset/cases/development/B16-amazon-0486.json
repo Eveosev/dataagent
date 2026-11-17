@@ -1,0 +1,36 @@
+{
+  "case_id": "B16-amazon-0486",
+  "task_id": "B16",
+  "split_role": "development",
+  "inputs": [
+    {
+      "kind": "record_pair",
+      "ref": "fixtures/B16-amazon-0486.json",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B16-amazon-0486.json"
+  },
+  "evidence": [
+    "fixtures/B16-amazon-0486.json"
+  ],
+  "tags": [
+    "entity-matching",
+    "source:amazon",
+    "domain:product",
+    "gold:2",
+    "candidates:6"
+  ],
+  "source": "amazon",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

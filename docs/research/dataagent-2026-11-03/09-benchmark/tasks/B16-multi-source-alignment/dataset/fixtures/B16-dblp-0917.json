@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/sigmod/KambhampatiK03",
+    "title": "Information integration on the Web: a view from AI and databases (report on IIWeb-03)",
+    "authors": "Subbarao Kambhampati, Craig A. Knoblock",
+    "venue": "SIGMOD Record",
+    "year": "2003"
+  },
+  "right_candidates": [
+    {
+      "id": "959083",
+      "title": "Report on the 5th international workshop on the design and management of data warehouses (DMDW'03)",
+      "authors": "Hans J. Lenz, Panos Vassiliadis, Manfred Jeusfeld, Martin Staudt",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2003"
+    },
+    {
+      "id": "672216",
+      "title": "A Formal Perspective on the View Selection Problem",
+      "authors": "Rada Chirkova, Alon Y. Halevy, Dan Suciu",
+      "venue": "Very Large Data Bases",
+      "year": "2001"
+    },
+    {
+      "id": "637416",
+      "title": "Agents, trust, and information access on the semantic web",
+      "authors": "Tim Finin, Anupam Joshi",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2002"
+    },
+    {
+      "id": "945735",
+      "title": "In-context peer-to-peer information filtering on the Web",
+      "authors": "Aris M. Ouksel",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2003"
+    },
+    {
+      "id": "959086",
+      "title": "Information integration on the Web: a view from AI and databases (report on IIWeb-03)",
+      "authors": "Subbarao Kambhampati, Craig A. Knoblock",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2003"
+    }
+  ]
+}

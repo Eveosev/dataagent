@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/sigmod/NormanZT96",
+    "title": "Much Ado About Shared-Nothing",
+    "authors": "Michael G. Norman, Peter Thanisch, Thomas Zurek",
+    "venue": "SIGMOD Record",
+    "year": "1996"
+  },
+  "right_candidates": [
+    {
+      "id": "191955",
+      "title": "The MEDUSA project: autonomous data management in a shared-nothing parallel database machine",
+      "authors": "G. M. Bryan, W. E. Moore, B. J. Curry, K. W. Lodge, J. Geyer",
+      "venue": "International Conference on Management of Data",
+      "year": "1994"
+    },
+    {
+      "id": "276367",
+      "title": "About Quark Digital Media System",
+      "authors": "Kamar Aulakh",
+      "venue": "International Conference on Management of Data",
+      "year": "1998"
+    },
+    {
+      "id": "765547",
+      "title": "Data placement in shared-nothing parallel database systems",
+      "authors": "Manish Mehta, David J. DeWitt",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "1997"
+    },
+    {
+      "id": "234895",
+      "title": "Control strategies for complex relational query processing in shared nothing systems",
+      "authors": "Lionel Brunie, Harald Kosch",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1996"
+    },
+    {
+      "id": "234892",
+      "title": "Much ado about shared-nothing",
+      "authors": "Michael G. Norman, Thomas Zurek, Peter Thanisch",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1996"
+    }
+  ]
+}

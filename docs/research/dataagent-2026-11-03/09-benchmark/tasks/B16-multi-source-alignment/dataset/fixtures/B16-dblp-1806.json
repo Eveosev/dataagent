@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/sigmod/RoantreeS02",
+    "title": "Research in Information Managment at Dublin City University",
+    "authors": "Alan F. Smeaton, Mark Roantree",
+    "venue": "SIGMOD Record",
+    "year": "2002"
+  },
+  "right_candidates": [
+    {
+      "id": "637435",
+      "title": "Research in information managment at Dublin City University",
+      "authors": "Mark Roantree, Alan F. Smeaton",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2002"
+    },
+    {
+      "id": "959087",
+      "title": "Research in database engineering at the University of Namur",
+      "authors": "Jean-Luc Hainaut",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2003"
+    },
+    {
+      "id": "601882",
+      "title": "Research activities in database management and information retrieval at University of Illinois at Chicago",
+      "authors": "Isabel Cruz, Ashfaq Khokhar, Bing Liu, Prasad Sistla, Ouri Wolfson, Clement Yu",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2002"
+    },
+    {
+      "id": "219769",
+      "title": "Data and knowledge base research at Hong Kong University of Science and Technology",
+      "authors": "P. Drew, B. Hamidzadeh, K. Karlapalem, A. Kean, D. Lee, Q. Li, F. Lochovsky, C. D. Shum, B. Wuthrich",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1995"
+    },
+    {
+      "id": "369277",
+      "title": "Research and practice in federated information systems",
+      "authors": "W. Hasselbring, W.-J. van den Heuvel, G. J. Houben, R.-D. Kutsche, B. Rieger, M. Roantree, K. Subieta",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2000"
+    }
+  ]
+}

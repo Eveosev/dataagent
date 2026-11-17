@@ -1,0 +1,43 @@
+{
+  "task": "entity_alignment",
+  "source": "Amazon → Google Products",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "b000lu89xy",
+    "title": "transfer my dvd",
+    "manufacturer": "avanquest",
+    "price": "29.95"
+  },
+  "right_candidates": [
+    {
+      "id": "http://www.google.com/base/feeds/snippets/12354599434001970846",
+      "name": "vegas7 + dvd upgrade",
+      "description": "model- sny-cd83887wi vendor- sony media software features- vegas 7 + dvd production suite software- upgrade version to install the upgrade version the most recent full version of the software must be installed on your pc. video editing and dvd ...",
+      "price": "226.56"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/18361636558506127089",
+      "name": "ventura 10 dvd",
+      "description": "ventura 10 dvd - full versionwhen it comes to business publishing corel ventura 10 is as powerful as it gets. it is the only tool you need for transforming long complex documents-including xml files-into highly formatted & visually rich ...",
+      "price": "662.5"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/11343247749866294908",
+      "name": "vegas + dvd sony",
+      "description": "key features: three features in one professional dvds...",
+      "price": "899.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/11784459841921410504",
+      "name": "transfer my dvd (6601)",
+      "description": "transfer my dvd brand: avanquest mpn: 6601 variant name: transfer my dvd",
+      "price": "28.75"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/13831527178214062853",
+      "name": "transfer my dvd avanquest usa",
+      "description": "key features: dvds and movies on your ipod for video ipods...",
+      "price": "29.95"
+    }
+  ]
+}

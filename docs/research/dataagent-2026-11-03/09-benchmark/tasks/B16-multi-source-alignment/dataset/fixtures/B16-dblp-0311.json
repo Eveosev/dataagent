@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/GrumbachRS98",
+    "title": "The DEDALE System for Complex Spatial Queries",
+    "authors": "Luc Segoufin, Philippe Rigaux, Stéphane Grumbach",
+    "venue": "SIGMOD Conference",
+    "year": "1998"
+  },
+  "right_candidates": [
+    {
+      "id": "304250",
+      "title": "The need for distributed asynchronous transactions",
+      "authors": "Lyman Do, Prabhu Ram, Pamela Drew",
+      "venue": "International Conference on Management of Data",
+      "year": "1999"
+    },
+    {
+      "id": "253287",
+      "title": "The STRIP rule system for efficiently maintaining derived data",
+      "authors": "Brad Adelberg, Hector Garcia-Molina, Jennifer Widom",
+      "venue": "International Conference on Management of Data",
+      "year": "1997"
+    },
+    {
+      "id": "564707",
+      "title": "Covering indexes for branching path queries",
+      "authors": "Raghav Kaushik, Philip Bohannon, Jeffrey F Naughton, Henry F Korth",
+      "venue": "International Conference on Management of Data",
+      "year": "2002"
+    },
+    {
+      "id": "276324",
+      "title": "The DEDALE system for complex spatial queries",
+      "authors": "St&#233;phane Grumbach, Philippe Rigaux, Luc Segoufin",
+      "venue": "International Conference on Management of Data",
+      "year": "1998"
+    },
+    {
+      "id": "223859",
+      "title": "The Lotus notes storage system",
+      "authors": "Kenneth Moore",
+      "venue": "International Conference on Management of Data",
+      "year": "1995"
+    }
+  ]
+}

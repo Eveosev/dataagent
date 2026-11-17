@@ -19,9 +19,9 @@ BASE = Path(__file__).resolve().parent.parent
 DOCS = BASE.parent
 CATALOG = DOCS / "catalog" / "atomic-capability-catalog.json"
 SPLITS = ("development", "regression", "unseen_acceptance")
-TASK_ID = re.compile(r"^B(0[1-9]|1[0-5])$")
+TASK_ID = re.compile(r"^B(0[1-9]|1[0-9]|20)$")
 RUN_ID = re.compile(r"^[rx][0-9]{3}-[0-9]{4}-[0-9]{2}-[0-9]{2}$")
-CASE_ID = re.compile(r"^B(0[1-9]|1[0-5])-[a-z0-9-]+-[0-9]{3,5}$")
+CASE_ID = re.compile(r"^B(0[1-9]|1[0-9]|20)-[a-z0-9-]+-[0-9]{3,5}$")
 
 errors: list[str] = []
 warnings: list[str] = []
@@ -107,9 +107,9 @@ def check_registry() -> list[dict]:
 
     tasks = registry.get("tasks", [])
     ids = [t.get("id") for t in tasks]
-    expected = [f"B{i:02d}" for i in range(1, 16)]
+    expected = [f"B{i:02d}" for i in range(1, len(tasks) + 1)]
     if ids != expected:
-        errors.append(f"registry.json: 任务顺序或编号不符合 B01–B15（实际 {ids}）")
+        errors.append(f"registry.json: 任务应自 B01 起连续编号（实际 {ids}）")
 
     for t in tasks:
         tid = t.get("id", "?")
@@ -304,8 +304,9 @@ def check_rounds() -> None:
         if not RUN_ID.match(rid):
             errors.append(f"{where}: round_id 格式应为 rNNN-YYYY-MM-DD")
         slots = data.get("tasks", {})
-        if sorted(slots) != [f"B{i:02d}" for i in range(1, 16)]:
-            errors.append(f"{where}: tasks 必须覆盖 B01–B15，实际 {sorted(slots)}")
+        expected = [t.get("id") for t in (_registry or {}).get("tasks", [])] or [f"B{i:02d}" for i in range(1, 16)]
+        if sorted(slots) != sorted(expected):
+            errors.append(f"{where}: tasks 必须覆盖 registry 的全部任务，实际 {sorted(slots)}")
         for tid, slot in slots.items():
             run_dir = BASE / slot.get("run_dir", "")
             if not (run_dir / "run.json").exists():
@@ -371,13 +372,14 @@ def check_graders(tasks: list[dict]) -> None:
             name = metric.get("grader")
             if not name:
                 continue
-            path = gdir / f"{name}.py"
+            module_name, _, function = name.partition(":")
+            path = gdir / f"{module_name}.py"
             if not path.exists():
                 warnings.append(f"{t['id']}: grader {name} 未实现（{metric['id']}）")
                 continue
             source = path.read_text(encoding="utf-8")
-            if "def grade(" not in source:
-                errors.append(f"{t['id']}: grader {name} 缺少 def grade()")
+            if f"def {function or 'grade'}(" not in source:
+                errors.append(f"{t['id']}: grader {name} 缺少 def {function or 'grade'}()")
 
 
 def main() -> int:
