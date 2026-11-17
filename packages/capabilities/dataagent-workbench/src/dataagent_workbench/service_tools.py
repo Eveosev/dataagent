@@ -7,7 +7,24 @@ from dataagent_contracts.core import Issue
 from .tool_schema import MODELS
 
 
+def _public_output(value):
+    """Remove credential-bearing fields before a result leaves the workbench."""
+
+    if isinstance(value, dict):
+        return {key: _public_output(item) for key, item in value.items()
+                if not str(key).lower().rsplit('.', 1)[-1].startswith('credential')}
+    if isinstance(value, list):
+        return [_public_output(item) for item in value]
+    return value
+
+
 def invoke(wb, name, args):
+    result = _invoke(wb, name, args)
+    data = _public_output(result.data)
+    return result if data == result.data else result.model_copy(update={'data': data})
+
+
+def _invoke(wb, name, args):
     if name not in MODELS:raise ValueError('unknown aggregate tool')
     typed=MODELS[name].model_validate(args)
     args=typed.model_dump(mode='json')

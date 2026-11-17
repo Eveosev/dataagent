@@ -4,7 +4,17 @@ import os
 from pathlib import Path
 import subprocess
 from dataagent_contracts.intake import SourceProfile
-from .source_connections import SourceConnections
+from .source_connections import SourceConnections, validate_forwarded
+
+_PROBE_ENV = {'PATH', 'HOME', 'TMPDIR', 'LANG', 'TZ'}
+
+
+def _clean_child_environment(allowed):
+    """Run in the forked probe child before exec; do not read values here."""
+
+    for name in list(os.environ):
+        if name not in allowed:
+            os.environ.pop(name, None)
 
 
 class LayerClient:
@@ -15,12 +25,35 @@ class LayerClient:
     def _call(self,selection,ctx,workspace,**operation):
         python=self.package_dir/'.venv/bin/python'
         if not python.is_file():raise ValueError('data layer environment missing; run dataagent setup')
+        if 'credentials' in operation:
+            raise ValueError('plaintext credentials must not cross the process boundary')
+        validate_forwarded(selection.options, 'source.options')
+        validate_forwarded(selection.requested_scope, 'source.scope')
+        validate_forwarded(operation.get('credential_options') or {}, 'credential_options')
         workspace=Path(workspace).resolve()
-        env={k:v for k,v in os.environ.items() if k in {'PATH','HOME','TMPDIR','LANG','TZ'} or k.startswith('LC_')}
+        # The probe child gets a minimal environment. For ``env:`` references
+        # it starts from the inherited environment and drops everything except
+        # the named variables in the forked child before exec; the workbench
+        # never reads or copies a credential value.
+        refs = operation.get('credential_refs')
+        if not isinstance(refs, dict):
+            refs = {}
+        env_names = {ref[4:] for ref in refs.values()
+                     if isinstance(ref, str) and ref.startswith('env:')}
+        preexec_fn = None
+        if env_names:
+            env = None
+            allowed = _PROBE_ENV | env_names
+            preexec_fn = lambda: _clean_child_environment(allowed)
+        else:
+            env = {name: os.environ[name] for name in _PROBE_ENV if name in os.environ}
+        # The child receives logical names only; it resolves them inside its own process.
+        payload={'source':selection.model_dump(mode='json'),'context':ctx.model_dump(mode='json'),**operation}
         try:
             result=subprocess.run([str(python),'-m','dataagent_data.observation.cli','--workspace',str(workspace)],
-                input=json.dumps({'source':selection.model_dump(mode='json'),'context':ctx.model_dump(mode='json'),**operation}),
-                capture_output=True,text=True,timeout=120,env=env,cwd=workspace)
+                input=json.dumps(payload),
+                capture_output=True,text=True,timeout=120,env=env,cwd=workspace,
+                preexec_fn=preexec_fn)
         except subprocess.TimeoutExpired as exc:
             raise ValueError('data layer probe timed out; completed source observations remain available') from exc
         if result.returncode:
