@@ -1,0 +1,57 @@
+{
+  "sample": "invoices.tsv",
+  "sha256": "39a573ca8004d6a905572a50877e54f41c842c14f8cf74fa41f351271e62dd4d",
+  "kind": "tsv",
+  "probe_options": {},
+  "partition_unit": "file",
+  "total_partitions": 1,
+  "coverage": "full",
+  "completed_partitions": [1],
+  "gaps": [],
+  "record_count": 3,
+  "fields": ["number", "issue_date", "vendor", "amount_minor", "currency", "memo"],
+  "encoding": "utf-8（无 BOM，LF 换行）",
+  "delimiter": "\\t",
+  "anchor_convention": "row = 文件物理行号（表头为第 1 行），field = 列名",
+  "records": [
+    {
+      "fields": {"number": "INV-011", "issue_date": "2026-11-02", "vendor": "北京星河办公用品有限公司", "amount_minor": "45600", "currency": "CNY", "memo": "打印纸, 文具"},
+      "anchors": {
+        "number": {"row": 2, "field": "number"},
+        "issue_date": {"row": 2, "field": "issue_date"},
+        "vendor": {"row": 2, "field": "vendor"},
+        "amount_minor": {"row": 2, "field": "amount_minor"},
+        "currency": {"row": 2, "field": "currency"},
+        "memo": {"row": 2, "field": "memo"}
+      }
+    },
+    {
+      "fields": {"number": "INV-012", "issue_date": "2026-11-03", "vendor": "上海云帆差旅服务有限公司", "amount_minor": "128050", "currency": "CNY", "memo": "机票, 改签费"},
+      "anchors": {
+        "number": {"row": 3, "field": "number"},
+        "issue_date": {"row": 3, "field": "issue_date"},
+        "vendor": {"row": 3, "field": "vendor"},
+        "amount_minor": {"row": 3, "field": "amount_minor"},
+        "currency": {"row": 3, "field": "currency"},
+        "memo": {"row": 3, "field": "memo"}
+      }
+    },
+    {
+      "fields": {"number": "INV-013", "issue_date": "2026-11-04", "vendor": "杭州青禾餐饮管理有限公司", "amount_minor": "9900", "currency": "CNY", "memo": "会议茶歇"},
+      "anchors": {
+        "number": {"row": 4, "field": "number"},
+        "issue_date": {"row": 4, "field": "issue_date"},
+        "vendor": {"row": 4, "field": "vendor"},
+        "amount_minor": {"row": 4, "field": "amount_minor"},
+        "currency": {"row": 4, "field": "currency"},
+        "memo": {"row": 4, "field": "memo"}
+      }
+    }
+  ],
+  "anchor_coverage": "100%：3 条记录 × 6 个字段 = 18 个锚点",
+  "issues_expected": [],
+  "判断依据": [
+    "memo 列里有英文逗号加空格（\"打印纸, 文具\"）。分隔符必须按制表符识别；如果被嗅探成逗号，会出现列数不齐或 quarantined_rows，coverage 变 partial，这正是本样本要抓的错误。",
+    "日期列是纯文本，按原文字符串比较，不要求转成日期类型。"
+  ]
+}

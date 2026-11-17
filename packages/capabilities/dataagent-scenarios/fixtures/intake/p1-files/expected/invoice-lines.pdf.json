@@ -1,0 +1,66 @@
+{
+  "sample": "invoice-lines.pdf",
+  "sha256": "c02fd122d7b11799d82c48e6facbc7777ea1e2016263ae62e7179ad23d0191bc",
+  "kind": "pdf",
+  "probe_options": {},
+  "ocr_required": false,
+  "partition_unit": "page",
+  "total_partitions": 2,
+  "coverage": "full",
+  "completed_partitions": [1, 2],
+  "gaps": [],
+  "page_types": {"1": "text", "2": "text"},
+  "record_count": 11,
+  "anchor_convention": "page = 页码（从 1 开始），snippet = 该页文本层里能唯一定位该值的原文片段（值本身必须是 snippet 的子串）。对应 pdf_text_span 或 pdf_bbox 选择器，比对时只要求锚点页码一致、锚点指向的原文包含该值",
+  "document_fields": {
+    "note": "页面上「key: value」形式的发票级字段，合成 1 条记录",
+    "fields": {
+      "invoice_number": "INV-101",
+      "issue_date": "2026-11-05",
+      "vendor": "Beijing Xinghe Office Supplies Co. Ltd.",
+      "currency": "CNY",
+      "total_amount_minor": "340200"
+    },
+    "anchors": {
+      "invoice_number": {"page": 1, "snippet": "invoice_number: INV-101"},
+      "issue_date": {"page": 1, "snippet": "issue_date: 2026-11-05"},
+      "vendor": {"page": 1, "snippet": "vendor: Beijing Xinghe Office Supplies Co. Ltd."},
+      "currency": {"page": 1, "snippet": "currency: CNY"},
+      "total_amount_minor": {"page": 2, "snippet": "total_amount_minor: 340200"}
+    }
+  },
+  "logical_table": {
+    "columns": ["line", "item", "qty", "unit_price_minor", "amount_minor"],
+    "pages": [1, 2],
+    "header_on_page": {"1": true, "2": "重复表头，不是数据行"},
+    "rows_on_page_1": [1, 2, 3, 4, 5, 6],
+    "rows_on_page_2": [7, 8, 9, 10],
+    "records": [
+      {"fields": {"line": "1", "item": "A4 copy paper (box)", "qty": "4", "unit_price_minor": "18500", "amount_minor": "74000"}, "page": 1, "row_snippet": "1 A4 copy paper (box) 4 18500 74000"},
+      {"fields": {"line": "2", "item": "Gel pen black (pack of 12)", "qty": "10", "unit_price_minor": "2400", "amount_minor": "24000"}, "page": 1, "row_snippet": "2 Gel pen black (pack of 12) 10 2400 24000"},
+      {"fields": {"line": "3", "item": "Stapler heavy duty", "qty": "2", "unit_price_minor": "6800", "amount_minor": "13600"}, "page": 1, "row_snippet": "3 Stapler heavy duty 2 6800 13600"},
+      {"fields": {"line": "4", "item": "Whiteboard marker set", "qty": "5", "unit_price_minor": "3200", "amount_minor": "16000"}, "page": 1, "row_snippet": "4 Whiteboard marker set 5 3200 16000"},
+      {"fields": {"line": "5", "item": "File folder A4 (pack of 20)", "qty": "6", "unit_price_minor": "4500", "amount_minor": "27000"}, "page": 1, "row_snippet": "5 File folder A4 (pack of 20) 6 4500 27000"},
+      {"fields": {"line": "6", "item": "Desk organizer", "qty": "3", "unit_price_minor": "8900", "amount_minor": "26700"}, "page": 1, "row_snippet": "6 Desk organizer 3 8900 26700"},
+      {"fields": {"line": "7", "item": "Sticky notes (pack of 10)", "qty": "8", "unit_price_minor": "1500", "amount_minor": "12000"}, "page": 2, "row_snippet": "7 Sticky notes (pack of 10) 8 1500 12000"},
+      {"fields": {"line": "8", "item": "Toner cartridge", "qty": "2", "unit_price_minor": "39800", "amount_minor": "79600"}, "page": 2, "row_snippet": "8 Toner cartridge 2 39800 79600"},
+      {"fields": {"line": "9", "item": "Label maker tape", "qty": "4", "unit_price_minor": "2600", "amount_minor": "10400"}, "page": 2, "row_snippet": "9 Label maker tape 4 2600 10400"},
+      {"fields": {"line": "10", "item": "Paper shredder", "qty": "1", "unit_price_minor": "56900", "amount_minor": "56900"}, "page": 2, "row_snippet": "10 Paper shredder 1 56900 56900"}
+    ],
+    "anchor_rule": "每条行记录的 5 个字段各有一个锚点，页码 = 该行的 page；锚点指向的单元格或文本片段包含该字段的值"
+  },
+  "cross_checks": "每行 qty × unit_price_minor = amount_minor；10 行 amount_minor 之和 = 340200 = total_amount_minor（第 2 页）。",
+  "anchor_coverage": "100%：发票级 5 个字段 + 10 行 × 5 列 = 55 个锚点",
+  "must_not_appear_as_records": [
+    "第 2 页顶部的重复表头行（line / item / qty / unit_price_minor / amount_minor）",
+    "「Line items」「continued on next page」「Page 1 of 2」「Page 2 of 2」这类版面文字"
+  ],
+  "issues_expected": [],
+  "判断依据": [
+    "【判断依据 1：跨页表算 1 张逻辑表】第 1 页 6 行、第 2 页 4 行共用同一组列，第 2 页表头是排版重复。期望 10 条行记录，行 7–10 的锚点在第 2 页；第 2 页重复表头不能变成一条数据记录，也不能让第 2 页的行用不同的字段名。metadata 里把它记成两个物理表块可以接受，只要记录层满足上面的条件。",
+    "【判断依据 2：发票级字段合成 1 条记录】invoice_number 等 4 个 key: value 字段在第 1 页，total_amount_minor 在第 2 页表格下方。期望它们属于同一份文档的字段集合（record_count 11 = 1 + 10）。如果实现按页各出一条键值记录（第 1 页 4 个字段、第 2 页 1 个字段，record_count 12），字段值与锚点页码不变，可以接受；请在比对器里按字段 + 锚点页码比，不硬比 record_count。",
+    "第 1 页说明文字（Deliver to ..., All amounts ..., Synthetic test ...）没有冒号，不是字段，不要求出现在记录里。",
+    "表格是带边框线的规整表格，单元格值按原文字符串比较（\"74000\" 不转数字）。",
+    "跨页表放在这份文本 PDF 里，而不是混排 PDF，是按派单说明做的；T21 卡片原文把「跨页表」写在混排 PDF 下，评审可决定是否也要在混排 PDF 里再放一张。"
+  ]
+}

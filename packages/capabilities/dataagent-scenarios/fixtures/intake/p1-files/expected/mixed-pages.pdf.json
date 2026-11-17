@@ -1,0 +1,70 @@
+{
+  "sample": "mixed-pages.pdf",
+  "sha256": "c0418f7e29897e52ae98ff4b31d34fcf85b7fc36d347b726a85827c59c146650",
+  "kind": "pdf",
+  "probe_options": {},
+  "ocr_required": true,
+  "partition_unit": "page",
+  "total_partitions": 3,
+  "page_layout": {
+    "1": "文本层（Helvetica），4 行 key: value，无图片",
+    "2": "无文本层；只有一张声明为 1000×450 DeviceRGB DCTDecode 的图片，但流内容不是合法 JPEG（JFIF 头 + 2048 个随机字节，无 EOI）；用 pdfium 渲染该页得到纯白页面",
+    "3": "无文本层；一张 1000×450 灰度 JPEG（质量 20），低对比（字 150 / 底 198）、旋转 1.8°、高斯模糊、噪点，金额那一行有一道浅色扫描条纹，且金额整行印得比其他行更淡（字 165，模拟打印头磨损）"
+  },
+  "with_ocr": {
+    "coverage": "partial",
+    "completed_partitions": [1, 3],
+    "gap_pages": [2],
+    "gaps": [
+      {"partition": 2, "reason": "页面无可抽取内容（无文本层，唯一图片无法解码）", "accepted_codes": ["ocr_empty", "ocr_failed"]}
+    ],
+    "page_types": {"1": "text", "2": "gap", "3": "ocr"},
+    "issues_expected": [
+      {"code": "intake.low_ocr_confidence", "page": 3}
+    ]
+  },
+  "without_ocr": {
+    "coverage": "partial",
+    "completed_partitions": [1],
+    "gap_pages": [2, 3],
+    "gaps": [
+      {"partition": 2, "reason": "无文本层且未配置 OCR", "accepted_codes": ["ocr_engine_missing"]},
+      {"partition": 3, "reason": "无文本层且未配置 OCR", "accepted_codes": ["ocr_engine_missing"]}
+    ],
+    "issues_expected": []
+  },
+  "record_count_with_ocr": 2,
+  "records": [
+    {
+      "page": 1,
+      "confidence": "normal",
+      "fields": {"invoice_number": "INV-201", "issue_date": "2026-11-08", "amount_minor": "90000", "currency": "CNY"},
+      "anchors": {
+        "invoice_number": {"page": 1, "snippet": "invoice_number: INV-201"},
+        "issue_date": {"page": 1, "snippet": "issue_date: 2026-11-08"},
+        "amount_minor": {"page": 1, "snippet": "amount_minor: 90000"},
+        "currency": {"page": 1, "snippet": "currency: CNY"}
+      }
+    },
+    {
+      "page": 3,
+      "confidence": "low",
+      "original_text": "Invoice INV-203\nDate: 2026-11-09\nAmount: 4580.00 CNY",
+      "facts": [
+        {"label": "Invoice", "labeled": false, "value": "INV-203", "page": 3, "snippet": "Invoice INV-203"},
+        {"label": "Date", "labeled": true, "value": "2026-11-09", "page": 3, "snippet": "Date: 2026-11-09"},
+        {"label": "Amount", "labeled": true, "value": "4580.00 CNY", "page": 3, "snippet": "Amount: 4580.00 CNY"}
+      ],
+      "value_match": "soft：OCR 读出的值与上面真值不同不判失败，但必须带第 3 页锚点，且第 3 页必须有 intake.low_ocr_confidence"
+    }
+  ],
+  "anchor_coverage": "100%：第 1 页 4 个字段各有第 1 页锚点；第 3 页记录里每个字段（不论 OCR 读成什么）都有第 3 页锚点；第 2 页不得出现任何记录或锚点",
+  "判断依据": [
+    "【判断依据 1：失败页是缺口，且只影响自己】PRD FR1.1 写「失败页不影响成功页」，V1.1 写「混排样本为 partial 且缺口页号一致」。契约里 coverage 有缺口即 partial（dataagent-contracts/src/dataagent_contracts/intake.py:69-71，基于 dataagent@bc7b3c9）。所以期望第 2 页是唯一缺口，第 1、3 页照常完成；整份文件因为第 2 页报错而失败、或第 1 页被一起丢掉，都算不一致。",
+    "【判断依据 2：失败页的缺口原因按类别比，不按代码字面比】CoverageGap.code 是开放字符串。第 2 页的图片流损坏，渲染器可能静默跳过（得到白页 → OCR 无结果，现有代码记 ocr_empty，documents.py:45）也可能抛错（记 ocr_failed，documents.py:27）。两者都表示「这页拿不到内容」，都接受；页码必须是 2。若实现新增更具体的代码（如 image_undecodable），也应接受。",
+    "【判断依据 3：低置信度页算完成页 + 标记，不算缺口】契约 SourceProfile 没有字段级置信度，只有 gaps、completed_partitions、issues 三处可表达。现有代码只在页文本为空时记缺口（documents.py:43-45，基于 dataagent@bc7b3c9），OCR 块置信度低于 0.6 时在 issues 里记 intake.low_ocr_confidence（documents.py:85-86）。按这个口径，第 3 页应在 completed_partitions 里，值照常出现并带第 3 页锚点，同时 issues 里有 page=3 的 low_ocr_confidence，供工作台提示人工核对（test-inventory M1-05「低置信度数字……在浏览器中复核」）。可以不同意的地方：如果团队认为低置信度页应作为缺口（如 ocr_low_confidence）不进 completed，则期望改为 completed [1]、gap_pages [2,3]，coverage 仍为 partial。",
+    "【判断依据 4：第 3 页的值不硬比】页面经人眼可读出 INV-203、2026-11-09、4580.00 CNY，但条纹正好压在金额数字上，OCR 可能把 4580 读成 4560/4588 等。验收要抓的是「读错的值没有被当成可信结果」，所以真值只做软比对：读对更好，读错时只要低置信度标记在，就不判失败；若读错且没有低置信度标记，判失败。",
+    "【样本校准，不是期望来源】第 3 页的退化程度用原始 RapidOCR 引擎（rapidocr-onnxruntime 1.4.4，默认参数，与 DataAgent 引擎 worker 相同的 RapidOCR() 构造）在 144 dpi 渲染图上校准过：v1 样本三行置信度 0.858 / 0.950 / 0.864，不触发 0.6 阈值；v2（金额行变淡）为 0.852 / 0.946 / 0.557，金额行低于 0.6。RapidOCR 默认把低于 0.5 的行直接丢掉（text_score=0.5），所以可用窗口只有 0.5–0.6，换引擎版本或渲染方式后可能落到窗口外：若金额行整行消失，第 3 页仍是完成页但缺 Amount 字段，应减轻退化重做样本；若回到 ≥ 0.6，应加重。校准只用来调样本，上面的真值（4580.00 CNY 等）仍按原件手写，没有取自 OCR 输出。",
+    "【人眼可读性】v2 第 3 页人眼能读出 Invoice INV-203、Date: 2026-11-09、Amount: 4?80.00 CNY；金额第三位数字在淡印和条纹下人眼也不易分辨 8 和 6，真值以生成脚本为准（4580.00）。这正是低置信度数字要人工复核的场景。"
+  ]
+}

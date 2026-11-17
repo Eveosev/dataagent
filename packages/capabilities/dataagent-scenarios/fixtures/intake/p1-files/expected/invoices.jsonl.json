@@ -1,0 +1,57 @@
+{
+  "sample": "invoices.jsonl",
+  "sha256": "d873acee69e126f1fe68e2e498940492dc1c836656fcd62dd15f52cf747c668b",
+  "kind": "jsonl",
+  "probe_options": {},
+  "partition_unit": "file",
+  "total_partitions": 1,
+  "coverage": "full",
+  "completed_partitions": [1],
+  "gaps": [],
+  "record_count": 3,
+  "fields": ["/number", "/issue_date", "/amount_minor", "/currency", "/vendor/name", "/vendor/tax_id", "/remark"],
+  "anchor_convention": "line = 文件物理行号（从 1 开始），pointer = 该行 JSON 内的 RFC 6901 JSON Pointer。等价写法：record_key 选择器 {keys:{line:N}, field:<pointer>}",
+  "records": [
+    {
+      "fields": {"/number": "INV-021", "/issue_date": "2026-11-06", "/amount_minor": 32000, "/currency": "CNY", "/vendor/name": "成都锦程会务服务有限公司", "/vendor/tax_id": "TEST-TAX-021"},
+      "anchors": {
+        "/number": {"line": 1, "pointer": "/number"},
+        "/issue_date": {"line": 1, "pointer": "/issue_date"},
+        "/amount_minor": {"line": 1, "pointer": "/amount_minor"},
+        "/currency": {"line": 1, "pointer": "/currency"},
+        "/vendor/name": {"line": 1, "pointer": "/vendor/name"},
+        "/vendor/tax_id": {"line": 1, "pointer": "/vendor/tax_id"}
+      }
+    },
+    {
+      "fields": {"/number": "INV-022", "/issue_date": "2026-11-07", "/amount_minor": 15800, "/currency": "CNY", "/vendor/name": "武汉江汉文具有限公司", "/vendor/tax_id": "TEST-TAX-022"},
+      "anchors": {
+        "/number": {"line": 2, "pointer": "/number"},
+        "/issue_date": {"line": 2, "pointer": "/issue_date"},
+        "/amount_minor": {"line": 2, "pointer": "/amount_minor"},
+        "/currency": {"line": 2, "pointer": "/currency"},
+        "/vendor/name": {"line": 2, "pointer": "/vendor/name"},
+        "/vendor/tax_id": {"line": 2, "pointer": "/vendor/tax_id"}
+      }
+    },
+    {
+      "fields": {"/number": "INV-023", "/issue_date": "2026-11-08", "/amount_minor": 276000, "/currency": "CNY", "/vendor/name": "南京紫金设备租赁有限公司", "/vendor/tax_id": "TEST-TAX-023", "/remark": "押金另付"},
+      "anchors": {
+        "/number": {"line": 3, "pointer": "/number"},
+        "/issue_date": {"line": 3, "pointer": "/issue_date"},
+        "/amount_minor": {"line": 3, "pointer": "/amount_minor"},
+        "/currency": {"line": 3, "pointer": "/currency"},
+        "/vendor/name": {"line": 3, "pointer": "/vendor/name"},
+        "/vendor/tax_id": {"line": 3, "pointer": "/vendor/tax_id"},
+        "/remark": {"line": 3, "pointer": "/remark"}
+      }
+    }
+  ],
+  "anchor_coverage": "100%：6 + 6 + 7 = 19 个锚点；第 1、2 行没有 /remark，不要求也不允许为它造锚点",
+  "issues_expected": [],
+  "判断依据": [
+    "嵌套对象 vendor 展开成 /vendor/name、/vendor/tax_id 两个叶子字段，各自有锚点；若实现把 vendor 当整体对象保留，则 /vendor 一个锚点覆盖不到叶子值，视为不一致。",
+    "amount_minor 在原文是 JSON 数字（不是字符串），按数字比较。",
+    "JSONL 的锚点必须带行号：单独一个 /amount_minor 指针无法区分是哪一行。"
+  ]
+}
