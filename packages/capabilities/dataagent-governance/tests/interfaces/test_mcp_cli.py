@@ -58,7 +58,11 @@ def test_tools_list_exposes_exactly_the_six_s0_operations(rt):
         "evaluate_business_acceptance",
         "isolate_acceptance_samples",
     ]
-    assert all("context" in t["inputSchema"]["required"] for t in tools)
+    # R1 (T11a): ``context`` is an optional caller hint. Authority comes
+    # from the host _meta / host environment / local-owner chain, so the
+    # schema must not require it.
+    assert all("context" in t["inputSchema"]["properties"] for t in tools)
+    assert all("context" not in t["inputSchema"]["required"] for t in tools)
 
 
 def test_tools_call_roundtrip(rt):

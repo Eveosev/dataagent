@@ -28,6 +28,7 @@ from dataagent_governance.governance.sensitivity import mask_content, scan_conte
 from dataagent_governance.policy import evaluate_access, evaluate_egress
 from dataagent_governance.runtime.errors import invalid_input, not_found
 from dataagent_runtime import operation
+from dataagent_runtime.policy.context import is_legacy_context
 
 
 def _now() -> datetime:
@@ -35,17 +36,22 @@ def _now() -> datetime:
 
 
 def _authority(rt, ctx):  # noqa: ANN001
-    """Subject and purpose come from the trusted host, never call arguments.
+    """Subject and purpose are already resolved by the one context resolver.
 
-    The host-configured values are authoritative (B7): a caller-supplied
-    CallContext cannot override them — when both are present the host
-    value wins. Only when the host did not fix a value may the wire
-    context (itself a trusted channel: ``_meta`` or the process entry)
-    supply it.
+    ``invoke`` resolves the trusted channels (host ``_meta``, host-injected
+    environment, local-owner) before a handler runs; re-applying the
+    runtime's configured authority here would override a host ``_meta``
+    context that outranks it. The ``DATAAGENT_CONTEXT_RESOLVER=legacy``
+    switch is the one-release exception: the old handler used the runtime
+    host authority first, so keep that precedence on the rollback path.
     """
 
-    subject = rt.host_subject_ref or ctx.subject_ref
-    purpose = rt.host_purpose or ctx.purpose
+    if is_legacy_context(runtime=rt):
+        subject = rt.host_subject_ref or ctx.subject_ref
+        purpose = rt.host_purpose or ctx.purpose
+    else:
+        subject = ctx.subject_ref
+        purpose = ctx.purpose
     if not subject:
         raise invalid_input(
             "no executing subject: set CallContext.subject_ref or configure the "

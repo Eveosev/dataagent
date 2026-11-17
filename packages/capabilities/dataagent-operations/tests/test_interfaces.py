@@ -4,7 +4,7 @@ import subprocess
 import sys
 
 
-def test_mcp_stdio_discovers_only_through_trusted_scope(configured, tmp_path):
+def test_mcp_stdio_discovers_only_through_trusted_authorization(configured, tmp_path):
     db, config = configured
     configuration = tmp_path / "config.json"
     configuration.write_text(json.dumps(config))
@@ -20,7 +20,7 @@ def test_mcp_stdio_discovers_only_through_trusted_scope(configured, tmp_path):
         }},
         {"id": 3, "method": "tools/call", "params": {
             "name": "environment_discover", "arguments": {"environment_id": "test-orders", "context": context},
-            "_meta": {"context": context | {"scope_ref": "other-scope"}},
+            "_meta": {"context": context | {"authorization_ref": "other-grant"}},
         }},
     ]
     result = subprocess.run(

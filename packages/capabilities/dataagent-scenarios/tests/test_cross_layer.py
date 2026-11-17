@@ -48,7 +48,11 @@ def workspace(tmp_path):
 
 
 @pytest.fixture()
-def data(workspace):
+def data(workspace, monkeypatch):
+    # R1: trusted host identity for the data layer (host-injected env), so
+    # the gate/product recheck matches the governance decisions.
+    monkeypatch.setenv("DATAAGENT_HOST_SUBJECT_REF", "user:alice")
+    monkeypatch.setenv("DATAAGENT_HOST_PURPOSE", "monthly_report")
     return create_data_runtime(
         workspace_root=workspace, data_root=workspace / ".dataagent"
     )

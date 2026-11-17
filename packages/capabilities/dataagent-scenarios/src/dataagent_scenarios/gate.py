@@ -31,6 +31,8 @@ from dataagent_runtime.enforcement import (
     EnforcementConfig,
     access_recheck,
 )
+from dataagent_runtime.policy.context import ContextResolutionError, resolved_context
+from dataagent_runtime.types import ContextSource
 
 # Input-model fields that hold the resource references each data-layer
 # operation reads (file / document / table / profile assets). Operations not
@@ -144,7 +146,16 @@ def enforce_data_invoke(
 
     from dataagent_data.invoke import invoke as data_invoke
 
-    ctx = context if isinstance(context, CallContext) else CallContext.model_validate(context)
+    # R1: the gate composition is an entry point too. Resolve one trusted
+    # context (host _meta/environment -> local-owner; older callers hand a
+    # bare CallContext/mapping and it is treated as a hint) and hand the
+    # sealed envelope to the product path so the gate and the data-layer
+    # recheck cannot disagree about the executing identity.
+    try:
+        resolved = resolved_context(context, runtime=runtime)
+    except ContextResolutionError as exc:
+        return _denied(operation, f"invalid CallContext: {exc}")
+    ctx = resolved.context
     config = enforcement or EnforcementConfig(mode="enforce")
     if not ctx.authorization_ref.strip():
         return _denied(
@@ -156,6 +167,7 @@ def enforce_data_invoke(
         resolver,
         gate_resource_refs(operation, payload),
         config=config,
+        legacy=resolved.source is ContextSource.LEGACY,
     )
     if outcome.ok or config.mode == "warn":
         # The product path rechecks ``resource_fields`` with the same
@@ -163,7 +175,7 @@ def enforce_data_invoke(
         result = data_invoke(
             operation,
             payload,
-            context,
+            resolved,
             runtime=runtime,
             resolver=resolver,
             enforcement=config,

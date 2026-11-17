@@ -112,7 +112,12 @@ def test_mcp_tools_call_needs_input_and_ok(tmp_path):
     assert needs["issues"][0]["inference_request"]["kind"] == "expression_ast"
 
 
-def test_mcp_rejects_missing_context(tmp_path):
+def test_mcp_missing_context_falls_back_to_local_owner(tmp_path):
+    # R1 (T11a): ``context`` is optional. With no caller hint and no host
+    # authority, resolve_context supplies the local-owner subject and a
+    # workspace-scoped local authorization; the operation itself reads no
+    # governed resource, so the call is a normal business result rather
+    # than the old "context is required" transport error.
     call = {
         "jsonrpc": "2.0",
         "id": 5,
@@ -126,7 +131,10 @@ def test_mcp_rejects_missing_context(tmp_path):
         [call],
         {"DATAAGENT_DATA_ROOT": str(tmp_path / "data"), "DATAAGENT_WORKSPACE": str(tmp_path)},
     )
-    assert responses[0]["result"]["isError"] is True
+    assert responses[0]["result"]["isError"] is False
+    body = json.loads(responses[0]["result"]["content"][0]["text"])
+    assert body["status"] == "ok"
+    assert body["data"]["binding"]["engine_id"] == "duckdb"
 
 
 def test_cli_list_and_call(tmp_path):
