@@ -118,16 +118,61 @@ def test_recheck_subject_mismatch_denies():
     assert any("subject mismatch" in r for r in outcome.reasons)
 
 
-def test_recheck_kernel_path_only_checks_existence():
-    # Expired + deny + uncovered, but the kernel guard is declared effective.
+def test_recheck_legacy_kernel_path_only_checks_existence():
+    # Legacy rollback: expired + deny + uncovered, but the guard is declared.
     config = EnforcementConfig(mode="enforce", kernel_guard_declared=True)
     outcome = access_recheck(
         ctx(kernel_session_id="ks:1"),
         lambda ref: decision(decision=AccessOutcome.deny, valid_until=PAST),
         [VersionedRef(id="table:elsewhere", revision="r9")],
         config=config,
+        legacy=True,
     )
     assert outcome.ok and outcome.kernel_path
+
+
+def test_recheck_v1_kernel_path_still_verifies_the_decision():
+    """r8: a host session plus a declared guard must not skip the recheck.
+
+    The caller can put ``authorization_ref`` in ``arguments.context``; with
+    only an existence check that handle would turn a deny into access.
+    """
+
+    config = EnforcementConfig(mode="enforce", kernel_guard_declared=True)
+    outcome = access_recheck(
+        ctx(kernel_session_id="ks:1"),
+        lambda ref: decision(decision=AccessOutcome.deny, valid_until=PAST),
+        [VersionedRef(id="table:elsewhere", revision="r9")],
+        config=config,
+        legacy=False,
+    )
+    assert not outcome.ok and not outcome.kernel_path
+    assert any("outcome is deny" in r for r in outcome.reasons)
+
+
+def test_recheck_v1_kernel_path_checks_subject_and_resource():
+    config = EnforcementConfig(mode="enforce", kernel_guard_declared=True)
+    other = VersionedRef(id="table:elsewhere", revision="r9")
+
+    subject = access_recheck(
+        ctx(kernel_session_id="ks:1", subject_ref="user:mallory"),
+        lambda ref: decision(),
+        [RESOURCE],
+        config=config,
+        legacy=False,
+    )
+    assert not subject.ok
+    assert any("subject mismatch" in r for r in subject.reasons)
+
+    resource = access_recheck(
+        ctx(kernel_session_id="ks:1"),
+        lambda ref: decision(),
+        [other],
+        config=config,
+        legacy=False,
+    )
+    assert not resource.ok
+    assert any("does not cover input resource" in r for r in resource.reasons)
 
 
 def test_recheck_kernel_session_without_declaration_still_rechecks():
@@ -137,6 +182,7 @@ def test_recheck_kernel_session_without_declaration_still_rechecks():
         lambda ref: decision(decision=AccessOutcome.deny),
         [RESOURCE],
         config=config,
+        legacy=False,
     )
     assert not outcome.ok
 

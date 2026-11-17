@@ -217,6 +217,120 @@ def test_x1_local_fallback_does_not_look_like_a_kernel_call(ops, tmp_path):
     assert "subject mismatch" in result.issues[0].message
 
 
+@pytest.mark.parametrize(
+    ("decision_kwargs", "reason"),
+    [
+        ({"decision": AccessOutcome.deny}, "outcome is deny"),
+        ({"subject": "user:bob"}, "subject mismatch"),
+        ({"resource": PUBLIC}, "does not cover input resource"),
+    ],
+)
+def test_x1_kernel_guard_does_not_trust_a_caller_supplied_decision(
+    ops, tmp_path, decision_kwargs, reason
+):
+    """r8: a host session plus a declared guard must not turn a hint into access.
+
+    ``authorization_ref`` is caller-supplied; the kernel path must still
+    verify the decision outcome, subject and resource coverage, or a deny /
+    foreign decision would authorize reading an uncovered resource.
+    """
+
+    rt = _runtime(
+        tmp_path,
+        host_subject_ref="user:alice",
+        host_purpose="report",
+        kernel_guard_declared=True,
+    )
+    rt.decisions.save_access(_decision(decision_id="ad:host", **decision_kwargs))
+    resolved = resolve_context(
+        host_meta={"session_id": "ks-host", "call_id": "kc-host", "turn": 1},
+        argument_context={"authorization_ref": "ad:host"},
+        runtime=rt,
+        environ={},
+    )
+    assert resolved.context.kernel_session_id == "ks-host"
+    assert resolved.context.authorization_ref == "ad:host"
+
+    result = shared_invoke(
+        "t11a_read",
+        {"source": "table:secret@r1"},
+        resolved,
+        runtime=rt,
+        resolver=rt.decisions.get_access,
+    )
+    assert result.status == "failed"
+    assert result.issues[0].code == "da12.access_denied"
+    assert reason in result.issues[0].message
+
+
+def test_x1_kernel_guard_allows_a_covering_decision(ops, tmp_path):
+    """Control: the full recheck still accepts a matching allow decision."""
+
+    rt = _runtime(
+        tmp_path,
+        host_subject_ref="user:alice",
+        host_purpose="report",
+        kernel_guard_declared=True,
+    )
+    rt.decisions.save_access(
+        _decision(decision_id="ad:host", subject="user:alice", purpose="report")
+    )
+    resolved = resolve_context(
+        host_meta={"session_id": "ks-host", "call_id": "kc-host", "turn": 1},
+        argument_context={"authorization_ref": "ad:host"},
+        runtime=rt,
+        environ={},
+    )
+    result = shared_invoke(
+        "t11a_read",
+        {"source": "table:secret@r1"},
+        resolved,
+        runtime=rt,
+        resolver=rt.decisions.get_access,
+    )
+    assert result.status == "ok", result.issues
+
+
+def test_x1_mcp_kernel_guard_rechecks_caller_authorization(ops, tmp_path):
+    """Wire repro: host session + hint authorization_ref must not bypass deny."""
+
+    rt = _runtime(
+        tmp_path,
+        host_subject_ref="user:alice",
+        host_purpose="report",
+        kernel_guard_declared=True,
+    )
+    rt.decisions.save_access(
+        _decision(decision_id="ad:deny", decision=AccessOutcome.deny)
+    )
+    response = mcp_server.handle(
+        {
+            "jsonrpc": "2.0",
+            "id": 5,
+            "method": "tools/call",
+            "params": {
+                "name": "t11a_read",
+                "arguments": {
+                    "source": "table:secret@r1",
+                    "context": {"authorization_ref": "ad:deny"},
+                },
+                "_meta": {"session_id": "ks-host", "call_id": "kc-host", "turn": 1},
+            },
+        },
+        server_name="t11a",
+        server_version="0.1.0",
+        list_operations=lambda: [get_spec("t11a_read")],
+        invoke=lambda op, payload, context: shared_invoke(
+            op, payload, context, runtime=rt, resolver=rt.decisions.get_access
+        ),
+    )
+    assert response is not None
+    body = json.loads(response["result"]["content"][0]["text"])
+    assert body["status"] == "failed"
+    assert body["issues"][0]["code"] == "da12.access_denied"
+    assert "outcome is deny" in body["issues"][0]["message"]
+
+
 def test_x1_caller_built_resolved_envelope_is_rejected(ops, tmp_path):
     """A forged envelope must not be trusted as host ``_meta`` authority."""
 

@@ -73,6 +73,8 @@ class EnforcementConfig:
     mode: EnforcementMode = "warn"
     # Trusted-host declaration that the kernel guard is wired and effective.
     # Mere presence of ``kernel_session_id`` never suffices (review §7.3).
+    # Only the legacy rollback path may use it to skip the per-decision
+    # checks; v1 has no call-bound proof and rechecks in full (codex r8).
     kernel_guard_declared: bool = False
 
 
@@ -147,8 +149,16 @@ def access_recheck(
 ) -> RecheckOutcome:
     """Recheck ``authorization_ref`` against the resources this call reads.
 
-    ``legacy=True`` restores the old ``None``-subject skip for the
-    one-release rollback; ``invoke`` passes it from the resolved source.
+    ``legacy=True`` restores the old behavior for the one-release rollback:
+    the ``None``-subject skip and the kernel-guard shortcut. ``invoke``
+    passes it from the resolved source.
+
+    The kernel-guard shortcut is rollback-only. It trusts
+    ``kernel_guard_declared`` and verifies only that the decision exists,
+    which lets a caller-supplied ``authorization_ref`` bypass a deny, an
+    expired decision, a subject mismatch and resource coverage. v1 therefore
+    rechecks the decision outcome, subject and resources even when a host
+    ``session_id`` is present (codex r8).
     """
 
     if legacy is None:
@@ -160,9 +170,12 @@ def access_recheck(
         return _deny(
             [f"authorization_ref {ctx.authorization_ref!r} does not resolve to an AccessDecision"]
         )
-    kernel_path = bool(ctx.kernel_session_id) and config.kernel_guard_declared
+    kernel_path = (
+        bool(ctx.kernel_session_id) and config.kernel_guard_declared and bool(legacy)
+    )
     if kernel_path:
-        # Guard is authoritative; existence of the decision is all we verify.
+        # Old behavior, rollback only: the declared guard is authoritative and
+        # existence of the decision is all that is verified.
         return RecheckOutcome(ok=True, kernel_path=True)
 
     reasons: list[str] = []
