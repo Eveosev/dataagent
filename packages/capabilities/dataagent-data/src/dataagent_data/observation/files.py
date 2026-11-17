@@ -33,7 +33,7 @@ def probe_file(selection, ctx, *, workspace, budget_rows=200, engine=None):
     if len(payload)>32*1024*1024:
         raise ValueError('file exceeds 32 MiB local probe limit')
     suffix=path.suffix.lower()
-    if suffix not in {'.csv','.tsv','.json','.jsonl','.xlsx','.xlsm','.pdf'}:
+    if suffix not in {'.csv','.tsv','.json','.jsonl','.xlsx','.xlsm','.pdf','.docx'}:
         raise ValueError('unsupported source format')
     digest=hashlib.sha256(payload).hexdigest();revision='sha256:'+digest
     root=Path(workspace)/'.dataagent/content';root.mkdir(parents=True,exist_ok=True)
@@ -112,10 +112,11 @@ def probe_file(selection, ctx, *, workspace, budget_rows=200, engine=None):
         metadata={'total_rows':len(raw),'format':parsed['format'],'records_path':selection.options.get('records_path','')}
     else:
         records,anchors,metadata,completed,gaps,issues=probe_document(snapshot,selection.source_id,revision,engine=engine)
-        total=metadata['total_pages']
+        total=metadata.get('total_pages',metadata.get('total_blocks',1))
     fields=list(dict.fromkeys(k for row in records for k in row))
+    if 'structure_fingerprint' not in metadata:
+        metadata['structure_fingerprint']=hashlib.sha256(json.dumps({'kind':suffix,'fields':sorted(fields)},sort_keys=True).encode()).hexdigest()
     metadata.update({'snapshot_ref':str(snapshot.relative_to(workspace)),'extractor_version':'dataagent-probe@1',
-        'structure_fingerprint':hashlib.sha256(json.dumps({'kind':suffix,'fields':sorted(fields)},sort_keys=True).encode()).hexdigest(),
         'field_stats':{k:{'missing_in_sample':sum(row.get(k) is None for row in records)} for k in fields}})
     return SourceProfile(source_id=selection.source_id,source_revision=revision,kind=suffix.lstrip('.'),
         records=records,fields=fields,anchors=anchors,metadata=metadata,total_partitions=total,

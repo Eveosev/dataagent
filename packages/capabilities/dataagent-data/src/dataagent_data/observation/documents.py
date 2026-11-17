@@ -1,12 +1,36 @@
-"""Document probe retains successful pages and explicit OCR/coverage gaps."""
+"""Document probe retains successful pages and explicit OCR/coverage gaps.
+
+PDF pages and Word body blocks are both exposed as ``SourceProfile``
+partitions. Word anchors are character spans inside stable unit refs:
+``paragraph:<n>`` for a body paragraph and
+``table:<t>/row:<r>/col:<c>`` for a table cell (all 1-based).  Merged cells
+are expanded; an expanded cell keeps the anchor of the cell that owns the
+value, and the merge geometry is reported in metadata.
+"""
+import hashlib
 import io
+import json
+from pathlib import Path
 import re
+import zipfile
 from dataagent_contracts.core.refs import SourceAnchor
 from dataagent_contracts.intake import CoverageGap
+from ..adapters.parsers.excel import dedupe_names, infer_scalar_type
 from ..adapters.parsers.pdf import parse_pdf
 
 
+_DOCX_MAX_EXPANDED_BYTES = 256 * 1024 * 1024
+_DOCX_MAX_ENTRIES = 10_000
+
+
 def probe_document(path, source_id, revision, *, engine=None, max_pages=200):
+    """Dispatch a document snapshot to the Word or PDF probe."""
+    if Path(path).suffix.lower() == ".docx":
+        return probe_docx(path, source_id, revision)
+    return _probe_pdf(path, source_id, revision, engine=engine, max_pages=max_pages)
+
+
+def _probe_pdf(path, source_id, revision, *, engine=None, max_pages=200):
     import pdfplumber
     with pdfplumber.open(path) as pdf:
         total = len(pdf.pages)
@@ -87,3 +111,328 @@ def probe_document(path, source_id, revision, *, engine=None, max_pages=200):
     if selected < total:
         gaps.append(CoverageGap(partition=f'{selected+1}-{total}',code='page_budget_exceeded'))
     return records,anchors,{'pages':pages,'tables':tables,'total_pages':total},completed,gaps,issues
+
+
+def _check_docx_archive(path):
+    """Reject non-zip and non-Word containers before python-docx reads them."""
+    try:
+        with zipfile.ZipFile(path) as archive:
+            infos = archive.infolist()
+            names = {info.filename for info in infos}
+            expanded = sum(info.file_size for info in infos)
+    except (OSError, zipfile.BadZipFile) as exc:
+        raise ValueError('not a valid .docx file (expected a zip archive)') from exc
+    if '[Content_Types].xml' not in names or 'word/document.xml' not in names:
+        raise ValueError('not a valid .docx file (missing Word document parts)')
+    if len(infos) > _DOCX_MAX_ENTRIES or expanded > _DOCX_MAX_EXPANDED_BYTES:
+        raise ValueError('expanded .docx exceeds probe limit')
+
+
+def _iter_body_blocks(document):
+    """Yield body paragraphs and tables in document order.
+
+    Headers and footers live outside ``w:body`` and are intentionally ignored.
+    Content controls are unwrapped so their paragraphs/tables keep their
+    document-order numbering.
+    """
+    from docx.oxml.ns import qn
+    from docx.table import Table
+    from docx.text.paragraph import Paragraph
+
+    def walk(parent):
+        for child in parent.iterchildren():
+            if child.tag == qn('w:p'):
+                yield 'paragraph', Paragraph(child, document)
+            elif child.tag == qn('w:tbl'):
+                yield 'table', Table(child, document)
+            elif child.tag == qn('w:sdt'):
+                content = child.find(qn('w:sdtContent'))
+                if content is not None:
+                    yield from walk(content)
+            elif child.tag == qn('w:customXml'):
+                yield from walk(child)
+
+    yield from walk(document.element.body)
+
+
+def _paragraph_style(paragraph):
+    try:
+        style = paragraph.style
+        return getattr(style, 'name', '') or '', getattr(style, 'style_id', '') or ''
+    except Exception:  # noqa: BLE001 - a missing style is not a parse failure
+        return '', ''
+
+
+def _heading_level(paragraph, style_name, style_id):
+    """Return the 1-based heading level from a Word style or outline level."""
+    from docx.oxml.ns import qn
+    for value in (style_name, style_id):
+        value = (value or '').strip()
+        if re.match(r'^(?:heading|标题)', value, re.I):
+            digits = re.search(r'(\d+)\s*$', value)
+            return int(digits.group(1)) if digits else 1
+    pPr = paragraph._p.pPr
+    outline = pPr.find(qn('w:outlineLvl')) if pPr is not None else None
+    if outline is not None:
+        try:
+            return int(outline.get(qn('w:val'))) + 1
+        except (TypeError, ValueError):
+            pass
+    return None
+
+
+def _cell_text(tc, table):
+    from docx.table import _Cell
+    return _Cell(tc, table).text
+
+
+def _table_grid(table):
+    """Expand a Word table into a rectangular grid and merge geometry.
+
+    ``values[r][c]`` is the displayed value, ``origins[r][c]`` is the
+    ``(row, col)`` cell that owns it (different from ``(r, c)`` only for a
+    merged continuation position), and ``merges`` uses 1-based coordinates.
+    A row's ``w:gridBefore`` is represented as leading ``None`` cells so a
+    right-hand value never shifts into the omitted left column.
+    """
+    from docx.oxml.ns import qn
+
+    values, origins = [], []
+    merges = {}
+    vertical = {}
+    grid_width = 0
+    tbl_grid = getattr(getattr(table._tbl, 'tblGrid', None), 'gridCol_lst', None)
+    if tbl_grid is not None:
+        grid_width = len(tbl_grid)
+    for row_index, tr in enumerate(table._tbl.tr_lst):
+        grid_before = 0
+        trPr = tr.trPr
+        if trPr is not None:
+            marker = trPr.find(qn('w:gridBefore'))
+            if marker is not None:
+                try:
+                    grid_before = max(0, int(marker.get(qn('w:val')) or 0))
+                except (TypeError, ValueError):
+                    grid_before = 0
+        row_values = [None] * grid_before
+        row_origins = [(row_index, column) for column in range(grid_before)]
+        column = grid_before
+        for tc in tr.tc_lst:
+            tcPr = tc.tcPr
+            span, vmerge = 1, None
+            if tcPr is not None:
+                grid_span = tcPr.find(qn('w:gridSpan'))
+                if grid_span is not None:
+                    try:
+                        span = max(1, int(grid_span.get(qn('w:val')) or 1))
+                    except (TypeError, ValueError):
+                        span = 1
+                marker = tcPr.find(qn('w:vMerge'))
+                if marker is not None:
+                    vmerge = marker.get(qn('w:val')) or 'continue'
+            text = _cell_text(tc, table)
+            if vmerge == 'restart':
+                origin = (row_index, column)
+                for offset in range(span):
+                    vertical[column + offset] = (origin, text)
+                merges[origin] = {'row': row_index + 1, 'col': column + 1,
+                                  'row_span': 1, 'col_span': span}
+            elif vmerge == 'continue' and column in vertical:
+                origin, text = vertical[column]
+                merge = merges.setdefault(origin, {'row': origin[0] + 1, 'col': origin[1] + 1,
+                                                   'row_span': 1, 'col_span': span})
+                merge['row_span'] = max(merge['row_span'], row_index - origin[0] + 1)
+                merge['col_span'] = max(merge['col_span'], span)
+                for offset in range(span):
+                    vertical[column + offset] = (origin, text)
+            else:
+                origin = (row_index, column)
+                if span > 1:
+                    merges[origin] = {'row': row_index + 1, 'col': column + 1,
+                                      'row_span': 1, 'col_span': span}
+            for _ in range(span):
+                row_values.append(text)
+                row_origins.append(origin)
+            column += span
+        values.append(row_values)
+        origins.append(row_origins)
+    width = max([grid_width] + [len(row) for row in values])
+    for row_index, row in enumerate(values):
+        while len(row) < width:
+            row.append(None)
+            origins[row_index].append((row_index, len(row) - 1))
+    return values, origins, [merges[key] for key in sorted(merges)]
+
+
+_DATA_TYPES = frozenset({'number', 'date', 'boolean'})
+
+
+def _row_is_marked_header(tr):
+    """Word's repeat-header marker is an explicit statement about the row."""
+    from docx.oxml.ns import qn
+    trPr = tr.trPr
+    if trPr is None:
+        return False
+    marker = trPr.find(qn('w:tblHeader'))
+    if marker is None:
+        return False
+    value = (marker.get(qn('w:val')) or '').strip().lower()
+    return value not in {'0', 'false', 'off'}
+
+
+def _row_has_data_value(row):
+    return any(value not in (None, '') and infer_scalar_type(value) in _DATA_TYPES
+               for value in row)
+
+
+def _detect_header_row(values, table):
+    """Whether the first row labels data below it.
+
+    Text-only tables have no reliable label signal, so they stay headerless:
+    keeping every row as a record is safer than silently turning a real first
+    row into field names.  An explicit ``w:tblHeader`` marker overrides the
+    heuristic, and a numeric/date/boolean first row is always data.
+    """
+    if len(values) < 2 or not any(value not in (None, '') for value in values[0]):
+        return False
+    tr_lst = table._tbl.tr_lst
+    if tr_lst and _row_is_marked_header(tr_lst[0]):
+        return True
+    if _row_has_data_value(values[0]):
+        return False
+    return any(_row_has_data_value(row) for row in values[1:])
+
+
+def _docx_fingerprint(paragraph_structure, table_structure):
+    """Hash structure only: paragraph styles/levels plus table geometry."""
+    payload = {'kind': 'docx', 'paragraphs': paragraph_structure, 'tables': table_structure}
+    return hashlib.sha256(json.dumps(payload, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+
+
+def probe_docx(path, source_id, revision):
+    """Extract body paragraphs/headings and tables from a .docx snapshot."""
+    _check_docx_archive(path)
+    try:
+        import docx
+        document = docx.Document(str(path))
+    except Exception as exc:  # noqa: BLE001 - report a corrupt package as a clear error
+        raise ValueError(f'invalid .docx file: {type(exc).__name__}') from exc
+
+    blocks = list(_iter_body_blocks(document))
+    total = len(blocks)
+    records, anchors, units = [], {}, {}
+    record_locations, paragraphs_meta, tables_meta = [], [], []
+    paragraph_structure, table_structure = [], []
+    completed, gaps, issues = [], [], []
+    paragraph_number = 0
+    table_number = 0
+
+    for block_number, (kind, block) in enumerate(blocks, 1):
+        try:
+            if kind == 'paragraph':
+                paragraph_number += 1
+                style_name, style_id = _paragraph_style(block)
+                level = _heading_level(block, style_name, style_id)
+                paragraph_structure.append({'style': style_name, 'heading_level': level})
+                text = block.text
+                if not text.strip():
+                    completed.append(block_number)
+                    continue
+                unit_ref = f'paragraph:{paragraph_number}'
+                units[unit_ref] = text
+                paragraphs_meta.append({'paragraph': paragraph_number, 'style': style_name,
+                                        'heading_level': level, 'unit_ref': unit_ref, 'text': text})
+                index = len(records)
+                records.append({'text': text})
+                anchors[f'{index}.text'] = [SourceAnchor(source_ref=source_id, source_revision=revision,
+                    selector={'kind': 'text_span', 'unit_ref': unit_ref,
+                              'char_start': 0, 'char_end': len(text)})]
+                record_locations.append({'record': index, 'kind': 'paragraph',
+                                         'paragraph': paragraph_number, 'unit_ref': unit_ref})
+            else:
+                table_number += 1
+                values, origins, merges = _table_grid(block)
+                row_count = len(values)
+                column_count = max((len(row) for row in values), default=0)
+                table_structure.append({'row_count': row_count, 'column_count': column_count,
+                                        'merges': merges})
+                # A text-only or one-row table has no reliable header: keep
+                # every row as a record.  When a header is detected it also
+                # becomes a record, so its cells are anchored too rather than
+                # disappearing into ``metadata.tables``.
+                header_detected = _detect_header_row(values, block)
+                header_row = 1 if header_detected else 0
+                if header_detected:
+                    headers = dedupe_names(['' if value is None else str(value)
+                                            for value in values[0]])
+                else:
+                    headers = dedupe_names([f'column_{index + 1}'
+                                            for index in range(column_count)])
+                header_record = None
+                if header_detected:
+                    header_record = len(records)
+                    records.append({field: (None if value == '' else value)
+                                    for field, value in zip(headers, values[0])})
+                    record_locations.append({'record': header_record, 'kind': 'table_header',
+                                             'table': table_number, 'row': 1})
+                    for column_index, field in enumerate(headers):
+                        value = values[0][column_index]
+                        if value in (None, ''):
+                            continue
+                        origin_row, origin_column = origins[0][column_index]
+                        unit_ref = (f'table:{table_number}/row:{origin_row + 1}'
+                                    f'/col:{origin_column + 1}')
+                        anchors[f'{header_record}.{field}'] = [SourceAnchor(source_ref=source_id,
+                            source_revision=revision,
+                            selector={'kind': 'text_span', 'unit_ref': unit_ref,
+                                      'char_start': 0, 'char_end': len(value)})]
+                tables_meta.append({'table': table_number, 'row_count': row_count,
+                                    'column_count': column_count, 'header_row': header_row,
+                                    'header_detected': header_detected,
+                                    'header_record': header_record,
+                                    'headers': headers, 'merges': merges, 'rows': values})
+                for row_index, row in enumerate(values):
+                    for column_index, value in enumerate(row):
+                        if value in (None, '') or origins[row_index][column_index] != (row_index, column_index):
+                            continue
+                        units[f'table:{table_number}/row:{row_index + 1}/col:{column_index + 1}'] = value
+                for row_index in range(header_row, row_count):
+                    row = values[row_index]
+                    if all(value in (None, '') for value in row):
+                        continue
+                    index = len(records)
+                    records.append({field: (None if value == '' else value)
+                                    for field, value in zip(headers, row)})
+                    record_locations.append({'record': index, 'kind': 'table',
+                                             'table': table_number, 'row': row_index + 1})
+                    for column_index, field in enumerate(headers):
+                        value = row[column_index] if column_index < len(row) else None
+                        if value in (None, ''):
+                            continue
+                        origin_row, origin_column = origins[row_index][column_index]
+                        unit_ref = (f'table:{table_number}/row:{origin_row + 1}'
+                                    f'/col:{origin_column + 1}')
+                        anchors[f'{index}.{field}'] = [SourceAnchor(source_ref=source_id,
+                            source_revision=revision,
+                            selector={'kind': 'text_span', 'unit_ref': unit_ref,
+                                      'char_start': 0, 'char_end': len(value)})]
+            completed.append(block_number)
+        except Exception as exc:  # noqa: BLE001 - a bad block must not abort the document
+            gap_code = 'docx_block_failed'
+            gaps.append(CoverageGap(partition=block_number, code=gap_code,
+                                    detail=type(exc).__name__))
+            issues.append({'code': 'intake.docx_block_failed', 'block': block_number,
+                           'kind': kind, 'detail': type(exc).__name__})
+
+    metadata = {
+        'format': 'docx',
+        'paragraphs': paragraphs_meta,
+        'tables': tables_meta,
+        'units': units,
+        'record_locations': record_locations,
+        'paragraph_count': paragraph_number,
+        'table_count': table_number,
+        'total_blocks': total,
+        'structure_fingerprint': _docx_fingerprint(paragraph_structure, table_structure),
+    }
+    return records, anchors, metadata, completed, gaps, issues

@@ -168,10 +168,13 @@ def test_tools_list_carries_write_annotations():
 
     tools = {tool["name"]: tool for tool in _tools()}
     assert len(tools) == 32
-    # A strict MCP client only sends declared required arguments; every tool
-    # needs the call context, so it must be in ``required`` (r5-plan item 2).
+    # R1: every tool still advertises the context hint, but it is optional.
+    # The runtime resolves host authority, so a strict MCP client that only
+    # sends declared required arguments must remain able to call.
     for name, tool in tools.items():
-        assert "context" in tool["inputSchema"]["required"], name
+        schema = tool["inputSchema"]
+        assert "context" in schema["properties"], name
+        assert "context" not in schema.get("required", []), name
 
     read = tools["inspect_workbook_calc_state"]["annotations"]
     idempotent_write = tools["register_extraction_schema_version"]["annotations"]
