@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "rule": "business-imports-platform-adapters",
+  "description": "Baseline for scripts/check_layering.py. Business packages under packages/capabilities/dataagent-*/src may import dataagent_runtime contracts, ports, registry and interfaces, but not dataagent_runtime.adapters. Each entry is a violation site counted by (package, file relative to package, imported module); a site may stay at its recorded count or disappear, never grow and never be added.",
+  "total": 10,
+  "violations": [
+    {
+      "package": "dataagent-application",
+      "file": "src/dataagent_application/helpers.py",
+      "module": "dataagent_runtime.adapters.local_content",
+      "count": 1
+    },
+    {
+      "package": "dataagent-data",
+      "file": "src/dataagent_data/adapters/storage/local_content.py",
+      "module": "dataagent_runtime.adapters.local_content",
+      "count": 1
+    },
+    {
+      "package": "dataagent-data",
+      "file": "src/dataagent_data/adapters/storage/sqlite.py",
+      "module": "dataagent_runtime.adapters.sqlite",
+      "count": 1
+    },
+    {
+      "package": "dataagent-data",
+      "file": "src/dataagent_data/helpers.py",
+      "module": "dataagent_runtime.adapters.gold_ledger",
+      "count": 1
+    },
+    {
+      "package": "dataagent-governance",
+      "file": "src/dataagent_governance/runtime/runtime.py",
+      "module": "dataagent_runtime.adapters.gold_ledger",
+      "count": 1
+    },
+    {
+      "package": "dataagent-governance",
+      "file": "src/dataagent_governance/runtime/runtime.py",
+      "module": "dataagent_runtime.adapters.local_content",
+      "count": 1
+    },
+    {
+      "package": "dataagent-governance",
+      "file": "src/dataagent_governance/runtime/runtime.py",
+      "module": "dataagent_runtime.adapters.sqlite",
+      "count": 1
+    },
+    {
+      "package": "dataagent-ocr",
+      "file": "src/dataagent_ocr/egress.py",
+      "module": "dataagent_runtime.adapters.sqlite",
+      "count": 1
+    },
+    {
+      "package": "dataagent-operations",
+      "file": "src/dataagent_operations/mcp.py",
+      "module": "dataagent_runtime.adapters.workbench_sqlite",
+      "count": 1
+    },
+    {
+      "package": "dataagent-workbench",
+      "file": "src/dataagent_workbench/bootstrap.py",
+      "module": "dataagent_runtime.adapters.workbench_sqlite",
+      "count": 1
+    }
+  ]
+}

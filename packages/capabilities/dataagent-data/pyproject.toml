@@ -13,6 +13,7 @@ authors = [{ name = "AgentOS DataAgent" }]
 dependencies = [
   "dataagent-contracts",
   "dataagent-runtime",
+  "dataagent-ocr",
   "pydantic>=2.7,<3",
   "openpyxl>=3.1,<4",
   "pdfplumber>=0.11,<1",
@@ -26,6 +27,7 @@ dev = ["pytest>=8"]
 [tool.uv.sources]
 dataagent-contracts = { path = "../dataagent-contracts", editable = true }
 dataagent-runtime = { path = "../dataagent-runtime", editable = true }
+dataagent-ocr = { path = "../dataagent-ocr", editable = true }
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/dataagent_data"]
