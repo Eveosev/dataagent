@@ -93,11 +93,13 @@ python_of() {
 
 # OCR doctor/setup probe (07 §2.3 T20): validates the pin under
 # <data_root>/ocr through the data layer venv (dataagent_ocr is its explicit
-# dependency) and prints one summary line. Exit 0 = configured local engine
-# (engine, model and version on stdout); 1 = missing or broken (hint on
-# stderr); 3 = configured but remote — the data layer refuses remote OCR
-# until the egress gate lands (T15), so scanned-document probes would not
-# work; anything else = the probe itself could not run.
+# dependency) and prints one summary line. Exit 0 = configured local engine,
+# with its installation checked (engine kind: engine.lock.json, worker and
+# the engine .venv must exist and pass the worker selftest); 1 = missing or
+# broken, with the repair command on stderr; 3 = configured but remote — the
+# data layer refuses remote OCR until the egress gate lands (T15), so
+# scanned-document probes would not work; anything else = the probe itself
+# could not run.
 OCR_PROBE='
 # DATAAGENT_OCR_DOCTOR_PROBE
 try:
@@ -105,9 +107,12 @@ try:
     from dataagent_ocr.profiles import ProfileStore
 except Exception:
     raise SystemExit(2)
+import os
+import subprocess
 import sys
 from pathlib import Path
-store = ProfileStore(Path(sys.argv[1]))
+data_root = Path(sys.argv[1])
+store = ProfileStore(data_root)
 try:
     pin, profile, verification = store.load_pinned()
 except NotConfigured:
@@ -126,6 +131,40 @@ else:
 if profile.remote:
     print(f"ocr:      {profile.kind} {name} is remote — the data layer does not use remote OCR before the egress gate (T15); scanned-document probes need a local engine (dataagent-ocr engine install + configure-engine, then dataagent setup --ocr-root)", file=sys.stderr)
     raise SystemExit(3)
+if profile.kind == "engine":
+    from dataagent_ocr import engines
+    cfg = profile.engine
+    repair = f"dataagent-ocr engine plan {cfg.engine} / engine install {cfg.engine}, configure-engine --engine {cfg.engine}, verify; then dataagent setup --ocr-root"
+    try:
+        lock = engines.read_lock(data_root, cfg.engine)
+    except Exception as exc:
+        print(f"ocr:      engine {cfg.engine} is not installed ({exc}) (run: {repair})", file=sys.stderr)
+        raise SystemExit(1)
+    if lock["lock_digest"] != cfg.lock_digest:
+        print(f"ocr:      engine {cfg.engine} was reinstalled after the profile was created (run: {repair})", file=sys.stderr)
+        raise SystemExit(1)
+    try:
+        spec = engines.EngineSpec.model_validate(lock["spec"])
+        worker_digest = engines.current_worker_digest(data_root, spec)
+    except Exception as exc:
+        print(f"ocr:      worker for {cfg.engine} is missing ({exc}) (run: {repair})", file=sys.stderr)
+        raise SystemExit(1)
+    if worker_digest != cfg.worker_digest:
+        print(f"ocr:      worker for {cfg.engine} changed (run: {repair})", file=sys.stderr)
+        raise SystemExit(1)
+    argv = engines.worker_argv(data_root, spec, lang=cfg.lang or spec.default_lang) + ["--selftest"]
+    env = {k: v for k, v in os.environ.items() if k in {"PATH", "HOME", "LANG", "LC_ALL", "TMPDIR"}}
+    try:
+        result = subprocess.run(argv, capture_output=True, text=True, timeout=120, env=env,
+                                cwd=str(engines.engine_dir(data_root, cfg.engine)))
+    except Exception as exc:
+        print(f"ocr:      engine environment for {cfg.engine} is not runnable ({type(exc).__name__}) (run: {repair})", file=sys.stderr)
+        raise SystemExit(1)
+    if result.returncode != 0:
+        detail = (result.stderr or result.stdout).strip().splitlines()
+        tail = f": {detail[-1]}" if detail else ""
+        print(f"ocr:      engine {cfg.engine} failed its selftest{tail} (run: {repair})", file=sys.stderr)
+        raise SystemExit(1)
 print(f"ocr:      {profile.kind} {name} version={verification.engine_version or pin.ref} verification={verification.verification_id}")
 '
 

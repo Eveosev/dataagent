@@ -1,10 +1,24 @@
 """Bootstrap phase: install build/local into a fresh Mint project and smoke the CLI."""
 
+import hashlib
 import json
 import os
 import re
 
 from .common import ROOT, run
+
+
+def package_digests():
+    """One digest per package in build/local (M1-01 evidence: the report
+    records which package contents the acceptance actually ran against)."""
+    manifest = json.loads((ROOT / 'build/local/manifest.json').read_text())
+    packages = {}
+    for path, digest in manifest['files'].items():
+        packages.setdefault(path.split('/', 1)[0], []).append(f'{path}:{digest}')
+    return {
+        name: 'sha256:' + hashlib.sha256('\n'.join(sorted(files)).encode()).hexdigest()
+        for name, files in packages.items()
+    }
 
 
 def prepare(project, mint):
@@ -37,6 +51,7 @@ def base_report(args, context, project, mint):
     return {'phase': args.phase, 'status': 'passed', 'project': str(project),
             'session_id': context['session_id'],
             'mint': run([mint, '--version'], project).strip(), 'doctor': context['doctor'],
+            'package_digests': package_digests(),
             'manifest': json.loads((ROOT / 'build/local/manifest.json').read_text()),
             'not_verified': ['file processing', 'TUI session', 'GUI session']}
 
