@@ -33,7 +33,7 @@ feishu_obj: KfxJduEjyo9YyqxkA9tcCM8znpb
 | `BENCH` | 09-benchmark 目录 | `docs/research/dataagent-2026-11-03/09-benchmark` |
 | `KERNEL` | agent-kernel 开发 clone（不是 `upstream/agent-kernel`） | P1 不需要（[03](<03 平台方案与 iface 共建.md>) 的 Q5 已拍：P1 不提 PR） |
 | `OCR_ROOT` | 已验证的本机 OCR 目录 | Claude Code 在阶段 A 从 `13-ocr-build/` 实施记录里找；找不到再问 payne |
-| `PG_LOCATOR` | 本机 PostgreSQL 测试库地址，含种子发票表（`scripts/verify_local.py:347`） | Claude Code 在阶段 A 查本机现成库；没有时起库方案经 payne 同意 |
+| `PG_LOCATOR` | 本机 PostgreSQL 测试库地址 | P1 不需要（PostgreSQL 移出 P1 验收，[06](<06 PRD.md>) 的 Q12） |
 | `LINGCAI_DATASET` | 令才 Computer Use 数据集 | `~/.codex/visualizations/2026/10/28/01a182a2-1762-7d71-a3b1-f35548b004be/lingcai-dataset-2026-10-28` |
 | `QL_AUDIT` | ql-audit 插件目录（只读，只调用不修改） | `~/Vibe/AgentCPM-agent-evolution/products/ql-audit/plugins/ql-audit` |
 | `PRIVATE_DIR` | 本机私有输出目录 | 默认 `~/Vibe/dataagent-private`（`chmod 700`，不在任何 git 仓库里）；各变量写在其中的 `p1.env` |
@@ -72,7 +72,7 @@ feishu_obj: KfxJduEjyo9YyqxkA9tcCM8znpb
 
 1. T00 完成：代码在 GitHub 可见，集成分支存在。
 2. crew 在 payne 的 Mac 上可用（T01）；Claude 桌面应用的沙盒调不到本机 CLI，派工和本机操作都由 Mac 上的 Claude Code 执行（启动方式见盘点材料 `P1-操作清单.md` §0）。
-3. 本机有 Mint CLI、uv、Node、Chrome；环境变量由 Claude Code 在阶段 A 定好并写进 `~/Vibe/dataagent-private/p1.env`（`PG_LOCATOR` 没有现成库时，起库方案经 payne 同意）。
+3. 本机有 Mint CLI、uv、Node、Chrome；环境变量由 Claude Code 在阶段 A 定好并写进 `~/Vibe/dataagent-private/p1.env`。
 
 ## 2. 分步清单（一期）
 
@@ -173,7 +173,7 @@ flowchart LR
 
 | 目标 | 文件 | 改法 | 命令 | 验收 | 回滚 |
 |---|---|---|---|---|---|
-| 凭据按逻辑名解析，只进探查子进程；不进对话、日志、结果 | `$CAP/dataagent-runtime/src/dataagent_runtime/policy/secrets.py`（新增）；`$CAP/dataagent-workbench/src/dataagent_workbench/adapters/source_connections.py`；`$CAP/dataagent-ocr/src/dataagent_ocr/secrets.py`；三包 `tests/`；`scripts/acceptance/sources.py`（工作台 `.mcp.json` 在 T12a 已改，本卡只加连接清单的 `env` 一行） | 逻辑名支持 `env:`、`keychain:`、`file:`（`file:` 只读 `.dataagent/secrets/`，目录 0700、文件 0600）；连接清单只存逻辑名，路径写进工作台包内 `.mcp.json` 的字面 `env`；OCR 的凭据解析改用同一模块；sources 阶段用哨兵凭据跑一遍，并扫描临时工作区与本次 Mint 会话日志，命中即非零退出 | `bash scripts/test_all.sh dataagent-runtime dataagent-workbench dataagent-ocr`；`bash scripts/prepare_acceptance.sh && bash scripts/verify_local.sh --phase sources --postgres-locator "$PG_LOCATOR"` | 通过；哨兵扫描 0 命中；`intake_status`、`intake_inference` 输出不含凭据字段；M2-01 至 M2-04 达到「已验证」条件 | revert |
+| 凭据按逻辑名解析，只进探查子进程；不进对话、日志、结果 | `$CAP/dataagent-runtime/src/dataagent_runtime/policy/secrets.py`（新增）；`$CAP/dataagent-workbench/src/dataagent_workbench/adapters/source_connections.py`；`$CAP/dataagent-ocr/src/dataagent_ocr/secrets.py`；三包 `tests/`；`scripts/acceptance/sources.py`；`scripts/verify_local.py`（只改 `--postgres-locator` 为可选）（工作台 `.mcp.json` 在 T12a 已改，本卡只加连接清单的 `env` 一行） | 逻辑名支持 `env:`、`keychain:`、`file:`（`file:` 只读 `.dataagent/secrets/`，目录 0700、文件 0600）；连接清单只存逻辑名，路径写进工作台包内 `.mcp.json` 的字面 `env`；OCR 的凭据解析改用同一模块；按 06 的 Q12：sources 阶段的 `--postgres-locator` 改为可选，不给时跳过 PostgreSQL 来源，其余断言按文件、SQLite、REST 三类来源；本机 REST 测试源改为要求 `Authorization: Bearer <token>`，token 用哨兵值，经连接清单的逻辑名注入；用这个哨兵跑一遍 sources 阶段，并扫描临时工作区与本次 Mint 会话日志，命中即非零退出 | `bash scripts/test_all.sh dataagent-runtime dataagent-workbench dataagent-ocr`；`bash scripts/prepare_acceptance.sh && bash scripts/verify_local.sh --phase sources` | 通过；不给 `--postgres-locator` 时退出码 0；token 错误时 REST 读取返回鉴权失败，错误信息不含 token；哨兵扫描 0 命中；`intake_status`、`intake_inference` 输出不含凭据字段；M2-01、M2-03、M2-04 达到「已验证」条件 | revert |
 
 **T15 R3：外发闸门与 HTTP 统一** · 执行：dsh · 审核：codex · 依赖：T13 · 优先级：P1（不进 P1 退出条件，可顺延 W3）· W2 · FR1.18
 
@@ -223,7 +223,7 @@ flowchart LR
 
 | 目标 | 文件 | 改法 | 命令 | 验收 | 回滚 |
 |---|---|---|---|---|---|
-| 跨源对齐与冲突处理有独立金标 | `$CAP/dataagent-scenarios/fixtures/intake/cross-source/`（新增）；`scripts/acceptance/sources.py` | PDF、SQLite、PostgreSQL、REST 共享单据号，含同名异对象、冲突金额、缺键记录；金标手工编写；sources 阶段比对对象数、冲突数并断言冲突对象保存被拦 | `bash scripts/prepare_acceptance.sh && bash scripts/verify_local.sh --phase sources --postgres-locator "$PG_LOCATOR"` | 对象数、冲突数与金标一致；冲突对象保存返回阻断问题；M2-05 达到「已验证」条件 | revert |
+| 跨源对齐与冲突处理有独立金标 | `$CAP/dataagent-scenarios/fixtures/intake/cross-source/`（新增）；`scripts/acceptance/sources.py` | PDF、SQLite、REST（带 token）共享单据号，含同名异对象、冲突金额、缺键记录（PostgreSQL 不在 P1 验收，06 的 Q12）；金标独立编写；sources 阶段比对对象数、冲突数并断言冲突对象保存被拦 | `bash scripts/prepare_acceptance.sh && bash scripts/verify_local.sh --phase sources` | 对象数、冲突数与金标一致；冲突对象保存返回阻断问题；M2-05 达到「已验证」条件 | revert |
 
 ### 2.4 评测与验收数据
 
@@ -377,6 +377,7 @@ flowchart LR
 3. 向 agent-kernel 提 PR（PR-1 至 PR-8；11-17 已拍 P1 不提，T40–T43 暂缓）。
 4. 质量规则、专家金标、B04 / B05 判分器补齐（P3）。
 5. 食品安全场景（等数据）。
+6. PostgreSQL 等服务端数据库的验收（适配器保留，P2 接真实库时验；06 的 Q12）。
 
 ## 6. 风险与待定项
 

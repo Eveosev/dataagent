@@ -2,7 +2,7 @@
 doc_id: prd
 title: 06 PRD
 answers: P1（多源数据接入）与 P2（本体的实现、打通、可视化）改什么、为什么改；每个目标怎么验收
-status: 草稿 v0.2（P1、P2 细到验收命令；P3–P6 见 05；11-17 决策已拍：P1 不提 agent-kernel PR，其余按推荐）
+status: 草稿 v0.2（P1、P2 细到验收命令；P3–P6 见 05；11-17 决策已拍：P1 不提 agent-kernel PR；PostgreSQL 移出 P1 验收（Q12）；其余按推荐）
 feishu_node: SXeGwwK9Zi9VyzkpHYycsPcMnUc
 feishu_obj: JxbYdi11YoijDQxwF4ZcSOy2nRb
 ---
@@ -27,7 +27,7 @@ feishu_obj: JxbYdi11YoijDQxwF4ZcSOy2nRb
 | # | 目标（可验收的一句话） | 对应 §6 | 期 |
 |---|---|---|---|
 | G1.1 | 8 类文件在安装产物上接入，展示值都能定位来源 | V1.1 | P1 |
-| G1.2 | 数据库与 API 在安装产物上接入，可续跑 | V1.2 | P1 |
+| G1.2 | 文件型数据库（SQLite）与 API 在安装产物上接入，可续跑（PostgreSQL 不在 P1 验收，Q12） | V1.2 | P1 |
 | G1.3 | 跨源对齐正确，冲突不静默覆盖 | V1.3 | P1 |
 | G1.4 | Mint TUI、GUI 各完成一次文件接入和一次数据库或 API 接入 | V1.4 | P1 |
 | G1.5 | 默认审批策略下可用 | V1.5 | P1 |
@@ -58,7 +58,7 @@ feishu_obj: JxbYdi11YoijDQxwF4ZcSOy2nRb
 
 ### 2.2 非目标
 
-1. P1 不做：多实体本体与本体修订发布（P2）；新来源类型（MySQL、Hive、对象存储、飞书表格等，P2 起按需）；增量与定时（P5）；质量规则（P3）；令才审核结论的对错验收（需专家金标，P3）；食品安全场景（等数据）；写回源系统与 MintHub 分发（P6）；平台层改名与存储、打包收敛（P2）。
+1. P1 不做：PostgreSQL 等服务端数据库的验收（适配器保留，P2 接真实库时验，Q12）；多实体本体与本体修订发布（P2）；新来源类型（MySQL、Hive、对象存储、飞书表格等，P2 起按需）；增量与定时（P5）；质量规则（P3）；令才审核结论的对错验收（需专家金标，P3）；食品安全场景（等数据）；写回源系统与 MintHub 分发（P6）；平台层改名与存储、打包收敛（P2）。
 2. P2 不做：指标与规则的计算语义（P4）；质量规则执行（P3）；本体推理（OWL 推理机）与外部本体平台对接（Q4）；多租户共享本体（P6）；跨工作区的知识登记（Q5）；令才审核结论的业务验收（P4）；GUI 内嵌视图（P6）。
 
 ## 3 方案判定
@@ -82,7 +82,7 @@ feishu_obj: JxbYdi11YoijDQxwF4ZcSOy2nRb
 | # | 改动 | 文件或模块 | 现状 | 期 |
 |---|---|---|---|---|
 | FR1.1 | 识别 8 类文件并探查：结构、样本、字段统计、页类型、表块；扫描页走本地 OCR；失败页不影响成功页 | `dataagent-data/.../observation/` | 已实现；Excel、JSON、混排 PDF 未在安装产物上验收 | P1 |
-| FR1.2 | SQLite、PostgreSQL、REST 有界读取；主键、唯一键、外键；分页与续跑；不接受用户 SQL | `dataagent-data/.../adapters/sources/`、`observation/` | 已实现；双端发起未验收 | P1 |
+| FR1.2 | SQLite、PostgreSQL、REST 有界读取；主键、唯一键、外键；分页与续跑；不接受用户 SQL | `dataagent-data/.../adapters/sources/`、`observation/` | 已实现；双端发起未验收；PostgreSQL 适配器保留，P1 不验收（Q12） | P1 |
 | FR1.3 | 每次读取存不可变快照；每个字段带锚点；报告抽样、缺口、未完成分区 | 同上 | 已实现 | P1 |
 | FR1.4 | 推断请求只含获准字段；默认最小披露（Q3）；Agent 回交映射提案，组件校验试算；只问影响结果的歧义 | `dataagent-workbench/.../inference_requests.py` | 默认无白名单时全部字段、前 5 行样本和 PDF 前 5 页文字摘录（每页 2000 字）进模型 | P1 |
 | FR1.5 | 跨源同一业务键对齐；复合键不拼字符串；冲突保留两条断言并阻止保存 | `dataagent-ontology` | 已实现 | P1 |
@@ -124,7 +124,7 @@ feishu_obj: JxbYdi11YoijDQxwF4ZcSOy2nRb
 |---|---|---|
 | MCP 工具 | 所有工具带 `readOnlyHint` / `destructiveHint` / `idempotentHint`；工具 schema 里 `context` 改为可选，调用参数里的上下文只作提示；长调用超时前返回 `retry_probe` 与续跑句柄 | P1 |
 | CLI | 新增 `dataagent run --case/--out/--config`；`dataagent doctor` 输出 OCR 引擎与模型版本 | P1 |
-| 验收脚本 | `verify_local.sh` 新增 `lingcai-payloads` 阶段；`files` 阶段扩到 8 类样本；`sources` 阶段加哨兵凭据 | P1 |
+| 验收脚本 | `verify_local.sh` 新增 `lingcai-payloads` 阶段；`files` 阶段扩到 8 类样本；`sources` 阶段的 `--postgres-locator` 改为可选，本机 REST 测试源要求 bearer token 并用哨兵值 | P1 |
 | 连接配置 | 连接清单只存逻辑名；凭据按 `env:`、`keychain:`、`file:` 逻辑名解析；将来 PR-3 合入后改为宿主注入 | P1 |
 | agent-kernel | （暂缓，11-17 已拍 P1 不提）PR-1 `ToolSpec` 效果等级；PR-2 MCP `_meta` 调用元数据；PR-3 bundle `capabilities.secrets`；PR-4 打包桌面版 bundle 工具可见 | 暂缓 |
 | MCP 工具 | 新增 `ontology_describe`、`object_query`、`relation_query`、`fact_trace`；审核与发布工具改为动作形式（参数 + 提交条件 + 日志） | P2 |
@@ -136,11 +136,11 @@ feishu_obj: JxbYdi11YoijDQxwF4ZcSOy2nRb
 | # | 命令或操作 | 期望结果 | 期次 |
 |---|---|---|---|
 | V1.1 | 全新工作区：`bash scripts/verify_local.sh --phase files --ocr-root <OCR 目录>`（files 阶段扩到 8 类样本与独立期望文件，新增） | 退出码 0；每个样本的 `coverage` 与独立编写的期望文件一致（混排样本为 `partial` 且缺口页号一致）；每条记录的每个字段都有锚点；test-inventory 的 M1-04、M1-05、M1-06 在安装产物上为「已验证」 | P1 |
-| V1.2 | `bash scripts/verify_local.sh --phase sources --postgres-locator <只读库>` | 退出码 0；REST 第 1 页请求次数 = 1，第 2 页 429 后续跑完成；M2-01 至 M2-04 在安装产物上为「已验证」 | P1 |
-| V1.3 | `bash scripts/prepare_acceptance.sh && bash scripts/verify_local.sh --phase sources --postgres-locator "$PG_LOCATOR"`（跨源样本组与金标见 07 的 T25） | 对象数、冲突数与独立金标一致；冲突对象保存返回阻断问题；M2-05 为「已验证」 | P1 |
+| V1.2 | `bash scripts/prepare_acceptance.sh && bash scripts/verify_local.sh --phase sources`（不给 `--postgres-locator`） | 退出码 0；REST 第 1 页请求次数 = 1，第 2 页 429 后续跑完成；M2-01、M2-03、M2-04 在安装产物上为「已验证」；M2-02（PostgreSQL 实库）不在 P1 验收（Q12） | P1 |
+| V1.3 | `bash scripts/prepare_acceptance.sh && bash scripts/verify_local.sh --phase sources`（跨源样本组为 PDF、SQLite、REST，金标见 07 的 T25） | 对象数、冲突数与独立金标一致；冲突对象保存返回阻断问题；M2-05 为「已验证」 | P1 |
 | V1.4 | TUI、GUI 各做一次 C-01 与 C-02（05 §4.2），证据摘要写入 `16-local-ingestion-workflow-build/evidence-{tui,gui}.md`（07 的 T50、T51） | 证据包含发起、网页纠正、返回聊天保存、发布引用、所用审批策略；M1-09、M1-10、M2-06 为「已验证」 | P1 |
 | V1.5 | 默认审批配置下做一次 C-01，确认次数记入 `evidence-tui.md` | 全流程人工确认不超过 3 次，只读类工具不弹确认；宿主认注解要 PR-1（P1 不提），做不到时登记外部阻断并记录所用审批策略 | P1 |
-| V1.6 | sources 阶段的连接加哨兵凭据（新增），再从 Mint TUI 跑一次同样的接入；然后 `grep -r <哨兵值>` 工作区（除 `.dataagent/secrets/`）、`~/.mint` 会话日志、工具结果文件 | 0 命中；`intake_status`、`intake_inference` 输出不含凭据字段；GUI 部分用钥匙串逻辑名绕行（宿主注入要 PR-3，P1 不提），绕行不通时登记外部阻断 | P1 |
+| V1.6 | sources 阶段的本机 REST 测试源要求 bearer token，token 用哨兵值、经连接清单的逻辑名注入（新增；PostgreSQL 不再作凭据测试源，Q12），再从 Mint TUI 跑一次同样的接入；然后 `grep -r <哨兵值>` 工作区（除 `.dataagent/secrets/`）、`~/.mint` 会话日志、工具结果文件 | 0 命中；`intake_status`、`intake_inference` 输出不含凭据字段；GUI 部分用钥匙串逻辑名绕行（宿主注入要 PR-3，P1 不提），绕行不通时登记外部阻断 | P1 |
 | V1.7 | 二次接入（单来源、多来源各一例）；30 MB 级样本接入；M1-08、M2-04 复跑 | 预览里 `mapping_reused=true`；单次 `intake_advance` 墙钟小于 55 秒且分段完成；M1-08、M2-04 为「已验证」 | P1 |
 | V1.8 | `bash scripts/verify_local.sh --phase bootstrap`；`dataagent doctor`；在安装目录 grep 开发仓绝对路径 | 退出码 0；doctor 输出 OCR 引擎与模型版本；grep 0 命中；M1-01 为「已验证」 | P1 |
 | V1.9 | 一次目标用户无提示操作观察（方案 16 §10），记录写入 `ux-observation.md`（07 的 T52） | 记录首次预览时间、完成时间、主动操作、澄清轮次、重做次数；10 MB 以内文件首次预览不超过 60 秒，澄清不超过 2 轮（Q2） | P1 |
@@ -225,6 +225,7 @@ MintHub 上的候选与判断见 [03](<03 平台方案与 iface 共建.md>) §11
 ## 8 决策（2026-11-17 已拍）
 
 > Q1–Q11 均按推荐拍板（A），裁决清单 D-019 至 D-029。Q7 选 A：G2.12 纳入 P2 退出条件；Q10、Q11 的门槛在首轮跑出后按推荐里的规则校准。
+> Q12 由 payne 于 11-17 拍板为 B（与推荐不同），裁决清单 D-030：PostgreSQL 移出 P1 退出条件，P1 只验 SQLite 加 REST，凭据测试改用带 token 的 REST；改动见 V1.2、V1.3、V1.6 与 07 的 T14、T25。
 
 | | 决策 | 选项 A | 选项 B | 推荐 | 影响 |
 |---|---|---|---|---|---|
@@ -239,6 +240,7 @@ MintHub 上的候选与判断见 [03](<03 平台方案与 iface 共建.md>) §11
 | Q9 | 关系建模 | 保留多元有序角色，对外投影为「关系对象 + 二元链接」 | 只支持二元链接 | A（FR2.12 已按 A 写） | B 简单，但多元事实要拆开，丢掉「同一事实」 |
 | Q10 | P1 首轮 benchmark 门槛（G1.12） | 首轮只建基线，门槛取基线值，之后只升不降 | 现在按公开榜单水平预设门槛 | A：现在没有任何基线 | B 若门槛定高，P1 可能卡在公开集上而不是真实问题上 |
 | Q11 | 真实流程与变异集的门槛（G1.13、G1.15） | 可判定率 ≥ 40%；变异检出率 ≥ 95%、干净单误报率 ≤ 5% | 只报数不设门槛，P1 结束时定 | A；可判定率目标在第一次跑出现状后校准 | 可判定率上限受报文本身缺字段限制，40% 是否可达要先看缺口分布 |
+| Q12 | P1 是否验收 PostgreSQL | 保留：本机临时 PostgreSQL 测试库，验收服务端只读、`information_schema` 元数据、驱动打包与数据库凭据 | 移出 P1 退出条件：只验 SQLite 加 REST，凭据测试改用带 token 的 REST；PostgreSQL 适配器保留但不验收 | A：服务端数据库路径只有它能证明，本机临时库成本低 | B 让 P1 的「数据库接入」只证明文件型数据库；服务端连接、服务端只读、元数据读取和 `psycopg` 打包推迟到 P2 接真实库时验 |
 
 ## 9 参考资料
 
