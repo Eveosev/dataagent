@@ -7,6 +7,39 @@ from dataagent_contracts.intake import SourceProfile
 from .source_connections import SourceConnections, validate_forwarded
 
 _PROBE_ENV = {'PATH', 'HOME', 'TMPDIR', 'LANG', 'TZ'}
+_SEGMENT_ENV = {
+    'budget_rows': ('DATAAGENT_PROBE_ROW_BUDGET', 10000),
+    'segment_rows': ('DATAAGENT_PROBE_SEGMENT_ROWS', 100000),
+    'segment_pages': ('DATAAGENT_PROBE_SEGMENT_PAGES', 1000),
+    'segment_blocks': ('DATAAGENT_PROBE_SEGMENT_BLOCKS', 100000),
+    'segment_sheets': ('DATAAGENT_PROBE_SEGMENT_SHEETS', 1000),
+}
+
+
+class DataLayerProbeError(ValueError):
+    """A coded probe failure that the intake coordinator can classify."""
+
+    def __init__(self, code, detail, *, retryable=False):
+        super().__init__(detail)
+        self.code = str(code or 'probe_failed')
+        self.detail = str(detail)
+        self.retryable = bool(retryable)
+
+
+def _segment_options():
+    options = {}
+    for name, (variable, maximum) in _SEGMENT_ENV.items():
+        raw = os.environ.get(variable)
+        if raw is None:
+            continue
+        try:
+            value = int(raw)
+        except (TypeError, ValueError):
+            raise ValueError(f'{variable} must be an integer between 1 and {maximum}') from None
+        if not 1 <= value <= maximum:
+            raise ValueError(f'{variable} must be an integer between 1 and {maximum}')
+        options[name] = value
+    return options
 
 
 def _clean_child_environment(allowed):
@@ -49,26 +82,55 @@ class LayerClient:
             env = {name: os.environ[name] for name in _PROBE_ENV if name in os.environ}
         # The child receives logical names only; it resolves them inside its own process.
         payload={'source':selection.model_dump(mode='json'),'context':ctx.model_dump(mode='json'),**operation}
+        budget = operation.get('budget_seconds')
+        timeout = 120.0
+        if isinstance(budget, (int, float)) and not isinstance(budget, bool) and budget > 0:
+            timeout = min(120.0, max(5.0, float(budget) + 2.0))
         try:
             result=subprocess.run([str(python),'-m','dataagent_data.observation.cli','--workspace',str(workspace)],
                 input=json.dumps(payload),
-                capture_output=True,text=True,timeout=120,env=env,cwd=workspace,
+                capture_output=True,text=True,timeout=timeout,env=env,cwd=workspace,
                 preexec_fn=preexec_fn)
         except subprocess.TimeoutExpired as exc:
-            raise ValueError('data layer probe timed out; completed source observations remain available') from exc
+            raise DataLayerProbeError('probe_timeout',
+                'data layer probe timed out; completed source observations remain available',
+                retryable=True) from exc
         if result.returncode:
+            error = {}
+            try:
+                response = json.loads(result.stdout)
+                if isinstance(response, dict) and isinstance(response.get('error'), dict):
+                    error = response['error']
+            except (TypeError, ValueError):
+                pass
+            code = error.get('code') or 'probe_failed'
+            retryable = bool(error.get('retryable'))
             if selection.kind in {'postgres','rest'}:
-                raise ValueError('remote source probe failed; check the configured connection and read scope')
-            raise ValueError('data layer probe failed: '+result.stderr[-1500:])
+                # Remote diagnostics may name a connection or read scope; keep
+                # the agent-visible text generic while preserving the code.
+                raise DataLayerProbeError(code,
+                    'remote source probe failed; check the configured connection and read scope',
+                    retryable=retryable)
+            detail = error.get('detail') or result.stderr[-1500:]
+            raise DataLayerProbeError(code, 'data layer probe failed: '+str(detail)[-1500:],
+                retryable=retryable)
         return json.loads(result.stdout)
 
-    def probe(self, selection, ctx, workspace, *, previous=None):
+    def probe(self, selection, ctx, workspace, *, previous=None, budget_seconds=None):
         workspace=Path(workspace).resolve()
         try:
             resolved, options=self.connections.resolve(selection)
+            operation=dict(options)
+            # The coordinator owns the resume checkpoint and budget; a source
+            # manifest may configure what to read, never how far this call runs.
+            for key in ('previous','budget_seconds',*_SEGMENT_ENV):
+                operation.pop(key,None)
+            operation.update(_segment_options())
             if previous is not None:
-                options['previous'] = previous.model_dump(mode='json')
-            summary=self._call(resolved,ctx,workspace,**options)
+                operation['previous'] = previous.model_dump(mode='json')
+            if budget_seconds is not None:
+                operation['budget_seconds'] = max(0.05, float(budget_seconds))
+            summary=self._call(resolved,ctx,workspace,**operation)
             path=(workspace/summary['result_path']).resolve()
             if not path.is_relative_to(workspace/'.dataagent/results'):
                 raise ValueError('invalid result location')

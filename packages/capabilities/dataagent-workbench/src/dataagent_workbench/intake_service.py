@@ -1,23 +1,82 @@
 """Durable intake coordination over isolated probes and validated ontology proposals."""
-from dataagent_contracts.intake import SourceProfile
+import json
+import os
+import time
+from pathlib import Path
+from dataagent_contracts.intake import CoverageGap, SourceProfile
 from dataagent_contracts.ontology import MappingSpec
 from dataagent_runtime.ports.workbench_store import Write,VersionConflict
 from dataagent_ontology.identity import digest
-from .adapters.layer_client import LayerClient,installed_data_package
+from .adapters.layer_client import DataLayerProbeError, LayerClient,installed_data_package
 from .inference_requests import mapping_request
 from .document_fields import extract_fields
 from .ontology_discovery import is_discovery
+
+
+BUDGET_GAP = 'time_budget_exceeded'
+_REST_RETRY_GAPS = {'connection_failed','rate_limited','http_error'}
+_MIN_SEGMENT_SECONDS = 0.25
+_MAX_SEGMENTS = 500
+_DEFAULT_BUDGET_SECONDS = 50.0
 
 
 def _rest_retryable(profile):
     return (profile.kind == 'rest' and profile.coverage == 'partial'
             and profile.metadata.get('source_version') is not None
             and profile.metadata.get('row_offset') == 0 and bool(profile.metadata.get('cursor'))
-            and all(gap.code in {'connection_failed','rate_limited','http_error'} for gap in profile.gaps))
+            and all(gap.code in _REST_RETRY_GAPS for gap in profile.gaps))
+
+
+def _resumable(profile):
+    """True when the profile carries a checkpoint produced by a segment budget."""
+    state = profile.metadata.get('resume') if isinstance(profile.metadata, dict) else None
+    return (isinstance(state, dict)
+            and any(gap.code == BUDGET_GAP for gap in profile.gaps))
+
+
+def _failure_state(profile):
+    """Return (error, attempts, retryable) for a persisted failure, if any."""
+    metadata = profile.metadata if isinstance(profile.metadata, dict) else {}
+    error = metadata.get('probe_error')
+    if not isinstance(error, dict):
+        return None
+    attempts = metadata.get('probe_attempts', 1)
+    attempts = attempts if isinstance(attempts, int) else 1
+    return error, attempts, bool(error.get('retryable'))
+
+
+def _retryable_failure(profile):
+    """A coded, transient failure may be probed again a bounded number of times."""
+    state = _failure_state(profile)
+    return bool(state and state[2] and state[1] < 2)
+
+
+def _exhausted_failure(profile):
+    """A failure that must not be retried automatically any more."""
+    state = _failure_state(profile)
+    return bool(state and (not state[2] or state[1] >= 2))
+
+
+def _segment_budget(value):
+    try:
+        seconds = _DEFAULT_BUDGET_SECONDS if value is None else float(value)
+    except (TypeError, ValueError):
+        seconds = _DEFAULT_BUDGET_SECONDS
+    # The host gives a tool call 60s. Keep headroom for transport/process
+    # start-up and for writing the profile back before returning.
+    return min(55.0, max(0.1, seconds))
+
+
+def _deadline_key(profile):
+    state = profile.metadata.get('resume') if isinstance(profile.metadata, dict) else None
+    return (json.dumps(state, sort_keys=True, default=str),
+            len(profile.records), tuple(profile.completed_partitions))
 
 
 class IntakeService:
-    def __init__(self,wb):self.wb=wb
+    def __init__(self,wb):
+        self.wb=wb
+        self.budget_seconds=_segment_budget(os.environ.get('DATAAGENT_INTAKE_BUDGET_SECONDS'))
 
     def _profiles(self,session):
         out=[]
@@ -29,50 +88,174 @@ class IntakeService:
             out.append(SourceProfile.model_validate(row['body']))
         return out
 
+    def _store_profile(self,session,versions,source,profile,ctx):
+        wb=self.wb
+        key='profile:'+source.source_id
+        pid=session.id+':'+source.source_id
+        previous_revision=versions[key].rsplit('@',1)[1] if key in versions else None
+        revision=str(int(previous_revision)+1) if previous_revision else '1'
+        versions[key]=pid+'@'+revision
+        versions.pop('preview',None)
+        return wb.sessions.update(session.id,session.revision,{'selected_versions':versions},ctx,
+            extra_writes=[Write('profile',pid,wb.scope,profile.model_dump(mode='json'),previous_revision)])
+
+    def _failure_profile(self,source,previous,*,code,detail,retryable):
+        """Persist the evidence observed so far plus an explicit failure gap."""
+        code=str(code or 'probe_failed')
+        detail=str(detail)[:500]
+        attempts=(int(previous.metadata.get('probe_attempts',0))+1
+                  if previous is not None and isinstance(previous.metadata.get('probe_attempts',0),int)
+                  else 1)
+        if previous is not None:
+            records=list(previous.records);anchors=dict(previous.anchors)
+            completed=list(previous.completed_partitions);total=previous.total_partitions
+            sampled=previous.sampled;issues=list(previous.issues)
+            metadata=dict(previous.metadata)
+            # Keep an in-flight checkpoint: a transient failure while a
+            # segment is being continued must not throw away completed rows.
+            gaps=[gap for gap in previous.gaps if gap.code != code]
+            if not isinstance(previous.metadata.get('resume'),dict):
+                metadata.pop('resume',None)
+                gaps=[gap for gap in gaps if gap.code != BUDGET_GAP]
+            revision=previous.source_revision;kind=previous.kind
+        else:
+            records=[];anchors={};completed=[];total=None;sampled=False;issues=[]
+            metadata={'structure_fingerprint':digest([self.wb.scope,source.source_id,'unprobed'])}
+            gaps=[];revision='sha256:'+digest([self.wb.scope,source.source_id,'probe-failed'])
+            kind=Path(source.locator_ref).suffix.lstrip('.') if source.kind=='file' else source.kind
+        partition=1
+        state=previous.metadata.get('resume') if previous is not None else None
+        if isinstance(state,dict):
+            partition=(state.get('next_row') or state.get('next_page')
+                       or state.get('next_block') or state.get('next_sheet') or 1)
+            if not any(gap.code==BUDGET_GAP for gap in gaps):
+                gaps.append(CoverageGap(partition=partition,code=BUDGET_GAP))
+        gaps.append(CoverageGap(partition=partition,code=code,detail=detail[:200]))
+        metadata.update({'probe_error':{'code':code,'detail':detail,
+                                         'retryable':bool(retryable)},
+                         'probe_attempts':attempts,
+                         'structure_fingerprint':metadata.get('structure_fingerprint')
+                             or digest([self.wb.scope,source.source_id,'unprobed'])})
+        fields=list(dict.fromkeys(key for row in records for key in row))
+        return SourceProfile(source_id=source.source_id,source_revision=revision,kind=kind,
+            records=records,fields=fields,anchors=anchors,metadata=metadata,
+            total_partitions=total,completed_partitions=completed,gaps=gaps,
+            sampled=sampled,issues=issues),attempts
+
     def advance(self,session_id,ctx):
         wb=self.wb;s=wb.sessions.get(session_id,ctx)
         if s.phase == 'saved':return s
         prior_profiles = {profile.source_id: profile for profile in self._profiles(s)}
         if is_discovery(s) and prior_profiles and s.phase != 'probing' and 'retry_probe' not in s.next_actions:
             return s
-        if s.phase == 'preview' and not any(_rest_retryable(profile) for profile in prior_profiles.values()):
+        if s.phase == 'preview' and not any(_rest_retryable(profile) or _resumable(profile) for profile in prior_profiles.values()):
             return s
+        if s.phase == 'needs_input' and 'retry_probe' not in s.next_actions:
+            # A completed or permanently failed observation must not be probed
+            # again just because the agent asked advance once more.  A newly
+            # registered verified mapping is still picked up here.
+            if s.next_actions == ['repair_source']:
+                return s
+            if not any(_resumable(profile) for profile in prior_profiles.values()):
+                profiles=list(prior_profiles.values())
+                if (not is_discovery(s) and profiles and not s.issues
+                        and all(profile.coverage=='full' for profile in profiles)):
+                    if self._reuse_verified_mapping(s,profiles,ctx):
+                        return wb.sessions.get(s.id,ctx)
+                return s
         client=wb.layer_client or LayerClient(installed_data_package(wb.workspace))
         versions=s.selected_versions.copy()
         job=wb.store.current('job',s.job_ref,scope=wb.scope)
         s=wb.sessions.update(s.id,s.revision,{'phase':'probing','issues':[]},ctx,
             extra_writes=[Write('job',s.job_ref,wb.scope,{**job['body'],'state':'running'},job['revision'])])
-        errors=[]
+        errors=[];budget_exhausted=False;probed_any=False
+        deadline=time.monotonic()+self.budget_seconds
         for source in s.sources:
-            key = 'profile:'+source.source_id
+            if budget_exhausted:break
             previous = prior_profiles.get(source.source_id)
-            if previous is not None and not _rest_retryable(previous):continue
+            if previous is not None and (_exhausted_failure(previous)
+                    or not (_rest_retryable(previous) or _resumable(previous)
+                            or _retryable_failure(previous))):
+                continue
             selection = source
             if is_discovery(s):
                 selection = source.model_copy(update={'options': {**source.options, 'sample_strategy': 'per_table'}})
-            try:
-                profile=(client.probe(selection,ctx,wb.workspace,previous=previous) if previous is not None
-                         else client.probe(selection,ctx,wb.workspace))
-            except (ValueError,OSError,TimeoutError) as exc:
-                errors.append({'code':'intake.probe_failed','source_id':source.source_id,'detail':str(exc)})
-                continue
-            pid=s.id+':'+source.source_id
-            previous_revision=versions[key].rsplit('@',1)[1] if key in versions else None
-            revision=str(int(previous_revision)+1) if previous_revision else '1'
-            versions[key]=pid+'@'+revision
-            versions.pop('preview',None)
-            s=wb.sessions.update(s.id,s.revision,{'selected_versions':versions},ctx,
-                extra_writes=[Write('profile',pid,wb.scope,profile.model_dump(mode='json'),previous_revision)])
+            segments=0;last_progress=None
+            while True:
+                remaining=deadline-time.monotonic()
+                if remaining <= _MIN_SEGMENT_SECONDS and (probed_any or segments):
+                    budget_exhausted=True
+                    break
+                try:
+                    profile=(client.probe(selection,ctx,wb.workspace,previous=previous,
+                                          budget_seconds=max(remaining,0.05))
+                             if previous is not None
+                             else client.probe(selection,ctx,wb.workspace,
+                                               budget_seconds=max(remaining,0.05)))
+                except (DataLayerProbeError,ValueError,OSError,TimeoutError) as exc:
+                    if isinstance(exc,DataLayerProbeError):
+                        code,retryable=exc.code,bool(exc.retryable)
+                    else:
+                        # The data layer was never reached (for example the
+                        # selected connection is not configured).  The agent
+                        # can correct the selection, but only for one retry.
+                        code,retryable='probe_failed',True
+                    detail=str(exc)[:500]
+                    profile,attempts=self._failure_profile(source,previous,
+                        code=code,detail=detail,retryable=retryable)
+                    errors.append({'code':'intake.probe_failed','source_id':source.source_id,
+                        'target':source.source_id,'detail':detail,'error_code':str(code),
+                        'attempts':attempts,'retryable':retryable})
+                    s=self._store_profile(s,versions,source,profile,ctx)
+                    probed_any=True
+                    break
+                probed_any=True
+                s=self._store_profile(s,versions,source,profile,ctx)
+                previous=profile
+                segments+=1
+                if _rest_retryable(profile) or not _resumable(profile):
+                    break
+                progress=_deadline_key(profile)
+                if last_progress == progress:
+                    errors.append({'code':'intake.probe_stalled','source_id':source.source_id,
+                        'detail':'probe returned the same checkpoint without progress',
+                        'retryable':False,'attempts':segments})
+                    break
+                last_progress=progress
+                if segments >= _MAX_SEGMENTS:
+                    errors.append({'code':'intake.probe_segment_limit','source_id':source.source_id,
+                        'detail':'segment limit reached in one advance','retryable':False,
+                        'attempts':segments})
+                    break
+                if time.monotonic() >= deadline:
+                    budget_exhausted=True
+                    break
         job=wb.store.current('job',s.job_ref,scope=wb.scope)
         profiles=self._profiles(s)
-        retry=errors or any(_rest_retryable(profile) for profile in profiles)
-        next_action = 'propose_mapping'
-        if is_discovery(s):
-            next_action = 'propose_discovery' if profiles and profiles[0].metadata['tables'] else 'select_source'
+        resumable=any(_resumable(profile) for profile in profiles)
+        exhausted=any(_exhausted_failure(profile) for profile in profiles)
+        retryable_errors=[error for error in errors
+                          if error.get('retryable') and error.get('attempts',1) < 2]
+        permanent_errors=[error for error in errors if not error.get('retryable')]
+        retry=(not exhausted and not permanent_errors
+               and (bool(retryable_errors) or resumable or budget_exhausted
+                    or not profiles
+                    or any(_rest_retryable(profile) for profile in profiles)))
+        if exhausted:
+            next_action='select_source' if is_discovery(s) else 'repair_source'
+        elif errors and not retry:
+            next_action='select_source' if is_discovery(s) else 'repair_source'
+        elif retry:
+            next_action='retry_probe'
+        elif is_discovery(s):
+            next_action='propose_discovery' if profiles[0].metadata.get('tables') else 'select_source'
+        else:
+            next_action='propose_mapping'
         s=wb.sessions.update(s.id,s.revision,{'phase':'needs_input','issues':errors,
-            'next_actions':['retry_probe'] if retry else [next_action]},ctx,
+            'next_actions':[next_action]},ctx,
             extra_writes=[Write('job',s.job_ref,wb.scope,{**job['body'],'state':'needs_input','checkpoint':'profiles'},job['revision'])])
-        if not is_discovery(s) and profiles and not errors and all(p.coverage=='full' for p in profiles):
+        if (not is_discovery(s) and profiles and not errors and not retry
+                and all(profile.coverage=='full' for profile in profiles)):
             if self._reuse_verified_mapping(s,profiles,ctx):
                 return wb.sessions.get(s.id,ctx)
         return s
@@ -179,8 +362,20 @@ class IntakeService:
         s=self.wb.sessions.get(session_id,ctx)
         profiles = self._profiles(s)
         if is_discovery(s):
-            return self.wb.discovery.request(s, profiles)
-        return mapping_request(s, profiles, self.wb.definition, self.wb.allowed_model_fields)
+            request=self.wb.discovery.request(s, profiles)
+            if profiles:
+                request['resume']=profiles[0].metadata.get('resume')
+            request['issues']=list(s.issues)
+            return request
+        request=mapping_request(s, profiles, self.wb.definition, self.wb.allowed_model_fields)
+        # The agent needs the failure code and the continuation point on the
+        # same request that tells it to retry, not only in an internal log.
+        request['issues']=list(s.issues)
+        for item,profile in zip(request.get('sources',[]),profiles):
+            item['completed_partitions']=profile.completed_partitions
+            item['total_partitions']=profile.total_partitions
+            item['resume']=profile.metadata.get('resume')
+        return request
 
     def extract_document_fields(self, session_id, source_id, fields, expected_revision, ctx):
         wb = self.wb

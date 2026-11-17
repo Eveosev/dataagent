@@ -111,6 +111,26 @@ def rest_selection(origin,path='/items',**kwargs):
     return SourceSelection(source_id='api',kind='rest',locator_ref=origin+path,options=options,**kwargs)
 
 
+def test_rest_probe_segments_by_page_and_resumes(tmp_path,http_source):
+    from dataagent_data.observation.cli import probe
+    origin,routes,requests=http_source
+    routes['/items']=(200,{'items':[{'id':1}],'next':'/more'},{'X-Source-Version':'r1'})
+    routes['/more']=(200,{'items':[{'id':2}],'next':None},{'X-Source-Version':'r1'})
+    selection=rest_selection(origin)
+    first=probe(selection,None,tmp_path,{'allowed_origins':[origin],'segment_pages':1})
+    assert first.coverage=='partial'
+    assert first.completed_partitions==[1]
+    assert first.records==[{'/id':1}]
+    assert [(gap.partition,gap.code) for gap in first.gaps]==[(2,'time_budget_exceeded')]
+    assert first.metadata['resume']=={'kind':'rest','next_page':2}
+    assert [path for path,_ in requests]==['/items']
+    second=probe(selection,None,tmp_path,{'allowed_origins':[origin],
+        'previous':first.model_dump(mode='json')})
+    assert second.coverage=='full' and second.completed_partitions==[1,2]
+    assert second.records==[{'/id':1},{'/id':2}]
+    assert [path for path,_ in requests]==['/items','/more']
+
+
 def test_rest_follows_pages_preserves_nesting_and_response_anchors(tmp_path,http_source):
     from dataagent_data.observation.http import probe_rest
     origin,routes,requests=http_source

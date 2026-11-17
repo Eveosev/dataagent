@@ -13,9 +13,11 @@ compared by the accepted code categories.
 """
 
 import json
+import os
 import shutil
 import sqlite3
 import subprocess
+import time
 
 from .common import ROOT, call_workbench, remove_not_verified, run
 
@@ -57,8 +59,13 @@ def _upload(project, name, source_id, fixture):
         'sources': [{'source_id': source_id, 'kind': 'file', 'locator_ref': name}],
     })['session_id']}
     request = call_workbench(project, 'intake_advance', args)
-    new, = set(results.glob('probe-*.json')) - before
-    return args, request, json.loads(new.read_text())
+    changed = set(results.glob('probe-*.json')) - before
+    if not changed:
+        raise RuntimeError(f'{name}: intake_advance produced no probe result')
+    # A segmented probe writes one result per segment; the newest file holds
+    # the accumulated profile.
+    newest = max(changed, key=lambda path: path.stat().st_mtime_ns)
+    return args, request, json.loads(newest.read_text())
 
 
 def _anchor(profile, index, field):
@@ -562,6 +569,108 @@ def verify_xlsx(project):
     return {'second_amount_cell': selector['range']}
 
 
+def _selected_profile(project, session_id, source_id):
+    """Read the exact profile revision selected by the session."""
+    with sqlite3.connect(project/'.dataagent/db/workbench.sqlite3') as db:
+        body, = db.execute(
+            "SELECT body FROM wb_records WHERE kind='session' AND id=? "
+            'ORDER BY revision DESC LIMIT 1', (session_id,)).fetchone()
+        selected = json.loads(body)['selected_versions']
+        ref = selected['profile:'+source_id]
+        profile_id, revision = ref.rsplit('@', 1)
+        profile_body, = db.execute(
+            "SELECT body FROM wb_records WHERE kind='profile' AND id=? AND revision=?",
+            (profile_id, int(revision))).fetchone()
+    return json.loads(profile_body)
+
+
+def _bulk_sample(project):
+    """Generate the 30 MB-class sample at run time (never committed)."""
+    path = project/'bulk-30mb.csv'
+    target = 30 * 1024 * 1024
+    header = 'number,amount_minor,currency,note\n'
+    with path.open('w', encoding='utf-8', newline='') as handle:
+        handle.write(header)
+        written = len(header.encode())
+        index = 0
+        while written < target:
+            line = f'INV-{index:07d},126000,CNY,bulk row {index:07d} ' + 'x'*150 + '\n'
+            handle.write(line)
+            written += len(line.encode())
+            index += 1
+    return path, written, index
+
+
+def _profile_view(profile):
+    """Comparable evidence; worker_pid and other run-local fields are excluded."""
+    return {
+        'records': profile['records'],
+        'anchors': profile['anchors'],
+        'fields': profile['fields'],
+        'coverage': profile['coverage'],
+        'sampled': profile['sampled'],
+        'total_partitions': profile['total_partitions'],
+        'completed_partitions': profile['completed_partitions'],
+        'gaps': profile['gaps'],
+        'total_rows': profile['metadata']['total_rows'],
+        'structure_fingerprint': profile['metadata']['structure_fingerprint'],
+        'field_stats': profile['metadata']['field_stats'],
+    }
+
+
+def verify_segmented_sample(project):
+    """T13: a 30 MB-class sample completes in bounded, resumable advances and
+    produces the same evidence as a single unbounded probe."""
+    path, size, rows = _bulk_sample(project)
+    common_env = {**os.environ, 'DATAAGENT_PROBE_ROW_BUDGET': '2000'}
+    one_started = call_workbench(project, 'intake_start', {
+        'goal': '核对 30MB 样本内容',
+        'sources': [{'source_id': 'bulk', 'kind': 'file', 'locator_ref': path.name}],
+    })
+    began = time.monotonic()
+    one_request = call_workbench(project, 'intake_advance',
+        {'session_id': one_started['session_id']},
+        env={**common_env, 'DATAAGENT_INTAKE_BUDGET_SECONDS': '50',
+             'DATAAGENT_PROBE_SEGMENT_ROWS': '100000'})
+    one_wall = time.monotonic() - began
+    assert one_wall < 55, f'one-shot advance took {one_wall:.1f}s'
+    assert one_request['next_actions'] != ['retry_probe'], one_request
+    one_shot = _selected_profile(project, one_started['session_id'], 'bulk')
+    assert one_shot['sampled'] and len(one_shot['records']) == 2000, one_shot['coverage']
+
+    started = call_workbench(project, 'intake_start', {
+        'goal': '核对 30MB 样本内容（分段）',
+        'sources': [{'source_id': 'bulk', 'kind': 'file', 'locator_ref': path.name}],
+    })
+    segmented_env = {**common_env, 'DATAAGENT_INTAKE_BUDGET_SECONDS': '0.1',
+                     'DATAAGENT_PROBE_SEGMENT_ROWS': '250'}
+    advances = 0
+    walls = []
+    while True:
+        began = time.monotonic()
+        request = call_workbench(project, 'intake_advance',
+            {'session_id': started['session_id']}, env=segmented_env)
+        walls.append(time.monotonic() - began)
+        advances += 1
+        assert walls[-1] < 55, f'advance {advances} took {walls[-1]:.1f}s'
+        if request.get('next_actions') != ['retry_probe']:
+            break
+        source, = request['sources']
+        assert source['resume'], source
+        assert source['completed_partitions'] == [], source
+        assert request.get('issues') == [], request.get('issues')
+        assert advances < 400, 'segmented intake did not finish'
+    segmented = _selected_profile(project, started['session_id'], 'bulk')
+    assert advances > 1, advances
+    assert segmented['sampled'] and len(segmented['records']) == 2000
+    assert _profile_view(segmented) == _profile_view(one_shot)
+    return {'size_bytes': size, 'rows': rows, 'advances': advances,
+            'one_shot_seconds': round(one_wall, 2),
+            'max_advance_seconds': round(max(walls), 2),
+            'records': len(segmented['records']),
+            'anchors': len(segmented['anchors']), 'matches_one_shot': True}
+
+
 def apply(report, project, args, context):
     report['scan'] = verify_scan(project, args.ocr_root)
     report['legacy_fixtures'] = {'invoice': verify_invoice(project),
@@ -585,4 +694,5 @@ def apply(report, project, args, context):
                  f'| actual {item["actual"]!r}' for item in diffs.items]
         raise RuntimeError(f'p1-files 比对失败，{len(lines)} 处差异（样本 | 检查项 | '
                            '期望 | 实际）：\n' + '\n'.join(lines))
+    report['segmented_30mb'] = verify_segmented_sample(project)
     remove_not_verified(report, 'file processing')
