@@ -26,6 +26,21 @@ if [ "$1" = "-c" ]; then
             [ -f "$DATAAGENT_FAKE_POLICY" ] && exit 0
             exit 1
             ;;
+        *DATAAGENT_OCR_DOCTOR_PROBE*)
+            # doctor / setup OCR probe (07 §2.3 T20): the pin is configured
+            # iff the marker file exists, otherwise the "none" hint + rc 1;
+            # the remote marker makes it report a remote provider (rc 3).
+            if [ -f "$DATAAGENT_FAKE_OCR_REMOTE" ]; then
+                echo "ocr:      openai_compat fake-model is remote — the data layer does not use remote OCR before the egress gate (T15); scanned-document probes need a local engine" >&2
+                exit 3
+            fi
+            if [ -f "$DATAAGENT_FAKE_OCR" ]; then
+                printf 'ocr:      openai_compat fake-model version=fake@r1:abc123456789 verification=ocrv-fake\\n'
+                exit 0
+            fi
+            echo "ocr:      none (run: dataagent setup --ocr-root <verified ocr dir>)" >&2
+            exit 1
+            ;;
     esac
     exit 0
 fi
@@ -57,6 +72,8 @@ class DispatcherTests(unittest.TestCase):
             "DATAAGENT_FAKE_CWD": str(self.out / "cwd"),
             "DATAAGENT_FAKE_ENV": str(self.out / "env"),
             "DATAAGENT_FAKE_POLICY": str(self.out / "policy"),
+            "DATAAGENT_FAKE_OCR": str(self.out / "ocr"),
+            "DATAAGENT_FAKE_OCR_REMOTE": str(self.out / "ocr-remote"),
             "DATAAGENT_HOST_SUBJECT_REF": "user:alice",
             "DATAAGENT_HOST_PURPOSE": "monthly_report",
             "MINT_MODEL_API_KEY": "secret-token",
@@ -73,6 +90,16 @@ class DispatcherTests(unittest.TestCase):
             env=self.env,
             cwd=str(cwd or self.project),
         )
+
+    def _fake_uv(self):
+        """Put a no-op uv shim first on PATH so setup_cmd runs offline."""
+        bin_dir = self.out / "bin"
+        bin_dir.mkdir(exist_ok=True)
+        shim = bin_dir / "uv"
+        shim.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+        shim.chmod(0o755)
+        self.env["PATH"] = f"{bin_dir}:{self.env['PATH']}"
+        return shim
 
     def test_dispatch_workbench_and_ops(self):
         for layer, pkg, module in [('workbench','workbench','dataagent_workbench'), ('ops','operations','dataagent_operations')]:
@@ -205,11 +232,13 @@ class DispatcherTests(unittest.TestCase):
         for pkg in ("data-layer", "application-layer", "governance-layer"):
             _make_layer(self.project, pkg, "0.1.0")
         (self.out / "policy").write_text("{}\n", encoding="utf-8")
+        (self.out / "ocr").write_text("", encoding="utf-8")
         result = self._run("doctor")
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("venv     data-layer: ok", result.stdout)
         self.assertIn("policy:   configured", result.stdout)
         self.assertIn("data_root:", result.stdout)
+        self.assertIn("ocr:      openai_compat fake-model version=fake@r1:", result.stdout)
 
     def test_doctor_missing_policy_exits_3(self):
         """r5-review D14: a missing policy is a failing doctor check.
@@ -245,6 +274,107 @@ class DispatcherTests(unittest.TestCase):
         result = self._run("doctor")
         self.assertEqual(result.returncode, 3)
         self.assertIn("policy:   governance layer unavailable", result.stderr)
+
+    def test_doctor_missing_ocr_is_a_failing_check(self):
+        """07 §2.3 T20: OCR is the data layer's explicit dependency. A missing
+        engine is reported with the configuration item and never as ok (same
+        fail-closed reading as the policy check, r5-review D14)."""
+        _make_layer(self.project, "data-layer", "0.1.0")
+        _make_layer(self.project, "workbench", "0.1.0")
+        result = self._run("doctor")
+        self.assertEqual(result.returncode, 3)
+        self.assertIn("ocr:      none", result.stderr)
+        self.assertIn("dataagent setup --ocr-root", result.stderr)
+        self.assertNotIn("ocr:      openai_compat", result.stdout)
+
+    def test_doctor_remote_ocr_is_a_failing_check(self):
+        """07 §2.3 T20 (调度方 11-18 补充): a remote OCR provider must not be
+        reported as ok — the data layer refuses remote OCR until the egress
+        gate lands (T15), so scanned-document probes would not work; doctor
+        says so explicitly."""
+        _make_layer(self.project, "data-layer", "0.1.0")
+        _make_layer(self.project, "workbench", "0.1.0")
+        (self.out / "ocr-remote").write_text("", encoding="utf-8")
+        result = self._run("doctor")
+        self.assertEqual(result.returncode, 3)
+        self.assertIn("remote OCR before the egress gate (T15)", result.stderr)
+        self.assertIn("scanned-document probes need a local engine", result.stderr)
+        self.assertNotIn("version=", result.stdout)  # never reported as ok
+
+    def test_setup_ocr_root_accepts_remote_pin_with_warning(self):
+        _make_layer(self.project, "data-layer", "0.1.0")
+        _make_layer(self.project, "workbench", "0.1.0")
+        self._fake_uv()
+        (self.out / "ocr-remote").write_text("", encoding="utf-8")
+        source = self.project / "ocr-src"
+        source.mkdir()
+        (source / "active.json").write_text('{"profile_id": "fake"}\n', encoding="utf-8")
+        result = self._run("setup", "--ocr-root", str(source))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue((self.project / ".dataagent" / "ocr" / "active.json").is_file())
+        self.assertIn("remote OCR before the egress gate (T15)", result.stderr)
+        # doctor then reports the limitation instead of ok
+        doctor = self._run("doctor")
+        self.assertEqual(doctor.returncode, 3)
+        self.assertIn("scanned-document probes need a local engine", doctor.stderr)
+
+    def test_doctor_without_data_layer_skips_ocr_check(self):
+        _make_layer(self.project, "workbench", "0.1.0")
+        result = self._run("doctor")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertNotIn("ocr:", result.stdout + result.stderr)
+
+    def test_setup_ocr_root_installs_verified_directory(self):
+        _make_layer(self.project, "data-layer", "0.1.0")
+        _make_layer(self.project, "workbench", "0.1.0")
+        self._fake_uv()
+        (self.out / "ocr").write_text("", encoding="utf-8")  # probe validates
+        source = self.project / "ocr-src"
+        source.mkdir()
+        (source / "active.json").write_text('{"profile_id": "fake"}\n', encoding="utf-8")
+        (source / "profiles").mkdir()
+        result = self._run("setup", "--ocr-root", str(source))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        installed = self.project / ".dataagent" / "ocr"
+        self.assertEqual(
+            (installed / "active.json").read_text(encoding="utf-8"),
+            '{"profile_id": "fake"}\n',
+        )
+        self.assertIn("setup: ocr configured from", result.stdout)
+        # re-running with the same source is idempotent
+        again = self._run("setup", "--ocr-root", str(source))
+        self.assertEqual(again.returncode, 0, again.stderr)
+        self.assertIn("setup: ocr already configured at", again.stdout)
+
+    def test_setup_ocr_root_rejects_directory_without_pin(self):
+        _make_layer(self.project, "data-layer", "0.1.0")
+        _make_layer(self.project, "workbench", "0.1.0")
+        self._fake_uv()
+        source = self.project / "ocr-src"
+        source.mkdir()
+        result = self._run("setup", "--ocr-root", str(source))
+        self.assertEqual(result.returncode, 3)
+        self.assertIn("not a verified OCR directory", result.stderr)
+        self.assertFalse((self.project / ".dataagent" / "ocr").exists())
+
+    def test_setup_ocr_root_refuses_to_replace_a_different_pin(self):
+        _make_layer(self.project, "data-layer", "0.1.0")
+        _make_layer(self.project, "workbench", "0.1.0")
+        self._fake_uv()
+        source = self.project / "ocr-src"
+        source.mkdir()
+        (source / "active.json").write_text('{"profile_id": "new"}\n', encoding="utf-8")
+        existing = self.project / ".dataagent" / "ocr"
+        existing.mkdir(parents=True)
+        (existing / "active.json").write_text('{"profile_id": "old"}\n', encoding="utf-8")
+        result = self._run("setup", "--ocr-root", str(source))
+        self.assertEqual(result.returncode, 3)
+        self.assertIn("different OCR configuration", result.stderr)
+        # the existing pin is untouched
+        self.assertEqual(
+            (existing / "active.json").read_text(encoding="utf-8"),
+            '{"profile_id": "old"}\n',
+        )
 
 
 

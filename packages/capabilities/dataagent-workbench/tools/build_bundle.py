@@ -58,10 +58,18 @@ def stage(out: Path):
     mod=importlib.util.module_from_spec(spec);spec.loader.exec_module(mod)
     mod.stage(out/'data-layer')
     ocr=CAP/'dataagent-ocr/src/dataagent_ocr'
-    if ocr.exists():
-        shutil.copytree(ocr,out/'data-layer/src/dataagent_ocr',ignore=IGNORE)
-        project=out/'data-layer/pyproject.toml'
-        project.write_text(project.read_text().replace('"src/dataagent_data",','"src/dataagent_data", "src/dataagent_ocr",'))
+    if not ocr.is_dir():
+        raise SystemExit(
+            f'dataagent-ocr is missing ({ocr}); the data layer declares it as an explicit '
+            'dependency and the bundle cannot be built without it — restore the package '
+            'or fix the checkout before building')
+    shutil.copytree(ocr,out/'data-layer/src/dataagent_ocr',ignore=IGNORE)
+    project=out/'data-layer/pyproject.toml'
+    vendored=project.read_text().replace('"src/dataagent_data",','"src/dataagent_data", "src/dataagent_ocr",')
+    if '"src/dataagent_ocr"' not in vendored:
+        raise SystemExit('data-layer pyproject no longer lists "src/dataagent_data"; '
+            'cannot register the vendored dataagent_ocr package — update build_bundle.py')
+    project.write_text(vendored)
     shutil.copytree(CAP/'dataagent-cli',out/'cli',ignore=IGNORE)
     shutil.copytree(CAP/'dataagent-intake',out/'preset-intake',ignore=IGNORE)
     manifest(out)

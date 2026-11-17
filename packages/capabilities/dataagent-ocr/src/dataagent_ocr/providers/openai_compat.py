@@ -129,7 +129,15 @@ def parse_text(content: str) -> list[tuple[str, list[float]]]:
 
 
 def block_confidences(content: str, texts: list[str], logprobs: list[dict[str, Any]] | None) -> list[float | None]:
-    """Map token logprobs onto block texts by locating each text in ``content``."""
+    """Map token logprobs onto block texts by locating each text in ``content``.
+
+    Tokens must reconstruct ``content`` exactly; the one tolerated exception
+    is trailing tokens past the end of ``content`` — vLLM appends the stop
+    token (e.g. ``<|im_end|>``, with its literal text as ``token`` and
+    non-empty ``bytes``) to ``logprobs.content`` without including it in
+    ``message.content``. Anything else (server-side post-processing that
+    changed the text) still maps to no confidence.
+    """
 
     if not logprobs:
         return [None] * len(texts)
@@ -140,10 +148,14 @@ def block_confidences(content: str, texts: list[str], logprobs: list[dict[str, A
         lp = token.get("logprob")
         if not isinstance(piece, str) or not isinstance(lp, (int, float)):
             return [None] * len(texts)
+        if cursor >= len(content):
+            break  # trailing stop tokens are not part of the content
+        if not content.startswith(piece, cursor):
+            # Tokens do not reconstruct the content (server-side post-processing); no mapping.
+            return [None] * len(texts)
         spans.append((cursor, cursor + len(piece), float(lp)))
         cursor += len(piece)
-    if cursor != len(content):
-        # Tokens do not reconstruct the content (server-side post-processing); no mapping.
+    if cursor < len(content):
         return [None] * len(texts)
     out: list[float | None] = []
     search_from = 0
