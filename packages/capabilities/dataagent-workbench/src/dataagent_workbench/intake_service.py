@@ -73,8 +73,7 @@ class IntakeService:
             'next_actions':['retry_probe'] if retry else [next_action]},ctx,
             extra_writes=[Write('job',s.job_ref,wb.scope,{**job['body'],'state':'needs_input','checkpoint':'profiles'},job['revision'])])
         if not is_discovery(s) and profiles and not errors and all(p.coverage=='full' for p in profiles):
-            cached=self._verified_mapping(profiles)
-            if cached is not None and self._reuse_verified_mapping(s,profiles,cached,ctx):
+            if self._reuse_verified_mapping(s,profiles,ctx):
                 return wb.sessions.get(s.id,ctx)
         return s
 
@@ -82,26 +81,76 @@ class IntakeService:
         """Order-independent fingerprint set identifying the source combination."""
         return sorted({profile.metadata['structure_fingerprint'] for profile in profiles})
 
-    def _verified_mapping(self,profiles):
+    def _verified_mapping_keys(self,profiles):
         wb=self.wb
-        key=digest([wb.scope,self._fingerprints(profiles),f'{wb.definition.id}@{wb.definition.revision}'])
-        return wb.store.current('verified_mapping',key,scope=wb.scope)
+        revision=f'{wb.definition.id}@{wb.definition.revision}'
+        keys=[digest([wb.scope,self._fingerprints(profiles),revision])]
+        # Older builds registered a single source under the bare fingerprint string.
+        if len(profiles)==1:
+            keys.append(digest([wb.scope,profiles[0].metadata['structure_fingerprint'],revision]))
+        return keys
 
-    def _reuse_verified_mapping(self,session,profiles,cached,ctx):
-        body=cached['body']
-        entries=body.get('mappings')
-        if entries is None:entries=[body['mapping']] if 'mapping' in body else []
-        try:mappings=[MappingSpec.model_validate(entry) for entry in entries]
-        except (KeyError,ValueError):return False
-        if len(mappings)!=len(profiles):return False
-        remaining={}
-        for mapping in mappings:remaining.setdefault(mapping.source_fingerprint,[]).append(mapping)
+    @staticmethod
+    def _mapping_body(mapping):
+        ignored={'id','revision','scope'}
+        return {key:value for key,value in mapping.model_dump(mode='json').items() if key not in ignored}
+
+    def _same_mapping(self,left,right):
+        return self._mapping_body(left)==self._mapping_body(right)
+
+    def _cached_sources(self,body):
+        records=body.get('sources')
+        if records is not None:
+            if not isinstance(records,list):return None
+            try:
+                return [{'source_id':record.get('source_id'),'locator_ref':record.get('locator_ref'),
+                         'kind':record.get('kind'),'mapping':MappingSpec.model_validate(record['mapping'])}
+                        for record in records]
+            except (AttributeError,KeyError,TypeError,ValueError):return None
+        mappings=body.get('mappings')
+        if mappings is None and 'mapping' in body:mappings=[body['mapping']]
+        if not isinstance(mappings,list):return None
+        try:
+            return [{'source_id':None,'locator_ref':None,'kind':None,'mapping':MappingSpec.model_validate(mapping)}
+                    for mapping in mappings]
+        except (TypeError,ValueError):return None
+
+    def _cached_source_match(self,profile,selection,candidates):
+        if len(candidates)==1:return 0
+        matches=[index for index,record in enumerate(candidates) if record['source_id']==profile.source_id]
+        if len(matches)==1:return matches[0]
+        if selection is not None:
+            matches=[index for index,record in enumerate(candidates)
+                     if record['locator_ref']==selection.locator_ref and record['kind']==selection.kind]
+            if len(matches)==1:return matches[0]
+        if all(self._same_mapping(record['mapping'],candidates[0]['mapping']) for record in candidates[1:]):
+            return 0
+        return None
+
+    def _reuse_verified_mapping(self,session,profiles,ctx):
+        for key in self._verified_mapping_keys(profiles):
+            cached=self.wb.store.current('verified_mapping',key,scope=self.wb.scope)
+            if cached is not None and self._reuse_cached_mapping(session,profiles,cached,ctx):
+                return True
+        return False
+
+    def _reuse_cached_mapping(self,session,profiles,cached,ctx):
+        records=self._cached_sources(cached['body'])
+        if not records or len(records)!=len(profiles):return False
+        groups={}
+        for record in records:groups.setdefault(record['mapping'].source_fingerprint,[]).append(record)
+        if sorted(groups)!=self._fingerprints(profiles):return False
+        for fingerprint,group in groups.items():
+            if len(group)!=sum(1 for profile in profiles
+                               if profile.metadata['structure_fingerprint']==fingerprint):return False
+        sources={source.source_id:source for source in session.sources}
         proposals={}
         for profile in profiles:
-            bucket=remaining.get(profile.metadata['structure_fingerprint'])
-            if not bucket:return False
-            proposals[profile.source_id]=bucket.pop()
-        if any(remaining.values()):return False
+            candidates=groups[profile.metadata['structure_fingerprint']]
+            index=self._cached_source_match(profile,sources.get(profile.source_id),candidates)
+            if index is None:return False
+            proposals[profile.source_id]=candidates.pop(index)['mapping']
+        if any(groups.values()):return False
         if len(profiles)==1:
             self.submit_proposal(session.id,proposals[profiles[0].source_id],session.revision,ctx,reused=True)
         else:
@@ -230,13 +279,22 @@ class IntakeService:
             phase='saved'
             mapping=body['mapping']
             source_mappings=(body.get('extensions') or {}).get('intake.source_mappings') or {}
-            mappings=list(source_mappings.values()) if source_mappings else [mapping]
-            if len(mappings)==len(selected):
-                fingerprints=sorted({item['source_fingerprint'] for item in mappings})
+            selections={source.source_id:source for source in s.sources}
+            if source_mappings:
+                records=[{'source_id':source_id,'locator_ref':selections[source_id].locator_ref,
+                          'kind':selections[source_id].kind,'mapping':item}
+                         for source_id,item in source_mappings.items() if source_id in selections]
+            else:
+                source=selections.get(next(iter(selected))) if len(selected)==1 else None
+                records=[{'source_id':source.source_id if source else None,
+                          'locator_ref':source.locator_ref if source else None,
+                          'kind':source.kind if source else None,'mapping':mapping}]
+            if len(records)==len(selected):
+                fingerprints=sorted({record['mapping']['source_fingerprint'] for record in records})
                 key=digest([wb.scope,fingerprints,f'{wb.definition.id}@{wb.definition.revision}'])
                 cached=wb.store.current('verified_mapping',key,scope=wb.scope)
-                entry={'source_fingerprints':fingerprints,'mappings':mappings,'release_ref':versions['release']}
-                if len(mappings)==1:entry['mapping']=mappings[0]
+                entry={'source_fingerprints':fingerprints,'sources':records,'release_ref':versions['release']}
+                if len(records)==1:entry['mapping']=records[0]['mapping']
                 writes.append(Write('verified_mapping',key,wb.scope,entry,cached['revision'] if cached else None))
             job=wb.store.current('job',s.job_ref,scope=wb.scope)
             writes.append(Write('job',s.job_ref,wb.scope,{**job['body'],'state':'completed','result_ref':versions['release']},job['revision']))

@@ -2,7 +2,8 @@ from pathlib import Path
 import pytest
 from dataagent_contracts.intake import SourceSelection,WorkSpec
 from dataagent_contracts.ontology import MappingSpec,ReviewDecision
-from dataagent_runtime.ports.workbench_store import VersionConflict
+from dataagent_ontology.identity import digest
+from dataagent_runtime.ports.workbench_store import ChangeSet,VersionConflict,Write
 from dataagent_workbench.bootstrap import Workbench
 from dataagent_workbench.adapters.layer_client import LayerClient
 
@@ -66,6 +67,17 @@ def test_known_source_reuses_mapping(tmp_path):
     goal=WorkSpec(id='g2',goal='再接入',acceptance_criteria=['来源可核对'],authorization_ref=wb.authorization)
     h=wb.sessions.start([SourceSelection(source_id='f2',kind='file',locator_ref='invoice.csv')],goal,wb.ctx)
     reused=wb.intake.advance(h.session_id,wb.ctx)
+    assert reused.phase=='preview'
+    assert wb.intake.view(reused.id,wb.ctx)['mapping_reused']
+
+
+def test_legacy_single_source_cache_is_still_reused(tmp_path):
+    wb,s=setup(tmp_path)
+    mapping=proposal(s,wb)
+    legacy_key=digest([wb.scope,mapping.source_fingerprint,f'{wb.definition.id}@{wb.definition.revision}'])
+    wb.store.commit(ChangeSet(writes=[Write('verified_mapping',legacy_key,wb.scope,{
+        'mapping':mapping.model_dump(mode='json'),'release_ref':'release:legacy@1'})]))
+    reused=wb.intake.advance(s.id,wb.ctx)
     assert reused.phase=='preview'
     assert wb.intake.view(reused.id,wb.ctx)['mapping_reused']
 
@@ -145,6 +157,73 @@ def test_reused_multi_source_mapping_can_be_saved_and_reused_again(tmp_path):
     again=wb.intake.advance(start_multi(wb,('invoice','ledger'),'g3').session_id,wb.ctx)
     assert again.phase=='preview'
     assert wb.intake.view(again.id,wb.ctx)['mapping_reused']
+
+
+def same_fingerprint_setup(tmp_path):
+    data=Path(__file__).resolve().parents[2]/'dataagent-data'
+    wb=Workbench(tmp_path,layer_client=LayerClient(data))
+    (tmp_path/'minor.csv').write_text('number,amount,currency\nINV-1,126000,CNY\n')
+    (tmp_path/'major.csv').write_text('number,amount,currency\nINV-1,1260,CNY\n')
+    return wb
+
+
+def same_fingerprint_sources(*source_ids):
+    selections={'minor':SourceSelection(source_id='minor',kind='file',locator_ref='minor.csv'),
+                'major':SourceSelection(source_id='major',kind='file',locator_ref='major.csv')}
+    return [selections[source_id].model_copy() for source_id in source_ids]
+
+
+def start_selected(wb,sources,goal_id):
+    goal=WorkSpec(id=goal_id,goal='接入采购单',acceptance_criteria=['来源可核对'],authorization_ref=wb.authorization)
+    return wb.sessions.start(sources,goal,wb.ctx)
+
+
+def same_fingerprint_proposals(session,wb):
+    bindings={
+        'minor':{'number':{'source_field':'number'},'amount':{'source_field':'amount','transform':'minor_to_major'},
+                 'currency':{'source_field':'currency'}},
+        'major':{'number':{'source_field':'number'},'amount':{'source_field':'amount','transform':'decimal'},
+                 'currency':{'source_field':'currency'}},
+    }
+    request=wb.intake.inference_request(session.id,wb.ctx)
+    return {source['source_id']:MappingSpec(id='candidate',revision='1',ontology_revision='procurement@1',
+        source_fingerprint=source['structure_fingerprint'],bindings=bindings[source['source_id']])
+        for source in request['sources']}
+
+
+def save_same_fingerprint(wb,source_ids=('minor','major')):
+    session=wb.intake.advance(start_selected(wb,same_fingerprint_sources(*source_ids),'g1').session_id,wb.ctx)
+    assert session.phase=='needs_input'
+    preview=wb.intake.submit_source_proposals(session.id,same_fingerprint_proposals(session,wb),session.revision,wb.ctx)
+    session=wb.sessions.get(session.id,wb.ctx)
+    wb.intake.apply(session.id,ReviewDecision(
+        preview_ref=preview.id+'@'+preview.revision,target_scope='mapping'),session.revision,wb.ctx)
+    assert wb.sessions.get(session.id,wb.ctx).phase=='saved'
+
+
+def test_same_fingerprint_sources_keep_their_mapping_on_reuse(tmp_path):
+    wb=same_fingerprint_setup(tmp_path)
+    save_same_fingerprint(wb,('minor','major'))
+    reused=wb.intake.advance(start_selected(wb,same_fingerprint_sources('minor','major'),'g2').session_id,wb.ctx)
+    assert reused.phase=='preview'
+    view=wb.intake.view(reused.id,wb.ctx)
+    assert view['mapping_reused']
+    source_mappings=view['preview']['extensions']['intake.source_mappings']
+    assert source_mappings['minor']['bindings']['amount']['transform']=='minor_to_major'
+    assert source_mappings['major']['bindings']['amount']['transform']=='decimal'
+
+
+def test_same_fingerprint_reuse_declines_without_source_correspondence(tmp_path):
+    wb=same_fingerprint_setup(tmp_path)
+    save_same_fingerprint(wb)
+    (tmp_path/'minor-copy.csv').write_text('number,amount,currency\nINV-1,126000,CNY\n')
+    (tmp_path/'major-copy.csv').write_text('number,amount,currency\nINV-1,1260,CNY\n')
+    sources=[SourceSelection(source_id='minor-copy',kind='file',locator_ref='minor-copy.csv'),
+             SourceSelection(source_id='major-copy',kind='file',locator_ref='major-copy.csv')]
+    current=wb.intake.advance(start_selected(wb,sources,'g2').session_id,wb.ctx)
+    assert current.phase=='needs_input'
+    assert current.issues==[] and current.next_actions==['propose_mapping']
+    assert not wb.intake.view(current.id,wb.ctx)['mapping_reused']
 
 
 def test_changed_source_fingerprint_does_not_reuse_mapping(tmp_path):
