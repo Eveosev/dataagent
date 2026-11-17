@@ -15,7 +15,7 @@ import re
 import zipfile
 from dataagent_contracts.core.refs import SourceAnchor
 from dataagent_contracts.intake import CoverageGap
-from ..adapters.parsers.excel import dedupe_names
+from ..adapters.parsers.excel import dedupe_names, infer_scalar_type
 from ..adapters.parsers.pdf import parse_pdf
 
 
@@ -192,15 +192,31 @@ def _table_grid(table):
     ``values[r][c]`` is the displayed value, ``origins[r][c]`` is the
     ``(row, col)`` cell that owns it (different from ``(r, c)`` only for a
     merged continuation position), and ``merges`` uses 1-based coordinates.
+    A row's ``w:gridBefore`` is represented as leading ``None`` cells so a
+    right-hand value never shifts into the omitted left column.
     """
     from docx.oxml.ns import qn
 
     values, origins = [], []
     merges = {}
     vertical = {}
+    grid_width = 0
+    tbl_grid = getattr(getattr(table._tbl, 'tblGrid', None), 'gridCol_lst', None)
+    if tbl_grid is not None:
+        grid_width = len(tbl_grid)
     for row_index, tr in enumerate(table._tbl.tr_lst):
-        row_values, row_origins = [], []
-        column = 0
+        grid_before = 0
+        trPr = tr.trPr
+        if trPr is not None:
+            marker = trPr.find(qn('w:gridBefore'))
+            if marker is not None:
+                try:
+                    grid_before = max(0, int(marker.get(qn('w:val')) or 0))
+                except (TypeError, ValueError):
+                    grid_before = 0
+        row_values = [None] * grid_before
+        row_origins = [(row_index, column) for column in range(grid_before)]
+        column = grid_before
         for tc in tr.tc_lst:
             tcPr = tc.tcPr
             span, vmerge = 1, None
@@ -240,12 +256,51 @@ def _table_grid(table):
             column += span
         values.append(row_values)
         origins.append(row_origins)
-    width = max((len(row) for row in values), default=0)
+    width = max([grid_width] + [len(row) for row in values])
     for row_index, row in enumerate(values):
         while len(row) < width:
             row.append(None)
             origins[row_index].append((row_index, len(row) - 1))
     return values, origins, [merges[key] for key in sorted(merges)]
+
+
+_DATA_TYPES = frozenset({'number', 'date', 'boolean'})
+
+
+def _row_is_marked_header(tr):
+    """Word's repeat-header marker is an explicit statement about the row."""
+    from docx.oxml.ns import qn
+    trPr = tr.trPr
+    if trPr is None:
+        return False
+    marker = trPr.find(qn('w:tblHeader'))
+    if marker is None:
+        return False
+    value = (marker.get(qn('w:val')) or '').strip().lower()
+    return value not in {'0', 'false', 'off'}
+
+
+def _row_has_data_value(row):
+    return any(value not in (None, '') and infer_scalar_type(value) in _DATA_TYPES
+               for value in row)
+
+
+def _detect_header_row(values, table):
+    """Whether the first row labels data below it.
+
+    Text-only tables have no reliable label signal, so they stay headerless:
+    keeping every row as a record is safer than silently turning a real first
+    row into field names.  An explicit ``w:tblHeader`` marker overrides the
+    heuristic, and a numeric/date/boolean first row is always data.
+    """
+    if len(values) < 2 or not any(value not in (None, '') for value in values[0]):
+        return False
+    tr_lst = table._tbl.tr_lst
+    if tr_lst and _row_is_marked_header(tr_lst[0]):
+        return True
+    if _row_has_data_value(values[0]):
+        return False
+    return any(_row_has_data_value(row) for row in values[1:])
 
 
 def _docx_fingerprint(paragraph_structure, table_structure):
@@ -301,15 +356,40 @@ def probe_docx(path, source_id, revision):
                 column_count = max((len(row) for row in values), default=0)
                 table_structure.append({'row_count': row_count, 'column_count': column_count,
                                         'merges': merges})
-                # A one-row table has no header to spare: keep its cells as a
-                # synthetic-column record instead of silently dropping text.
-                header_row = 1 if row_count > 1 else 0
-                if row_count > 1:
-                    headers = dedupe_names(['' if value is None else str(value) for value in values[0]])
+                # A text-only or one-row table has no reliable header: keep
+                # every row as a record.  When a header is detected it also
+                # becomes a record, so its cells are anchored too rather than
+                # disappearing into ``metadata.tables``.
+                header_detected = _detect_header_row(values, block)
+                header_row = 1 if header_detected else 0
+                if header_detected:
+                    headers = dedupe_names(['' if value is None else str(value)
+                                            for value in values[0]])
                 else:
-                    headers = dedupe_names([f'column_{index + 1}' for index in range(column_count)])
+                    headers = dedupe_names([f'column_{index + 1}'
+                                            for index in range(column_count)])
+                header_record = None
+                if header_detected:
+                    header_record = len(records)
+                    records.append({field: (None if value == '' else value)
+                                    for field, value in zip(headers, values[0])})
+                    record_locations.append({'record': header_record, 'kind': 'table_header',
+                                             'table': table_number, 'row': 1})
+                    for column_index, field in enumerate(headers):
+                        value = values[0][column_index]
+                        if value in (None, ''):
+                            continue
+                        origin_row, origin_column = origins[0][column_index]
+                        unit_ref = (f'table:{table_number}/row:{origin_row + 1}'
+                                    f'/col:{origin_column + 1}')
+                        anchors[f'{header_record}.{field}'] = [SourceAnchor(source_ref=source_id,
+                            source_revision=revision,
+                            selector={'kind': 'text_span', 'unit_ref': unit_ref,
+                                      'char_start': 0, 'char_end': len(value)})]
                 tables_meta.append({'table': table_number, 'row_count': row_count,
                                     'column_count': column_count, 'header_row': header_row,
+                                    'header_detected': header_detected,
+                                    'header_record': header_record,
                                     'headers': headers, 'merges': merges, 'rows': values})
                 for row_index, row in enumerate(values):
                     for column_index, value in enumerate(row):

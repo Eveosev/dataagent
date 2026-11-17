@@ -48,6 +48,12 @@ def test_docx_extracts_paragraphs_headings_tables_and_merged_cells(workspace, ct
         ['差旅费', '1200', '实报实销'],
         ['招待费', '800', '实报实销'],
     ]
+    assert table['header_detected'] is True and table['header_row'] == 1
+    header_index = table['header_record']
+    assert profile.records[header_index] == {
+        '项目': '项目', '金额': '金额', '说明': '说明'}
+    assert profile.anchors[f'{header_index}.项目'][0].selector.unit_ref == (
+        'table:1/row:1/col:1')
 
     by_item = {row['项目']: index for index, row in enumerate(profile.records) if row.get('项目')}
     assert profile.records[by_item['差旅费']]['说明'] == '实报实销'
@@ -83,18 +89,22 @@ def test_docx_extracts_paragraphs_headings_tables_and_merged_cells(workspace, ct
 
 def test_docx_horizontal_merge_is_expanded(workspace, ctx):
     from docx import Document
+    from docx.oxml import OxmlElement
 
     document = Document()
     table = document.add_table(rows=2, cols=3)
     for column, value in enumerate(['项目', '金额', '说明']):
         table.cell(0, column).text = value
+    # This all-text table is ambiguous by content, so mark the row explicitly
+    # as a repeating Word header.
+    table.rows[0]._tr.get_or_add_trPr().append(OxmlElement('w:tblHeader'))
     table.cell(1, 0).text = '合并值'
     table.cell(1, 0).merge(table.cell(1, 1))
     table.cell(1, 2).text = '独立值'
     document.save(str(workspace / 'merged.docx'))
 
     profile = probe(workspace, ctx, 'merged.docx')
-    record = [row for row in profile.records if row.get('项目')][0]
+    record = next(row for row in profile.records if row.get('项目') == '合并值')
     assert record['项目'] == '合并值'
     assert record['金额'] == '合并值'
     assert record['说明'] == '独立值'
@@ -103,6 +113,60 @@ def test_docx_horizontal_merge_is_expanded(workspace, ctx):
     index = profile.records.index(record)
     assert profile.anchors[f'{index}.项目'][0].selector.unit_ref == 'table:1/row:2/col:1'
     assert profile.anchors[f'{index}.金额'][0].selector.unit_ref == 'table:1/row:2/col:1'
+
+
+def test_docx_grid_before_keeps_the_right_column_anchor(workspace, ctx):
+    from docx import Document
+    from docx.oxml import OxmlElement
+    from docx.oxml.ns import qn
+
+    document = Document()
+    table = document.add_table(rows=2, cols=2)
+    table.cell(0, 0).text = '左列'
+    table.cell(0, 1).text = '右列'
+    table.cell(1, 1).text = '应在右列'
+    row = table.rows[1]._tr
+    row.remove(row.tc_lst[0])  # the second row omits its leading cell
+    grid_before = OxmlElement('w:gridBefore')
+    grid_before.set(qn('w:val'), '1')
+    row.get_or_add_trPr().append(grid_before)
+    document.save(str(workspace / 'grid-before.docx'))
+
+    profile = probe(workspace, ctx, 'grid-before.docx')
+    table_meta = profile.metadata['tables'][0]
+    assert table_meta['rows'] == [['左列', '右列'], [None, '应在右列']]
+    assert table_meta['header_detected'] is False
+    assert profile.records[1] == {'column_1': None, 'column_2': '应在右列'}
+    assert profile.anchors['1.column_2'][0].selector.unit_ref == (
+        'table:1/row:2/col:2')
+    assert '1.column_1' not in profile.anchors
+
+
+def test_docx_headerless_two_row_table_anchors_its_first_row(workspace, ctx):
+    from docx import Document
+
+    document = Document()
+    table = document.add_table(rows=2, cols=2)
+    table.cell(0, 0).text = '张三'
+    table.cell(0, 1).text = '销售部'
+    table.cell(1, 0).text = '李四'
+    table.cell(1, 1).text = '技术部'
+    document.save(str(workspace / 'headerless.docx'))
+
+    profile = probe(workspace, ctx, 'headerless.docx')
+    table_meta = profile.metadata['tables'][0]
+    assert table_meta['header_detected'] is False
+    assert table_meta['header_row'] == 0
+    assert table_meta['header_record'] is None
+    assert profile.records == [
+        {'column_1': '张三', 'column_2': '销售部'},
+        {'column_1': '李四', 'column_2': '技术部'},
+    ]
+    assert profile.anchors['0.column_1'][0].selector.unit_ref == (
+        'table:1/row:1/col:1')
+    assert profile.anchors['0.column_2'][0].selector.unit_ref == (
+        'table:1/row:1/col:2')
+    assert profile.coverage == 'full'
 
 
 def test_docx_one_row_table_keeps_its_text(workspace, ctx):
