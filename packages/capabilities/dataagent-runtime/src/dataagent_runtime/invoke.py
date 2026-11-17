@@ -31,6 +31,13 @@ from dataagent_runtime.enforcement import (
     access_recheck,
 )
 from dataagent_runtime.errors import CapabilityError, NeedsInputError
+from dataagent_runtime.policy.context import (
+    ContextResolutionError,
+    ResolvedContext,
+    resolve_context,
+    workspace_scope,
+)
+from dataagent_runtime.types import ContextSource
 from dataagent_runtime.registry import IMPLEMENTATION_REF, get_spec
 
 
@@ -273,33 +280,98 @@ def _closure_errors(spec_input: BaseModel, resource_fields: tuple[str, ...]) -> 
     return errors
 
 
-def _host_context(rt: Any, ctx: CallContext) -> CallContext:
-    """Stamp the trusted-host authority over the caller-supplied context.
+def _resolve_call_context(rt: Any, context: Any) -> ResolvedContext:
+    """Resolve one trusted context for the whole call (R1, S0 X1).
 
-    ``host_subject_ref`` / ``host_purpose`` come from configuration (or the
-    host-injected environment), never from call arguments: when they are
-    set they are authoritative for every hook in this call (review B7) —
-    the recheck, the handlers and the decisions they mint.
+    Entry points hand over a :class:`ResolvedContext`; older callers hand
+    over a bare ``CallContext``/mapping, which is treated as a *hint* and
+    resolved against the trusted channels. Either way the result is the
+    context the recheck and every handler see — no-resource handlers
+    included, which is what closes the B7 gap on non-resource operations.
     """
 
-    subject = getattr(rt, "host_subject_ref", None)
-    purpose = getattr(rt, "host_purpose", None)
-    if not subject and not purpose:
-        return ctx
-    updates: dict[str, str | None] = {}
-    if subject and ctx.subject_ref != subject:
-        updates["subject_ref"] = subject
-    if purpose and ctx.purpose != purpose:
-        updates["purpose"] = purpose
-    if not updates:
-        return ctx
-    return ctx.model_copy(update=updates)
+    if isinstance(context, ResolvedContext):
+        resolved = context
+        # The runtime's workspace is authoritative for scope spelling even
+        # when an entry point resolved against its own cwd.
+        workspace = getattr(rt, "workspace_root", None)
+        if workspace is not None and resolved.source is not ContextSource.LEGACY:
+            scope_ref = workspace_scope(workspace)
+            if resolved.context.scope_ref != scope_ref:
+                resolved = resolved.model_copy(
+                    update={
+                        "context": resolved.context.model_copy(
+                            update={"scope_ref": scope_ref}
+                        )
+                    }
+                )
+        # Host ``_meta`` fields are final. For every field the host did not
+        # set, the runtime's configured host authority (explicit or
+        # environment) outranks the local-owner/environment value an entry
+        # point may have used before a runtime was in hand.
+        host_fields = set(resolved.host_fields)
+        context_updates: dict[str, Any] = {}
+        subject = getattr(rt, "host_subject_ref", None)
+        purpose = getattr(rt, "host_purpose", None)
+        if (
+            subject
+            and "subject_ref" not in host_fields
+            and resolved.context.subject_ref != subject
+        ):
+            context_updates["subject_ref"] = subject
+        if (
+            purpose
+            and "purpose" not in host_fields
+            and resolved.context.purpose != purpose
+        ):
+            context_updates["purpose"] = purpose
+        session = getattr(rt, "host_session_id", None)
+        call = getattr(rt, "host_call_id", None)
+        if (
+            session
+            and "session_id" not in host_fields
+            and resolved.context.kernel_session_id != session
+        ):
+            context_updates["kernel_session_id"] = session
+        if (
+            call
+            and "call_id" not in host_fields
+            and resolved.context.kernel_call_id != call
+        ):
+            context_updates["kernel_call_id"] = call
+        if context_updates:
+            resolved = resolved.model_copy(
+                update={
+                    "context": resolved.context.model_copy(
+                        update=context_updates
+                    )
+                }
+            )
+        if session and "session_id" not in host_fields and resolved.meta.session_id != session:
+            resolved = resolved.model_copy(
+                update={"meta": resolved.meta.model_copy(update={"session_id": session})}
+            )
+        if call and "call_id" not in host_fields and resolved.meta.call_id != call:
+            resolved = resolved.model_copy(
+                update={"meta": resolved.meta.model_copy(update={"call_id": call})}
+            )
+        turn = getattr(rt, "host_turn", None)
+        if (
+            turn is not None
+            and "turn" not in host_fields
+            and resolved.meta.turn != turn
+        ):
+            resolved = resolved.model_copy(
+                update={"meta": resolved.meta.model_copy(update={"turn": turn})}
+            )
+        return resolved
+    return resolve_context(argument_context=context, runtime=rt)
 
 
 def invoke(
     operation: str,
     payload: dict[str, Any] | None,
-    context: CallContext | dict[str, Any],
+    context: CallContext | dict[str, Any] | ResolvedContext,
     *,
     runtime: Any = None,
     resolver: Any = None,
@@ -312,6 +384,11 @@ def invoke(
     ``resolver`` resolves ``authorization_ref`` to an ``AccessDecision``;
     when omitted, the runtime's ``access_resolver`` is used, and if that is
     missing too the recheck fails closed for resource-reading operations.
+
+    ``context`` is a resolved envelope from an entry point or a bare
+    ``CallContext``/mapping. The bare form is a caller hint: it is resolved
+    through :func:`dataagent_runtime.policy.context.resolve_context` before
+    the recheck and before any handler runs (R1).
     """
 
     spec = get_spec(operation)
@@ -323,16 +400,22 @@ def invoke(
             suggested_action="tools/list shows the implemented operations",
         )
 
+    rt = runtime
+    if rt is None:
+        from dataagent_runtime.runtime import default_runtime
+
+        rt = default_runtime()
     try:
-        ctx = context if isinstance(context, CallContext) else CallContext.model_validate(context)
-    except ValidationError as exc:
+        resolved = _resolve_call_context(rt, context)
+    except ContextResolutionError as exc:
         return _failure(
             StandardErrorCode.invalid_input,
-            f"invalid CallContext: {exc.errors()[0]['msg']}",
+            f"invalid CallContext: {exc}",
             operation=operation,
             capability_id=spec.capability_id,
             target="context",
         )
+    ctx = resolved.context
     if not ctx.authorization_ref.strip():
         return _failure(
             StandardErrorCode.invalid_input,
@@ -342,11 +425,6 @@ def invoke(
             target="context.authorization_ref",
         )
 
-    rt = runtime
-    if rt is None:
-        from dataagent_runtime.runtime import default_runtime
-
-        rt = default_runtime()
     config = enforcement or getattr(rt, "enforcement", None) or EnforcementConfig()
 
     started = now()
@@ -376,7 +454,6 @@ def invoke(
     # ``off`` disables the hook outright; ``warn`` keeps the call running with
     # a warning (development default); ``enforce`` denies before any read.
     if spec.resource_fields and config.mode != "off":
-        ctx = _host_context(rt, ctx)
         resolve = resolver or getattr(rt, "access_resolver", None)
         if resolve is None:
             result = _failure(

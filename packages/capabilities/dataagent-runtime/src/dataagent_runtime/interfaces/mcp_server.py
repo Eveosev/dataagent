@@ -10,25 +10,30 @@ import json
 import sys
 from typing import Any, Callable
 
-from dataagent_contracts.core import CapabilityStatus
+from dataagent_contracts.core import CallContext, CapabilityStatus
+
+from dataagent_runtime.policy.context import (
+    ContextResolutionError,
+    resolve_context,
+)
 
 PROTOCOL_VERSION = "2024-11-05"
 CONTEXT_SCHEMA = {
     "type": "object",
-    "description": "CallContext: request_id, scope_ref, authorization_ref, ...",
+    "description": (
+        "Optional caller hint: request_id, authorization_ref, task_ref. "
+        "The host _meta channel and the host environment "
+        "are authoritative; subject, purpose, scope and kernel call "
+        "identity are resolved by the runtime, never taken from here."
+    ),
     "properties": {
         "request_id": {"type": "string"},
-        "scope_ref": {"type": "string"},
         "authorization_ref": {"type": "string"},
-        "subject_ref": {"type": "string"},
-        "purpose": {"type": "string"},
         "requester_ref": {"type": "string"},
         "task_ref": {"type": "string", "description": "'<id>@<revision>'"},
-        "kernel_session_id": {"type": "string"},
-        "kernel_call_id": {"type": "string"},
         "expected_revision": {"type": "string"},
     },
-    "required": ["request_id", "scope_ref", "authorization_ref"],
+    "required": [],
 }
 
 
@@ -39,7 +44,12 @@ def tools_payload(
     for spec in list_operations():
         schema = spec.input_model.model_json_schema(mode="validation")
         schema.setdefault("properties", {})["context"] = CONTEXT_SCHEMA
-        schema["required"] = sorted(set(schema.get("required", [])) | {"context"})
+        # R1: ``context`` is optional. The resolver falls back to the host
+        # _meta -> host environment -> local-owner chain, so a client that
+        # has no context can still call; authority never comes from here.
+        schema["required"] = [
+            name for name in schema.get("required", []) if name != "context"
+        ]
         tools.append(
             {
                 "name": spec.operation,
@@ -65,26 +75,37 @@ def _error(request_id: Any, code: int, message: str) -> dict[str, Any]:
     return {"jsonrpc": "2.0", "id": request_id, "error": {"code": code, "message": message}}
 
 
-def _context(params: dict[str, Any], arguments: dict[str, Any]) -> dict[str, Any] | None:
-    """The CallContext for a call, from the trusted channels only.
+def _context(params: dict[str, Any], arguments: dict[str, Any]) -> CallContext | None:
+    """Compatibility seam: the resolved ``CallContext`` for a tools/call.
 
-    Precedence (review B7): the host-injected ``_meta`` context is
-    authoritative; ``arguments.context`` is Agent-writable and can never
-    override it — not even to fill authority fields (subject/purpose).
-    Without ``_meta`` the ``arguments.context`` is used (the MCP wire has
-    no other channel), which is why authority fixed values must come from
-    the host configuration (``_meta`` or the runtime's host authority).
+    Kept for callers/tests that only need the context object; authority is
+    resolved by :func:`dataagent_runtime.policy.context.resolve_context`,
+    with ``_meta`` first, then the host environment, then local-owner.
+    ``arguments.context`` is a hint only. ``None`` is returned only on the
+    legacy rollback path when no context was supplied at all.
     """
 
-    meta = params.get("_meta")
-    if isinstance(meta, dict):
-        if isinstance(meta.get("context"), dict):
-            return meta["context"]
-        if {"request_id", "scope_ref", "authorization_ref"} <= set(meta):
-            return {key: meta[key] for key in meta if key in CONTEXT_SCHEMA["properties"]}
-    if isinstance(arguments.get("context"), dict):
-        return arguments["context"]
-    return None
+    try:
+        return resolve_context(
+            host_meta=params.get("_meta"),
+            argument_context=arguments.get("context"),
+        ).context
+    except ContextResolutionError:
+        return None
+
+
+def _failure_payload(message: str) -> dict[str, Any]:
+    return {
+        "status": "failed",
+        "issues": [
+            {
+                "code": "invalid_input",
+                "severity": "error",
+                "message": message,
+                "retryable": False,
+            }
+        ],
+    }
 
 
 def handle(
@@ -93,7 +114,7 @@ def handle(
     server_name: str,
     server_version: str,
     list_operations: Callable[[], list[Any]],
-    invoke: Callable[[str, dict[str, Any] | None, dict[str, Any]], Any],
+    invoke: Callable[[str, dict[str, Any] | None, Any], Any],
 ) -> dict[str, Any] | None:
     method = message.get("method")
     request_id = message.get("id")
@@ -118,8 +139,12 @@ def handle(
         arguments = params.get("arguments") or {}
         if not isinstance(name, str) or not isinstance(arguments, dict):
             return _error(request_id, -32602, "tools/call requires name and arguments")
-        context = _context(params, arguments)
-        if context is None:
+        try:
+            context = resolve_context(
+                host_meta=params.get("_meta"),
+                argument_context=arguments.get("context"),
+            )
+        except ContextResolutionError as exc:
             return _ok(
                 request_id,
                 {
@@ -127,17 +152,7 @@ def handle(
                         {
                             "type": "text",
                             "text": json.dumps(
-                                {
-                                    "status": "failed",
-                                    "issues": [
-                                        {
-                                            "code": "invalid_input",
-                                            "severity": "error",
-                                            "message": "CallContext is required in arguments.context or _meta",
-                                            "retryable": False,
-                                        }
-                                    ],
-                                },
+                                _failure_payload(f"context resolution failed: {exc}"),
                                 ensure_ascii=False,
                             ),
                         }
@@ -167,7 +182,7 @@ def serve(
     server_name: str,
     server_version: str,
     list_operations: Callable[[], list[Any]],
-    invoke: Callable[[str, dict[str, Any] | None, dict[str, Any]], Any],
+    invoke: Callable[[str, dict[str, Any] | None, Any], Any],
     validate: Callable[[], None] | None = None,
 ) -> int:
     if validate is not None:

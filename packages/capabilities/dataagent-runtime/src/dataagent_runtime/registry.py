@@ -9,15 +9,28 @@ from __future__ import annotations
 
 import json
 import os
+import types as _pytypes
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Type
+from typing import Annotated, Any, Callable, Type, Union, get_args, get_origin
 
 from pydantic import BaseModel
+
+from dataagent_contracts.core import VersionedRef
 
 IMPLEMENTATION_REF = "dataagent-runtime/0.1.0"
 
 DEFAULT_CATALOG_ENV = "DATAAGENT_CATALOG_SNAPSHOT"
+
+# r41 X2: an undeclared or wrongly declared resource field silently disabled
+# the access recheck (typo -> attribute missing; ``str``/``dict`` -> no
+# VersionedRef produced). These are the only annotation shapes the recheck
+# can turn into resource refs, so they are the only shapes a declaration may
+# use. ``str``, ``dict``, ``Any`` and opaque models are rejected at
+# registration time, never at call time.
+# The recheck iterates only list/tuple values; accepting any other sequence
+# annotation here would re-open the silent-skip hole this validation closes.
+_SEQUENCE_ORIGINS = {list, tuple}
 
 
 @dataclass(frozen=True)
@@ -38,6 +51,108 @@ class OperationSpec:
     resource_fields: tuple[str, ...] = ()
 
 
+def _unwrap_annotation(annotation: Any) -> Any:
+    """Strip ``Annotated`` wrappers (pydantic keeps the inner type)."""
+
+    while get_origin(annotation) is Annotated:
+        annotation = get_args(annotation)[0]
+    return annotation
+
+
+def _is_resource_annotation(annotation: Any) -> bool:
+    """Can the recheck turn a value of this annotation into a resource ref?
+
+    Accepted shapes mirror ``invoke._to_versioned_ref``: a ``VersionedRef``,
+    an ``AssetRef``/``FileRef``-shaped model (``id`` + ``revision``), a
+    wrapper model carrying ``asset`` (``TableRef``, ``DocumentRef``,
+    ``ProfileRef`` ...), or a sequence/optional of those. Everything the
+    old recheck silently skipped — plain ``str``, ``dict`` containers,
+    ``Any``, opaque models — is rejected.
+    """
+
+    annotation = _unwrap_annotation(annotation)
+    if annotation is VersionedRef:
+        return True
+    origin = get_origin(annotation)
+    if origin in _SEQUENCE_ORIGINS:
+        args = [arg for arg in get_args(annotation) if arg is not Ellipsis]
+        return bool(args) and all(_is_resource_annotation(arg) for arg in args)
+    if origin in (Union, _pytypes.UnionType):
+        args = [arg for arg in get_args(annotation) if arg is not type(None)]
+        return bool(args) and all(_is_resource_annotation(arg) for arg in args)
+    if isinstance(annotation, type) and issubclass(annotation, BaseModel):
+        fields = set(annotation.model_fields)
+        if "asset" in fields:
+            # A wrapper names the asset it reads (TableRef/DocumentRef/...).
+            asset = _unwrap_annotation(annotation.model_fields["asset"].annotation)
+            return _is_asset_ref_annotation(asset)
+        # A flat asset carries the identity itself (AssetRef/FileRef); the
+        # recheck's ``_to_versioned_ref`` needs all three of id/kind/revision.
+        return {"id", "kind", "revision"} <= fields
+    return False
+
+
+def _is_asset_ref_annotation(annotation: Any) -> bool:
+    if annotation is VersionedRef:
+        return True
+    return bool(
+        isinstance(annotation, type)
+        and issubclass(annotation, BaseModel)
+        and {"id", "revision"} <= set(annotation.model_fields)
+    )
+
+
+def _resource_annotation_hint(annotation: Any) -> str:
+    annotation = _unwrap_annotation(annotation)
+    origin = get_origin(annotation)
+    if origin is dict:
+        return "a dict container is not a resource reference"
+    if annotation is str:
+        return "a plain str is not a resource reference"
+    if annotation is Any:
+        return "Any cannot be verified as a resource reference"
+    text = getattr(annotation, "__name__", None) or str(annotation)
+    return f"{text} does not carry an asset or an id/revision identity"
+
+
+def validate_resource_fields(
+    operation_name: str,
+    input_model: Type[BaseModel],
+    resource_fields: tuple[str, ...],
+) -> None:
+    """Reject resource-field declarations the access recheck cannot verify.
+
+    Runs at registration (``operation`` / ``register``), so a typo or an
+    unusable field type fails the process at startup instead of silently
+    skipping the DA12.1 recheck on every call (S0 review X2).
+    """
+
+    seen: set[str] = set()
+    for name in resource_fields:
+        if not isinstance(name, str) or not name:
+            raise RuntimeError(
+                f"{operation_name}: resource_fields must contain non-empty field names"
+            )
+        if name in seen:
+            raise RuntimeError(
+                f"{operation_name}: duplicate resource field {name!r} in resource_fields"
+            )
+        seen.add(name)
+        field = input_model.model_fields.get(name)
+        if field is None:
+            raise RuntimeError(
+                f"{operation_name}: resource field {name!r} is not an input field of "
+                f"{input_model.__name__}; a misspelled declaration would skip the "
+                "access recheck (X2)"
+            )
+        if not _is_resource_annotation(field.annotation):
+            raise RuntimeError(
+                f"{operation_name}: resource field {name!r} has type "
+                f"{field.annotation!r}; {_resource_annotation_hint(field.annotation)}. "
+                "Declare a VersionedRef or an AssetRef/TableRef-shaped model (X2)"
+            )
+
+
 _SPECS: dict[str, OperationSpec] = {}
 _LOADED = False
 
@@ -53,7 +168,10 @@ def operation(
     destructive: bool = False,
     resource_fields: tuple[str, ...] = (),
 ):
+    resource_fields = tuple(resource_fields)
+
     def decorator(fn: Callable[..., Any]) -> Callable[..., Any]:
+        validate_resource_fields(fn.__name__, input_model, resource_fields)
         module = fn.__module__
         source_file = "src/" + module.replace(".", "/") + ".py"
         spec = OperationSpec(
@@ -67,7 +185,7 @@ def operation(
             description=description,
             idempotent=idempotent,
             destructive=destructive,
-            resource_fields=tuple(resource_fields),
+            resource_fields=resource_fields,
         )
         existing = _SPECS.get(spec.operation)
         if existing is not None and existing != spec:
@@ -79,6 +197,7 @@ def operation(
 
 
 def register(spec: OperationSpec) -> None:
+    validate_resource_fields(spec.operation, spec.input_model, spec.resource_fields)
     existing = _SPECS.get(spec.operation)
     if existing is not None and existing != spec:
         raise RuntimeError(f"duplicate operation registration: {spec.operation}")

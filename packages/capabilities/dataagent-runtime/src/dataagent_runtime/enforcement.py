@@ -170,7 +170,15 @@ def access_recheck(
             f"purpose mismatch: call purpose {ctx.purpose!r} != decision purpose "
             f"{decision.purpose!r}"
         )
-    if ctx.subject_ref is not None and ctx.subject_ref != decision.subject_ref:
+    if ctx.subject_ref is None or not str(ctx.subject_ref).strip():
+        # r41 X1: a missing subject used to skip the comparison entirely
+        # (fail-open). The resolved context always carries a subject
+        # (host, environment or local-owner); an empty one means a caller
+        # bypassed resolution, so fail closed.
+        reasons.append(
+            "CallContext.subject_ref is missing; the trusted host must fix the subject"
+        )
+    elif ctx.subject_ref != decision.subject_ref:
         reasons.append(
             f"subject mismatch: executing subject {ctx.subject_ref!r} != decision subject "
             f"{decision.subject_ref!r}"

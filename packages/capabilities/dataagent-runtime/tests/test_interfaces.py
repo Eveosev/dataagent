@@ -45,7 +45,8 @@ def test_mcp_tools_list_and_call():
     )
     tools = response["result"]["tools"]
     assert [t["name"] for t in tools] == ["ping"]
-    assert "context" in tools[0]["inputSchema"]["required"]
+    assert "context" in tools[0]["inputSchema"]["properties"]
+    assert "context" not in tools[0]["inputSchema"]["required"]
 
     call = {
         "jsonrpc": "2.0",
@@ -76,7 +77,7 @@ def test_mcp_tools_list_and_call():
     assert not response["result"]["isError"]
 
 
-def test_mcp_missing_context_is_error():
+def test_mcp_missing_context_is_optional():
     call = {
         "jsonrpc": "2.0",
         "id": 3,
@@ -90,8 +91,16 @@ def test_mcp_missing_context_is_error():
         list_operations=list_operations,
         invoke=_invoke,
     )
-    assert response["result"]["isError"]
-    assert "CallContext is required" in response["result"]["content"][0]["text"]
+    body = json.loads(response["result"]["content"][0]["text"])
+    assert body["status"] == "ok"
+    assert not response["result"]["isError"]
+    # The resolved context is the local-owner fallback with the one scope
+    # spelling; no CallContext was required from the caller.
+    resolved = mcp_server._context({}, {})
+    assert resolved is not None
+    assert resolved.subject_ref.startswith("local-owner:")
+    assert resolved.scope_ref.startswith("workspace:")
+    assert resolved.authorization_ref.startswith("local-owner:")
 
 
 def test_cli_end_to_end():

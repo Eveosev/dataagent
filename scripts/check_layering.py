@@ -90,6 +90,52 @@ def describe(key: tuple[str, str, str]) -> str:
     return f'{package}/{file}: imports {module}'
 
 
+def _bound_names(node: ast.Assign | ast.AnnAssign) -> list[str]:
+    targets: list[ast.expr] = []
+    if isinstance(node, ast.Assign):
+        targets = list(node.targets)
+    elif node.target is not None:
+        targets = [node.target]
+    names: list[str] = []
+    for target in targets:
+        if isinstance(target, ast.Name):
+            names.append(target.id)
+    return names
+
+
+def resolve_context_sites(cap_dir: Path) -> list[str]:
+    """Every production definition/binding of ``resolve_context``.
+
+    R1 has exactly one resolver
+    (``dataagent_runtime/policy/context.py``). A second definition in any
+    capability package is a fork of the context authority, so the guard
+    fails instead of letting the copies drift (S0 review X1).
+    """
+
+    sites: list[str] = []
+    for package in sorted(cap_dir.glob('dataagent-*')):
+        src = package / 'src'
+        if not src.is_dir():
+            continue
+        for path in sorted(src.rglob('*.py')):
+            try:
+                tree = ast.parse(path.read_text(encoding='utf-8'), filename=str(path))
+            except (OSError, SyntaxError) as exc:
+                raise SystemExit(f'check_layering: cannot parse {path}: {exc}')
+            for node in ast.walk(tree):
+                name: str | None = None
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    name = node.name
+                elif isinstance(node, (ast.Assign, ast.AnnAssign)):
+                    if 'resolve_context' in _bound_names(node):
+                        name = 'resolve_context'
+                if name == 'resolve_context':
+                    sites.append(
+                        f'{package.name}/{path.relative_to(package).as_posix()}:{node.lineno}'
+                    )
+    return sorted(sites)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--baseline', type=Path, default=DEFAULT_BASELINE,
@@ -100,8 +146,20 @@ def main() -> int:
 
     baseline = baseline_entries(args.baseline)
     current = collect(args.capabilities)
+    resolver_sites = resolve_context_sites(args.capabilities)
     baseline_total = sum(baseline.values())
     current_total = sum(current.values())
+
+    if len(resolver_sites) != 1:
+        for site in resolver_sites:
+            print(f'resolve_context definition: {site}', file=sys.stderr)
+        print(
+            'check_layering: FAILED — resolve_context must be defined exactly once '
+            f'(found {len(resolver_sites)})',
+            file=sys.stderr,
+        )
+        return 1
+    print(f'check_layering: resolve_context defined once ({resolver_sites[0]})')
 
     new_sites = sorted(key for key in current if key not in baseline)
     grown = sorted(
