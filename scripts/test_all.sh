@@ -16,9 +16,8 @@
 #
 # Browser acceptance tests need
 # packages/capabilities/dataagent-workbench/web/node_modules/playwright.
-# A clean checkout has no node_modules: those named tests are deselected and
-# reported (not silently skipped). Run `npm ci` in that web directory first
-# to include them.
+# A clean checkout has no node_modules, so the runner installs it with
+# `npm ci` before those suites; the tests use the system Chrome channel.
 #
 # The dataagent-cli real-Mint tests install the s0 preset, whose data-layer
 # dependency is the gitignored dataagent-data/packaging/bundle. The runner
@@ -80,6 +79,21 @@ stage_cli_fixtures() {
         || die "failed to stage the data bundle for dataagent-cli tests"
 }
 
+# The browser tests require the workbench web dependencies. They are ignored,
+# so install them once from the tracked package-lock when a clean checkout
+# lacks them; the tests themselves use the system Chrome channel.
+ensure_browser_deps() {
+    local web=$CAP_DIR/dataagent-workbench/web
+    local module=$web/node_modules/playwright
+    [ -e "$module" ] && return 0
+    [ -d "$web" ] || die "workbench web directory not found: $web"
+    command -v npm >/dev/null 2>&1 || die "npm not found (browser tests require it)"
+    echo "installing browser test dependencies: (cd $web && npm ci --no-audit --no-fund)" >&2
+    (cd "$web" && npm ci --no-audit --no-fund) \
+        || die "npm ci failed (browser tests require playwright)"
+    [ -e "$module" ] || die "npm ci finished but $module is missing"
+}
+
 [ -d "$CAP_DIR" ] || die "capability directory not found: $CAP_DIR"
 command -v uv >/dev/null 2>&1 || die "uv not found on PATH"
 
@@ -135,6 +149,9 @@ for pkg in "${packages[@]}"; do
     if [ "$pkg" = dataagent-cli ]; then
         stage_cli_fixtures
     fi
+    case $pkg in
+        dataagent-operations|dataagent-scenarios) ensure_browser_deps ;;
+    esac
 
     cmd=(uv run)
     if [ -f "$dir/pyproject.toml" ]; then
@@ -165,34 +182,10 @@ for pkg in "${packages[@]}"; do
     fi
     cmd+=(python -m pytest -p no:cacheprovider)
 
-    # Browser acceptance tests need the workbench web node_modules
-    # (playwright), which a clean checkout does not contain. Skip only
-    # those named tests and say so; every other test still runs.
-    deselects=()
-    browser_module=$CAP_DIR/dataagent-workbench/web/node_modules/playwright
-    if [ ! -e "$browser_module" ]; then
-        case $pkg in
-            dataagent-operations)
-                deselects+=(
-                    --deselect tests/test_channel_switch.py::test_unknown_api_submission_is_reconciled_by_read_only_browser
-                    --deselect tests/test_gui_workflow.py::test_observes_real_page_and_detects_changed_required_field
-                    --deselect tests/test_gui_workflow.py::test_browser_blocks_unapproved_requests_and_rejects_hidden_status
-                )
-                echo "$pkg: skipping 3 browser tests (missing $browser_module)" >&2
-                ;;
-            dataagent-scenarios)
-                deselects+=(
-                    --deselect tests/test_business_system_fixture.py::test_browser_creates_attaches_and_submits_shared_record
-                )
-                echo "$pkg: skipping 1 browser test (missing $browser_module)" >&2
-                ;;
-        esac
-    fi
-
     log=$(mktemp "${TMPDIR:-/tmp}/dataagent-test-all.XXXXXX") || die "mktemp failed"
 
     echo "=== $pkg"
-    if (cd "$dir" && "${cmd[@]}" ${deselects[@]+"${deselects[@]}"} ${pytest_args[@]+"${pytest_args[@]}"}) >"$log" 2>&1; then
+    if (cd "$dir" && "${cmd[@]}" ${pytest_args[@]+"${pytest_args[@]}"}) >"$log" 2>&1; then
         rc=0
     else
         rc=$?
