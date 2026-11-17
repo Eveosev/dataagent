@@ -99,7 +99,16 @@
       "missing_metrics": [
         "conflict_retention_rate"
       ],
-      "note": "三个源只标注实体对，未标注跨源同对象的值冲突，冲突保留率按缺口记录；非金标候选按数据集 gold mapping 的排他性视为非匹配，这是成对实体匹配评测的通行口径。",
+      "coverage_gaps": [
+        {
+          "id": "no_match_cases",
+          "status": "unverified",
+          "description": "当前 240 条用例的左记录均来自 perfectMapping，每条至少有一个真匹配；没有零匹配样本。",
+          "impact": "“没有匹配时返回空数组”未被验证；empty 适配器只验证空输出地板，不能替代该场景。",
+          "next_step": "从未标注记录中人工确认零匹配样本并补金标；在此之前不把未标注记录直接当负例。"
+        }
+      ],
+      "note": "三个源只标注实体对，未标注跨源同对象的值冲突，冲突保留率按缺口记录；非金标候选按数据集 gold mapping 的排他性视为非匹配，这是候选集内的成对评测口径，候选集外的未标注记录不直接当作负例。当前 240 条均至少有一个真匹配，“没有匹配时返回空数组”未验证，见 coverage_gaps。",
       "license_audit": [
         {
           "candidate": "DeepMatcher UW-Madison Datasets.md 镜像",
@@ -164,7 +173,7 @@
         }
       }
     },
-    "content_digest": "sha256:c935f5b215f1b90a64d360801c7a41f204780cc6e12da3c17f210977c7481233",
-    "content_digest_version": 2
+    "content_digest": "sha256:1533d653391e656468f1a5cb5b0b2cd0f28addbb3bf430ac2ed341d54230bf56",
+    "content_digest_version": 3
   }
 }

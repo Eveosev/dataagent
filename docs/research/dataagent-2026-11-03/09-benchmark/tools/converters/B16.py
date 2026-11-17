@@ -99,9 +99,28 @@ def build(ctx) -> dict:
                 "covered_metrics": ["entity_pair_f1", "false_merge_rate"],
                 "partial_metrics": [],
                 "missing_metrics": ["conflict_retention_rate"],
+                "coverage_gaps": [
+                    {
+                        "id": "no_match_cases",
+                        "status": "unverified",
+                        "description": (
+                            "当前 240 条用例的左记录均来自 perfectMapping，每条至少有一个真匹配；"
+                            "没有零匹配样本。"
+                        ),
+                        "impact": (
+                            "“没有匹配时返回空数组”未被验证；empty 适配器只验证空输出地板，"
+                            "不能替代该场景。"
+                        ),
+                        "next_step": (
+                            "从未标注记录中人工确认零匹配样本并补金标；在此之前不把未标注记录直接当负例。"
+                        ),
+                    }
+                ],
                 "note": (
                     "三个源只标注实体对，未标注跨源同对象的值冲突，冲突保留率按缺口记录；"
-                    "非金标候选按数据集 gold mapping 的排他性视为非匹配，这是成对实体匹配评测的通行口径。"
+                    "非金标候选按数据集 gold mapping 的排他性视为非匹配，这是候选集内的成对评测口径，"
+                    "候选集外的未标注记录不直接当作负例。当前 240 条均至少有一个真匹配，"
+                    "“没有匹配时返回空数组”未验证，见 coverage_gaps。"
                 ),
                 "license_audit": [
                     {
@@ -174,6 +193,7 @@ def _build_source(ctx, spec: dict) -> dict:
 
     split_counts = {split: 0 for split in SPLITS}
     seq = 0
+    # 只从有金标匹配的左记录生成用例；当前 240 条均有匹配，零匹配场景见 coverage_gaps。
     for left_id in sorted(mapping, key=lambda x: hashlib.sha256(f"{spec['id']}:{x}".encode()).hexdigest()):
         gold_rights = mapping[left_id]
         root = _find(parent, "L:" + left_id)

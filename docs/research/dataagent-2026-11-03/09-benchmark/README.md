@@ -239,7 +239,7 @@ python3 -I docs/research/dataagent-2026-11-03/09-benchmark/tools/report.py
 ```
 
 - 抓取器幂等：`FETCH.json` 标记 `ok` 的源默认跳过；`--force` 重抓。
-- 构建器幂等：先清空本任务 `cases/`、`expected/`、`fixtures/`，再按固定哈希切分重写；同一份原始数据两次构建结果一致。`manifest.build.content_digest` 记录 cases、expected、fixtures 与来源内容标识（source id + 内容 digest，不计 `fetched_at` 等抓取元数据）的摘要，摘要方案记在 `build.content_digest_version`；摘要不变时保持原 `revision` 和 `updated`，内容变化才升版本。
+- 构建器幂等：先清空本任务 `cases/`、`expected/`、`fixtures/`，再按固定哈希切分重写；同一份原始数据两次构建结果一致。`manifest.build.content_digest` 记录 cases、expected、fixtures 与来源目录实际数据文件内容（逐文件 sha256，排除 `FETCH.json`、`.git` 等抓取元数据）的摘要，摘要方案记在 `build.content_digest_version`；摘要不变时保持原 `revision` 和 `updated`，内容变化才升版本。
 - `gated` 源（DocILE、BEAVER、Spider2 全量）需人工接受条款并配置 HF token，`fetch.py` 会跳过并在 `fetch-report.json` 里写 `remedy`；这类缺口要如实留在 manifest，不得用替身数据充数。
 
 ## 10. 维护
@@ -262,7 +262,7 @@ python3 -I docs/research/dataagent-2026-11-03/09-benchmark/tools/report.py
 | registry/task 状态 | 已建任务 `status=collecting`；B15 保持 `planned`（无公开数据） |
 | grader 实现 | 17 个已实现（覆盖 B01–B04、B16），其中 13 个可真正判分（`unknown_retention` 只在 unknown 子集上计分）；其余 41 个未实现或金标缺口，见 `harness/graders/README.md` |
 | 判分链路 | `harness/grade.py` 可跑通：金标回填 240 条得满分（B03/B16），扰动 20% 后掉分；scorecard 通过 schema 校验 |
-| B16 判分自检 | oracle 三切分 F1=1、FMR=0；empty 三切分 F1=0；手工金标回填 F1=1、FMR=0；聚类 `[[L,R1],[R1,R2]]` 经传递闭包得 F1=1、FMR=0；`[[L,R1,OUTSIDE]]` 把 OUTSIDE 计 FP，得 F1=2/3、FMR=0.5；FMR `1/1`+`3/4` 按预测对 pooled=0.8；全程无合并时 value=null、denominator=0 |
+| B16 判分自检 | oracle 三切分 F1=1、FMR=0；empty 三切分 F1=0；手工金标回填 F1=1、FMR=0；聚类 `[[L,R1],[R1,R2]]` 经传递闭包得 F1=1、FMR=0；`[[L,R1,OUTSIDE]]` 把 OUTSIDE 计 FP，得 F1=2/3、FMR=0.5；FMR `1/1`+`3/4` 按预测对 pooled=0.8；全程无合并时 value=null、denominator=0；零匹配场景未覆盖（240 条均至少一个真匹配），见 B16 NOTES「覆盖与缺口」 |
 | 适配器 | `dataagent-cli` / `oracle` / `empty` 三个，见 `harness/adapters/README.md`；`harness/run.py` 一键产出 run.json + cases.jsonl + scorecard。B16 的 oracle 分支已补，三切分 F1=1、FMR=0 |
 | 已跑通的探索轮 | B02 `x001`（oracle，满分）、B02 `x002`（empty，地板）、B02 `x003`（CLI 缺失，如实 failed）、B03/B04 `x001`（oracle）、B16 `x544`（oracle，三切分 F1=1、FMR=0）、B16 `x045`（empty，三切分 F1=0）；本轮运行产物不入库，明细见 B16 NOTES 验证记录 |
 | 基线 | 未建立，16 个 `baseline.json` 的 `run_id` 为 null |

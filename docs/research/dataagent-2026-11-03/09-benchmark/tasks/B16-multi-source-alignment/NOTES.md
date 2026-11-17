@@ -45,7 +45,7 @@
 
 金标是 `expected.pairs` 的实体对列表，只来自数据集自带的 `*_perfectMapping.csv`。Amazon-Google 有 1,300 对、1,113 条左记录，其中 144 条左记录对应多个右记录；候选里保留该左记录的全部真匹配。
 
-非金标候选按数据集 gold mapping 的排他性视为非匹配：同一左记录的真匹配已在 gold mapping 中列全，候选里的其它右记录不是它的匹配。这是 DeepMatcher / Magellan 成对评测的通行口径，也是本任务唯一的负例来源；未标注的真匹配是已知噪声，写进 manifest `build.coverage.note`，不当成 0 分理由。
+非金标候选按数据集 gold mapping 的排他性视为非匹配：同一左记录的真匹配已在 gold mapping 中列全，候选里的其它右记录不是它的匹配。这是候选集内的成对评测口径；候选集外的未标注记录不直接当作负例，未标注的真匹配是已知噪声，写进 manifest `build.coverage.note`，不当成 0 分理由。
 
 候选负例取同 split 内与左记录 token Jaccard 相似度最高的 4 条，过滤相似度 ≥ 0.95 的近重复；候选顺序按哈希固定，金标不会总在首位。
 
@@ -69,6 +69,7 @@
 
 - 已覆盖：实体对 F1、错误合并率。
 - 缺口：`conflict_retention_rate`（冲突保留率）。三个源只标注实体对，未标注跨源同对象的值冲突；按 README §9「覆盖诚实」记录，不用假金标补。
+- 缺口：零匹配场景。当前 240 条用例的左记录均来自 `perfectMapping`，每条至少有一个真匹配；没有零匹配样本，“没有匹配时返回空数组”未被验证。empty 适配器只验证空输出地板，不能替代该场景。后续从未标注记录中人工确认零匹配样本并补金标；在此之前不把未标注记录直接当负例。manifest `build.coverage.coverage_gaps` 记录同一缺口。
 - 范围：本轮评成对实体对齐（左记录 → 右候选），不含 N 路聚类与 Join 计划生成。
 - 生成器 `tools/converters/B16.py`；原始数据在 `workspace/benchmark-data/B16/`，不入库。
 
@@ -82,11 +83,11 @@
 ## 数据构建摘要
 
 - 构建：`tools/build_cases.py --task B16`（转换器 `tools/converters/B16.py`）；当前版本以 `dataset/manifest.json` 为准
-- 版本：`build_cases.py` 对 cases、expected、fixtures 与来源内容标识（source id + 内容 digest，不计 `fetched_at` 等抓取元数据）算内容摘要；摘要不变时重复构建不升 `revision`
+- 版本：`build_cases.py` 对 cases、expected、fixtures 与来源目录实际数据文件内容（排除 `FETCH.json`、`.git` 等抓取元数据）算内容摘要；摘要不变时重复构建不升 `revision`
 - 原始数据：`leipzig-dblp-acm`、`leipzig-amazon-google`、`leipzig-abt-buy`，落在 `workspace/benchmark-data/B16/`
 - 当前用例：development 120 / regression 60 / unseen 60（共 240）
 - 金标：数据集自带 `perfectMapping.csv`；非金标候选按排他性视为非匹配
-- 指标覆盖：已覆盖 `entity_pair_f1`、`false_merge_rate`；缺口 `conflict_retention_rate`
+- 指标覆盖：已覆盖 `entity_pair_f1`、`false_merge_rate`；缺口 `conflict_retention_rate`；零匹配场景未覆盖（240 条均至少一个真匹配）
 <!-- data-build:end -->
 
 ## 迭代日志
@@ -110,6 +111,6 @@
 | `x544-2026-11-17` | oracle | 1.000 / 0.000 | 1.000 / 0.000 | 1.000 / 0.000 | v0.11 |
 | `x045-2026-11-17` | empty | 0.000 / null | 0.000 / null | 0.000 / null | v0.11 |
 
-- 构建版本测试：`tests/test_build_digest.py` 覆盖 fetched_at 变化不升 revision、用例变化升一版。
+- 构建版本测试：`tests/test_build_digest.py` 覆盖 fetched_at/强制重抓元数据变化不升 revision、同长度来源内容变化升版、旧 manifest 无摘要首次重建内容变化升版。
 
 FMR 的 `null` 表示该切分没有预测合并，pooled 分母为 0；不是 missing，也不是 0 分。本轮运行产物在 `history/runs/`，按 `.gitignore` 排除；验证结论以上表为准。
