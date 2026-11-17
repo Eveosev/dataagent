@@ -1,0 +1,44 @@
+{
+  "task": "entity_alignment",
+  "source": "Amazon → Google Products",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "b000hi1i2e",
+    "title": "scrabble complete (jewel case)",
+    "description": "scrabble complete gives you the challenge you crave for the classic word-based board game. whether you're a beginner or expert you'll increase your winning word power with the best scrabble computer game ever.",
+    "manufacturer": "encore",
+    "price": "9.99"
+  },
+  "right_candidates": [
+    {
+      "id": "http://www.google.com/base/feeds/snippets/16645057250274804209",
+      "name": "bob dylan bob dylan - isong cd-rom (jewel case-sized edition)",
+      "description": "isong is the only teaching tool that actually syncs to the original recordings of legendary musicians and today's top stars! each isong pack includes arrangements ranging from very simple to note-accurate transcriptions a performance video and a ...",
+      "price": "18.5"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/13465309500499088471",
+      "name": "total 3d home deluxe (jewel case) (jce-th6)",
+      "description": "total 3d home deluxe (jewel case) brand: individual software mpn: jce-th6 variant name: total 3d home deluxe (jewel case)",
+      "price": "9.59"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/10282477376383378142",
+      "name": "merriam-webster's dictionary (win/mac) (jewel case) (10462)",
+      "description": "merriam-webster's dictionary (win/mac) (jewel case) brand: fogware publishing mpn: 10462 variant name: merriam-webster's dictionary (win/mac) (jewel case)",
+      "price": "9.59"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/13642535173107321529",
+      "name": "cross stitch design studio (jewel case) (8006)",
+      "description": "cross stitch design studio (jewel case) brand: m and r technologies mpn: 8006 variant name: cross stitch design studio (jewel case)",
+      "price": "9.59"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/2084347887571442067",
+      "name": "encore software 11290 - scrabble complete - win 98 me xp",
+      "description": "encore software 11290 : scrabble takes the world s most popular word game and adds a new dimension. try more than a dozen mini-games for quick doses of scrabble fun. system requirements: operating system: windows 98/me/xp processor: pentium ii 333 ...",
+      "price": "7.69"
+    }
+  ]
+}

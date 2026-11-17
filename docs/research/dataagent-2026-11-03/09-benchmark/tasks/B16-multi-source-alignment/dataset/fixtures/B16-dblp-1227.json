@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/vldb/SevcikK96",
+    "title": "Filter Trees for Managing Spatial Data over a Range of Size Granularities",
+    "authors": "Kenneth C. Sevcik, Nick Koudas",
+    "venue": "VLDB",
+    "year": "1996"
+  },
+  "right_candidates": [
+    {
+      "id": "672840",
+      "title": "V-Trees - A Storage Method for Long Vector Data",
+      "authors": "Maur&#236;cio R. Mediano, Marco A. Casanova, Marcelo Dreux",
+      "venue": "Very Large Data Bases",
+      "year": "1994"
+    },
+    {
+      "id": "673466",
+      "title": "Filter Trees for Managing Spatial Data over a Range of Size Granularities",
+      "authors": "Kenneth C. Sevcik, Nick Koudas",
+      "venue": "Very Large Data Bases",
+      "year": "1996"
+    },
+    {
+      "id": "369289",
+      "title": "A vision for management of complex models",
+      "authors": "Phillip A. Bernstein, Alon Y. Halevy, Rachel A. Pottinger",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2000"
+    },
+    {
+      "id": "310065",
+      "title": "A study on data point search for HG-trees",
+      "authors": "Joseph Kuan, Paul Lewis",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1999"
+    },
+    {
+      "id": "872775",
+      "title": "XPRESS: a queriable compression for XML data",
+      "authors": "Jun-Ki Min, Myung-Jae Park, Chin-Wan Chung",
+      "venue": "International Conference on Management of Data",
+      "year": "2003"
+    }
+  ]
+}

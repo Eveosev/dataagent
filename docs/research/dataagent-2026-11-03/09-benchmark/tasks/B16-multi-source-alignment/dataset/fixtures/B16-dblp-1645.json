@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/BryanMCLG94",
+    "title": "The MEDUSA Project: Autonomous Data Management in a Shared-Nothing Parallel Database Machine",
+    "authors": "George M. Bryan, J. Geyer, Wayne E. Moore, B. J. Curry, K. W. Lodge",
+    "venue": "SIGMOD Conference",
+    "year": "1994"
+  },
+  "right_candidates": [
+    {
+      "id": "564757",
+      "title": "Automating physical database design in a parallel database",
+      "authors": "Jun Rao, Chun Zhang, Nimrod Megiddo, Guy Lohman",
+      "venue": "International Conference on Management of Data",
+      "year": "2002"
+    },
+    {
+      "id": "191929",
+      "title": "Parallel database systems in the 1990's",
+      "authors": "Michael J. Carey",
+      "venue": "International Conference on Management of Data",
+      "year": "1994"
+    },
+    {
+      "id": "959070",
+      "title": "The Cougar Project: a work-in-progress report",
+      "authors": "Alan Demers, Johannes Gehrke, Rajmohan Rajaraman, Niki Trigoni, Yong Yao",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2003"
+    },
+    {
+      "id": "191955",
+      "title": "The MEDUSA project: autonomous data management in a shared-nothing parallel database machine",
+      "authors": "G. M. Bryan, W. E. Moore, B. J. Curry, K. W. Lodge, J. Geyer",
+      "venue": "International Conference on Management of Data",
+      "year": "1994"
+    },
+    {
+      "id": "765547",
+      "title": "Data placement in shared-nothing parallel database systems",
+      "authors": "Manish Mehta, David J. DeWitt",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "1997"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/vldb/AbrolLMMMRTWZ01",
+    "title": "Navigating large-scale semi-structured data in business portals",
+    "authors": "Michel Tourn, Man Abrol, John Wang, Grace Zhang, Jianchang Mao, Uma Mahadevan, Rajat Mukherjee, Prabhakar Raghavan, Neil Latarche",
+    "venue": "VLDB",
+    "year": "2001"
+  },
+  "right_candidates": [
+    {
+      "id": "672355",
+      "title": "Navigating large-scale semi-structured data in business portals",
+      "authors": "Man Abrol, Neil Latarche, Uma Mahadevan, Jianchang Mao, Rajat Mukherjee, Prabhakar Raghavan, Michel Tourn, John Wang, Grace Zhang",
+      "venue": "Very Large Data Bases",
+      "year": "2001"
+    },
+    {
+      "id": "672192",
+      "title": "Views in a Large Scale XML Repository",
+      "authors": "Sophie Cluet, Pierangelo Veltri, Dan Vodislav",
+      "venue": "Very Large Data Bases",
+      "year": "2001"
+    },
+    {
+      "id": "344860",
+      "title": "Practical lessons in supporting large-scale computational science",
+      "authors": "Ron Musick, Terence Critchlow",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1999"
+    },
+    {
+      "id": "672973",
+      "title": "Data Integration in the Large: The Challenge of Reuse",
+      "authors": "Arnon Rosenthal, Leonard J. Seligman",
+      "venue": "Very Large Data Bases",
+      "year": "1994"
+    },
+    {
+      "id": "671345",
+      "title": "Active Storage for Large-Scale Data Mining and Multimedia",
+      "authors": "Erik Riedel, Garth A. Gibson, Christos Faloutsos",
+      "venue": "Very Large Data Bases",
+      "year": "1998"
+    }
+  ]
+}

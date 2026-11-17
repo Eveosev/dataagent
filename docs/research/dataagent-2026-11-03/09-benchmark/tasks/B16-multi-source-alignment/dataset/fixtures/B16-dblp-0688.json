@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/sigmod/BabuW01",
+    "title": "Continuous Queries over Data Streams",
+    "authors": "Jennifer Widom, Shivnath Babu",
+    "venue": "SIGMOD Record",
+    "year": "2001"
+  },
+  "right_candidates": [
+    {
+      "id": "603884",
+      "title": "Continuous queries over data streams",
+      "authors": "Shivnath Babu, Jennifer Widom",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2001"
+    },
+    {
+      "id": "375665",
+      "title": "On computing correlated aggregates over continual data streams",
+      "authors": "Johannes Gehrke, Flip Korn, Divesh Srivastava",
+      "venue": "International Conference on Management of Data",
+      "year": "2001"
+    },
+    {
+      "id": "872823",
+      "title": "Evaluating probabilistic queries over imprecise data",
+      "authors": "Reynold Cheng, Dmitri V. Kalashnikov, Sunil Prabhakar",
+      "venue": "International Conference on Management of Data",
+      "year": "2003"
+    },
+    {
+      "id": "564698",
+      "title": "Continuously adaptive continuous queries over streams",
+      "authors": "Samuel Madden, Mehul Shah, Joseph M. Hellerstein, Vijayshankar Raman",
+      "venue": "International Conference on Management of Data",
+      "year": "2002"
+    },
+    {
+      "id": "872790",
+      "title": "Processing set expressions over continuous update streams",
+      "authors": "Sumit Ganguly, Minos Garofalakis, Rajeev Rastogi",
+      "venue": "International Conference on Management of Data",
+      "year": "2003"
+    }
+  ]
+}

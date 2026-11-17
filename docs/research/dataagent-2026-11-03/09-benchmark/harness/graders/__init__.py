@@ -27,11 +27,16 @@ REGISTRY = {
     "direction_symmetry": "condition_direction_consistency",
     "decidability_classification": "decidability_accuracy",
     "unknown_preservation": "unknown_retention",
+    # B16：同一判分模块的两个入口，实体对 F1 与错误合并率分别出分
+    "entity_pair_f1": "entity_pair_f1",
+    "entity_pair_f1:false_merge": "false_merge_rate",
 }
 
 
 def load(name: str):
+    """按注册名加载 grade()；`module:function` 形式加载同模块的另一个入口。"""
     if name not in REGISTRY:
         raise KeyError(f"未注册的 grader: {name}")
-    module = importlib.import_module(f"graders.{name}")
-    return module.grade
+    module_name, _, function = name.partition(":")
+    module = importlib.import_module(f"graders.{module_name}")
+    return getattr(module, function or "grade")

@@ -1,0 +1,44 @@
+{
+  "task": "entity_alignment",
+  "source": "Amazon → Google Products",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "b00005birs",
+    "title": "math 2",
+    "description": "based on the school zone workbook series this program teaches critical math skills with interactive activities and fun games. proven curriculum audio guidance and clear examples help your child master addition subtraction multiplication place values and other skills. the program randomizes problems with each use providing endless activities. the engaging games provide a helpful break.",
+    "manufacturer": "school zone",
+    "price": "9.99"
+  },
+  "right_candidates": [
+    {
+      "id": "http://www.google.com/base/feeds/snippets/15911936238938935149",
+      "name": "miraizon cinematize 2",
+      "description": "system requirements: a power macintosh g3 or later computer mac os x 10.2 or higher quicktime 6.0 or later approximately 2.5 mb of hard disk space (additional space is needed for extracted files) 128 mb or more of ram 256 mb or more of ram ...",
+      "price": "65.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/17196507061828599304",
+      "name": "summitsoft corp photoedit 2",
+      "description": "becoming a photography pro is child's play using the quick and easy features of photoedit 2. develop your creative skills using tons of image filters using special effects text creation and drawing & paint tools. system requirements: g3 o",
+      "price": "26.14"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/14568361195754285856",
+      "name": "xbox: halo 2",
+      "description": "halo 2 continues the story of the master chief the genetically enhanced super-soldier who is the only human ever to successfully defy the covenant--a coalition of alien races on a murderous march toward earth. their defeat at the ancient halo ...",
+      "price": "29.95"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/8401993747038150345",
+      "name": "millies math house",
+      "description": "develop fundamental early math skills with millie and friends",
+      "price": "9.9"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/16816523477506304009",
+      "name": "school zone interactive math 2 on track software",
+      "description": "math 2 helps your child master second-grade math skills. engaging activities games and animated rewards make this electronic workbook a great way to learn! system requirements: windows®: microsoft® windows® 95 98 or higher 3",
+      "price": "9.45"
+    }
+  ]
+}

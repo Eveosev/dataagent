@@ -1,0 +1,36 @@
+{
+  "case_id": "B16-dblp-1806",
+  "task_id": "B16",
+  "split_role": "regression",
+  "inputs": [
+    {
+      "kind": "record_pair",
+      "ref": "fixtures/B16-dblp-1806.json",
+      "digest": null
+    }
+  ],
+  "expected": {
+    "kind": "inline",
+    "ref": "expected/B16-dblp-1806.json"
+  },
+  "evidence": [
+    "fixtures/B16-dblp-1806.json"
+  ],
+  "tags": [
+    "entity-matching",
+    "source:dblp",
+    "domain:bibliographic",
+    "gold:1",
+    "candidates:5"
+  ],
+  "source": "dblp",
+  "license": null,
+  "fingerprint": null,
+  "annotation": {
+    "status": "reviewed",
+    "annotators": [
+      "external"
+    ],
+    "adjudicated": false
+  }
+}

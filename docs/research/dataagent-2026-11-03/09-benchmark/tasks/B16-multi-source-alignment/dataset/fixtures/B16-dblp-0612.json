@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/Mamoulis03",
+    "title": "Efficient Processing of Joins on Set-valued Attributes",
+    "authors": "Nikos Mamoulis",
+    "venue": "SIGMOD Conference",
+    "year": "2003"
+  },
+  "right_candidates": [
+    {
+      "id": "375670",
+      "title": "Space-efficient online computation of quantile summaries",
+      "authors": "Michael Greenwald, Sanjeev Khanna",
+      "venue": "International Conference on Management of Data",
+      "year": "2001"
+    },
+    {
+      "id": "191880",
+      "title": "Multi-step processing of spatial joins",
+      "authors": "Thomas Brinkhoff, Hans-Peter Kriegel, Ralf Schneider, Bernhard Seeger",
+      "venue": "International Conference on Management of Data",
+      "year": "1994"
+    },
+    {
+      "id": "564694",
+      "title": "Efficient integration and aggregation of historical information",
+      "authors": "Mirek Riedewald, Divyakant Agrawal, Amr El Abbadi",
+      "venue": "International Conference on Management of Data",
+      "year": "2002"
+    },
+    {
+      "id": "872778",
+      "title": "Efficient processing of joins on set-valued attributes",
+      "authors": "Nikos Mamoulis",
+      "venue": "International Conference on Management of Data",
+      "year": "2003"
+    },
+    {
+      "id": "375728",
+      "title": "Communication-efficient distributed mining of association rules",
+      "authors": "Assaf Schuster, Ran Wolff",
+      "venue": "International Conference on Management of Data",
+      "year": "2001"
+    }
+  ]
+}

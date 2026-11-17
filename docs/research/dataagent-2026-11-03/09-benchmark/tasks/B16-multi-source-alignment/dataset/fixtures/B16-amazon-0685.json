@@ -1,0 +1,44 @@
+{
+  "task": "entity_alignment",
+  "source": "Amazon → Google Products",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "b000a2aknu",
+    "title": "internet cleanup 3.0",
+    "description": "with internet cleanup 3.0 you'll streamline your privacy management. anyone who uses the web needs to clean out their cache from tiem to time - internet cleanup 3.0 makes it quick and easy. with a few clicks you'll delete browser caches auto-fill data chat transcripts browser history files and e-mail attachments. the program also has features that look for spyware and keystroke recorders protecting your mac while you surf. block cookies and prevent websites from knowing your browsing history electronic shredding with secure delete - obliterate files completely and protect your privacy advanced new network security tools for safe secure system-wide cleanup",
+    "manufacturer": "aladdin systems",
+    "price": "29.99"
+  },
+  "right_candidates": [
+    {
+      "id": "http://www.google.com/base/feeds/snippets/18053348848713858697",
+      "name": "allume internet cleanup 4.0",
+      "description": "requires mac os x 10.4 or later...",
+      "price": "29.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/5520835678868977029",
+      "name": "allume internet cleanup 3.0",
+      "description": "system requirements mac os 10.3 or newer",
+      "price": "24.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/13573519961862572084",
+      "name": "vhs to dvd 3.0 deluxe",
+      "description": "with vhs to dvd 3.0 deluxe you can copy your videotape collection onto dvds or cds and create your own dvd/cd movies from your camcorder vcr dvd player and more! vhs to dvd 3.0 deluxe provides everything you need to easily transfer your video to ...",
+      "price": "99.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/18368153783802816439",
+      "name": "adobe premiere elements 3.0",
+      "description": "bring your home videos to life! adobe premiere element 3.0 software makes creating and sharing impressive home videos a snap. burn your footage to dvd in two simple steps complete with a dvd menu and scene index or easily assemble your movie by rea",
+      "price": "89.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/14284530408597272725",
+      "name": "instant landscape design 3.0",
+      "description": "from shrubbery to sandboxes; gravel to gateposts now you can design the lawn and garden of your dreams with a few clicks of the mouse and the powerful user-friendly tech tools exclusive to instant landscape design 3.0 on cd-rom. developed ...",
+      "price": "17.9"
+    }
+  ]
+}

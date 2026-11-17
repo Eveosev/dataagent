@@ -1,0 +1,89 @@
+{
+  "id": "B16",
+  "slug": "multi-source-alignment",
+  "title": "多源对齐与实体解析",
+  "plan_row": 16,
+  "plan_ref": "../../../09-benchmark-plan.md",
+  "catalog_atoms": [
+    "DA02.5.1",
+    "DA02.5.2",
+    "DA02.5.3",
+    "DA03.2.1",
+    "DA03.2.2",
+    "DA03.2.3"
+  ],
+  "slice": "S0",
+  "unit": "case",
+  "why_not_unit_tested": "同名异物、跨源字段差异与多对一匹配只在真实商品/文献记录分布上出现；单测无法覆盖记录噪声与候选歧义",
+  "reference_benchmarks": [
+    {
+      "name": "DeepMatcher (SIGMOD 2018) benchmark datasets",
+      "url": "https://github.com/anhaidgroup/deepmatcher/blob/master/Datasets.md",
+      "scale_note": "DBLP-ACM / Amazon-Google / Abt-Buy 等成对实体匹配集；本轮采用其中三个集的 Leipzig 原始发布"
+    },
+    {
+      "name": "Leipzig DBS benchmark datasets for entity resolution",
+      "url": "https://dbs.uni-leipzig.de/en/research/projects/object_matching/fever/benchmark_datasets_for_entity_resolution",
+      "scale_note": "DBLP-ACM 2,224 对、Amazon-Google 1,300 对、Abt-Buy 1,097 对；2019-01 起以 CC BY 4.0 发布"
+    },
+    {
+      "name": "Magellan",
+      "url": "https://github.com/anhaidgroup/magellan",
+      "scale_note": "实体匹配工具与教程；仓库当前只含项目站点代码（MIT），基准数据指向 DeepMatcher/Leipzig 同一批来源"
+    }
+  ],
+  "dataset": {
+    "sources": [
+      "leipzig-dblp-acm",
+      "leipzig-amazon-google",
+      "leipzig-abt-buy"
+    ],
+    "composition": "每条用例给一条左表记录与 5–8 条右表候选，候选含该记录在数据集 gold mapping 中的全部真匹配；金标只取数据集自带的 perfectMapping，非金标候选按排他性视为非匹配",
+    "manifest_ref": "dataset/manifest.json",
+    "refresh": {
+      "unseen_acceptance_every_rounds": 6,
+      "replace_ratio": 0.25,
+      "rule": "样本一经暴露即降级为 regression；unseen_acceptance 不得参与调参"
+    }
+  },
+  "graders": [
+    "entity_pair_f1",
+    "entity_pair_f1:false_merge"
+  ],
+  "metrics": [
+    {
+      "id": "entity_pair_f1",
+      "label": "实体对 F1",
+      "direction": "higher",
+      "primary": true,
+      "unit": "f1",
+      "aggregation": "pooled",
+      "grader": "entity_pair_f1",
+      "threshold_status": "pending_baseline"
+    },
+    {
+      "id": "false_merge_rate",
+      "label": "错误合并率（按预测对汇总）",
+      "direction": "lower",
+      "primary": false,
+      "unit": "ratio",
+      "aggregation": "pooled",
+      "grader": "entity_pair_f1:false_merge",
+      "threshold_status": "pending_baseline"
+    }
+  ],
+  "gate": {
+    "tier": "warn",
+    "in_ci": true,
+    "blocking_metrics": [
+      "entity_pair_f1",
+      "false_merge_rate"
+    ],
+    "ref": "../../monitor/thresholds.json"
+  },
+  "status": "collecting",
+  "owner": "TBD",
+  "notes_ref": "NOTES.md",
+  "created": "2026-11-17",
+  "scope_note": "评测成对实体对齐（左记录 → 右候选），N 路聚类与 Join 计划生成不在本轮；冲突保留率缺公开金标：三个源只标注实体对，未标注跨源同对象的值冲突，按缺口记录，不编造。"
+}

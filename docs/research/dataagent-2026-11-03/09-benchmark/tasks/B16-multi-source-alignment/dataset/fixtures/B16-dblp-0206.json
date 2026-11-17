@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/AgichteinGV01",
+    "title": "Snowball: A Prototype System for Extracting Relations from Large Text Collections",
+    "authors": "Jeff Pavel, Luis Gravano, Aleksandr Voskoboynik, Eugene Agichtein, Viktoriya Sokolova",
+    "venue": "SIGMOD Conference",
+    "year": "2001"
+  },
+  "right_candidates": [
+    {
+      "id": "253404",
+      "title": "GeoMiner: a system prototype for spatial data mining",
+      "authors": "Jaiwei Han, Krzysztof Koperski, Nebojsa Stefanovic",
+      "venue": "International Conference on Management of Data",
+      "year": "1997"
+    },
+    {
+      "id": "872851",
+      "title": "QXtract: a building block for efficient information extraction from text databases",
+      "authors": "Eugene Agichtein, Luis Gravano",
+      "venue": "International Conference on Management of Data",
+      "year": "2003"
+    },
+    {
+      "id": "375774",
+      "title": "Snowball: a prototype system for extracting relations from large text collections",
+      "authors": "Eugene Agichtein, Luis Gravano, Jeff Pavel, Viktoriya Sokolova, Aleksandr Voskoboynik",
+      "venue": "International Conference on Management of Data",
+      "year": "2001"
+    },
+    {
+      "id": "673160",
+      "title": "A Data Transformation System for Biological Data Sources",
+      "authors": "Peter Buneman, Susan B. Davidson, Kyle Hart, G. Christian Overton, Limsoon Wong",
+      "venue": "Very Large Data Bases",
+      "year": "1995"
+    },
+    {
+      "id": "872865",
+      "title": "A system for watermarking relational databases",
+      "authors": "Rakesh Agrawal, Peter J. Haas, Jerry Kiernan",
+      "venue": "International Conference on Management of Data",
+      "year": "2003"
+    }
+  ]
+}

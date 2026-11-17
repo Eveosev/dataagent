@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/sigmod/HadzilacosT97",
+    "title": "An Extended Entity-Relationship Model for Geographic Applications",
+    "authors": "Nectaria Tryfona, Thanasis Hadzilacos",
+    "venue": "SIGMOD Record",
+    "year": "1997"
+  },
+  "right_candidates": [
+    {
+      "id": "872786",
+      "title": "Extended wavelets for multiple measures",
+      "authors": "Antonios Deligiannakis, Nick Roussopoulos",
+      "venue": "International Conference on Management of Data",
+      "year": "2003"
+    },
+    {
+      "id": "262766",
+      "title": "An extended entity-relationship model for geographic applications",
+      "authors": "Thanasis Hadzilacos, Nectaria Tryfona",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1997"
+    },
+    {
+      "id": "507344",
+      "title": "An active functionality service for e-business applications",
+      "authors": "M. Cilia, A. P. Buchmann",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2002"
+    },
+    {
+      "id": "672360",
+      "title": "Caching Technologies for Web Applications",
+      "authors": "C. Mohan",
+      "venue": "Very Large Data Bases",
+      "year": "2001"
+    },
+    {
+      "id": "381893",
+      "title": "Lifestreams: a storage model for personal data",
+      "authors": "Eric Freeman, David Gelernter",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1996"
+    }
+  ]
+}

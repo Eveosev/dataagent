@@ -1,0 +1,44 @@
+{
+  "task": "entity_alignment",
+  "source": "Amazon → Google Products",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "b000brgbpa",
+    "title": "computrace lojack for laptops - 4 year subscription",
+    "description": "with computrace lojack for laptops you'll be able to track a stolen laptop anywhere! every 53 seconds a laptop is stolen - this recovery service enables law enforcement to recover stolen laptops the minute thieves go online. you'll have information on your laptop's wherabouts as soon as it goes missing. protect your computer today with lojack for laptops.",
+    "manufacturer": "absolute software",
+    "price": "119.99"
+  },
+  "right_candidates": [
+    {
+      "id": "http://www.google.com/base/feeds/snippets/16896274800862908869",
+      "name": "ibm websphere portal enable for iseries - ( v. 4.1 ) - complete package",
+      "description": "iseries v4.1 program pk ml",
+      "price": "82676.95"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/18413484739795948632",
+      "name": "absolute software - lfl-n2-48 - computrace lojack for laptops - 4 year license",
+      "description": "computrace lojack for laptops is a software-enabled recovery service that allows law enforcement to recover stolen laptops. if your laptop is stolen and isn't recovered within 30 days we will refund your purchase of lojack for laptops.",
+      "price": "105.68"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/18419564278412211145",
+      "name": "dramatica pro 4 for pc",
+      "description": "for pc media format cd dramatica pro acts as your creative-writing partner. helps you solve the plots & character problems that prevent good stories from being sold assists you from the initial idea all the way through to the completed narrative ...",
+      "price": "249.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/3387952751339888455",
+      "name": "ibm websphere portal enable for iseries - ( v. 4.1 ) - complete package",
+      "description": "iseries v4.1 program pk ml",
+      "price": "81262.95"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/13040366668202103361",
+      "name": "lfl-n2-12 computrace lojack for laptops - subscription package ( 1 year ) - 1 notebook ( m",
+      "description": "absolute software lfl-n2-12 : usually ships in 24 hours : in stock : a laptop is stolen every 53 seconds and according to the fbi 97% are never recovered.",
+      "price": "39.95"
+    }
+  ]
+}

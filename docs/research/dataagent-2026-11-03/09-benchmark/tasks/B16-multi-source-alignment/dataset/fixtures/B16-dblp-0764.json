@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/TsurUACMNR98",
+    "title": "Query Flocks: A Generalization of Association-Rule Mining",
+    "authors": "Chris Clifton, Svetlozar Nestorov, Rajeev Motwani, Shalom Tsur, Jeffrey D. Ullman, Arnon Rosenthal, Serge Abiteboul",
+    "venue": "SIGMOD Conference",
+    "year": "1998"
+  },
+  "right_candidates": [
+    {
+      "id": "673500",
+      "title": "A New SQL-like Operator for Mining Association Rules",
+      "authors": "Rosa Meo, Giuseppe Psaila, Stefano Ceri",
+      "venue": "Very Large Data Bases",
+      "year": "1996"
+    },
+    {
+      "id": "276306",
+      "title": "Query flocks: a generalization of association-rule mining",
+      "authors": "Dick Tsur, Jeffrey D. Ullman, Serge Abiteboul, Chris Clifton, Rajeev Motwani, Svetlozar Nestorov, Arnon Rosenthal",
+      "venue": "International Conference on Management of Data",
+      "year": "1998"
+    },
+    {
+      "id": "673304",
+      "title": "Mining Generalized Association Rules",
+      "authors": "Ramakrishnan Srikant, Rakesh Agrawal",
+      "venue": "Very Large Data Bases",
+      "year": "1995"
+    },
+    {
+      "id": "181554",
+      "title": "A hypertext query language for images",
+      "authors": "Li Yang",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1994"
+    },
+    {
+      "id": "375728",
+      "title": "Communication-efficient distributed mining of association rules",
+      "authors": "Assaf Schuster, Ran Wolff",
+      "venue": "International Conference on Management of Data",
+      "year": "2001"
+    }
+  ]
+}

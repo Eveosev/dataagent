@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/sigmod/AndlerHEMBE96",
+    "title": "DeeDS Towards a Distributed and Active Real-Time Database System",
+    "authors": "Joakim Eriksson, Jonas Mellin, Sten Andler, Mikael Berndtsson, Bengt Eftring, Jörgen Hansson",
+    "venue": "SIGMOD Record",
+    "year": "1996"
+  },
+  "right_candidates": [
+    {
+      "id": "381873",
+      "title": "Real-time database - similarity and resource scheduling",
+      "authors": "Tei-Wei Kuo, Aloysius K. Mok",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1996"
+    },
+    {
+      "id": "671167",
+      "title": "A Database System for Real-Time Event Aggregation in Telecommunication",
+      "authors": "Jerry Baulier, Stephen Blott, Henry F. Korth, Abraham Silberschatz",
+      "venue": "Very Large Data Bases",
+      "year": "1998"
+    },
+    {
+      "id": "375755",
+      "title": "REVIEW: a real-time virtual walkthrough system",
+      "authors": "L. Shou, C. H. Chionh, Z. Huang, Y. Ruan, Kian-Lee Tan",
+      "venue": "International Conference on Management of Data",
+      "year": "2001"
+    },
+    {
+      "id": "672354",
+      "title": "SMOOTH - A Distributed Multimedia Database System",
+      "authors": "Harald Kosch, L&#225;szl&#243; B&#246;sz&#246;rm&#233;nyi, Alexander Bachlechner, Christian Hanin, Christian Hofbauer, Margit Lang, Carmen Riedler, Roland Tusch",
+      "venue": "Very Large Data Bases",
+      "year": "2001"
+    },
+    {
+      "id": "381881",
+      "title": "DeeDS towards a distributed and active real-time database system",
+      "authors": "S. F. Andler, J. Hansson, J. Eriksson, J. Mellin, M. Berndtsson, B. Eftring",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1996"
+    }
+  ]
+}

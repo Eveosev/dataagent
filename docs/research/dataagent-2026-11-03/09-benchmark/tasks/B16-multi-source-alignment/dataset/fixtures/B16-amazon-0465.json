@@ -1,0 +1,44 @@
+{
+  "task": "entity_alignment",
+  "source": "Amazon → Google Products",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "b000ra5bl6",
+    "title": "jewels of cleopatra",
+    "description": "jewels of cleopatra is a mesmerizing puzzler with a creative twist: instead of matching tiles you'll be adventuring through them! as archaeologist dr. felicity turnstone you must make your way through hidden tombs and underground catacombs matching tiles to clear your path. your task is complicated by a competing art dealer who is up to no good! unlock treasure chests filled with items that help clear rocks and other obstacles that block your way. are you up to the challenge of finding the lost treasures?",
+    "manufacturer": "encore software",
+    "price": "19.95"
+  },
+  "right_candidates": [
+    {
+      "id": "http://www.google.com/base/feeds/snippets/16667784108639281583",
+      "name": "josh white homespun video the guitar of josh white",
+      "description": "the legendary josh white (1914-1969) is widely considered to be one of the most influential blues and folk artists of all time celebrated in 1998 with a commemorative us postage stamp. josh white jr. an accomplished actor singer and teacher ...",
+      "price": "22.13"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/1999028797513668232",
+      "name": "encore software 14131 - wheel of fortune deluxe",
+      "description": "encore software 14131 : encore software wheel of fortune deluxe - 14131",
+      "price": "17.97"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/6585267440043502908",
+      "name": "fundamentals of software engineering by carlo ghezzi 9780133056990",
+      "description": "the long-awaited second edition of fundamentals of software engineering presents the fundamental principles of software engineering and illustrates the application of those principles in the different phases of software development. it stresses the ...",
+      "price": "107"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/13634906937991178152",
+      "name": "konami of america silent hill experience the",
+      "description": "silent hill experience the",
+      "price": "7.08"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/14007011703509063417",
+      "name": "encore software 11861 - jewels of cleopatra - win xp vista",
+      "description": "encore software 11861 : jewels of cleopatra is a mesmerizing puzzler with a creative twist: instead of matching tiles you ll be adventuring through them! as archaeologist dr. felicity turnstone you must make your way through hidden tombs and ...",
+      "price": "18.97"
+    }
+  ]
+}

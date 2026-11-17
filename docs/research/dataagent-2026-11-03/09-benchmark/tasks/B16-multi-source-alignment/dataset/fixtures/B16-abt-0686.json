@@ -1,0 +1,44 @@
+{
+  "task": "entity_alignment",
+  "source": "Abt → Buy",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "34895",
+    "name": "Sony 52' BRAVIA V-Series Black LCD Flat Panel HDTV - KDL52V4100",
+    "description": "Sony 52' BRAVIA V-Series 1080p LCD Flat Panel HDTV - KDL52V4100/ 1920 x 1080 Full HD Resolution/ Digital Media Extender (DMex)/ Advanced Contrast Enhancer (ACE)/ 24p True Cinema/ 25,000:1 Dynamic Contrast Ratio/ MPEG Noise Reduction/ 3D Comb Filter/ CineMotion Reverse 3:2 Pulldown Technology/ Black Finish"
+  },
+  "right_candidates": [
+    {
+      "id": "208504345",
+      "name": "Sony BRAVIA V Series KDL-52V4100 52' LCD TV - KDL52V4100",
+      "description": "52' - ATSC, NTSC - 16:9 - 1920 x 1080 - HDTV",
+      "manufacturer": "Sony",
+      "price": "$1,599.00"
+    },
+    {
+      "id": "208937533",
+      "name": "Toshiba 32AV502 - 31.5' Widescreen 720p LCD HDTV w/ Cinespeed - Piano Black - 32av502u",
+      "manufacturer": "Toshiba",
+      "price": "$579.00"
+    },
+    {
+      "id": "209026634",
+      "name": "Toshiba 42RV535U - 42' Widescreen 1080p LCD HDTV w/ Cinespeed - Piano Black",
+      "manufacturer": "Toshiba",
+      "price": "$789.98"
+    },
+    {
+      "id": "208504407",
+      "name": "LG LG70 Series 52LG70 52' LCD TV",
+      "description": "LG 52LG70 - 52' Widescreen 1080p LCD HDTV - 120Hz - 15,000:1 Dynamic Contrast Ratio - 4ms Response Time",
+      "manufacturer": "LG Electronics"
+    },
+    {
+      "id": "208294718",
+      "name": "Sony BRAVIA KDL-32L4000 32' LCD TV - KDL32L4000",
+      "description": "32' - ATSC, NTSC - 16:9 - 1366 x 768 - HDTV",
+      "manufacturer": "Sony",
+      "price": "$597.72"
+    }
+  ]
+}

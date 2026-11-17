@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/vldb/Gibbons01",
+    "title": "Distinct Sampling for Highly-Accurate Answers to Distinct Values Queries and Event Reports",
+    "authors": "Phillip B. Gibbons",
+    "venue": "VLDB",
+    "year": "2001"
+  },
+  "right_candidates": [
+    {
+      "id": "290597",
+      "title": "Algebraic change propagation for semijoin and outerjoin queries",
+      "authors": "Timothy Griffin, Bharat Kumar",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1998"
+    },
+    {
+      "id": "872814",
+      "title": "An optimal and progressive algorithm for skyline queries",
+      "authors": "Dimitris Papadias, Yufei Tao, Greg Fu, Bernhard Seeger",
+      "venue": "International Conference on Management of Data",
+      "year": "2003"
+    },
+    {
+      "id": "564742",
+      "title": "Selectivity estimation for spatio-temporal queries to moving objects",
+      "authors": "Yong-Jin Choi, Chin-Wan Chung",
+      "venue": "International Conference on Management of Data",
+      "year": "2002"
+    },
+    {
+      "id": "672351",
+      "title": "Distinct Sampling for Highly-Accurate Answers to Distinct Values Queries and Event Reports",
+      "authors": "Phillip B. Gibbons",
+      "venue": "Very Large Data Bases",
+      "year": "2001"
+    },
+    {
+      "id": "276334",
+      "title": "New sampling-based summary statistics for improving approximate query answers",
+      "authors": "Phillip B. Gibbons, Yossi Matias",
+      "venue": "International Conference on Management of Data",
+      "year": "1998"
+    }
+  ]
+}

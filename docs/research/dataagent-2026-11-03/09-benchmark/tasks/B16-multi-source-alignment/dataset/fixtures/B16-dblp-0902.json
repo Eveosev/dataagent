@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/BrownCL96",
+    "title": "Goal-Oriented Buffer Management Revisited",
+    "authors": "Kurt P. Brown, Michael J. Carey, Miron Livny",
+    "venue": "SIGMOD Conference",
+    "year": "1996"
+  },
+  "right_candidates": [
+    {
+      "id": "276316",
+      "title": "Interaction of query evaluation and buffer management for information retrieval",
+      "authors": "Bj&#246;rn T. J&#243;nsson, Michael J. Franklin, Divesh Srivastava",
+      "venue": "International Conference on Management of Data",
+      "year": "1998"
+    },
+    {
+      "id": "233351",
+      "title": "Goal-oriented buffer management revisited",
+      "authors": "Kurt P. Brown, Michael J. Carey, Miron Livny",
+      "venue": "International Conference on Management of Data",
+      "year": "1996"
+    },
+    {
+      "id": "271077",
+      "title": "Management of semistructured data",
+      "authors": "Dan Suciu",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1997"
+    },
+    {
+      "id": "304586",
+      "title": "The WASA2 object-oriented workflow management system",
+      "authors": "Gottfried Vossen, Mathias Weske",
+      "venue": "International Conference on Management of Data",
+      "year": "1999"
+    },
+    {
+      "id": "672996",
+      "title": "2Q: A Low Overhead High Performance Buffer Management Replacement Algorithm",
+      "authors": "Theodore Johnson, Dennis Shasha",
+      "venue": "Very Large Data Bases",
+      "year": "1994"
+    }
+  ]
+}

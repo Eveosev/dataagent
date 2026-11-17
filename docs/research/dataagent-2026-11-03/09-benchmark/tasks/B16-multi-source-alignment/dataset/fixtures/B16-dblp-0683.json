@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/CuiOTS03",
+    "title": "Contorting High Dimensional Data for Efficient Main Memory Processing",
+    "authors": "Beng Chin Ooi, Bin Cui, Kian-Lee Tan, Jianwen Su",
+    "venue": "SIGMOD Conference",
+    "year": "2003"
+  },
+  "right_candidates": [
+    {
+      "id": "276387",
+      "title": "Xmas: an extensible main-memory storage system for high-performance applications",
+      "authors": "Jang Ho Park, Yong Sik Kwon, Ki Hong Kim, Sang Ho Lee, Byoung Dae Park, Sang Kyun Cha",
+      "venue": "International Conference on Management of Data",
+      "year": "1998"
+    },
+    {
+      "id": "615210",
+      "title": "The TV-tree: an index structure for high-dimensional data",
+      "authors": "King Ip Lin, H. V. Jagadish, Christos Faloutsos",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "1994"
+    },
+    {
+      "id": "872815",
+      "title": "Contorting high dimensional data for efficient main memory KNN processing",
+      "authors": "Bin Cui, Beng Chin Ooi, Jianwen Su, Kian-Lee Tan",
+      "venue": "International Conference on Management of Data",
+      "year": "2003"
+    },
+    {
+      "id": "671018",
+      "title": "Parallel Algorithms for High-dimensional Similarity Joins for Data Mining Applications",
+      "authors": "John C. Shafer, Rakesh Agrawal",
+      "venue": "Very Large Data Bases",
+      "year": "1997"
+    },
+    {
+      "id": "375668",
+      "title": "Outlier detection for high dimensional data",
+      "authors": "Charu C. Aggarwal, Philip S. Yu",
+      "venue": "International Conference on Management of Data",
+      "year": "2001"
+    }
+  ]
+}

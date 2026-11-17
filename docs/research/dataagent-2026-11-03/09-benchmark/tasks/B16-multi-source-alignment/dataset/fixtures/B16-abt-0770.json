@@ -1,0 +1,40 @@
+{
+  "task": "entity_alignment",
+  "source": "Abt → Buy",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "37039",
+    "name": "Klipsch 5.25' THX Ultra2 In-Ceiling White Loudspeaker - KS7502THX",
+    "description": "Klipsch 5.25' THX Ultra2 In-Ceiling White Loudspeaker - KS7502THX/ 100W Continuous/400W Peak Power Handling/ Dual 1' Titanium Diaphragm Compression Drivers Mated To WDST Tractrix Horn Array/ Dual 5.25' High-Output Cerametallic Cone Woofers/ MDF And Aluminum Motorboard/ABS Shell Enclosure/ White Finish/ Price Per Speaker",
+    "price": "$1,000.00"
+  },
+  "right_candidates": [
+    {
+      "id": "204559214",
+      "name": "Panasonic NNSN667W 1.2 cu. ft. Countertop Microwave Oven In White",
+      "manufacturer": "Panasonic",
+      "price": "$107.81"
+    },
+    {
+      "id": "208504461",
+      "name": "Klipsch KS7502THX (Each) - KS-7502-THX",
+      "manufacturer": "Klipsch",
+      "price": "$1,000.00"
+    },
+    {
+      "id": "90145972",
+      "name": "Weber 841001 Performer 22.5' Charcoal Grill in Black",
+      "manufacturer": "Weber"
+    },
+    {
+      "id": "90145909",
+      "name": "Weber 848001 Performer 22.5' Charcoal Grill in Dark Blue",
+      "manufacturer": "Weber"
+    },
+    {
+      "id": "207391014",
+      "name": "Toshiba 19LV506 - 19' Widescreen LCD HDTV w/ Built-in DVD Player - 800:1 Contrast Ratio - 5ms Response Time - White",
+      "manufacturer": "Toshiba"
+    }
+  ]
+}

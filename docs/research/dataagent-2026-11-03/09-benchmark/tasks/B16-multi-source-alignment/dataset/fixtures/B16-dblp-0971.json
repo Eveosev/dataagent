@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/vldb/Sullivan96",
+    "title": "Tribeca: A Stream Database Manager for Network Traffic Analysis",
+    "authors": "Mark Sullivan",
+    "venue": "VLDB",
+    "year": "1996"
+  },
+  "right_candidates": [
+    {
+      "id": "673637",
+      "title": "Querying a Multilevel Database: A Logical Analysis",
+      "authors": "Fr&#233;d&#233;ric Cuppens",
+      "venue": "Very Large Data Bases",
+      "year": "1996"
+    },
+    {
+      "id": "673486",
+      "title": "The Structured Information Manager: A Database System for SGML Documents",
+      "authors": "Ron Sacks-Davis",
+      "venue": "Very Large Data Bases",
+      "year": "1996"
+    },
+    {
+      "id": "950485",
+      "title": "Aurora: a new model and architecture for data stream management",
+      "authors": "Daniel J. Abadi, Don Carney, Ugur &#199;etintemel, Mitch Cherniack, Christian Convey, Sangdon Lee, Michael Stonebraker, Nesime Tatbul, Stan Zdonik",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "2003"
+    },
+    {
+      "id": "673489",
+      "title": "Tribeca: A Stream Database Manager for Network Traffic Analysis",
+      "authors": "Mark Sullivan",
+      "venue": "Very Large Data Bases",
+      "year": "1996"
+    },
+    {
+      "id": "280354",
+      "title": "DBSim: a simulation tool for predicting database performance",
+      "authors": "Mark Lefler, Mark Stokrp, Craig Wong",
+      "venue": "International Conference on Management of Data",
+      "year": "1996"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/vldb/KamelWS94",
+    "title": "A Pattern-Based Object Calculus",
+    "authors": "Stanley Y. W. Su, Nabil Kamel, Ping Wu",
+    "venue": "VLDB J.",
+    "year": "1994"
+  },
+  "right_candidates": [
+    {
+      "id": "191963",
+      "title": "A language based multidatabase system",
+      "authors": "Eva K&#252;hn, Thomas Tschernko, Konrad Schwarz",
+      "venue": "International Conference on Management of Data",
+      "year": "1994"
+    },
+    {
+      "id": "273267",
+      "title": "Towards a richer Web object model",
+      "authors": "Frank Manola",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1998"
+    },
+    {
+      "id": "672833",
+      "title": "Building a Laboratory Information System Around a C++-Based Object-Oriented DBMS",
+      "authors": "Nathan Goodman, Steve Rozen, Lincoln Stein",
+      "venue": "Very Large Data Bases",
+      "year": "1994"
+    },
+    {
+      "id": "615188",
+      "title": "A pattern-based object calculus",
+      "authors": "Nabil Kamel, Ping Wu, Stanley Y. W. Su",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "1994"
+    },
+    {
+      "id": "564734",
+      "title": "Continually evaluating similarity-based pattern queries on a streaming time series",
+      "authors": "Like Gao, X. Sean Wang",
+      "venue": "International Conference on Management of Data",
+      "year": "2002"
+    }
+  ]
+}

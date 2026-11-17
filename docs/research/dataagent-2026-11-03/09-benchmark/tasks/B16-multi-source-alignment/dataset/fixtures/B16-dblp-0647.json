@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/LiuPBHPT00",
+    "title": "AQR-Toolkit: An Adaptive Query Routing Middleware for Distributed Data Intensive Systems",
+    "authors": "Henrique Paques, Wei Tang, Calton Pu, Wei Han, Ling Liu, David Buttler",
+    "venue": "SIGMOD Conference",
+    "year": "2000"
+  },
+  "right_candidates": [
+    {
+      "id": "672209",
+      "title": "Query Engines for Web-Accessible XML Data",
+      "authors": "Leonidas Fegaras, Ramez Elmasri",
+      "venue": "Very Large Data Bases",
+      "year": "2001"
+    },
+    {
+      "id": "615214",
+      "title": "HyperFile: a data and query model for documents",
+      "authors": "Chris Clifton, Hector Garcia-Molina, David Bloom",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "1995"
+    },
+    {
+      "id": "673476",
+      "title": "EROC: A Toolkit for Building NEATO Query Optimizers",
+      "authors": "William J. McKenna, Louis Burger, Chi Hoang, Melissa Truong",
+      "venue": "Very Large Data Bases",
+      "year": "1996"
+    },
+    {
+      "id": "212011",
+      "title": "An aspect of query optimization in multidatabase systems",
+      "authors": "Chiang Lee, Chia-Jung Chen, Hongjun Lu",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1995"
+    },
+    {
+      "id": "336579",
+      "title": "AQR-toolkit: an adaptive query routing middleware for distributed data intensive systems",
+      "authors": "Ling Liu, Calton Pu, David Buttler, Wei Han, Henrique Paques, Wei Tang",
+      "venue": "International Conference on Management of Data",
+      "year": "2000"
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "source": "leipzig-amazon-google",
+  "source_label": "Amazon → Google Products",
+  "license": "CC BY 4.0",
+  "license_url": "https://creativecommons.org/licenses/by/4.0/",
+  "attribution": "Leipzig DBS group; Köpcke et al., VLDB 2010",
+  "left_id": "b000fabege",
+  "gold_right_ids": [
+    "http://www.google.com/base/feeds/snippets/17453864721509833307"
+  ],
+  "candidate_ids": [
+    "http://www.google.com/base/feeds/snippets/17453864721509833307",
+    "http://www.google.com/base/feeds/snippets/6885839871445322451",
+    "http://www.google.com/base/feeds/snippets/528675562457283213",
+    "http://www.google.com/base/feeds/snippets/17911312393691300802",
+    "http://www.google.com/base/feeds/snippets/11448761432933644608"
+  ],
+  "distractor_ids": [
+    "http://www.google.com/base/feeds/snippets/17911312393691300802",
+    "http://www.google.com/base/feeds/snippets/528675562457283213",
+    "http://www.google.com/base/feeds/snippets/6885839871445322451",
+    "http://www.google.com/base/feeds/snippets/11448761432933644608"
+  ],
+  "negative_policy": "候选集中除 gold_right_ids 外的记录按数据集 gold mapping 的排他性视为非匹配",
+  "case_id": "B16-amazon-0908",
+  "expected": {
+    "kind": "entity_pairs",
+    "source_dataset": "leipzig-amazon-google",
+    "license": "CC BY 4.0",
+    "left_id": "b000fabege",
+    "candidate_ids": [
+      "http://www.google.com/base/feeds/snippets/17453864721509833307",
+      "http://www.google.com/base/feeds/snippets/6885839871445322451",
+      "http://www.google.com/base/feeds/snippets/528675562457283213",
+      "http://www.google.com/base/feeds/snippets/17911312393691300802",
+      "http://www.google.com/base/feeds/snippets/11448761432933644608"
+    ],
+    "pairs": [
+      {
+        "left_id": "b000fabege",
+        "right_id": "http://www.google.com/base/feeds/snippets/17453864721509833307"
+      }
+    ]
+  }
+}

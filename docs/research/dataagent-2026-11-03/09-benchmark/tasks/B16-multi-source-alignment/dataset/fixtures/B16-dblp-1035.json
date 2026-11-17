@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/vldb/ChakrabartiRS03",
+    "title": "Fast and accurate text classification via multiple linear discriminant projections pp",
+    "authors": "Shourya Roy, Mahesh V. Soundalgekar, Soumen Chakrabarti",
+    "venue": "VLDB J.",
+    "year": "2003"
+  },
+  "right_candidates": [
+    {
+      "id": "673155",
+      "title": "Fast Similarity Search in the Presence of Noise, Scaling, and Translation in Time-Series Databases",
+      "authors": "Rakesh Agrawal, King-Ip Lin, Harpreet S. Sawhney, Kyuseok Shim",
+      "venue": "Very Large Data Bases",
+      "year": "1995"
+    },
+    {
+      "id": "280349",
+      "title": "databases and visualization",
+      "authors": "Daniel A. Keim",
+      "venue": "International Conference on Management of Data",
+      "year": "1996"
+    },
+    {
+      "id": "950488",
+      "title": "Fast and accurate text classification via multiple linear discriminant projections",
+      "authors": "Soumen Chakrabarti, Shourya Roy, Mahesh V. Soundalgekar",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "2003"
+    },
+    {
+      "id": "276330",
+      "title": "NoDoSE-a tool for semi-automatically extracting structured and semistructured data from text documents",
+      "authors": "Brad Adelberg",
+      "venue": "International Conference on Management of Data",
+      "year": "1998"
+    },
+    {
+      "id": "953240",
+      "title": "Managing multiple and distributed ontologies on the Semantic Web",
+      "authors": "A. Maedche, B. Motik, L. Stojanovic",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "2003"
+    }
+  ]
+}

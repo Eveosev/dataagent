@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/PengC03",
+    "title": "XPath Queries on Streaming Data",
+    "authors": "Sudarshan S. Chawathe, Feng Peng",
+    "venue": "SIGMOD Conference",
+    "year": "2003"
+  },
+  "right_candidates": [
+    {
+      "id": "603884",
+      "title": "Continuous queries over data streams",
+      "authors": "Shivnath Babu, Jennifer Widom",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2001"
+    },
+    {
+      "id": "564734",
+      "title": "Continually evaluating similarity-based pattern queries on a streaming time series",
+      "authors": "Like Gao, X. Sean Wang",
+      "venue": "International Conference on Management of Data",
+      "year": "2002"
+    },
+    {
+      "id": "375723",
+      "title": "Monitoring XML data on the Web",
+      "authors": "Benjamin Nguyen, Serge Abiteboul, Gr&#233;gory Cobena, Miha&#237; Preda",
+      "venue": "International Conference on Management of Data",
+      "year": "2001"
+    },
+    {
+      "id": "872810",
+      "title": "XPath queries on streaming data",
+      "authors": "Feng Peng, Sudarshan S. Chawathe",
+      "venue": "International Conference on Management of Data",
+      "year": "2003"
+    },
+    {
+      "id": "191898",
+      "title": "Optimizing queries on files",
+      "authors": "Mariano P. Consens, Tova Milo",
+      "venue": "International Conference on Management of Data",
+      "year": "1994"
+    }
+  ]
+}

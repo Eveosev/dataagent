@@ -1,0 +1,179 @@
+{
+  "dataset_id": "B16.dataset",
+  "task_id": "B16",
+  "revision": "v0.11",
+  "status": "collecting",
+  "unit": "case",
+  "sources": [
+    {
+      "name": "leipzig-dblp-acm",
+      "locator": "https://dbs.uni-leipzig.de/files/datasets/DBLP-ACM.zip",
+      "license": "CC BY 4.0",
+      "digest": "sha256:a3d65e6922d37dd9e63be72f374c0b6128e83c4bca4b6912935277a61e528fb5",
+      "revision": "2023-10-06",
+      "files": 3,
+      "mb": 0.9,
+      "fetched_at": "2026-11-17T21:04:47+08:00",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "license_evidence": "https://dbs.uni-leipzig.de/research/projects/object_matching/benchmark_datasets_for_entity_resolution",
+      "license_checked_at": "2026-11-17"
+    },
+    {
+      "name": "leipzig-amazon-google",
+      "locator": "https://dbs.uni-leipzig.de/files/datasets/Amazon-GoogleProducts.zip",
+      "license": "CC BY 4.0",
+      "digest": "sha256:21c5d59a5f2bd89c55f8a8df9112f1221fbaaf03d1fe376d722a9e0ef64ade83",
+      "revision": "2023-10-06",
+      "files": 3,
+      "mb": 3.0,
+      "fetched_at": "2026-11-17T21:05:26+08:00",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "license_evidence": "https://dbs.uni-leipzig.de/research/projects/object_matching/benchmark_datasets_for_entity_resolution",
+      "license_checked_at": "2026-11-17"
+    },
+    {
+      "name": "leipzig-abt-buy",
+      "locator": "https://dbs.uni-leipzig.de/files/datasets/Abt-Buy.zip",
+      "license": "CC BY 4.0",
+      "digest": "sha256:bc63c00abbf4ab9acf54ef8f8aa0c85155aa05f4ef729570fd9e88461c76b826",
+      "revision": "2023-10-06",
+      "files": 3,
+      "mb": 0.5,
+      "fetched_at": "2026-11-17T21:05:29+08:00",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "license_evidence": "https://dbs.uni-leipzig.de/research/projects/object_matching/benchmark_datasets_for_entity_resolution",
+      "license_checked_at": "2026-11-17"
+    }
+  ],
+  "splits": {
+    "development": {
+      "count": 120,
+      "frozen": false
+    },
+    "regression": {
+      "count": 60,
+      "frozen": false
+    },
+    "unseen_acceptance": {
+      "count": 60,
+      "frozen": false
+    }
+  },
+  "exposure": {
+    "ledger_ref": "exposure.jsonl",
+    "entries": 0
+  },
+  "fixtures": {
+    "storage": "local",
+    "path": "fixtures/",
+    "limits": "单文件 <= 2 MB；超出走对象存储并在 digest 记录"
+  },
+  "updated": "2026-11-17",
+  "notes": "由 build_cases.py 从 workspace/benchmark-data 构建；原始数据不入库",
+  "build": {
+    "version": 11,
+    "script": "tools/build_cases.py",
+    "built_at": "2026-11-17",
+    "policy": "金标只取数据集 perfectMapping；按金标连通分量做固定 sha256 60/20/20；每条用例取同 split 内与左记录最相似的非金标右记录 4 条作候选负例，候选顺序按哈希固定，避免金标总在首位。",
+    "available": {
+      "development": 2623,
+      "regression": 906,
+      "unseen_acceptance": 889
+    },
+    "selected": {
+      "development": 120,
+      "regression": 60,
+      "unseen_acceptance": 60
+    },
+    "caps": {
+      "development": 120,
+      "regression": 60,
+      "unseen_acceptance": 60
+    },
+    "coverage": {
+      "covered_metrics": [
+        "entity_pair_f1",
+        "false_merge_rate"
+      ],
+      "partial_metrics": [],
+      "missing_metrics": [
+        "conflict_retention_rate"
+      ],
+      "coverage_gaps": [
+        {
+          "id": "no_match_cases",
+          "status": "unverified",
+          "description": "当前 240 条用例的左记录均来自 perfectMapping，每条至少有一个真匹配；没有零匹配样本。",
+          "impact": "“没有匹配时返回空数组”未被验证；empty 适配器只验证空输出地板，不能替代该场景。",
+          "next_step": "从未标注记录中人工确认零匹配样本并补金标；在此之前不把未标注记录直接当负例。"
+        }
+      ],
+      "note": "三个源只标注实体对，未标注跨源同对象的值冲突，冲突保留率按缺口记录；非金标候选按数据集 gold mapping 的排他性视为非匹配，这是候选集内的成对评测口径，候选集外的未标注记录不直接当作负例。当前 240 条均至少有一个真匹配，“没有匹配时返回空数组”未验证，见 coverage_gaps。",
+      "license_audit": [
+        {
+          "candidate": "DeepMatcher UW-Madison Datasets.md 镜像",
+          "license": "未声明数据集许可（仓库 LICENSE 为 BSD-3-Clause，只覆盖代码）",
+          "decision": "不采用镜像；改用同一批数据的 Leipzig 原始发布（CC BY 4.0）"
+        },
+        {
+          "candidate": "Magellan GitHub",
+          "license": "MIT（当前仓库只含项目站点代码）",
+          "decision": "不采用；仓库不再分发基准数据，数据指向同一批 DeepMatcher/Leipzig 来源"
+        },
+        {
+          "candidate": "Fodors-Zagats / iTunes-Amazon / Walmart-Amazon / BeerAdvo-RateBeer / Company",
+          "license": "原始站点与 DeepMatcher 镜像均未声明可再分发许可",
+          "decision": "舍弃"
+        },
+        {
+          "candidate": "DBLP-ACM / Amazon-Google / Abt-Buy",
+          "license": "CC BY 4.0",
+          "decision": "采用；manifest 记 attribution",
+          "evidence": "https://dbs.uni-leipzig.de/research/projects/object_matching/benchmark_datasets_for_entity_resolution",
+          "evidence_quote": "January 2019: These datasets are made available by the database group of Prof. Erhard Rahm under the Creative Commons license. To give proper credit please refer to this website and the VLDB2010 paper [1]",
+          "evidence_checked_at": "2026-11-17"
+        }
+      ]
+    },
+    "counts": {
+      "leipzig-dblp-acm": {
+        "left_records": 2616,
+        "right_records": 2294,
+        "gold_pairs": 2224,
+        "skipped_pairs": 0,
+        "cases": 2224,
+        "splits": {
+          "development": 1296,
+          "regression": 476,
+          "unseen_acceptance": 452
+        }
+      },
+      "leipzig-amazon-google": {
+        "left_records": 1363,
+        "right_records": 3226,
+        "gold_pairs": 1300,
+        "skipped_pairs": 0,
+        "cases": 1113,
+        "splits": {
+          "development": 664,
+          "regression": 216,
+          "unseen_acceptance": 233
+        }
+      },
+      "leipzig-abt-buy": {
+        "left_records": 1081,
+        "right_records": 1092,
+        "gold_pairs": 1097,
+        "skipped_pairs": 0,
+        "cases": 1081,
+        "splits": {
+          "development": 663,
+          "regression": 214,
+          "unseen_acceptance": 204
+        }
+      }
+    },
+    "content_digest": "sha256:1533d653391e656468f1a5cb5b0b2cd0f28addbb3bf430ac2ed341d54230bf56",
+    "content_digest_version": 3
+  }
+}

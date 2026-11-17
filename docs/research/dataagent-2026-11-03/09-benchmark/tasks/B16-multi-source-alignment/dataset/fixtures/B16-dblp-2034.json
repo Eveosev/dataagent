@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/vldb/PellenkoftLK97",
+    "title": "The Complexity of Transformation-Based Join Enumeration",
+    "authors": "César A. Galindo-Legaria, Martin L. Kersten, Arjan Pellenkoft",
+    "venue": "VLDB",
+    "year": "1997"
+  },
+  "right_candidates": [
+    {
+      "id": "223847",
+      "title": "Hypergraph based reorderings of outer join queries with complex predicates",
+      "authors": "Gautam Bhargava, Piyush Goel, Bala Iyer",
+      "venue": "International Conference on Management of Data",
+      "year": "1995"
+    },
+    {
+      "id": "673295",
+      "title": "Sampling-Based Estimation of the Number of Distinct Values of an Attribute",
+      "authors": "Peter J. Haas, Jeffrey F. Naughton, S. Seshadri, Lynne Stokes",
+      "venue": "Very Large Data Bases",
+      "year": "1995"
+    },
+    {
+      "id": "673661",
+      "title": "The Complexity of Transformation-Based Join Enumeration",
+      "authors": "Arjan Pellenkoft, C&#233;sar A. Galindo-Legaria, Martin L. Kersten",
+      "venue": "Very Large Data Bases",
+      "year": "1997"
+    },
+    {
+      "id": "615222",
+      "title": "InterViso: dealing with the complexity of federated database access",
+      "authors": "Marjorie Templeton, Herbert Henley, Edward Maros, Darrel J. Van Buer",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "1995"
+    },
+    {
+      "id": "336570",
+      "title": "Concept based design of data warehouses: the DWQ demonstrators",
+      "authors": "M. Jarke, C. Quix, D. Calvanese, M. Lenzerini, E. Franconi, S. Ligoudistianos, P. Vassiliadis, Y. Vassiliou",
+      "venue": "International Conference on Management of Data",
+      "year": "2000"
+    }
+  ]
+}

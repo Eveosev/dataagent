@@ -1,0 +1,46 @@
+{
+  "task": "entity_alignment",
+  "source": "Amazon → Google Products",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "b000j4k804",
+    "title": "instant immersion spanish (audio book)",
+    "description": "instant immersion spanish (audio book) (audio book)",
+    "manufacturer": "topics entertainment",
+    "price": "0"
+  },
+  "right_candidates": [
+    {
+      "id": "http://www.google.com/base/feeds/snippets/18411875162562199123",
+      "name": "topics entertainment 40248 instant immersion spanish audio book audio book",
+      "description": "instant immersion spanish (audio book) (audio book)",
+      "manufacturer": "topics entertainment",
+      "price": "23.61"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/18066386301399841327",
+      "name": "topics entertainment instant immersion spanish advanced audio",
+      "description": "yearning for the yucatan? going back to baja? now intermediate-level spanish speakers can take their fluency to the next level with instant immersion spanish advanced on 8 compact discs.",
+      "price": "12.05"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/17359014404157181642",
+      "name": "topics entertainment instant immersion japanese crash course",
+      "description": "designed to pinpoint the most relevant information needed for daily communication the instant immersion japanese crash course provides a quick and thorough program for travelers students and business people alike who need to master key speaking ...",
+      "price": "6.56"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/10066664236286478958",
+      "name": "instant immersion italian 2.0",
+      "description": "topics entertainment instant immersion italian 2.0 this 5 cd-rom suite immerses you in the learning process with cultural videos entertaining games and interactive lessons with native speakers windows/mac",
+      "manufacturer": "topics entertainment",
+      "price": "20.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/17758143132560820340",
+      "name": "topics entertainment instant immersion german audio",
+      "description": "business trip to berlin? holiday in hamburg? from munich to mannheim now you can join the conversation with instant immersion german the dynamic audio language learning system on 8 compact discs.",
+      "price": "12.05"
+    }
+  ]
+}

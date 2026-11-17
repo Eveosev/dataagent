@@ -1,0 +1,43 @@
+{
+  "task": "entity_alignment",
+  "source": "Amazon → Google Products",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "b000bc38o2",
+    "title": "media studio for psp standard editon",
+    "description": "media studio for psp standard editon (win 98 me 2000 xp)",
+    "manufacturer": "encore software",
+    "price": "29.99"
+  },
+  "right_candidates": [
+    {
+      "id": "http://www.google.com/base/feeds/snippets/13468530879861986847",
+      "name": "ringtone media studio (pc) avanquest",
+      "description": "key features: create ringtones design screensavers...",
+      "price": "19.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/12383342975629473219",
+      "name": "media studio for psp standard editon (800060)",
+      "description": "media studio for psp standard editon brand: encore software mpn: 800060 variant name: media studio for psp standard editon",
+      "price": "47.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/18369640987371255757",
+      "name": "ringtone media studio 2.0 (bil",
+      "price": "14.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/10471177135649344162",
+      "name": "sony media manager for psp (98598)",
+      "description": "key features: share digital content transfer photos and video ...",
+      "price": "24.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/18374143831267894200",
+      "name": "sound studio 3 for mac",
+      "description": "easytouse mac os x application for recording and editing audio digitally to your computer digitize vinyl records and tapes record live performances create mixes with crossfades tweak levels and eq apply digital and save in file formats repair ...",
+      "price": "79.99"
+    }
+  ]
+}

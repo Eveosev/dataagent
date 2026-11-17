@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/HoAMS97",
+    "title": "Range Queries in OLAP Data Cubes",
+    "authors": "Ching-Tien Ho, Rakesh Agrawal, Nimrod Megiddo, Ramakrishnan Srikant",
+    "venue": "SIGMOD Conference",
+    "year": "1997"
+  },
+  "right_candidates": [
+    {
+      "id": "671365",
+      "title": "Hierarchical Prefix Cubes for Range-Sum Queries",
+      "authors": "Chee Yong Chan, Yannis E. Ioannidis",
+      "venue": "Very Large Data Bases",
+      "year": "1999"
+    },
+    {
+      "id": "672366",
+      "title": "Intelligent Rollups in Multidimensional OLAP Data",
+      "authors": "Gayatri Sathe, Sunita Sarawagi",
+      "venue": "Very Large Data Bases",
+      "year": "2001"
+    },
+    {
+      "id": "672006",
+      "title": "Temporal Queries in OLAP",
+      "authors": "Alberto O. Mendelzon, Alejandro A. Vaisman",
+      "venue": "Very Large Data Bases",
+      "year": "2000"
+    },
+    {
+      "id": "672176",
+      "title": "Mining Multi-Dimensional Constrained Gradients in Data Cubes",
+      "authors": "Guozhu Dong, Jiawei Han, Joyce M. W. Lam, Jian Pei, Ke Wang",
+      "venue": "Very Large Data Bases",
+      "year": "2001"
+    },
+    {
+      "id": "253274",
+      "title": "Range queries in OLAP data cubes",
+      "authors": "Ching-Tien Ho, Rakesh Agrawal, Nimrod Megiddo, Ramakrishnan Srikant",
+      "venue": "International Conference on Management of Data",
+      "year": "1997"
+    }
+  ]
+}

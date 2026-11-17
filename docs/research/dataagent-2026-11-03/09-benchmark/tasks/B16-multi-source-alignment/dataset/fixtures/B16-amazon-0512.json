@@ -1,0 +1,43 @@
+{
+  "task": "entity_alignment",
+  "source": "Amazon → Google Products",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "b000h69szu",
+    "title": "dk exotic animals africa",
+    "manufacturer": "global software publishing",
+    "price": "9.99"
+  },
+  "right_candidates": [
+    {
+      "id": "http://www.google.com/base/feeds/snippets/18013331682522840661",
+      "name": "safari photo africa: wild earth for pc",
+      "description": "safari photo africa: wild earth sends you on a mission to take photos of herds of wildlife in their native habitat. the family friendly game comes with 11 assignments that send you across africa looking for wildebeests and zebras. if your kids liked ...",
+      "price": "19.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/17810980474859468457",
+      "name": "global software a0454jch - dk smart steps 3rd grade - win 95 98 me 2000 xp vista",
+      "description": "global software a0454jch : give your child the competitive edge they deserve! developed by dedicated educators smart steps 3rd grade targets the math reading and science skills that children need to succeed. with over 130 tutorials and over 380 ...",
+      "price": "9.08"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/5964541247628078613",
+      "name": "global software a0447jch - dk smart steps 2nd grade - win 95 98 me 2000 xp vista",
+      "description": "global software a0447jch : this cd by dk (dorling kindersley) is the most complete learning system for your child. developed by dedicated educators smart steps covers the complete second grade core curriculum along with lots of creative activities ...",
+      "price": "9.08"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/3528611718110158975",
+      "name": "global software a2663m2h - amazing animals w/zoofari games - win 95 98 me xp/mac 8.6-9.x (classic) x v10.1 or higher",
+      "description": "global software a2663m2h : meet your cd host henry a delightful 3-d animated lizard who will lead you through the wonderful world of the animal kingdom! the amazing animal expert notebook is packed with photos maps sounds and amazing animal facts ...",
+      "price": "8.79"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/15544999546747963941",
+      "name": "global software a4124m2h - dk exotic animals africa - win 95 98 2000 xp",
+      "description": "global software a4124m2h : animals of afica is an interactive multimedia virtual zoofari tour that brings you into the deepest depths of africa to watch the wild animals of the terrain come alive. safari on through hours of enjoyment with this easy ...",
+      "price": "9.08"
+    }
+  ]
+}

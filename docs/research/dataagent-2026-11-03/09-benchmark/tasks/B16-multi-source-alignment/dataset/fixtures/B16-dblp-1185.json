@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/sigmod/ChengP03",
+    "title": "Managing uncertainty in sensor database",
+    "authors": "Sunil Prabhakar, Reynold Cheng",
+    "venue": "SIGMOD Record",
+    "year": "2003"
+  },
+  "right_candidates": [
+    {
+      "id": "959074",
+      "title": "Distributed deviation detection in sensor networks",
+      "authors": "Themistoklis Palpanas, Dimitris Papadopoulos, Vana Kalogeraki, Dimitrios Gunopulos",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2003"
+    },
+    {
+      "id": "672348",
+      "title": "Online Scaling in a Highly Available Database",
+      "authors": "Svein Erik Bratsberg, Rune Humborstad",
+      "venue": "Very Large Data Bases",
+      "year": "2001"
+    },
+    {
+      "id": "959068",
+      "title": "Managing uncertainty in sensor database",
+      "authors": "Reynold Cheng, Sunil Prabhakar",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2003"
+    },
+    {
+      "id": "673140",
+      "title": "Managing a DB2 Parallel Edition Database",
+      "authors": "Gilles Fecteau",
+      "venue": "Very Large Data Bases",
+      "year": "1995"
+    },
+    {
+      "id": "673299",
+      "title": "Managing Intra-operator Parallelism in Parallel Database Systems",
+      "authors": "Manish Mehta, David J. DeWitt",
+      "venue": "Very Large Data Bases",
+      "year": "1995"
+    }
+  ]
+}

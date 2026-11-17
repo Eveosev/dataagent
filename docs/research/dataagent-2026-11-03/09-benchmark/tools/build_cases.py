@@ -8,6 +8,8 @@
 
 每个任务一个转换器：tools/converters/<TASK>.py，暴露 `build(ctx)`。
 转换器只声明「用例长什么样」，切分、落盘、计数、manifest 回填由本脚本统一做。
+manifest.build.content_digest 记录 cases、expected、fixtures 与来源目录实际数据文件内容的摘要；
+摘要不变时重复构建保持原 revision / updated，内容变化才升版本。
 
 依赖：文本类源用标准库；parquet 源需要 workspace/benchmark-data/.pydeps（fetch.py 说明里给安装命令）。
 """
@@ -30,6 +32,105 @@ DEPS = RAW / ".pydeps"
 SPLITS = ("development", "regression", "unseen_acceptance")
 RATIOS = {"development": 60, "regression": 20, "unseen_acceptance": 20}
 DEFAULT_CAPS = {"development": 120, "regression": 60, "unseen_acceptance": 60}
+DIGEST_VERSION = 3
+DIGEST_PREFIX = f"benchmark-content-v{DIGEST_VERSION}"
+
+
+def _update_tree_digest(digest, label: str, root: Path) -> None:
+    """把 root 下所有文件的相对路径与内容写入摘要；空/缺失目录也计入。"""
+    digest.update(label.encode("utf-8") + b"\0")
+    if not root.exists():
+        digest.update(b"<missing>\0")
+        return
+    files = sorted(
+        (path for path in root.rglob("*") if path.is_file()),
+        key=lambda path: path.relative_to(root).as_posix(),
+    )
+    if not files:
+        digest.update(b"<empty>\0")
+    for path in files:
+        rel = path.relative_to(root).as_posix()
+        data = path.read_bytes()
+        digest.update(rel.encode("utf-8") + b"\0")
+        digest.update(str(len(data)).encode("ascii") + b"\0")
+        digest.update(data)
+
+
+SOURCE_METADATA = {"FETCH.json"}
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1 << 20), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _update_source_digest(digest, source_id: str, root: Path | None) -> None:
+    """把来源 id 与实际数据文件内容写入摘要，排除 FETCH.json 等抓取元数据。"""
+    digest.update(b"source\0")
+    digest.update(source_id.encode("utf-8") + b"\0")
+    if root is None or not root.exists():
+        digest.update(b"<missing>\0")
+        return
+    files = []
+    for path in root.rglob("*"):
+        if not path.is_file():
+            continue
+        rel = path.relative_to(root)
+        if path.name in SOURCE_METADATA or ".git" in rel.parts:
+            continue
+        files.append((rel.as_posix(), path))
+    files.sort(key=lambda item: item[0])
+    if not files:
+        digest.update(b"<empty>\0")
+        return
+    for rel, path in files:
+        digest.update(rel.encode("utf-8") + b"\0")
+        digest.update(_sha256_file(path).encode("ascii") + b"\0")
+
+
+def dataset_content_digest(task_dir: Path) -> str:
+    """只对 cases、expected、fixtures 的内容算摘要，用于旧 manifest 首次迁移比较。"""
+    digest = hashlib.sha256()
+    digest.update(b"benchmark-dataset-v1\0")
+    dataset = task_dir / "dataset"
+    _update_tree_digest(digest, "cases", dataset / "cases")
+    _update_tree_digest(digest, "expected", dataset / "expected")
+    _update_tree_digest(digest, "fixtures", dataset / "fixtures")
+    return "sha256:" + digest.hexdigest()
+
+
+def content_digest(task_dir: Path, sources: list[dict], source_paths: dict[str, Path]) -> str:
+    """cases、expected、fixtures 与来源实际文件内容的稳定摘要。"""
+    digest = hashlib.sha256()
+    digest.update(DIGEST_PREFIX.encode("ascii") + b"\0")
+    dataset = task_dir / "dataset"
+    _update_tree_digest(digest, "cases", dataset / "cases")
+    _update_tree_digest(digest, "expected", dataset / "expected")
+    _update_tree_digest(digest, "fixtures", dataset / "fixtures")
+    for source in sorted(sources, key=lambda item: item.get("name", "")):
+        source_id = str(source.get("name"))
+        _update_source_digest(digest, source_id, source_paths.get(source.get("name")))
+    return "sha256:" + digest.hexdigest()
+
+
+def _manifest_version(manifest: dict) -> int:
+    build = manifest.get("build") or {}
+    try:
+        version = int(build.get("version", 0) or 0)
+    except (TypeError, ValueError):
+        version = 0
+    if version > 0:
+        return version
+    revision = str(manifest.get("revision", ""))
+    if revision.startswith("v0."):
+        try:
+            return max(0, int(revision[3:]))
+        except ValueError:
+            pass
+    return 0
 
 
 def split_of(key: str) -> str:
@@ -42,15 +143,17 @@ def split_of(key: str) -> str:
 
 
 class Context:
-    def __init__(self, task: dict, limit: int | None, dry: bool):
+    def __init__(self, task: dict, limit: int | None, dry: bool, previous_dataset_digest: str | None = None):
         self.task = task
         self.task_id = task["id"]
         self.task_dir = BASE / task["path"]
         self.dataset = self.task_dir / "dataset"
         self.limit = limit
         self.dry = dry
+        self.previous_dataset_digest = previous_dataset_digest
         self.cases: dict[str, list[dict]] = {s: [] for s in SPLITS}
         self.sources: list[dict] = []
+        self.source_paths: dict[str, Path] = {}
         self.notes: list[str] = []
         self._pending: dict[str, str] = {}
 
@@ -66,6 +169,7 @@ class Context:
             "name": source_id,
             "locator": entry["locator"],
             "license": entry.get("license"),
+            # 仅记录 FETCH 元数据；content_digest 使用来源文件实际内容。
             "digest": meta.get("digest"),
             "revision": meta.get("resolved_revision"),
             "files": meta.get("files"),
@@ -73,6 +177,7 @@ class Context:
             "fetched_at": meta.get("fetched_at"),
         }
         self.sources.append(rec)
+        self.source_paths[source_id] = RAW / entry["task"] / source_id
         return rec
 
     def raw_path(self, source_id: str, *parts: str) -> Path:
@@ -164,30 +269,77 @@ class Context:
             return
         mpath = self.dataset / "manifest.json"
         manifest = json.loads(mpath.read_text(encoding="utf-8"))
-        build_no = int(manifest.get("build", {}).get("version", 0)) + 1
+        digest = content_digest(self.task_dir, self.sources, self.source_paths)
+        dataset_digest = dataset_content_digest(self.task_dir)
+        previous_build = manifest.get("build") or {}
+        previous_digest = previous_build.get("content_digest")
+        previous_digest_version = previous_build.get("content_digest_version")
+        previous_version = _manifest_version(manifest)
+        today = date.today().isoformat()
+        migrated = previous_digest is None or previous_digest_version != DIGEST_VERSION
+        dataset_changed = (
+            self.previous_dataset_digest is not None
+            and self.previous_dataset_digest != dataset_digest
+        )
+
+        if migrated:
+            if dataset_changed:
+                # 首次引入摘要或摘要方案迁移时，旧 cases/expected/fixtures 已变化，按内容升版。
+                build_no = previous_version + 1
+                revision = f"v0.{build_no}"
+                updated = today
+                built_at = today
+                changed = True
+            else:
+                # 内容未变，沿用原 revision，避免迁移本身制造新版本。
+                build_no = previous_version
+                revision = manifest.get("revision") or f"v0.{build_no}"
+                updated = manifest.get("updated") or today
+                built_at = previous_build.get("built_at") or today
+                changed = False
+        elif previous_digest != digest:
+            build_no = previous_version + 1
+            revision = f"v0.{build_no}"
+            updated = today
+            built_at = today
+            changed = True
+        else:
+            build_no = previous_version
+            revision = manifest.get("revision") or f"v0.{build_no}"
+            updated = manifest.get("updated") or today
+            built_at = previous_build.get("built_at") or today
+            changed = False
+
         manifest.update(
-            revision=f"v0.{build_no}",
+            revision=revision,
             status="collecting",
-            updated=date.today().isoformat(),
+            updated=updated,
             sources=self.sources,
             splits={
                 s: {"count": stats["selected"][s], "frozen": False} for s in SPLITS
             },
         )
-        manifest["build"] = {
+        build = {
             "version": build_no,
             "script": "tools/build_cases.py",
-            "built_at": date.today().isoformat(),
+            "built_at": built_at,
             "policy": policy,
             "available": stats["available"],
             "selected": stats["selected"],
             "caps": stats["caps"],
-            **(extra or {}),
         }
+        build.update(extra or {})
+        build["content_digest"] = digest
+        build["content_digest_version"] = DIGEST_VERSION
+        manifest["build"] = build
         manifest["notes"] = "由 build_cases.py 从 workspace/benchmark-data 构建；原始数据不入库"
         mpath.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
-        print(f"{self.task_id}: {stats['selected']} cases  building={build_no}  sources={len(self.sources)}")
+        print(
+            f"{self.task_id}: {stats['selected']} cases  building={build_no}  changed={changed}  "
+            f"migrated={migrated}  dataset_changed={dataset_changed}  "
+            f"digest={digest[:19]}  sources={len(self.sources)}"
+        )
 
 
 def clean_outputs(task_dir: Path) -> None:
@@ -231,11 +383,20 @@ def main() -> int:
     if task is None:
         raise SystemExit(f"未知任务 {args.task}")
 
+    previous_dataset_digest = None
+    if not args.dry_run:
+        manifest_path = BASE / task["path"] / "dataset" / "manifest.json"
+        try:
+            json.loads(manifest_path.read_text(encoding="utf-8"))
+            previous_dataset_digest = dataset_content_digest(BASE / task["path"])
+        except (OSError, json.JSONDecodeError):
+            previous_dataset_digest = None
+
     if not args.keep and not args.dry_run:
         clean_outputs(task["path"] and BASE / task["path"])
 
     mod = load_converter(args.task)
-    ctx = Context(task, args.limit, args.dry_run)
+    ctx = Context(task, args.limit, args.dry_run, previous_dataset_digest=previous_dataset_digest)
     payload = mod.build(ctx)
     stats = ctx.write()
     ctx.publish(stats, policy=payload.get("policy", ""), extra=payload.get("extra"))

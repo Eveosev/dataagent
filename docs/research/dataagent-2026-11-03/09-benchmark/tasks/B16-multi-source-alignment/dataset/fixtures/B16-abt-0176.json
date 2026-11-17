@@ -1,0 +1,38 @@
+{
+  "task": "entity_alignment",
+  "source": "Abt → Buy",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "34945",
+    "name": "LG LFC25770SW 25.0 Cu. Ft. Smooth White French Door Bottom Freezer Refrigerator - LFC25770WH",
+    "description": "LG LFC25770SW 25.0 Cu. Ft. Smooth White French Door Bottom Freezer Refrigerator - LFC25770WH/ 4 Slide Out Tempered Glass Shelves/ Internal LED Touch Pad Digital Temperature Controls/ 2 Humidity Crispers/ 4 Compartment Crisper System/ Multi Air Flow Cooling/ IcePlus Accelerated Freezing Function/ LoDecibel Quiet Operation/ BioShield Anti Bacterial Door Seal/ Pull Out Freezer Drawer/ Smooth White Finish"
+  },
+  "right_candidates": [
+    {
+      "id": "208715736",
+      "name": "7.0 Cu. Ft. Super Capacity Electric Dryer - MED5900TW",
+      "manufacturer": "Maytag",
+      "price": "$479.00"
+    },
+    {
+      "id": "208114674",
+      "name": "LG 25.0 Cu.Ft. Total Capacity",
+      "manufacturer": "LG Electronics"
+    },
+    {
+      "id": "208114681",
+      "name": "LG 25 Cu. Ft. Ice & Water Dispensing",
+      "manufacturer": "LG Electronics"
+    },
+    {
+      "id": "208117937",
+      "name": "LG 5.0 cu.ft. Freestanding Gas Range",
+      "manufacturer": "LG Electronics"
+    },
+    {
+      "id": "205664973",
+      "name": "LG 4.0 cu. ft. Capacity Front Load Washer w/ Sanitary cycle",
+      "manufacturer": "LG Electronics"
+    }
+  ]
+}

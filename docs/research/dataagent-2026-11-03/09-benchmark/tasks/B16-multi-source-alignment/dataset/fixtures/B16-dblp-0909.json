@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/sigmod/dOnofrioP03",
+    "title": "Modelling temporal thematic map contents",
+    "authors": "Elaheh Pourabbas, Alberto d'Onofrio",
+    "venue": "SIGMOD Record",
+    "year": "2003"
+  },
+  "right_candidates": [
+    {
+      "id": "672027",
+      "title": "Transaction Timestamping in (Temporal) Databases",
+      "authors": "Christian S. Jensen, David B. Lomet",
+      "venue": "Very Large Data Bases",
+      "year": "2001"
+    },
+    {
+      "id": "673474",
+      "title": "Coalescing in Temporal Databases",
+      "authors": "Michael H. B&#246;hlen, Richard Thomas Snodgrass, Michael D. Soo",
+      "venue": "Very Large Data Bases",
+      "year": "1996"
+    },
+    {
+      "id": "672006",
+      "title": "Temporal Queries in OLAP",
+      "authors": "Alberto O. Mendelzon, Alejandro A. Vaisman",
+      "venue": "Very Large Data Bases",
+      "year": "2000"
+    },
+    {
+      "id": "219758",
+      "title": "Temporal database system implementations",
+      "authors": "Michael H. B&#246;hlen",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1995"
+    },
+    {
+      "id": "776990",
+      "title": "Modelling temporal thematic map contents",
+      "authors": "Alberto d'Onofrio, Elaheh Pourabbas",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2003"
+    }
+  ]
+}

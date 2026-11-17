@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/vldb/SchaeferBBJ00",
+    "title": "Controlling Data Warehouses with Knowledge Networks",
+    "authors": "Jan-Dirk Becker, Matthias Jarke, Andreas Boehmer, Elvira Schaefer",
+    "venue": "VLDB",
+    "year": "2000"
+  },
+  "right_candidates": [
+    {
+      "id": "671666",
+      "title": "What can Hierarchies do for Data Warehouses?",
+      "authors": "H. V. Jagadish, Laks V. S. Lakshmanan, Divesh Srivastava",
+      "venue": "Very Large Data Bases",
+      "year": "1999"
+    },
+    {
+      "id": "603876",
+      "title": "Preservation of digital data with self-validating, self-instantiating knowledge-based archives",
+      "authors": "Bertram Lud&#228;scher, Richard Marciano, Reagan Moore",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2001"
+    },
+    {
+      "id": "671845",
+      "title": "Controlling Data Warehouses with Knowledge Networks",
+      "authors": "Elvira Schaefer, Jan-Dirk Becker, Andreas Boehmer, Matthias Jarke",
+      "venue": "Very Large Data Bases",
+      "year": "2000"
+    },
+    {
+      "id": "672208",
+      "title": "WARLOCK: A Data Allocation Tool for Parallel Warehouses",
+      "authors": "Thomas St&#246;hr, Erhard Rahm",
+      "venue": "Very Large Data Bases",
+      "year": "2001"
+    },
+    {
+      "id": "671836",
+      "title": "Integration of Data Mining with Database Technology",
+      "authors": "Amir Netz, Surajit Chaudhuri, Jeff Bernhardt, Usama M. Fayyad",
+      "venue": "Very Large Data Bases",
+      "year": "2000"
+    }
+  ]
+}

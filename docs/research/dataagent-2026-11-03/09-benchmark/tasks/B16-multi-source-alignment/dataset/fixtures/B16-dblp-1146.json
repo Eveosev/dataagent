@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/vldb/ChristodoulakisTZ97",
+    "title": "Principles of Optimally Placing Data in Tertiary Storage Libraries",
+    "authors": "Fenia Zioga, Peter Triantafillou, Stavros Christodoulakis",
+    "venue": "VLDB",
+    "year": "1997"
+  },
+  "right_candidates": [
+    {
+      "id": "671007",
+      "title": "Principles of Optimally Placing Data in Tertiary Storage Libraries",
+      "authors": "Stavros Christodoulakis, Peter Triantafillou, Fenia Zioga",
+      "venue": "Very Large Data Bases",
+      "year": "1997"
+    },
+    {
+      "id": "190631",
+      "title": "Data modelling in the large",
+      "authors": "Martin Bertram",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1994"
+    },
+    {
+      "id": "672196",
+      "title": "French government activity in the conservation of data and electronic documents",
+      "authors": "Serge Novaretti",
+      "venue": "Very Large Data Bases",
+      "year": "2001"
+    },
+    {
+      "id": "671352",
+      "title": "Curio: A Novel Solution for Efficient Storage and Indexing in Data Warehouses",
+      "authors": "Anindya Datta, Krithi Ramamritham, Helen M. Thomas",
+      "venue": "Very Large Data Bases",
+      "year": "1999"
+    },
+    {
+      "id": "672175",
+      "title": "Storage and Querying of E-Commerce Data",
+      "authors": "Rakesh Agrawal, Amit Somani, Yirong Xu",
+      "venue": "Very Large Data Bases",
+      "year": "2001"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/vldb/BarbaraI95",
+    "title": "Sleepers and Workaholics: Caching Strategies in Mobile Environments",
+    "authors": "Tomasz Imielinski, Daniel Barbará",
+    "venue": "VLDB J.",
+    "year": "1995"
+  },
+  "right_candidates": [
+    {
+      "id": "615230",
+      "title": "Adaptable pointer swizzling strategies in object bases: design, realization, and quantitative analysis",
+      "authors": "Alfons Kemper, Donald Kossmann",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "1995"
+    },
+    {
+      "id": "615236",
+      "title": "Sleepers and workaholics: caching strategies in mobile environments (extended version)",
+      "authors": "Daniel Barbar&#225;, Tomasz Imieli&#324;ski",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "1995"
+    },
+    {
+      "id": "253294",
+      "title": "InfoSleuth: agent-based semantic integration of information in open and dynamic environments",
+      "authors": "R. J. Bayardo, Jr., W. Bohrer, R. Brice, A. Cichocki, J. Fowler, A. Helal, V. Kashyap, T. Ksiezyk, G. Martin, M. Nodine, M. Rashid, M. Rusinkiewicz, R. Shea, C. Unnikrishnan, A. Unruh, D. Woelk",
+      "venue": "International Conference on Management of Data",
+      "year": "1997"
+    },
+    {
+      "id": "777944",
+      "title": "Spatial queries in dynamic environments",
+      "authors": "Yufei Tao, Dimitris Papadias",
+      "venue": "ACM Transactions on Database Systems (TODS) ",
+      "year": "2003"
+    },
+    {
+      "id": "233327",
+      "title": "Query caching and optimization in distributed mediator systems",
+      "authors": "S. Adali, K. S. Candan, Y. Papakonstantinou, V. S. Subrahmanian",
+      "venue": "International Conference on Management of Data",
+      "year": "1996"
+    }
+  ]
+}

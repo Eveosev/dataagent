@@ -1,0 +1,39 @@
+{
+  "task": "entity_alignment",
+  "source": "Abt → Buy",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "27186",
+    "name": "Weber Stainless Steel Summit S-650 Liquid Propane Grill - 1780001",
+    "description": "Weber Stainless Steel Summit S-650 Liquid Propane Grill - 1780001/ 6 Stainless Steel Burners/ 60,000 BTU-Per-Hour Input/ 12,000 BTU-Per-Hour Input Side Burner/ 10,600 BTU-Per-Hour Rotisserie Burner/ 8,000 BTU-Per-Hour Input Smoker Burner/ Snap-Jet Individual Burner Ignition System/ 3/8-Inch Diameter Stainless Steel Rod Cooking Grates/ Stainless Steel Flavorizer Bars/ Stainless Steel Finish/ Liquid Propane Model (LP Tank Not Included)/ Assembly Required",
+    "price": "$1,999.00"
+  },
+  "right_candidates": [
+    {
+      "id": "204318288",
+      "name": "Weber Genesis S-320 3880001 60' Freestanding Gas Grill with 637 sq. in. Cooking Surface, 3 Stainless Steel Burners, Flush-Mounted Side Burner & Stainless Steel Shroud: Natural Gas",
+      "manufacturer": "Weber",
+      "price": "$754.29"
+    },
+    {
+      "id": "204292473",
+      "name": "Weber Genesis Series S-310 60' Freestanding Gas Grill",
+      "manufacturer": "Weber"
+    },
+    {
+      "id": "208464828",
+      "name": "Weber Summit SP-320 Stainless LP Gas Grill",
+      "manufacturer": "Weber"
+    },
+    {
+      "id": "204292477",
+      "name": "Weber Summit Series S-450 74 1/10' Freestanding Gas Grill with 838 sq. in. Cooking Surface, 6 Stainless Steel Burners, Rotisserie Burner, Stainless Steel Smoker Box & Stainless Steel Work Surface: LP Gas",
+      "manufacturer": "Weber"
+    },
+    {
+      "id": "208464825",
+      "name": "Weber Summit E-620 Copper LP Gas Grill",
+      "manufacturer": "Weber"
+    }
+  ]
+}

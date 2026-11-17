@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/vldb/Ganguly98",
+    "title": "Design and Analysis of Parametric Query Optimization Algorithms",
+    "authors": "Sumit Ganguly",
+    "venue": "VLDB",
+    "year": "1998"
+  },
+  "right_candidates": [
+    {
+      "id": "375748",
+      "title": "Orthogonal optimization of subqueries and aggregation",
+      "authors": "C&#233;sar Galindo-Legaria, Milind Joshi",
+      "venue": "International Conference on Management of Data",
+      "year": "2001"
+    },
+    {
+      "id": "671329",
+      "title": "Design and Analysis of Parametric Query Optimization Algorithms",
+      "authors": "Sumit Ganguly",
+      "venue": "Very Large Data Bases",
+      "year": "1998"
+    },
+    {
+      "id": "673488",
+      "title": "Implementation and Analysis of a Parallel Collection Query Language",
+      "authors": "Dan Suciu",
+      "venue": "Very Large Data Bases",
+      "year": "1996"
+    },
+    {
+      "id": "191872",
+      "title": "Optimization of dynamic query evaluation plans",
+      "authors": "Richard L. Cole, Goetz Graefe",
+      "venue": "International Conference on Management of Data",
+      "year": "1994"
+    },
+    {
+      "id": "765552",
+      "title": "Parametric query optimization",
+      "authors": "Yannis E. Ioannidis, Raymond T. Ng, Kyuseok Shim, Timos K. Sellis",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "1997"
+    }
+  ]
+}

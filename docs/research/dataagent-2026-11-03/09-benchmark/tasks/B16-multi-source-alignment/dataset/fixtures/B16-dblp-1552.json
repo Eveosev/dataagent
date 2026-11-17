@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/CeriFP98",
+    "title": "The IDEA Web Lab",
+    "authors": "Piero Fraternali, Stefano Paraboschi, Stefano Ceri",
+    "venue": "SIGMOD Conference",
+    "year": "1998"
+  },
+  "right_candidates": [
+    {
+      "id": "276370",
+      "title": "Real business processing meets the Web",
+      "authors": "James Chong",
+      "venue": "International Conference on Management of Data",
+      "year": "1998"
+    },
+    {
+      "id": "671014",
+      "title": "To Weave the Web",
+      "authors": "Paolo Atzeni, Giansalvatore Mecca, Paolo Merialdo",
+      "venue": "Very Large Data Bases",
+      "year": "1997"
+    },
+    {
+      "id": "276390",
+      "title": "The IDEA Web lab",
+      "authors": "Stefano Ceri, Piero Fraternali, Stefano Paraboschi",
+      "venue": "International Conference on Management of Data",
+      "year": "1998"
+    },
+    {
+      "id": "375723",
+      "title": "Monitoring XML data on the Web",
+      "authors": "Benjamin Nguyen, Serge Abiteboul, Gr&#233;gory Cobena, Miha&#237; Preda",
+      "venue": "International Conference on Management of Data",
+      "year": "2001"
+    },
+    {
+      "id": "672181",
+      "title": "Self-similarity in the Web",
+      "authors": "Stephen Dill, Ravi Kumar, Kevin S. McCurley, Sridhar Rajagopalan, D. Sivakumar, Andrew Tomkins",
+      "venue": "Very Large Data Bases",
+      "year": "2001"
+    }
+  ]
+}

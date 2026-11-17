@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/Bonnet02",
+    "title": "Going public: open-source databases and database research",
+    "authors": "Philippe Bonnet",
+    "venue": "SIGMOD Conference",
+    "year": "2002"
+  },
+  "right_candidates": [
+    {
+      "id": "234901",
+      "title": "OLAP, relational, and multidimensional database systems",
+      "authors": "George Colliat",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1996"
+    },
+    {
+      "id": "280349",
+      "title": "databases and visualization",
+      "authors": "Daniel A. Keim",
+      "venue": "International Conference on Management of Data",
+      "year": "1996"
+    },
+    {
+      "id": "187460",
+      "title": "Database research at NTHU and ITRI",
+      "authors": "Arbee L. P. Chen",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1994"
+    },
+    {
+      "id": "564790",
+      "title": "Going public: open-source databases and database research",
+      "authors": "Philippe Bonnet",
+      "venue": "International Conference on Management of Data",
+      "year": "2002"
+    },
+    {
+      "id": "276339",
+      "title": "Secure and portable database extensibility",
+      "authors": "Michael Godfrey, Tobias Mayr, Praveen Seshadri, Thorsten von Eicken",
+      "venue": "International Conference on Management of Data",
+      "year": "1998"
+    }
+  ]
+}

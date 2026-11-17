@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/vldb/RamanH01",
+    "title": "Potter's Wheel: An Interactive Data Cleaning System",
+    "authors": "Joseph M. Hellerstein, Vijayshankar Raman",
+    "venue": "VLDB",
+    "year": "2001"
+  },
+  "right_candidates": [
+    {
+      "id": "604270",
+      "title": "Mining system audit data: opportunities and challenges",
+      "authors": "Wenke Lee, Wei Fan",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2001"
+    },
+    {
+      "id": "671663",
+      "title": "Online Dynamic Reordering for Interactive Data Processing",
+      "authors": "Vijayshankar Raman, Bhaskaran Raman, Joseph M. Hellerstein",
+      "venue": "Very Large Data Bases",
+      "year": "1999"
+    },
+    {
+      "id": "672045",
+      "title": "Potter's Wheel: An Interactive Data Cleaning System",
+      "authors": "Vijayshankar Raman, Joseph M. Hellerstein",
+      "venue": "Very Large Data Bases",
+      "year": "2001"
+    },
+    {
+      "id": "233348",
+      "title": "An open abstract-object storage system",
+      "authors": "Stephen Blott, Lukas Relly, Hans-J&#246;rg Schek",
+      "venue": "International Conference on Management of Data",
+      "year": "1996"
+    },
+    {
+      "id": "336568",
+      "title": "AJAX: an extensible data cleaning tool",
+      "authors": "Helena Galhardas, Daniela Florescu, Dennis Shasha, Eric Simon",
+      "venue": "International Conference on Management of Data",
+      "year": "2000"
+    }
+  ]
+}

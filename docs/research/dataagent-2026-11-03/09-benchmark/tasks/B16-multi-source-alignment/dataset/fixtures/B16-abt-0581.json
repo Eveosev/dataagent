@@ -1,0 +1,44 @@
+{
+  "task": "entity_alignment",
+  "source": "Abt → Buy",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "10101",
+    "name": "Omnimount Wall Speaker Mount - 20WLBK",
+    "description": "Omnimount Wall Speaker Mount - 20WLBK/ Stainless Steel Shafts And All Necessary Hardware Included/ Supports Speakers Up To 20 lbs./ Sold As Single / Black Finish",
+    "price": "$39.95"
+  },
+  "right_candidates": [
+    {
+      "id": "201699873",
+      "name": "Peerless Universal Flat Wall Mount - SF640P",
+      "description": "Peerless Flat Wall Mount for 23'- 46' LCD Screens - Black",
+      "manufacturer": "Peerless"
+    },
+    {
+      "id": "90106172",
+      "name": "OmniMount Universal Wall Speaker Mounting Kit - 20.0 WALL-B",
+      "description": "Stainless Steel - 20 lb",
+      "manufacturer": "OMNIMOUNT SYSTEMS, INC",
+      "price": "$24.34"
+    },
+    {
+      "id": "201701865",
+      "name": "Peerless Universal Tilt Wall Mount",
+      "description": "Peerless Smart Mount ST660P Universal Tilt Wall Mount for 37' to 60' Screens (Black) up to 200lbs",
+      "manufacturer": "Peerless"
+    },
+    {
+      "id": "90125786",
+      "name": "Sanus Wall/Ceiling Speaker Mount - WMS3S SILVER",
+      "description": "Plastic - 8 lb",
+      "manufacturer": "Sanus"
+    },
+    {
+      "id": "90125772",
+      "name": "Sanus Speaker Mount - WMS3B BLACK",
+      "description": "Plastic - 8 lb",
+      "manufacturer": "Sanus"
+    }
+  ]
+}

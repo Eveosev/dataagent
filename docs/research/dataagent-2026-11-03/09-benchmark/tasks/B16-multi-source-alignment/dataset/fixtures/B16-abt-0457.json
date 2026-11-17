@@ -1,0 +1,42 @@
+{
+  "task": "entity_alignment",
+  "source": "Abt → Buy",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "26137",
+    "name": "Panasonic SR-NA18 White Deluxe Fuzzy Logic Rice Cooker - SRNA18",
+    "description": "Panasonic SR-NA18 White Deluxe Fuzzy Logic Rice Cooker - SRNA18/ Compact Design/ Advanced Fuzzy Logic Technology/ 8 Menu Settings/ Non-Stick Coated Pan With Dimpled Bottom/ 24-Hour Clock/ 12-Hour Keep Warm Feature/ White Finish"
+  },
+  "right_candidates": [
+    {
+      "id": "204272122",
+      "name": "Panasonic SR-NA18 10-Cup Rice Cooker/Warmer with Advanced Fuzzy Logic Technology",
+      "manufacturer": "Panasonic"
+    },
+    {
+      "id": "207543191",
+      "name": "Panasonic KX-TG9343T Cordless Phone",
+      "description": "Panasonic KX-TG9343T DECT 6.0 Expandable Digital Cordless Answering System w/3 Handsets",
+      "manufacturer": "Panasonic",
+      "price": "$102.12"
+    },
+    {
+      "id": "204559214",
+      "name": "Panasonic NNSN667W 1.2 cu. ft. Countertop Microwave Oven In White",
+      "manufacturer": "Panasonic",
+      "price": "$107.81"
+    },
+    {
+      "id": "90104307",
+      "name": "Panasonic KX-TS108W Corded Phone",
+      "description": "1 x Phone Line(s) - White",
+      "manufacturer": "Panasonic"
+    },
+    {
+      "id": "90105056",
+      "name": "Panasonic KX-TS208W Corded Phone",
+      "description": "2 x Phone Line(s) - Headset - White",
+      "manufacturer": "Panasonic"
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "task": "entity_alignment",
+  "source": "Amazon → Google Products",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "b00099xf0e",
+    "title": "synet pc sharing kit(w/17ft usb ext.cable)",
+    "manufacturer": "synet electronics inc.",
+    "price": "0"
+  },
+  "right_candidates": [
+    {
+      "id": "http://www.google.com/base/feeds/snippets/16819471998102486336",
+      "name": "synet electronics inc. synet pc sharing kit(w/17ft usb ext.cable)",
+      "description": "simple networking for 2 pcs without any hardware to install share one internet connection between two pcs share printers drives scanners and other devices fast data/file transfer system requirements: processor: intel pentium 400 mhz a",
+      "price": "26.14"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/10248910023220043204",
+      "name": "microsoft onenote 2007 upgrade (pc)",
+      "description": "key features: professional content share your documents business integration better manage content owner's instructions...",
+      "price": "79.95"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/16675085685401286991",
+      "name": "datapilot universal pro kit",
+      "description": "datapilot universal pro kit lets you back up synchronize and personalize your mobile phones content. keep your data in microsoft outlook and mac address book in sync with your pc or mac including contacts appointments and more. includes universal ...",
+      "price": "79.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/13036666023758000710",
+      "name": "detto move2mac usb kit (to move data from pc to ma",
+      "description": "pc with 486 or higher processor microsoft internet explorer 4.01* or higher mouse (highly recommended) keyboard any of the following operating systems: microsoft windows 98 98se millennium 2000 or xp 32 mb ram 30 mb hard drive space cd rom drive ...",
+      "price": "44.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/11409582066977374017",
+      "name": "learning quickbooks (pc) intuit",
+      "description": "key features: get information work efficiently gain confidence for windows 2000/xp/vista ...",
+      "price": "39.99"
+    }
+  ]
+}

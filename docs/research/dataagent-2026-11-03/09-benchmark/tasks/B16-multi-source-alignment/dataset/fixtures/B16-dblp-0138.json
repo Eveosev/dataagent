@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/tods/ChoG03",
+    "title": "Effective page refresh policies for Web crawlers",
+    "authors": "Junghoo Cho, Hector Garcia-Molina",
+    "venue": "ACM Trans. Database Syst.",
+    "year": "2003"
+  },
+  "right_candidates": [
+    {
+      "id": "958945",
+      "title": "Effective page refresh policies for Web crawlers",
+      "authors": "Junghoo Cho, Hector Garcia-Molina",
+      "venue": "ACM Transactions on Database Systems (TODS) ",
+      "year": "2003"
+    },
+    {
+      "id": "375736",
+      "title": "Enabling dynamic content caching for database-driven web sites",
+      "authors": "K. Sel&#231;uk Candan, Wen-Syan Li, Qiong Luo, Wang-Pin Hsiung, Divyakant Agrawal",
+      "venue": "International Conference on Management of Data",
+      "year": "2001"
+    },
+    {
+      "id": "253364",
+      "title": "A unified framework for enforcing multiple access control policies",
+      "authors": "Sushil Jajodia, Pierangela Samarati, V. S. Subrahmanian, Eliza Bertino",
+      "venue": "International Conference on Management of Data",
+      "year": "1997"
+    },
+    {
+      "id": "335434",
+      "title": "On effective multi-dimensional indexing for strings",
+      "authors": "H. V. Jagadish, Nick Koudas, Divesh Srivastava",
+      "venue": "International Conference on Management of Data",
+      "year": "2000"
+    },
+    {
+      "id": "290605",
+      "title": "Database techniques for the World-Wide Web: a survey",
+      "authors": "Daniela Florescu, Alon Levy, Alberto Mendelzon",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1998"
+    }
+  ]
+}

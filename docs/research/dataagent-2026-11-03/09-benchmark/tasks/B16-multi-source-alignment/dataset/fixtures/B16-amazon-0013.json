@@ -1,0 +1,44 @@
+{
+  "task": "entity_alignment",
+  "source": "Amazon → Google Products",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "b0001av65w",
+    "title": "ideasoft photo clip art 10 000",
+    "description": "stand out from the crowd with 10 000 unique photo images! these bright bold and brilliant photos come with solid changeable backgrounds making them as easy to use as clip art. from bananas to banjos cars to children dogs to ducks - there's a photo clip art image for every project!",
+    "manufacturer": "nova development",
+    "price": "0"
+  },
+  "right_candidates": [
+    {
+      "id": "http://www.google.com/base/feeds/snippets/18312853825749428303",
+      "name": "nova development corp ideasoft photo clip art 10000",
+      "description": "stand out from the crowd with 10000 unique photo images! these bright bold and brilliant photos come with solid changeable backgrounds making them as easy to use as clip art. from bananas to banjos cars to children dogs to ducks - there's a photo",
+      "price": "7.81"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/9381087429548020234",
+      "name": "sony photo go",
+      "description": "key features: simple to use import photos rate favorite photos many edit options share photos show me how tutorials ...",
+      "price": "24.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/18435579466587005010",
+      "name": "microspot interiors (mac 10.2 or later)",
+      "description": "microspot interiors makes it possible for you to create 3d rooms and walkthroughs of your home.remodel your home or office without leaving your chair.try fresh paint wall paper or carpet with out going to the store.preview that alteration without ...",
+      "price": "99.95"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/16599167006186127666",
+      "name": "ibm(r) viavoice(r) pro edition 10",
+      "description": "ibm viavoice pro usb edition is the flagship offering of the viavoice for windows release 10 product line. it represents the merger of high-productivity software with advanced microphone technology. pro usb edition offers great dictation versatility ...",
+      "price": "179.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/13276293278980872969",
+      "name": "quickstart photo montage studio",
+      "description": "transform your photos into professional-looking montages! this unique software uses hundreds of mini-size photos as tiles to recreate your favorite digital photo into one great masterpiece. turn memorable moments into priceless keepsakes create ...",
+      "price": "9.95"
+    }
+  ]
+}

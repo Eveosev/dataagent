@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/tods/DiaoAFZF03",
+    "title": "Path sharing and predicate evaluation for high-performance XML filtering",
+    "authors": "Yanlei Diao, Hao Zhang, Peter M. Fischer, Michael J. Franklin, Mehmet Altinel",
+    "venue": "ACM Trans. Database Syst.",
+    "year": "2003"
+  },
+  "right_candidates": [
+    {
+      "id": "564707",
+      "title": "Covering indexes for branching path queries",
+      "authors": "Raghav Kaushik, Philip Bohannon, Jeffrey F Naughton, Henry F Korth",
+      "venue": "International Conference on Management of Data",
+      "year": "2002"
+    },
+    {
+      "id": "671192",
+      "title": "A Quantitative Analysis and Performance Study for Similarity-Search Methods in High-Dimensional Spaces",
+      "authors": "Roger Weber, Hans-J&#246;rg Schek, Stephen Blott",
+      "venue": "Very Large Data Bases",
+      "year": "1998"
+    },
+    {
+      "id": "603874",
+      "title": "On database theory and XML",
+      "authors": "Dan Suciu",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2001"
+    },
+    {
+      "id": "958947",
+      "title": "Path sharing and predicate evaluation for high-performance XML filtering",
+      "authors": "Yanlei Diao, Mehmet Altinel, Michael J. Franklin, Hao Zhang, Peter Fischer",
+      "venue": "ACM Transactions on Database Systems (TODS) ",
+      "year": "2003"
+    },
+    {
+      "id": "335423",
+      "title": "A framework for expressing and combining preferences",
+      "authors": "Rakesh Agrawal, Edward L. Wimmers",
+      "venue": "International Conference on Management of Data",
+      "year": "2000"
+    }
+  ]
+}

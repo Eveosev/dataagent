@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/LabrinidisR00",
+    "title": "WebView Materialization",
+    "authors": "Nick Roussopoulos, Alexandros Labrinidis",
+    "venue": "SIGMOD Conference",
+    "year": "2000"
+  },
+  "right_candidates": [
+    {
+      "id": "872851",
+      "title": "QXtract: a building block for efficient information extraction from text databases",
+      "authors": "Eugene Agichtein, Luis Gravano",
+      "venue": "International Conference on Management of Data",
+      "year": "2003"
+    },
+    {
+      "id": "310063",
+      "title": "Efficient materialization and use of views in data warehouses",
+      "authors": "M&#225;rcio Farias de Souza, Marcus Costa Sampaio",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1999"
+    },
+    {
+      "id": "765237",
+      "title": "One-dimensional and multi-dimensional substring selectivity estimation",
+      "authors": "H. V. Jagadish, Olga Kapitskaia, Raymond T. Ng, Divesh Srivastava",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "2000"
+    },
+    {
+      "id": "335430",
+      "title": "WebView materialization",
+      "authors": "Alexandros Labrinidis, Nick Roussopoulos",
+      "venue": "International Conference on Management of Data",
+      "year": "2000"
+    },
+    {
+      "id": "672997",
+      "title": "Materialization: A Powerful and Ubiquitous Abstraction Pattern",
+      "authors": "Alain Pirotte, Esteban Zim&#225;nyi, David Massart, Tatiana Yakusheva",
+      "venue": "Very Large Data Bases",
+      "year": "1994"
+    }
+  ]
+}

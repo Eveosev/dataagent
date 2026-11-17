@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/vldb/BouguettayaEMO01",
+    "title": "Ontology-based Support for Digital Government",
+    "authors": "Ahmed K. Elmagarmid, Athman Bouguettaya, Mourad Ouzzani, Brahim Medjahed",
+    "venue": "VLDB",
+    "year": "2001"
+  },
+  "right_candidates": [
+    {
+      "id": "767097",
+      "title": "An authorization system for digital libraries",
+      "authors": "E. Ferrari, N.R. Adam, V. Atluri, E. Bertino, U. Capuozzo",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "2002"
+    },
+    {
+      "id": "637414",
+      "title": "Methodology for development and employment of ontology based knowledge management applications",
+      "authors": "York Sure, Steffen Staab, Rudi Studer",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2002"
+    },
+    {
+      "id": "373691",
+      "title": "Towards knowledge-based digital libraries",
+      "authors": "Ling Feng, Marfred A. Jeusfeld, Jeroen Hoppenbrouwers",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2001"
+    },
+    {
+      "id": "223855",
+      "title": "Copy detection mechanisms for digital documents",
+      "authors": "Sergey Brin, James Davis, H&#233;ctor Garc&#237;a-Molina",
+      "venue": "International Conference on Management of Data",
+      "year": "1995"
+    },
+    {
+      "id": "672201",
+      "title": "Ontology-based Support for Digital Government",
+      "authors": "Athman Bouguettaya, Ahmed K. Elmagarmid, Brahim Medjahed, M. Ouzzani",
+      "venue": "Very Large Data Bases",
+      "year": "2001"
+    }
+  ]
+}

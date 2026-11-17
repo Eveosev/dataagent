@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/VossenW99",
+    "title": "The WASA2 Object-Oriented Workflow Management System",
+    "authors": "Mathias Weske, Gottfried Vossen",
+    "venue": "SIGMOD Conference",
+    "year": "1999"
+  },
+  "right_candidates": [
+    {
+      "id": "304582",
+      "title": "The CCUBE constraint object-oriented database system",
+      "authors": "Alexander Brodsky, Victor E. Segal, Jia Chen, Paval A. Exarkhopoulo",
+      "venue": "International Conference on Management of Data",
+      "year": "1999"
+    },
+    {
+      "id": "290601",
+      "title": "The TriGS active object-oriented database system- an overview",
+      "authors": "G. Kappel, W. Retschitzegger",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1998"
+    },
+    {
+      "id": "304586",
+      "title": "The WASA2 object-oriented workflow management system",
+      "authors": "Gottfried Vossen, Mathias Weske",
+      "venue": "International Conference on Management of Data",
+      "year": "1999"
+    },
+    {
+      "id": "191967",
+      "title": "The ORES temporal database management system",
+      "authors": "Babis Theodoulidis, Aziz Ait-Braham, George Andrianopoulos, Jayant Chaudhary, George Karvelis, Simon Sou",
+      "venue": "International Conference on Management of Data",
+      "year": "1994"
+    },
+    {
+      "id": "223902",
+      "title": "Using the CALANDA time series management system",
+      "authors": "Werner Dreyer, Angelika Kotz Dittrich, Duri Schmidt",
+      "venue": "International Conference on Management of Data",
+      "year": "1995"
+    }
+  ]
+}

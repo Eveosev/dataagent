@@ -1,0 +1,46 @@
+{
+  "task": "entity_alignment",
+  "source": "Amazon → Google Products",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "b0001fyrq2",
+    "title": "logic pro 6",
+    "manufacturer": "apple",
+    "price": "999.99"
+  },
+  "right_candidates": [
+    {
+      "id": "http://www.google.com/base/feeds/snippets/7954126691882273345",
+      "name": "sony media software acid pro 6 software music production software",
+      "description": "acid pro 6 loop based music production software for windows special offer acid pro 6 from sony media software is a loop-based music creation tool that allows for the production of original royalty-free music. songs can be created tracks re-mixed ...",
+      "price": "299.95"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/14693413290856659257",
+      "name": "apple software t9163ll/a logic pro 6",
+      "description": "1 user standard license complete retail package logic is the most widely used program of its kind in professional music production. it elegantly combines composition notation and audio production facilities in one comprehensive product. and now ...",
+      "manufacturer": "apple software",
+      "price": "809"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/13394537834910060641",
+      "name": "qb pos 6.0 pro solution hw/sw",
+      "description": "qb pos 6.0 pro solution hw/sw. ships in an unprinted corrugated shipper.",
+      "manufacturer": "intuit",
+      "price": "1474.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/14188088676549374410",
+      "name": "apple/emagic logic pro 7.2 software music production software",
+      "description": "logic pro 7.2 - multitrack digital audio/midi recorder/editor software - intel or powerpc mac logic pro 7.2 from apple turns either an intel- or powerpc-based mac into a professional digital audio workstation and provides the ultimate synthesis of ...",
+      "price": "999"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/6239309275726276581",
+      "name": "apple software t9161ll/a logic platinum/ gold 5&6 to logic pro 6 update",
+      "description": "updates any existing logic platinum or logic gold user owning version 5 or 6 to logic pro 6. updates any existing logic platinum or logic gold user owning version 5 or 6 to logic pro 6. package contains necessary codes to provide 90 day access to ...",
+      "manufacturer": "apple software",
+      "price": "149"
+    }
+  ]
+}

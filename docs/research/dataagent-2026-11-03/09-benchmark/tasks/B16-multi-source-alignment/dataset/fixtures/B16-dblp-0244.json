@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/PadmanabhanBMCH03",
+    "title": "Multi-Dimensional Clustering: A New Data Layout Scheme in DB2",
+    "authors": "Bishwaranjan Bhattacharjee, Sriram Padmanabhan, Matthew Huras, Leslie Cranston, Timothy Malkemus",
+    "venue": "SIGMOD Conference",
+    "year": "2003"
+  },
+  "right_candidates": [
+    {
+      "id": "276314",
+      "title": "Automatic subspace clustering of high dimensional data for data mining applications",
+      "authors": "Rakesh Agrawal, Johannes Gehrke, Dimitrios Gunopulos, Prabhakar Raghavan",
+      "venue": "International Conference on Management of Data",
+      "year": "1998"
+    },
+    {
+      "id": "872835",
+      "title": "Multi-dimensional clustering: a new data layout scheme in DB2",
+      "authors": "Sriram Padmanabhan, Bishwaranjan Bhattacharjee, Tim Malkemus, Leslie Cranston, Matthew Huras",
+      "venue": "International Conference on Management of Data",
+      "year": "2003"
+    },
+    {
+      "id": "357776",
+      "title": "A cost model for query processing in high dimensional data spaces",
+      "authors": "Christian B&#246;hm",
+      "venue": "ACM Transactions on Database Systems (TODS) ",
+      "year": "2000"
+    },
+    {
+      "id": "950485",
+      "title": "Aurora: a new model and architecture for data stream management",
+      "authors": "Daniel J. Abadi, Don Carney, Ugur &#199;etintemel, Mitch Cherniack, Christian Convey, Sangdon Lee, Michael Stonebraker, Nesime Tatbul, Stan Zdonik",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "2003"
+    },
+    {
+      "id": "671201",
+      "title": "Incremental Clustering for Mining in a Data Warehousing Environment",
+      "authors": "Martin Ester, Hans-Peter Kriegel, J&#246;rg Sander, Michael Wimmer, Xiaowei Xu",
+      "venue": "Very Large Data Bases",
+      "year": "1998"
+    }
+  ]
+}

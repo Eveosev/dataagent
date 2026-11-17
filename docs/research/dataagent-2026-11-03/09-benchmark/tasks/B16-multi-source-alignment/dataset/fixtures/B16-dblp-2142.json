@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/SeidlK98",
+    "title": "Optimal Multi-Step k-Nearest Neighbor Search",
+    "authors": "Thomas Seidl, Hans-Peter Kriegel",
+    "venue": "SIGMOD Conference",
+    "year": "1998"
+  },
+  "right_candidates": [
+    {
+      "id": "765232",
+      "title": "Dynamic vp-tree indexing for n-nearest neighbor search given pair-wise distances",
+      "authors": "Ada Wai-chee Fu, Polly Mei-shuen Chan, Yin-Ling Cheung, Yiu Sang Moon",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "2000"
+    },
+    {
+      "id": "276319",
+      "title": "Optimal multi-step k-nearest neighbor search",
+      "authors": "Thomas Seidl, Hans-Peter Kriegel",
+      "venue": "International Conference on Management of Data",
+      "year": "1998"
+    },
+    {
+      "id": "290596",
+      "title": "Enhanced nearest neighbour search on the R-tree",
+      "authors": "King Lum Cheung, Ada Wai-Chee Fu",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1998"
+    },
+    {
+      "id": "673317",
+      "title": "Efficient Search of Multi-Dimensional B-Trees",
+      "authors": "Harry Leslie, Rohit Jain, Dave Birdsall, Hedieh Yaghmai",
+      "venue": "Very Large Data Bases",
+      "year": "1995"
+    },
+    {
+      "id": "673493",
+      "title": "Fast Nearest Neighbor Search in Medical Image Databases",
+      "authors": "Flip Korn, Nikolaos Sidiropoulos, Christos Faloutsos, Eliot Siegel, Zenon Protopapas",
+      "venue": "Very Large Data Bases",
+      "year": "1996"
+    }
+  ]
+}

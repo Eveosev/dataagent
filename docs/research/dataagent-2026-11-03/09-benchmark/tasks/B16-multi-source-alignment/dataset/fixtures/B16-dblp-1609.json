@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/vldb/HaasCLS97",
+    "title": "Seeking the Truth About ad hoc Join Costs",
+    "authors": "Amit Shukla, Miron Livny, Michael J. Carey, Laura M. Haas",
+    "venue": "VLDB J.",
+    "year": "1997"
+  },
+  "right_candidates": [
+    {
+      "id": "673156",
+      "title": "The Oracle Warehouse",
+      "authors": "Gary Hallmark",
+      "venue": "Very Large Data Bases",
+      "year": "1995"
+    },
+    {
+      "id": "615195",
+      "title": "The CORAL deductive system",
+      "authors": "Raghu Ramakrishnan, Divesh Srivastava, S. Sudarshan, Praveen Seshadri",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "1994"
+    },
+    {
+      "id": "310066",
+      "title": "The OASIS multidatabase prototype",
+      "authors": "Mark Roantree, John Murphy, Wilhelm Hasselbring",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1999"
+    },
+    {
+      "id": "765559",
+      "title": "Sing the truth about ad hoc join costs",
+      "authors": "Laura M. Haas, Michael J. Carey, Miron Livny, Amit Shukla",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "1997"
+    },
+    {
+      "id": "670999",
+      "title": "The Microsoft Repository",
+      "authors": "Philip A. Bernstein, Brian Harry, Paul Sanders, David Shutt, Jason Zander",
+      "venue": "Very Large Data Bases",
+      "year": "1997"
+    }
+  ]
+}

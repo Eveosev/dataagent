@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/GuoSBS03",
+    "title": "XRANK: Ranked Keyword Search over XML Documents",
+    "authors": "Feng Shao, Lin Guo, Chavdar Botev, Jayavel Shanmugasundaram",
+    "venue": "SIGMOD Conference",
+    "year": "2003"
+  },
+  "right_candidates": [
+    {
+      "id": "564782",
+      "title": "DBXplorer: enabling keyword search over relational databases",
+      "authors": "Sanjay Agrawal, Surajit Chaudhuri, Gautam Das",
+      "venue": "International Conference on Management of Data",
+      "year": "2002"
+    },
+    {
+      "id": "507360",
+      "title": "The XML typechecking problem",
+      "authors": "Dan Suciu",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2002"
+    },
+    {
+      "id": "564725",
+      "title": "Approximate XML joins",
+      "authors": "Sudipto Guha, H. V. Jagadish, Nick Koudas, Divesh Srivastava, Ting Yu",
+      "venue": "International Conference on Management of Data",
+      "year": "2002"
+    },
+    {
+      "id": "872762",
+      "title": "XRANK: ranked keyword search over XML documents",
+      "authors": "Lin Guo, Feng Shao, Chavdar Botev, Jayavel Shanmugasundaram",
+      "venue": "International Conference on Management of Data",
+      "year": "2003"
+    },
+    {
+      "id": "375764",
+      "title": "Securing XML documents: the author-X project demonstration",
+      "authors": "Elisa Bertino, Silvana Castano, Elena Ferrari",
+      "venue": "International Conference on Management of Data",
+      "year": "2001"
+    }
+  ]
+}

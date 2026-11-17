@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/sigmod/Mackay99",
+    "title": "Semantic Integration of Environmental Models for Application to Global Information Systems and Decision-Making",
+    "authors": "D. Scott Mackay",
+    "venue": "SIGMOD Record",
+    "year": "1999"
+  },
+  "right_candidates": [
+    {
+      "id": "248605",
+      "title": "Integrating modelling systems for environmental management information systems",
+      "authors": "David J. Abel, Kerry Taylor, Dean Kun",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1997"
+    },
+    {
+      "id": "309878",
+      "title": "Unpacking the semantics of source and usage to perform semantic reconciliation in large-scale information systems",
+      "authors": "Ken Smith, Leo Obrst",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1999"
+    },
+    {
+      "id": "672972",
+      "title": "Challenges for Global Information Systems",
+      "authors": "Alon Y. Levy, Abraham Silberschatz, Divesh Srivastava, Maria Zemankova",
+      "venue": "Very Large Data Bases",
+      "year": "1994"
+    },
+    {
+      "id": "603879",
+      "title": "The Ecobase project: database and web technologies for environmental information systems",
+      "authors": "Luc Bouganim, Maria Claudia Cavalcanti, Fran&#231;oise Fabret, Maria Luiza Campos, Fran&#231;ois Llirbat, Marta Mattoso, Rubens Melo, Ana Maria Moura, Esther Pacitti, Fabio Porto, Margareth Simoes, Eric Simon, Asterio Tanaka, Patrick Valduriez",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2001"
+    },
+    {
+      "id": "309852",
+      "title": "Semantic integration of environmental models for application to global information systems and decision-making",
+      "authors": "D. Scott Mackay",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1999"
+    }
+  ]
+}

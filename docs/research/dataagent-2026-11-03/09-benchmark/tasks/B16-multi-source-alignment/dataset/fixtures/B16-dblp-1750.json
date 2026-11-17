@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/vldb/KraissW98",
+    "title": "Integrated Document Caching and Prefetching in Storage Hierarchies Based on Markov-Chain Predictions",
+    "authors": "Achim Kraiss, Gerhard Weikum",
+    "venue": "VLDB J.",
+    "year": "1998"
+  },
+  "right_candidates": [
+    {
+      "id": "223900",
+      "title": "Pattern matching and pattern discovery in scientific, program, and document databases",
+      "authors": "Jason T. L. Wang, Kaizhong Zhang, Dennis Shasha",
+      "venue": "International Conference on Management of Data",
+      "year": "1995"
+    },
+    {
+      "id": "223896",
+      "title": "Information translation, mediation, and mosaic-based browsing in the TSIMMIS system",
+      "authors": "Joachim Hammer, H&#233;ctor Garc&#237;a-Molina, Kelly Ireland, Yannis Papakonstantinou, Jeffrey Ullman, Jennifer Widom",
+      "venue": "International Conference on Management of Data",
+      "year": "1995"
+    },
+    {
+      "id": "673494",
+      "title": "Storage Estimation for Multidimensional Aggregates in the Presence of Hierarchies",
+      "authors": "Amit Shukla, Prasad Deshpande, Jeffrey F. Naughton, Karthikeyan Ramasamy",
+      "venue": "Very Large Data Bases",
+      "year": "1996"
+    },
+    {
+      "id": "673663",
+      "title": "On-Demand Data Elevation in Hierarchical Multimedia Storage Servers",
+      "authors": "Peter Triantafillou, Thomas Papadakis",
+      "venue": "Very Large Data Bases",
+      "year": "1997"
+    },
+    {
+      "id": "765532",
+      "title": "Integrated document caching and prefetching in storage hierarchies based on Markov-chain predictions",
+      "authors": "Achim Kraiss, Gerhard Weikum",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "1998"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "task": "entity_alignment",
+  "source": "Amazon → Google Products",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "b000hlt5g2",
+    "title": "monopoly here & now",
+    "manufacturer": "encore",
+    "price": "19.95"
+  },
+  "right_candidates": [
+    {
+      "id": "http://www.google.com/base/feeds/snippets/9852496278444342781",
+      "name": "encore software 11180 - monopoly here & now - win 98 me 2000 xp",
+      "description": "encore software 11180 : this special anniversary edition celebrates 70 years of the world s most popular board game with a modern day equivalent to the traditional game. system requirements: operating system: windows(r) 98/me/xp processor: pentium(r ...",
+      "price": "18.97"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/7946849252371593289",
+      "name": "microsoft word 2004 upgrade for mac os x apple & mac software",
+      "description": "word 2004 upgrade for mac os x the word 2004 upgrade for mac os x from microsoft allows users of older versions of word to upgrade to the word 2004 version at a cost reduced when compared to buying the full version of the software. word is a ...",
+      "price": "108.95"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/2340023037950941644",
+      "name": "systematic software testing by rick d. craig 9781580535083",
+      "description": "systematic software testing offers an in-depth understanding of the software testing people and process issues that are critical for delivering high-quality software on time and within budget. written by leading experts this book gives those ...",
+      "price": "73.5"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/5100142948291279525",
+      "name": "onone software mpr-40212 mask pro 4.0 upgrade (buy now and get free cs3 compatibility upgrades)",
+      "description": "mask pro 4 a comprehensive tool-set designed for creating complex masks and selections inside of adobe photoshop. separate subjects from backgrounds with ease. mask pro 4 is a collection of masking and selection tools that make any masking job ...",
+      "manufacturer": "onone software",
+      "price": "69.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/3274305083856247424",
+      "name": "encore software 11182 - monopoly here & now - win 98 me 2000 xp",
+      "description": "encore software 11182 : this special anniversary edition celebrates 70 years of the world s most popular board game with a modern day equivalent to the traditional game. system requirements: operating system: windows(r) 98/me/xp processor: pentium(r ...",
+      "price": "18.97"
+    }
+  ]
+}

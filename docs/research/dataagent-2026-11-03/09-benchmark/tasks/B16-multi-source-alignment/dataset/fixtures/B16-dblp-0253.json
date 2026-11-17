@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/Aulakh98",
+    "title": "About Quark Digital Media System",
+    "authors": "Kamar Aulakh",
+    "venue": "SIGMOD Conference",
+    "year": "1998"
+  },
+  "right_candidates": [
+    {
+      "id": "212017",
+      "title": "METU interoperable database system",
+      "authors": "A. Dogac, C. Dengi, E. Kilic, G. Ozhan, F. Ozcan, S. Nural, C. Evrendilek, U. Halici, B. Arpinar, P. Koksal, N. Kesim, S. Mancuhan",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1995"
+    },
+    {
+      "id": "767097",
+      "title": "An authorization system for digital libraries",
+      "authors": "E. Ferrari, N.R. Adam, V. Atluri, E. Bertino, U. Capuozzo",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "2002"
+    },
+    {
+      "id": "223887",
+      "title": "The NAOS system",
+      "authors": "C. Collet, T. Coupaye",
+      "venue": "International Conference on Management of Data",
+      "year": "1995"
+    },
+    {
+      "id": "276367",
+      "title": "About Quark Digital Media System",
+      "authors": "Kamar Aulakh",
+      "venue": "International Conference on Management of Data",
+      "year": "1998"
+    },
+    {
+      "id": "219758",
+      "title": "Temporal database system implementations",
+      "authors": "Michael H. B&#246;hlen",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1995"
+    }
+  ]
+}

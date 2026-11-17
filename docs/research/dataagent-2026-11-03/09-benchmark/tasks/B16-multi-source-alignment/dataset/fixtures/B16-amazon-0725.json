@@ -1,0 +1,44 @@
+{
+  "task": "entity_alignment",
+  "source": "Amazon → Google Products",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "b0002itt84",
+    "title": "rise of nations: gold (mac)",
+    "description": "rise of nations combines the thrills and speed of real-time strategy with the in-depth management of turn-based gaming for an all new experience! streamlined multiplayer action for up to 8 players on a lan or an internet connection!",
+    "manufacturer": "macsoft",
+    "price": "49.99"
+  },
+  "right_candidates": [
+    {
+      "id": "http://www.google.com/base/feeds/snippets/5505866551596188643",
+      "name": "destineer rise of nations gold edition",
+      "description": "system requirements: any macintosh with 600mhz or faster processor mac os x v10.2.8 or higher 256mb ram (512 recommended for online play) 32mb video card monitor with support for 1024 x 768 or higher resolution cd-rom drive 1gb free hard drive space ...",
+      "price": "45.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/15556656056394141993",
+      "name": "xbox 360: call of action 3 - gold edition",
+      "description": "call of duty 3 delivers more intense combat than ever before. follow the allies on the normandy breakthrough campaign as they push inland to liberate paris and take the first step on the path to berlin. through a seamless narrative that delivers the ...",
+      "price": "59.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/10595032077010116055",
+      "name": ".mac (mac) apple",
+      "description": "key features: publish podcasts share photos ad-free e-mail personal online storage organize activities learn about your mac ...",
+      "price": "99.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/12845228373531717554",
+      "name": "aspyr call of duty 2 mac",
+      "description": "system requirements: final system requirements will be given once testing of those requirements is complete. important note: because all users have different ideas of what it means for a game to be 'playable' some users may feel a game plays fine ...",
+      "price": "47.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/18368199696280073853",
+      "name": "solid gold",
+      "description": "featuring ez play today notation. turbo music (software). general midi software. book & disk package. 9x12 inches. 48 pages. published by turbo music. you're the star! packs include fully-orchestrated accompaniments on disk for each song in the ...",
+      "price": "29.95"
+    }
+  ]
+}

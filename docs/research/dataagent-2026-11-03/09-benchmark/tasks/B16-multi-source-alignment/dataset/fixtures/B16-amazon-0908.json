@@ -1,0 +1,44 @@
+{
+  "task": "entity_alignment",
+  "source": "Amazon → Google Products",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "b000fabege",
+    "title": "quickverse sermon builder 4.0",
+    "description": "sermon builder 4.0 (win 98 me 2000 xp)",
+    "manufacturer": "findex.com inc",
+    "price": "69.95"
+  },
+  "right_candidates": [
+    {
+      "id": "http://www.google.com/base/feeds/snippets/17453864721509833307",
+      "name": "findex.com inc sermon builder 4.0",
+      "description": "sermon builder 4.0 includes everything you need to create punctuated sermons comprehensive lessons and in-depth bible studies. it gives you access to any verse word or topic in the bible and over 50000 related articles. system requirements:",
+      "price": "43.33"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/6885839871445322451",
+      "name": "daceasy(tm) 4.0-4.2 compatible continuous accounts payable checks",
+      "description": "compatible with daceasy(tm) versions 4.0-4.2.",
+      "price": "144.59"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/528675562457283213",
+      "name": "adobe photoshop elements 4.0 mac academic",
+      "description": "system requirements: powerpc® g3 g4 or g5 processor mac os x v.10.3 or 10.4 256mb of ram 750mb of available hard-disk space 1024x768 16-bit (xga) display cd-rom drive product datasheet [pdf: 1.1mb]",
+      "price": "69.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/17911312393691300802",
+      "name": "roxio inc stopzilla 4.0",
+      "description": "cnet editors? choice award winner! stopzilla?s true real-time® protection is unbeatable. it detects and destroys spyware and pop-ups and blocks online threats including phishing attacks. stopzilla?s superior technology delivers daily updates",
+      "price": "26.14"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/11448761432933644608",
+      "name": "spanish vocabulary builder",
+      "description": "expand your vocabulary! contains fun lessons that both teach and entertain you'll quickly find yourself mastering new terms. includes games and more!",
+      "price": "6.95"
+    }
+  ]
+}

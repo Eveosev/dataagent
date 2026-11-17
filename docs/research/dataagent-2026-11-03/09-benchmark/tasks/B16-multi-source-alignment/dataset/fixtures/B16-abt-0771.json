@@ -1,0 +1,47 @@
+{
+  "task": "entity_alignment",
+  "source": "Abt → Buy",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "33047",
+    "name": "Canon Black Photo Ink Cartridge - CLI8B",
+    "description": "Canon Black Photo Ink Cartridge - CLI8B/ FINE Technology For Exceptional Sharpness & Detail/ Compatible With Canon Pixma Printers",
+    "price": "$16.00"
+  },
+  "right_candidates": [
+    {
+      "id": "201692648",
+      "name": "Canon CLI-8M Ink Cartridge - 0622B002",
+      "description": "Magenta",
+      "manufacturer": "Canon",
+      "price": "$10.35"
+    },
+    {
+      "id": "201692695",
+      "name": "Canon Black Ink Cartridge - 0615B002",
+      "description": "Black",
+      "manufacturer": "Canon"
+    },
+    {
+      "id": "201692705",
+      "name": "Canon PGI-5BK Black Ink Cartridge - 0628B002",
+      "description": "Canon PGI-5 Pigment Black Ink Cartridge for Canon ContrastPLUS Photo Printers",
+      "manufacturer": "Canon",
+      "price": "$14.99"
+    },
+    {
+      "id": "201953025",
+      "name": "Canon CLI-8PM Photo Magenta Ink Cartridge - 0625B002",
+      "description": "Photo Magenta",
+      "manufacturer": "Canon",
+      "price": "$13.99"
+    },
+    {
+      "id": "201692665",
+      "name": "Canon Ink Cartridge For PIXMA iP4200, iP5200, iP5200R and iP6600D Printers - 0620B002",
+      "description": "Black",
+      "manufacturer": "Canon",
+      "price": "$13.99"
+    }
+  ]
+}

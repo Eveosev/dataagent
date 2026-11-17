@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/vldb/BernsteinPS00",
+    "title": "Context-based prefetch - an optimization for implementing objects on relations",
+    "authors": "David Shutt, Philip A. Bernstein, Shankar Pal",
+    "venue": "VLDB J.",
+    "year": "2000"
+  },
+  "right_candidates": [
+    {
+      "id": "564697",
+      "title": "Rate-based query optimization for streaming information sources",
+      "authors": "Stratis D. Viglas, Jeffrey F. Naughton",
+      "venue": "International Conference on Management of Data",
+      "year": "2002"
+    },
+    {
+      "id": "564722",
+      "title": "Exploiting statistics on query expressions for optimization",
+      "authors": "Nicolas Bruno, Surajit Chaudhuri",
+      "venue": "International Conference on Management of Data",
+      "year": "2002"
+    },
+    {
+      "id": "765235",
+      "title": "Context-based prefetch - an optimization for implementing objects on relations",
+      "authors": "Philip A. Bernstein, Shankar Pal, David Shutt",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "2000"
+    },
+    {
+      "id": "233360",
+      "title": "Cost-based optimization for magic: algebra and implementation",
+      "authors": "Praveen Seshadri, Joseph M. Hellerstein, Hamid Pirahesh, T. Y. Cliff Leung, Raghu Ramakrishnan, Divesh Srivastava, Peter J. Stuckey, S. Sudarshan",
+      "venue": "International Conference on Management of Data",
+      "year": "1996"
+    },
+    {
+      "id": "276327",
+      "title": "An alternative storage organization for ROLAP aggregate views based on cubetrees",
+      "authors": "Yannis Kotidis, Nick Roussopoulos",
+      "venue": "International Conference on Management of Data",
+      "year": "1998"
+    }
+  ]
+}

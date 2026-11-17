@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/sigmod/KoubarakisTID03",
+    "title": "Selective information dissemination in P2P networks: problems and solutions",
+    "authors": "Stratos Idreos, Manolis Koubarakis, Christos Tryfonopoulos, Yannis Drougas",
+    "venue": "SIGMOD Record",
+    "year": "2003"
+  },
+  "right_candidates": [
+    {
+      "id": "232692",
+      "title": "Solving satisfiability and implication problems in database systems",
+      "authors": "Sha Guo, Wei Sun, Mark A. Weiss",
+      "venue": "ACM Transactions on Database Systems (TODS) ",
+      "year": "1996"
+    },
+    {
+      "id": "945736",
+      "title": "Selective information dissemination in P2P networks: problems and solutions",
+      "authors": "Manolis Koubarakis, Christos Tryfonopoulos, Stratos Idreos, Yannis Drougas",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2003"
+    },
+    {
+      "id": "331992",
+      "title": "The SIFT information dissemination system",
+      "authors": "Tak W. Yan, Hector Garcia-Molina",
+      "venue": "ACM Transactions on Database Systems (TODS) ",
+      "year": "1999"
+    },
+    {
+      "id": "673153",
+      "title": "Duplicate Removal in Information System Dissemination",
+      "authors": "Tak W. Yan, Hector Garcia-Molina",
+      "venue": "Very Large Data Bases",
+      "year": "1995"
+    },
+    {
+      "id": "959072",
+      "title": "Power efficient data gathering and aggregation in wireless sensor networks",
+      "authors": "H&#252;seyin &#214;zg&#252;r Tan, Ibrahim K&#246;rpeo&#487;lu",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2003"
+    }
+  ]
+}

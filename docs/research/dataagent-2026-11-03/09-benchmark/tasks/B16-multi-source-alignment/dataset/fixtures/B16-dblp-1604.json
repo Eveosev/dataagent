@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/sigmod/KannanKIK03",
+    "title": "Energy and rate based MAC protocol for wireless sensor networks",
+    "authors": "Ramaraju Kalidindi, Vijay Kumar, Rajgopal Kannan, S. Sitharama Iyengar",
+    "venue": "SIGMOD Record",
+    "year": "2003"
+  },
+  "right_candidates": [
+    {
+      "id": "233356",
+      "title": "Rule languages and internal algebras for rule-based optimizers",
+      "authors": "Mitch Cherniack, Stanley B. Zdonik",
+      "venue": "International Conference on Management of Data",
+      "year": "1996"
+    },
+    {
+      "id": "959071",
+      "title": "Energy and rate based MAC protocol for wireless sensor networks",
+      "authors": "Rajgopal Kannan, Ram Kalidindi, S. S. Iyengar, Vijay Kumar",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2003"
+    },
+    {
+      "id": "564697",
+      "title": "Rate-based query optimization for streaming information sources",
+      "authors": "Stratis D. Viglas, Jeffrey F. Naughton",
+      "venue": "International Conference on Management of Data",
+      "year": "2002"
+    },
+    {
+      "id": "564776",
+      "title": "Distributing queries over low-power wireless sensor networks",
+      "authors": "Samuel Madden, Joseph M. Hellerstein",
+      "venue": "International Conference on Management of Data",
+      "year": "2002"
+    },
+    {
+      "id": "959067",
+      "title": "Bluetooth-based sensor networks",
+      "authors": "Philippe Bonnet, Allan Beaufour, Mads Bondo Dydensborg, Martin Leopold",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2003"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/Ivinskis95",
+    "title": "High Availability of Commercial Applications",
+    "authors": "Kestutis Ivinskis",
+    "venue": "SIGMOD Conference",
+    "year": "1995"
+  },
+  "right_candidates": [
+    {
+      "id": "671496",
+      "title": "High Level Indexing of User-Defined Types",
+      "authors": "Weidong Chen, Jyh-Herng Chow, You-Chin Fuh, Jean Grandbois, Michelle Jou, Nelson Mendon&#231;a Mattos, Brian T. Tran, Yun Wang",
+      "venue": "Very Large Data Bases",
+      "year": "1999"
+    },
+    {
+      "id": "223862",
+      "title": "High availability of commercial applications",
+      "authors": "Kestutis Ivinskis",
+      "venue": "International Conference on Management of Data",
+      "year": "1995"
+    },
+    {
+      "id": "253322",
+      "title": "High-performance sorting on networks of workstations",
+      "authors": "Andrea C. Arpaci-Dusseau, Remzi H. Arpaci-Dusseau, David E. Culler, Joseph M. Hellerstein, David A. Patterson",
+      "venue": "International Conference on Management of Data",
+      "year": "1997"
+    },
+    {
+      "id": "564784",
+      "title": "HD-Eye: visual clustering of high dimensional data",
+      "authors": "Alexander Hinneburg, Daniel A. Keim, Markus Wawryniuk",
+      "venue": "International Conference on Management of Data",
+      "year": "2002"
+    },
+    {
+      "id": "276372",
+      "title": "Delivering high availability for Inktomi search engines",
+      "authors": "Eric A. Brewer",
+      "venue": "International Conference on Management of Data",
+      "year": "1998"
+    }
+  ]
+}

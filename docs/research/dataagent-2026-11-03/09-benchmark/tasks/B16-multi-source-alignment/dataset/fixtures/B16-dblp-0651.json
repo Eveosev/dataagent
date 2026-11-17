@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "journals/tods/ChomickiTB01",
+    "title": "Querying ATSQL databases with temporal logic",
+    "authors": "Jan Chomicki, David Toman, Michael H. Böhlen",
+    "venue": "ACM Trans. Database Syst.",
+    "year": "2001"
+  },
+  "right_candidates": [
+    {
+      "id": "377665",
+      "title": "Temporal statement modifiers",
+      "authors": "Michael H. B&#246;hlen, Christian S. Jensen, Richard Thomas Snodgrass",
+      "venue": "ACM Transactions on Database Systems (TODS) ",
+      "year": "2000"
+    },
+    {
+      "id": "219754",
+      "title": "Report on the 1995 international workshop on temporal databases",
+      "authors": "Arie Segev, Christian S. Jensen, Richard Thomas Snodgrass",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1995"
+    },
+    {
+      "id": "615186",
+      "title": "Chronological scheduling of transactions with temporal dependencies",
+      "authors": "Dimitrios Georgakopoulos, Marek Rusinkiewicz, Witold Litwin",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "1994"
+    },
+    {
+      "id": "872779",
+      "title": "Temporal coalescing with now granularity, and incomplete information",
+      "authors": "Curtis E. Dyreson",
+      "venue": "International Conference on Management of Data",
+      "year": "2003"
+    },
+    {
+      "id": "383892",
+      "title": "Querying ATSQL databases with temporal logic",
+      "authors": "Jan Chomicki, David Toman, Michael H. B&#246;hlen",
+      "venue": "ACM Transactions on Database Systems (TODS) ",
+      "year": "2001"
+    }
+  ]
+}

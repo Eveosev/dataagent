@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/ChungMS02",
+    "title": "APEX: an adaptive path index for XML data",
+    "authors": "Chin-Wan Chung, Kyuseok Shim, Jun-Ki Min",
+    "venue": "SIGMOD Conference",
+    "year": "2002"
+  },
+  "right_candidates": [
+    {
+      "id": "764206",
+      "title": "An XML query engine for network-bound data",
+      "authors": "Zachary G. Ives, A. Y. Halevy, D. S. Weld",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "2002"
+    },
+    {
+      "id": "872776",
+      "title": "D(k)-index: an adaptive structural summary for graph-structured data",
+      "authors": "Qun Chen, Andrew Lim, Kian Win Ong",
+      "venue": "International Conference on Management of Data",
+      "year": "2003"
+    },
+    {
+      "id": "344815",
+      "title": "An extensible compressor for XML data",
+      "authors": "Hartmut Liefke, Dan Suciu",
+      "venue": "ACM SIGMOD Record ",
+      "year": "2000"
+    },
+    {
+      "id": "564706",
+      "title": "APEX: an adaptive path index for XML data",
+      "authors": "Chin-Wan Chung, Jun-Ki Min, Kyuseok Shim",
+      "venue": "International Conference on Management of Data",
+      "year": "2002"
+    },
+    {
+      "id": "335405",
+      "title": "XMill: an efficient compressor for XML data",
+      "authors": "Hartmut Liefke, Dan Suciu",
+      "venue": "International Conference on Management of Data",
+      "year": "2000"
+    }
+  ]
+}

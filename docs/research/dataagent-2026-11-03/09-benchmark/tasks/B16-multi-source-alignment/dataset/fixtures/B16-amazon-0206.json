@@ -1,0 +1,43 @@
+{
+  "task": "entity_alignment",
+  "source": "Amazon → Google Products",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "b000exq2cs",
+    "title": "jumpstart advanced 3rd grade v2.0",
+    "description": "jumpstart advanced 3rd grade has more fun and enriching learning activities to prepare children for 3rd grade. these premium features and extensive content is designed to teach children at a pace that's just right for them. the fun games and exercises keep kids engaged and learning for hours. the software adapts to individual children's learning styles helping them learn more about everything from spelling and arithmetic. subjects include: thinking skills - problem solving & critical thinking",
+    "manufacturer": "knowledge adventure",
+    "price": "19.99"
+  },
+  "right_candidates": [
+    {
+      "id": "http://www.google.com/base/feeds/snippets/18171290245464117932",
+      "name": "topics entertainment instant play guitar deluxe v2.0",
+      "price": "31.06"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/11143055459495586546",
+      "name": "jumpstart advanced 1st grade knowledge adventure",
+      "description": "key features: four cd set enhances education over 50 skills reviewed special features ...",
+      "price": "19.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/9463842250533836611",
+      "name": "jumpstart advanced 3rd grade (pc/mac) knowledge adventure",
+      "description": "key features: four disc set 50 skills taught learning profiler state education standards ...",
+      "price": "19.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/13023052343955574084",
+      "name": "adventure workshop 1st-3rd grade. 8th edition (pc) encore",
+      "description": "key features: build essential skills 1st-3rd grade...",
+      "price": "19.95"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/2460101921085498175",
+      "name": "omni web 5.0",
+      "description": "sure you can use a standard web browser with standard features. but you didn't choose a standard software experience - you chose the mac. why not try a browser built just for discriminating people with fabulous taste like yourself? omniweb5 ...",
+      "price": "23.99"
+    }
+  ]
+}

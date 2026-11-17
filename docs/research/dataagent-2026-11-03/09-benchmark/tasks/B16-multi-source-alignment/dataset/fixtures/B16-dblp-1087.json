@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/sigmod/French95",
+    "title": "``One Size Fits All'' Database Architectures Do Not Work for DDS",
+    "authors": "Clark D. French",
+    "venue": "SIGMOD Conference",
+    "year": "1995"
+  },
+  "right_candidates": [
+    {
+      "id": "672369",
+      "title": "Architectures for Internal Web Services Deployment",
+      "authors": "Oded Shmueli",
+      "venue": "Very Large Data Bases",
+      "year": "2001"
+    },
+    {
+      "id": "253397",
+      "title": "Languages for multi-database interoperability",
+      "authors": "Fr&#233;d&#233;ric Gingras, Laks V. S. Lakshmanan, Iyer N. Subramanian, Despina Papoulis, Nematollaah Shiri",
+      "venue": "International Conference on Management of Data",
+      "year": "1997"
+    },
+    {
+      "id": "191849",
+      "title": "ARIES/CSA: a method for database recovery in client-server architectures",
+      "authors": "C. Mohan, Inderpal Narang",
+      "venue": "International Conference on Management of Data",
+      "year": "1994"
+    },
+    {
+      "id": "223871",
+      "title": "One size fits all database architectures do not work for DSS",
+      "authors": "Clark D. French",
+      "venue": "International Conference on Management of Data",
+      "year": "1995"
+    },
+    {
+      "id": "223786",
+      "title": "Recovery protocols for shared memory database systems",
+      "authors": "Lory D. Molesky, Krithi Ramamritham",
+      "venue": "International Conference on Management of Data",
+      "year": "1995"
+    }
+  ]
+}

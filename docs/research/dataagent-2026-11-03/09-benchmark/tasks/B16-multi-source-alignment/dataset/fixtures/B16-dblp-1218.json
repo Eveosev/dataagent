@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/vldb/WangZL99",
+    "title": "Building Hierarchical Classifiers Using Class Proximity",
+    "authors": "Shiang Chen Liew, Senqiang Zhou, Ke Wang",
+    "venue": "VLDB",
+    "year": "1999"
+  },
+  "right_candidates": [
+    {
+      "id": "190647",
+      "title": "Loading databases using dataflow parallelism",
+      "authors": "Tom Barclay, Robert Barnes, Jim Gray, Prakash Sundaresan",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1994"
+    },
+    {
+      "id": "872840",
+      "title": "WinMagic: subquery elimination using window aggregation",
+      "authors": "Calisto Zuzarte, Hamid Pirahesh, Wenbin Ma, Qi Cheng, Linqi Liu, Kwai Wong",
+      "venue": "International Conference on Management of Data",
+      "year": "2003"
+    },
+    {
+      "id": "758379",
+      "title": "Building and Customizing Data-Intensive Web Sites Using Weave",
+      "authors": "Khaled Yagoub, Daniela Florescu, Val&#233;rie Issarny, Patrick Valduriez",
+      "venue": "Very Large Data Bases",
+      "year": "2000"
+    },
+    {
+      "id": "181555",
+      "title": "Supporting dynamic displays using active rules",
+      "authors": "Oscar D&#237;az, Arturo Jaime, Norman W. Paton, Ghassan al-Qaimari",
+      "venue": "ACM SIGMOD Record ",
+      "year": "1994"
+    },
+    {
+      "id": "671360",
+      "title": "Building Hierarchical Classifiers Using Class Proximity",
+      "authors": "Ke Wang, Senqiang Zhou, Shiang Chen Liew",
+      "venue": "Very Large Data Bases",
+      "year": "1999"
+    }
+  ]
+}

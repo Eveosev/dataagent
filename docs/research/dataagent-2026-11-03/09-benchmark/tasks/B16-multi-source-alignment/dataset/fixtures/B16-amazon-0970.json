@@ -1,0 +1,44 @@
+{
+  "task": "entity_alignment",
+  "source": "Amazon → Google Products",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "b00002sac9",
+    "title": "millie's math house ages 3-7 (win/mac)",
+    "description": "now featuring addition subtraction and counting to 30 the award-winning millie's math house has been enhanced to offer even more learning. in seven activities children explore numbers shapes sizes patterns addition and subtraction as they build mouse houses create wacky bugs count animated critters make jellybean cookies and answer math challenges posed by dorothy the duck. use the spanish language version for esl bilingual and spanish language instruction.",
+    "manufacturer": "ibm (aap misc parts)",
+    "price": "0"
+  },
+  "right_candidates": [
+    {
+      "id": "http://www.google.com/base/feeds/snippets/18391865764441158658",
+      "name": "pxl smartscale for mac/win",
+      "description": "one image any size.",
+      "price": "159.95"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/13486878941125826714",
+      "name": "122103 quarkxpress - ( v. 7 ) - complete package - 1 user - cd - win mac",
+      "description": "quark 122103 : usually ships in 24 hours : in stock : quarkxpress is powerful design and page layout software with an intuitive versatile interface that lets you combine superior typography with color and pictures to produce dynamic final output ...",
+      "price": "742.21"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/18365358438027236949",
+      "name": "poser 7 (win 2000 xp/mac 10.4 or higher ub)",
+      "description": "poser is the standard for depicting the human form in 3d. poser is used for figure design and animation by hobbyists and professional graphic artists.using poser digital artists can easily create traditional art comics education and training ...",
+      "price": "199.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/10282477376383378142",
+      "name": "merriam-webster's dictionary (win/mac) (jewel case) (10462)",
+      "description": "merriam-webster's dictionary (win/mac) (jewel case) brand: fogware publishing mpn: 10462 variant name: merriam-webster's dictionary (win/mac) (jewel case)",
+      "price": "9.59"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/8401993747038150345",
+      "name": "millies math house",
+      "description": "develop fundamental early math skills with millie and friends",
+      "price": "9.9"
+    }
+  ]
+}

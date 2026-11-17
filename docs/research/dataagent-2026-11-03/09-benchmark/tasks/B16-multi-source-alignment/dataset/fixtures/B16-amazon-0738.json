@@ -1,0 +1,44 @@
+{
+  "task": "entity_alignment",
+  "source": "Amazon → Google Products",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "b0002mg5uk",
+    "title": "iview mediapro 2.5",
+    "manufacturer": "global marketing",
+    "price": "199.99"
+  },
+  "right_candidates": [
+    {
+      "id": "http://www.google.com/base/feeds/snippets/12587313892719471193",
+      "name": "nik software color efex pro 2.0 select and iview mediapro 3 plug in software for windows and macintosh",
+      "description": "adorama camera: · the award-winning nik color efex pro 2.0 digital photographic filters offer features and functionality that are designed to make creative digital photography enhancements and digital photography not only easier but better. ...",
+      "price": "199.95"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/1267940675828545901",
+      "name": "iview mediapro 2.6 media management",
+      "description": "product datasheet (pdf: 1.1mb) system requirements macintosh ? powerpc or newer such as imac g3 g4 ? mac os 9.1.x or mac os x (10.1.x) ? carbonlib 1.5 ? quicktime 6.x ? 8 mb of ram (os 9 allocation) ? monitor set to thousands or millions ? 13 mb ...",
+      "price": "155.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/4776201646741876078",
+      "name": "apple software m8789z/a webobjects 5.2",
+      "description": "the easiest way to build powerful web services. webobjects makes it easy to quickly develop and deploy your java server applications. now with version 5.2 you can offer these applications as standards-based web services as well.a powerful rapid ...",
+      "manufacturer": "apple software",
+      "price": "648.99"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/1347968736695236641",
+      "name": "apple web objects 5.2 software apple & mac software",
+      "description": "web objects 5.2 software apple's webobjects allows you to quickly develop and deploy java server applications and standards-based web services. a powerful rapid application development environment that extends the reach of developers and reduces the ...",
+      "price": "689.95"
+    },
+    {
+      "id": "http://www.google.com/base/feeds/snippets/15911936238938935149",
+      "name": "miraizon cinematize 2",
+      "description": "system requirements: a power macintosh g3 or later computer mac os x 10.2 or higher quicktime 6.0 or later approximately 2.5 mb of hard disk space (additional space is needed for extracted files) 128 mb or more of ram 256 mb or more of ram ...",
+      "price": "65.99"
+    }
+  ]
+}

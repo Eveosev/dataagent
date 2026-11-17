@@ -1,0 +1,49 @@
+{
+  "task": "entity_alignment",
+  "source": "DBLP → ACM",
+  "instruction": "左侧记录与右侧候选来自两个数据源。找出右侧候选中与左侧记录指向同一实体的记录，返回实体对；没有匹配时返回空数组，不要猜测。",
+  "left": {
+    "id": "conf/vldb/MogiK95",
+    "title": "Hot Block Clustering for Disk Arrays with Dynamic Striping",
+    "authors": "Kazuhiko Mogi, Masaru Kitsuregawa",
+    "venue": "VLDB",
+    "year": "1995"
+  },
+  "right_candidates": [
+    {
+      "id": "673307",
+      "title": "Hot Block Clustering for Disk Arrays with Dynamic Striping",
+      "authors": "Kazuhiko Mogi, Masaru Kitsuregawa",
+      "venue": "Very Large Data Bases",
+      "year": "1995"
+    },
+    {
+      "id": "767098",
+      "title": "Query processing techniques for arrays",
+      "authors": "Arunprasad P. Marathe, Kenneth Salem",
+      "venue": "The VLDB Journal &mdash; The International Journal on Very Large Data Bases ",
+      "year": "2002"
+    },
+    {
+      "id": "304188",
+      "title": "Fast algorithms for projected clustering",
+      "authors": "Charu C. Aggarwal, Joel L. Wolf, Philip S. Yu, Cecilia Procopiuc, Jong Soo Park",
+      "venue": "International Conference on Management of Data",
+      "year": "1999"
+    },
+    {
+      "id": "304211",
+      "title": "Query processing techniques for arrays",
+      "authors": "Arunprasad P. Marathe, Kenneth Salem",
+      "venue": "International Conference on Management of Data",
+      "year": "1999"
+    },
+    {
+      "id": "671002",
+      "title": "A Language for Manipulating Arrays",
+      "authors": "Arunprasad P. Marathe, Kenneth Salem",
+      "venue": "Very Large Data Bases",
+      "year": "1997"
+    }
+  ]
+}
