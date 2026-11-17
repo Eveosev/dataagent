@@ -35,7 +35,7 @@ import re
 import shutil
 import sys
 import traceback
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Callable, Iterable, Sequence
 
 TASKS = ("B02", "B03")
@@ -180,11 +180,52 @@ def resolve_raw_root(
     return (repo / (raw or "workspace/benchmark-data")).resolve()
 
 
-def _relative_parts(value: str) -> tuple[str, ...]:
-    parts = Path(value).parts
+def _relative_parts(value: str, *, label: str = "input reference") -> tuple[str, ...]:
+    """Split a URL-style relative path, rejecting every escape spelling."""
+
+    if not isinstance(value, str) or not value.strip():
+        raise BenchError(f"{label} is empty: {value!r}")
+    if value.startswith(("/", "\\")) or re.match(r"^[A-Za-z]:", value):
+        raise BenchError(f"{label} must be relative, not absolute: {value}")
+    parts = PurePosixPath(value).parts
     if not parts or any(part in {"..", ""} for part in parts):
-        raise BenchError(f"input reference escapes its root: {value}")
+        raise BenchError(f"{label} escapes its root: {value}")
+    if any("\\" in part for part in parts):
+        raise BenchError(f"{label} must use '/' separators: {value}")
     return tuple(parts)
+
+
+def _safe_component(value: str, *, label: str) -> str:
+    parts = _relative_parts(value, label=label)
+    if len(parts) != 1:
+        raise BenchError(f"{label} must be one path segment: {value}")
+    return parts[0]
+
+
+def _contained_file(
+    target: Path,
+    root: Path,
+    ref: str,
+    *,
+    hint: str = "",
+) -> Path:
+    """Resolve symlinks, then require the real file to stay under ``root``."""
+
+    try:
+        resolved_root = root.resolve(strict=False)
+        resolved = target.resolve(strict=True)
+    except (OSError, RuntimeError, ValueError) as exc:
+        raise BenchError(f"input not found: {ref} -> {target}: {exc}{hint}") from exc
+    try:
+        resolved.relative_to(resolved_root)
+    except ValueError as exc:
+        raise BenchError(
+            f"input reference escapes allowed root: {ref} -> {resolved} "
+            f"(allowed root: {resolved_root})"
+        ) from exc
+    if not resolved.is_file():
+        raise BenchError(f"input is not a regular file: {ref} -> {resolved}{hint}")
+    return resolved
 
 
 def resolve_ref(
@@ -194,28 +235,45 @@ def resolve_ref(
     dataset_dir: str | os.PathLike[str],
     raw_root: str | os.PathLike[str],
 ) -> Path:
-    """Map a case input reference to a file on this machine."""
+    """Map a supported case input reference to a contained regular file.
+
+    Only two forms are accepted: ``bench://<source>/<path>`` (under
+    ``<raw_root>/<task_id>``) and ``fixtures/<path>`` (under the dataset
+    directory). Absolute paths, traversal segments, and symlinks whose real
+    target leaves those roots are rejected before any bytes are copied.
+    """
+
+    if not isinstance(ref, str) or not ref:
+        raise BenchError("input reference must be a non-empty string")
+    if ref.startswith(("/", "\\")) or re.match(r"^[A-Za-z]:", ref):
+        raise BenchError(f"absolute input reference is not allowed: {ref}")
 
     dataset = Path(dataset_dir)
     raw = Path(raw_root)
+    hint = (
+        " (raw benchmark data is not staged; set DATAAGENT_BENCH_RAW_ROOT "
+        "or run tools/fetch.py for this task)"
+    )
     if ref.startswith("bench://"):
-        source, _, rest = ref[len("bench://") :].partition("/")
-        if not source or not rest:
+        source, separator, rest = ref[len("bench://") :].partition("/")
+        if not separator or not source or not rest:
             raise BenchError(f"malformed bench:// reference: {ref}")
-        target = raw.joinpath(task_id, source, *_relative_parts(rest))
-    elif ref.startswith("fixtures/"):
-        target = dataset.joinpath(*_relative_parts(ref))
-    else:
-        target = dataset.joinpath(*_relative_parts(ref))
-    if not target.is_file():
-        hint = ""
-        if ref.startswith("bench://"):
-            hint = (
-                " (raw benchmark data is not staged; set DATAAGENT_BENCH_RAW_ROOT "
-                "or run tools/fetch.py for this task)"
-            )
-        raise BenchError(f"input not found: {ref} -> {target}{hint}")
-    return target
+        source = _safe_component(source, label="bench:// source")
+        task = _safe_component(task_id, label="task_id")
+        # Check against the task root, not source: a symlinked source may
+        # otherwise point at any host directory (review r2).
+        task_root = raw / task
+        target = task_root / source / Path(*_relative_parts(rest))
+        return _contained_file(target, task_root, ref, hint=hint)
+    if ref.startswith("fixtures/"):
+        # Check against the dataset, not dataset/fixtures: a symlinked
+        # fixtures directory must not escape the dataset either.
+        target = dataset / Path(*_relative_parts(ref))
+        return _contained_file(target, dataset, ref)
+    raise BenchError(
+        "unsupported input reference (expected bench://<source>/<path> "
+        f"or fixtures/<path>): {ref}"
+    )
 
 
 def resolve_inputs(

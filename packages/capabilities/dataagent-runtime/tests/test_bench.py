@@ -114,6 +114,89 @@ def test_resolve_ref_rejects_escape_and_reports_missing(tmp_path: Path):
         )
 
 
+def test_resolve_ref_rejects_absolute_unknown_and_traversal(tmp_path: Path):
+    _root, task = _make_bench(tmp_path)
+    raw = tmp_path / "workspace" / "benchmark-data"
+    refs = [
+        "/etc/passwd",
+        "C:/Windows/win.ini",
+        "elsewhere/file.txt",
+        "fixtures",
+        "fixtures/../../etc/passwd",
+        "fixtures/./../outside.txt",
+        "bench://omnidocbench",
+        "bench://../outside.txt",
+        "bench://omnidocbench/../../outside.txt",
+        "bench://omnidocbench//etc/passwd",
+    ]
+    for ref in refs:
+        with pytest.raises(bench.BenchError):
+            bench.resolve_ref(
+                ref,
+                task_id="B02",
+                dataset_dir=task / "dataset",
+                raw_root=raw,
+            )
+
+
+def test_resolve_ref_rejects_symlink_escape(tmp_path: Path):
+    _root, task = _make_bench(tmp_path)
+    dataset = task / "dataset"
+    outside = tmp_path / "outside.txt"
+    outside.write_text("secret", encoding="utf-8")
+    (dataset / "fixtures" / "leak.txt").symlink_to(outside)
+    with pytest.raises(bench.BenchError, match="escapes allowed root"):
+        bench.resolve_ref(
+            "fixtures/leak.txt",
+            task_id="B02",
+            dataset_dir=dataset,
+            raw_root=tmp_path / "raw",
+        )
+
+
+def test_resolve_ref_rejects_symlinked_source_escape(tmp_path: Path):
+    _root, task = _make_bench(tmp_path)
+    raw = tmp_path / "raw"
+    images = raw / "B02" / "omnidocbench" / "images"
+    images.mkdir(parents=True)
+    outside = tmp_path / "outside.png"
+    outside.write_bytes(b"secret")
+    (images / "leak.png").symlink_to(outside)
+    with pytest.raises(bench.BenchError, match="escapes allowed root"):
+        bench.resolve_ref(
+            "bench://omnidocbench/images/leak.png",
+            task_id="B02",
+            dataset_dir=task / "dataset",
+            raw_root=raw,
+        )
+
+
+def test_resolve_ref_accepts_symlink_inside_root(tmp_path: Path):
+    _root, task = _make_bench(tmp_path)
+    raw = tmp_path / "raw"
+    real = raw / "B02" / "omnidocbench" / "images" / "real.png"
+    real.parent.mkdir(parents=True)
+    real.write_bytes(b"png")
+    (real.parent / "alias.png").symlink_to(real)
+    resolved = bench.resolve_ref(
+        "bench://omnidocbench/images/alias.png",
+        task_id="B02",
+        dataset_dir=task / "dataset",
+        raw_root=raw,
+    )
+    assert resolved == real.resolve()
+
+
+def test_run_case_absolute_ref_fails_before_reading(tmp_path: Path):
+    _root, task = _make_bench(tmp_path)
+    case = _write_case(task, ref="/etc/passwd")
+    out = tmp_path / "out"
+    assert bench.run_case(case, out) == 1
+    payload = json.loads((out / "result.json").read_text(encoding="utf-8"))
+    assert payload["status"] == "failed"
+    assert "absolute input reference" in payload["error"]
+
+
 def test_run_case_missing_input_writes_explicit_failure(tmp_path: Path):
     _root, task = _make_bench(tmp_path)
     case = _write_case(task, ref="fixtures/missing.png")
