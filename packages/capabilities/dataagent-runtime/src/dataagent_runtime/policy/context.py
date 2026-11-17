@@ -6,7 +6,9 @@ Resolution order, highest first:
    with the iface names ``session_id``, ``call_id``, ``turn`` (agent-kernel
    ``kernel/iface/src/types/mod.rs:7-11``); a host-supplied ``context`` map
    is the host's ``CallContext`` for authority fields. The host context is
-   trusted because only the host writes ``_meta``.
+   trusted because only the host writes ``_meta``. ``_meta.context``'s
+   ``kernel_session_id`` / ``kernel_call_id`` are CallContext mirror fields,
+   not CallMeta spellings, and never supply call identity in v1.
 2. **Host-injected environment** — ``DATAAGENT_HOST_SUBJECT_REF`` /
    ``DATAAGENT_HOST_PURPOSE`` (the existing trusted-host wiring) and the
    Kernel tool-broker ``AGENTCPM_TOOL_BROKER_SESSION`` /
@@ -448,15 +450,16 @@ def resolve_context(
     env_turn_raw = _env(environment, HOST_TURN_ENV)
 
     authoritative = bool(host_context) or bool(host_meta_values)
+    # Only the iface CallMeta names at the top of ``_meta`` are call identity.
+    # ``_meta.context`` is the host CallContext; its ``kernel_*`` mirror is a
+    # context field, never a fallback spelling for ``CallMeta`` (codex r5).
     session_id = _pick(
         host_meta_values.get("session_id"),
-        host_context.get("kernel_session_id"),
         _runtime_value(runtime, "host_session_id"),
         env_session,
     )
     call_id = _pick(
         host_meta_values.get("call_id"),
-        host_context.get("kernel_call_id"),
         _runtime_value(runtime, "host_call_id"),
     )
     # Select the winning source before validating it: a malformed lower
@@ -565,9 +568,9 @@ def resolve_context(
         host_fields.append("subject_ref")
     if host_context.get("purpose"):
         host_fields.append("purpose")
-    if host_meta_values.get("session_id") or host_context.get("kernel_session_id"):
+    if host_meta_values.get("session_id"):
         host_fields.append("session_id")
-    if host_meta_values.get("call_id") or host_context.get("kernel_call_id"):
+    if host_meta_values.get("call_id"):
         host_fields.append("call_id")
     if host_meta_values.get("turn") is not None:
         host_fields.append("turn")

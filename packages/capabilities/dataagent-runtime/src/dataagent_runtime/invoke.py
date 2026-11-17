@@ -534,10 +534,12 @@ def invoke(
     # In v1 a declared resource field must produce a verifiable ref, even
     # under ``mode=off``: otherwise an optional/opaque value would make the
     # recheck compare an empty resource list (r41 X2 follow-up). The legacy
-    # path keeps the old skip for a value that yields no ref.
+    # path keeps the old skip for a value that yields no ref, and old invoke
+    # did not even extract resources when the hook was off: it ran the
+    # handler directly (codex r5).
     legacy_path = resolved.source is ContextSource.LEGACY
     resource_refs: list[VersionedRef] | None = None
-    if spec.resource_fields:
+    if spec.resource_fields and not (legacy_path and config.mode == "off"):
         try:
             resource_refs = _resource_refs(
                 input_obj, spec.resource_fields, strict=not legacy_path

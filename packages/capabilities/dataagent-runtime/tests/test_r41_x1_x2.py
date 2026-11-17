@@ -379,8 +379,75 @@ def test_x1_host_meta_callmeta_uses_iface_names(ops, tmp_path):
         runtime=rt,
         environ={},
     )
-    assert invented_only.context.kernel_session_id != "evil-session"
-    assert invented_only.context.kernel_call_id != "evil-call"
+    assert invented_only.context.kernel_session_id is None
+    assert invented_only.context.kernel_call_id is None
+    assert "session_id" not in invented_only.host_fields
+    assert "call_id" not in invented_only.host_fields
+
+
+def test_x1_nested_kernel_ids_are_not_callmeta(ops, tmp_path):
+    """``_meta.context`` is a CallContext, not a source of iface CallMeta."""
+
+    rt = _runtime(tmp_path)
+    resolved = resolve_context(
+        host_meta={
+            "context": {
+                "kernel_session_id": "alias-session",
+                "kernel_call_id": "alias-call",
+            }
+        },
+        runtime=rt,
+        environ={},
+    )
+    assert resolved.meta.session_id != "alias-session"
+    assert resolved.meta.call_id != "alias-call"
+    assert resolved.meta.session_id.startswith("local:")
+    assert resolved.meta.call_id.startswith("call:")
+    assert resolved.context.kernel_session_id is None
+    assert resolved.context.kernel_call_id is None
+    assert "session_id" not in resolved.host_fields
+    assert "call_id" not in resolved.host_fields
+
+    # The top-level iface names still win over the nested mirror.
+    mixed = resolve_context(
+        host_meta={
+            "context": {
+                "kernel_session_id": "alias-session",
+                "kernel_call_id": "alias-call",
+            },
+            "session_id": "ks-real",
+            "call_id": "kc-real",
+            "turn": 1,
+        },
+        runtime=rt,
+        environ={},
+    )
+    assert mixed.meta == CallMeta(session_id="ks-real", call_id="kc-real", turn=1)
+    assert mixed.context.kernel_session_id == "ks-real"
+    assert mixed.context.kernel_call_id == "kc-real"
+    assert {"session_id", "call_id", "turn"} <= set(mixed.host_fields)
+
+
+def test_x1_flat_old_context_kernel_ids_are_not_callmeta(ops, tmp_path):
+    """The old flat ``_meta`` CallContext shape is not a CallMeta either."""
+
+    resolved = resolve_context(
+        host_meta={
+            "request_id": "req:flat",
+            "scope_ref": "tenant:flat",
+            "authorization_ref": "ad:flat",
+            "kernel_session_id": "alias-session",
+            "kernel_call_id": "alias-call",
+        },
+        runtime=_runtime(tmp_path),
+        environ={},
+    )
+    assert resolved.meta.session_id != "alias-session"
+    assert resolved.meta.call_id != "alias-call"
+    assert resolved.context.kernel_session_id is None
+    assert resolved.context.kernel_call_id is None
+    assert "session_id" not in resolved.host_fields
+    assert "call_id" not in resolved.host_fields
 
 
 def test_x1_tool_schema_keeps_callmeta_out_and_context_optional(ops):
@@ -650,6 +717,48 @@ def test_x2_custom_asset_conversion_error_is_invalid_input(
     assert "cannot be converted" in result.issues[0].message
 
 
+def test_legacy_mode_off_skips_resource_extraction(ops, tmp_path):
+    """Rollback control: old invoke ran the handler without touching resources."""
+
+    @operation(
+        "T11A.X2.14",
+        input_model=CustomAssetInput,
+        output_model=ReadOutput,
+        resource_fields=("source",),
+    )
+    def x2_custom_asset(input_obj, ctx, runtime):  # noqa: ANN001
+        return ReadOutput(value=input_obj.source.asset.id)
+
+    rt = _runtime(tmp_path)
+    payload = {"source": {"asset": {"id": "table:secret", "revision": ""}}}
+    resolved = resolve_context(
+        argument_context=_forged_context(),
+        runtime=rt,
+        environ={"DATAAGENT_CONTEXT_RESOLVER": "legacy"},
+    )
+    legacy = shared_invoke(
+        "x2_custom_asset",
+        payload,
+        resolved,
+        runtime=rt,
+        enforcement=EnforcementConfig(mode="off"),
+    )
+    assert legacy.status == "ok", legacy.issues
+    assert legacy.data.value == "table:secret"
+
+    # v1 keeps strict extraction even when the access hook is off (X2).
+    v1 = shared_invoke(
+        "x2_custom_asset",
+        payload,
+        _forged_context(),
+        runtime=rt,
+        enforcement=EnforcementConfig(mode="off"),
+    )
+    assert v1.status == "failed"
+    assert v1.issues[0].code == "invalid_input"
+    assert "cannot be converted" in v1.issues[0].message
+
+
 def test_x1_legacy_nested_host_context_does_not_merge_arguments(ops):
     """Old ``_context`` ignored arguments entirely when ``_meta.context`` existed."""
 
@@ -675,6 +784,26 @@ def test_x1_legacy_nested_host_context_does_not_merge_arguments(ops):
     assert resolved.context.authorization_ref == "ad:host"
     assert resolved.context.subject_ref is None
     assert resolved.context.purpose is None
+
+
+def test_legacy_keeps_nested_kernel_id_callmeta(ops):
+    """The rollback switch may keep the old nested kernel-id mapping."""
+
+    resolved = resolve_context(
+        host_meta={
+            "context": {
+                "request_id": "req:old",
+                "scope_ref": "tenant:old",
+                "authorization_ref": "ad:old",
+                "kernel_session_id": "ks-legacy",
+                "kernel_call_id": "kc-legacy",
+            }
+        },
+        environ={"DATAAGENT_CONTEXT_RESOLVER": "legacy"},
+    )
+    assert resolved.source is ContextSource.LEGACY
+    assert resolved.meta.session_id == "ks-legacy"
+    assert resolved.meta.call_id == "kc-legacy"
 
 
 def test_x1_legacy_no_resource_keeps_the_caller_context(ops, tmp_path):
