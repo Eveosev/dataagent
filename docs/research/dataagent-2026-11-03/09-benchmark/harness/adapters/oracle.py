@@ -26,6 +26,8 @@ def _map(task_id: str, expected: dict) -> dict:
         return out
     if task_id == "B04":
         return {"label": expected.get("value")}
+    if task_id == "B16":
+        return {"pairs": expected.get("pairs") or []}
     return {}
 
 

@@ -1,7 +1,7 @@
 {
   "dataset_id": "B16.dataset",
   "task_id": "B16",
-  "revision": "v0.8",
+  "revision": "v0.10",
   "status": "collecting",
   "unit": "case",
   "sources": [
@@ -62,7 +62,7 @@
   "updated": "2026-11-17",
   "notes": "由 build_cases.py 从 workspace/benchmark-data 构建；原始数据不入库",
   "build": {
-    "version": 8,
+    "version": 10,
     "script": "tools/build_cases.py",
     "built_at": "2026-11-17",
     "policy": "金标只取数据集 perfectMapping；按金标连通分量做固定 sha256 60/20/20；每条用例取同 split 内与左记录最相似的非金标右记录 4 条作候选负例，候选顺序按哈希固定，避免金标总在首位。",

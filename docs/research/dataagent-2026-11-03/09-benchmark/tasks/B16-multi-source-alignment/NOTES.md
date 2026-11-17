@@ -55,7 +55,7 @@
 - `grade()` → `entity_pair_f1`：微观 F1，`2TP / (2TP + FP + FN)`，跨用例 `pooled`。
 - `false_merge()` → `false_merge_rate`：`FP / (TP + FP)`，即已预测合并中错误合并的占比；单用例没有预测合并时记 0（没有发生错误合并）。它只惩罚误合并，不惩罚漏合并；漏合并由 F1 反映。跨用例按预测实体对 `pooled` 汇总：总 FP / 总 (TP + FP)；若全部用例都没有预测合并，pooled 分母为 0，scorecard 的 value 为 null（没有可汇总的合并，不当作 0 分）。
 
-产出接受 `pairs` / `matches` / `links` / `alignment` 的实体对列表，也接受 `clusters`（先对簇成员求连通分量，再只展开左记录与候选右记录的实体对；`[[L,R1],[R1,R2]]` 会经 R1 合并为同一实体）和 `{"right_ids": [...]}`。左 id 缺省时用用例的 `left_id`；预测出候选集外的 id 或错误左 id 仍计 FP，并在 notes 的 `invalid` 计数里记数。
+产出接受 `pairs` / `matches` / `links` / `alignment` 的实体对列表，也接受 `clusters`（先对簇成员求连通分量，再展开左记录与簇内所有其他成员的实体对；候选集外成员也计入 FP；`[[L,R1],[R1,R2]]` 会经 R1 合并为同一实体）和 `{"right_ids": [...]}`。左 id 缺省时用用例的 `left_id`；预测出候选集外的 id 或错误左 id 仍计 FP，并在 notes 的 `invalid` 计数里记数。
 
 ## 覆盖与缺口
 
@@ -73,7 +73,7 @@
 <!-- data-build:start -->
 ## 数据构建摘要
 
-- 构建：`tools/build_cases.py --task B16`（转换器 `tools/converters/B16.py`），manifest `v0.7`
+- 构建：`tools/build_cases.py --task B16`（转换器 `tools/converters/B16.py`），manifest `v0.9`
 - 原始数据：`leipzig-dblp-acm`、`leipzig-amazon-google`、`leipzig-abt-buy`，落在 `workspace/benchmark-data/B16/`
 - 当前用例：development 120 / regression 60 / unseen 60（共 240）
 - 金标：数据集自带 `perfectMapping.csv`；非金标候选按排他性视为非匹配
@@ -84,4 +84,15 @@
 
 | 轮次 | 结论 | 变更 |
 |-|-|-|
-| x424 / x929 | oracle F1=0（适配器缺 B16 分支），empty F1=0；240/240 全部产出；FMR 按预测对 pooled，无合并时 value=null | 修复聚类传递闭包与 FMR 汇总；数据 v0.7 |
+| x424 / x929 | oracle F1=0（适配器缺 B16 分支），empty F1=0；240/240 全部产出；FMR 按预测对 pooled，无合并时 value=null | 修复聚类传递闭包与 FMR 汇总；数据 v0.7（历史） |
+| x506 / x009 | oracle 三切分 F1=1、FMR=0；empty 三切分 F1=0；240/240 全部产出 | 补 oracle B16 分支；聚类候选集外成员计 FP；数据 v0.8（历史） |
+| x816 / x320 | oracle 三切分 F1=1、FMR=0；empty 三切分 F1=0；240/240 全部产出 | 当前验收轮；数据 v0.9 |
+
+## 验证记录
+
+| run_id | 适配器 | development F1 / FMR | regression F1 / FMR | unseen_acceptance F1 / FMR | 数据 |
+|-|-|-|-|-|-|
+| `x816-2026-11-17` | oracle | 1.000 / 0.000 | 1.000 / 0.000 | 1.000 / 0.000 | v0.9 |
+| `x320-2026-11-17` | empty | 0.000 / null | 0.000 / null | 0.000 / null | v0.9 |
+
+FMR 的 `null` 表示该切分没有预测合并，pooled 分母为 0；不是 missing，也不是 0 分。本轮运行产物在 `history/runs/`，按 `.gitignore` 排除；验证结论以上表为准。

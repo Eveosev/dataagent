@@ -6,8 +6,8 @@
 产出接受三种常见形状：
 - `{"pairs": [{"left_id": "...", "right_id": "..."}]}`
 - `{"matches": [{"left_id": "...", "right_id": "..."}]}` 或 `{"matches": ["right_id", ...]}`
-- `{"clusters": [["id", "id", ...]]}`（同一簇内的成员先求连通分量，再只展开左记录与候选右记录的实体对；
-  两个长度为 2 的簇 `[[L,R1],[R1,R2]]` 会经 R1 合并为同一实体）
+- `{"clusters": [["id", "id", ...]]}`（同一簇内的成员先求连通分量，再展开左记录与簇内所有其他成员；
+  簇内候选集以外的成员也计入 FP，不丢弃；两个长度为 2 的簇 `[[L,R1],[R1,R2]]` 会经 R1 合并为同一实体）
 
 口径：
 - `entity_pair_f1`：微观 F1，2TP / (2TP + FP + FN)，跨用例 pooled。
@@ -175,7 +175,7 @@ def _pred(output: dict, left_id: str, candidates: set[str]):
 
 
 def _from_clusters(raw, left_id: str, candidates: set[str]):
-    """把聚类展开为实体对：先对簇成员求连通分量，再只取左记录与候选右记录的对。"""
+    """把聚类展开为实体对：先对簇成员求连通分量，再取左记录与簇内所有其他成员的对；候选集外成员计 FP。"""
     if not left_id:
         return set(), 0
     items = raw
@@ -221,10 +221,9 @@ def _from_clusters(raw, left_id: str, candidates: set[str]):
     for node in list(parent):
         if node == left_id or find(node) != root:
             continue
-        if candidates and node not in candidates:
-            continue
         pred.add((left_id, node))
-    return pred, 0
+    invalid = sum(1 for _, right in pred if candidates and right not in candidates)
+    return pred, invalid
 
 
 def _cluster_members(item) -> list[str]:
