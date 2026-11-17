@@ -24,21 +24,34 @@ B02 calls the OCR capability; B03 calls OCR and then the field-extraction
 capability. OCR is always the locally pinned engine under ``$OCR_ROOT`` (or
 ``$DATAAGENT_OCR_ROOT``); a remote pin is refused because the egress gate
 (T15) does not cover the CLI path yet.
+
+B16 (entity alignment) and B17 (schema matching) run on the normalized
+record/table fixtures instead of documents. The data layer catalog does not
+yet register the DA03.2 identity-alignment or DA02.4 schema-mapping atoms, so
+this entry carries the deterministic baselines for those two tasks: B16 ranks
+the right candidates against the left record and emits ``expected.pairs``-
+shaped entity pairs; B17 ranks target columns for the requested source field
+and emits the ``mappings`` shape used by the oracle adapter. Both matchers are
+pure, offline, and bounded by the case fixture; a malformed case raises
+``BenchError`` so the harness records an explicit failure instead of an empty
+success.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import re
 import shutil
 import sys
 import traceback
+import unicodedata
 from pathlib import Path, PurePosixPath
 from typing import Any, Callable, Iterable, Sequence
 
-TASKS = ("B02", "B03")
+TASKS = ("B02", "B03", "B16", "B17")
 
 # Images the data layer's OCR atom can decode with Pillow.
 IMAGE_SUFFIXES = frozenset({".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff", ".webp"})
@@ -836,6 +849,447 @@ def _b03_output(result: Any, fields: Sequence[Any], content: Any) -> dict[str, A
     return out
 
 
+# B16/B17 baselines. The data layer's 32-atom catalog does not register the
+# DA03.2 identity-alignment / DA02.4 schema-mapping atoms yet, so the benchmark
+# entry carries deterministic, fixture-local matchers. Both are lexical
+# baselines (not inference); thresholds are calibrated on the development
+# split and keep the output honest: below the threshold the answer is an empty
+# pair list / explicit null, never a guess.
+_B16_MATCH_THRESHOLD = 0.40
+_B17_MATCH_THRESHOLD = 0.35
+
+_STOPWORDS = frozenset(
+    {
+        "a",
+        "an",
+        "and",
+        "are",
+        "as",
+        "at",
+        "by",
+        "for",
+        "from",
+        "in",
+        "is",
+        "of",
+        "on",
+        "or",
+        "that",
+        "the",
+        "this",
+        "to",
+        "with",
+    }
+)
+
+_TOKEN_SYNONYMS = {
+    "addr": "address",
+    "amt": "amount",
+    "cat": "category",
+    "cd": "code",
+    "chg": "change",
+    "changes": "change",
+    "desc": "description",
+    "dt": "date",
+    "info": "information",
+    "mo": "month",
+    "nm": "name",
+    "no": "number",
+    "num": "number",
+    "pct": "percent",
+    "qty": "quantity",
+    "stat": "status",
+    "val": "value",
+    "wk": "week",
+    "yr": "year",
+}
+
+
+def _normalize_text(value: Any) -> str:
+    """NFKC, camel-case split, casefold, and non-alphanumeric to space."""
+
+    text = unicodedata.normalize("NFKC", str(value or ""))
+    text = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", text)
+    return re.sub(r"[^a-z0-9]+", " ", text.casefold()).strip()
+
+
+def _stem_token(token: str) -> str:
+    """A small suffix stemmer: enough for charger/charging and controller(s)."""
+
+    for suffix in ("ing", "ers", "er", "ies", "es", "s"):
+        if len(token) > 4 and token.endswith(suffix):
+            if suffix == "ies":
+                return token[: -len(suffix)] + "y"
+            return token[: -len(suffix)]
+    return token
+
+
+def _text_tokens(value: Any) -> set[str]:
+    tokens = {
+        _stem_token(token)
+        for token in re.findall(r"[a-z0-9]+", _normalize_text(value))
+        if token not in _STOPWORDS
+    }
+    return tokens
+
+
+def _field_tokens(value: Any) -> list[str]:
+    """Token list for schema matching; keeps order for greedy soft matching."""
+
+    return [
+        _TOKEN_SYNONYMS.get(token, token)
+        for token in re.findall(r"[a-z0-9]+", _normalize_text(value))
+        if token not in _STOPWORDS
+    ]
+
+
+def _char_ngrams(value: Any, size: int = 3) -> set[str]:
+    text = _normalize_text(value).replace(" ", "")
+    return {text[index : index + size] for index in range(max(0, len(text) - size + 1))}
+
+
+def _set_dice(left: set[str], right: set[str]) -> float:
+    if not left or not right:
+        return 0.0
+    return 2 * len(left & right) / (len(left) + len(right))
+
+
+def _set_jaccard(left: set[str], right: set[str]) -> float:
+    if not left or not right:
+        return 0.0
+    return len(left & right) / len(left | right)
+
+
+def _set_containment(left: set[str], right: set[str]) -> float:
+    if not left or not right:
+        return 0.0
+    return len(left & right) / min(len(left), len(right))
+
+
+def _title_of(record: dict[str, Any]) -> str:
+    return str(record.get("name") or record.get("title") or "")
+
+
+def _record_text(record: dict[str, Any], fields: Sequence[str]) -> str:
+    return " ".join(str(record[field]) for field in fields if record.get(field))
+
+
+def _candidate_token_idf(candidates: Sequence[dict[str, Any]]) -> dict[str, float]:
+    """IDF over the candidate titles so rare model/brand words dominate."""
+
+    counts: dict[str, int] = {}
+    for candidate in candidates:
+        for token in _text_tokens(_title_of(candidate)):
+            counts[token] = counts.get(token, 0) + 1
+    total = len(candidates)
+    return {
+        token: math.log((total + 1) / (frequency + 0.5)) + 1.0
+        for token, frequency in counts.items()
+    }
+
+
+def _entity_similarity(
+    left: dict[str, Any],
+    right: dict[str, Any],
+    idf: dict[str, float],
+) -> float:
+    """Score one left/right record pair for the B16 entity-alignment baseline."""
+
+    left_title = _title_of(left)
+    right_title = _title_of(right)
+    left_tokens = _text_tokens(left_title)
+    right_tokens = _text_tokens(right_title)
+
+    title_jaccard = _set_jaccard(left_tokens, right_tokens)
+    title_containment = _set_containment(left_tokens, right_tokens)
+    title_ngrams = _set_dice(_char_ngrams(left_title), _char_ngrams(right_title))
+    weighted_intersection = sum(
+        idf.get(token, 1.0) for token in left_tokens & right_tokens
+    )
+    weighted_right = sum(idf.get(token, 1.0) for token in right_tokens) or 1.0
+    weighted_union = sum(idf.get(token, 1.0) for token in left_tokens | right_tokens) or 1.0
+    weighted_cover = weighted_intersection / weighted_right
+    weighted_jaccard = weighted_intersection / weighted_union
+    title = (
+        0.20 * title_jaccard
+        + 0.22 * title_containment
+        + 0.18 * title_ngrams
+        + 0.20 * weighted_cover
+        + 0.20 * weighted_jaccard
+    )
+
+    left_body = _text_tokens(
+        _record_text(left, ("name", "title", "description", "authors", "venue"))
+    )
+    right_body = _text_tokens(
+        _record_text(right, ("name", "title", "description", "authors", "venue"))
+    )
+    body = _set_jaccard(left_body, right_body)
+
+    left_manufacturer = _text_tokens(left.get("manufacturer") or "")
+    right_manufacturer = _text_tokens(right.get("manufacturer") or "")
+    if left_manufacturer and right_manufacturer:
+        brand = (
+            1.0
+            if left_manufacturer == right_manufacturer
+            else _set_jaccard(left_manufacturer, right_manufacturer)
+        )
+    elif right_manufacturer and right_manufacturer & left_tokens:
+        brand = 1.0
+    else:
+        brand = 0.0
+
+    left_models = {
+        token for token in left_tokens if any(char.isdigit() for char in token) and len(token) >= 4
+    }
+    right_models = {
+        token
+        for token in right_tokens
+        if any(char.isdigit() for char in token) and len(token) >= 4
+    }
+    model = _set_containment(left_models, right_models)
+
+    year = (
+        1.0
+        if left.get("year")
+        and right.get("year")
+        and str(left.get("year")) == str(right.get("year"))
+        else 0.0
+    )
+    price = (
+        1.0
+        if left.get("price")
+        and right.get("price")
+        and _normalize_text(left.get("price")) == _normalize_text(right.get("price"))
+        else 0.0
+    )
+
+    return (
+        0.42 * title
+        + 0.14 * body
+        + 0.18 * brand
+        + 0.12 * model
+        + 0.10 * year
+        + 0.04 * price
+    )
+
+
+def _align_entities(fixture: dict[str, Any]) -> list[dict[str, str]]:
+    """B16 baseline: pick the best right candidate for the left record."""
+
+    left = fixture.get("left")
+    if not isinstance(left, dict):
+        raise BenchError("B16 fixture has no left record")
+    left_id = str(left.get("id") or "").strip()
+    if not left_id:
+        raise BenchError("B16 fixture left record has no id")
+
+    raw_candidates = fixture.get("right_candidates")
+    if not isinstance(raw_candidates, list):
+        raise BenchError("B16 fixture has no right_candidates list")
+    candidates = [
+        candidate
+        for candidate in raw_candidates
+        if isinstance(candidate, dict) and str(candidate.get("id") or "").strip()
+    ]
+    if not candidates:
+        return []
+
+    idf = _candidate_token_idf(candidates)
+    ranked = sorted(
+        (
+            (_entity_similarity(left, candidate, idf), str(candidate["id"]).strip())
+            for candidate in candidates
+        ),
+        key=lambda item: (-item[0], item[1]),
+    )
+    best_score, best_right_id = ranked[0]
+    if best_score < _B16_MATCH_THRESHOLD:
+        return []
+    return [{"left_id": left_id, "right_id": best_right_id}]
+
+
+def _b16_output(fixture: dict[str, Any]) -> dict[str, Any]:
+    """The oracle adapter's B16 shape: ``{"pairs": [{"left_id", "right_id"}]}``."""
+
+    return {"pairs": _align_entities(fixture)}
+
+
+def _consonants(token: str) -> str:
+    return "".join(char for char in token if char not in "aeiouy")
+
+
+def _tokens_equivalent(left: str, right: str) -> bool:
+    """Exact, prefix, or consonant-skeleton match (BRGH_CD vs borough)."""
+
+    if left == right:
+        return True
+    if len(left) >= 3 and len(right) >= 3:
+        if left.startswith(right) or right.startswith(left):
+            return True
+        left_consonants = _consonants(left)
+        right_consonants = _consonants(right)
+        if len(left_consonants) >= 2 and left_consonants == right_consonants:
+            return True
+    return False
+
+
+def _soft_overlap(left: Sequence[str], right: Sequence[str]) -> int:
+    """Greedy one-to-one token matches; used for abbreviation-aware scoring."""
+
+    used = [False] * len(right)
+    matched = 0
+    for token in left:
+        for index, other in enumerate(right):
+            if used[index]:
+                continue
+            if _tokens_equivalent(token, other):
+                used[index] = True
+                matched += 1
+                break
+    return matched
+
+
+def _column_samples(column: dict[str, Any]) -> set[str]:
+    samples = set()
+    for value in column.get("samples") or []:
+        normalized = _normalize_text(value)
+        if normalized:
+            samples.add(normalized)
+    return samples
+
+
+def _schema_similarity(
+    source_field: str,
+    source_column: dict[str, Any],
+    target_column: dict[str, Any],
+) -> float:
+    """Score one source-field/target-column pair for the B17 baseline."""
+
+    target_name = str(target_column.get("name") or "")
+    source_tokens = _field_tokens(source_field)
+    target_tokens = _field_tokens(target_name)
+    matched = _soft_overlap(source_tokens, target_tokens)
+    union = len(source_tokens) + len(target_tokens) - matched
+    token_jaccard = matched / union if union else 0.0
+    token_containment = (
+        matched / min(len(source_tokens), len(target_tokens))
+        if source_tokens and target_tokens
+        else 0.0
+    )
+    ngram_dice = _set_dice(_char_ngrams(source_field), _char_ngrams(target_name))
+    sample_dice = _set_dice(_column_samples(source_column), _column_samples(target_column))
+    exact = 1.0 if _normalize_text(source_field) == _normalize_text(target_name) else 0.0
+
+    return (
+        0.28 * exact
+        + 0.18 * token_jaccard
+        + 0.20 * token_containment
+        + 0.14 * ngram_dice
+        + 0.20 * sample_dice
+    )
+
+
+def _find_column(table: dict[str, Any], name: str) -> dict[str, Any] | None:
+    columns = table.get("columns")
+    if not isinstance(columns, list):
+        return None
+    for column in columns:
+        if isinstance(column, dict) and str(column.get("name") or "") == name:
+            return column
+    wanted = _normalize_text(name)
+    for column in columns:
+        if isinstance(column, dict) and _normalize_text(column.get("name")) == wanted:
+            return column
+    return None
+
+
+def _map_schema_field(fixture: dict[str, Any]) -> str | None:
+    """B17 baseline: the top-1 target column, or ``None`` when nothing matches."""
+
+    source_field = str(fixture.get("source_field") or "").strip()
+    if not source_field:
+        raise BenchError("B17 fixture has no source_field")
+    source_table = fixture.get("source_table")
+    target_table = fixture.get("target_table")
+    if not isinstance(source_table, dict) or not isinstance(target_table, dict):
+        raise BenchError("B17 fixture has no source_table/target_table")
+    source_column = _find_column(source_table, source_field)
+    if source_column is None:
+        raise BenchError(f"B17 fixture source table has no column {source_field!r}")
+    raw_columns = target_table.get("columns")
+    if not isinstance(raw_columns, list) or not raw_columns:
+        raise BenchError("B17 fixture target table has no columns")
+
+    ranked = sorted(
+        (
+            (
+                _schema_similarity(source_field, source_column, column),
+                str(column.get("name") or ""),
+            )
+            for column in raw_columns
+            if isinstance(column, dict) and str(column.get("name") or "").strip()
+        ),
+        key=lambda item: (-item[0], item[1]),
+    )
+    if not ranked or ranked[0][0] < _B17_MATCH_THRESHOLD:
+        return None
+    return ranked[0][1]
+
+
+def _b17_output(fixture: dict[str, Any]) -> dict[str, Any]:
+    """The oracle adapter's B17 shape, with an explicit ``null`` for no match."""
+
+    source_field = str(fixture.get("source_field") or "").strip()
+    return {
+        "mappings": [
+            {
+                "source_field": source_field,
+                "target_field": _map_schema_field(fixture),
+            }
+        ]
+    }
+
+
+def _read_fixture_input(
+    inputs: Sequence[tuple[dict[str, Any], Path]],
+    kinds: frozenset[str],
+    *,
+    task_id: str,
+) -> dict[str, Any]:
+    """Read the first resolved input whose declared kind belongs to ``kinds``."""
+
+    for item, path in inputs:
+        if str(item.get("kind") or "") not in kinds:
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError as exc:
+            raise BenchError(f"cannot read {task_id} fixture {path}: {exc}") from exc
+        try:
+            payload = json.loads(text)
+        except json.JSONDecodeError as exc:
+            raise BenchError(f"{task_id} fixture is not valid JSON: {path}: {exc}") from exc
+        if not isinstance(payload, dict):
+            raise BenchError(f"{task_id} fixture must be a JSON object: {path}")
+        return payload
+    raise BenchError(f"{task_id} case has no {sorted(kinds)[0]} input")
+
+
+def _execute_b16(
+    inputs: Sequence[tuple[dict[str, Any], Path]],
+) -> tuple[dict[str, Any], str, list[dict[str, Any]]]:
+    fixture = _read_fixture_input(inputs, frozenset({"record_pair"}), task_id="B16")
+    return _b16_output(fixture), "ok", []
+
+
+def _execute_b17(
+    inputs: Sequence[tuple[dict[str, Any], Path]],
+) -> tuple[dict[str, Any], str, list[dict[str, Any]]]:
+    fixture = _read_fixture_input(inputs, frozenset({"table"}), task_id="B17")
+    return _b17_output(fixture), "ok", []
+
+
 def _execute_task(
     *,
     task_id: str,
@@ -846,6 +1300,11 @@ def _execute_task(
     scratch: Path,
 ) -> tuple[dict[str, Any], str | None, list[dict[str, Any]]]:
     """Run the task's capability chain; return (output, status, issues)."""
+
+    if task_id == "B16":
+        return _execute_b16(inputs)
+    if task_id == "B17":
+        return _execute_b17(inputs)
 
     workspace = scratch / "workspace"
     data_root = scratch / "data"
@@ -934,7 +1393,10 @@ def run_case(
         case_id = str(case.get("case_id"))
         task_id = str(case.get("task_id") or "").strip() or None
         if task_id not in TASKS:
-            raise BenchError(f"unsupported task_id: {task_id or '<missing>'} (expected B02 or B03)")
+            raise BenchError(
+                f"unsupported task_id: {task_id or '<missing>'} "
+                f"(expected {' or '.join(TASKS)})"
+            )
         bench_root = find_bench_root(case_path)
         repo_root = repo_root_for(bench_root)
         dataset_dir = dataset_dir_for(case_path)
