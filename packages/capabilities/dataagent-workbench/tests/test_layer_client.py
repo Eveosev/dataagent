@@ -5,6 +5,7 @@ from types import SimpleNamespace
 import pytest
 from dataagent_contracts.intake import SourceProfile, SourceSelection
 from dataagent_workbench.bootstrap import Workbench
+from dataagent_workbench.adapters import layer_client
 from dataagent_workbench.adapters.layer_client import LayerClient
 
 
@@ -41,6 +42,7 @@ def test_probe_passes_logical_credential_names_only(tmp_path, monkeypatch):
     def fake_run(argv,**kwargs):
         captured['input']=kwargs['input']
         captured['env']=kwargs['env']
+        captured['preexec_fn']=kwargs.get('preexec_fn')
         directory=tmp_path/'.dataagent/results';directory.mkdir(parents=True)
         profile=SourceProfile(source_id='api',source_revision='sha256:'+'0'*64,kind='rest',
             records=[{'/id':1}],fields=['/id'],anchors={},total_partitions=1,
@@ -56,6 +58,7 @@ def test_probe_passes_logical_credential_names_only(tmp_path, monkeypatch):
     assert 'credentials' not in payload
     assert sentinel not in captured['input']
     assert captured['env'] is None
+    assert callable(captured['preexec_fn'])
     assert profile.records==[{'/id':1}]
 
 
@@ -67,3 +70,11 @@ def test_probe_rejects_plaintext_in_forwarded_selection_options(tmp_path):
                               options={'token':'T14-EXAMPLE'})
     with pytest.raises(ValueError,match='credential'):
         LayerClient(tmp_path).probe(selection,wb.ctx,tmp_path)
+
+
+def test_probe_child_environment_drops_unrelated_variables(monkeypatch):
+    monkeypatch.setattr(layer_client.os, 'environ', {
+        'PATH': '/bin', 'T14_SENTINEL_TOKEN': 'sentinel', 'UNRELATED_SECRET': 'other',
+    })
+    layer_client._clean_child_environment({'PATH', 'T14_SENTINEL_TOKEN'})
+    assert set(layer_client.os.environ) == {'PATH', 'T14_SENTINEL_TOKEN'}

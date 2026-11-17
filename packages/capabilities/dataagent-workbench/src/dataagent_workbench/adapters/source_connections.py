@@ -23,6 +23,10 @@ _HEADER_KEYS = {'header', 'headers', 'http_header', 'http_headers', 'request_hea
 _SECRET_FRAGMENTS = ('token', 'secret', 'password', 'apikey', 'api_key',
                      'authorization', 'credential', 'private_key', 'cookie')
 _AUTH_VALUE = re.compile(r'^\s*(?:Bearer|Basic)\s+\S+', re.IGNORECASE)
+_ENTRY_FIELDS = {
+    'kind', 'label', 'locator', 'options', 'scope', 'allowed_origins',
+    'credential_refs', 'credential_env', 'credential_options',
+}
 
 
 def _is_secret_key(name):
@@ -67,6 +71,17 @@ def _validate_origins(origins):
         raise ValueError('connection manifest allowed_origins is invalid')
     for origin in origins:
         _validate_url(origin, 'allowed_origins')
+
+
+def _validate_entry(name, entry):
+    if not isinstance(entry, dict):
+        raise ValueError(f'connection manifest entry {name} must be an object')
+    unknown = set(entry) - _ENTRY_FIELDS
+    if unknown:
+        raise ValueError(
+            f'connection manifest entry {name} contains unsupported fields; '
+            'credentials must use credential_refs'
+        )
 
 
 def _credential_refs(entry):
@@ -153,6 +168,10 @@ class SourceConnections:
         except FileNotFoundError:
             # A default manifest path may not exist yet; local sources still work.
             self.entries = {}
+        if not isinstance(self.entries, dict):
+            raise ValueError('connection manifest must be an object')
+        for name, entry in self.entries.items():
+            _validate_entry(name, entry)
 
     def list(self):
         return [{'id': key, 'kind': entry['kind'], 'label': entry.get('label', key)}

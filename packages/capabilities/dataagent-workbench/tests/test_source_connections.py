@@ -217,3 +217,15 @@ def test_intake_status_omits_credential_binding_reference(tmp_path):
     assert session.sources[0].credential_binding_ref == 'file:rest-token'
     status = invoke(wb, 'intake_status', {'session_id': started['session_id']})
     assert 'credential_binding_ref' not in json.dumps(status.data)
+
+
+@pytest.mark.parametrize('field', ['credentials', 'token', 'password'])
+def test_manifest_rejects_unknown_credential_fields(tmp_path, monkeypatch, field):
+    config = tmp_path / 'connections.json'
+    config.write_text(json.dumps({'accounting': {
+        'kind': 'rest', 'locator': 'http://127.0.0.1:9999/invoices',
+        field: 'T14-EXAMPLE',
+    }}))
+    monkeypatch.setenv('DATAAGENT_SOURCE_CONNECTIONS', str(config))
+    with pytest.raises(ValueError, match='unsupported'):
+        SourceConnections()
