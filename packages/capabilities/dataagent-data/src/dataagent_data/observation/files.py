@@ -8,7 +8,6 @@ import zipfile
 from dataagent_contracts.core.refs import SourceAnchor
 from dataagent_contracts.intake import SourceProfile, CoverageGap
 from ..adapters.parsers.delimited import parse_delimited
-from ..adapters.parsers.excel import dedupe_names
 from ..adapters.parsers.json_records import parse_json_records
 from .documents import probe_document
 
@@ -55,31 +54,82 @@ def probe_file(selection, ctx, *, workspace, budget_rows=200, engine=None):
         if bad:
             gaps=[CoverageGap(partition=b['row'],code='malformed_row') for b in bad]
     elif suffix in {'.xlsx','.xlsm'}:
-        from openpyxl import load_workbook
         from openpyxl.utils import get_column_letter
+        from openpyxl.utils.cell import range_boundaries
+        from ..adapters.parsers.excel import (open_workbook,row_is_empty,sheet_grid,
+            trim_empty_edges_with_offset)
+        from ..preparation.regions import detect_regions
+        from ..preparation.structure import recover_header_block
         with zipfile.ZipFile(io.BytesIO(payload)) as archive:
             if sum(i.file_size for i in archive.infolist()) > 256*1024*1024 or len(archive.infolist())>10000:
                 raise ValueError('expanded workbook exceeds probe limit')
-        book=load_workbook(snapshot,data_only=True,read_only=True)
+        book=open_workbook(snapshot,data_only=True)
         total=len(book.sheetnames);completed=[];total_rows=0
+        def header_row_count(block,merged_ranges,origin_row,origin_col):
+            # The header-row heuristic runs on a merge-expanded copy: the sparse
+            # sub-header row of a merged header block (不含税/税额 under a merged
+            # 金额（分）) would otherwise be read as a data row.
+            expanded=[list(row) for row in block]
+            width=max(len(row) for row in expanded)
+            for row in expanded:row.extend([None]*(width-len(row)))
+            for cell_range in merged_ranges or []:
+                try:min_col,min_row,max_col,max_row=range_boundaries(cell_range)
+                except Exception:continue
+                top,left=min_row-origin_row,min_col-origin_col
+                if top<0 or left<0 or top>=len(expanded) or left>=width:continue
+                value=expanded[top][left]
+                if value in (None,''):continue
+                for row in range(top,min(max_row-origin_row+1,len(expanded))):
+                    for column in range(left,min(max_col-origin_col+1,width)):
+                        if expanded[row][column] in (None,''):
+                            expanded[row][column]=value
+            return recover_header_block(expanded).header_rows
         try:
-            for number,sheet in enumerate(book,1):
-                header_row=int(selection.options.get('header_row',1))
-                if not 1<=header_row<=sheet.max_row:
+            for number,name in enumerate(book.sheetnames,1):
+                sheet=sheet_grid(book,name)
+                grid,row_offset,col_offset=trim_empty_edges_with_offset(sheet.rows)
+                hint=int(selection.options['header_row']) if 'header_row' in selection.options else None
+                if hint is not None and not 1<=hint<=sheet.max_row:
                     gaps.append(CoverageGap(partition=number,code='header_row_missing'));continue
-                grid=sheet.iter_rows(values_only=True)
-                header=next(row for i,row in enumerate(grid,1) if i==header_row)
-                if sum(v is not None for v in header)<2 and sheet.max_column>1:
-                    gaps.append(CoverageGap(partition=number,code='header_selection_required'));continue
-                fields=dedupe_names(['' if x is None else str(x) for x in header])
-                for rownum,row in enumerate(grid,header_row+1):
-                    if all(x is None for x in row):continue
-                    total_rows+=1
-                    if len(records)>=budget_rows:sampled=True;continue
-                    index=len(records)
-                    records.append({k:v.isoformat() if hasattr(v,'isoformat') else v for k,v in zip(fields,row)})
-                    for col,field in enumerate(fields,1):
-                        anchor(index,field,{'kind':'excel_cell','sheet':sheet.title,'range':f'{get_column_letter(col)}{rownum}'})
+                if not grid:
+                    completed.append(number);continue
+                # Bands separated by two or more blank rows are separate table
+                # regions (merged headers, multi-region sheets); one blank row
+                # stays inside its table so sparse sheets keep their records.
+                bands=[];start=None;blanks=0
+                for index,row in enumerate(grid):
+                    if not row_is_empty(row):
+                        if start is None:start=index
+                        blanks=0
+                    else:
+                        blanks+=1
+                        if start is not None and blanks>=2:
+                            bands.append((start,index-blanks));start=None
+                if start is not None:bands.append((start,len(grid)-1))
+                for band_start,band_end in bands:
+                    block_rows=grid[band_start:band_end+1]
+                    dense=[row for row in block_rows if not row_is_empty(row)]
+                    spans=[(box.min_col,box.max_col) for box in detect_regions(dense)]
+                    if not spans:spans=[(0,max(len(row) for row in dense)-1)]
+                    for min_col,max_col in spans:
+                        block=[row[min_col:max_col+1] for row in block_rows]
+                        origin_row=row_offset+band_start+1;origin_col=col_offset+min_col+1
+                        if hint is not None and origin_row<=hint<origin_row+len(block):
+                            # the caller pinned the header at an absolute sheet
+                            # row; rows above it are layout, not a multi-row header
+                            block=block[hint-origin_row:];origin_row=hint
+                        recovered=recover_header_block(block,
+                            header_rows=header_row_count(block,sheet.merged_ranges,origin_row,origin_col),
+                            merged_ranges=sheet.merged_ranges,origin_row=origin_row,origin_col=origin_col)
+                        if not recovered.columns:continue
+                        for values,source_row in zip(recovered.rows,recovered.source_rows):
+                            total_rows+=1
+                            if len(records)>=budget_rows:sampled=True;continue
+                            index=len(records)
+                            records.append(dict(zip(recovered.columns,values)))
+                            for col,field in enumerate(recovered.columns):
+                                anchor(index,field,{'kind':'excel_cell','sheet':name,
+                                    'range':f'{get_column_letter(origin_col+col)}{source_row}'})
                 completed.append(number)
         finally:book.close()
         metadata={'total_rows':total_rows,'sheets':book.sheetnames,'formula_policy':'cached_values'}

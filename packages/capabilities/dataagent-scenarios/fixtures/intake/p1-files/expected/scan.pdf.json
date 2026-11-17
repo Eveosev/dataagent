@@ -1,0 +1,35 @@
+{
+  "sample": "scan.pdf",
+  "sha256": "9f7aceaa32779e1e65ae6da48b9699ebf856a2dac4990977db7ba0f382f7e788",
+  "kind": "pdf",
+  "probe_options": {},
+  "ocr_required": true,
+  "partition_unit": "page",
+  "total_partitions": 1,
+  "with_ocr": {
+    "coverage": "full",
+    "completed_partitions": [1],
+    "gaps": [],
+    "page_types": {"1": "ocr"}
+  },
+  "without_ocr": {
+    "coverage": "partial",
+    "completed_partitions": [],
+    "gaps": [{"partition": 1, "reason": "无文本层且未配置 OCR", "accepted_codes": ["ocr_engine_missing"]}]
+  },
+  "record_count": 1,
+  "original_text": "Invoice INV-003\nAmount: 1260.00 CNY",
+  "anchor_convention": "page + snippet：锚点指向的 OCR 文本片段（或其 bbox 内文字）包含该值",
+  "facts": [
+    {"label": "Invoice", "labeled": false, "value": "INV-003", "page": 1, "snippet": "Invoice INV-003"},
+    {"label": "Amount", "labeled": true, "value": "1260.00 CNY", "page": 1, "snippet": "Amount: 1260.00 CNY"}
+  ],
+  "semantic_values": {"number": "INV-003", "amount": "1260.00", "currency": "CNY"},
+  "anchor_coverage": "100%：记录里每个字段（至少 Amount，若实现把整页文本作 text 字段则 text）都有第 1 页的锚点",
+  "issues_expected": [],
+  "判断依据": [
+    "原样复制自 fixtures/intake/scan.pdf：1 页、页面 1000×450 pt、只有一张 1000×450 RGB JPEG、无文本层。图片内容是清晰黑字白底，判断 OCR 置信度应高，不期望 intake.low_ocr_confidence。",
+    "「Invoice INV-003」这一行没有冒号，不是 key: value；值 INV-003 只要求出现在第 1 页某个带锚点的字段原文里。semantic_values 是映射后应得的值（与离线用例 F05、现有 expected.json 一致），给 mapping 阶段用，files 阶段只核对 facts。",
+    "acceptance 按 --ocr-root 运行，所以主期望是 with_ocr；without_ocr 用来核对未配置 OCR 时不能显示为成功（T20 验收口径）。"
+  ]
+}

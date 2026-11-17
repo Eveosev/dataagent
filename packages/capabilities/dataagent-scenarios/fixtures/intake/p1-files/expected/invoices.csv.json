@@ -1,0 +1,37 @@
+{
+  "sample": "invoices.csv",
+  "sha256": "36f4d5b041650c46a41a967a92ea9ac462aaca1e3c0c03dea4a8bbd9dc701c4f",
+  "kind": "csv",
+  "probe_options": {},
+  "partition_unit": "file（整个文件算 1 个分区）",
+  "total_partitions": 1,
+  "coverage": "full",
+  "completed_partitions": [1],
+  "gaps": [],
+  "record_count": 2,
+  "fields": ["number", "amount_minor", "currency"],
+  "anchor_convention": "row = 文件物理行号（表头为第 1 行），field = 列名；对应 record_key 选择器 {keys:{row}, field}",
+  "records": [
+    {
+      "fields": {"number": "INV-001", "amount_minor": "126000", "currency": "CNY"},
+      "anchors": {
+        "number": {"row": 2, "field": "number"},
+        "amount_minor": {"row": 2, "field": "amount_minor"},
+        "currency": {"row": 2, "field": "currency"}
+      }
+    },
+    {
+      "fields": {"number": "INV-002", "amount_minor": "90000", "currency": "CNY"},
+      "anchors": {
+        "number": {"row": 3, "field": "number"},
+        "amount_minor": {"row": 3, "field": "amount_minor"},
+        "currency": {"row": 3, "field": "currency"}
+      }
+    }
+  ],
+  "anchor_coverage": "100%：2 条记录 × 3 个字段 = 6 个锚点",
+  "issues_expected": [],
+  "判断依据": [
+    "原样复制自 fixtures/intake/invoices.csv，未改动；值按原文字符串比较（\"126000\" 不转数字）。"
+  ]
+}

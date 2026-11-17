@@ -55,6 +55,45 @@ def test_excel_preserves_sheet_cell_and_sparse_rows(workspace,ctx):
     assert profile.anchors['1.amount'][0].selector.range=='B4'
 
 
+def test_merged_headers_and_second_region_probe_as_two_tables(workspace,ctx):
+    from datetime import date
+    from openpyxl import Workbook
+    wb=Workbook();ws=wb.active;ws.title='报销明细'
+    ws.append(['发票号','开票日期','供应商','金额（分）',None,'币种'])
+    ws.append([None,None,None,'不含税','税额',None])
+    ws.append(['INV-1',date(2026,11,10),'甲',100,10,'CNY'])
+    ws.append(['INV-2',date(2026,11,11),'乙',200,20,'CNY'])
+    ws.append([]);ws.append([])  # two blank rows separate the table regions
+    ws.append(['报销单号','发票号','费用类别','报销金额（分）'])
+    ws.append(['EXP-1','INV-1','办公用品',110])
+    for block in ['A1:A2','B1:B2','C1:C2','D1:E1','F1:F2']:
+        ws.merge_cells(block)
+    wb.save(workspace/'regions.xlsx')
+    profile=probe_file(selection('regions.xlsx'),ctx,workspace=workspace)
+    assert profile.coverage=='full' and profile.completed_partitions==[1] and profile.gaps==[]
+    # The merged header resolves to parent/child columns; the sub-header row
+    # and the second region's header row are not records.
+    assert profile.records==[
+        {'发票号':'INV-1','开票日期':'2026-11-10T00:00:00','供应商':'甲',
+         '金额（分） / 不含税':100,'金额（分） / 税额':10,'币种':'CNY'},
+        {'发票号':'INV-2','开票日期':'2026-11-11T00:00:00','供应商':'乙',
+         '金额（分） / 不含税':200,'金额（分） / 税额':20,'币种':'CNY'},
+        {'报销单号':'EXP-1','发票号':'INV-1','费用类别':'办公用品','报销金额（分）':110}]
+    assert profile.metadata['total_rows']==3
+    assert profile.anchors['0.金额（分） / 税额'][0].selector.range=='E3'
+    assert profile.anchors['1.开票日期'][0].selector.range=='B4'
+    assert profile.anchors['2.报销金额（分）'][0].selector.range=='D8'
+    assert [a[0].selector.sheet for a in profile.anchors.values()]==['报销明细']*16
+
+
+def test_header_row_option_selects_the_header(workspace,ctx):
+    build_xlsx(workspace/'in.xlsx',{'S':[['skip','col'],['id','amount'],['A',1]]})
+    chosen=selection('in.xlsx').model_copy(update={'options':{'header_row':2}})
+    profile=probe_file(chosen,ctx,workspace=workspace)
+    assert [r['id'] for r in profile.records]==['A']
+    assert profile.anchors['0.amount'][0].selector.range=='B3'
+
+
 def test_path_escape_and_content_mismatch_are_rejected(workspace,ctx,tmp_path):
     (tmp_path/'outside.csv').write_text('id\nx\n')
     (workspace/'link.csv').symlink_to(tmp_path/'outside.csv')

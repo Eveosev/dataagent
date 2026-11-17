@@ -1,13 +1,467 @@
-"""Files phase: scanned PDF through the installed workbench."""
+"""Files phase: eight sample classes compared with hand-written expectations,
+plus the retained fixture assertions (invoice.pdf, mixed.pdf, invoices.xlsx and
+the scanned-PDF intake loop).
 
+The p1-files expectations under fixtures/intake/p1-files/expected/ were written
+independently against the original files; this module only compares probe
+output against them (coverage, completed/gap partitions, record counts, field
+values and anchors) and never generates or rewrites them. Tolerances follow
+the rules the expectation files state themselves (判断依据 / soft markers):
+Excel dates may carry a midnight time, the text PDF may expose 11 or 12
+records, low-confidence OCR values are soft-checked, and gap reasons are
+compared by the accepted code categories.
+"""
+
+import json
 import shutil
+import sqlite3
+import subprocess
 
 from .common import ROOT, call_workbench, remove_not_verified, run
+
+
+INTAKE = ROOT/'packages/capabilities/dataagent-scenarios/fixtures/intake'
+P1_FILES = INTAKE/'p1-files'
+# The comparison order is the sample list of p1-files/README.md.
+SAMPLE_ORDER = ['invoices.csv', 'invoices.tsv', 'invoices-regions.xlsx', 'invoices.json',
+                'invoices.jsonl', 'invoice-lines.pdf', 'mixed-pages.pdf', 'scan.pdf']
+
+# Diffs that conflict with an assumption the expectation files document
+# (p1-files/README.md 需要评审确认的假设). The resolution is outside this
+# task's file scope and is left for review; the comparator stays faithful to
+# the expectations as written.
+CONFLICT_NOTES = {
+    'invoices-regions.xlsx': (
+        '冲突：README 假设 4 / regions 判断依据 1 —— 数据层探查用单一 header_row 整表平铺'
+        '（dataagent-data observation/files.py），子表头行与表区 2 表头成为记录；'
+        '修复需改 observation/files.py（接入 ingestion 的区域检测），超出本卡文件范围'),
+    'mixed-pages.pdf': (
+        '冲突：README 假设 1、2 / mixed 判断依据 3、4 —— RapidOCR 对该退化页的块置信度'
+        '高于 0.6 阈值但金额读错（4580→4560），intake.low_ocr_confidence 不会触发；'
+        '按 README 假设 2 的处置应由样本作者加重退化参数重新生成样本（样本须与独立'
+        '原件逐字节一致，实现方不能改），阈值改动在 documents.py，也超出本卡范围'),
+}
 
 
 def installed_cli(project):
     cli, = (project/'.mint/packages/dataagent').glob('cli@*/bin/dataagent')
     return cli
+
+
+class Diffs:
+    """Per-item differences (sample, check, expected, actual) for one run."""
+
+    def __init__(self):
+        self.items = []
+
+    def add(self, sample, check, expected, actual):
+        self.items.append({'sample': sample, 'check': check,
+                           'expected': expected, 'actual': actual})
+
+    def __bool__(self):
+        return bool(self.items)
+
+
+def _upload(project, name, source_id, fixture):
+    """Upload one sample through the installed workbench; return the session
+    args, the agent-visible request and the full data-layer probe result."""
+    shutil.copy2(fixture, project/name)
+    results = project/'.dataagent/results'
+    before = set(results.glob('probe-*.json'))
+    args = {'session_id': call_workbench(project, 'intake_start', {
+        'goal': '核对样本文件内容',
+        'sources': [{'source_id': source_id, 'kind': 'file', 'locator_ref': name}],
+    })['session_id']}
+    request = call_workbench(project, 'intake_advance', args)
+    new, = set(results.glob('probe-*.json')) - before
+    return args, request, json.loads(new.read_text())
+
+
+def _anchor(profile, index, field):
+    found = profile['anchors'].get(f'{index}.{field}')
+    return found[0]['selector'] if found else None
+
+
+def _value_equal(expected, actual):
+    """Field comparison with the tolerances the expectation files state:
+    numbers compare numerically, Excel dates may carry a midnight time
+    (regions 判断依据 4), everything else is an exact comparison."""
+    if isinstance(expected, bool) or isinstance(actual, bool):
+        return expected is actual
+    if isinstance(expected, (int, float)) and isinstance(actual, (int, float)):
+        return expected == actual
+    if expected == actual:
+        return True
+    return isinstance(expected, str) and isinstance(actual, str) \
+        and actual == expected + 'T00:00:00'
+
+
+def _ocr_contains(text, value):
+    """Whitespace-insensitive containment for OCR pages: the expectations were
+    written against the readable page while RapidOCR drops or adds spaces."""
+    return ''.join(value.split()) in ''.join(text.split())
+
+
+def _check_partitions(diffs, sample, spec, profile):
+    if profile['coverage'] != spec['coverage']:
+        diffs.add(sample, 'coverage', spec['coverage'], profile['coverage'])
+    if profile['total_partitions'] != spec['total_partitions']:
+        diffs.add(sample, 'total_partitions', spec['total_partitions'],
+                  profile['total_partitions'])
+    if profile['completed_partitions'] != spec['completed_partitions']:
+        diffs.add(sample, 'completed_partitions', spec['completed_partitions'],
+                  profile['completed_partitions'])
+    expected_gaps = {gap['partition']: gap.get('accepted_codes')
+                     for gap in spec.get('gaps', [])}
+    actual_gaps = {gap['partition']: gap['code'] for gap in profile['gaps']}
+    if set(actual_gaps) != set(expected_gaps):
+        diffs.add(sample, 'gap partitions', sorted(map(str, expected_gaps)),
+                  sorted(map(str, actual_gaps)))
+    for partition, codes in expected_gaps.items():
+        if partition in actual_gaps and codes and actual_gaps[partition] not in codes:
+            diffs.add(sample, f'gap {partition} code', codes, actual_gaps[partition])
+
+
+def _check_anchor_coverage(diffs, sample, profile):
+    """PRD V1.1: every non-empty field of every record carries an anchor."""
+    for index, record in enumerate(profile['records']):
+        for field, value in record.items():
+            if value is not None and _anchor(profile, index, field) is None:
+                diffs.add(sample, f'record {index} field {field} anchor',
+                          'anchor present', None)
+
+
+def _compare_flat(diffs, expected, profile):
+    """CSV, TSV, JSON and JSONL: values plus row/line/pointer anchors."""
+    sample = expected['sample']
+    _check_partitions(diffs, sample, expected, profile)
+    if {f.lstrip('/') for f in expected['fields']} != {f.lstrip('/') for f in profile['fields']}:
+        diffs.add(sample, 'fields', expected['fields'], profile['fields'])
+    if len(profile['records']) != expected['record_count']:
+        diffs.add(sample, 'record_count', expected['record_count'],
+                  len(profile['records']))
+    if 'delimiter' in expected:
+        delimiter = expected['delimiter'].replace('\\t', '\t')
+        if profile['metadata'].get('delimiter') != delimiter:
+            diffs.add(sample, 'delimiter', delimiter,
+                      profile['metadata'].get('delimiter'))
+    if expected['kind'] in {'csv', 'tsv'} and profile['metadata'].get('quarantined_rows'):
+        diffs.add(sample, 'quarantined_rows', [],
+                  profile['metadata']['quarantined_rows'])
+    for index, expected_record in enumerate(expected['records']):
+        actual = profile['records'][index] if index < len(profile['records']) else {}
+        for field, value in expected_record['fields'].items():
+            if not _value_equal(value, actual.get(field)):
+                diffs.add(sample, f'record {index} field {field}', value,
+                          actual.get(field))
+        for field, anchor in expected_record['anchors'].items():
+            selector = _anchor(profile, index, field)
+            if selector is None:
+                diffs.add(sample, f'record {index} anchor {field}', anchor, None)
+                continue
+            if 'row' in anchor:
+                ok = (selector['kind'] == 'record_key'
+                      and selector['keys'].get('row') == anchor['row']
+                      and selector['field'] == field)
+            elif 'line' in anchor:
+                ok = (selector['kind'] == 'record_key'
+                      and selector['keys'].get('line') == anchor['line']
+                      and selector['field'].lstrip('/') == anchor['pointer'].lstrip('/'))
+            else:
+                ok = (selector['kind'] == 'json_pointer'
+                      and selector['pointer'] == anchor['pointer'])
+            if not ok:
+                diffs.add(sample, f'record {index} anchor {field}', anchor,
+                          selector)
+    _check_anchor_coverage(diffs, sample, profile)
+
+
+def _compare_xlsx(diffs, expected, profile):
+    """Merged headers and multiple regions: compare values per expected
+    anchor cell (columns are identified by header_cells, not by the header
+    spelling — regions 判断依据 2)."""
+    sample = expected['sample']
+    _check_partitions(diffs, sample, expected, profile)
+    anchored = {}
+    for key, found in profile['anchors'].items():
+        selector = found[0]['selector']
+        if selector['kind'] == 'excel_cell':
+            anchored[(selector['sheet'], selector['range'])] = key
+    data_rows = {row for region in expected['layout']['regions']
+                 for row in region['data_rows']}
+    for table in expected['tables']:
+        for record in table['records']:
+            for field, anchor in record['anchors'].items():
+                key = anchored.get((anchor['sheet'], anchor['cell']))
+                if key is None:
+                    diffs.add(sample, f'{anchor["cell"]} value ({field})',
+                              record['fields'][field],
+                              'no record anchored at this cell')
+                    continue
+                index, anchored_field = key.split('.', 1)
+                value = profile['records'][int(index)].get(anchored_field)
+                if not _value_equal(record['fields'][field], value):
+                    diffs.add(sample, f'{anchor["cell"]} value ({field})',
+                              record['fields'][field], value)
+    violations = {}
+    for sheet, cell in anchored:
+        row = int(''.join(ch for ch in cell if ch.isdigit()))
+        if row not in data_rows:
+            violations.setdefault(row, []).append(f'{sheet}!{cell}')
+    for row, cells in sorted(violations.items()):
+        diffs.add(sample,
+                  f'row {row} must not appear as records (must_not_appear_as_records)',
+                  'no record anchored on this row',
+                  'records anchored at ' + ', '.join(sorted(cells)))
+    if len(profile['records']) != expected['record_count']:
+        diffs.add(sample, 'record_count', expected['record_count'],
+                  len(profile['records']))
+    _check_anchor_coverage(diffs, sample, profile)
+
+
+def _span_text(pages, selector):
+    text = pages.get(selector['page'], {}).get('text', '')
+    return text[selector['char_start']:selector['char_end']]
+
+
+def _bbox_texts(project, name, boxes):
+    """Text inside pdf_bbox anchors, extracted with the installed data layer
+    (pdfplumber); used to verify that a bbox anchor points at text that
+    contains its value."""
+    if not boxes:
+        return {}
+    python, = (project/'.mint/packages/dataagent').glob('data-layer@*/.venv/bin/python')
+    code = ('import json,sys,pdfplumber\n'
+            'data=json.loads(sys.stdin.read())\n'
+            'out={}\n'
+            'with pdfplumber.open(data["file"]) as pdf:\n'
+            '    for page,boxes in data["boxes"].items():\n'
+            '        sheet=pdf.pages[int(page)-1]\n'
+            '        out[page]=[sheet.crop(box).extract_text() or "" for box in boxes]\n'
+            'print(json.dumps(out))\n')
+    result = subprocess.run([str(python), '-c', code], cwd=project,
+                            input=json.dumps({'file': name,
+                                              'boxes': {str(page): bboxes
+                                                        for page, bboxes in boxes.items()}}),
+                            capture_output=True, text=True)
+    if result.returncode:
+        raise RuntimeError(f'bbox text extraction failed: {result.stderr[-2000:]}')
+    extracted = json.loads(result.stdout)
+    out = {}
+    for page, bboxes in boxes.items():
+        for bbox, text in zip(bboxes, extracted[str(page)]):
+            out[(page, tuple(bbox))] = text
+    return out
+
+
+def _check_anchor_value(diffs, sample, selector, value, where, pages, cell_texts):
+    """An anchor must point at original text containing the value (both span
+    and bbox selectors; text pages compare exactly, OCR pages ignore
+    whitespace)."""
+    if selector['kind'] == 'pdf_text_span':
+        text = _span_text(pages, selector)
+    elif selector['kind'] == 'pdf_bbox':
+        text = cell_texts.get((selector['page'], tuple(selector['bbox'])))
+    else:
+        return
+    if text is None or value not in text:
+        diffs.add(sample, f'{where} anchor text', f'contains {value!r}', text)
+
+
+def _compare_text_pdf(diffs, expected, profile, cell_texts):
+    """invoice-lines.pdf: cross-page table (one logical table, repeated header
+    is not a record) plus document-level key: value fields. Records may be
+    11 or 12 (判断依据 2), so rows are matched by field and anchor page."""
+    sample = expected['sample']
+    _check_partitions(diffs, sample, expected, profile)
+    pages = {page['page']: page for page in profile['metadata']['pages']}
+    for page, method in expected['page_types'].items():
+        if pages.get(int(page), {}).get('method') != method:
+            diffs.add(sample, f'page {page} type', method,
+                      pages.get(int(page), {}).get('method'))
+    document = expected['document_fields']
+    matched = set()
+    for field, value in document['fields'].items():
+        anchor = document['anchors'][field]
+        index = next((i for i, r in enumerate(profile['records']) if field in r), None)
+        if index is None:
+            diffs.add(sample, f'document field {field}', value, 'missing')
+            continue
+        matched.add(index)
+        if not _value_equal(value, profile['records'][index][field]):
+            diffs.add(sample, f'document field {field} value', value,
+                      profile['records'][index][field])
+        selector = _anchor(profile, index, field)
+        if selector is None or selector.get('page') != anchor['page']:
+            diffs.add(sample, f'document field {field} anchor page',
+                      anchor['page'], selector and selector.get('page'))
+        elif selector['kind'] == 'pdf_text_span':
+            span = _span_text(pages, selector)
+            if str(value) not in span:
+                diffs.add(sample, f'document field {field} anchor text',
+                          f'contains {value!r}', span)
+        else:
+            _check_anchor_value(diffs, sample, selector, str(value),
+                                f'document field {field}', pages, cell_texts)
+    for row in expected['logical_table']['records']:
+        index = next((i for i, r in enumerate(profile['records'])
+                      if str(r.get('line')) == row['fields']['line']), None)
+        if index is None:
+            diffs.add(sample, f'table row {row["fields"]["line"]}',
+                      row['fields'], 'missing')
+            continue
+        matched.add(index)
+        actual = profile['records'][index]
+        for field, value in row['fields'].items():
+            if not _value_equal(value, actual.get(field)):
+                diffs.add(sample, f'row {row["fields"]["line"]} field {field}',
+                          value, actual.get(field))
+            selector = _anchor(profile, index, field)
+            if selector is None or selector.get('page') != row['page']:
+                diffs.add(sample,
+                          f'row {row["fields"]["line"]} field {field} anchor page',
+                          row['page'], selector and selector.get('page'))
+            elif selector is not None:
+                _check_anchor_value(diffs, sample, selector, value,
+                                    f'row {row["fields"]["line"]} field {field}',
+                                    pages, cell_texts)
+    count = expected['record_count']
+    if len(profile['records']) not in {count, count + 1}:
+        diffs.add(sample, 'record_count',
+                  f'{count} or {count + 1} (判断依据 2)', len(profile['records']))
+    for index, record in enumerate(profile['records']):
+        if index in matched:
+            continue
+        if any(field not in document['fields'] for field in record):
+            diffs.add(sample, 'unexpected record (must_not_appear_as_records)',
+                      'only document fields', record)
+    _check_anchor_coverage(diffs, sample, profile)
+
+
+def _compare_mixed_pdf(diffs, expected, profile):
+    """mixed-pages.pdf: text page, failing page (gap) and low-confidence scan
+    page, compared against the with_ocr branch (acceptance runs --ocr-root).
+    The low-confidence page must be completed, its values are soft-checked,
+    and it must carry the intake.low_ocr_confidence issue."""
+    sample = expected['sample']
+    # The with_ocr branch overrides coverage; the page count stays on the root.
+    spec = {**expected, **expected['with_ocr']}
+    _check_partitions(diffs, sample, spec, profile)
+    pages = {page['page']: page for page in profile['metadata']['pages']}
+    for key, found in profile['anchors'].items():
+        for anchor in found:
+            if anchor['selector'].get('page') == 2:
+                diffs.add(sample, 'page 2 must not have records or anchors',
+                          'none', key)
+    first = expected['records'][0]
+    index = next((i for i, r in enumerate(profile['records'])
+                  if r.get('invoice_number') == first['fields']['invoice_number']), None)
+    if index is None:
+        diffs.add(sample, 'page 1 record', first['fields'], 'missing')
+    else:
+        for field, value in first['fields'].items():
+            if not _value_equal(value, profile['records'][index].get(field)):
+                diffs.add(sample, f'page 1 record field {field}', value,
+                          profile['records'][index].get(field))
+            selector = _anchor(profile, index, field)
+            if selector is None or selector.get('page') != 1:
+                diffs.add(sample, f'page 1 record field {field} anchor page',
+                          1, selector and selector.get('page'))
+            elif selector is not None:
+                _check_anchor_value(diffs, sample, selector, value,
+                                    f'page 1 record field {field}', pages, {})
+    page_three = [i for i, r in enumerate(profile['records'])
+                  if any(anchor['selector'].get('page') == 3
+                         for key, found in profile['anchors'].items()
+                         if key.startswith(f'{i}.') for anchor in found)]
+    if not page_three:
+        diffs.add(sample, 'page 3 record', 'values with page 3 anchors',
+                  'no record anchored on page 3')
+    for index in page_three:
+        for field, value in profile['records'][index].items():
+            selector = _anchor(profile, index, field)
+            if value is not None and (selector is None or selector.get('page') != 3):
+                diffs.add(sample, f'page 3 record field {field} anchor page', 3,
+                          selector and selector.get('page'))
+    if len(profile['records']) != expected['record_count_with_ocr']:
+        diffs.add(sample, 'record_count', expected['record_count_with_ocr'],
+                  len(profile['records']))
+    for issue in spec.get('issues_expected', []):
+        if not any(i.get('code') == issue['code'] and i.get('page') == issue['page']
+                   for i in profile['issues']):
+            diffs.add(sample, f'issue {issue["code"]} page {issue["page"]}',
+                      'present', [i.get('code') for i in profile['issues']])
+    _check_anchor_coverage(diffs, sample, profile)
+
+
+def _compare_scan_pdf(diffs, expected, profile):
+    """scan.pdf: a single scanned page whose OCR values appear in the page
+    text and whose record fields carry page 1 anchors (facts only; the
+    semantic values are covered by the retained intake loop below)."""
+    sample = expected['sample']
+    # The with_ocr branch overrides coverage; the page count stays on the root.
+    spec = {**expected, **expected['with_ocr']}
+    _check_partitions(diffs, sample, spec, profile)
+    pages = {page['page']: page for page in profile['metadata']['pages']}
+    for page, method in spec['page_types'].items():
+        if pages.get(int(page), {}).get('method') != method:
+            diffs.add(sample, f'page {page} type', method,
+                      pages.get(int(page), {}).get('method'))
+    for fact in expected['facts']:
+        text = pages.get(1, {}).get('text', '')
+        if not _ocr_contains(text, fact['value']):
+            diffs.add(sample, f'fact {fact["label"]} in page text',
+                      fact['value'], text)
+    if len(profile['records']) != expected['record_count']:
+        diffs.add(sample, 'record_count', expected['record_count'],
+                  len(profile['records']))
+    for index, record in enumerate(profile['records']):
+        for field in record:
+            selector = _anchor(profile, index, field)
+            if selector is None or selector.get('page') != 1:
+                diffs.add(sample, f'record {index} field {field} anchor page',
+                          1, selector and selector.get('page'))
+    _check_anchor_coverage(diffs, sample, profile)
+
+
+def _collect_bbox_texts(project, name, profile):
+    boxes = {}
+    for found in profile['anchors'].values():
+        for anchor in found:
+            selector = anchor['selector']
+            if selector['kind'] == 'pdf_bbox':
+                boxes.setdefault(selector['page'], []).append(selector['bbox'])
+    return _bbox_texts(project, name, boxes)
+
+
+def _compare_sample(diffs, project, name):
+    expected = json.loads((P1_FILES/'expected'/f'{name}.json').read_text())
+    args, request, profile = _upload(project, name, name, P1_FILES/'samples'/name)
+    if profile['source_revision'] != 'sha256:' + expected['sha256']:
+        raise RuntimeError(f'{name}: probe revision does not match the expected sample')
+    if isinstance(request, dict) and request.get('sources'):
+        observed = request['sources'][0]
+        spec = expected.get('with_ocr') or expected
+        if observed.get('coverage') != spec['coverage']:
+            diffs.add(name, 'observed coverage (inference request)',
+                      spec['coverage'], observed.get('coverage'))
+    if expected['kind'] in {'csv', 'tsv', 'json', 'jsonl'}:
+        _compare_flat(diffs, expected, profile)
+    elif expected['kind'] == 'xlsx':
+        _compare_xlsx(diffs, expected, profile)
+    elif name == 'invoice-lines.pdf':
+        _compare_text_pdf(diffs, expected, profile,
+                          _collect_bbox_texts(project, name, profile))
+    elif name == 'mixed-pages.pdf':
+        _compare_mixed_pdf(diffs, expected, profile)
+    else:
+        _compare_scan_pdf(diffs, expected, profile)
+    return {'source_revision': profile['source_revision'],
+            'coverage': profile['coverage'],
+            'completed_partitions': profile['completed_partitions'],
+            'gaps': [(gap['partition'], gap['code']) for gap in profile['gaps']],
+            'records': len(profile['records']),
+            'anchors': len(profile['anchors'])}
 
 
 def verify_scan(project, ocr_root):
@@ -60,6 +514,97 @@ def verify_scan(project, ocr_root):
             'source_revision': source['source_revision'], 'late_proposal': replay}
 
 
+def _preview_values(project, preview_ref):
+    """Read the mapped instance values of a preview straight from the
+    workbench store (the MCP tools only expose counts)."""
+    id, revision = preview_ref.rsplit('@', 1)
+    with sqlite3.connect(project/'.dataagent/db/workbench.sqlite3') as db:
+        body, = db.execute(
+            'SELECT body FROM wb_records WHERE kind=? AND id=? AND revision=?',
+            ('preview', id, int(revision))).fetchone()
+    return json.loads(body)['instances'][0]['values']
+
+
+def verify_invoice(project):
+    """invoice.pdf, the retained assertion M1-04 depends on: the original value
+    126000 converts to 1260 through a minor_to_major mapping."""
+    args, request, profile = _upload(project, 'invoice.pdf', 'invoice', INTAKE/'invoice.pdf')
+    expected = {'number': 'INV-001', 'amount_minor': '126000', 'currency': 'CNY'}
+    assert profile['coverage'] == 'full' and profile['records'] == [expected], profile
+    proposal = {**request['proposal_template'], 'bindings': {
+        'number': {'source_field': 'number'},
+        'amount': {'source_field': 'amount_minor', 'transform': 'minor_to_major'},
+        'currency': {'source_field': 'currency'},
+    }}
+    preview = call_workbench(project, 'intake_propose', {
+        **args, 'expected_revision': request['expected_revision'], 'proposal': proposal,
+    })
+    assert preview['instance_count'] == 1 and preview['issues'] == []
+    values = _preview_values(project, preview['preview_ref'])
+    assert (values.get('number'), str(values.get('amount')), values.get('currency')) \
+        == ('INV-001', '1260', 'CNY'), values
+    call_workbench(project, 'mapping_apply', {
+        **args, 'expected_revision': preview['session_revision'],
+        'decision': {'preview_ref': preview['preview_ref'], 'target_scope': 'mapping'},
+    })
+    status = call_workbench(project, 'intake_status', args)
+    assert status['phase'] == 'saved' and status['selected_versions']['release']
+    return {'observed': expected, 'mapped': values, 'session': status}
+
+
+def verify_mixed(project):
+    """mixed.pdf, the retained partial-coverage assertion: pages 1 and 3 are
+    completed while page 2 stays a gap."""
+    _args, _request, profile = _upload(project, 'mixed.pdf', 'mixed', INTAKE/'mixed.pdf')
+    assert profile['coverage'] == 'partial', profile['coverage']
+    assert profile['completed_partitions'] == [1, 3], profile['completed_partitions']
+    gaps = [gap['partition'] for gap in profile['gaps']]
+    assert gaps == [2], gaps
+    return {'completed': profile['completed_partitions'], 'gaps': gaps}
+
+
+def verify_xlsx(project):
+    """invoices.xlsx, the retained sparse-sheet assertion: the INV-002 amount
+    evidence sits at B4 (the empty third row shifts it down)."""
+    _args, _request, profile = _upload(project, 'invoices.xlsx', 'xlsx',
+                                       INTAKE/'invoices.xlsx')
+    assert profile['coverage'] == 'full', profile['coverage']
+    index = next(i for i, r in enumerate(profile['records'])
+                 if r.get('number') == 'INV-002')
+    selector = _anchor(profile, index, 'amount_minor')
+    assert selector is not None and selector['kind'] == 'excel_cell' \
+        and selector['range'] == 'B4', selector
+    assert profile['records'][index]['amount_minor'] == 90000
+    return {'second_amount_cell': selector['range']}
+
+
 def apply(report, project, args, context):
     report['scan'] = verify_scan(project, args.ocr_root)
+    report['legacy_fixtures'] = {'invoice': verify_invoice(project),
+                                'mixed': verify_mixed(project),
+                                'xlsx': verify_xlsx(project)}
+    diffs = Diffs()
+    report['p1_files'] = {}
+    for name in SAMPLE_ORDER:
+        report['p1_files'][name] = _compare_sample(diffs, project, name)
+    report['p1_files']['mismatches'] = diffs.items
+    if diffs:
+        args.output.mkdir(parents=True, exist_ok=True)
+        (args.output/'files-diffs.json').write_text(
+            json.dumps(diffs.items, ensure_ascii=False, indent=2))
+        # Evidence for the samples that did match, for the review that
+        # adjudicates the remaining conflicts.
+        report['status'] = 'mismatched'
+        (args.output/'files-report-partial.json').write_text(
+            json.dumps(report, ensure_ascii=False, indent=2))
+        lines = [f'{item["sample"]} | {item["check"]} | expected {item["expected"]!r} '
+                 f'| actual {item["actual"]!r}' for item in diffs.items]
+        notes = [f'[{sample}] {CONFLICT_NOTES[sample]}' for sample in
+                 dict.fromkeys(item['sample'] for item in diffs.items
+                               if item['sample'] in CONFLICT_NOTES)]
+        raise RuntimeError(f'p1-files 比对失败，{len(lines)} 处差异（样本 | 检查项 | '
+                           '期望 | 实际）：\n' + '\n'.join(lines)
+                           + ('\n与期望文件假设的冲突（详见 p1-files/README.md，'
+                              '修复超出本卡文件范围，留审核方裁定）：\n' + '\n'.join(notes)
+                              if notes else ''))
     remove_not_verified(report, 'file processing')
