@@ -1,0 +1,120 @@
+{
+  "case": "T25 跨源样本组与金标（PDF + SQLite + REST）",
+  "author": "独立编写的子 agent，人工推理得出，未运行 DataAgent 的 probe/intake/verify",
+  "written_on": "2026-11-18",
+  "basis": {
+    "ontology": "procurement@1（PurchaseDocument；properties: number, amount, currency, issuer；identity_fields: [number]）",
+    "ontology_file": "packages/capabilities/dataagent-workbench/src/dataagent_workbench/ontologies/procurement.json",
+    "read_at": "dataagent@d2b883a（feat/p1-intake），只作文档阅读",
+    "identity_rule": "同一工作区内 number 相同即同一对象键；number 缺失或为空的记录不得与任何对象合并（包括按金额、开票方、日期都相同的情况）",
+    "value_comparison": "amount 按十进制数值比较（1580.5 = 1580.50 = \"1580.50\"），单位一律为元；issuer、currency 按字符串精确比较；posted_on 不在本体里，只作证据，不计冲突"
+  },
+
+  "sources": {
+    "pdf":    {"file": "samples/invoices.pdf", "kind": "file", "record_unit": "每页一条记录", "record_count": 9, "keyed": 8, "keyless": 1},
+    "sqlite": {"file": "samples/ledger.db", "kind": "sqlite", "record_unit": "invoice 表一行", "record_count": 8, "keyed": 7, "keyless": 1},
+    "rest":   {"file": "samples/rest/page1.json..page3.json", "kind": "rest", "record_unit": "/items 下一项", "record_count": 10, "keyed": 9, "keyless": 1, "pages": 3, "version": "t25-fixture-1"}
+  },
+
+  "expected": {
+    "total_source_records": 27,
+    "keyed_object_count": 10,
+    "keyless_candidate_count": 3,
+    "instance_count_including_keyless_candidates": 13,
+    "conflict_object_count": 4,
+    "conflict_field_count": 5,
+    "conflict_object_numbers": ["INV-2026-104", "INV-2026-105", "INV-2026-107", "INV-2026-110"],
+    "blocked_object_numbers": ["INV-2026-104", "INV-2026-105", "INV-2026-107", "INV-2026-110"],
+    "conflict_free_object_numbers": ["INV-2026-101", "INV-2026-102", "INV-2026-103", "INV-2026-106", "INV-2026-108", "INV-2026-109"],
+    "save_must_be_blocked": true,
+    "save_blocking_reasons": ["冲突字段（5 处，见 conflicts）", "缺键记录未定身份（3 条，见 keyless_records）"]
+  },
+
+  "objects": [
+    {"number": "INV-2026-101", "case": "三源一致",
+     "records": [{"source": "pdf", "page": 1}, {"source": "sqlite", "table": "invoice", "id": 1}, {"source": "rest", "page": 1, "pointer": "/items/0"}],
+     "values": {"amount": "1260.00", "currency": "CNY", "issuer": "Huaxin Office Supplies Co Ltd"}, "conflicts": []},
+    {"number": "INV-2026-102", "case": "三源一致（金额写法不同：PDF 1580.50、SQLite REAL 1580.5、REST \"1580.50\"）",
+     "records": [{"source": "pdf", "page": 2}, {"source": "sqlite", "table": "invoice", "id": 2}, {"source": "rest", "page": 1, "pointer": "/items/1"}],
+     "values": {"amount": "1580.50", "currency": "CNY", "issuer": "Yunfan Software Co Ltd"}, "conflicts": []},
+    {"number": "INV-2026-103", "case": "三源一致",
+     "records": [{"source": "pdf", "page": 3}, {"source": "sqlite", "table": "invoice", "id": 3}, {"source": "rest", "page": 1, "pointer": "/items/2"}],
+     "values": {"amount": "3200.00", "currency": "CNY", "issuer": "Qingshan Printing Co Ltd"}, "conflicts": []},
+    {"number": "INV-2026-104", "case": "金额冲突（SQLite 多录 80 元）",
+     "records": [{"source": "pdf", "page": 4}, {"source": "sqlite", "table": "invoice", "id": 4}, {"source": "rest", "page": 1, "pointer": "/items/3"}],
+     "values": {"amount": null, "currency": "CNY", "issuer": "Beiming Logistics Co Ltd"}, "unresolved": ["amount"], "conflicts": ["amount"]},
+    {"number": "INV-2026-105", "case": "金额冲突（REST 数字颠倒 2150 → 2510）",
+     "records": [{"source": "pdf", "page": 5}, {"source": "sqlite", "table": "invoice", "id": 5}, {"source": "rest", "page": 2, "pointer": "/items/0"}],
+     "values": {"amount": null, "currency": "CNY", "issuer": "Yunfan Software Co Ltd"}, "unresolved": ["amount"], "conflicts": ["amount"]},
+    {"number": "INV-2026-106", "case": "两源一致（SQLite + REST，PDF 无此单）",
+     "records": [{"source": "sqlite", "table": "invoice", "id": 6}, {"source": "rest", "page": 2, "pointer": "/items/1"}],
+     "values": {"amount": "760.00", "currency": "CNY", "issuer": "Qingshan Printing Co Ltd"}, "conflicts": []},
+    {"number": "INV-2026-107", "case": "同号异对象：PDF 是华信 10-15 的单，REST 是北明 09-02 的单；金额恰好都是 5400.00",
+     "records": [{"source": "pdf", "page": 6}, {"source": "rest", "page": 2, "pointer": "/items/3"}],
+     "values": {"amount": "5400.00", "currency": "CNY", "issuer": null}, "unresolved": ["issuer"], "conflicts": ["issuer"],
+     "same_number_different_object": true,
+     "evidence_only_differences": {"posted_on": {"pdf": "2026-10-15", "rest": "2026-09-02"}}},
+    {"number": "INV-2026-108", "case": "单源（仅 PDF）",
+     "records": [{"source": "pdf", "page": 8}],
+     "values": {"amount": "690.00", "currency": "CNY", "issuer": "Huaxin Office Supplies Co Ltd"}, "conflicts": []},
+    {"number": "INV-2026-109", "case": "单源（仅 REST，第 3 页，验证翻页读全）",
+     "records": [{"source": "rest", "page": 3, "pointer": "/items/0"}],
+     "values": {"amount": "12000.00", "currency": "CNY", "issuer": "Beiming Logistics Co Ltd"}, "conflicts": []},
+    {"number": "INV-2026-110", "case": "同号异对象：PDF 与 SQLite 是青山 10-20 的 880 元单，REST 是华信 10-21 的 2300 元单",
+     "records": [{"source": "pdf", "page": 9}, {"source": "sqlite", "table": "invoice", "id": 8}, {"source": "rest", "page": 3, "pointer": "/items/1"}],
+     "values": {"amount": null, "currency": "CNY", "issuer": null}, "unresolved": ["amount", "issuer"], "conflicts": ["amount", "issuer"],
+     "same_number_different_object": true,
+     "evidence_only_differences": {"posted_on": {"pdf": "2026-10-20", "sqlite": "2026-10-20", "rest": "2026-10-21"}}}
+  ],
+
+  "conflicts": [
+    {"number": "INV-2026-104", "field": "amount", "values": {"pdf": "4800.00", "sqlite": "4880", "rest": "4800.00"}, "odd_one_out": "sqlite"},
+    {"number": "INV-2026-105", "field": "amount", "values": {"pdf": "2150.00", "sqlite": "2150", "rest": "2510.00"}, "odd_one_out": "rest"},
+    {"number": "INV-2026-107", "field": "issuer", "values": {"pdf": "Huaxin Office Supplies Co Ltd", "rest": "Beiming Logistics Co Ltd"}, "odd_one_out": null},
+    {"number": "INV-2026-110", "field": "amount", "values": {"pdf": "880.00", "sqlite": "880", "rest": "2300.00"}, "odd_one_out": "rest"},
+    {"number": "INV-2026-110", "field": "issuer", "values": {"pdf": "Qingshan Printing Co Ltd", "sqlite": "Qingshan Printing Co Ltd", "rest": "Huaxin Office Supplies Co Ltd"}, "odd_one_out": "rest"}
+  ],
+
+  "keyless_records": [
+    {"source": "pdf", "page": 7, "missing": "number（页面没有 number: 行，只有 \"Draft - invoice number not yet assigned\"）",
+     "values": {"amount": "450.00", "currency": "CNY", "issuer": "Huaxin Office Supplies Co Ltd", "posted_on": "2026-10-30"}},
+    {"source": "sqlite", "table": "invoice", "id": 7, "missing": "number 为 NULL",
+     "values": {"amount": "1260", "currency": "CNY", "issuer": "Huaxin Office Supplies Co Ltd", "posted_on": "2026-10-08"},
+     "trap": "除 number 外与 INV-2026-101 完全相同，不得并入 INV-2026-101"},
+    {"source": "rest", "page": 2, "pointer": "/items/2", "missing": "code 键不存在（REST 来源的 number 字段是 /code）",
+     "values": {"amount": "300.00", "currency": "CNY", "issuer": "Beiming Logistics Co Ltd", "posted_on": "2026-11-02"}}
+  ],
+  "keyless_reporting": {
+    "must": [
+      "每条缺键记录单独报告，带来源和位置（PDF 页号 / SQLite 行 id / REST 页号与 JSON Pointer）",
+      "报告原因是身份无法确定（number 缺失），不是转换失败",
+      "不并入任何有键对象，不计入 keyed_object_count，不静默丢弃",
+      "缺键记录之间也不互相合并（3 条记录 → 3 个待定候选）"
+    ],
+    "acceptable_forms": ["以候选对象出现并标未定身份（实例数 13 = 10 + 3）", "只出现在问题列表、不进实例列表（实例数 10）"]
+  },
+
+  "non_conflicts_traps": [
+    {"number": "INV-2026-102", "why": "1580.50、1580.5、\"1580.50\" 数值相同，按十进制比较不算冲突"},
+    {"number": "INV-2026-101", "why": "整数 1260（SQLite INTEGER）与 \"1260.00\" 相同，不算冲突"},
+    {"number": "INV-2026-107", "field": "amount", "why": "两条记录金额都是 5400.00；冲突只在 issuer，不在 amount"},
+    {"number": "INV-2026-106/108/109", "why": "只出现在一或两个来源，缺来源不算冲突"}
+  ],
+
+  "auth_expectation": {
+    "rest_requires": "Authorization: Bearer <令牌>，令牌按逻辑名注入，样本里不含任何令牌值",
+    "without_token": "REST 来源探查失败（401），不产生记录，不能被当作空来源；本金标其余数字都以带令牌读全 3 页为前提"
+  },
+
+  "judgements": [
+    {"id": "J1", "topic": "身份只看 number", "判断依据": "procurement.json 的 identity_fields 只有 number，且 number 的说明是「在工作区采购资料范围内唯一的单据编号」。本体没有用 issuer 或日期参与身份，所以系统不可能把同号记录拆成两个对象。同号异对象（107、110）只能建模为「一个对象键 + issuer（及 110 的 amount）冲突 + 阻断保存」，交给人判断。期望行为是暴露冲突，不是自动拆分，也不是静默合并。"},
+    {"id": "J2", "topic": "同号异对象的识别依赖绑定 issuer", "判断依据": "INV-2026-107 两条记录金额相同，唯一能进本体的差异是 issuer（posted_on 不在本体）。所以 sources 阶段三个来源都必须绑定 issuer；不绑 issuer 时 107 会被静默合并，冲突数会变成 3 处、冲突对象 3 个，这是金标认定的错误结果。"},
+    {"id": "J3", "topic": "冲突计数口径", "判断依据": "冲突按（对象, 字段）去重计数，共 5 处、4 个对象。同一字段在三个来源里出现两种值（如 104 的 4800/4880/4800）算 1 处冲突，不按来源两两比较或按事件次数计。如果实现按问题事件计数，比对前需按（对象, 字段）去重。"},
+    {"id": "J4", "topic": "posted_on 不计冲突", "判断依据": "posted_on 不是 procurement@1 的属性，无法绑定，只能作为未映射字段留作证据。107、110 的日期差异列在 evidence_only_differences，用于人工判断同号异对象，不进 conflict_field_count。若以后本体加了 posted_on，冲突数会变成 7 处（107、110 各加 1），对象数不变。"},
+    {"id": "J5", "topic": "阻断范围", "判断依据": "卡片要求「冲突对象保存被拦」。金标要求：104、105、107、110 不能以任何值被保存为正式对象，保存请求返回阻断问题并点名这些对象的冲突字段。整批阻断（因为还有冲突或缺键，整份预览都不能保存）也算满足；只放行无冲突对象而拦下冲突对象，同样满足。不满足的情况：任何冲突对象被保存，或冲突值被任选一个写入。"},
+    {"id": "J6", "topic": "缺键记录不按其他字段猜身份", "判断依据": "SQLite id=7 的开票方、日期、金额都和 INV-2026-101 相同，故意做成陷阱。按本体身份规则，缺 number 就是未定身份，不得并入 101；101 仍只有 3 条来源记录。"},
+    {"id": "J7", "topic": "对象数口径", "判断依据": "主口径是 keyed_object_count = 10（10 个不同单据号）。如果实现把缺键记录作为候选对象放进实例列表，则实例数为 13；两种口径都要能从报告里分开读出，比对时用 10 比有键对象、3 比缺键记录。"},
+    {"id": "J8", "topic": "金额单位", "判断依据": "三源金额都已是元：PDF 文本 \"1260.00\"、SQLite NUMERIC（整数或 REAL）、REST 十进制字符串。三源都用十进制转换，不用「分 → 元」。若误用分转元，所有金额会缩小 100 倍，跨源全部冲突，冲突数会远超 5。"},
+    {"id": "J9", "topic": "currency", "判断依据": "所有记录都是 CNY，没有设计币种冲突；currency 冲突数应为 0。"}
+  ]
+}
