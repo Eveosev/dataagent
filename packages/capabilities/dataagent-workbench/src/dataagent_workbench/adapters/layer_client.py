@@ -20,20 +20,18 @@ class LayerClient:
         validate_forwarded(selection.options, 'source.options')
         validate_forwarded(selection.requested_scope, 'source.scope')
         validate_forwarded(operation.get('credential_options') or {}, 'credential_options')
-        refs = operation.get('credential_refs')
-        if isinstance(refs, dict) and any(
-            isinstance(ref, str) and ref.startswith('env:') for ref in refs.values()
-        ):
-            raise ValueError(
-                'env: credentials require the trusted host to inject the variable '
-                'directly into the probe process; use file: or keychain:'
-            )
         workspace=Path(workspace).resolve()
-        # The workbench never reads a credential value. file:/keychain: names
-        # are resolved by the child; env: names are rejected above because the
-        # host cannot yet inject them without exposing the value to this process.
-        env={name: os.environ[name] for name in ('PATH', 'HOME', 'TMPDIR', 'LANG', 'TZ')
-             if name in os.environ}
+        # The workbench never reads a credential value. For ``env:`` names the
+        # child inherits the environment and resolves the value itself; other
+        # schemes are resolved by the child from the logical name.
+        refs = operation.get('credential_refs')
+        env_refs = isinstance(refs, dict) and any(
+            isinstance(ref, str) and ref.startswith('env:') for ref in refs.values()
+        )
+        env = None if env_refs else {
+            name: os.environ[name] for name in ('PATH', 'HOME', 'TMPDIR', 'LANG', 'TZ')
+            if name in os.environ
+        }
         # The child receives logical names only; it resolves them inside its own process.
         payload={'source':selection.model_dump(mode='json'),'context':ctx.model_dump(mode='json'),**operation}
         try:

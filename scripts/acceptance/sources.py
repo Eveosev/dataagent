@@ -19,7 +19,7 @@ SENTINEL = 'T14-SENTINEL-5f0c9a7d2b8e4c61'
 WRONG_TOKEN = 'T14-WRONG-2a7e4c9b6d1f8035'
 _CREDENTIAL_KEYS = {
     'token', 'password', 'secret', 'credentials', 'credential_refs',
-    'credential_options', 'authorization',
+    'credential_options', 'credential_binding_ref', 'authorization',
 }
 
 
