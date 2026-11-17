@@ -39,6 +39,7 @@ from dataagent_contracts.core import (
 
 from dataagent_runtime.adapters.local_content import canonical_bytes, digest_bytes
 from dataagent_runtime.errors import NeedsInputError
+from dataagent_runtime.policy.context import is_legacy_context
 
 EnforcementMode = Literal["off", "warn", "enforce"]
 
@@ -142,9 +143,16 @@ def access_recheck(
     *,
     config: EnforcementConfig = EnforcementConfig(),
     at: datetime | None = None,
+    legacy: bool | None = None,
 ) -> RecheckOutcome:
-    """Recheck ``authorization_ref`` against the resources this call reads."""
+    """Recheck ``authorization_ref`` against the resources this call reads.
 
+    ``legacy=True`` restores the old ``None``-subject skip for the
+    one-release rollback; ``invoke`` passes it from the resolved source.
+    """
+
+    if legacy is None:
+        legacy = is_legacy_context()
     if config.mode == "off":
         return RecheckOutcome(ok=True)
     decision = resolver(ctx.authorization_ref)
@@ -170,14 +178,29 @@ def access_recheck(
             f"purpose mismatch: call purpose {ctx.purpose!r} != decision purpose "
             f"{decision.purpose!r}"
         )
-    if ctx.subject_ref is None or not str(ctx.subject_ref).strip():
+    if ctx.subject_ref is None:
         # r41 X1: a missing subject used to skip the comparison entirely
-        # (fail-open). The resolved context always carries a subject
-        # (host, environment or local-owner); an empty one means a caller
-        # bypassed resolution, so fail closed.
-        reasons.append(
-            "CallContext.subject_ref is missing; the trusted host must fix the subject"
-        )
+        # (fail-open). The resolved context always carries a subject (host,
+        # environment or local-owner); an empty one means a caller bypassed
+        # resolution, so fail closed. The legacy switch restores the old
+        # ``None`` skip for the one-release rollback.
+        if not legacy:
+            reasons.append(
+                "CallContext.subject_ref is missing; the trusted host must fix the subject"
+            )
+    elif not str(ctx.subject_ref).strip():
+        if legacy:
+            # Old code only skipped ``None``; an empty string was compared and
+            # rejected as a mismatch.
+            if decision.subject_ref != ctx.subject_ref:
+                reasons.append(
+                    f"subject mismatch: executing subject {ctx.subject_ref!r} != "
+                    f"decision subject {decision.subject_ref!r}"
+                )
+        else:
+            reasons.append(
+                "CallContext.subject_ref is missing; the trusted host must fix the subject"
+            )
     elif ctx.subject_ref != decision.subject_ref:
         reasons.append(
             f"subject mismatch: executing subject {ctx.subject_ref!r} != decision subject "

@@ -64,6 +64,7 @@ __all__ = [
     "LEGACY",
     "LOCAL_PURPOSE",
     "ContextResolutionError",
+    "is_legacy_context",
     "resolve_context",
     "resolved_context",
     "verify_resolved",
@@ -252,6 +253,23 @@ def _resolver_mode(
     return "v1"
 
 
+def is_legacy_context(
+    *,
+    runtime: Any = None,
+    environ: Mapping[str, str] | None = None,
+    legacy: bool | None = None,
+) -> bool:
+    """Whether the one-release rollback switch is active.
+
+    Used by the legacy-only registration and enforcement branches, so the
+    switch covers the whole old call path and not just resolution.
+    """
+
+    return _resolver_mode(
+        runtime, os.environ if environ is None else environ, legacy
+    ) == LEGACY
+
+
 def _workspace_root(
     runtime: Any,
     environ: Mapping[str, str],
@@ -313,6 +331,7 @@ def _legacy(
     hint: dict[str, Any],
     runtime: Any,
     environ: Mapping[str, str],
+    allow_synthesis: bool,
 ) -> ResolvedContext:
     """The one-release rollback path: old precedence and old scope spelling.
 
@@ -330,7 +349,7 @@ def _legacy(
         base = dict(host_context)
     elif hint:
         base = dict(hint)
-    elif runtime is not None:
+    elif runtime is not None and allow_synthesis:
         # The unified CLI never took a context argument: it built one from
         # the host wiring. Keep that shape on the rollback path only.
         base = {
@@ -391,6 +410,7 @@ def resolve_context(
     environ: Mapping[str, str] | None = None,
     workspace_root: str | os.PathLike[str] | None = None,
     legacy: bool | None = None,
+    allow_legacy_synthesis: bool = False,
 ) -> ResolvedContext:
     """Resolve the single trusted ``CallContext`` for a call.
 
@@ -398,6 +418,9 @@ def resolve_context(
     the caller-writable ``arguments.context`` hint (a mapping or a
     ``CallContext``). ``runtime`` supplies explicitly configured host
     authority and the workspace root. The result records which channel won.
+    ``allow_legacy_synthesis`` is set only by the legacy unified CLI, which
+    historically built a context when none was supplied; every other entry
+    keeps the old "context is required" error under the rollback switch.
     """
 
     environment = os.environ if environ is None else environ
@@ -412,6 +435,7 @@ def resolve_context(
             hint=hint,
             runtime=runtime,
             environ=environment,
+            allow_synthesis=allow_legacy_synthesis,
         )
 
     root = _workspace_root(runtime, environment, workspace_root)
@@ -422,9 +446,6 @@ def resolve_context(
     env_purpose = _env(environment, HOST_PURPOSE_ENV)
     env_session = _env(environment, HOST_SESSION_ENV)
     env_turn_raw = _env(environment, HOST_TURN_ENV)
-    env_turn = (
-        _call_meta_value(env_turn_raw, field="turn") if env_turn_raw is not None else None
-    )
 
     authoritative = bool(host_context) or bool(host_meta_values)
     session_id = _pick(
@@ -438,12 +459,15 @@ def resolve_context(
         host_context.get("kernel_call_id"),
         _runtime_value(runtime, "host_call_id"),
     )
+    # Select the winning source before validating it: a malformed lower
+    # priority environment value must not veto a valid host ``_meta`` turn.
     turn = _pick(
         host_meta_values.get("turn"),
         _runtime_value(runtime, "host_turn"),
-        env_turn,
+        env_turn_raw,
         0,
     )
+    turn = _call_meta_value(turn, field="turn")
     if session_id is not None:
         session_id = _call_meta_value(session_id, field="session_id")
     if call_id is not None:
@@ -530,7 +554,7 @@ def resolve_context(
             _runtime_value(runtime, "host_call_id"),
             _runtime_value(runtime, "host_turn"),
             env_session,
-            env_turn,
+            env_turn_raw,
         )
     ):
         source = ContextSource.HOST_ENV

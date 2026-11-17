@@ -436,7 +436,7 @@ def _build_context(runtime: Any, parsed: Parsed) -> ResolvedContext:
     # -> local-owner. The old argv-only context path is reached with
     # DATAAGENT_CONTEXT_RESOLVER=legacy.
     try:
-        resolved = resolve_context(runtime=runtime)
+        resolved = resolve_context(runtime=runtime, allow_legacy_synthesis=True)
     except ContextResolutionError as exc:
         raise _ContextError(str(exc)) from exc
     if parsed.authorize:

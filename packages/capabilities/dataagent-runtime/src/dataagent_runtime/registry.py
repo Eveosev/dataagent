@@ -18,6 +18,8 @@ from pydantic import BaseModel
 
 from dataagent_contracts.core import VersionedRef
 
+from dataagent_runtime.policy.context import is_legacy_context
+
 IMPLEMENTATION_REF = "dataagent-runtime/0.1.0"
 
 DEFAULT_CATALOG_ENV = "DATAAGENT_CATALOG_SNAPSHOT"
@@ -148,14 +150,22 @@ def validate_resource_fields(
     operation_name: str,
     input_model: Type[BaseModel],
     resource_fields: tuple[str, ...],
+    *,
+    legacy: bool | None = None,
 ) -> None:
     """Reject resource-field declarations the access recheck cannot verify.
 
     Runs at registration (``operation`` / ``register``), so a typo or an
     unusable field type fails the process at startup instead of silently
-    skipping the DA12.1 recheck on every call (S0 review X2).
+    skipping the DA12.1 recheck on every call (S0 review X2). Under the
+    one-release ``legacy`` switch the old permissive registration is kept,
+    so existing packages can roll back without changing their declarations.
     """
 
+    if legacy is None:
+        legacy = is_legacy_context()
+    if legacy:
+        return
     seen: set[str] = set()
     for name in resource_fields:
         if not isinstance(name, str) or not name:

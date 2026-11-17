@@ -61,10 +61,11 @@ class Runtime:
     # (DATAAGENT_HOST_SUBJECT_REF / DATAAGENT_HOST_PURPOSE).
     host_subject_ref: str | None = None
     host_purpose: str | None = None
-    # Host call metadata, same names as the iface ``CallMeta``. Read from the
-    # Kernel tool-broker environment (``AGENTCPM_TOOL_BROKER_SESSION`` /
-    # ``AGENTCPM_TOOL_BROKER_TURN``) unless the composition passes them. The
-    # MCP ``_meta`` channel is resolved per call, not stored on the runtime.
+    # Host call metadata, same names as the iface ``CallMeta``. The session
+    # id is read from the Kernel tool-broker environment unless explicitly
+    # passed; the turn is resolved per call so ``_meta.turn`` can outrank a
+    # malformed environment value. The MCP ``_meta`` channel is resolved per
+    # call, not stored on the runtime.
     host_session_id: str | None = None
     host_call_id: str | None = None
     host_turn: int | None = None
@@ -125,7 +126,11 @@ class Runtime:
 
         from dataagent_runtime.policy.context import ContextResolutionError
 
-        turn = host_turn if host_turn is not None else _env_turn()
+        # The environment turn is deliberately not parsed here: it is the
+        # lowest-priority metadata source, so a malformed value must not
+        # abort composition when a per-call ``_meta.turn`` (or an explicit
+        # host_turn) wins. The resolver validates the selected value.
+        turn = host_turn
         if turn is not None and (
             isinstance(turn, bool)
             or not isinstance(turn, int)
@@ -176,32 +181,6 @@ class Runtime:
             ocr_engine=ocr_engine,
             traces=traces,
         )
-
-
-def _env_turn() -> int | None:
-    """``AGENTCPM_TOOL_BROKER_TURN`` as the iface ``u64`` turn, or ``None``.
-
-    A malformed value fails the runtime composition instead of silently
-    downgrading the call to a local turn: the host's metadata is either
-    usable or it is an environment error.
-    """
-
-    from dataagent_runtime.policy.context import ContextResolutionError
-
-    raw = os.environ.get("AGENTCPM_TOOL_BROKER_TURN")
-    if raw is None or not str(raw).strip():
-        return None
-    text = str(raw).strip()
-    if not text.isdigit():
-        raise ContextResolutionError(
-            "AGENTCPM_TOOL_BROKER_TURN must be an unsigned integer"
-        )
-    turn = int(text)
-    if turn > 2**64 - 1:
-        raise ContextResolutionError(
-            "AGENTCPM_TOOL_BROKER_TURN must be an unsigned integer"
-        )
-    return turn
 
 
 _DEFAULT: Runtime | None = None

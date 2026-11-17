@@ -516,6 +516,140 @@ def test_legacy_without_context_still_requires_it(ops):
         resolve_context(environ={"DATAAGENT_CONTEXT_RESOLVER": "legacy"})
 
 
+def test_legacy_registration_accepts_old_str_and_dict(monkeypatch, tmp_path):
+    """The rollback switch also restores the old permissive registration."""
+
+    monkeypatch.setenv("DATAAGENT_CONTEXT_RESOLVER", "legacy")
+    reset_registry()
+    try:
+
+        @operation(
+            "T11A.LEGACY.STR",
+            input_model=StrInput,
+            output_model=ReadOutput,
+            resource_fields=("source",),
+        )
+        def legacy_str(input_obj, ctx, runtime):  # noqa: ANN001
+            return ReadOutput(value=input_obj.source)
+
+        @operation(
+            "T11A.LEGACY.DICT",
+            input_model=DictInput,
+            output_model=ReadOutput,
+            resource_fields=("sources",),
+        )
+        def legacy_dict(input_obj, ctx, runtime):  # noqa: ANN001
+            return ReadOutput(value=",".join(input_obj.sources))
+
+        @operation(
+            "T11A.LEGACY.TYPO",
+            input_model=StrInput,
+            output_model=ReadOutput,
+            resource_fields=("sourcee",),
+        )
+        def legacy_typo(input_obj, ctx, runtime):  # noqa: ANN001
+            return ReadOutput(value=input_obj.source)
+
+        assert get_spec("legacy_typo") is not None
+
+        rt = _runtime(tmp_path)
+        rt.decisions.save_access(_decision(subject="user:admin", purpose="exfil"))
+        ctx = _forged_context()
+        first = shared_invoke(
+            "legacy_str",
+            {"source": "table:secret@r1"},
+            ctx,
+            runtime=rt,
+            resolver=rt.decisions.get_access,
+        )
+        second = shared_invoke(
+            "legacy_dict",
+            {"sources": {"a": "table:secret@r1"}},
+            ctx,
+            runtime=rt,
+            resolver=rt.decisions.get_access,
+        )
+        assert first.status == "ok", first.issues
+        assert second.status == "ok", second.issues
+    finally:
+        reset_registry()
+
+
+def test_legacy_direct_invoke_without_context_is_invalid(ops, tmp_path, monkeypatch):
+    """Old direct ``invoke`` did not synthesize a unified-CLI context."""
+
+    monkeypatch.setenv("DATAAGENT_CONTEXT_RESOLVER", "legacy")
+    rt = _runtime(tmp_path)
+    for context in (None, {}):
+        result = shared_invoke("t11a_whoami", {}, context, runtime=rt)
+        assert result.status == "failed"
+        assert result.issues[0].code == "invalid_input"
+        assert "CallContext is required" in result.issues[0].message
+
+
+def test_legacy_missing_subject_restores_old_skip(ops, tmp_path, monkeypatch):
+    """Old access_recheck skipped a ``None`` subject; v1 fails closed."""
+
+    monkeypatch.setenv("DATAAGENT_CONTEXT_RESOLVER", "legacy")
+    rt = _runtime(tmp_path)
+    rt.decisions.save_access(_decision(subject="user:bob", purpose="report"))
+    ctx = _forged_context(subject_ref=None, purpose="report")
+
+    old = access_recheck(
+        ctx,
+        lambda ref: _decision(subject="user:bob", purpose="report"),
+        [RESOURCE],
+        legacy=False,
+    )
+    # Explicit v1: the new fail-closed rule still applies.
+    assert not old.ok
+
+    legacy = access_recheck(
+        ctx,
+        lambda ref: _decision(subject="user:bob", purpose="report"),
+        [RESOURCE],
+        legacy=True,
+    )
+    assert legacy.ok
+    result = shared_invoke(
+        "t11a_read",
+        {"source": "table:secret@r1"},
+        ctx,
+        runtime=rt,
+        resolver=rt.decisions.get_access,
+    )
+    assert result.status == "ok", result.issues
+
+
+@pytest.mark.parametrize("revision", ["", "bad@rev"])
+def test_x2_custom_asset_conversion_error_is_invalid_input(
+    ops, tmp_path, revision
+):
+    """A custom asset shape can pass registration but fail VersionedRef validation."""
+
+    @operation(
+        "T11A.X2.13",
+        input_model=CustomAssetInput,
+        output_model=ReadOutput,
+        resource_fields=("source",),
+    )
+    def x2_custom_asset(input_obj, ctx, runtime):  # noqa: ANN001
+        return ReadOutput(value=input_obj.source.asset.id)
+
+    rt = _runtime(tmp_path)
+    rt.decisions.save_access(_decision())
+    result = shared_invoke(
+        "x2_custom_asset",
+        {"source": {"asset": {"id": "table:secret", "revision": revision}}},
+        _forged_context(subject_ref="user:alice", purpose="report"),
+        runtime=rt,
+        resolver=rt.decisions.get_access,
+    )
+    assert result.status == "failed"
+    assert result.issues[0].code == "invalid_input"
+    assert "cannot be converted" in result.issues[0].message
+
+
 def test_x1_legacy_nested_host_context_does_not_merge_arguments(ops):
     """Old ``_context`` ignored arguments entirely when ``_meta.context`` existed."""
 
@@ -584,10 +718,19 @@ def test_x1_legacy_unified_context_is_synthesized(ops, tmp_path):
     resolved = resolve_context(
         runtime=_runtime(tmp_path),
         environ={"DATAAGENT_CONTEXT_RESOLVER": "legacy"},
+        allow_legacy_synthesis=True,
     )
     assert resolved.source is ContextSource.LEGACY
     assert resolved.context.scope_ref == "tenant:local"
     assert resolved.context.authorization_ref == "cli:unauthorized"
+
+
+def test_legacy_resolver_without_context_does_not_synthesize(ops, tmp_path):
+    with pytest.raises(ContextResolutionError, match="CallContext is required"):
+        resolve_context(
+            runtime=_runtime(tmp_path),
+            environ={"DATAAGENT_CONTEXT_RESOLVER": "legacy"},
+        )
 
 
 def test_x1_legacy_invoke_keeps_the_old_scope(ops, tmp_path):
@@ -609,6 +752,39 @@ def test_x1_turn_must_be_an_unsigned_integer(ops, tmp_path):
     for bad in (True, 1.5, "-1", "1.0"):
         with pytest.raises(ContextResolutionError, match="unsigned integer"):
             resolve_context(host_meta={"turn": bad}, runtime=_runtime(tmp_path), environ={})
+
+
+def test_x1_meta_turn_wins_before_environment_validation(ops):
+    """A valid ``_meta.turn`` must not be vetoed by a bad lower-priority env."""
+
+    resolved = resolve_context(
+        host_meta={"turn": 7},
+        environ={"AGENTCPM_TOOL_BROKER_TURN": "not-an-int"},
+    )
+    assert resolved.meta.turn == 7
+
+
+def test_x1_invalid_meta_turn_is_not_masked_by_valid_environment(ops):
+    with pytest.raises(ContextResolutionError, match="unsigned integer"):
+        resolve_context(
+            host_meta={"turn": "not-an-int"},
+            environ={"AGENTCPM_TOOL_BROKER_TURN": "5"},
+        )
+
+
+def test_x1_runtime_does_not_parse_lower_priority_env_turn(monkeypatch, tmp_path):
+    """Runtime.create must not fail on an env turn that ``_meta`` outranks."""
+
+    monkeypatch.setenv("AGENTCPM_TOOL_BROKER_TURN", "not-an-int")
+    rt = Runtime.create(
+        workspace_root=tmp_path / "ws", data_root=tmp_path / "data"
+    )
+    resolved = resolve_context(
+        host_meta={"turn": 4},
+        runtime=rt,
+        environ={"AGENTCPM_TOOL_BROKER_TURN": "not-an-int"},
+    )
+    assert resolved.meta.turn == 4
 
 
 # --- X2: resource_fields declarations are validated at registration -------- #
@@ -682,6 +858,19 @@ class EmptyKindRef(BaseModel):
 
 class EmptyKindInput(BaseModel):
     source: EmptyKindRef
+
+
+class CustomAsset(BaseModel):
+    id: str
+    revision: str
+
+
+class CustomAssetWrapper(BaseModel):
+    asset: CustomAsset
+
+
+class CustomAssetInput(BaseModel):
+    source: CustomAssetWrapper
 
 
 def test_x2_optional_kind_is_rejected_at_registration(ops):

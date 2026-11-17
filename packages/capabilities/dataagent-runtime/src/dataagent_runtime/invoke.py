@@ -105,14 +105,32 @@ class UnverifiableResourceError(ValueError):
         super().__init__(f"resource field {field!r} {detail}")
 
 
-def _resource_refs(spec_input: BaseModel, resource_fields: tuple[str, ...]) -> list[VersionedRef]:
+def _resource_refs(
+    spec_input: BaseModel,
+    resource_fields: tuple[str, ...],
+    *,
+    strict: bool = True,
+) -> list[VersionedRef]:
     """Extract refs, refusing a declared field that cannot be verified.
 
     A present declared value that does not carry id/kind/revision used to be
     skipped silently; the recheck then saw an empty list and compared no
     resource at all (r41 X2 follow-up). An absent optional resource is left
-    absent, matching the old skip.
+    absent, matching the old skip. With ``strict=False`` (the legacy
+    rollback path) an unconvertible value is skipped like the old recheck
+    instead of rejecting the call.
     """
+
+    def convert(value: Any, label: str) -> VersionedRef | None:
+        try:
+            return _to_versioned_ref(value)
+        except Exception as exc:  # pydantic ValidationError, TypeError, ...
+            # A conversion error is never a reason to skip the recheck: map
+            # it to the caller-visible invalid_input path even on legacy.
+            raise UnverifiableResourceError(
+                name,
+                f"{label} cannot be converted to a VersionedRef: {exc}",
+            ) from exc
 
     refs: list[VersionedRef] = []
     for name in resource_fields:
@@ -123,19 +141,23 @@ def _resource_refs(spec_input: BaseModel, resource_fields: tuple[str, ...]) -> l
             continue
         if isinstance(value, (list, tuple)):
             for index, item in enumerate(value):
-                ref = _to_versioned_ref(item)
+                ref = convert(item, f"item {index}")
                 if ref is None:
-                    raise UnverifiableResourceError(
-                        name,
-                        f"item {index} does not carry an id/kind/revision reference",
-                    )
+                    if strict:
+                        raise UnverifiableResourceError(
+                            name,
+                            f"item {index} does not carry an id/kind/revision reference",
+                        )
+                    continue
                 refs.append(ref)
         else:
-            ref = _to_versioned_ref(value)
+            ref = convert(value, "value")
             if ref is None:
-                raise UnverifiableResourceError(
-                    name, "does not carry an id/kind/revision reference"
-                )
+                if strict:
+                    raise UnverifiableResourceError(
+                        name, "does not carry an id/kind/revision reference"
+                    )
+                continue
             refs.append(ref)
     return refs
 
@@ -420,7 +442,11 @@ def _resolve_call_context(rt: Any, context: Any) -> ResolvedContext:
                 update={"meta": resolved.meta.model_copy(update={"turn": turn})}
             )
         return _reseal(resolved)
-    return resolve_context(argument_context=context, runtime=rt)
+    return resolve_context(
+        argument_context=context,
+        runtime=rt,
+        allow_legacy_synthesis=False,
+    )
 
 
 def invoke(
@@ -505,13 +531,17 @@ def invoke(
             target=location or None,
         )
 
-    # A declared resource field must always produce a verifiable ref, even
-    # under ``mode=off``: otherwise an optional/empty/opaque value would make
-    # the recheck compare an empty resource list (r41 X2 follow-up).
+    # In v1 a declared resource field must produce a verifiable ref, even
+    # under ``mode=off``: otherwise an optional/opaque value would make the
+    # recheck compare an empty resource list (r41 X2 follow-up). The legacy
+    # path keeps the old skip for a value that yields no ref.
+    legacy_path = resolved.source is ContextSource.LEGACY
     resource_refs: list[VersionedRef] | None = None
     if spec.resource_fields:
         try:
-            resource_refs = _resource_refs(input_obj, spec.resource_fields)
+            resource_refs = _resource_refs(
+                input_obj, spec.resource_fields, strict=not legacy_path
+            )
         except UnverifiableResourceError as exc:
             return _failure(
                 StandardErrorCode.invalid_input,
@@ -525,7 +555,7 @@ def invoke(
     # ``off`` disables the hook outright; ``warn`` keeps the call running with
     # a warning (development default); ``enforce`` denies before any read.
     if spec.resource_fields and config.mode != "off":
-        if resolved.source is ContextSource.LEGACY:
+        if legacy_path:
             # Old invoke applied the host authority only here (resource
             # recheck), not to no-resource operations or mode=off calls.
             ctx = _legacy_host_context(rt, ctx)
@@ -561,6 +591,7 @@ def invoke(
                     resolve,
                     resource_refs or [],
                     config=config,
+                    legacy=legacy_path,
                 )
             )
             if outcome.ok:
