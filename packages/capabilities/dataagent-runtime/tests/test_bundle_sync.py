@@ -33,8 +33,9 @@ _VENDORED = {
     ),
 }
 
-# Known, intentional pending re-vendor (T11a). The vendored runtime still
-# has the pre-R1 context path; the live source is what build/local installs.
+# Known, intentional pending re-vendor (T11a and T14). The vendored runtime
+# still has the pre-R1 context path and predates the shared credential
+# resolver; the live source is what build/local installs.
 _PENDING_REVENDOR = frozenset(
     {
         "enforcement.py",
@@ -44,6 +45,7 @@ _PENDING_REVENDOR = frozenset(
         "invoke.py",
         "policy/__init__.py",
         "policy/context.py",
+        "policy/secrets.py",
         "registry.py",
         "runtime.py",
         "types/__init__.py",

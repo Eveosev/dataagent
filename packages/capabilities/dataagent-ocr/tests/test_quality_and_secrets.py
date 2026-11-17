@@ -64,6 +64,7 @@ def test_score_digits_must_match():
 def test_secret_refs(data_root, monkeypatch):
     ref = secrets.store_file_secret(data_root, "ocr-x", "  sk-1  \n")
     assert ref == "file:ocr-x" and secrets.resolve(ref, data_root) == "sk-1"
+    assert secrets.resolve("file:ocr/ocr-x", data_root) == "sk-1"
     path = data_root / "secrets" / "ocr" / "ocr-x.key"
     os.chmod(path, 0o644)
     with pytest.raises(CredentialsError, match="readable by other users"):

@@ -3,9 +3,11 @@ from pathlib import Path
 import sqlite3
 
 import pytest
+from dataagent_contracts.intake import SourceSelection
 from dataagent_contracts.ontology import ReviewDecision
 
 from dataagent_workbench.adapters.layer_client import LayerClient
+from dataagent_workbench.adapters.source_connections import SourceConnections
 from dataagent_workbench.bootstrap import Workbench
 from dataagent_workbench.service_tools import invoke
 
@@ -47,6 +49,38 @@ def test_connection_reference_cannot_override_host_configuration(tmp_path, monke
         session = wb.intake.advance(started['session_id'], wb.ctx)
         assert session.next_actions == ['retry_probe']
         assert expected in session.issues[0]['detail']
+
+
+def test_connection_manifest_keeps_only_logical_credential_names(tmp_path, monkeypatch):
+    sentinel = 'T14-SENTINEL-5f0c9a7d2b8e4c61'
+    monkeypatch.setenv('T14_REST_TOKEN', sentinel)
+    config = tmp_path / 'connections.json'
+    config.write_text(json.dumps({'accounting': {
+        'kind': 'rest', 'locator': 'http://127.0.0.1:9999/invoices',
+        'allowed_origins': ['http://127.0.0.1:9999'], 'options': {'records_path': '/items'},
+        'credential_options': {'auth': 'bearer'},
+        'credential_refs': {'token': 'env:T14_REST_TOKEN'},
+    }}))
+    monkeypatch.setenv('DATAAGENT_SOURCE_CONNECTIONS', str(config))
+    selection = SourceSelection(source_id='api', kind='rest', locator_ref='accounting')
+    resolved, options = SourceConnections().resolve(selection)
+    assert resolved.locator_ref == 'http://127.0.0.1:9999/invoices'
+    assert options['credential_refs'] == {'token': 'env:T14_REST_TOKEN'}
+    assert options['credential_options'] == {'auth': 'bearer'}
+    assert sentinel not in json.dumps(options)
+
+
+def test_connection_manifest_rejects_literal_secrets_and_bad_references(tmp_path, monkeypatch):
+    monkeypatch.setenv('DATAAGENT_SOURCE_CONNECTIONS', str(tmp_path / 'connections.json'))
+    for entry in [
+        {'kind': 'rest', 'locator': 'http://127.0.0.1:9999/invoices',
+         'credential_options': {'token': 'literal'}},
+        {'kind': 'rest', 'locator': 'http://127.0.0.1:9999/invoices',
+         'credential_refs': {'token': 'literal'}},
+    ]:
+        (tmp_path / 'connections.json').write_text(json.dumps({'accounting': entry}))
+        with pytest.raises(ValueError, match='logical'):
+            SourceConnections().resolve(SourceSelection(source_id='api', kind='rest', locator_ref='accounting'))
 
 
 @pytest.mark.parametrize('database_amount', [1260, 990])

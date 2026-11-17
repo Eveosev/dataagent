@@ -22,3 +22,10 @@ def test_local_closure_contains_independent_sources_and_no_repository_paths(tmp_
     assert not list(out.rglob('*.pyc'))
     assert str(root.resolve()) not in (out/'workbench/pyproject.toml').read_text()
     assert json.loads((out/'manifest.json').read_text())['files']
+
+
+def test_mcp_manifest_injects_the_connection_manifest_path():
+    root=Path(__file__).resolve().parents[1]
+    manifest=json.loads((root/'.mcp.json').read_text())
+    env=manifest['mcpServers']['dataagent-workbench']['env']
+    assert env['DATAAGENT_SOURCE_CONNECTIONS']=='.dataagent/source-connections.json'

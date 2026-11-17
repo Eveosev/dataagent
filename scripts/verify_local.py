@@ -22,13 +22,11 @@ def main():
     parser.add_argument('--phase', choices=['bootstrap', 'files', 'sources', 'api-workflow', 'mixed-workflow', 'discovery'], default='bootstrap')
     parser.add_argument('--output', type=Path, default=ROOT/'.superpowers/sdd/16-local-ingestion-workflow-build-plan/acceptance')
     parser.add_argument('--ocr-root', type=Path, help='verified local OCR directory to use for scanned PDF acceptance')
-    parser.add_argument('--postgres-locator', help='local test database URL with a seeded invoice table')
+    parser.add_argument('--postgres-locator', help='optional local test database URL with a seeded invoice table; sources phase skips PostgreSQL without it')
     parser.add_argument('--postgres-user', default='dataagent_reader')
     args = parser.parse_args()
     if args.phase == 'files' and not args.ocr_root:
         parser.error('--phase files requires a verified local --ocr-root')
-    if args.phase == 'sources' and not args.postgres_locator:
-        parser.error('--phase sources requires --postgres-locator')
     mint = shutil.which('mint') or str(Path.home()/'.mint/bin/mint')
     project = Path(tempfile.mkdtemp(prefix='dataagent-intake-'))
     context = bootstrap.prepare(project, mint)

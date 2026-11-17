@@ -2,9 +2,13 @@
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 from dataagent_contracts.intake import SourceProfile
 from .source_connections import SourceConnections
+
+
+_ENV_NAME = re.compile(r'^[A-Za-z_][A-Za-z0-9_]*$')
 
 
 class LayerClient:
@@ -15,11 +19,24 @@ class LayerClient:
     def _call(self,selection,ctx,workspace,**operation):
         python=self.package_dir/'.venv/bin/python'
         if not python.is_file():raise ValueError('data layer environment missing; run dataagent setup')
+        if 'credentials' in operation:
+            raise ValueError('plaintext credentials must not cross the process boundary')
         workspace=Path(workspace).resolve()
-        env={k:v for k,v in os.environ.items() if k in {'PATH','HOME','TMPDIR','LANG','TZ'} or k.startswith('LC_')}
+        env={k:v for k,v in os.environ.items() if k in {'PATH','HOME','TMPDIR','LANG','TZ','DATAAGENT_DATA_ROOT'} or k.startswith('LC_')}
+        # ``env:`` names are resolved by the child. Forward only the variables
+        # the manifest named; the value never enters the JSON payload or logs.
+        refs = operation.get('credential_refs')
+        if isinstance(refs, dict):
+            for ref in refs.values():
+                if isinstance(ref, str) and ref.startswith('env:'):
+                    name = ref[4:]
+                    if _ENV_NAME.fullmatch(name) and name in os.environ:
+                        env[name] = os.environ[name]
+        # The child receives logical names only; it resolves them inside its own process.
+        payload={'source':selection.model_dump(mode='json'),'context':ctx.model_dump(mode='json'),**operation}
         try:
             result=subprocess.run([str(python),'-m','dataagent_data.observation.cli','--workspace',str(workspace)],
-                input=json.dumps({'source':selection.model_dump(mode='json'),'context':ctx.model_dump(mode='json'),**operation}),
+                input=json.dumps(payload),
                 capture_output=True,text=True,timeout=120,env=env,cwd=workspace)
         except subprocess.TimeoutExpired as exc:
             raise ValueError('data layer probe timed out; completed source observations remain available') from exc

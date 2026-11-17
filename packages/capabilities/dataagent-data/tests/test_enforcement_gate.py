@@ -31,6 +31,14 @@ def workspace(tmp_path):
     return path
 
 
+@pytest.fixture(autouse=True)
+def _trusted_host_authority(monkeypatch):
+    """R1: subject and purpose come from the trusted host channel, not arguments."""
+
+    monkeypatch.setenv("DATAAGENT_HOST_SUBJECT_REF", "user:alice")
+    monkeypatch.setenv("DATAAGENT_HOST_PURPOSE", "monthly_report")
+
+
 def _ctx(authorization: str = "policy:test-read") -> dict:
     return {
         "request_id": "req:gate",
@@ -212,11 +220,12 @@ def test_non_resource_operations_are_not_gated(workspace, tmp_path):
     assert result.status.value == "ok", result.issues
 
 
-def test_mcp_context_schema_carries_subject_and_purpose():
+def test_mcp_context_schema_is_a_caller_hint_only():
     from dataagent_data.interfaces.mcp_server import CONTEXT_SCHEMA
 
     props = CONTEXT_SCHEMA["properties"]
-    assert "subject_ref" in props and "purpose" in props
+    assert "authorization_ref" in props
+    assert "subject_ref" not in props and "purpose" not in props
 
 
 # --- r28 B1: a profile asset separated from its field stats is a fabricated

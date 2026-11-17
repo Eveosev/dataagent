@@ -7,12 +7,56 @@ import sys
 from uuid import uuid4
 from dataagent_contracts.core import CallContext
 from dataagent_contracts.intake import SourceProfile, SourceSelection
+from dataagent_runtime.policy.secrets import SecretError, resolve as resolve_secret
+from dataagent_runtime.runtime import resolve_roots
 from .files import probe_file,_safe_path
+
+
+_SECRET_OPTION_KEYS = {'token', 'password', 'secret', 'api_key', 'apikey', 'authorization'}
+
+
+def _credentials(selection, workspace, request):
+    """Resolve logical credential names inside the probing process only."""
+    if 'credentials' in request:
+        raise ValueError('plaintext credentials are not accepted; pass logical references')
+    options = request.get('credential_options') or {}
+    refs = request.get('credential_refs') or {}
+    if not isinstance(options, dict) or not isinstance(refs, dict):
+        raise ValueError('unsupported credential configuration')
+    if any(str(name).lower() in _SECRET_OPTION_KEYS for name in options):
+        raise ValueError('plaintext credentials are not accepted; pass logical references')
+    values = dict(options)
+    if selection.kind not in {'postgres', 'rest'}:
+        if refs:
+            raise ValueError('this source kind does not accept credentials')
+        return None
+    _, data_root = resolve_roots(workspace)
+    for name, ref in refs.items():
+        if not isinstance(name, str) or not isinstance(ref, str):
+            raise ValueError('unsupported credential configuration')
+        try:
+            values[name] = resolve_secret(ref, data_root)
+        except SecretError:
+            raise ValueError('configured source credential is unavailable') from None
+    return values
+
+
+def _classify_rest_auth(profile):
+    """A 401/403 is an authentication failure, not a retryable transport error."""
+    failed = any(issue.get('code') == 'http_error' and issue.get('status') in {401, 403}
+                 for issue in profile.issues)
+    if not failed:
+        return profile
+    gaps = [gap.model_copy(update={'code': 'authentication_failed'})
+            if gap.code == 'http_error' else gap for gap in profile.gaps]
+    if gaps == profile.gaps:
+        return profile
+    return profile.model_copy(update={'gaps': gaps})
 
 
 def probe(selection, ctx, workspace, request):
     budget = request.get('budget_rows', 200)
-    credentials = request.get('credentials')
+    credentials = _credentials(selection, workspace, request)
     if selection.kind in {'sqlite', 'postgres'}:
         from .database import probe_database
         return probe_database(selection, ctx, workspace=workspace, budget_rows=budget, credentials=credentials)
@@ -21,8 +65,9 @@ def probe(selection, ctx, workspace, request):
         options = {'workspace':workspace, 'budget_rows':budget, 'credentials':credentials,
                    'allowed_origins':request.get('allowed_origins')}
         if request.get('previous'):
-            return resume_rest(selection, SourceProfile.model_validate(request['previous']), ctx, **options)
-        return probe_rest(selection, ctx, **options)
+            return _classify_rest_auth(
+                resume_rest(selection, SourceProfile.model_validate(request['previous']), ctx, **options))
+        return _classify_rest_auth(probe_rest(selection, ctx, **options))
     if selection.kind != 'file':
         raise ValueError('unsupported source kind')
     engine = None
