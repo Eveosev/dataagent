@@ -115,17 +115,26 @@ class IntakeService:
                     for mapping in mappings]
         except (TypeError,ValueError):return None
 
-    def _cached_source_match(self,profile,selection,candidates):
-        if len(candidates)==1:return 0
-        matches=[index for index,record in enumerate(candidates) if record['source_id']==profile.source_id]
-        if len(matches)==1:return matches[0]
-        if selection is not None:
-            matches=[index for index,record in enumerate(candidates)
-                     if record['locator_ref']==selection.locator_ref and record['kind']==selection.kind]
-            if len(matches)==1:return matches[0]
-        if all(self._same_mapping(record['mapping'],candidates[0]['mapping']) for record in candidates[1:]):
-            return 0
-        return None
+    def _group_mappings(self,profiles,records,sources):
+        """Pair every source in one fingerprint group, refusing gaps or conflicts."""
+        used=set()
+        proposals={}
+        for profile in profiles:
+            selection=sources.get(profile.source_id)
+            by_id=[index for index,record in enumerate(records)
+                   if record['source_id'] is not None and record['source_id']==profile.source_id]
+            by_locator=[]
+            if selection is not None:
+                by_locator=[index for index,record in enumerate(records)
+                            if record['locator_ref'] is not None and record['locator_ref']==selection.locator_ref
+                            and record['kind']==selection.kind]
+            if len(by_id)>1 or len(by_locator)>1:return None
+            if by_id and by_locator and by_id[0]!=by_locator[0]:return None
+            matches=by_id or by_locator
+            if not matches or matches[0] in used:return None
+            used.add(matches[0])
+            proposals[profile.source_id]=records[matches[0]]['mapping']
+        return proposals if len(used)==len(records) else None
 
     def _reuse_verified_mapping(self,session,profiles,ctx):
         for key in self._verified_mapping_keys(profiles):
@@ -140,17 +149,21 @@ class IntakeService:
         groups={}
         for record in records:groups.setdefault(record['mapping'].source_fingerprint,[]).append(record)
         if sorted(groups)!=self._fingerprints(profiles):return False
-        for fingerprint,group in groups.items():
-            if len(group)!=sum(1 for profile in profiles
-                               if profile.metadata['structure_fingerprint']==fingerprint):return False
         sources={source.source_id:source for source in session.sources}
         proposals={}
-        for profile in profiles:
-            candidates=groups[profile.metadata['structure_fingerprint']]
-            index=self._cached_source_match(profile,sources.get(profile.source_id),candidates)
-            if index is None:return False
-            proposals[profile.source_id]=candidates.pop(index)['mapping']
-        if any(groups.values()):return False
+        for fingerprint,group in groups.items():
+            current=[profile for profile in profiles
+                     if profile.metadata['structure_fingerprint']==fingerprint]
+            if len(current)!=len(group):return False
+            if len(group)==1:
+                proposals[current[0].source_id]=group[0]['mapping']
+            elif all(self._same_mapping(record['mapping'],group[0]['mapping']) for record in group[1:]):
+                proposals.update({profile.source_id:record['mapping']
+                                  for profile,record in zip(current,group)})
+            else:
+                matched=self._group_mappings(current,group,sources)
+                if matched is None:return False
+                proposals.update(matched)
         if len(profiles)==1:
             self.submit_proposal(session.id,proposals[profiles[0].source_id],session.revision,ctx,reused=True)
         else:

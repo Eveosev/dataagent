@@ -226,6 +226,29 @@ def test_same_fingerprint_reuse_declines_without_source_correspondence(tmp_path)
     assert not wb.intake.view(current.id,wb.ctx)['mapping_reused']
 
 
+def test_same_fingerprint_reuse_declines_when_one_source_has_no_match(tmp_path):
+    wb=same_fingerprint_setup(tmp_path)
+    save_same_fingerprint(wb)
+    (tmp_path/'other.csv').write_text('number,amount,currency\nINV-1,1260,CNY\n')
+    sources=[SourceSelection(source_id='minor',kind='file',locator_ref='minor.csv'),
+             SourceSelection(source_id='other',kind='file',locator_ref='other.csv')]
+    current=wb.intake.advance(start_selected(wb,sources,'g2').session_id,wb.ctx)
+    assert current.phase=='needs_input'
+    assert current.issues==[] and current.next_actions==['propose_mapping']
+    assert not wb.intake.view(current.id,wb.ctx)['mapping_reused']
+
+
+def test_same_fingerprint_reuse_declines_on_id_locator_conflict(tmp_path):
+    wb=same_fingerprint_setup(tmp_path)
+    save_same_fingerprint(wb)
+    sources=[SourceSelection(source_id='minor',kind='file',locator_ref='major.csv'),
+             SourceSelection(source_id='major',kind='file',locator_ref='minor.csv')]
+    current=wb.intake.advance(start_selected(wb,sources,'g2').session_id,wb.ctx)
+    assert current.phase=='needs_input'
+    assert current.issues==[] and current.next_actions==['propose_mapping']
+    assert not wb.intake.view(current.id,wb.ctx)['mapping_reused']
+
+
 def test_changed_source_fingerprint_does_not_reuse_mapping(tmp_path):
     wb=multi_setup(tmp_path)
     save_multi(wb)
