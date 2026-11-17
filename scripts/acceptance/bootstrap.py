@@ -1,6 +1,8 @@
 """Bootstrap phase: install build/local into a fresh Mint project and smoke the CLI."""
 
 import json
+import os
+import re
 
 from .common import ROOT, run
 
@@ -10,8 +12,18 @@ def prepare(project, mint):
     run([mint, 'add', 'path:' + str(ROOT / 'build/local/preset-intake'), '--offline', '-y'], project)
     cli = list((project / '.mint/packages/dataagent').glob('cli@*/bin/dataagent'))
     assert len(cli) == 1, 'exactly one installed CLI required'
-    run([cli[0], 'setup'], project)
+    # The data layer's OCR dependency is configured through the installed
+    # setup command from the verified local directory (07 §2.3 T20), not by
+    # pre-seeding .dataagent behind its back.
+    ocr_root = os.environ.get('OCR_ROOT', '').strip()
+    if not ocr_root:
+        raise RuntimeError(
+            'OCR_ROOT is not set; source p1.env first — the bootstrap phase '
+            'configures the verified local OCR directory through dataagent setup')
+    run([cli[0], 'setup', '--ocr-root', ocr_root], project)
     doctor = run([cli[0], 'doctor'], project)
+    # T20: doctor must report the OCR engine and its model version.
+    assert re.search(r'^ocr:\s+\S+ \S+ version=\S+', doctor, re.M), doctor
     created = json.loads(run([cli[0], 'workbench', 'intake', '--goal', '本地接入验收',
                               '--source', 'invoice.csv'], project))
     session = created['result']['data']['session_id']

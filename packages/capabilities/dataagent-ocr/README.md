@@ -26,6 +26,8 @@ runtime.ocr_engine = load_active_engine(runtime.data_root)   # 未固定时抛 O
 
 依赖型引擎：`engine list` → `engine plan <name>` → 用户确认 → `engine install <name> --confirm <plan_digest>` → `configure-engine --engine <name>` → `verify`。
 
+安装产物（preset-intake）中经统一 CLI 配置与检查：`dataagent setup --ocr-root <已验证目录>` 把通过 `verify` 的 OCR 目录装进 `<data_root>/ocr`（幂等，不静默替换别的固定）；`dataagent doctor` 输出固定的引擎（openai_compat 为模型）与版本，缺失时报缺并给出该配置项。
+
 ## 测试
 
 `uv run pytest`（38 项；不联网，OpenAI 兼容服务与 worker 均为本地替身）。

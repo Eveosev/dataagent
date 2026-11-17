@@ -11,8 +11,12 @@
 # Commands:
 #   dataagent <data|app|gov> ...    layer dispatch (list / run / --help / ...)
 #   dataagent link                 generate ./dataagent in the project root
-#   dataagent setup                uv sync --frozen for all three layers
-#   dataagent doctor               check packages, .venv, policy, data_root, mode
+#   dataagent setup [--ocr-root <dir>]
+#                                  uv sync --frozen for all layers; with
+#                                  --ocr-root, install a verified OCR
+#                                  directory into <data_root>/ocr
+#   dataagent doctor               check packages, .venv, policy, data_root,
+#                                  ocr engine + model, mode
 #
 # POSIX sh only, no Python dependency.
 
@@ -87,6 +91,44 @@ python_of() {
     printf '%s\n' "$py"
 }
 
+# OCR doctor/setup probe (07 §2.3 T20): validates the pin under
+# <data_root>/ocr through the data layer venv (dataagent_ocr is its explicit
+# dependency) and prints one summary line. Exit 0 = configured local engine
+# (engine, model and version on stdout); 1 = missing or broken (hint on
+# stderr); 3 = configured but remote — the data layer refuses remote OCR
+# until the egress gate lands (T15), so scanned-document probes would not
+# work; anything else = the probe itself could not run.
+OCR_PROBE='
+# DATAAGENT_OCR_DOCTOR_PROBE
+try:
+    from dataagent_ocr.errors import NotConfigured
+    from dataagent_ocr.profiles import ProfileStore
+except Exception:
+    raise SystemExit(2)
+import sys
+from pathlib import Path
+store = ProfileStore(Path(sys.argv[1]))
+try:
+    pin, profile, verification = store.load_pinned()
+except NotConfigured:
+    print("ocr:      none (run: dataagent setup --ocr-root <verified ocr dir>, or dataagent-ocr configure + verify)", file=sys.stderr)
+    raise SystemExit(1)
+except Exception as exc:
+    code = getattr(exc, "code", type(exc).__name__)
+    print(f"ocr:      {code}: {exc} (verify the OCR profile again)", file=sys.stderr)
+    raise SystemExit(1)
+if profile.kind == "openai_compat":
+    name = profile.openai_compat.model
+elif profile.kind == "engine":
+    name = profile.engine.engine
+else:
+    name = profile.command.argv[0]
+if profile.remote:
+    print(f"ocr:      {profile.kind} {name} is remote — the data layer does not use remote OCR before the egress gate (T15); scanned-document probes need a local engine (dataagent-ocr engine install + configure-engine, then dataagent setup --ocr-root)", file=sys.stderr)
+    raise SystemExit(3)
+print(f"ocr:      {profile.kind} {name} version={verification.engine_version or pin.ref} verification={verification.verification_id}")
+'
+
 # §5.4: clear every variable unrelated to DataAgent before exec'ing the
 # layer process; keep only the whitelist + DATAAGENT_*.
 scrub_env() {
@@ -120,7 +162,50 @@ link_cmd() {
     echo "$PWD/dataagent"
 }
 
+# install_ocr <dir>: copy a verified OCR directory (active.json, profiles,
+# verifications — produced by dataagent-ocr verify) into <data_root>/ocr.
+# Idempotent for the same source; refuses to silently replace a different
+# pin — switching OCR providers is a verified decision, not a copy.
+install_ocr() {
+    src=$1
+    [ -f "$src/active.json" ] || die "setup: not a verified OCR directory (active.json missing): $src"
+    dest_root=${DATAAGENT_DATA_ROOT:-$PWD/.dataagent}
+    dest=$dest_root/ocr
+    if [ -e "$dest" ]; then
+        if [ -f "$dest/active.json" ] && cmp -s "$dest/active.json" "$src/active.json"; then
+            echo "setup: ocr already configured at $dest"
+            return 0
+        fi
+        die "setup: $dest already holds a different OCR configuration; switching providers goes through dataagent-ocr verify"
+    fi
+    mkdir -p "$dest_root"
+    cp -R "$src" "$dest" || die "setup: copying $src into $dest failed"
+    # Validate the installed pin with the same check doctor runs; roll the
+    # copy back when it does not hold up.
+    py=$(python_of "$(resolve_dir "data-layer")")
+    rc=0
+    "$py" -c "$OCR_PROBE" "$dest_root" >/dev/null || rc=$?
+    case $rc in
+        0) ;;
+        3) echo "setup: warning: this OCR provider is remote — the data layer does not use remote OCR before the egress gate (T15); scanned-document probes need a local engine" >&2 ;;
+        *) rm -rf "$dest"
+           die "setup: the OCR directory at $src did not validate (pin, profile or verification is inconsistent)" ;;
+    esac
+    echo "setup: ocr configured from $src"
+}
+
 setup_cmd() {
+    ocr_root=""
+    while [ $# -gt 0 ]; do
+        case $1 in
+            --ocr-root)
+                [ $# -ge 2 ] || die "setup: --ocr-root needs a directory argument"
+                ocr_root=$2
+                shift 2
+                ;;
+            *) die "setup: unknown argument: $1 (usage: dataagent setup [--ocr-root <dir>])" ;;
+        esac
+    done
     command -v uv >/dev/null 2>&1 || die "uv not found on PATH; install it or run uv sync inside each layer package"
     for layer in $(active_layers); do
         pkg=$(layer_pkg "$layer")
@@ -128,6 +213,9 @@ setup_cmd() {
         echo "setup: $dir"
         (cd "$dir" && uv sync --frozen) || die "uv sync --frozen failed in $dir"
     done
+    if [ -n "$ocr_root" ]; then
+        install_ocr "$ocr_root"
+    fi
     echo "setup: ok"
 }
 
@@ -171,6 +259,22 @@ doctor_cmd() {
     else
         echo "data_root: $root (will be created on first run)"
     fi
+    # OCR is the data layer's explicit dependency (07 §2.3 T20): the check
+    # runs where the data layer is installed and, like the policy check
+    # above (r5-review D14), a missing engine is a failing check with the
+    # configuration hint — the next scanned document would fail late
+    # otherwise. Zero or several data-layer versions are reported above.
+    data_dir=$(installed_dirs "data-layer")
+    if [ "$(count_lines "$data_dir")" -eq 1 ] && [ -x "$data_dir/.venv/bin/python" ]; then
+        rc=0
+        "$data_dir/.venv/bin/python" -c "$OCR_PROBE" "$root" || rc=$?
+        case $rc in
+            0) ;;
+            1|3) status=3 ;;
+            *) echo "ocr:      check failed" >&2
+               status=3 ;;
+        esac
+    fi
     # The policy probe runs only against a single installed governance
     # layer; zero or several versions are reported above.
     gov_dir=$(installed_dirs "governance-layer")
@@ -213,7 +317,7 @@ usage() {
     cat >&2 <<'EOF'
 usage: dataagent <layer> <command> [flags]
        dataagent link
-       dataagent setup
+       dataagent setup [--ocr-root <verified ocr dir>]
        dataagent doctor
 
 layers: data | app | gov | workbench | ops
@@ -248,7 +352,7 @@ active_layers() {
 case $1 in
     data|app|gov|workbench|ops) dispatch "$@" ;;
     link) [ $# -eq 1 ] && link_cmd || usage ;;
-    setup) [ $# -eq 1 ] && setup_cmd || usage ;;
+    setup) shift; setup_cmd "$@" ;;
     doctor) [ $# -eq 1 ] && doctor_cmd || usage ;;
     -h|--help|help) usage ;;
     *) usage ;;

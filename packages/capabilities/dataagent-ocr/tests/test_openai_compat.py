@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 
 import pytest
 
@@ -98,6 +99,27 @@ def test_bbox_outside_image_is_dropped():
 def test_confidence_needs_token_reconstruction():
     assert block_confidences("abc", ["abc"], [{"token": "ab", "logprob": 0.0}]) == [None]
     assert block_confidences("abc", ["abc"], [{"token": "abc", "logprob": 0.0}]) == [1.0]
+
+
+def test_vllm_trailing_stop_token_still_maps_confidence():
+    """vLLM appends the stop token (e.g. <|im_end|>) to logprobs.content
+    with its literal text as ``token``; the mapping must survive it."""
+
+    content = json.dumps({"blocks": [{"text": "INVOICE NO. 2026-1106-0042", "bbox": [1, 2, 3, 4]}]})
+    pieces = [content[i : i + 4] for i in range(0, len(content), 4)]
+    logprobs = [{"token": piece, "logprob": -0.02, "bytes": [ord(c) for c in piece], "top_logprobs": []}
+                for piece in pieces]
+    logprobs.append({"token": "<|im_end|>", "logprob": 0.0,
+                     "bytes": [60, 124, 105, 109, 95, 101, 110, 100, 124, 62], "top_logprobs": []})
+    assert block_confidences(content, ["INVOICE NO. 2026-1106-0042"], logprobs) == [
+        pytest.approx(math.exp(-0.02), abs=5e-5)
+    ]
+
+
+def test_trailing_stop_token_does_not_mask_a_real_mismatch():
+    content = '{"blocks": [{"text": "AB"}]}'
+    logprobs = [{"token": "XY", "logprob": -0.01}, {"token": "<|im_end|>", "logprob": 0.0}]
+    assert block_confidences(content, ["AB"], logprobs) == [None]
 
 
 def test_base_url_rejects_embedded_credentials():

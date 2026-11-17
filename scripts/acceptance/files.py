@@ -2,21 +2,34 @@
 
 import shutil
 
-from .common import ROOT, call_workbench, remove_not_verified
+from .common import ROOT, call_workbench, remove_not_verified, run
+
+
+def installed_cli(project):
+    cli, = (project/'.mint/packages/dataagent').glob('cli@*/bin/dataagent')
+    return cli
 
 
 def verify_scan(project, ocr_root):
     fixture = ROOT/'packages/capabilities/dataagent-scenarios/fixtures/intake/scan.pdf'
     shutil.copy2(fixture, project/'scan.pdf')
-    shutil.copytree(ocr_root, project/'.dataagent/ocr', symlinks=True)
+    # The verified OCR directory is configured through the installed setup
+    # command (07 §2.3 T20), which validates the pin; the workbench is not
+    # handed a pre-seeded .dataagent/ocr.
+    run([installed_cli(project), 'setup', '--ocr-root', str(ocr_root)], project)
     args = {'session_id': call_workbench(project, 'intake_start', {
         'goal': '核对扫描发票的编号、金额和币种',
         'sources': [{'source_id': 'scan', 'kind': 'file', 'locator_ref': 'scan.pdf'}],
     })['session_id']}
     observed = call_workbench(project, 'intake_advance', args)
     source, = observed['sources']
+    assert source['coverage'] == 'full', (
+        f"scanned page was not fully observed: coverage={source['coverage']}, "
+        f"gaps={source.get('gaps')}; the data layer probe disables remote OCR "
+        'providers (dataagent_data/observation/cli.py, '
+        'remote_ocr_requires_governed_egress) and scan.pdf has no text layer, '
+        'so a usable OCR engine is required')
     page, = source['document_excerpts']
-    assert source['coverage'] == 'full'
     fields = {'number': 'INV-003', 'amount': '1260.00', 'currency': 'CNY'}
     assert all(value in page['text'] for value in fields.values())
     derived = call_workbench(project, 'intake_extract', {
