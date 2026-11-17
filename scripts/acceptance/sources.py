@@ -26,6 +26,7 @@ from .common import ROOT, call_workbench, loopback, remove_not_verified
 
 SENTINEL = 'T14-SENTINEL-5f0c9a7d2b8e4c61'
 WRONG_TOKEN = 'T14-WRONG-2a7e4c9b6d1f8035'
+PREVIEW_BLOCK_DETAIL = 'preview contains unresolved issues'
 CROSS_SOURCE = ROOT/'packages/capabilities/dataagent-scenarios/fixtures/intake/cross-source'
 _CREDENTIAL_KEYS = {
     'token', 'password', 'secret', 'credentials', 'credential_refs',
@@ -523,14 +524,28 @@ def verify_cross_source(project, url, token_ref, diffs, cross_reads, cross_unaut
         key = (conflict['number'], conflict['field'])
         if key not in blocked_fields:
             diffs.add(key[0], key[1], '保存阻断问题', '未出现')
+    error_code = blocked.get('error')
     detail = blocked.get('detail', '')
+    if not isinstance(detail, str):
+        detail = repr(detail)
+    preview_has_issues = bool(preview_body['issues'])
+    # Require the save to be blocked by the unresolved preview, not by a bad
+    # argument or revision. The MCP error payload carries the service's detail
+    # string; a revision/argument failure has a different detail.
+    preview_block = detail == PREVIEW_BLOCK_DETAIL and preview_has_issues
+    if detail != PREVIEW_BLOCK_DETAIL:
+        diffs.add('（全部）', 'mapping_apply.detail', PREVIEW_BLOCK_DETAIL, detail)
+    if not preview_has_issues:
+        diffs.add('（全部）', 'mapping_apply.preview_issues', '非空', '空')
     # Gold J5 accepts a whole-batch block. The preview issues name the four
-    # conflict objects and fields; the MCP error detail is generic, so record
-    # whether it names them instead of making that the pass condition.
+    # conflict objects and fields; the MCP error detail itself is generic.
     summary['save_block'] = {
         'request': 'mapping_apply save',
-        'blocked': True,
+        'blocked': preview_block,
+        'error': error_code,
         'detail': detail,
+        'expected_detail': PREVIEW_BLOCK_DETAIL,
+        'preview_has_issues': preview_has_issues,
         'blocking_issues': blocking,
         'error_detail_names_conflict_objects': [
             number for number in gold['expected']['conflict_object_numbers'] if number in detail],
