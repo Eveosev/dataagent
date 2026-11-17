@@ -262,8 +262,9 @@ python3 -I docs/research/dataagent-2026-11-03/09-benchmark/tools/report.py
 | registry/task 状态 | 已建任务 `status=collecting`；B15 保持 `planned`（无公开数据） |
 | grader 实现 | 17 个已实现（覆盖 B01–B04、B16），其中 13 个可真正判分（`unknown_retention` 只在 unknown 子集上计分）；其余 41 个未实现或金标缺口，见 `harness/graders/README.md` |
 | 判分链路 | `harness/grade.py` 可跑通：金标回填 240 条得满分（B03/B16），扰动 20% 后掉分；scorecard 通过 schema 校验 |
+| B16 判分自检 | 手工金标回填 F1=1、FMR=0；聚类 `[[L,R1],[R1,R2]]` 经传递闭包得 F1=1、FMR=0；FMR `1/1`+`3/4` 按预测对 pooled=0.8；全程无合并时 value=null、denominator=0 |
 | 适配器 | `dataagent-cli` / `oracle` / `empty` 三个，见 `harness/adapters/README.md`；`harness/run.py` 一键产出 run.json + cases.jsonl + scorecard。B16 的 oracle 分支尚未加（`oracle.py` 不在 T31 改动范围），命令可跑通但 F1 为 0 |
-| 已跑通的探索轮 | B02 `x001`（oracle，满分）、B02 `x002`（empty，地板）、B02 `x003`（CLI 缺失，如实 failed）、B03/B04 `x001`（oracle）、B16 `x323`（oracle，适配器缺 B16 分支，F1=0）、B16 `x827`（empty，地板） |
+| 已跑通的探索轮 | B02 `x001`（oracle，满分）、B02 `x002`（empty，地板）、B02 `x003`（CLI 缺失，如实 failed）、B03/B04 `x001`（oracle）、B16 `x424`（oracle，适配器缺 B16 分支，F1=0）、B16 `x929`（empty，地板）；`x710`/`x211`/`x323`/`x827` 为修复前旧轮 |
 | 基线 | 未建立，16 个 `baseline.json` 的 `run_id` 为 null |
 | 门槛 | 仅 2 条绝对门槛（B01 行保留率、B12 外泄率），其余待首轮回填 |
 
@@ -284,7 +285,7 @@ python3 -I docs/research/dataagent-2026-11-03/09-benchmark/tools/report.py
 | B13 记忆与经验召回 | 240 | v0.2 | collecting | 已构建 |
 | B14 数据建模与物化 | 224 | v0.1 | collecting | 已构建 |
 | B15 FDE 交付效果 | 0 | v0.0 | planned | 待下载/待建 |
-| B16 多源对齐与实体解析 | 240 | v0.5 | collecting | 已构建 |
+| B16 多源对齐与实体解析 | 240 | v0.7 | collecting | 已构建 |
 
 数据构建命令与引用规则见 §9；不可得来源的原因与所需动作见 §9.2；每个任务的指标覆盖写在 `manifest.build.coverage` 与 `tasks/<task>/NOTES.md`「数据构建」。
 

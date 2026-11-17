@@ -63,11 +63,11 @@
     },
     {
       "id": "false_merge_rate",
-      "label": "错误合并率",
+      "label": "错误合并率（按预测对汇总）",
       "direction": "lower",
       "primary": false,
       "unit": "ratio",
-      "aggregation": "mean_over_cases",
+      "aggregation": "pooled",
       "grader": "entity_pair_f1:false_merge",
       "threshold_status": "pending_baseline"
     }

@@ -107,9 +107,9 @@ def check_registry() -> list[dict]:
 
     tasks = registry.get("tasks", [])
     ids = [t.get("id") for t in tasks]
-    expected = [f"B{i:02d}" for i in range(1, len(tasks) + 1)]
+    expected = [f"B{i:02d}" for i in range(1, max(15, len(tasks)) + 1)]
     if ids != expected:
-        errors.append(f"registry.json: 任务应自 B01 起连续编号（实际 {ids}）")
+        errors.append(f"registry.json: 任务必须包含 B01–B15，B16 起连续编号（实际 {ids}）")
 
     for t in tasks:
         tid = t.get("id", "?")

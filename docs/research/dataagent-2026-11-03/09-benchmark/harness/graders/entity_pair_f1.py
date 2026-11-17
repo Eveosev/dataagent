@@ -6,12 +6,14 @@
 产出接受三种常见形状：
 - `{"pairs": [{"left_id": "...", "right_id": "..."}]}`
 - `{"matches": [{"left_id": "...", "right_id": "..."}]}` 或 `{"matches": ["right_id", ...]}`
-- `{"clusters": [["id", "id", ...]]}`（同一簇内的左记录与右候选视为合并）
+- `{"clusters": [["id", "id", ...]]}`（同一簇内的成员先求连通分量，再只展开左记录与候选右记录的实体对；
+  两个长度为 2 的簇 `[[L,R1],[R1,R2]]` 会经 R1 合并为同一实体）
 
 口径：
 - `entity_pair_f1`：微观 F1，2TP / (2TP + FP + FN)，跨用例 pooled。
-- `false_merge_rate`：错误合并占已预测合并的比例，FP / (TP + FP)；没有预测合并时记 0，
-  表示没有发生错误合并。它只惩罚误合并，不惩罚漏合并；漏合并由 F1 反映。
+- `false_merge_rate`：错误合并占已预测合并的比例，FP / (TP + FP)；跨用例按预测实体对 pooled，
+  即总 FP / 总 (TP + FP)。单用例没有预测合并时记 0；若全程都没有预测合并，pooled 分母为 0，
+  scorecard 的 value 为 null，表示没有可汇总的合并，不当作 0 分。
 - 返回 `value=None` 只在金标为空且没有预测时发生，由 grade.py 记进 missing，绝不当 0。
 """
 from __future__ import annotations
@@ -95,6 +97,7 @@ def _gold(case: dict):
 
 def _pred(output: dict, left_id: str, candidates: set[str]):
     raw = None
+    cluster_mode = False
     for key in ("pairs", "entity_pairs", "matches", "links", "alignment", "match_pairs"):
         if key in output:
             raw = output[key]
@@ -108,12 +111,17 @@ def _pred(output: dict, left_id: str, candidates: set[str]):
             raw = [output["right_id"]] if output.get("match") else []
         elif "clusters" in output:
             raw = output["clusters"]
+            cluster_mode = True
         elif "entities" in output and isinstance(output["entities"], list):
             raw = output["entities"]
+            cluster_mode = True
+
+    if raw is None:
+        return set(), 0
+    if cluster_mode:
+        return _from_clusters(raw, left_id, candidates)
 
     pred = set()
-    if raw is None:
-        return pred, 0
     if isinstance(raw, dict):
         if "left_id" in raw or "right_id" in raw or "right_ids" in raw:
             left = _norm_id(raw.get("left_id") or left_id)
@@ -164,6 +172,84 @@ def _pred(output: dict, left_id: str, candidates: set[str]):
         if (left and left != left_id) or (candidates and right not in candidates)
     )
     return pred, invalid
+
+
+def _from_clusters(raw, left_id: str, candidates: set[str]):
+    """把聚类展开为实体对：先对簇成员求连通分量，再只取左记录与候选右记录的对。"""
+    if not left_id:
+        return set(), 0
+    items = raw
+    if isinstance(items, dict):
+        cluster_keys = ("members", "ids", "entities", "records", "cluster",
+                        "left_id", "left", "right_id", "right")
+        if any(key in items for key in cluster_keys):
+            items = [items]
+        else:
+            items = [[key, *_cluster_members(value)] for key, value in items.items()]
+    if not isinstance(items, (list, tuple, set)):
+        return set(), 0
+    items = list(items)
+    if items and all(not isinstance(item, (dict, list, tuple, set)) for item in items):
+        items = [items]
+
+    parent: dict[str, str] = {}
+
+    def find(node: str) -> str:
+        parent.setdefault(node, node)
+        while parent[node] != node:
+            parent[node] = parent[parent[node]]
+            node = parent[node]
+        return node
+
+    def union(a: str, b: str) -> None:
+        root_a, root_b = find(a), find(b)
+        if root_a != root_b:
+            parent[root_b] = root_a
+
+    for item in items:
+        members = _cluster_members(item)
+        if not members:
+            continue
+        first = members[0]
+        for member in members[1:]:
+            union(first, member)
+
+    if left_id not in parent:
+        return set(), 0
+    root = find(left_id)
+    pred = set()
+    for node in list(parent):
+        if node == left_id or find(node) != root:
+            continue
+        if candidates and node not in candidates:
+            continue
+        pred.add((left_id, node))
+    return pred, 0
+
+
+def _cluster_members(item) -> list[str]:
+    if isinstance(item, dict):
+        for key in ("members", "ids", "entities", "records", "cluster"):
+            if key in item:
+                return _cluster_members(item[key])
+        left = item.get("left_id") or item.get("left") or item.get("source_id") or item.get("source")
+        right = item.get("right_id") or item.get("right") or item.get("target_id") or item.get("target")
+        if left is not None or right is not None:
+            return [value for value in (_norm_id(left), _norm_id(right)) if value]
+        ident = item.get("id") or item.get("record_id")
+        return [_norm_id(ident)] if _norm_id(ident) else []
+    if isinstance(item, (list, tuple, set)):
+        members = []
+        for value in item:
+            if isinstance(value, dict):
+                members.extend(_cluster_members(value))
+            else:
+                norm = _norm_id(value)
+                if norm:
+                    members.append(norm)
+        return members
+    norm = _norm_id(item)
+    return [norm] if norm else []
 
 
 def _pair(item, default_left: str):
