@@ -16,5 +16,6 @@ status: 实施中
 | [离线输入测试用例](offline-input-cases.md) | 合成材料、连接准备、逐场景操作和通过条件 |
 | [SQLite 本体发现](sqlite-ontology-discovery.md) | 发现入口、证据约束、草案审核和离线验收 |
 | [离线安装与链路验收](implementation-2026-11-11.md) | 可复跑命令、真实运行引用、评审修复与待验收场景 |
+| [打包桌面版 GUI 工具通道核实](gui-channel-check.md) | T02：打包版 Mint Agent 能起项目会话、能加载技能，但拿不到 DataAgent 的 MCP 工具 |
 
 实施后按任务和轮次增加修复、评审与验收记录，并登记实际工作区、版本、输入范围与产物引用。
