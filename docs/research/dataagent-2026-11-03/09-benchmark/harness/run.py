@@ -8,6 +8,8 @@
 
 约束：
 - 只写 tasks/<task>/history/runs/<round-id>/，不动 cases/expected；
+- new_round.py 生成的待跑骨架（run.json status=pending、无预测产物）可直接续跑并覆盖；
+  已有真实产物的 run 目录拒绝复用，换一个 round-id；
 - 适配器失败必须如实进 cases.jsonl 与 run.json.samples.missing，不伪造输出；
 - 跑完自动调用 grade.py 写 scorecard.json，再跑 tools/check.py 可校验一致性。
 """
@@ -24,6 +26,29 @@ from datetime import datetime, timezone
 HERE = pathlib.Path(__file__).resolve().parent
 BENCH = HERE.parent
 SPLITS = ("development", "regression", "unseen_acceptance")
+# new_round.py 只写 run.json / scorecard.json；artifacts 是 run.py 自己建的空目录。
+SKELETON_ENTRIES = {"run.json", "scorecard.json", "artifacts"}
+
+
+def is_pending_skeleton(run_dir: pathlib.Path) -> bool:
+    """run 目录是否只有 new_round.py 生成的待跑骨架（尚无任何预测产物）。
+
+    条件：目录里只有骨架文件、run.json.status=pending、artifacts 为空。
+    predictions.jsonl / cases.jsonl 或任何额外文件都算真实产物，不允许复用。
+    """
+    if not run_dir.is_dir():
+        return False
+    entries = {p.name for p in run_dir.iterdir()}
+    if not entries or not entries <= SKELETON_ENTRIES:
+        return False
+    try:
+        run = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    if run.get("status") != "pending":
+        return False
+    artifacts = run_dir / "artifacts"
+    return not (artifacts.exists() and any(artifacts.rglob("*")))
 
 
 def load_task(task_id: str) -> tuple[dict, pathlib.Path]:
@@ -68,8 +93,14 @@ def main() -> int:
 
     run_id = args.round_id
     run_dir = tdir / "history" / "runs" / run_id
-    if run_dir.exists() and any(run_dir.iterdir()):
-        raise SystemExit(f"run 目录已存在且非空，换一个 round-id: {run_dir}")
+    if run_dir.exists() and not run_dir.is_dir():
+        raise SystemExit(f"run 路径已存在且不是目录: {run_dir}")
+    if run_dir.is_dir() and any(run_dir.iterdir()):
+        if not is_pending_skeleton(run_dir):
+            raise SystemExit(f"run 目录已存在且非空，换一个 round-id: {run_dir}")
+        # 待跑骨架：删掉占位文件后按正式运行重新写；空 artifacts 目录保留复用。
+        for name in ("run.json", "scorecard.json"):
+            (run_dir / name).unlink(missing_ok=True)
     (run_dir / "artifacts").mkdir(parents=True, exist_ok=True)
 
     base_cfg = json.loads(pathlib.Path(args.config).read_text(encoding="utf-8"))
