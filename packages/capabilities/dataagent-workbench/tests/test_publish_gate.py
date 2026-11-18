@@ -659,3 +659,102 @@ def test_probe_source_version_survives_a_workbench_restart(tmp_path):
     restarted = Workbench(tmp_path, layer_client=LayerClient(DATA))
     prepared = prepare(restarted, full_completion(restarted, session_id, current))
     assert prepared.data['state'] == 'awaiting_human_confirmation'
+
+
+class FlakySecondaryClient:
+    """Fail the secondary source once, then delegate to the real data layer."""
+
+    def __init__(self, client):
+        self.client = client
+        self.failed = False
+
+    def probe(self, selection, *args, **kwargs):
+        if selection.source_id == 'secondary' and not self.failed:
+            self.failed = True
+            raise ValueError('transient probe failure')
+        return self.client.probe(selection, *args, **kwargs)
+
+    def __getattr__(self, name):
+        return getattr(self.client, name)
+
+
+def two_source_wal_workbench(tmp_path):
+    """Primary is observed; secondary must be retried once."""
+    keeper = sqlite3.connect(tmp_path / 'sales.db')
+    keeper.executescript(SEED.read_text())
+    keeper.execute('PRAGMA journal_mode=WAL')
+    keeper.execute('PRAGMA wal_autocheckpoint=0')
+    keeper.commit()
+    with sqlite3.connect(tmp_path / 'retry.db') as connection:
+        connection.executescript(
+            'CREATE TABLE retry_marker (code TEXT PRIMARY KEY, label TEXT);\n'
+            "INSERT INTO retry_marker VALUES ('X-1', 'retry');")
+    wb = Workbench(tmp_path, layer_client=FlakySecondaryClient(LayerClient(DATA)))
+    session_id = invoke(wb, 'intake_start', {
+        'goal': '两个来源中一个需要重试',
+        'mode': 'ontology_discovery',
+        'sources': [
+            {'source_id': 'primary', 'kind': 'sqlite', 'locator_ref': 'sales.db'},
+            {'source_id': 'secondary', 'kind': 'sqlite', 'locator_ref': 'retry.db'},
+        ],
+    }).data['session_id']
+    first = invoke(wb, 'intake_advance', {'session_id': session_id}).data
+    return wb, session_id, first, keeper
+
+
+def test_retrying_secondary_does_not_refresh_the_primary_source_version(tmp_path):
+    """Per-source pins: retrying B must not bless a WAL-only edit of A."""
+    wb, session_id, first, keeper = two_source_wal_workbench(tmp_path)
+    try:
+        assert first['next_actions'] == ['retry_probe']
+        session = wb.sessions.get(session_id, wb.ctx)
+        primary_ref = session.selected_versions['profile:primary']
+        secondary_ref = session.selected_versions['profile:secondary']
+        record = wb.store.current('source_version', session_id, scope=wb.scope)
+        primary_record = record['body']['sources']['primary']
+
+        database = tmp_path / 'sales.db'
+        before = database.read_bytes()
+        keeper.execute("INSERT INTO party VALUES ('P-3', 'Cedar')")
+        keeper.commit()
+        assert database.read_bytes() == before
+        assert (tmp_path / 'sales.db-wal').stat().st_size > 0
+
+        request = invoke(wb, 'intake_advance', {'session_id': session_id}).data
+        session = wb.sessions.get(session_id, wb.ctx)
+        # Only the retried source gets a new observation; A keeps its old pin.
+        assert session.selected_versions['profile:primary'] == primary_ref
+        assert session.selected_versions['profile:secondary'] != secondary_ref
+        record = wb.store.current('source_version', session_id, scope=wb.scope)
+        assert record['body']['sources']['primary'] == primary_record
+
+        declared, = [link for link in request['catalog']['relationships']
+                     if link['origin'] == 'declared']
+        inferred, = [link for link in request['catalog']['relationships']
+                     if link['origin'] == 'sample_supported']
+        current = draft(wb, session_id, request, [
+            {'table': 'doc_hdr', 'name': 'SalesOrder', 'grain': '每个账簿内的一份销售单',
+             'identity': ['book', 'doc_no']},
+            {'table': 'doc_line', 'name': 'SalesOrderLine', 'grain': '销售单的一条明细',
+             'identity': ['book', 'doc_no', 'seq'],
+             'properties': [{'column': 'cents', 'name': 'amountInCents'}]},
+            {'table': 'party', 'name': 'Customer', 'grain': '每个客户一行',
+             'identity': ['party_no'],
+             'properties': [{'column': 'nm', 'name': 'name'}]},
+            {'table': 'retry_marker', 'name': 'RetryMarker', 'grain': '每行一条重试标记',
+             'identity': ['code']},
+        ], [
+            {'evidence_id': declared['id'], 'name': 'belongsToOrder'},
+            {'evidence_id': inferred['id'], 'name': 'orderedBy'},
+        ])
+        completion = full_completion(wb, session_id, current)
+        completion['concepts'].append({
+            'entity': 'RetryMarker', 'properties': {
+                'code': {'column': 'code', 'value_type': 'string', 'required': True},
+                'label': {'column': 'label', 'value_type': 'string'},
+            }, 'identity_fields': ['code'],
+        })
+        with pytest.raises(ValueError, match='source changed since it was observed'):
+            prepare(wb, completion)
+    finally:
+        keeper.close()

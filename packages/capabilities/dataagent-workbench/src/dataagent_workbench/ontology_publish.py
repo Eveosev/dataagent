@@ -159,35 +159,41 @@ def _source_state(workspace, source):
 
 
 def record_source_versions(wb, session):
-    """Pin the source version when a probe writes a new observation.
+    """Pin each source version when that source's probe writes an observation.
 
-    Called right after ``IntakeService.advance`` stores its profiles.  The
-    record is keyed by the session and the profile refs it belongs to, so a
-    no-op advance (which does not probe) cannot move the baseline past an
-    external edit.  Publication requires this record for every file/SQLite
-    source.
+    A retry of source B must not refresh source A's pin: the record holds one
+    entry per source, tagged with the profile ref it was observed at, and only
+    the entry whose own profile ref changed is re-read.  A no-op advance
+    therefore cannot move any baseline past an external edit.
     """
     if session is None or not is_discovery(session):
         return
-    refs = [session.selected_versions.get('profile:' + source.source_id)
-            for source in session.sources]
-    refs = [ref for ref in refs if ref]
     previous = wb.store.current(SOURCE_VERSION_KIND, session.id, scope=wb.scope)
-    if previous is not None and (previous['body'] or {}).get('profile_refs') == refs:
-        return
-    sources = {}
+    previous_body = previous['body'] if previous is not None else {}
+    recorded = dict((previous_body or {}).get('sources') or {})
+    changed = False
     for source in session.sources:
         if source.kind not in {'file', 'sqlite'}:
             continue
+        ref = session.selected_versions.get('profile:' + source.source_id)
+        if not ref:
+            continue
+        entry = recorded.get(source.source_id)
+        if (isinstance(entry, dict) and entry.get('profile_ref') == ref
+                and isinstance(entry.get('state'), dict)
+                and not entry['state'].get('unreadable')):
+            continue
         try:
-            sources[source.source_id] = _source_state(wb.workspace, source)
+            state = _source_state(wb.workspace, source)
         except (OSError, PermissionError, ValueError) as exc:
-            sources[source.source_id] = {
-                'source_id': source.source_id, 'kind': source.kind,
-                'locator_ref': source.locator_ref, 'unreadable': str(exc)[:200],
-            }
-    body = {'session_id': session.id, 'profile_refs': refs,
-            'sources': sources, 'observed_at': _now()}
+            state = {'source_id': source.source_id, 'kind': source.kind,
+                     'locator_ref': source.locator_ref,
+                     'unreadable': str(exc)[:200]}
+        recorded[source.source_id] = {'profile_ref': ref, 'state': state}
+        changed = True
+    if not changed:
+        return
+    body = {'session_id': session.id, 'sources': recorded, 'observed_at': _now()}
     wb.store.commit(ChangeSet(writes=[Write(
         SOURCE_VERSION_KIND, session.id, wb.scope, body,
         previous['revision'] if previous is not None else None)]))
@@ -528,7 +534,12 @@ class PublishService:
         return files
 
     def _verify_probe_sources(self, session):
-        """Compare the live source with the version recorded at probe time."""
+        """Compare live sources with the per-source versions pinned at probe time.
+
+        The recorded profile ref must still be the one selected on the session:
+        a source that was re-probed has new evidence, so a candidate built from
+        the old profile refs is stale even if the file happens to be unchanged.
+        """
         sources = [source for source in session.sources
                    if source.kind in {'file', 'sqlite'}]
         if not sources:
@@ -538,9 +549,13 @@ class PublishService:
             raise ValueError('source observation version was not recorded; discover again')
         recorded = (row['body'] or {}).get('sources') or {}
         for source in sources:
-            expected = recorded.get(source.source_id)
+            entry = recorded.get(source.source_id)
+            expected = entry.get('state') if isinstance(entry, dict) else None
             if not isinstance(expected, dict) or expected.get('unreadable'):
                 raise ValueError('source observation version is missing; discover again')
+            ref = session.selected_versions.get('profile:' + source.source_id)
+            if entry.get('profile_ref') != ref:
+                raise ValueError('source observation changed; discover again')
             try:
                 actual = _source_state(self.wb.workspace, source)
             except OSError:
