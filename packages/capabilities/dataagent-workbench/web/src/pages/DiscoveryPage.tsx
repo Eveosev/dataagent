@@ -1,6 +1,7 @@
-import {useState} from 'react';
-import {api,display,humanDetail,technicalDetail} from '../client';
-import type {View} from '../client';
+import {useEffect,useState} from 'react';
+import {api,ApiError,display,humanDetail,technicalDetail} from '../client';
+import type {View,PublishCandidate,PublishDisposition} from '../client';
+import type {IntakeSession} from '../generated/IntakeSession';
 
 export type Relationship = {
  id:string; origin:'declared'|'sample_supported'; source_table:string; source_columns:string[];
@@ -12,8 +13,9 @@ type Column = {
 };
 export type Discovery = {
  source_revision?:string; coverage?:string;
+ publish_candidate?:{ref:string;state?:string;ontology_id?:string;ontology_revision?:string}|null;
  catalog:null|{
-  tables:{name:string;rows_observed:number;sampled:boolean;columns:Record<string,Column>;keys:string[][];identity_keys:string[][]}[];
+  tables:{name:string;source_id?:string;rows_observed:number;sampled:boolean;columns:Record<string,Column>;keys:string[][];identity_keys:string[][]}[];
   relationships:Relationship[];gaps:{table?:string;code:string}[];
  };
  draft:null|{
@@ -21,6 +23,7 @@ export type Discovery = {
   entities:{name:string;table:string;grain:string;identity:string[];
             properties:{name:string;column:string}[];extension_columns:string[]}[];
   relationships:Relationship[]; unresolved_tables:string[]; unresolved_relationships:Relationship[];
+  gaps?:{ref?:string;table?:string;code:string}[]; coverage?:string;
  };
 };
 
@@ -44,19 +47,150 @@ const gapLabels:Record<string,string>={
  declared_fk_target_key_unverified:'外键目标键无法核对',
  candidate_budget_exceeded:'部分候选超出展示上限',
 };
+const coverageNames:Record<string,string>={sampled:'抽样观察',partial:'部分读取',unknown:'覆盖未知'};
+const dispositionKindNames:Record<string,string>={unresolved_table:'未建模的表',unresolved_relationship:'未采用的关系',coverage_gap:'覆盖缺口',coverage:'来源覆盖'};
+type OpenItem={kind:string;ref:string;label:string};
+// 草案里的未决项与覆盖缺口：发布前必须逐项排除或接受（D1 门禁在服务端复核，
+// 这里先点名给用户核对）。
+function openItems(draft:NonNullable<Discovery['draft']>):OpenItem[]{
+ const items:OpenItem[]=[];
+ for(const table of draft.unresolved_tables||[])
+  items.push({kind:'unresolved_table',ref:String(table),label:`未建模的表 ${table}`});
+ for(const link of draft.unresolved_relationships||[])
+  items.push({kind:'unresolved_relationship',ref:String(link.id),
+   label:`未采用的关系 ${link.name||`${link.source_table} → ${link.target_table}`}`});
+ for(const gap of draft.gaps||[])
+  items.push({kind:'coverage_gap',ref:String(gap.ref||''),label:`覆盖缺口 ${gap.table?gap.table+' · ':''}${gapLabels[gap.code]||gap.code}`});
+ const coverage=draft.coverage||'unknown';
+ if(coverage!=='full')
+  items.push({kind:'coverage',ref:coverage,label:`来源覆盖 ${coverageNames[coverage]||coverage}`});
+ return items;
+}
+const shortDigest=(value:string|undefined)=>value?value.replace('sha256:','').slice(0,12):'—';
 
-export function DiscoveryPage({view,reload,onNew,onError}:{
- view:View;reload:()=>Promise<void>;onNew:()=>void;onError:(error:unknown)=>void;
+// 草案通过审核后的发布区块：候选定义摘要、来源快照摘要、未决项处置状态；
+// 未处置项点名并阻断，确认由人勾选后提交（网页是唯一确认通道）。
+function PublishBlock({session,discovery,reload,onError,onOpenOntologies}:{
+ session:IntakeSession;discovery:Discovery;reload:()=>Promise<void>;
+ onError:(error:unknown)=>void;onOpenOntologies?:()=>void;
+}){
+ const draft=discovery.draft!;
+ const base=`/api/sessions/${session.id}`;
+ const [candidate,setCandidate]=useState<PublishCandidate|null>(null),[checked,setChecked]=useState(false),[busy,setBusy]=useState(false);
+ const [failure,setFailure]=useState<{text:string;action:'rediscover'|'refresh'}|null>(null),[copied,setCopied]=useState(false);
+ const summary=discovery.publish_candidate||null;
+ const fetchCandidate=async()=>setCandidate(await api<PublishCandidate|null>(base+'/publish/candidate'));
+ useEffect(()=>{let cancelled=false;
+  (async()=>{try{const data=await api<PublishCandidate|null>(base+'/publish/candidate');if(!cancelled)setCandidate(data);}
+   catch(error){if(!cancelled)onError(error);}})();
+  return()=>{cancelled=true;};
+ },[summary?.ref,summary?.state]);
+ const published=summary?.state==='published';
+ // 候选必须锚定当前草案；草案更新后的旧候选不可确认。
+ const current=candidate&&candidate.draft_ref===draft.ref?candidate:null;
+ const items=openItems(draft);
+ const dispositionOf=(item:OpenItem)=>(current?.dispositions||[]).find((entry:PublishDisposition)=>entry.kind===item.kind&&entry.ref===item.ref);
+ const undisposed=items.filter(item=>!dispositionOf(item));
+ const completionPrompt=`继续当前工作区的本体发现任务 ${session.id}。草案 ${draft.ref} 已通过审核；调用 ontology_publish_prepare 补全每个概念的属性值类型、必需性与身份字段，对关系给出端点与角色，并对未决项与覆盖缺口逐项给出排除或接受的处置，生成发布候选供我在工作台确认。`;
+ async function confirm(){
+  if(!current)return;
+  setBusy(true);
+  try{
+   await api(base+'/publish/confirm','POST',{
+    candidate_ref:current.ref,draft_ref:current.draft_ref,
+    source_snapshot:current.source_snapshot,definition_digest:current.definition_digest,
+    expected_revision:session.revision,confirmed:true,reason:'工作台人工确认发布',
+   });
+   setChecked(false);setFailure(null);
+   await reload();await fetchCandidate();
+  }catch(error){
+   // 过期 / 来源变更 / 重复确认：中文说明 + 重新探查或刷新候选入口。
+   const raw=error instanceof ApiError?error.raw:'';
+   setFailure({text:error instanceof Error?error.message:String(error),
+    action:/discover again/.test(raw)?'rediscover':'refresh'});
+  }finally{setBusy(false);}
+ }
+ async function rediscover(){
+  setBusy(true);
+  try{await api(base+'/advance','POST',{});await reload();setFailure(null);}
+  catch(error){onError(error);}finally{setBusy(false);}
+ }
+ async function refreshCandidate(){
+  setBusy(true);
+  try{await reload();await fetchCandidate();setFailure(null);}
+  catch(error){onError(error);}finally{setBusy(false);}
+ }
+ if(published)
+  return <section className="discovery-card" data-testid="publish-card"><div className="panel-heading"><h2>发布为本体</h2><span className="badge">已发布</span></div>
+   <div className="notice green" data-testid="publish-done">草案已发布为正式本体 <code>{summary?.ontology_id}</code>（修订 {summary?.ontology_revision}），新任务将默认使用它。
+    {onOpenOntologies&&<button className="secondary" onClick={onOpenOntologies}>查看本体库</button>}</div>
+  </section>;
+ return <section className="discovery-card" data-testid="publish-card"><div className="panel-heading"><h2>发布为本体</h2><span className="badge">{current?'待人工确认':'待补全'}</span></div>
+  {failure&&<div className="notice amber" data-testid="publish-failure"><p>{failure.text}</p>
+   {failure.action==='rediscover'
+    ?<button className="secondary" disabled={busy} onClick={rediscover}>重新探查</button>
+    :<button className="secondary" disabled={busy} onClick={refreshCandidate}>刷新候选</button>}
+  </div>}
+  {current?<><h3>候选定义摘要 · {current.title||current.ontology_id}</h3>
+   <div className="discovery-entities">{Object.entries(current.definition.concepts).map(([name,concept])=>
+    <article key={name} className="discovery-entity" data-testid={`publish-concept-${name}`}>
+     <h3>{name}</h3><dl><dt>实体类型</dt><dd><code>{concept.entity_type}</code></dd>
+      <dt>身份字段</dt><dd>{concept.identity_fields.join(' + ')}</dd></dl>
+     <table className="mapping-table"><thead><tr><th>属性</th><th>值类型</th><th>必需</th></tr></thead>
+      <tbody>{Object.entries(concept.properties).map(([prop,definition])=><tr key={prop}>
+       <td>{prop}</td><td>{definition.value_type}</td><td>{definition.required?'必需':'可选'}</td></tr>)}</tbody>
+     </table>
+    </article>)}</div>
+   {Object.keys(current.definition.relations||{}).length>0&&<><h3>拟登记的关系</h3>
+    <ul className="discovery-links">{Object.entries(current.definition.relations).map(([name,relation])=>{
+     const roles=Array.isArray(relation)?relation:relation.roles;
+     return <li key={name}><div><strong>{name}</strong> · <code>{Array.isArray(relation)?name:relation.subject_concept}</code>（{roles[0]}） → <code>{Array.isArray(relation)?name:relation.object_concept}</code>（{roles[1]}）</div></li>;
+    })}</ul></>}
+   <h3>来源快照摘要</h3>
+   <dl className="publish-snapshot"><div><dt>来源修订</dt><dd><code title={current.source_revision}>{shortDigest(current.source_revision)}</code></dd></div>
+    <div><dt>结构指纹</dt><dd><code title={current.structure_fingerprint}>{shortDigest(current.structure_fingerprint)}</code></dd></div>
+    <div><dt>快照摘要</dt><dd><code title={current.source_snapshot}>{shortDigest(current.source_snapshot)}</code></dd></div>
+    <div><dt>本体标识</dt><dd><code>{current.ontology_id}</code> · 修订 {current.ontology_revision}</dd></div></dl>
+  </>:<div className="notice amber"><p>草案已通过审核。让 Agent 补全值类型、必需性与身份字段并生成发布候选后，在这里人工确认发布；Agent 工具不能代为确认。</p>
+   <div className="discovery-prompt"><code>{completionPrompt}</code><button className="secondary" onClick={()=>
+    navigator.clipboard.writeText(completionPrompt).then(()=>setCopied(true)).catch(onError)}>{copied?'已复制':'复制指令'}</button></div>
+  </div>}
+  <h3>未决项与覆盖缺口</h3>
+  {items.length>0?<ul className="publish-items" data-testid="publish-open-items">{items.map(item=>{
+   const disposition=dispositionOf(item);
+   return <li key={`${item.kind}:${item.ref}`} data-testid="publish-open-item">
+    {item.label} · {disposition
+     ?<span className="ok">{disposition.action==='exclude'?'已排除':'已接受'}（{disposition.reason}）</span>
+     :<span className="warn">未处置</span>}
+   </li>;})}</ul>:<p className="muted">无未决项与覆盖缺口。</p>}
+  {undisposed.length>0&&<div className="notice amber" data-testid="publish-blocked">
+   <p>有 {undisposed.length} 项未处置，发布前必须逐项排除或接受：{undisposed.map(item=>item.label).join('；')}。请在补全指令中给出处置。</p>
+  </div>}
+  <p className="help">发布后将成为新任务的默认目标本体；既有任务与已发布实例不受影响。</p>
+  <div className="discovery-review">
+   <label><input type="checkbox" checked={checked} disabled={!current||undisposed.length>0}
+    onChange={e=>setChecked(e.target.checked)}/> 我已核对候选定义与来源摘要，确认发布</label>
+   <button className="primary" disabled={!current||undisposed.length>0||!checked||busy} onClick={confirm}>{busy?'正在发布…':'确认发布'}</button>
+  </div>
+ </section>;
+}
+
+export function DiscoveryPage({view,reload,onNew,onError,onOpenOntologies}:{
+ view:View;reload:()=>Promise<void>;onNew:()=>void;onError:(error:unknown)=>void;onOpenOntologies?:()=>void;
 }){
  const [busy,setBusy]=useState(false),[copied,setCopied]=useState(false);
  const {session,discovery}=view;
  if(!discovery)return null;
  const {catalog,draft}=discovery;
- const source=session.sources[0];
- const profile=view.profiles[0];
- const recordKeys=profile?.metadata?.record_keys as {table:string}[]|undefined;
- const binaryFields=profile?.metadata?.binary_fields as Record<string,string[]>|undefined;
- const displayName=String(source.extensions?.['dataagent.display_name']||source.locator_ref.split('/').pop());
+ // 发现页对所有来源类型通用：显示名与样本行按表所属来源解析，不假设唯一来源。
+ const profilesById=new Map(view.profiles.map(profile=>[profile.source_id,profile]));
+ const sourceName=(sourceId:string|undefined)=>{
+  const source=session.sources.find(item=>item.source_id===sourceId);
+  if(!source)return '';
+  return String(source.extensions?.['dataagent.display_name']||source.options?.display_name||source.locator_ref.split('/').pop());
+ };
+ const displayName=session.sources.map(source=>
+  String(source.extensions?.['dataagent.display_name']||source.options?.display_name||source.locator_ref.split('/').pop())).join('、');
  const prompt=`继续当前工作区的本体发现任务 ${session.id}。调用 intake_inference 获取当前证据，提出实体、粒度、标识、属性和关系，再用 ontology_discovery_propose 提交草案供我在工作台审核。`;
  const base=`/api/sessions/${session.id}`;
  async function review(decision:'approve'|'reject'){
@@ -85,7 +219,9 @@ export function DiscoveryPage({view,reload,onNew,onError}:{
    <button className="secondary" onClick={onNew}>新建接入</button>
   </header>
   {session.next_actions?.includes('retry_probe')&&<div className="notice amber">
-   <p>{probe.summary||'来源探查未完成'}{probe.detail&&<details className="tech-detail"><summary>详情</summary><pre>{technicalDetail(probe.detail)}</pre></details>}</p>
+   {/* 折叠详情不嵌在 <p> 内：details 与 pre 是块级元素，浏览器会拆开非法嵌套。 */}
+   <p>{probe.summary||'来源探查未完成'}</p>
+   {probe.detail&&<details className="tech-detail"><summary>详情</summary><pre>{technicalDetail(probe.detail)}</pre></details>}
    <button className="secondary" disabled={busy} onClick={retry}>重新探查</button>
   </div>}
   {!!catalog?.tables.length&&(!draft||draft.state==='rejected')&&<section className="discovery-card">
@@ -120,14 +256,20 @@ export function DiscoveryPage({view,reload,onNew,onError}:{
     <button className="primary" disabled={busy} onClick={()=>review('approve')}>确认当前草案</button>
    </div>}
   </section>}
+  {draft&&draft.state==='approved'&&<PublishBlock session={session} discovery={discovery} reload={reload}
+   onError={onError} onOpenOntologies={onOpenOntologies}/>}
   {catalog&&<section className="discovery-card">
    <h2>来源证据</h2>
-   <p className="muted">{catalog.tables.length} 张表 · 来源修订 <code title={discovery.source_revision}>{discovery.source_revision?.replace('sha256:','').slice(0,12)}</code></p>
+   <p className="muted">{catalog.tables.length} 张表 · 来源修订 <code title={discovery.source_revision}>{shortDigest(discovery.source_revision)}</code></p>
    {catalog.tables.map(table=>{
-    const rows=recordKeys?.flatMap((key,index)=>key.table===table.name?[{values:profile.records?.[index],binary:binaryFields?.[index]}]:[]).slice(0,3)||[];
+    // 样本记录按表所属的来源取，多来源时不串表。
+    const profile=table.source_id?profilesById.get(table.source_id):view.profiles[0];
+    const recordKeys=profile?.metadata?.record_keys as {table:string}[]|undefined;
+    const binaryFields=profile?.metadata?.binary_fields as Record<string,string[]>|undefined;
+    const rows=recordKeys?.flatMap((key,index)=>key.table===table.name?[{values:profile?.records?.[index],binary:binaryFields?.[index]}]:[]).slice(0,3)||[];
     const fields=Object.values(table.columns);
     return <details key={table.name} className="discovery-table">
-    <summary><code>{table.name}</code> <span className="muted">{table.rows_observed} 行{table.sampled?'抽样':'已观察'}</span></summary>
+    <summary><code>{table.name}</code> <span className="muted">{table.rows_observed} 行{table.sampled?'抽样':'已观察'}{sourceName(table.source_id)?` · ${sourceName(table.source_id)}`:''}</span></summary>
     <p>主键与唯一键 · {table.keys.map(key=>key.join(' + ')).join(' / ')||'未观察到'}</p>
     {table.identity_keys.length<table.keys.length&&<p className="muted">含已观察空值的键不可用作标识。</p>}
     <table className="mapping-table"><thead><tr><th>字段</th><th>声明类型</th><th>空值行</th><th>观测去重值</th>{rows.map((_,index)=><th key={index}>样本 {index+1}</th>)}</tr></thead>

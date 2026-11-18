@@ -1,5 +1,5 @@
 import {useEffect,useRef,useState} from 'react';
-import {api,ApiError,display,locate,findAnchorRow,isDecisionEvidence,decisionSourceName,issueBlocksSave,issueObject,issueReasons,propertyLabel,entityTypeLabel,reviewStateNames,humanDetail,technicalDetail,legacyProperties,legacyEntityType} from '../client';
+import {api,ApiError,display,locate,findAnchorRow,isDecisionEvidence,decisionSourceName,issueBlocksSave,issueObject,issueReasons,propertyLabel,entityTypeLabel,reviewStateNames,humanDetail,technicalDetail,conceptOf} from '../client';
 import type {CorrectionView,ObjectView,SourceProfile,Issue,WorkObject,ConflictValue,DispositionOption,Selector} from '../client';
 import {SourceViewer} from '../components/SourceViewer';
 
@@ -28,7 +28,7 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
   setView(data);
   if(!initialized.current){
    initialized.current=true;
-   const properties=Object.keys(legacyProperties(data.ontology));
+   const properties=Object.keys(conceptOf(data.ontology,data.ontology_concept).properties);
    if(properties.length)setField(properties[0]);
    const pending=sessionStorage.getItem(localKey);
    if(pending&&data.session.phase!=='saved'){
@@ -74,8 +74,10 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
  }
  // 整批保存还被哪些对象挡住（FDE-12）：点名对象与属性，供纠正后的琥珀色说明。
  function blockedList(data:ObjectView):string{
-  const identity=data.ontology.identity_fields?.[0]||'number';
-  const required=Object.entries(legacyProperties(data.ontology)).filter(([,definition])=>definition.required).map(([prop])=>prop);
+  // 缺单号的对象按任务固定概念的身份字段点名（多概念本体不再回退 'number'）。
+  const concept=conceptOf(data.ontology,data.ontology_concept);
+  const identity=concept.identity_fields[0]||'';
+  const required=Object.entries(concept.properties).filter(([,definition])=>definition.required).map(([prop])=>prop);
   const parts:string[]=[];
   for(const entry of data.objects){
    const label=objectLabel(entry,data);
@@ -205,7 +207,7 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
  const idx=Math.min(index,Math.max(0,(view?.objects.length||0)-1));
  idxRef.current=idx;
  if(!view)return <main className="loading">正在恢复任务…</main>;
- const conceptProperties=legacyProperties(view.ontology);
+ const conceptProperties=conceptOf(view.ontology,view.ontology_concept).properties;
  const properties=Object.keys(conceptProperties);
  const done=view.session.phase==='saved';
  const object=view.objects[idx];
@@ -235,7 +237,7 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
  };
  // 缺键对象不显示内部 candidate 哈希，改用来源描述点名（FDE-11）。
  const objectLabel=(entry:WorkObject,data:ObjectView=view)=>{
-  const keyValue=entry.values[data.ontology.identity_fields?.[0]||'number'];
+  const keyValue=entry.values[conceptOf(data.ontology,data.ontology_concept).identity_fields[0]||''];
   if(keyValue!==undefined&&keyValue!==null&&keyValue!=='')return String(keyValue);
   for(const anchors of Object.values(entry.evidence||{})){
    for(const anchor of anchors){
@@ -287,7 +289,7 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
    {entry.unresolved.length>0&&<span className="badge">{entry.unresolved.length} 项未解决</span>}</button>)}</div>
   {view.objects.length===0&&<div className="empty">生成映射预览后，在这里查看对象。</div>}
   <SourceViewer sessionId={sessionId} profile={profile as SourceProfile|undefined} anchor={sourceAnchor?{source_ref:sourceAnchor.source_id,selector:sourceAnchor.selector}:undefined} recordIndex={sourceRow} sourceField={sourceField}/>
- </section><section className="mapping-panel"><div className="panel-heading"><strong>对象详情</strong><span className="badge">{entityTypeLabel(legacyEntityType(view.ontology))}</span></div>
+ </section><section className="mapping-panel"><div className="panel-heading"><strong>对象详情</strong><span className="badge">{entityTypeLabel(conceptOf(view.ontology,view.ontology_concept).entity_type)}</span></div>
   {object?<><div className="mapping-table-scroll"><table className="mapping-table"><thead><tr><th>本体属性</th><th>当前值</th><th>来源定位</th><th>状态</th></tr></thead><tbody>{properties.map(prop=>{
    const anchors=object.evidence[prop]||[];const corrected=corrections.some(c=>c.property===prop);
    const issue=view.issues.some(i=>i.target===prop);

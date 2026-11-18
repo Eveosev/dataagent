@@ -1,5 +1,5 @@
 import {useEffect,useRef,useState} from 'react';
-import {api,ApiError,display,transformNames,propertyLabel,entityTypeLabel,sourceProblem,issueReasons,legacyProperties,legacyEntityType} from '../client';
+import {api,ApiError,display,transformNames,propertyLabel,entityTypeLabel,sourceProblem,issueReasons,conceptOf} from '../client';
 import type {View,Draft,FieldBinding,IntakeSession,MappingSpec,SourceProfile,CorrectionView} from '../client';
 import {SourceViewer} from '../components/SourceViewer';
 import {DiscoveryPage} from './DiscoveryPage';
@@ -9,13 +9,15 @@ function savedMappings(view:View){
  return (view.preview?.extensions?.['intake.source_mappings']||{}) as Record<string,MappingSpec>;
 }
 
+// 默认绑定按任务固定概念的属性名与来源字段同名匹配（多概念本体不再读全局旧字段）。
 function defaultBindings(view:View,sourceId:string){
  const profile=view.profiles.find(p=>p.source_id===sourceId);
- return Object.fromEntries(Object.keys(legacyProperties(view.ontology)).filter(k=>profile?.fields?.includes(k))
+ const properties=conceptOf(view.ontology,view.ontology_concept).properties;
+ return Object.fromEntries(Object.keys(properties).filter(k=>profile?.fields?.includes(k))
   .map(k=>[k,{source_field:k,transform:'identity' as const}]));
 }
 
-export function MappingPage({sessionId,onNew,onError,onOpenObjects}:{sessionId:string;onNew:()=>void;onError:(e:unknown)=>void;onOpenObjects?:()=>void}){
+export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenOntologies}:{sessionId:string;onNew:()=>void;onError:(e:unknown)=>void;onOpenObjects?:()=>void;onOpenOntologies?:()=>void}){
  const [view,setView]=useState<View|null>(null),[bindings,setBindings]=useState<Record<string,FieldBinding>>({});
  const [field,setField]=useState(''),[sourceId,setSourceId]=useState(''),[record,setRecord]=useState(0),[dirty,setDirty]=useState(false),[busy,setBusy]=useState(false),[onlyProblems,setOnlyProblems]=useState(false),[draftState,setDraftState]=useState('');
  // FDE-12：字段详情里的纠正同样给绿色成功提示；被其他问题挡住时点名，不走红色错误条。
@@ -57,14 +59,14 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects}:{sessionId:s
    const id=selectedSource.current||local?.source_id||data.draft.source_id||data.profiles[0]?.source_id||'';
    const chosen=sourceBindings.current[id]||{};
    selectedSource.current=id;setSourceId(id);setBindings(chosen);bindingsRef.current=chosen;
-   setField(current=>current||data.draft.selected_field||Object.keys(legacyProperties(data.ontology))[0]||'');
+   setField(current=>current||data.draft.selected_field||Object.keys(conceptOf(data.ontology,data.ontology_concept).properties)[0]||'');
    initialized.current=!!data.profiles.length;
   }else{
    const profile=data.profiles[0];const exact=defaultBindings(data,profile?.source_id||'');
    const chosen=local?.bindings||data.draft.bindings||data.preview?.mapping.bindings||exact;
    setBindings(chosen);bindingsRef.current=chosen;
    if(!initialized.current||reset){
-    setField(local?.selected_field||data.draft.selected_field||Object.keys(legacyProperties(data.ontology))[0]||'');
+    setField(local?.selected_field||data.draft.selected_field||Object.keys(conceptOf(data.ontology,data.ontology_concept).properties)[0]||'');
     setSourceId(data.draft.source_id||profile?.source_id||'');setRecord(data.draft.record_index||0);initialized.current=!!profile;
    }
   }
@@ -99,6 +101,8 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects}:{sessionId:s
    function propose(source:SourceProfile,fields:Record<string,FieldBinding>,prior?:MappingSpec):MappingSpec{
     const used=new Set(Object.values(fields).map(b=>b.source_field));
     return {...prior,id:'candidate',revision:'1',ontology_revision:`${loaded.ontology.id}@${loaded.ontology.revision}`,
+     // 多概念本体必须点名任务固定的概念，服务端会拒绝概念外的提案。
+     concept:conceptOf(loaded.ontology,loaded.ontology_concept).name,
      source_fingerprint:String(source.metadata?.structure_fingerprint),bindings:fields,
      unmapped:Object.fromEntries((source.fields||[]).filter(f=>!used.has(f)).map(f=>[f,'extension']))};
    }
@@ -143,7 +147,7 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects}:{sessionId:s
   }catch(error){onError(error);}
  }
  if(!view)return <main className="loading">正在恢复任务…</main>;
- if(view.discovery)return <DiscoveryPage view={view} reload={load} onNew={onNew} onError={onError}/>;
+ if(view.discovery)return <DiscoveryPage view={view} reload={load} onNew={onNew} onError={onError} onOpenOntologies={onOpenOntologies}/>;
  const phase=view.session.phase,done=phase==='saved',working=phase==='queued'||phase==='probing';
  const canRetry=view.session.next_actions?.includes('retry_probe');
  // FDE-10：任一来源探查失败时进度标红，副标题不再宣称「识别与探查已完成」。
@@ -155,7 +159,7 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects}:{sessionId:s
   key.endsWith('.'+binding?.source_field)&&anchors.some(anchor=>proof.some(candidate=>JSON.stringify(candidate)===JSON.stringify(anchor))));
  const sourceRow=instance?(direct?Number(direct[0].split('.',1)[0]):-1):record;
  const anchor=direct?.[1][0]||proof[0]||(!instance?profile?.anchors?.[`${sourceRow}.${binding?.source_field}`]?.[0]:undefined);
- const conceptProperties=legacyProperties(view.ontology);
+ const conceptProperties=conceptOf(view.ontology,view.ontology_concept).properties;
  const fields=Object.keys(conceptProperties).filter(k=>!onlyProblems||!bindings[k]||view.preview?.issues.some(i=>(i as Record<string,unknown>).target===k));
  const problemCount=(view.preview?.issues||view.session.issues||[]).length;
  // 预览问题已带对象标签与中文理由（issue_summary）；会话问题是探查失败，
@@ -177,7 +181,7 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects}:{sessionId:s
  <div className="work-grid"><section className="source-panel"><div className="panel-heading"><strong>来源</strong><span className="badge">{view.session.sources.length} 份材料</span></div>
   <div className="source-tabs">{view.session.sources.map(s=><button key={s.source_id} className={(profile?.source_id===s.source_id?'active ':'')+'source-tab'} onClick={()=>selectSource(s.source_id)}><span>▤</span><span>{String(s.options?.display_name||s.locator_ref.split('/').pop())}</span></button>)}</div>
   <SourceViewer sessionId={sessionId} profile={profile} anchor={anchor as never} recordIndex={sourceRow} sourceField={binding?.source_field}/>
- </section><section className="mapping-panel"><div className="panel-heading"><strong>目标映射</strong><span className="badge">{entityTypeLabel(legacyEntityType(view.ontology))}</span></div>
+ </section><section className="mapping-panel"><div className="panel-heading"><strong>目标映射</strong><span className="badge">{entityTypeLabel(conceptOf(view.ontology,view.ontology_concept).entity_type)}</span></div>
  <div className="mapping-toolbar"><span><strong>{Object.keys(bindings).length}</strong> / {Object.keys(conceptProperties).length} 字段已绑定</span><label><input type="checkbox" checked={onlyProblems} onChange={e=>setOnlyProblems(e.target.checked)}/>只看待处理</label></div>
  <div className="mapping-table-scroll"><table className="mapping-table"><thead><tr><th>本体属性</th><th>来源字段</th><th>转换方式</th><th>预览值</th></tr></thead><tbody>{fields.map(name=>{
   const b=bindings[name];const issue=view.preview?.issues.some(i=>(i as Record<string,unknown>).target===name);

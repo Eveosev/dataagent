@@ -7,7 +7,9 @@ import type {Discovery} from './pages/DiscoveryPage';
 export type {SourceProfile,IntakeSession,OntologyRevision,MappingSpec,FieldBinding};
 export type Preview=MappingPreview & {review_state:string; mapping_reused?:boolean; corrections?:unknown[]};
 export type Draft={bindings?:Record<string,FieldBinding>;source_bindings?:Record<string,Record<string,FieldBinding>>;selected_field?:string;source_id?:string;record_index?:number};
-export type View={session:IntakeSession;profiles:SourceProfile[];ontology:OntologyRevision;preview:Preview|null;draft:Draft;mapping_reused:boolean;discovery:Discovery|null;correction_views?:CorrectionView[]};
+// ontology_concept：任务固定映射目标的概念名（后端 _target 解析）；多概念本体
+// 的页面一律按它取概念，legacy 单概念本体忽略它走旧字段。
+export type View={session:IntakeSession;profiles:SourceProfile[];ontology:OntologyRevision;ontology_concept?:string;preview:Preview|null;draft:Draft;mapping_reused:boolean;discovery:Discovery|null;correction_views?:CorrectionView[]};
 export type Selector={kind:string;page?:number;char_start?:number;char_end?:number;bbox?:number[];pointer?:string;range?:string;sheet?:string;keys?:Record<string,unknown>;field?:string;unit_ref?:string;extensions?:Record<string,unknown>|null};
 export type Evidence={source_id:string;selector:Selector};
 export type WorkObject={id:string;entity_type:string;values:Record<string,unknown>;evidence:Record<string,Evidence[]>;unresolved:string[];extensions?:Record<string,unknown>|null;conflicts?:ConflictDetail[]};
@@ -21,10 +23,29 @@ export type ConflictDetail={entity_id:string;object?:string;field:string;reason?
 // 来源处置（后端 disposition_options / dispositions）：被拦问题的出路。
 export type DispositionOption={action:'partition_not_applicable'|'exclude_record';source_id:string;source_name:string;partition?:number|string;record?:number;gap?:string;reason_hint?:string};
 export type DispositionEntry={action:string;source_id:string;reason:string;partition?:number|string;record?:number;record_values?:Record<string,unknown>;decision_ref?:string;recorded_at?:string};
-export type ObjectView={session:IntakeSession;ontology:OntologyRevision;ontology_revision:string;ontology_draft:Record<string,unknown>|null;
+export type ObjectView={session:IntakeSession;ontology:OntologyRevision;ontology_revision:string;ontology_concept?:string;ontology_draft:Record<string,unknown>|null;
  sources:(SourceProfile&{display_name:string})[];objects:WorkObject[];corrections:Correction[];correction_views:CorrectionView[];issues:Issue[];
  conflicts:ConflictDetail[];dispositions:DispositionEntry[];disposition_options:DispositionOption[];
  review_state:string|null;preview_ref?:string;mapping_revision:string|null;draft:Draft};
+// 本体注册表（GET /api/ontologies）：内置 / 发现发布 / 已停用；default_ontology 为
+// 注册表当前指针（指针被停用清空时后端回退到内置）。
+export type RegistryEntry={id:string;ontology_revision:string;origin:'builtin'|'discovery';state:'active'|'retired';title:string;concepts:string[];default_concept:string;source_snapshot:string;published_at:string;published_by:string;retired_at:string|null;retired_by:string|null;retire_reason:string|null;registry_revision:string;is_default:boolean};
+export type Registry={ontologies:RegistryEntry[];default_ontology:string|null;pointer:{ontology_id:string|null;concept:string;updated_at?:string;updated_by?:string}|null};
+export const originNames:Record<string,string>={builtin:'内置',discovery:'发现发布'};
+export const ontologyStateNames:Record<string,string>={active:'在用',retired:'已停用'};
+// 标题展示：内置 procurement 沿用中文习惯名，其余用注册表标题（缺省回 ID）。
+export const builtinTitles:Record<string,string>={procurement:'采购资料'};
+export const registryTitle=(entry:Pick<RegistryEntry,'id'|'title'>)=>builtinTitles[entry.id]||entry.title||entry.id;
+// 发布候选（GET /api/sessions/{sid}/publish/candidate）：人在网页确认的精确对象，
+// 携带完整定义、来源摘要与全部处置记录。
+export type PublishDisposition={kind:string;ref:string;action:'exclude'|'accept';reason:string};
+export type PublishCandidate={
+ ref:string;session_id:string;draft_ref:string;state:'candidate'|'published';
+ ontology_id:string;ontology_revision:string;title:string;
+ definition:{id:string;revision:string;concepts:Record<string,{entity_type:string;identity_fields:string[];properties:Record<string,{value_type:string;required?:boolean;description?:string}>}>;relations:Record<string,{roles:string[];subject_concept?:string;object_concept?:string}|string[]>};
+ definition_digest:string;source_revision:string;source_snapshot:string;structure_fingerprint:string;session_revision:string;
+ dispositions:PublishDisposition[];candidate_revision?:string;publication_ref?:string;
+};
 // 问题分级对应后端约定：整批保存被任何未解决问题拦下（dataagent-ontology
 // service.py 的 prepare_review），其中这三个 code 能被对象页的实例纠正清除
 //（dataagent_workbench intake_service 的 _RESOLVABLE_ISSUES），其余问题在修订
@@ -78,9 +99,30 @@ const errorTexts:Record<string,string>={
  'preview contains unresolved issues':'预览仍有未解决的问题，请逐项核对后再保存',
  'preview does not need correction validation':'当前预览不需要重新校验，请刷新页面后重试',
  'unsupported file type':'暂不支持该文件类型',
- 'file exceeds 32 MiB limit':'文件超过 32 MiB 限制',
+ 'file exceeds 32 MiB limit':'文件超过 32 MB 限制',
  'Failed to fetch':'网络连接失败，请稍后重试',
  'Not Found':'当前服务不支持该操作，请更新工作台服务后再试',
+ // 发布与停用（D1 门禁）：拒绝原文统一换成中文说法，页面再按原文分类给
+ // 「重新探查」或「刷新候选」入口。
+ 'candidate is stale; prepare it again':'发布候选已过期，请让 Agent 重新生成候选后再确认',
+ 'candidate was already published':'该候选已发布过，请刷新后查看本体库',
+ 'discovery draft changed; prepare the candidate again':'草案已更新，请让 Agent 重新生成候选',
+ 'discovery draft changed; complete the latest draft':'草案已更新，请补全最新草案',
+ 'task changed; prepare the candidate again':'任务已有更新，请让 Agent 重新生成候选',
+ 'discovery session changed; reload inputs':'发现任务已有更新，请重新载入',
+ 'source changed since it was observed; discover again':'来源在观察后发生了变化，请重新探查',
+ 'source snapshot changed; discover again':'来源快照已变化，请重新探查',
+ 'source snapshot reference is missing; discover again':'来源快照缺失，请重新探查',
+ 'source structure changed; discover again':'来源结构已变化，请重新探查',
+ 'source observation changed; discover again':'来源观察已变化，请重新探查',
+ 'source file is no longer readable; discover again':'来源文件已不可读，请重新探查',
+ 'rejected discovery drafts cannot be published':'已退回的草案不能发布',
+ 'retiring an ontology requires explicit confirmation':'停用本体需要明确确认',
+ 'retiring an ontology needs a reason':'停用本体必须填写原因',
+ 'the builtin ontology is the workspace fallback and cannot be retired':'内置本体是工作区兜底，不能停用',
+ 'ontology is already retired':'该本体已停用',
+ 'ontology not registered':'本体不存在或未注册',
+ 'registry changed; reload before retiring':'本体注册表已有更新，请刷新后重试',
 };
 export function translateError(message:string):string{return errorTexts[message.trim()]||message;}
 // 用户可见的后端原文（问题 detail、报错 message）统一在这里中文化：已知原文
@@ -97,11 +139,22 @@ const detailTexts:Record<string,string>={
  'probe returned the same checkpoint without progress':'探查没有新进展，已暂停',
  'segment limit reached in one advance':'单次探查分段数达到上限',
 };
+// 前缀匹配：后端在固定原文后拼接具体项（如不再可解析的字段名），中文说法
+// 保留拼接部分，字段名原样透出。
+const detailPrefixes:[string,string][]=[
+ ['recorded fields no longer resolve in the source','来源字段在当前来源中已不再可解析'],
+];
 export type HumanDetail={summary:string;detail?:string};
 export function humanDetail(raw:unknown):HumanDetail{
  const text=String(raw??'').trim();
  if(!text)return {summary:''};
  if(detailTexts[text])return {summary:detailTexts[text]};
+ for(const [prefix,summary] of detailPrefixes){
+  if(text.startsWith(prefix)){
+   const rest=text.slice(prefix.length).replace(/^[\s:：]+/,'');
+   return {summary:rest?`${summary}：${rest}`:summary};
+  }
+ }
  // 中文原文按原文进主文案；未识别的英文原文只进折叠详情。
  if(/[\u4e00-\u9fff]/.test(text))return {summary:text};
  return {summary:'',detail:text};
@@ -146,10 +199,24 @@ export async function api<T>(path:string,method='GET',body?:unknown):Promise<T>{
 }
 export const display=(value:unknown)=>value===null||value===undefined?'—':typeof value==='object'?JSON.stringify(value):String(value);
 // D0 起本体可携带多概念，legacy 单概念字段（entity_type / properties）在生成类型里
-// 变为可选；运行时单概念任务仍按原样序列化这些字段。页面统一从这里兜底取值，
-// 多概念的页面适配由 D1 基于 concepts 重做，这里不做结构改动。
+// 变为可选；运行时单概念任务仍按原样序列化这些字段。页面统一从这里取任务固定
+// 概念：多概念本体走 concepts[任务固定的 concept]，旧字段兜底。
 export const legacyProperties=(ontology:{properties?:Record<string,{required?:boolean}>}|null|undefined):Record<string,{required?:boolean}>=>ontology?.properties||{};
 export const legacyEntityType=(ontology:{entity_type?:string}|null|undefined):string=>ontology?.entity_type||'';
+export type ConceptView={name:string;entity_type:string;properties:Record<string,{required?:boolean}>;identity_fields:string[]};
+// 任务固定概念：ontology_concept 命中 concepts 时用它；多概念但未给名字时退到
+// 第一个概念（后端 _target 总会解析出名字，这里只是兜底）；无 concepts 的 legacy
+// 定义按 entity_type 单概念读旧字段。
+export function conceptOf(ontology:OntologyRevision|null|undefined,concept?:string|null):ConceptView{
+ const concepts=ontology?.concepts;
+ if(concepts&&Object.keys(concepts).length){
+  const name=concept&&concepts[concept]?concept:Object.keys(concepts)[0];
+  const found=concepts[name];
+  return {name,entity_type:found.entity_type,properties:found.properties||{},identity_fields:found.identity_fields||[]};
+ }
+ return {name:legacyEntityType(ontology),entity_type:legacyEntityType(ontology),
+  properties:legacyProperties(ontology),identity_fields:ontology?.identity_fields||[]};
+}
 export const transformNames:Record<string,string>={identity:'保留原值',decimal:'十进制数',minor_to_major:'分 → 元（÷100）',integer:'整数',date:'日期',datetime:'带时区时间',enum:'枚举映射',combine:'组合字段',choose:'条件选择'};
 // 中英对照标签（FDE-11）：本体属性、实体类型与审核状态都有中文说法；
 // 没有对应中文时保留原名，不猜不译。
