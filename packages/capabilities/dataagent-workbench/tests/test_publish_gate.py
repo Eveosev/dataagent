@@ -478,6 +478,19 @@ def test_dropped_draft_items_are_reported_in_the_candidate_summary(tmp_path):
     assert view['dropped'] == candidate['dropped']
 
 
+def test_omitting_a_draft_entity_is_rejected_not_reported_as_dropped(tmp_path):
+    """Concepts cannot be dropped; the candidate diff only covers properties
+    and relationships.  The page's concept branch is defensive, not an
+    accepted flow, so the entity completeness gate stays in force."""
+    wb, session_id, request = workbench(tmp_path)
+    current = full_draft(wb, session_id, request)
+    completion = full_completion(wb, session_id, current)
+    completion['concepts'] = [item for item in completion['concepts']
+                              if item['entity'] != 'Customer']
+    with pytest.raises(ValueError, match='every draft entity must be completed'):
+        prepare(wb, completion)
+
+
 def test_stale_task_draft_and_source_confirmations_are_rejected(tmp_path):
     wb, session_id, request = workbench(tmp_path)
     current = full_draft(wb, session_id, request)

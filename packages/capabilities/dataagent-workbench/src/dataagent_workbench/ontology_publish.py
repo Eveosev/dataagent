@@ -293,9 +293,11 @@ def _dropped_draft_items(draft, completed_ids, completed_columns,
     """Draft-selected items the completion left out of the candidate.
 
     A completion may carry only some of the draft's properties and only some
-    of its selected relationships; in principle an entity may be left out too.
-    The candidate summary lists every difference so the publish page can show
-    the human exactly which draft choices the published definition drops.
+    of its selected relationships.  Draft entities may not be omitted: the
+    completeness gate below rejects that, so the ``concept`` branch here is
+    defensive only and is not an accepted publication path.  The candidate
+    summary lists every reachable difference so the publish page can show the
+    human exactly which draft choices the published definition drops.
     Relationship references are the evidence ids the disposition gate already
     uses, so the page can pair a dropped relationship with its disposition.
     """
@@ -471,6 +473,9 @@ def build_candidate(wb, draft, catalog, completion, *, revision='1'):
             'properties': anchors,
         }
 
+    # Gate boundary: a published concept is never silently dropped from the
+    # draft.  The diff's concept branch stays defensive for a future explicit
+    # flow; today only properties and relationships can be left out.
     missing_entities = sorted(set(entities) - seen_entities)
     if missing_entities:
         raise ValueError('every draft entity must be completed: %s'

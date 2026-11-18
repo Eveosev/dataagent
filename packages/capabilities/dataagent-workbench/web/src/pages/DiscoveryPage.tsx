@@ -92,6 +92,8 @@ function droppedItems(dropped:DroppedItem[],label:(table:string)=>string,
    return {kind:'unresolved_relationship',ref:item.ref,dropped:true,
     needsDisposition:true,label:`补全时放弃的草案关系${detail?` ${detail}`:''}`};
   }
+  // 防御分支：后端要求每个草案实体都补全，概念目前不会被放弃；关系与属性
+  // 才是可到达、需要逐项确认的删除项。
   if(item.kind==='concept')
    return {kind:'dropped_concept',ref:item.ref,dropped:true,needsDisposition:false,
     externalAck:removed?.concepts.has(item.name||item.ref)===true,
@@ -192,11 +194,22 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
   label:`${dispositionKindNames[entry.kind]||entry.kind} ${entry.ref}`}))];
  // 未处置只阻断后端门禁要求 Agent 表态的项；补全时放弃的概念/属性只需用户确认。
  const undisposed=allItems.filter(item=>item.needsDisposition!==false&&!dispositionOf(item));
- // Agent 处置与被放弃项的逐项同意：每一项都要用户勾选核对，全部同意前确认发布禁用；
- // 修订差异已列出的删除项用同一个「旧数据不迁移」勾选，勾一处两处同步。
+ // Agent 处置与被放弃项的逐项同意：每一项都要用户勾选核对，全部同意前确认发布禁用。
+ // 修订差异里的删除项同样逐项记录同意状态；迁移确认始终单独保留，多个删除项
+ // 时一次迁移确认不能代勾任何一项（只有候选整体仅放弃这一项时才与迁移确认同步）。
  const agreements=allItems.filter(item=>item.needsDisposition===false||!!dispositionOf(item));
- const dispositionsAgreed=agreements.every(item=>item.externalAck===true
-  ?migrationAck:agreed[`${item.kind}:${item.ref}`]===true);
+ const dispositionsAgreed=agreements.every(item=>agreed[`${item.kind}:${item.ref}`]===true);
+ const externalItems=allItems.filter(item=>item.externalAck===true);
+ const singleDropped=allItems.filter(item=>item.dropped===true).length===1;
+ const acknowledgeMigration=(value:boolean)=>{
+  setMigrationAck(value);
+  // 只有候选整体仅放弃这一项时才与迁移确认同步；同时放弃关系等其它项时，
+  // 迁移确认不代勾，避免一次操作放行多项。
+  if(externalItems.length===1&&singleDropped){
+   const item=externalItems[0];
+   setAgreed(previous=>({...previous,[`${item.kind}:${item.ref}`]:value}));
+  }
+ };
  const copyPrompt=(text:string,done:()=>void)=>navigator.clipboard.writeText(text).then(done).catch(onError);
  // 复制给用户转交 Agent 的指令只用业务话术，不出现内部工具名（FDE2-12）。
  const completionPrompt=`继续当前工作区的本体发现任务 ${session.id}。草案 ${draft.ref} ${draft.state==='pending'?'仍待审核':'已通过审核'}；请补全每个概念的属性值类型、必需性与身份字段，对关系给出端点与角色，对未决项与覆盖缺口逐项给出排除或接受的处置并说明影响，生成发布候选供我在工作台确认。`;
@@ -266,7 +279,7 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
    <p>候选已过期：任务修订已更新，后端会拒绝该候选。请让 Agent 重新生成发布候选后再确认。</p>
   </div>}
   {current?<><RevisionPublishNotice candidate={current} acknowledged={migrationAck}
-    onAcknowledge={setMigrationAck} disabled={expired}/>
+    onAcknowledge={acknowledgeMigration} disabled={expired}/>
    <h3>候选定义摘要 · {current.title||current.ontology_id}</h3>
    <DiscoveryConcepts testid={name=>`publish-concept-${name}`} concepts={Object.entries(current.definition.concepts).map(([name,concept])=>{
     const entity=draft.entities.find(item=>item.name===name);
@@ -312,11 +325,11 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
      <p className="help">{dropped&&'补全候选未带入该草案项。'}{disposition.action==='exclude'?'Agent 已排除':'Agent 已接受'}（{disposition.reason}）。影响：{impactOf(item,disposition.action)}</p>
     </>:item.externalAck?<>
      <label className="publish-disposition">
-      <input type="checkbox" checked={migrationAck} disabled={!current||expired}
-       onChange={event=>setMigrationAck(event.target.checked)}/>
-      <span>{item.label} · <span className="warn">已在上方修订差异列出，勾选即同意旧数据不迁移</span></span>
+      <input type="checkbox" checked={agreed[key]===true} disabled={!current||expired}
+       onChange={event=>setAgreed(previous=>({...previous,[key]:event.target.checked}))}/>
+      <span>{item.label} · <span className="warn">待你核对同意</span></span>
      </label>
-     <p className="help">补全候选未带入该草案项。影响：{droppedImpacts[item.kind]||'该草案项不会进入本体。'}该删除项已在上方修订差异中列出，与「旧数据不迁移」是同一个确认。</p>
+     <p className="help">补全候选未带入该草案项。影响：{droppedImpacts[item.kind]||'该草案项不会进入本体。'}该删除项已在上方修订差异中列出；{externalItems.length===1?'唯一被放弃项与「旧数据不迁移」同步，迁移确认仍需单独勾选。':'多个删除项必须逐项勾选，「旧数据不迁移」不能代替逐项同意。'}</p>
     </>:item.needsDisposition===false?<>
      <label className="publish-disposition">
       <input type="checkbox" checked={agreed[key]===true} disabled={!current||expired}
