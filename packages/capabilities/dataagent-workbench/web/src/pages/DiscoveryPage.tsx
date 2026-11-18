@@ -1,5 +1,5 @@
 import {useEffect,useRef,useState} from 'react';
-import {api,ApiError,display,humanDetail,technicalDetail,valueTypeLabel} from '../client';
+import {api,ApiError,draftEntityLabel,display,humanDetail,invalidateOntologyTitles,technicalDetail,valueTypeLabel,entityTypeLabel} from '../client';
 import type {View,PublishCandidate,PublishDisposition} from '../client';
 import type {IntakeSession} from '../generated/IntakeSession';
 import {DiscoveryConcepts} from '../components/DiscoveryConcepts';
@@ -153,6 +153,8 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
     expected_revision:session.revision,confirmed:true,reason:'工作台人工确认发布',
     ...(revision?{acknowledge_no_migration:migrationAck}:{}),
    });
+   // 注册表新增了本体：清掉标题缓存，同页签后续新建任务的面包屑能拿到新标题。
+   invalidateOntologyTitles();
    setChecked(false);setMigrationAck(false);setFailure(null);
    await reload();await fetchCandidate();
   }catch(error){
@@ -212,12 +214,12 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
    <h3>候选定义摘要 · {current.title||current.ontology_id}</h3>
    <DiscoveryConcepts testid={name=>`publish-concept-${name}`} concepts={Object.entries(current.definition.concepts).map(([name,concept])=>{
     const entity=draft.entities.find(item=>item.name===name);
-    return {name,identity:concept.identity_fields.join(' + '),
+    return {name,label:draftEntityLabel(name),identity:concept.identity_fields.join(' + '),
      propertyCount:Object.keys(concept.properties).length,
      sourceLabel:entity?tableLabel(entity.table,tables,session):'—',
      pending:entity?conceptPending(entity.table,draft,label):[],
      content:<>
-      <h3>{name}</h3><dl><dt>实体类型</dt><dd><code>{concept.entity_type}</code></dd>
+      <h3>{draftEntityLabel(name)}</h3><dl><dt>实体类型</dt><dd><code>{entityTypeLabel(concept.entity_type)}</code></dd>
        <dt>身份字段</dt><dd>{concept.identity_fields.join(' + ')}</dd></dl>
       <div className="mapping-table-scroll"><table className="mapping-table"><thead><tr><th>属性</th><th>值类型</th><th>必需</th></tr></thead>
        <tbody>{Object.entries(concept.properties).map(([prop,definition])=><tr key={prop}>
@@ -228,7 +230,7 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
    {Object.keys(current.definition.relations||{}).length>0&&<><h3>拟登记的关系</h3>
     <ul className="discovery-links">{Object.entries(current.definition.relations).map(([name,relation])=>{
      const roles=Array.isArray(relation)?relation:relation.roles;
-     return <li key={name}><div><strong>{name}</strong> · <code>{Array.isArray(relation)?name:relation.subject_concept}</code>（{roles[0]}） → <code>{Array.isArray(relation)?name:relation.object_concept}</code>（{roles[1]}）</div></li>;
+     return <li key={name}><div><strong>{name}</strong> · <code>{draftEntityLabel(Array.isArray(relation)?name:relation.subject_concept||name)}</code>（{roles[0]}） → <code>{draftEntityLabel(Array.isArray(relation)?name:relation.object_concept||name)}</code>（{roles[1]}）</div></li>;
     })}</ul></>}
    <h3>来源快照摘要</h3>
    {/* 内部哈希（来源修订、结构指纹、快照摘要）收进折叠的「技术详情」（FDE2-11），
@@ -333,11 +335,11 @@ export function DiscoveryPage({view,reload,onNew,onError,onOpenSession,onOpenOnt
   </section>}
   {draft&&catalog&&<section className="discovery-card">
    <div className="panel-heading"><h2>本体草案</h2><span className="badge">{status}</span></div>
-   <DiscoveryConcepts concepts={draft.entities.map(entity=>({name:entity.name,
+   <DiscoveryConcepts concepts={draft.entities.map(entity=>({name:entity.name,label:draftEntityLabel(entity.name),
     identity:entity.identity.join(' + '),propertyCount:entity.properties.length,
     sourceLabel:label(entity.table),pending:conceptPending(entity.table,draft,label),
     content:<>
-     <h3>{entity.name}</h3><p>{entity.grain}</p>
+     <h3>{draftEntityLabel(entity.name)}</h3><p>{entity.grain}</p>
      <dl><dt>来源表</dt><dd><code>{label(entity.table)}</code></dd>
       <dt>标识</dt><dd>{entity.identity.length?entity.identity.join(' + '):'待确认'}</dd></dl>
      {entity.properties.length>0&&<div className="mapping-table-scroll"><table className="mapping-table">

@@ -353,6 +353,18 @@ test('发布本体后按本体浏览已发布实例',async({page})=>{
  const horizontallyScrollable=await page.locator('.instance-card .mapping-table-scroll')
   .evaluate(el=>el.scrollWidth>el.clientWidth);
  expect(horizontallyScrollable).toBe(true);
+ // 滚到最右后，粘性身份列仍固定在视口内（不是只在初始位置可见）。
+ const scroller=page.locator('.instance-card .mapping-table-scroll');
+ await scroller.evaluate(el=>{el.scrollLeft=el.scrollWidth;});
+ expect(await scroller.evaluate(el=>el.scrollLeft>0)).toBe(true);
+ await expect.poll(async()=>{
+  const box=await page.getByTestId('instance-value-book').first().boundingBox();
+  return box?box.x>=0&&box.x+box.width<=390:false;
+ }).toBe(true);
+ const docNoBox=await page.getByTestId('instance-value-doc_no').first().boundingBox();
+ expect(docNoBox).toBeTruthy();
+ expect(docNoBox!.x).toBeGreaterThanOrEqual(0);
+ expect(docNoBox!.x+docNoBox!.width).toBeLessThanOrEqual(390);
  if(process.env.DATAAGENT_SCREENSHOT)await page.screenshot({
   path:path.join(path.dirname(process.env.DATAAGENT_SCREENSHOT),'browse-narrow.png')});
  await page.setViewportSize({width:1280,height:720});

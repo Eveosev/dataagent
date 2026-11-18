@@ -39,10 +39,14 @@ export const registryTitle=(entry:Pick<RegistryEntry,'id'|'title'>)=>builtinTitl
 // 面包屑用的本体名（FDE2-11）：任务页不再写死「采购资料」，按任务目标本体
 // 显示注册表标题；注册表拉取失败时由调用方退回内置习惯名或概念名。
 let ontologyTitleCache:Promise<Record<string,string>>|null=null;
+// 发布会往注册表里写入新本体：确认发布后清掉缓存，面包屑下次进入任务页
+// 重新拉取，同页签新建的任务也能拿到新标题。
+export function invalidateOntologyTitles(){ontologyTitleCache=null;}
 export function ontologyTitles():Promise<Record<string,string>>{
  if(!ontologyTitleCache)ontologyTitleCache=api<Registry>('/api/ontologies')
   .then(data=>Object.fromEntries((data.ontologies||[]).map(entry=>[entry.id,registryTitle(entry)])))
-  .catch(()=>({}));
+  // 失败不缓存，下一次调用重试，避免一次网络故障把空结果钉死到页签关闭。
+  .catch(()=>{ontologyTitleCache=null;return {};});
  return ontologyTitleCache;
 }
 // 发布候选（GET /api/sessions/{sid}/publish/candidate）：人在网页确认的精确对象，
@@ -238,8 +242,18 @@ export const propertyLabel=(name:string)=>propertyNames[name]||name;
 // 未收录的保留原名，不猜不译。
 export const entityTypeNames:Record<string,string>={
  PurchaseDocument:'采购单据',SalesOrder:'销售单',SalesOrderLine:'销售明细',Customer:'客户',
+ ExpenseLine:'费用明细',ExpenseReport:'费用报销单',TravelRequest:'差旅申请',
+ TravelItinerary:'行程',Reimbursement:'报销单',ExpenseCategory:'费用类别',
+ TravelPolicy:'差旅标准',Employee:'员工',Department:'部门',City:'城市',
+ CostCenter:'成本中心',Invoice:'发票',
 };
 export const entityTypeLabel=(name:string)=>entityTypeNames[name]||name;
+// 草案实体 / 概念名（FDE2-11）：Agent 起的中文名保留原名，英文名查实体
+// 类型字典；都没有时保留原名。
+export function draftEntityLabel(name:string):string{
+ if(/[\u4e00-\u9fff]/.test(name))return name;
+ return entityTypeLabel(name);
+}
 // 概念徽标（FDE2-11）：本体定义里概念名本身是中文时直接用（发现任务的
 // Agent 常用中文命名），否则查实体类型字典，都没有时保留原名。
 export function conceptLabel(concept:{name:string;entity_type:string}):string{

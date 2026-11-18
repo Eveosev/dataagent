@@ -346,7 +346,8 @@ test('SQLite 发现 → 草案 → 补全 → 网页确认发布 → 新接入�
  await expect(page.locator('#target-ontology')).toHaveValue('sales-model',{timeout:20000});
  await expect(page.getByLabel('目标概念')).toBeVisible();
  await page.getByLabel('目标概念').selectOption('SalesOrder');
- await expect(page.getByText('目标本体 · 销售单据模型 · SalesOrder')).toBeVisible();
+ // 目标概念的中文名（FDE2-11）：选项与目标提示都显示「销售单」而非 SalesOrder。
+ await expect(page.getByText('目标本体 · 销售单据模型 · 销售单')).toBeVisible();
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByRole('heading',{name:'核对来源与本体映射'})).toBeVisible({timeout:20000});
 

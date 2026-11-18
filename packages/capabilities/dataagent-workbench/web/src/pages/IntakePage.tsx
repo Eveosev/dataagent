@@ -1,6 +1,7 @@
 import {useEffect,useState} from 'react';
 import {api,translateError,registryTitle} from '../client';
 import type {Registry} from '../client';
+import {browseConceptLabel} from '../ontologyBrowse';
 type Source={source_id:string;kind:'file'|'sqlite'|'postgres'|'rest';locator_ref:string;options?:Record<string,string>};
 type Connection={id:string;kind:'postgres'|'rest';label:string};
 export function IntakePage({onStart,onError}:{onStart:(id:string)=>void;onError:(error:unknown)=>void}){
@@ -66,10 +67,10 @@ export function IntakePage({onStart,onError}:{onStart:(id:string)=>void;onError:
    {selectedEntry&&selectedEntry.concepts.length>1&&<>
     <label className="label" htmlFor="target-concept">目标概念</label>
     <select id="target-concept" value={targetConcept} onChange={e=>setTargetConcept(e.target.value)}>
-     {selectedEntry.concepts.map(concept=><option key={concept} value={concept}>{concept}</option>)}
+     {selectedEntry.concepts.map(concept=><option key={concept} value={concept}>{browseConceptLabel(concept)}</option>)}
     </select></>}
   </fieldset>}
-  {mode==='mapping'&&selectedEntry&&<div className="target-note"><span className="dot"/>目标本体 · {registryTitle(selectedEntry)}{selectedEntry.concepts.length>1&&targetConcept?` · ${targetConcept}`:''}</div>}
+  {mode==='mapping'&&selectedEntry&&<div className="target-note"><span className="dot"/>目标本体 · {registryTitle(selectedEntry)}{selectedEntry.concepts.length>1&&targetConcept?` · ${browseConceptLabel(targetConcept)}`:''}</div>}
   <button className="primary" disabled={!goal.trim()||(!files.length&&!selected.length)||busy} onClick={start}>{busy?'正在添加材料…':'开始接入'}</button></section>
  </main>;
 }
