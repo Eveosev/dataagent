@@ -1,7 +1,7 @@
 ---
-version: v0.3
+version: v0.4
 date: 2026-11-18
-status: 草案；目录与工具已落地，17 个任务已建，B16/B17 数据已构建
+status: 草案；目录与工具已落地（含基线写入工具），17 个任务已建，B16/B17 数据已构建
 basis: 09-benchmark-plan.md §2（17 个已建任务）、§3（评测集与流程）、§4（参考 benchmark）
 ---
 
@@ -61,6 +61,7 @@ basis: 09-benchmark-plan.md §2（17 个已建任务）、§3（评测集与流�
 └── tools/
     ├── check.py               # 目录契约校验（stdlib，无依赖）
     ├── new_round.py           # 开一轮，生成 round 与 17 个 run 骨架
+    ├── set_baseline.py        # 把正式轮主指标写成基线；--revert 回滚上一份
     └── report.py              # 汇总 rounds/ 与 scorecard 生成 monitor/trend.md
 ```
 
@@ -125,6 +126,7 @@ python3 tools/new_round.py --label model-swap --model <模型> --kernel agent-ke
 python3 tools/check.py
 
 # 5. 裁定：过门槛的轮次才写 history/baseline.json 与 registry.json 的 baseline_run
+#    首轮（r001）按 §5.1 的 Q10 例外只建基线
 # 6. 刷新看板
 python3 tools/report.py
 
@@ -141,6 +143,32 @@ python3 tools/report.py
 | 样本量 < `defaults.min_samples_for_gate` | `verdict=unknown`，不得据此换基线，也不得报「通过」 |
 
 基线只升不降：新轮次综合不如基线时不更新指针，避免用低水位替换高水位。
+
+### 5.1 写基线（`set_baseline.py`）
+
+`r001` 按 06 的 Q10「首轮只建基线」口径，先只把 B02、B03、B16、B17 的主指标写成基线，不按绝对门槛裁定；这四个任务从下一轮起适用 §5 的裁定表，其余任务照旧。
+
+```bash
+# 写入：run 必须已 status=scored，scorecard 必须存在
+python3 tools/set_baseline.py --round r001-2026-11-18 --tasks B02,B03,B16,B17
+
+# 回滚上一份基线（每个任务一份快照）
+python3 tools/set_baseline.py --revert --tasks B02,B03,B16,B17
+python3 tools/set_baseline.py --revert --round r001-2026-11-18   # 只撤销该轮写入的快照
+```
+
+| 项 | 规则 |
+|-|-|
+| 取分 split | 按 `unseen_acceptance` → `regression` → `development` 取第一个有样本且主指标非 null 的 split，与 `report.py` 口径一致 |
+| 写入前校验 | `history/runs/<round>/run.json` 存在且 `status=scored`；`scorecard.json` 存在；task_id / run_id 一致；主指标至少一个 split 有分。任一任务不通过则整批不写 |
+| 写入内容 | `baseline.json` 的 `run_id`、`dataset_revision`、主指标快照与 `registry.json` 的 `baseline_run` |
+| 快照 | 写前把旧 `baseline.json` 与旧 `registry.baseline_run` 存到 `tasks/<task>/history/baseline.prev.json`；同一轮重复写入不覆盖已有快照，只保留写入前最初一份；`--revert` 后删除 |
+| 拒绝 | 探索轮（`xNNN`）不建基线；`status≠scored`、缺 scorecard、主指标全 null 都拒绝 |
+| 不替代裁定 | `verdict`、`gate` 与是否该换基线由人按 §5 判断，工具只在校验通过后落账 |
+
+`--revert` 不带 `--tasks` 时回滚所有存在快照的任务；带 `--round` 时只回滚该轮写入的快照。样本量低于 `min_samples_for_gate` 或新值劣于旧基线时只打印 `WARN`，不阻断。
+
+自测：`uv run --offline --with pytest pytest -q tools/tests harness/tests -k baseline`；也可先装 pytest（见 `tools/tests/requirements.txt`）后走 `python3 -m pytest`；没有 pytest 时用 `python3 -I tools/tests/test_set_baseline.py`。
 
 ## 6. 监控
 
@@ -269,6 +297,7 @@ python3 -I docs/research/dataagent-2026-11-03/09-benchmark/tools/report.py
 | 适配器 | `dataagent-cli` / `oracle` / `empty` 三个，见 `harness/adapters/README.md`；`harness/run.py` 一键产出 run.json + cases.jsonl + scorecard。B16/B17 的 oracle 分支已补，B16 三切分 F1=1、FMR=0，B17 三切分 `mapping_top1`=1 |
 | 已跑通的探索轮 | B02 `x001`（oracle，满分）、B02 `x002`（empty，地板）、B02 `x003`（CLI 缺失，如实 failed）、B03/B04 `x001`（oracle）、B16 `x544`（oracle，三切分 F1=1、FMR=0）、B16 `x045`（empty，三切分 F1=0）、B17 `x315`（oracle，三切分 `mapping_top1`=1、`no_match_accuracy`=1）、B17 `x817`（empty，三切分均为 0）；本轮运行产物不入库，明细见 B16/B17 NOTES 验证记录 |
 | 基线 | 未建立，17 个 `baseline.json` 的 `run_id` 为 null |
+| 基线工具 | `tools/set_baseline.py` 已就绪：写入校验 run/scorecard、`--revert` 回滚上一份；真实基线待 `r001` 开轮后由裁定人写入 |
 | 门槛 | 仅 2 条绝对门槛（B01 行保留率、B12 外泄率），其余待首轮回填 |
 
 | 任务 | 用例数 | manifest | status | 数据状态 |
