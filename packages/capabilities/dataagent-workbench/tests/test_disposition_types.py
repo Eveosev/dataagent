@@ -434,6 +434,7 @@ def test_failed_conversion_counts_one_root_cause_and_two_rows(tmp_path):
                    for issue in summary['preview']['issues'])
     status = invoke(wb, 'intake_status', {'session_id': session.id}).data
     assert status['issue_count'] == len(status['issues']) == 1
+    assert status['issue_row_count'] == 2
     page = ViewService(wb).object_page(session.id, wb.ctx)
     assert page['issue_count'] == 1 and page['issue_row_count'] == 2
     assert len(page['issues']) == 2
