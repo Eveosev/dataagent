@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {humanDetail} from '../src/client';
+import {pinBuiltinOntology,slowTimeout} from './support';
 
 // G2 处置入口 + FDE-11 可读性 + FDE2-06 按问题类型给处置：真实数据行的缺键、
 // 转换失败不再给「排除表头行」（只有疑似表头或无关行才给排除）；类型转换失败
@@ -29,6 +30,7 @@ async function openObjectPage(page:import('@playwright/test').Page,files:Paramet
  await page.goto('/');
  await page.getByLabel('接入目标').fill('接入缺键记录并核对处置入口');
  await page.getByLabel('选择材料').setInputFiles(files);
+ await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByText('识别与探查已完成')).toBeVisible();
  await page.getByRole('button',{name:'生成映射预览'}).click();
@@ -37,7 +39,7 @@ async function openObjectPage(page:import('@playwright/test').Page,files:Paramet
 }
 
 test('缺键的真实数据行不给「排除表头行」处置',async({page})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  await openObjectPage(page,{name:'发票.csv',mimeType:'text/csv',buffer:missingNumberCsv});
  // FDE-11：缺键对象不显示 candidate:<哈希>，改用来源描述点名（第 3 行是文件里的原始行号）。
  await expect(page.locator('.source-tab').filter({hasText:'来源行 3'})).toContainText('发票.csv · 来源行 3（无单号）');
@@ -53,7 +55,7 @@ test('缺键的真实数据行不给「排除表头行」处置',async({page})=>
 });
 
 test('疑似表头行给排除处置并走真实后端',async({page})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  await openObjectPage(page,{name:'发票.csv',mimeType:'text/csv',buffer:repeatedHeaderCsv});
  // 第 2 行的值就是各列列名：整行与表头相似，转换失败旁给出排除处置。
  const issue=page.getByTestId('pending-issue').filter({hasText:'值无法按目标类型转换'});
@@ -87,7 +89,7 @@ test('疑似表头行给排除处置并走真实后端',async({page})=>{
 });
 
 test('只保存无问题对象需要填写原因并走真实后端 allow_partial',async({page})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  await openObjectPage(page,{name:'发票.csv',mimeType:'text/csv',buffer:missingNumberCsv});
  const partial=page.getByTestId('partial-save');
  await expect(partial).toBeVisible();
@@ -118,12 +120,13 @@ test('只保存无问题对象需要填写原因并走真实后端 allow_partial
 });
 
 test('空白页来源可标记分区不适用',async({page})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  // mixed.pdf 第 2 页是空白页：来源未完整读取（阻断）旁给出标记分区不适用的处置。
  await page.goto('/');
  await page.getByLabel('接入目标').fill('接入混排发票并核对空白页处置');
  await page.getByLabel('选择材料').setInputFiles({name:'mixed.pdf',mimeType:'application/pdf',
   buffer:await import('node:fs').then(fs=>fs.readFileSync('../../dataagent-scenarios/fixtures/intake/mixed.pdf'))});
+ await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByText('识别与探查已完成')).toBeVisible();
  await page.getByRole('button',{name:'生成映射预览'}).click();
@@ -198,7 +201,7 @@ with zipfile.ZipFile(sys.argv[1],'w') as z:
 
 test('xlsx 日期列错绑为 decimal：按根因合并计数，处置按类型给',async({page})=>{
  test.skip(!python,'run scripts/verify_browser.py to share the python interpreter');
- test.setTimeout(40000);
+ slowTimeout(40000);
  await page.goto('/');
  await page.getByLabel('接入目标').fill('接入报销明细并核对日期列的处置');
  await page.getByLabel('选择材料').setInputFiles(buildDateColumnXlsx());

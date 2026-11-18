@@ -1,10 +1,12 @@
 import {test,expect} from '@playwright/test';
 import path from 'node:path';
+import {pinBuiltinOntology} from './support';
 
 test('文件探查、映射试算、刷新恢复和保存',async({page})=>{
  await page.goto('/');
  await page.getByLabel('接入目标').fill('接入发票，金额 amount_minor 以分为单位');
  await page.getByLabel('选择材料').setInputFiles(path.resolve('../../dataagent-scenarios/fixtures/intake/invoices.csv'));
+ await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByText('识别与探查已完成')).toBeVisible();
  await page.getByLabel('金额 来源字段').selectOption('amount_minor');
@@ -25,6 +27,7 @@ test('PDF 来源定位、金额转换与发布后查看', async ({page}) => {
   await page.goto('/');
   await page.getByLabel('接入目标').fill('接入文本发票，金额以分为单位');
   await page.getByLabel('选择材料').setInputFiles(path.resolve('../../dataagent-scenarios/fixtures/intake/invoice.pdf'));
+  await pinBuiltinOntology(page);
   await page.getByRole('button', {name: '开始接入'}).click();
   await expect(page.getByText('识别与探查已完成')).toBeVisible();
   await page.getByLabel('金额 来源字段').selectOption('amount_minor');
@@ -47,6 +50,7 @@ test('两份材料分别映射并归并为同一对象', async ({page}) => {
     {name: 'invoice.csv', mimeType: 'text/csv', buffer: Buffer.from('number,amount_minor,currency\nINV-001,126000,CNY\nINV-002,90000,CNY\n')},
     {name: 'invoice.json', mimeType: 'application/json', buffer: Buffer.from('[{"code":"INV-002","total":"900","currency":"CNY"},{"code":"INV-001","total":"1260","currency":"CNY"}]')},
   ]);
+  await pinBuiltinOntology(page);
   await page.getByRole('button', {name: '开始接入'}).click();
   await expect(page.getByText('识别与探查已完成')).toBeVisible();
   await page.getByLabel('金额 来源字段').selectOption('amount_minor');
@@ -71,6 +75,7 @@ test('轮询期间保留本地编辑的基准修订', async ({page, context}) =>
   await page.goto('/');
   await page.getByLabel('接入目标').fill('并发审核同一份发票');
   await page.getByLabel('选择材料').setInputFiles(path.resolve('../../dataagent-scenarios/fixtures/intake/invoices.csv'));
+  await pinBuiltinOntology(page);
   await page.getByRole('button', {name: '开始接入'}).click();
   await expect(page.getByText('识别与探查已完成')).toBeVisible();
   await page.getByLabel('金额 来源字段').selectOption('amount_minor');

@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import type {Discovery} from '../src/pages/DiscoveryPage';
+import {slowTimeout,uniqueTag} from './support';
 
 let workspace=process.env.DATAAGENT_TEST_WORKSPACE||'';
 const python=process.env.DATAAGENT_TEST_PYTHON;
@@ -16,7 +17,7 @@ async function resolveWorkspace(page:Page){
  if(workspace)return;
  const response=await page.request.post('/api/files',{
   headers:{'x-dataagent-token':process.env.DATAAGENT_TEST_TOKEN||'',
-   'x-file-name':'discovery-workspace-probe.csv'},
+   'x-file-name':`discovery-workspace-probe-${uniqueTag()}.csv`},
   data:'probe\n',
  });
  expect(response.ok(),await response.text()).toBeTruthy();
@@ -48,8 +49,8 @@ function callTool(name:string, args:Record<string,unknown>){
 
 test('SQLite 上传、工具提交本体草案、工作台审核',async({page})=>{
  test.skip(!workspace||!python,'run scripts/verify_browser.py to share the test workspace with MCP');
- const database=path.join(workspace!,'sales-discovery.db');
- fs.rmSync(database,{force:true});
+ // 共享工作区里的文件名带用例级唯一后缀：不删除也不覆盖其他并行用例的文件。
+ const database=path.join(workspace!,`sales-discovery-${uniqueTag()}.db`);
  const sql=fs.readFileSync(path.resolve('../../dataagent-scenarios/fixtures/intake/sales-discovery.sql'));
  execFileSync('sqlite3',[database],{input:sql});
  await page.goto('/');
@@ -117,8 +118,9 @@ document.save(sys.argv[1])
 
 test('docx 与 xlsx 可在网页勾选本体发现发起，表名不显示内部 ID（FDE2-08）',async({page})=>{
  test.skip(!workspace||!python,'run scripts/verify_browser.py to share the test workspace with MCP');
- test.setTimeout(180000);
- const docx=path.join(workspace!,'两表制度.docx');
+ slowTimeout(180000);
+ const docxName=`两表制度-${uniqueTag()}.docx`;
+ const docx=path.join(workspace!,docxName);
  buildTwoTableDocx(docx);
  const xlsx=path.resolve('../../dataagent-scenarios/fixtures/intake/invoices.xlsx');
  await page.goto('/');
@@ -148,19 +150,18 @@ test('docx 与 xlsx 可在网页勾选本体发现发起，表名不显示内部
  await expect(page.getByRole('heading',{name:'本体草案',exact:true})).toBeVisible({timeout:20000});
  // 未建模的表显示来源文件名 + 表序号（或表名），不显示内部 ID。
  const notice=page.locator('.notice.amber').filter({hasText:'待核对'});
- await expect(notice).toContainText('两表制度.docx · 第 2 张表');
+ await expect(notice).toContainText(`${docxName} · 第 2 张表`);
  await expect(notice).toContainText('invoices.xlsx · ');
  await expect(page.locator('main')).not.toContainText('::table:');
  // 草案来源表与证据区的显示名同口径。
- await expect(page.locator('.discovery-entity').first()).toContainText('两表制度.docx · 第 1 张表');
- await expect(page.locator('.discovery-table summary').filter({hasText:'两表制度.docx · 第 1 张表'})).toHaveCount(1);
+ await expect(page.locator('.discovery-entity').first()).toContainText(`${docxName} · 第 1 张表`);
+ await expect(page.locator('.discovery-table summary').filter({hasText:`${docxName} · 第 1 张表`})).toHaveCount(1);
 });
 
 test('概念多时草案按概念折叠分组并支持待决筛选（FDE2-08）',async({page})=>{
  test.skip(!workspace||!python,'run scripts/verify_browser.py to share the test workspace with MCP');
- test.setTimeout(120000);
- const database=path.join(workspace!,'grouping-discovery.db');
- fs.rmSync(database,{force:true});
+ slowTimeout(120000);
+ const database=path.join(workspace!,`grouping-discovery-${uniqueTag()}.db`);
  const sql=fs.readFileSync(path.resolve('../../dataagent-scenarios/fixtures/intake/sales-discovery.sql'));
  execFileSync('sqlite3',[database],{input:sql});
  await page.goto('/');

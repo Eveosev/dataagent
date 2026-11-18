@@ -6,11 +6,41 @@ from dataagent_runtime.ports.workbench_store import ChangeSet,Write,VersionConfl
 from .identity import digest
 from .mapping import materialize,_typed
 from .registry import (REGISTRY_KIND,POINTER_KIND,POINTER_ID,build_entry,entries as registry_entries,
-    entry_row,parse_entry,pointer_row,DefaultTarget)
+    entry_row,parse_entry,pointer_row,revision_record,DefaultTarget)
+from .revisions import definition_diff
 
 
 def _now():
     return datetime.now(timezone.utc).isoformat()
+
+
+def _history_after_register(entry, previous, ontology, ctx):
+    """Carry a host-swapped builtin revision into the visible history.
+
+    ``register`` used to update only the row's current revision.  The library
+    then showed the old history and hid the newly registered revision; keep the
+    old definition as a synthesized first record for workspaces that predate
+    ``revisions`` and append the new revision with its diff.
+    """
+    history = list(entry.revisions or [])
+    if previous is not None and not any(
+            item.get('revision') == entry.ontology_revision for item in history):
+        history.append(revision_record(
+            previous, published_at=entry.published_at,
+            published_by=entry.published_by,
+            source_snapshot=entry.source_snapshot,
+            definition_digest=digest(previous.model_dump(mode='json'))))
+    if not any(item.get('revision') == ontology.revision for item in history):
+        diff = (definition_diff(previous, ontology)
+                if previous is not None and previous.revision != ontology.revision
+                else {})
+        history.append(revision_record(
+            ontology, published_at=_now(), published_by=ctx.subject_ref,
+            source_snapshot=entry.source_snapshot,
+            definition_digest=digest(ontology.model_dump(mode='json')),
+            previous_revision=entry.ontology_revision, diff=diff,
+            destructive=bool(diff.get('destructive'))))
+    return history
 
 
 class OntologyService:
@@ -44,9 +74,12 @@ class OntologyService:
         else:
             entry=parse_entry(row)
             if entry.state=='active' and entry.ontology_revision!=ontology.revision:
+                previous=(OntologyRevision.model_validate(current['body'])
+                          if current is not None else None)
                 updated=entry.model_copy(update={'ontology_revision':ontology.revision,
                     'concepts':list(ontology.concepts),
-                    'default_concept':next(iter(ontology.concepts))})
+                    'default_concept':next(iter(ontology.concepts)),
+                    'revisions':_history_after_register(entry,previous,ontology,ctx)})
                 writes.append(Write(REGISTRY_KIND,ontology.id,self.scope,
                     updated.model_dump(mode='json'),row['revision']))
         if writes:self.store.commit(ChangeSet(writes=writes))

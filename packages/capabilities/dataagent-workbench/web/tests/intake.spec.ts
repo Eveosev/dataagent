@@ -1,16 +1,18 @@
 import {test,expect} from '@playwright/test';
 import path from 'node:path';
 import {readFileSync,writeFileSync} from 'node:fs';
+import {pinBuiltinOntology,slowTimeout} from './support';
 
 function sessionId(page:{url():string},key:string){
  return new URL(page.url()).hash.match(new RegExp(key+'=([0-9a-f]+)'))![1];
 }
 
 test('对象页完成当前值纠正、映射修订与本体草案',async({page})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  await page.goto('/');
  await page.getByLabel('接入目标').fill('接入发票并在对象页核对');
  await page.getByLabel('选择材料').setInputFiles(path.resolve('../../dataagent-scenarios/fixtures/intake/invoices.csv'));
+ await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByText('识别与探查已完成')).toBeVisible();
  await page.getByLabel('金额 来源字段').selectOption('amount_minor');
@@ -61,13 +63,14 @@ test('对象页完成当前值纠正、映射修订与本体草案',async({page}
 });
 
 test('采用新映射值后保存只发布最新金额',async({page,request})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  // 独立的字段指纹，避免保存的映射被其他用例复用而改变它们的默认转换。
  const csv=test.info().outputPath('adopt-save.csv');
  writeFileSync(csv,'number,amount_minor,currency,batch_ref\nINV-901,126000,CNY,B-901\n');
  await page.goto('/');
  await page.getByLabel('接入目标').fill('采用新映射值并保存');
  await page.getByLabel('选择材料').setInputFiles(csv);
+ await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByText('识别与探查已完成')).toBeVisible();
  await page.getByLabel('金额 来源字段').selectOption('amount_minor');
@@ -101,6 +104,7 @@ async function openObjectPageWithPreview(page:import('@playwright/test').Page){
  await page.goto('/');
  await page.getByLabel('接入目标').fill('并发核对同一份发票');
  await page.getByLabel('选择材料').setInputFiles(path.resolve('../../dataagent-scenarios/fixtures/intake/invoices.csv'));
+ await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByText('识别与探查已完成')).toBeVisible();
  await page.getByLabel('金额 来源字段').selectOption('amount_minor');
@@ -121,7 +125,7 @@ async function chatSideCorrection(request:import('@playwright/test').APIRequestC
 }
 
 test('聊天与页面并发修改同一任务时保留编辑并拒绝过期决定',async({page,request})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  await openObjectPageWithPreview(page);
  // 页面开始编辑，基准修订冻结。
  await page.getByLabel('纠正后的值').fill('1250');
@@ -146,7 +150,7 @@ test('聊天与页面并发修改同一任务时保留编辑并拒绝过期决�
 });
 
 test('冲突后在页面上显式核对才能重新提交',async({page,request})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  await openObjectPageWithPreview(page);
  await page.getByLabel('纠正后的值').fill('1250');
  const sid=sessionId(page,'object');
@@ -165,10 +169,11 @@ test('冲突后在页面上显式核对才能重新提交',async({page,request})
 test('准备重启恢复的任务状态',async({page})=>{
  const stateFile=process.env.DATAAGENT_TEST_STATE_FILE;
  test.skip(!stateFile||process.env.DATAAGENT_TEST_STAGE==='recovery','仅在 verify_browser 两阶段运行时执行');
- test.setTimeout(40000);
+ slowTimeout(40000);
  await page.goto('/');
  await page.getByLabel('接入目标').fill('为重启恢复准备任务');
  await page.getByLabel('选择材料').setInputFiles(path.resolve('../../dataagent-scenarios/fixtures/intake/invoices.csv'));
+ await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByText('识别与探查已完成')).toBeVisible();
  await page.getByLabel('币种 来源字段').selectOption('');

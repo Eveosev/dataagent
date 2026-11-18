@@ -4,6 +4,7 @@ import {execFileSync} from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import {lockDefaultPointer,slowTimeout,uniqueTag,unlockDefaultPointer} from './support';
 
 const python=process.env.DATAAGENT_TEST_PYTHON;
 const SEED=path.resolve('../../dataagent-scenarios/fixtures/intake/sales-discovery.sql');
@@ -16,7 +17,7 @@ async function resolveWorkspace(page:Page){
  if(process.env.DATAAGENT_TEST_WORKSPACE)return process.env.DATAAGENT_TEST_WORKSPACE;
  const response=await page.request.post('/api/files',{
   headers:{'x-dataagent-token':process.env.DATAAGENT_TEST_TOKEN||'',
-   'x-file-name':'browse-probe.csv'},
+   'x-file-name':`browse-probe-${uniqueTag()}.csv`},
   data:'book,doc_no\nPROBE,1\n',
  });
  expect(response.ok(),await response.text()).toBeTruthy();
@@ -97,18 +98,38 @@ function completion(sid:string,draftRef:string,expectedRevision:string,catalog:C
  };
 }
 
+// 发布/停用本体移动注册表默认指针：与 publish.spec 的发布用例之间按工作区加
+// 文件锁串行，锁的释放挂在 afterEach 上（用例失败也释放）。
+let pointerLocked=false;
+test.beforeEach(()=>{pointerLocked=false;});
+test.afterEach(async({request},testInfo)=>{
+ if(!pointerLocked)return;
+ // 失败清理：发布成功后、停用前失败会让本体带着默认指针残留，破坏本用例的
+ // 重试与并行用例；先在锁内尽力停用，再释放锁（已停用或未发布的忽略结果）。
+ if(testInfo.status!=='passed'){
+  await request.post('/api/ontologies/browse-sales/retire',
+   {data:{reason:'用例失败后的清理停用，恢复默认指针',confirmed:true}}).catch(()=>{});
+ }
+ unlockDefaultPointer(workspace);
+ pointerLocked=false;
+});
+
 test('发布本体后按本体浏览已发布实例',async({page})=>{
  test.skip(!python,'run scripts/verify_browser.py to share the test workspace with MCP');
- test.setTimeout(300000);
+ slowTimeout(300000);
  workspace=await resolveWorkspace(page);
- const database=path.join(workspace,'browse-discovery.db');
- fs.rmSync(database,{force:true});
+ await lockDefaultPointer(workspace);
+ pointerLocked=true;
+ // 共享工作区里的文件名带用例级唯一后缀：不删除也不覆盖其他并行用例的文件。
+ const tag=uniqueTag();
+ const database=path.join(workspace,`browse-discovery-${tag}.db`);
  execFileSync('sqlite3',[database],{input:fs.readFileSync(SEED)});
  const token=process.env.DATAAGENT_TEST_TOKEN||'';
  const auth={'x-dataagent-token':token};
+ const ordersName=`browse-orders-${tag}.csv`;
  const csv='book,doc_no\n'+Array.from({length:12},(_,i)=>`SALE,${1001+i}`).join('\n')+'\n';
  const upload=await page.request.post('/api/files',{
-  headers:{...auth,'x-file-name':'browse-orders.csv'},data:csv});
+  headers:{...auth,'x-file-name':ordersName},data:csv});
  expect(upload.ok(),await upload.text()).toBeTruthy();
  const orderSource=await upload.json();
 
@@ -214,7 +235,7 @@ test('发布本体后按本体浏览已发布实例',async({page})=>{
  await expect(page.getByTestId('instance-value-book').first()).toHaveText('SALE');
  const firstPageDocNos=await page.getByTestId('instance-value-doc_no').allTextContents();
  expect(firstPageDocNos).toHaveLength(10);
- await expect(page.getByTestId('instance-source').first()).toContainText('browse-orders.csv');
+ await expect(page.getByTestId('instance-source').first()).toContainText(ordersName);
  await expect(page.getByTestId('instance-source').first()).toContainText('来源行');
  await expect(page.getByTestId('instance-task').first()).toContainText('接入浏览用的销售订单');
  await expect(page.getByTestId('instance-revision').first()).toContainText('修订 1');

@@ -13,7 +13,7 @@ import pytest
 from pydantic import ValidationError
 
 from dataagent_contracts.intake import SourceSelection
-from dataagent_contracts.ontology import MappingSpec, ReviewDecision
+from dataagent_contracts.ontology import MappingSpec, OntologyRevision, ReviewDecision
 from dataagent_ontology.identity import digest
 from dataagent_runtime.ports.workbench_store import ChangeSet, Write
 from dataagent_workbench.bootstrap import Workbench
@@ -561,7 +561,54 @@ def _expense_definition():
         object_concept='ExpenseStandard')})
 
 
-def _save_concept(wb, concept, rows, bindings, relation_bindings=None):
+def _relation_definition():
+    """Two string identity parts, so joined identity keys can collide."""
+    return OntologyRevision.model_validate({
+        'id': 'rel-model', 'revision': '1',
+        'concepts': {
+            'source': {
+                'entity_type': 'Source',
+                'properties': {'key': {'value_type': 'string', 'required': True}},
+                'identity_fields': ['key']},
+            'target': {
+                'entity_type': 'Target',
+                'properties': {'left': {'value_type': 'string'},
+                               'right': {'value_type': 'string'},
+                               'label': {'value_type': 'string'}},
+                'identity_fields': ['left', 'right']},
+        },
+        'relations': {'link': {'roles': ['source', 'target'],
+                                'subject_concept': 'source',
+                                'object_concept': 'target'}},
+    })
+
+
+def _choose_definition():
+    """A property and a relation role materialized through ``choose``."""
+    return OntologyRevision.model_validate({
+        'id': 'choose-model', 'revision': '1',
+        'concepts': {
+            'source': {
+                'entity_type': 'Source',
+                'properties': {'marker': {'value_type': 'string', 'required': True},
+                               'secret': {'value_type': 'string'},
+                               'public': {'value_type': 'string'},
+                               'derived': {'value_type': 'string'}},
+                'identity_fields': ['marker']},
+            'target': {
+                'entity_type': 'Target',
+                'properties': {'code': {'value_type': 'string', 'required': True},
+                               'label': {'value_type': 'string'}},
+                'identity_fields': ['code']},
+        },
+        'relations': {'link': {'roles': ['source', 'target'],
+                                'subject_concept': 'source',
+                                'object_concept': 'target'}},
+    })
+
+
+def _save_concept(wb, concept, rows, bindings, relation_bindings=None,
+                  ontology_id='expense-model'):
     from dataagent_contracts.intake import WorkSpec
     source_id = 'src-' + concept
     wb.layer_client = StubProbeClient({source_id: csv_profile(source_id, rows)})
@@ -571,13 +618,13 @@ def _save_concept(wb, concept, rows, bindings, relation_bindings=None):
         [SourceSelection(source_id=source_id, kind='file',
                          locator_ref=source_id + '.csv')],
         goal, wb.ctx, mode='mapping',
-        target={'ontology_id': 'expense-model', 'concept': concept})
+        target={'ontology_id': ontology_id, 'concept': concept})
     wb.intake.advance(handle.session_id, wb.ctx)
     session = wb.sessions.get(handle.session_id, wb.ctx)
     request = wb.intake.inference_request(handle.session_id, wb.ctx)
     source = request['sources'][0]
     mapping = MappingSpec(id='candidate', revision='1',
-                          ontology_revision='expense-model@1', concept=concept,
+                          ontology_revision=ontology_id + '@1', concept=concept,
                           source_fingerprint=source['structure_fingerprint'],
                           bindings=bindings,
                           relation_bindings=relation_bindings or {})
@@ -591,16 +638,34 @@ def _save_concept(wb, concept, rows, bindings, relation_bindings=None):
     return handle.session_id
 
 
-def expense_model(tmp_path):
+def _save_expense_standard(wb, rows):
+    return _save_concept(wb, 'ExpenseStandard', rows,
+        {'category': {'source_field': 'category'},
+         'limit': {'source_field': 'limit', 'transform': 'decimal'}})
+
+
+def _save_expense_line(wb, rows):
+    return _save_concept(wb, 'ExpenseLine', rows,
+        {'number': {'source_field': 'number'},
+         'line': {'source_field': 'line', 'transform': 'integer'},
+         'spent_on': {'source_field': 'spent_on', 'transform': 'date'},
+         'category': {'source_field': 'category'},
+         'amount': {'source_field': 'amount', 'transform': 'decimal'}},
+        {'usesStandard': {
+            'line': {'source_field': '$entity'},
+            'standard': {'source_field': 'category'},
+        }})
+
+
+def expense_model(tmp_path, allowed=None):
     """Standards and lines published by separate tasks of one revision."""
-    wb = Workbench(tmp_path)
+    wb = Workbench(tmp_path, allowed_model_fields=allowed)
     wb.ontology.register(_expense_definition(), wb.ctx)
-    _save_concept(wb, 'ExpenseStandard', [
+    _save_expense_standard(wb, [
         {'category': '住宿', 'limit': '500'},
         {'category': '伙食', 'limit': '80'},
-    ], {'category': {'source_field': 'category'},
-        'limit': {'source_field': 'limit', 'transform': 'decimal'}})
-    _save_concept(wb, 'ExpenseLine', [
+    ])
+    _save_expense_line(wb, [
         {'number': 'BX-1', 'line': '1', 'spent_on': '2026-03-01',
          'category': '住宿', 'amount': '600'},
         {'number': 'BX-1', 'line': '2', 'spent_on': '2026-03-02',
@@ -609,15 +674,7 @@ def expense_model(tmp_path):
          'category': '伙食', 'amount': '90'},
         {'number': 'BX-2', 'line': '2', 'spent_on': '2026-03-04',
          'category': '交通', 'amount': '30'},
-    ], {'number': {'source_field': 'number'},
-        'line': {'source_field': 'line', 'transform': 'integer'},
-        'spent_on': {'source_field': 'spent_on', 'transform': 'date'},
-        'category': {'source_field': 'category'},
-        'amount': {'source_field': 'amount', 'transform': 'decimal'}},
-        {'usesStandard': {
-            'line': {'source_field': '$entity'},
-            'standard': {'source_field': 'category'},
-        }})
+    ])
     return wb
 
 
@@ -680,6 +737,7 @@ def test_include_related_fetches_the_standard_limit_for_each_line(tmp_path):
         'relation': 'usesStandard',
         'target_instance_id': by_id['BX-1-1']['related']['target_instance_id'],
         'fields': {'limit': '500'},
+        'ambiguous': False,
     }
     assert by_id['BX-1-2']['related']['fields'] == {'limit': '500'}
     assert by_id['BX-2-1']['related']['fields'] == {'limit': '80'}
@@ -712,9 +770,21 @@ def test_include_related_can_traverse_in_reverse_and_defaults_to_identity(tmp_pa
     assert page['include_related']['target_concept'] == 'ExpenseLine'
     assert page['include_related']['direction'] == 'object_to_subject'
     assert page['include_related']['fields'] == ['number', 'line']
-    related = [item['related'] for item in page['items'] if item['related']]
-    assert len(related) == 2
-    assert all(set(item['fields']) == {'number', 'line'} for item in related)
+    by_category = {item['values']['category']: item for item in page['items']}
+    # 住宿 is used by two lines: the reverse link has two targets and must not
+    # silently pick one of them.  伙食 has exactly one line and is returned.
+    ambiguous = by_category['住宿']['related']
+    assert ambiguous['ambiguous'] is True
+    assert ambiguous['target_instance_id'] is None
+    assert ambiguous['fields'] == {}
+    assert len(ambiguous['candidates']) == 2
+    assert ambiguous['candidates_truncated'] is False
+    matched = by_category['伙食']['related']
+    assert matched['ambiguous'] is False
+    assert set(matched['fields']) == {'number', 'line'}
+    assert page['related_stats'] == {
+        'relation': 'usesStandard', 'matched': 1, 'missing': 0, 'ambiguous': 1,
+    }
 
     with pytest.raises(ValueError, match='unknown relation'):
         query(wb, ontology_id='expense-model', concept='ExpenseLine',
@@ -722,3 +792,187 @@ def test_include_related_can_traverse_in_reverse_and_defaults_to_identity(tmp_pa
     with pytest.raises(ValueError, match='not defined on related concept'):
         query(wb, ontology_id='expense-model', concept='ExpenseLine',
               include_related={'relation': 'usesStandard', 'fields': ['secret']})
+
+
+def test_related_stats_and_missing_describe_the_current_page_only(tmp_path):
+    wb = expense_model(tmp_path)
+    page = query(wb, ontology_id='expense-model', concept='ExpenseLine',
+                 include_related={'relation': 'usesStandard', 'fields': ['limit']},
+                 limit=2)
+    seen = []
+    while True:
+        assert page['count'] <= 2
+        assert sum(page['related_stats'][key]
+                   for key in ('matched', 'missing', 'ambiguous')) == page['count']
+        missing_rows = [item for item in page['items'] if item['related'] is None]
+        assert page['related_missing_count'] == len(missing_rows)
+        assert page['related_missing_truncated'] is False
+        assert {entry['instance_id'] for entry in page['related_missing']} == {
+            item['instance_id'] for item in missing_rows}
+        seen += [item['instance_id'] for item in page['items']]
+        if not page['next_cursor']:
+            break
+        page = query(wb, ontology_id='expense-model', concept='ExpenseLine',
+                     include_related={'relation': 'usesStandard',
+                                      'fields': ['limit']},
+                     limit=2, cursor=page['next_cursor'])
+    assert len(seen) == 4 and len(set(seen)) == 4
+
+
+def test_related_prefers_a_fact_from_the_instances_own_release(tmp_path):
+    wb = expense_model(tmp_path)
+    # Republish BX-1/1 with a different category: the same instance now has a
+    # relation fact in two releases.  Each release's row must use its own fact.
+    _save_expense_line(wb, [
+        {'number': 'BX-1', 'line': '1', 'spent_on': '2026-03-01',
+         'category': '伙食', 'amount': '600'},
+    ])
+    page = query(wb, ontology_id='expense-model', concept='ExpenseLine',
+                 include_related={'relation': 'usesStandard', 'fields': ['limit']},
+                 limit=200)
+    rows = [item for item in page['items']
+            if item['values']['number'] == 'BX-1' and item['values']['line'] == 1]
+    assert len(rows) == 2
+    assert len({row['release_ref'] for row in rows}) == 2
+    expected = {'住宿': '500', '伙食': '80'}
+    for row in rows:
+        assert row['related']['ambiguous'] is False
+        assert row['related']['fields']['limit'] == expected[
+            row['values']['category']]
+
+
+def test_related_multiple_matching_targets_are_ambiguous_and_truncated(tmp_path):
+    wb = Workbench(tmp_path)
+    wb.ontology.register(_relation_definition(), wb.ctx)
+    # Splitting the same string at every position gives distinct identity
+    # pairs whose separator-free joined key is always the same string, so one
+    # relation fact target resolves to every one of these distinct objects.
+    text = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    _save_concept(wb, 'target', [
+        {'left': text[:split], 'right': text[split:], 'label': str(split)}
+        for split in range(1, len(text))
+    ], {'left': {'source_field': 'left'}, 'right': {'source_field': 'right'},
+        'label': {'source_field': 'label'}}, ontology_id='rel-model')
+    _save_concept(wb, 'source', [{'key': text}],
+        {'key': {'source_field': 'key'}},
+        {'link': {'source': {'source_field': '$entity'},
+                  'target': {'source_field': 'key'}}},
+        ontology_id='rel-model')
+    page = query(wb, ontology_id='rel-model', concept='source',
+                 include_related={'relation': 'link', 'fields': ['label']},
+                 limit=200)
+    item, = page['items']
+    related = item['related']
+    assert related['ambiguous'] is True
+    assert related['target_instance_id'] is None
+    assert related['fields'] == {}
+    assert len(related['candidates']) == 20
+    assert related['candidates_truncated'] is True
+    assert page['related_stats'] == {
+        'relation': 'link', 'matched': 0, 'missing': 0, 'ambiguous': 1,
+    }
+
+
+def test_related_never_joins_on_a_hidden_relation_source_field(tmp_path):
+    # The line category is the usesStandard role source field; it is outside
+    # the disclosed model scope, so the link itself must not be usable.
+    wb = expense_model(tmp_path, allowed={
+        'src-ExpenseLine': ['number', 'line', 'spent_on', 'amount'],
+        'src-ExpenseStandard': ['category', 'limit'],
+    })
+    page = query(wb, ontology_id='expense-model', concept='ExpenseLine',
+                 include_related={'relation': 'usesStandard', 'fields': ['limit']},
+                 limit=200)
+    assert page['total'] == 4
+    assert all('category' not in item['values'] for item in page['items'])
+    assert all(item['related'] is None for item in page['items'])
+    assert page['related_stats'] == {
+        'relation': 'usesStandard', 'matched': 0, 'missing': 4, 'ambiguous': 0,
+    }
+    assert page['related_missing_count'] == 4
+    assert any(warning['code'] == 'ontology.related_relation_hidden'
+               for warning in page['warnings'])
+
+
+def _choose_model(tmp_path, allowed):
+    wb = Workbench(tmp_path, allowed_model_fields=allowed)
+    wb.ontology.register(_choose_definition(), wb.ctx)
+    _save_concept(wb, 'target', [{'code': 'T1', 'label': 'L1'}],
+        {'code': {'source_field': 'code'},
+         'label': {'source_field': 'label'}},
+        ontology_id='choose-model')
+    _save_concept(wb, 'source', [
+        {'marker': 'M1', 'secret': 'open', 'public': 'T1'},
+    ], {'marker': {'source_field': 'marker'},
+        'secret': {'source_field': 'secret'},
+        'public': {'source_field': 'public'},
+        'derived': {'source_field': 'marker',
+                    'transform': 'choose',
+                    'options': {'when_field': 'secret',
+                                'equals': 'open',
+                                'then_field': 'public',
+                                'else_field': 'marker'}}},
+        {'link': {'source': {'source_field': '$entity'},
+                  'target': {'source_field': 'marker',
+                             'transform': 'choose',
+                             'options': {'when_field': 'secret',
+                                         'equals': 'open',
+                                         'then_field': 'public',
+                                         'else_field': 'marker'}}}},
+        ontology_id='choose-model')
+    return wb
+
+
+def test_related_choose_role_is_hidden_when_a_read_field_is_hidden(tmp_path):
+    # choose reads when_field/then_field/else_field.  ``secret`` is the
+    # condition and is outside the disclosed scope, so both the derived
+    # property and the relation role would reveal whether secret == 'open'
+    # even though source_field (marker) is allowed.
+    wb = _choose_model(tmp_path, allowed={
+        'src-source': ['marker', 'public'],
+        'src-target': ['code', 'label'],
+    })
+    page = query(wb, ontology_id='choose-model', concept='source',
+                 include_related={'relation': 'link', 'fields': ['label']},
+                 limit=200)
+    item, = page['items']
+    assert item['values'] == {'marker': 'M1', 'public': 'T1'}
+    assert item['related'] is None
+    assert page['related_stats'] == {
+        'relation': 'link', 'matched': 0, 'missing': 1, 'ambiguous': 0,
+    }
+    assert any(warning['code'] == 'ontology.related_relation_hidden'
+               for warning in page['warnings'])
+
+
+def test_related_choose_role_links_when_every_read_field_is_disclosed(tmp_path):
+    wb = _choose_model(tmp_path, allowed={
+        'src-source': ['marker', 'secret', 'public'],
+        'src-target': ['code', 'label'],
+    })
+    page = query(wb, ontology_id='choose-model', concept='source',
+                 include_related={'relation': 'link', 'fields': ['label']},
+                 limit=200)
+    item, = page['items']
+    assert item['values'] == {'marker': 'M1', 'secret': 'open',
+                              'public': 'T1', 'derived': 'T1'}
+    assert item['related']['ambiguous'] is False
+    assert item['related']['fields'] == {'label': 'L1'}
+    assert page['related_stats'] == {
+        'relation': 'link', 'matched': 1, 'missing': 0, 'ambiguous': 0,
+    }
+
+
+def test_ordered_comparison_values_are_validated_before_any_row_is_read(tmp_path):
+    wb = Workbench(tmp_path)  # procurement is registered, nothing is published
+    with pytest.raises(ValueError, match='does not match ordered decimal'):
+        query(wb, ontology_id='procurement',
+              where=[{'property': 'amount', 'op': 'gt', 'value': 'not-a-number'}])
+    empty = query(wb, ontology_id='procurement',
+                  where=[{'property': 'amount', 'op': 'gt', 'value': '5'}])
+    assert empty['total'] == 0
+
+    wb.ontology.register(_expense_definition(), wb.ctx)
+    with pytest.raises(ValueError, match='does not match ordered date'):
+        query(wb, ontology_id='expense-model', concept='ExpenseLine',
+              where=[{'property': 'spent_on', 'op': 'lt', 'value': 'not-a-date'}])

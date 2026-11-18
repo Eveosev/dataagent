@@ -69,9 +69,10 @@ description: 多源数据接入、探查、Ontology 映射、可视化纠正与�
 4. 补全：`ontology_publish_prepare` 用最新 `draft_ref` 和 `expected_revision` 提交补全：每个概念的属性值类型、必需性、身份字段，关系的端点、方向与角色（`roles`），未决问题与覆盖缺口用 `dispositions` 显式处置。每项 `accept`/`exclude` 必须先向用户说明影响并得到明确决定，不自行 `accept`（见「必须遵守」第 10 条）。它只生成候选，不发布。草案被退回时按最新修订重新提案，不补全。
 5. 然后停下：`workbench_view` 打开同一任务，请用户在工作台网页一次确认发布。候选绑定草案内容摘要、来源快照与任务内容修订：网页审核草案只改审核状态，不会让候选失效，不用重新补全。草案仍 `pending` 时，发布区会直接显示候选，确认发布会在同一事务里一并审核（审计记「随发布确认一并审核」）；草案被退回则不能发布。
 6. 确认是唯一人工通道：不调用 `ontology_publish_confirm` 代确认（该工具只会返回需要人工确认），不声称已发布；发布前的候选不是本体，发布后才进入本体注册表。停用本体同样只能由用户在工作台网页操作，Agent 只说明入口。
-7. 发布后映射：新任务 `intake_start` 带 `target`（`ontology_id`、`concept`，固定在任务上），按正常接入提案。文档条款用 `intake_extract_records` 按目标概念生成记录：每条值带逐字引文和段落/页锚点，缺的必需属性列为缺口，不编造。保存规则不变：用户明确说「保存」才 `mapping_apply`。
-8. 查询：`ontology_query`（`ontology_id`；多概念本体带 `concept`，可加 `revision` 与 `where` 属性条件）和 `ontology_instances_summary` 回答「某本体下有哪些对象」。`where` 的 `op` 用 `eq`/`in`/`contains`，数值或日期比较用 `gt`/`gte`/`lt`/`lte`（只对 decimal/integer/date 属性）。需要关联对象的属性时加 `include_related: {"relation": "...", "fields": [...]}`：每条结果带 `related`（含 `target_instance_id` 与 `fields`），未命中为 `null`，`related_missing` 列出未命中行，`related_stats` 计数。对比类问题先取明细与关联标准，再比较；不要绕过工具读原始文件。只基于已发布快照，结果带来源定位、release 引用与修订；不读 `.dataagent` 下的数据库。
-9. 步数：发现 → 提案 → 补全候选 → 请用户一次确认 → 发布，目标不超过 7 次工具调用；用户要求审核草案时多一步。二次接入已发布本体同结构目标 3–5 步（先查复用，见「二次接入与复用」）。
+7. 改已发布本体的定义：用户说某属性类型定错、要增删属性、改身份字段或关系时，不要让用户去网页改类型（网页没有这个入口），也不要新建同名本体或先停用再重建。用 `intake_start` 带 `mode=ontology_discovery` 和 `revise_ontology_id=<已注册、未停用、发现发布的本体 id>` 发起修订发现，草案与补全照常，补全的 `ontology_id` 必须等于 `revise_ontology_id`。`ontology_publish_prepare` 的候选会给出与当前修订的差异（新增/删除/改类型/改身份/改关系的概念与属性）；删除属性、删除概念或修改身份字段属于破坏性变更，网页确认区要额外勾选「我知道旧修订的数据不会自动迁移」。确认仍只走网页：发布后同一本体登记 revision+1，注册表和默认指针移到新修订；旧任务与已发布实例仍固定在原修订，**不自动迁移、不删除**。新任务默认用新修订；查询默认当前修订，可显式指定旧修订。内置本体不可修订；已停用本体不可修订。
+8. 发布后映射：新任务 `intake_start` 带 `target`（`ontology_id`、`concept`，固定在任务上），按正常接入提案。文档条款用 `intake_extract_records` 按目标概念生成记录：每条值带逐字引文和段落/页锚点，缺的必需属性列为缺口，不编造。保存规则不变：用户明确说「保存」才 `mapping_apply`。
+9. 查询：`ontology_query`（`ontology_id`；多概念本体带 `concept`，可加 `revision` 与 `where` 属性条件）和 `ontology_instances_summary` 回答「某本体下有哪些对象」。`where` 的 `op` 用 `eq`/`in`/`contains`，数值或日期比较用 `gt`/`gte`/`lt`/`lte`（只对 decimal/integer/date 属性）。需要关联对象的属性时加 `include_related: {"relation": "...", "fields": [...]}`：每条结果带 `related`（含 `target_instance_id` 与 `fields`），未命中为 `null`，`related_missing` 列出未命中行，`related_stats` 计数。对比类问题先取明细与关联标准，再比较；不要绕过工具读原始文件。只基于已发布快照，结果带来源定位、release 引用与修订；不读 `.dataagent` 下的数据库。
+10. 步数：发现 → 提案 → 补全候选 → 请用户一次确认 → 发布，目标不超过 7 次工具调用；用户要求审核草案时多一步。二次接入已发布本体同结构目标 3–5 步（先查复用，见「二次接入与复用」）。 修订同一条链路：以修订目标发起发现 → 补全 → 请用户确认发布新修订。
 
 ### 本地业务系统
 

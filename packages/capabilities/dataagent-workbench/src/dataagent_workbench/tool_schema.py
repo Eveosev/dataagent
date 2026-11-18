@@ -26,6 +26,22 @@ class Start(Input):
     mode: Mode = "mapping"
     target: StartTarget | None = Field(default=None,
         description='映射目标（本体与概念）；缺省用内置采购本体的唯一概念')
+    revise_ontology_id: str | None = Field(default=None, min_length=2, max_length=64,
+        pattern=r'^[a-z][a-z0-9-]*[a-z0-9]$',
+        description='修订目标：mode=ontology_discovery 时可选，必须是已注册、未停用、'
+                    '发现发布的本体；补全的 ontology_id 必须与它一致')
+
+    @model_validator(mode='after')
+    def _route_revision_target(self):
+        """Carry a discovery revision target through the existing target channel."""
+        if self.revise_ontology_id is None:
+            return self
+        if self.mode != 'ontology_discovery':
+            raise ValueError('revise_ontology_id requires ontology_discovery mode')
+        if self.target is not None:
+            raise ValueError('name either revise_ontology_id or target, not both')
+        self.target = StartTarget(ontology_id=self.revise_ontology_id)
+        return self
 
 
 class Session(Input):

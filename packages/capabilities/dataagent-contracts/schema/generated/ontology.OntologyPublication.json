@@ -17,6 +17,11 @@
       "title": "Definition Digest",
       "type": "string"
     },
+    "diff": {
+      "additionalProperties": true,
+      "title": "Diff",
+      "type": "object"
+    },
     "draft_ref": {
       "default": "",
       "title": "Draft Ref",
@@ -42,6 +47,11 @@
     },
     "ontology_revision": {
       "title": "Ontology Revision",
+      "type": "string"
+    },
+    "previous_revision": {
+      "default": "",
+      "title": "Previous Revision",
       "type": "string"
     },
     "reason": {
