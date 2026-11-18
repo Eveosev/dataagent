@@ -128,23 +128,54 @@ def test_http_review_allow_partial_saves_only_unblocked_objects(tmp_path):
     saved = client.post(f'/api/sessions/{session_id}/review', headers=h, json={
         **decision, 'allow_partial': True, 'reason': '先保存可确认的单据，冲突和缺键记录挂起'})
     assert saved.status_code == 200, saved.text
-    audit = saved.json()['extensions']['intake.partial_save']
-    assert {item['object'] for item in audit['saved']} == {'INV-1', 'INV-3'}
-    suspended, = audit['suspended']
+    # The partial-save audit is flattened to top level, matching mapping_apply.
+    result = saved.json()
+    assert result['partial'] is True
+    assert {item['object'] for item in result['saved']} == {'INV-1', 'INV-3'}
+    suspended, = result['suspended']
     assert suspended['object'] == 'INV-2'
     assert {reason['code'] for reason in suspended['reasons']} >= {'ontology.conflicting_values'}
-    unidentified, = audit['unidentified_records']
+    unidentified, = result['unidentified_records']
     assert unidentified['reason'] == '缺少单据号，无法确定对象'
-    assert audit['reason'] == '先保存可确认的单据，冲突和缺键记录挂起'
-    assert audit['subject_ref'] == wb.subject and audit['recorded_at']
-    assert audit['release_ref'].startswith('release:')
+    assert result['reason'] == '先保存可确认的单据，冲突和缺键记录挂起'
+    assert result['subject_ref'] == wb.subject and result['recorded_at']
+    assert result['release_ref'].startswith('release:')
 
     status = client.get(f'/api/sessions/{session_id}', headers=h).json()
     assert status['phase'] == 'saved'
-    assert status['selected_versions']['release'] == audit['release_ref']
+    assert status['selected_versions']['release'] == result['release_ref']
     # Only the unblocked objects are released: no fact names the suspended object.
-    suspended_ids = {item['entity_id'] for item in audit['suspended']}
+    suspended_ids = {item['entity_id'] for item in result['suspended']}
     subjects = {role['value'] for fact in wb.store.query('fact', wb.scope)
                 for role in fact['body']['role_bindings']
                 if role['role'] == 'subject' and role['value_type'] == 'reference'}
     assert not suspended_ids & subjects
+
+
+def test_http_review_rejects_non_boolean_allow_partial_without_saving(tmp_path):
+    wb, session_id, preview = conflict_and_keyless_setup(tmp_path)
+    client, h = _client(wb)
+    decision = {'decision': {'preview_ref': preview.id + '@' + preview.revision,
+                             'target_scope': 'mapping'},
+                'expected_revision': wb.sessions.get(session_id, wb.ctx).revision}
+    for bad in ('false', 'true', 1, 0, [True]):
+        rejected = client.post(f'/api/sessions/{session_id}/review', headers=h,
+                               json={**decision, 'allow_partial': bad})
+        assert rejected.status_code == 422, bad
+        assert rejected.json()['error'] == 'invalid_input'
+    reason = client.post(f'/api/sessions/{session_id}/review', headers=h,
+                         json={**decision, 'reason': 7})
+    assert reason.status_code == 422
+    assert not wb.store.query('release', wb.scope)
+    assert wb.sessions.get(session_id, wb.ctx).phase == 'preview'
+
+
+def test_http_review_and_dispositions_reject_non_object_bodies(tmp_path):
+    wb, session_id, preview = conflict_and_keyless_setup(tmp_path)
+    client, h = _client(wb)
+    assert client.post(f'/api/sessions/{session_id}/review', headers=h,
+                       json=[1, 2]).status_code == 422
+    assert client.post(f'/api/sessions/{session_id}/dispositions', headers=h,
+                       json=[1]).status_code == 422
+    assert not wb.store.query('release', wb.scope)
+    assert not wb.store.query('disposition', wb.scope)
