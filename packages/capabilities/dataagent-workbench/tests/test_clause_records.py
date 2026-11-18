@@ -20,6 +20,7 @@ from dataagent_contracts.ontology import MappingSpec, OntologyRevision, ReviewDe
 from dataagent_ontology.identity import digest
 from dataagent_workbench.adapters.layer_client import LayerClient
 from dataagent_workbench.bootstrap import Workbench
+from dataagent_workbench.intake_service import PreviewBlocked
 from dataagent_workbench.service_tools import invoke
 
 
@@ -442,7 +443,15 @@ def test_swapped_limit_quotes_flag_attribution_and_dispose(tmp_path):
     issues = [issue for issue in preview.issues
               if issue.get('code') == 'record_attribution_unverified']
     assert {issue['row'] for issue in issues} == {0, 1}
-    assert all(issue.get('entity_id') for issue in issues)
+    # 共享引文（一类城市）不能把第 1 条的 issue 挂到第 0 条的对象上：
+    # 每条 issue 按记录独有的引文锚点指向自己的对象。
+    by_row = {issue['row']: issue for issue in issues}
+    identity = {tuple(instance.values[field]
+                      for field in ('城市等级', '职级', '费用类型')): instance.id
+                for instance in preview.instances}
+    assert by_row[0]['entity_id'] == identity[('一类', '经理级', '住宿')]
+    assert by_row[1]['entity_id'] == identity[('一类', '员工级', '住宿')]
+    assert by_row[0]['entity_id'] != by_row[1]['entity_id']
     assert len(preview.instances) == 4
 
     # The flagged records can be disposed; the unflagged ones then save.
@@ -465,6 +474,63 @@ def test_swapped_limit_quotes_flag_attribution_and_dispose(tmp_path):
         preview_ref=preview.id + '@' + preview.revision, target_scope='mapping'),
         session.revision, wb.ctx)
     assert wb.sessions.get(session.id, wb.ctx).phase == 'saved'
+
+
+def swapped_limit_records():
+    """The 800/500 quotes swapped between the first two records."""
+    records = clause_records()
+    records[0]['values'][3] = {'property': '限额', 'value': '500', 'quote': '500',
+                               'paragraph': CLAUSE_PARAGRAPH}
+    records[1]['values'][3] = {'property': '限额', 'value': '800', 'quote': '800',
+                               'paragraph': CLAUSE_PARAGRAPH}
+    return records
+
+
+def test_unverified_attribution_suspends_only_flagged_records_on_partial_save(tmp_path):
+    # 归属未核实的两条在部分保存中被挂起，其余正常记录照常保存。
+    wb, session = setup(tmp_path)
+    extract_records(wb, session, swapped_limit_records())
+    session = wb.sessions.get(session.id, wb.ctx)
+    preview = wb.intake.submit_proposal(session.id, standard_proposal(wb, session),
+                                        session.revision, wb.ctx)
+    session = wb.sessions.get(session.id, wb.ctx)
+    result = invoke(wb, 'mapping_apply', {
+        'session_id': session.id, 'expected_revision': session.revision,
+        'decision': {'preview_ref': preview.id + '@' + preview.revision,
+                     'target_scope': 'mapping', 'decision': 'save'},
+        'allow_partial': True, 'reason': '归属未核实的两条先挂起'}).data
+    assert result['partial'] is True
+    assert len(result['saved']) == 2
+    assert {item['values']['城市等级'] for item in result['saved']} == {'二类'}
+    suspended = {item['entity_id']: item for item in result['suspended']}
+    assert len(suspended) == 2
+    assert all(item['reasons'][0]['code'] == 'record_attribution_unverified'
+               for item in suspended.values())
+
+
+def test_attribution_issue_without_a_unique_instance_blocks_partial_save(tmp_path):
+    # 两条记录引用完全相同的引文时，共享锚点无法区分各自的对象：issue 不
+    # 指向任何实例，成为全局阻断，部分保存也不放行，只能先处置或重新提交。
+    wb, session = setup(tmp_path)
+    records = clause_records()
+    duplicate = {'record_span': dict(records[0]['record_span']),
+                 'values': [dict(item) for item in records[0]['values']]}
+    records.insert(1, duplicate)
+    extract_records(wb, session, records)
+    session = wb.sessions.get(session.id, wb.ctx)
+    preview = wb.intake.submit_proposal(session.id, standard_proposal(wb, session),
+                                        session.revision, wb.ctx)
+    issues = [issue for issue in preview.issues
+              if issue.get('code') == 'record_attribution_unverified']
+    assert {issue['row'] for issue in issues} == {0, 1}
+    assert all('entity_id' not in issue for issue in issues)
+    session = wb.sessions.get(session.id, wb.ctx)
+    with pytest.raises(PreviewBlocked):
+        invoke(wb, 'mapping_apply', {
+            'session_id': session.id, 'expected_revision': session.revision,
+            'decision': {'preview_ref': preview.id + '@' + preview.revision,
+                         'target_scope': 'mapping', 'decision': 'save'},
+            'allow_partial': True, 'reason': '无法确定对象，整体阻断'})
 
 
 def test_changed_source_breaks_clause_record_replay(tmp_path):

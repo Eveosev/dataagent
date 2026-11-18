@@ -1498,7 +1498,10 @@ class IntakeService:
         non-shared quotes fall outside its declared record_span, whose span
         overlaps another record's, or whose shared quote is not the nearest
         same-property value is listed here instead of blocking the batch.  A
-        record excluded by an audited disposition is no longer listed.
+        record excluded by an audited disposition is no longer listed.  When
+        no preview instance is uniquely identified by the record's own spans,
+        the issue carries no entity_id and blocks the whole batch: a partial
+        release must not save a record whose attribution is unverified.
         """
         issues=[]
         excluded={}
@@ -1525,23 +1528,32 @@ class IntakeService:
 
     @staticmethod
     def _row_instance(instances,entry,row):
-        """The preview instance carrying one clause record's anchors."""
-        selectors=set()
+        """The one preview instance this record's own anchors identify.
+
+        A span shared by several records proves nothing about which record
+        became which instance, so only spans cited by this record alone count
+        here.  When no instance carries them, or more than one does, the
+        caller must not guess: the issue stays without an entity_id and
+        blocks the whole batch instead of suspending one object.
+        """
+        cited_by={}
         for key,anchors in (entry.get('anchors') or {}).items():
-            if key.split('.',1)[0]!=str(row):continue
+            row_key=key.split('.',1)[0]
             for anchor in anchors or []:
                 selector=anchor.get('selector') or {}
-                selectors.add((anchor.get('source_ref'),
-                    json.dumps(selector,sort_keys=True,default=str)))
-        if not selectors:return None
+                cited_by.setdefault((anchor.get('source_ref'),
+                    json.dumps(selector,sort_keys=True,default=str)),set()).add(row_key)
+        own={selector for selector,rows in cited_by.items() if rows=={str(row)}}
+        if not own:return None
+        matched=set()
         for instance in instances:
-            for anchors in (instance.get('source_anchors') or {}).values():
-                for anchor in anchors or []:
-                    selector=anchor.get('selector') or {}
-                    if (anchor.get('source_ref'),
-                        json.dumps(selector,sort_keys=True,default=str)) in selectors:
-                        return instance.get('id')
-        return None
+            anchors=[anchor for field in (instance.get('source_anchors') or {}).values()
+                     for anchor in field or []]
+            if any((anchor.get('source_ref'),
+                json.dumps(anchor.get('selector') or {},sort_keys=True,default=str))
+                in own for anchor in anchors):
+                matched.add(instance.get('id'))
+        return matched.pop() if len(matched)==1 else None
 
     def submit_proposal(self,session_id,proposal,expected_revision,ctx,*,reused=False):
         wb=self.wb;s=wb.sessions.get(session_id,ctx)
