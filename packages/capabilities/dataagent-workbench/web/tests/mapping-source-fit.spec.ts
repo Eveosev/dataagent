@@ -1,6 +1,66 @@
 import {test,expect} from '@playwright/test';
+import type {Page} from '@playwright/test';
+import {execFileSync} from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import {compareDisplayText} from '../src/client';
-import {pinBuiltinOntology,slowTimeout} from './support';
+import {lockDefaultPointer,pinBuiltinOntology,slowTimeout,uniqueTag,unlockDefaultPointer} from './support';
+
+const python=process.env.DATAAGENT_TEST_PYTHON;
+let workspace='';
+let pointerLocked=false;
+let publishedOntology='';
+
+// 发布本体移动注册表默认指针（共享状态）：与 browse.spec / expense-labels.spec
+// 的发布用例按工作区加文件锁串行；收尾停用本用例发布的本体并释放锁。
+test.beforeEach(()=>{pointerLocked=false;publishedOntology='';});
+test.afterEach(async({request})=>{
+ if(!pointerLocked)return;
+ if(publishedOntology)await request.post(`/api/ontologies/${publishedOntology}/retire`,
+  {data:{reason:'用例收尾停用，恢复默认指针',confirmed:true}}).catch(()=>{});
+ unlockDefaultPointer(workspace);
+ pointerLocked=false;
+});
+
+// verify_browser.py 只把 URL/token/解释器传给 Playwright，不传工作区路径。
+// 上传一个探针文件拿 locator_ref，再到系统临时目录里找到持有它的运行中工作区。
+async function resolveWorkspace(page:Page){
+ if(workspace)return workspace;
+ const response=await page.request.post('/api/files',{
+  headers:{'x-dataagent-token':process.env.DATAAGENT_TEST_TOKEN||'',
+   'x-file-name':`source-fit-probe-${uniqueTag()}.csv`},
+  data:'probe\n',
+ });
+ expect(response.ok(),await response.text()).toBeTruthy();
+ const {locator_ref}=await response.json() as {locator_ref?:string};
+ const root=os.tmpdir();
+ const found=fs.readdirSync(root).filter(name=>name.startsWith('dataagent-ui-'))
+  .map(name=>path.join(root,name))
+  .filter(dir=>fs.existsSync(path.join(dir,'.dataagent','db','workbench.sqlite3')))
+  .find(dir=>{
+   const file=path.resolve(dir,String(locator_ref||''));
+   return file.startsWith(path.resolve(dir)+path.sep)&&fs.existsSync(file);
+  });
+ if(!found||!locator_ref)throw new Error(`cannot find the running workspace for ${locator_ref}`);
+ fs.rmSync(path.resolve(found,locator_ref),{force:true});
+ workspace=found;
+ return found;
+}
+
+// 草案与补全走真实 MCP 工具，发布确认只走 HTTP 网页人工通道（与 UI 同一条）。
+function callTool(name:string,args:Record<string,unknown>){
+ const request={jsonrpc:'2.0',id:1,method:'tools/call',params:{name,arguments:args}};
+ const line=execFileSync(python!,['-m','dataagent_workbench.interfaces.mcp_server'],{
+  cwd:workspace,input:JSON.stringify(request)+'\n',encoding:'utf8',
+  env:{...process.env,DATAAGENT_WORKSPACE:workspace},
+ });
+ const {result}=JSON.parse(line.trim().split('\n').filter(Boolean).pop()!);
+ if(result.isError)throw new Error(`tool ${name} failed: ${result.content[0].text}`);
+ const summary=JSON.parse(result.content[0].text);
+ return JSON.parse(fs.readFileSync(path.join(workspace,summary.result_path),'utf8')).data;
+}
+
 
 // FDE3-04：一个任务固定一个目标概念。限额表 docx 与费用明细 xlsx 一起提交时，
 // 限额表没有任务概念的身份列（单据编号），必需属性也大多无法绑定——映射预览
@@ -133,6 +193,8 @@ test('限额表与明细同任务：不符来源被拦截并可整源处置',asy
  await expect(issues).toContainText('限额表.docx');
  // 与概念不符的来源不给「纳入映射」，只有整源处置这一条出路。
  await expect(page.getByTestId('include-mapping-option')).toHaveCount(0);
+ // 拦截不是放宽保存：整源问题仍在预览里，保存仍被挡住。
+ await expect(page.getByRole('button',{name:'保存接入'})).toBeDisabled();
  const disposal=page.getByTestId('disposal-option').filter({hasText:'本任务不使用「限额表.docx」'});
  await expect(disposal).toBeVisible();
  const submit=disposal.getByRole('button',{name:'提交处置'});
@@ -148,6 +210,115 @@ test('限额表与明细同任务：不符来源被拦截并可整源处置',asy
  expect(body.entry.action).toBe('ignore_source');
  await expect(page.getByTestId('mapping-correction-notice')).toContainText('处置已记录');
  // 处置后重新生成：来源级问题消失，只剩明细对象，整批可以保存。
+ await page.getByRole('button',{name:'生成映射预览'}).click();
+ await expect(page.getByTestId('mapping-issues')).toHaveCount(0);
+ await expect(page.locator('.object-section .badge').first()).toHaveText('2 个对象');
+ await expect(page.getByRole('button',{name:'保存接入'})).toBeEnabled();
+ await page.getByRole('button',{name:'保存接入'}).click();
+ await expect(page.getByText('接入已保存')).toBeVisible();
+ // FDE2-13 余项：390px 窄屏下实例表横向滚动时，第一个数值列（金额，decimal）
+ // 与身份列一起粘性固定，不随「来源定位」等列滚出视口。
+ await page.goto('/#instances=procurement&concept=PurchaseDocument');
+ // 工作台的哈希路由只在挂载时解析；同文档只改 hash 不会重挂载，显式重载。
+ await page.reload();
+ await expect(page.getByTestId('instance-table')).toBeVisible();
+ await page.setViewportSize({width:390,height:844});
+ const instanceScroller=page.locator('.instance-card .mapping-table-scroll');
+ expect(await instanceScroller.evaluate(el=>el.scrollWidth>el.clientWidth)).toBe(true);
+ await instanceScroller.evaluate(el=>{el.scrollLeft=el.scrollWidth;});
+ await expect.poll(async()=>{
+  const box=await page.getByTestId('instance-value-amount').first().boundingBox();
+  return box?box.x>=0&&box.x+box.width<=390:false;
+ }).toBe(true);
+});
+
+// 与任务单同一形态的端到端用例：目标概念固定为「明细行」，限额表 docx 与
+// 明细 xlsx 一起提交。限额表没有身份列 number、必需属性也绑不上，必须被整源
+// 拦截；明细照常生成 2 个对象，处置后可保存。本体由本用例现场发布，不依赖
+// 其他用例留下的注册表状态（发布/停用与 browse.spec 共用工作区文件锁）。
+test('目标=明细行：限额表 docx 与明细 xlsx 同任务时整源拦截',async({page})=>{
+ test.skip(!python,'run scripts/verify_browser.py to share the test workspace with MCP');
+ slowTimeout(180000);
+ const root=await resolveWorkspace(page);
+ await lockDefaultPointer(root);
+ pointerLocked=true;
+ const tag=uniqueTag();
+ const ontologyId=`source-fit-${tag}`;
+ publishedOntology=ontologyId;
+ // 一张只有明细行字段的表，发布成单概念「明细行」。
+ const database=path.join(root,`source-fit-${tag}.db`);
+ execFileSync('sqlite3',[database],{input:
+  'CREATE TABLE expense_line (number TEXT PRIMARY KEY, amount REAL, currency TEXT);\n'
+  +"INSERT INTO expense_line VALUES ('INV-001',1260.00,'CNY'),('INV-002',900.00,'CNY');\n"});
+ const upload=await page.request.post('/api/files',{headers:{
+  'x-dataagent-token':process.env.DATAAGENT_TEST_TOKEN||'',
+  'x-file-name':`source-fit-${tag}.db`},data:fs.readFileSync(database)});
+ expect(upload.ok(),await upload.text()).toBeTruthy();
+ const source=await upload.json();
+ const created=await page.request.post('/api/sessions',{data:{
+  goal:'从费用明细库发现明细行本体',sources:[source],mode:'ontology_discovery'}});
+ expect(created.ok(),await created.text()).toBeTruthy();
+ const {session_id:discovery}=await created.json() as {session_id:string};
+ // 探查必须走网页服务：验收工作区没有安装 .mint 数据层，独立 MCP 进程
+ // 只能读工作区里已落盘的探查结果，不能自己探查。
+ const advanced=await page.request.post(`/api/sessions/${discovery}/advance`,{data:{}});
+ expect(advanced.ok(),await advanced.text()).toBeTruthy();
+ const request=callTool('intake_inference',{session_id:discovery});
+ callTool('ontology_discovery_propose',{session_id:discovery,
+  expected_revision:request.expected_revision,
+  proposal:{source_revision:request.source_revision,entities:[
+   {name:'明细行',table:'expense_line',grain:'一条明细行',identity:['number']},
+  ],relationships:[]}});
+ const fresh=callTool('intake_inference',{session_id:discovery});
+ const candidate=callTool('ontology_publish_prepare',{session_id:discovery,
+  expected_revision:fresh.expected_revision,draft_ref:fresh.draft.ref,
+  ontology_id:ontologyId,title:'来源核对明细行',
+  concepts:[{entity:'明细行',properties:{
+   number:{column:'number',value_type:'string',required:true},
+   amount:{column:'amount',value_type:'decimal',required:true},
+   currency:{column:'currency',value_type:'string',required:true},
+  },identity_fields:['number']}],
+  relations:[],dispositions:[]});
+ // 人工发布通道：与网页同一个 confirm 接口，显式 confirmed。
+ const confirmed=await page.request.post(`/api/sessions/${discovery}/publish/confirm`,{data:{
+  candidate_ref:candidate.candidate_ref,draft_ref:candidate.draft_ref,
+  source_snapshot:candidate.source_snapshot,definition_digest:candidate.definition_digest,
+  expected_revision:candidate.session_revision,confirmed:true}});
+ expect(confirmed.ok(),await confirmed.text()).toBeTruthy();
+
+ await page.goto('/');
+ await page.getByLabel('接入目标').fill('限额表与明细行同任务，核对来源拦截');
+ await page.getByLabel('选择材料').setInputFiles([
+  {name:'限额表.docx',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',buffer:limitsDocx},
+  {name:'明细.xlsx',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',buffer:detailXlsx},
+ ]);
+ await page.locator('#target-ontology').selectOption(ontologyId);
+ await page.getByRole('button',{name:'开始接入'}).click();
+ await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ // 任务固定目标概念为明细行（单概念本体，页面不出现概念下拉）。
+ await expect(page.locator('.mapping-panel > .panel-heading .badge')).toHaveText('明细行');
+ await page.getByRole('button',{name:'生成映射预览'}).click();
+ const issues=page.getByTestId('mapping-issues');
+ // 限额表被拦在对象之外：只有明细的 2 个对象，来源级 1 项根因。
+ await expect(page.locator('.object-section .badge').first()).toHaveText('2 个对象');
+ await expect(page.locator('.notice.amber strong').first()).toHaveText('1 项根因');
+ await expect(issues).toContainText('该来源与目标概念不符');
+ await expect(issues).toContainText('限额表.docx');
+ await expect(page.getByTestId('include-mapping-option')).toHaveCount(0);
+ // 拦截不是放宽保存：整源问题仍在预览里，保存仍被挡住。
+ await expect(page.getByRole('button',{name:'保存接入'})).toBeDisabled();
+ const disposal=page.getByTestId('disposal-option').filter({hasText:'本任务不使用「限额表.docx」'});
+ await expect(disposal).toBeVisible();
+ const submit=disposal.getByRole('button',{name:'提交处置'});
+ await expect(submit).toBeDisabled();
+ await disposal.getByLabel(/处置原因：本任务不使用/).fill('限额表是费用标准，不是费用明细');
+ await expect(submit).toBeEnabled();
+ const [disposed]=await Promise.all([
+  page.waitForResponse(response=>response.request().method()==='POST'&&/\/sessions\/[^/]+\/dispositions$/.test(response.url())),
+  submit.click(),
+ ]);
+ expect(disposed.status()).toBe(200);
+ expect((await disposed.json() as {entry:{action:string}}).entry.action).toBe('ignore_source');
  await page.getByRole('button',{name:'生成映射预览'}).click();
  await expect(page.getByTestId('mapping-issues')).toHaveCount(0);
  await expect(page.locator('.object-section .badge').first()).toHaveText('2 个对象');

@@ -349,10 +349,12 @@ class IntakeService:
         FDE3-04: a limit-table document proposed into an expense-line task used
         to turn every one of its rows into an unidentified object plus a
         missing-value problem.  A source is held out of the preview instead
-        when the concept's identity column is not bound to an observed field
-        and no more than half of the required properties bind — with
-        ``bindings`` from a proposal, or by the same-name defaults the web
-        would use when the source has no proposal at all.
+        when the concept declares identity fields and none of them binds to an
+        observed field (every row would be unidentified, however many other
+        properties match), or — for a concept without identity fields — when
+        no more than half of the required properties bind.  ``bindings`` comes
+        from a proposal, or falls back to the same-name defaults the web would
+        use when the source has no proposal at all.
         """
         fields = set(profile.fields or [])
         if not fields:
@@ -365,8 +367,12 @@ class IntakeService:
         else:
             bound = {name for name, binding in bindings.items()
                      if binding and binding.source_field in fields}
-        if any(name in bound for name in concept.identity_fields):
-            return True
+        identity = list(concept.identity_fields)
+        if identity:
+            # An identity column is what turns a row into a named object.  A
+            # source that cannot bind any identity field would only add
+            # unidentified objects, even if most other properties match.
+            return any(name in bound for name in identity)
         required = [name for name, definition in concept.properties.items()
                      if definition.required]
         if not required:
@@ -395,7 +401,7 @@ class IntakeService:
                 issues.append({'code': _SOURCE_CONCEPT_MISMATCH,
                                'source_id': profile.source_id,
                                'detail': '该来源没有任务目标概念的身份字段，'
-                                         '必需属性也大多无法绑定'})
+                                         '或必需属性大多无法绑定'})
             else:
                 issues.append({'code': 'ontology.source_unmapped',
                                'source_id': profile.source_id})
@@ -2060,7 +2066,12 @@ class IntakeService:
                 versions['mapping:'+key] = f'{mapping_id}@{revision}'
             writes.append(Write('mapping', mapping_id, wb.scope, mapping.model_dump(mode='json'),
                                 current['revision'] if current else None))
-        primary = next(iter(mappings.values()))
+        # The preview's own mapping record must name a source actually
+        # materialised; a mismatched first proposal only supplies the shared
+        # concept/revision fields when every source is held out.
+        primary = next((mappings[key] for key in mappings if key not in mismatched), None)
+        if primary is None:
+            primary = next(iter(mappings.values()))
         preview, body = wb.ontology.prepare_preview(
             primary, materialized, ctx,
             source_mappings={key: value for key, value in mappings.items()

@@ -4,11 +4,30 @@ import {execFileSync} from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import {anchorRowLocation} from '../src/ontologyBrowse';
 import {lockDefaultPointer,slowTimeout,uniqueTag,unlockDefaultPointer} from './support';
 
 const python=process.env.DATAAGENT_TEST_PYTHON;
 const SEED=path.resolve('../../dataagent-scenarios/fixtures/intake/sales-discovery.sql');
 let workspace='';
+
+// FDE2-13 余项：同一实例的多个属性来自同一来源行时（Word 表格一行拆成多个
+// 单元格、Excel 一行拆成多个单元格），实例页只显示一行定位，属性标签负责列。
+test('同一来源行的多个属性合并为一行定位',()=>{
+ expect(anchorRowLocation({selector:{kind:'text_span',unit_ref:'table:1/row:9/col:1'}},
+  '表 1 第 9 行 · 第 1 列')).toBe('表 1 第 9 行');
+ expect(anchorRowLocation({selector:{kind:'text_span',unit_ref:'table:1/row:9/col:4'}},
+  '表 1 第 9 行 · 第 4 列')).toBe('表 1 第 9 行');
+ expect(anchorRowLocation({selector:{kind:'excel_cell',sheet:'明细',range:'A9'}},
+  '明细 · A9')).toBe('明细 · 第 9 行');
+ expect(anchorRowLocation({selector:{kind:'excel_cell',sheet:'明细',range:'B9'}},
+  '明细 · B9')).toBe('明细 · 第 9 行');
+ // 跨行区间与行级定位保留原说法。
+ expect(anchorRowLocation({selector:{kind:'excel_cell',sheet:'明细',range:'A9:B10'}},
+  '明细 · A9:B10')).toBe('明细 · A9:B10');
+ expect(anchorRowLocation({selector:{kind:'record_key',keys:{row:2}}},
+  '来源行 2')).toBe('来源行 2');
+});
 
 // verify_browser.py 只把 URL/token/解释器传给 Playwright，不传工作区路径。
 // 用一次真实上传得到 locator_ref（相对工作区），再到系统临时目录里找到同一个

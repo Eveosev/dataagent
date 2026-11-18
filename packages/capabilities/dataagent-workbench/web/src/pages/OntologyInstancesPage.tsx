@@ -3,7 +3,7 @@ import type {CSSProperties} from 'react';
 import {api,compareDisplayText,display,isDecisionSelector,registryTitle,translateError} from '../client';
 import type {Correction,RegistryEntry,View} from '../client';
 import {
- anchorLocation,browseConceptLabel,browsePropertyLabel,comparisonOps,comparableValueTypes,conceptMap,
+ anchorLocation,anchorRowLocation,browseConceptLabel,browsePropertyLabel,comparisonOps,comparableValueTypes,conceptMap,
  filterOpNames,isComparisonOp,sourceDisplayName,
 } from '../ontologyBrowse';
 import type {FilterOp} from '../ontologyBrowse';
@@ -344,8 +344,9 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,initial
  };
 
  function sourceLines(item:PublishedInstance){
-  // 同一来源位置的多个属性合并成一行（账簿、单据号 · 文件 · 来源行 N），
-  // 避免同一对象重复展示同一段定位。
+  // 同一来源位置的多个属性合并成一行（账簿、单据号 · 文件 · 来源行 N）；
+  // Word/Excel 同一表格行的多个单元格也按行合并，属性标签已经标明列
+  // （FDE2-13 余项：不再每个属性一行）。
   const groups:{source:string;location:string;labels:string[]}[]=[];
   const anchorMap=item.source_anchors||{};
   const properties=[...new Set([...Object.keys(anchorMap),
@@ -357,7 +358,7 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,initial
     :(item.locations||[]).filter(location=>location.property===property);
    for(const anchor of anchors){
     const decision=isDecisionSelector(anchor.selector);
-    const located=decision?'':anchorLocation(anchor);
+    const located=decision?'':anchorRowLocation(anchor,anchorLocation(anchor));
     if(!decision&&!located)continue;
     const label=browsePropertyLabel(property);
     if(decision){

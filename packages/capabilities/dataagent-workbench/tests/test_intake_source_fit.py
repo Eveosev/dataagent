@@ -69,12 +69,15 @@ def proposals_for(wb, session, source_ids):
 def test_mismatched_source_is_held_out_with_one_source_level_issue(tmp_path):
     wb, session = mismatch_setup(tmp_path)
     # The agent proposes mappings for both materials, the limit table included.
+    proposals = proposals_for(wb, session, ('ledger', 'limits'))
     preview = wb.intake.submit_source_proposals(
-        session.id, proposals_for(wb, session, ('ledger', 'limits')),
-        session.revision, wb.ctx)
+        session.id, proposals, session.revision, wb.ctx)
     assert [(issue['code'], issue['source_id']) for issue in preview.issues] == \
         [('ontology.source_concept_mismatch', 'limits')]
     assert set(preview.source_revisions) == {'ledger'}
+    # The preview record names the materialised ledger, not the held-out
+    # limit table that happened to be proposed first.
+    assert preview.mapping.source_fingerprint == proposals['ledger'].source_fingerprint
     # The limit table's rows never became objects or per-row problems.
     assert [instance.values['number'] for instance in preview.instances] == \
         ['INV-1', 'INV-2']
@@ -175,7 +178,7 @@ def test_single_source_mismatch_keeps_one_issue_and_no_objects(tmp_path):
 
 
 def test_identity_column_keeps_a_sparse_source_materialized(tmp_path):
-    """The mismatch rule is conservative: identity bound, or half the required.
+    """The mismatch rule is conservative when the identity column is present.
 
     A ledger that carries the identity column but misses one required column
     is a real (incomplete) mapping, not a concept mismatch: its rows stay
@@ -207,3 +210,39 @@ def test_identity_column_keeps_a_sparse_source_materialized(tmp_path):
     assert summary['preview']['issue_row_count'] == 3
     assert summary['preview']['issue_item_count'] == \
         len(summary['preview']['issues']) == 4
+
+
+def test_identity_column_missing_is_a_mismatch_even_when_others_bind(tmp_path):
+    """No identity column means unidentified objects, however many others bind.
+
+    FDE3-04: binding only ``amount`` and ``currency`` on a four-property
+    concept used to pass the "half the required" test, so every row still
+    became an unidentified object.  The identity column is decisive on its
+    own: a source that cannot name an object is held out as a mismatch.
+    """
+    wb = Workbench(tmp_path)
+    wb.layer_client = StubProbeClient({
+        'no_identity': csv_profile('no_identity', [
+            {'amount_minor': '1200', 'currency': 'CNY', 'issuer': '甲'},
+            {'amount_minor': '3400', 'currency': 'CNY', 'issuer': '乙'}])})
+    session = wb.intake.advance(start(wb, [SourceSelection(
+        source_id='no_identity', kind='file', locator_ref='no_identity.csv')]).session_id, wb.ctx)
+    from dataagent_contracts.ontology import MappingSpec
+    source = wb.intake.inference_request(session.id, wb.ctx)['sources'][0]
+    # amount + currency bind (2 of 3 required); only the identity is missing.
+    proposal = MappingSpec(id='candidate', revision='1', ontology_revision='procurement@1',
+                           source_fingerprint=source['structure_fingerprint'],
+                           bindings={
+                               'amount': {'source_field': 'amount_minor',
+                                          'transform': 'minor_to_major'},
+                               'currency': {'source_field': 'currency'},
+                               'issuer': {'source_field': 'issuer'}})
+    preview = wb.intake.submit_proposal(session.id, proposal, session.revision, wb.ctx)
+    assert not preview.instances
+    assert {issue['code'] for issue in preview.issues} == \
+        {'ontology.source_concept_mismatch', 'ontology.no_records'}
+    summary = wb.intake.view(session.id, wb.ctx)
+    item = next(issue for issue in summary['preview']['issues']
+                if issue['code'] == 'ontology.source_concept_mismatch')
+    assert item['reason'] == '该来源与目标概念不符'
+    assert [option['reason_hint'] for option in item['actions']] == ['本任务不使用该来源']
