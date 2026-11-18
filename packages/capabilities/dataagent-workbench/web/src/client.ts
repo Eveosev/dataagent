@@ -103,10 +103,14 @@ const withoutPage=(selector:unknown)=>{
  if(!selector||typeof selector!=='object')return JSON.stringify(selector);
  const rest={...(selector as Record<string,unknown>)};
  delete rest.page;
- if(rest.extensions&&typeof rest.extensions==='object'){
-  const extensions={...(rest.extensions as Record<string,unknown>)};
-  delete extensions['dataagent.page'];
-  if(Object.keys(extensions).length)rest.extensions=extensions;else delete rest.extensions;
+ // extensions 的 null、空对象、缺失归一成同一形状（剥掉页号后为空视同没有），
+ // 其他扩展字段保留：带页号的新证据才能回退匹配 extensions:null 的旧锚点。
+ const extensions=rest.extensions;
+ if(extensions===null)delete rest.extensions;
+ else if(extensions&&typeof extensions==='object'){
+  const copy={...(extensions as Record<string,unknown>)};
+  delete copy['dataagent.page'];
+  if(Object.keys(copy).length)rest.extensions=copy;else delete rest.extensions;
  }
  return JSON.stringify(rest);
 };

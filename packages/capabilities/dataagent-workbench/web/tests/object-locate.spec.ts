@@ -21,19 +21,20 @@ test('SQLite 对象值的来源定位显示表与主键',async({page})=>{
 
 const pagedCsv=Buffer.from('number,amount_minor,currency\nINV-001,126000,CNY\nINV-002,90000,CNY\nINV-003,75000,CNY\n');
 
-async function openPagedObjectPage(page:import('@playwright/test').Page,mode:'with'|'without'|'mismatch'){
+async function openPagedObjectPage(page:import('@playwright/test').Page,mode:'with'|'without'|'mismatch'|'legacy'){
  // 把 CSV 来源改写成 REST 分页形态：同一 pointer 每页重复（/items/0、/items/1），页序号是
  // 区分记录的唯一信息。with/without 模拟 F1 前后的两种数据；mismatch 制造混合数据——
- // 锚点页码陈旧（全部停在第 1 页），证据页码正常推进，页码明确但不匹配。
+ // 锚点页码陈旧（全部停在第 1 页），证据页码正常推进，页码明确但不匹配；legacy 模拟
+ // 新证据（带页号）遇上旧锚点（extensions:null、无页号）。
  // 页号按 F1 合入的形状放在 selector.extensions["dataagent.page"]（1 起的响应页号），
- // without 模式的旧锚点没有 extensions。
+ // without 模式的旧锚点没有 extensions，legacy 模式的旧锚点 extensions 为 null。
  await page.route('**/api/sessions/*/objects',async route=>{
   const response=await route.fetch();
   const body=await response.json();
-  const anchorPage=(row:number)=>mode==='without'?undefined:mode==='mismatch'?1:Math.floor(row/2)+1;
+  const anchorPage=(row:number)=>mode==='without'||mode==='legacy'?undefined:mode==='mismatch'?1:Math.floor(row/2)+1;
   const evidencePage=(row:number)=>mode==='without'?undefined:Math.floor(row/2)+1;
   const toRest=(row:number,field:string,page?:number)=>({kind:'json_pointer',pointer:`/items/${row%2}/${field}`,
-   ...(page!==undefined?{extensions:{'dataagent.page':page}}:{})});
+   ...(page!==undefined?{extensions:{'dataagent.page':page}}:mode==='legacy'?{extensions:null}:{})});
   for(const source of body.sources||[]){
    if(!source.anchors)continue;
    for(const [key,anchors] of Object.entries(source.anchors)){
@@ -92,6 +93,16 @@ test('页码明确但不匹配时不回退到其他页的同名 pointer',async({
  // 证据是第 2 页，锚点全部停在第 1 页：定位仍显示证据页码，但不高亮任何来源行。
  await expect(page.getByText('invoice.csv · 第 2 页 · /items/0/amount_minor').first()).toBeVisible();
  await expect(page.locator('.selected-source-row')).toHaveCount(0);
+});
+
+test('新证据页号与旧锚点 extensions:null 混用时回退匹配',async({page})=>{
+ test.setTimeout(40000);
+ await openPagedObjectPage(page,'legacy');
+ await page.getByRole('button',{name:'INV-003'}).click();
+ await page.getByRole('button',{name:'amount',exact:true}).click();
+ // 证据带页号（第 2 页），旧锚点 extensions:null 且无页号：兼容回退命中同 pointer 第一条。
+ await expect(page.getByText('invoice.csv · 第 2 页 · /items/0/amount_minor').first()).toBeVisible();
+ await expect(page.locator('.selected-source-row .selected-cell').first()).toHaveText('126000');
 });
 
 test('纠正后必填属性未解决时提示为中文',async({page})=>{
