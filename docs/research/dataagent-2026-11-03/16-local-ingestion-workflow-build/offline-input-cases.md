@@ -25,9 +25,12 @@ sqlite3 invoice.db <<'SQL'
 CREATE TABLE invoice (number TEXT PRIMARY KEY, amount INTEGER, currency TEXT);
 INSERT INTO invoice VALUES ('INV-003', 1260, 'CNY');
 SQL
+
+uv run --frozen --project "$DATAAGENT_CHECKOUT/packages/capabilities/dataagent-data" \
+  python "$DATAAGENT_CHECKOUT/scripts/fixtures/build_invoice_docx.py" invoice.docx
 ```
 
-TSV、JSONL 的样本和独立期望在 `packages/capabilities/dataagent-scenarios/fixtures/intake/p1-files/`：`samples/` 是材料，`expected/` 是逐字段期望和锚点。docx 目前没有放进 `p1-files`；用仓库内 `packages/capabilities/dataagent-data/tests/observation/test_docx_record_sets.py` 的 `build_invoice_docx` 构造同结构样本（标题「采购单」、3 行表格、末尾备注段），或直接使用财务提供的 Word 文件。`p1-files` 的 docx 样本与 `expected/` 待补（待确认）。
+TSV、JSONL 的样本和独立期望在 `packages/capabilities/dataagent-scenarios/fixtures/intake/p1-files/`：`samples/` 是材料，`expected/` 是逐字段期望和锚点。docx 样本由上一段的 `scripts/fixtures/build_invoice_docx.py` 生成（标题「采购单」、表头加 3 行表格、末尾备注段），内容与 F10 的固定期望一致；或直接使用财务提供的 Word 文件，此时按实际内容核对，不用 F10 的期望值。`p1-files` 的 docx 样本与 `expected/` 待补（待确认）。
 
 ## 运行验收脚本的 OCR 前提
 
@@ -58,7 +61,7 @@ export OCR_ROOT="$HOME/.dataagent/ocr-rapidocr/ocr"
 | F09 JSONL | `p1-files/samples/invoices.jsonl`，期望 `p1-files/expected/invoices.jsonl.json` | 每行一个对象，共 3 条。绑定 `/number`、`/currency`、`/amount_minor`，金额选择「分 → 元」；嵌套 `/vendor/name`、`/vendor/tax_id` 在 `unmapped` 里设为 `extension` 保留，第 3 行的 `/remark` 只在第 3 行有锚点。预览 `INV-021` 320.00、`INV-022` 158.00、`INV-023` 2760.00 CNY；金额锚点带行号 1/2/3 和 JSON Pointer `/amount_minor` |
 | F10 Word（docx） | 标题「采购单」+ 表头 `number`/`amount`/`currency` + 3 行数据 + 末尾「备注：发票登记表由财务复核。」；金额已是元 | 绑定 `number`、`amount`、`currency`，金额不做分转元。预览 3 个对象：`INV-301` 1260.00、`INV-302` 900.50、`INV-303` 3300.00 CNY。表头行不能成为第 4 个对象，备注段不能混进发票；表头是标签，段落是独立的记录集。金额锚点为 `table:1/row:2/col:2`，币种为 `table:1/row:2/col:3`。不应出现 `candidate:` 对象或 `number="number"` 的对象 |
 
-F10 的样本构造见 `packages/capabilities/dataagent-data/tests/observation/test_docx_record_sets.py`：默认记录集是 `table:1`（3 条），段落是另一个记录集（2 条），表头不作为记录。网页上传框的 `accept` 目前不含 `.docx`（FDE-7 未修），文件选择器可能置灰；docx 用例从 Mint 聊天按工作区路径接入，或等上传框修复后再从网页选择。本机工作台可先用 `"$DATAAGENT" workbench intake --goal "接入 Word 发票登记表" --source invoice.docx` 建任务，再用 `"$DATAAGENT" workbench view <SESSION_ID>` 打开页面。
+F10 的样本由 `scripts/fixtures/build_invoice_docx.py` 生成（步骤见「准备测试输入」）：默认记录集是 `table:1`（3 条），段落是另一个记录集（2 条），表头不作为记录。网页上传框的 `accept` 目前不含 `.docx`（FDE-7 未修），文件选择器可能置灰；docx 用例从 Mint 聊天按工作区路径接入，或等上传框修复后再从网页选择。本机工作台可先用 `"$DATAAGENT" workbench intake --goal "接入 Word 发票登记表" --source invoice.docx` 建任务，再用 `"$DATAAGENT" workbench view <SESSION_ID>` 打开页面。
 
 ### 启用本机 OCR
 
@@ -91,7 +94,7 @@ export OCR_ROOT="$HOME/.dataagent/ocr-rapidocr/ocr"
 2. 工作区根目录 `source-connections.json`；
 3. 工作区 `.dataagent/source-connections.json`（兼容旧位置）。
 
-根目录与 `.dataagent` 同时存在时使用根目录文件并告警。`dataagent doctor` 打印清单路径和来源、已配置连接（名称、类型）以及每个凭据逻辑名的状态（可解析、缺失、权限不对、无效）；任一凭据不可解析时退出码 3 并给出修复提示。doctor 只报有无，不输出凭据值。
+根目录与 `.dataagent` 同时存在时使用根目录文件并告警。`dataagent doctor` 打印清单路径和来源、已配置连接（名称、类型）以及每个凭据逻辑名的状态（可解析、缺失、权限不对、无效）；工作区没有清单时打印 `connections: none (looked for …)` 且退出码 0，未配置连接不是失败。只有显式指定的清单不存在、清单读不出或不是对象，或任一凭据不可解析时，才退出码 3 并给出修复提示。doctor 只报有无，不输出凭据值。
 
 ### 带 token 的 REST 样例
 

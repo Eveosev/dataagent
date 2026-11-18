@@ -102,7 +102,7 @@ ocr:      engine rapidocr version=1.4.4 verification=ocrv-...
 
 退出码为 0。
 
-`doctor` 还检查连接清单、每个凭据逻辑名、当前工作区服务、policy 和 enforcement 模式。连接或凭据缺失、凭据权限不对时同样退出 3，并给出修复提示；它只报有无，不输出凭据值。本预设不安装 governance 层，`policy` 行显示 `local-owner workspace only` 不算失败。
+`doctor` 还检查连接清单、每个凭据逻辑名、当前工作区服务、policy 和 enforcement 模式。工作区没有连接清单不是失败：打印 `connections: none (looked for …)`，退出码 0。只有显式指定的清单（`DATAAGENT_SOURCE_CONNECTIONS`）不存在、清单读不出或不是对象，或凭据逻辑名缺失、权限不对、无效时，才退出 3 并给出修复提示；它只报有无，不输出凭据值。本预设不安装 governance 层，`policy` 行显示 `local-owner workspace only` 不算失败。
 
 ### 1.5 追加项目沙箱片段
 
