@@ -372,6 +372,63 @@ test('SQLite 发现 → 草案 → 补全 → 网页确认发布 → 新接入�
  await expect(page.locator('#target-ontology')).toHaveValue('procurement',{timeout:20000});
 });
 
+test('Agent 补全时放弃草案关系 → 发布区逐项列出并需勾选同意',async({page})=>{
+ test.skip(!workspace||!python,'run scripts/verify_browser.py to share the test workspace with MCP');
+ slowTimeout(180000);
+ const tag=uniqueTag();
+ const database=path.join(workspace!,`publish-dropped-${tag}.db`);
+ const ontologyId=`publish-dropped-${tag}`;
+ execFileSync('sqlite3',[database],{input:fs.readFileSync(SEED)});
+
+ await page.goto('/');
+ await page.getByLabel('接入目标').fill('补全时放弃草案关系核对');
+ await page.getByLabel('选择材料').setInputFiles(database);
+ await page.getByRole('radio',{name:'从数据库发现本体'}).check();
+ await page.getByRole('button',{name:'开始接入'}).click();
+ await expect(page.getByRole('heading',{name:'来源证据'})).toBeVisible({timeout:20000});
+ const sid=sessionId(page);
+ const request=callTool('intake_inference',{session_id:sid});
+ callTool('ontology_discovery_propose',{session_id:sid,...fullProposal(request)});
+ await expect(page.getByRole('heading',{name:'本体草案',exact:true})).toBeVisible({timeout:20000});
+ await page.getByRole('button',{name:'确认当前草案'}).click();
+ await expect(page.getByText('已通过审核').first()).toBeVisible({timeout:20000});
+
+ // 补全时只带入一条草案关系；另一条已选关系被放弃。后端候选与草案的差异
+ // 必须出现在发布确认区，而不是只留在候选的 dispositions 里。
+ const fresh=callTool('intake_inference',{session_id:sid});
+ const completion=fullCompletion(sid,fresh.draft!.ref,fresh.expected_revision,fresh.catalog,
+  false,ontologyId,'补全放弃关系模型');
+ const droppedRelation=completion.relations.find(item=>item.name==='orderedBy')!;
+ completion.relations=completion.relations.filter(item=>item!==droppedRelation);
+ callTool('ontology_publish_prepare',{...completion,
+  dispositions:[{kind:'unresolved_relationship',ref:droppedRelation.evidence_id,
+   action:'exclude',reason:'补全时未带入该关系'}]});
+ await expect(page.getByText('候选定义摘要 · 补全放弃关系模型')).toBeVisible({timeout:20000});
+
+ const dropped=page.getByTestId('publish-dropped-item');
+ await expect(dropped).toHaveCount(1);
+ await expect(dropped).toContainText('补全时放弃的草案关系');
+ await expect(dropped).toContainText('orderedBy');
+ await expect(dropped).toContainText('doc_hdr');
+ await expect(dropped).toContainText('party');
+ await expect(dropped).toContainText('补全候选未带入该草案项。');
+ await expect(dropped).toContainText('影响：');
+ await expect(page.getByTestId('publish-blocked')).toHaveCount(0);
+ const candidate=await page.request.get(`/api/sessions/${sid}/publish/candidate`);
+ const body=await candidate.json() as {dropped:{kind:string;ref:string}[]};
+ expect(body.dropped.some(item=>item.kind==='relationship'
+  &&item.ref===droppedRelation.evidence_id)).toBeTruthy();
+
+ // 总核对勾选后仍禁用；逐项勾选这条被放弃的关系后才可确认发布。
+ const checkbox=dropped.locator('input[type=checkbox]');
+ await page.getByLabel('我已核对候选定义与来源摘要，确认发布').check();
+ await expect(page.getByRole('button',{name:'确认发布'})).toBeDisabled();
+ await checkbox.check();
+ await expect(page.getByRole('button',{name:'确认发布'})).toBeEnabled();
+ await checkbox.uncheck();
+ await expect(page.getByRole('button',{name:'确认发布'})).toBeDisabled();
+});
+
 test('pending 草案 + 候选 → 网页一次确认发布 → 草案 approved',async({page})=>{
  test.skip(!workspace||!python,'run scripts/verify_browser.py to share the test workspace with MCP');
  slowTimeout(300000);
