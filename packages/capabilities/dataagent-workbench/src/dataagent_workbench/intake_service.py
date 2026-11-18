@@ -301,6 +301,8 @@ class IntakeService:
         new revision with who/when/why; the next proposal rebuilds a preview
         with the disposition applied.
         """
+        if not str(getattr(disposition, 'reason', '') or '').strip():
+            raise ValueError('处置原因不能为空')
         wb = self.wb
         session = wb.sessions.get(session_id, ctx)
         if session.revision != expected_revision:

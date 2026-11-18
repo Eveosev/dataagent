@@ -11,6 +11,7 @@ import pytest
 from dataagent_contracts.intake import CoverageGap, SourceSelection
 from dataagent_contracts.ontology import MappingSpec
 from dataagent_workbench.bootstrap import Workbench
+from dataagent_workbench.interfaces.mcp_server import handle
 from dataagent_workbench.service_tools import invoke
 from test_intake_repairs import StubProbeClient, csv_profile, pdf_profile, start
 
@@ -126,6 +127,34 @@ def test_exclude_record_drops_header_row_and_keeps_the_rest(tmp_path):
     session = wb.sessions.get(session.id, wb.ctx)
     wb.intake.apply(session.id, _save_decision(preview), session.revision, wb.ctx)
     assert wb.sessions.get(session.id, wb.ctx).phase == 'saved'
+
+
+def test_disposition_rejects_blank_reason_before_writing(tmp_path):
+    wb = Workbench(tmp_path)
+    wb.layer_client = StubProbeClient({'ledger': csv_profile(
+        'ledger', [{'number': 'INV-9', 'amount_minor': '90000', 'currency': 'CNY'}])})
+    session = wb.intake.advance(start(wb, [SourceSelection(
+        source_id='ledger', kind='file', locator_ref='ledger.csv')]).session_id, wb.ctx)
+
+    response = handle(wb, {
+        'method': 'tools/call',
+        'params': {'name': 'intake_dispose', 'arguments': {
+            'session_id': session.id, 'expected_revision': session.revision,
+            'action': 'partition_not_applicable', 'source_id': 'ledger',
+            'partition': 1, 'reason': ' \t ',
+        }},
+    })
+    assert response['isError'] is True
+    error = json.loads(response['content'][0]['text'])
+    assert error['error'] == 'invalid_input'
+    assert '处置原因不能为空' in error['detail']
+    assert not wb.store.query('disposition', wb.scope)
+
+    blank = _dispose('partition_not_applicable', partition=1)
+    blank.reason = ' \t '
+    with pytest.raises(ValueError, match='处置原因不能为空'):
+        wb.intake.dispose(session.id, blank, session.revision, wb.ctx)
+    assert not wb.store.query('disposition', wb.scope)
 
 
 def test_disposition_rejects_unknown_partition_record_and_duplicate(tmp_path):

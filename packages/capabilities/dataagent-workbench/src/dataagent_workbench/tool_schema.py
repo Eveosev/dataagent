@@ -1,6 +1,6 @@
 """Aggregate service inputs; host context never appears in tool arguments."""
 from typing import Annotated, Any, Literal, Union
-from pydantic import BaseModel,ConfigDict,Field,model_validator
+from pydantic import BaseModel,ConfigDict,Field,field_validator,model_validator
 from dataagent_contracts.intake import SourceSelection
 from dataagent_contracts.ontology import MappingSpec
 from .document_fields import DocumentField
@@ -120,6 +120,13 @@ class Dispose(Session):
     record: int | None = Field(default=None, ge=0,
         description='exclude_record 必填：来源记录下标（0 起，如表头行）')
     reason: str = Field(min_length=1, description='处置原因，写入审计')
+
+    @field_validator('reason')
+    @classmethod
+    def _reason_not_blank(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError('处置原因不能为空')
+        return value
 
 
 class Inherit(Session):
