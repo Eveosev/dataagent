@@ -417,22 +417,25 @@ def test_partial_save_reason_is_chinese_and_raw_detail_is_separate(tmp_path):
     assert all('Invalid' not in item['reason'] for item in reasons.values())
 
 
-def test_failed_conversion_is_counted_once_per_row_and_column(tmp_path):
+def test_failed_conversion_counts_one_root_cause_and_two_rows(tmp_path):
     wb, session = bad_rows_setup(tmp_path)
     preview = wb.intake.submit_proposal(session.id, proposal_for(wb, session, 'ledger'),
                                         session.revision, wb.ctx)
-    # Two rows fail; each failed column must not also count as a missing
-    # required value on the same row (FDE2-06: 20 rows read as 40 problems).
-    # The stored preview itself carries the deduplicated list now, so every
-    # outward count (preview, session status, page) reports the same number.
+    # Two rows fail in the same column, and the failed column must not also
+    # count as a missing required value on the same row.  That is one mapping
+    # root cause affecting two rows, while the per-row list stays available
+    # for locating/correcting each row (FDE2-06).
     assert len(preview.issues) == 2
     summary = wb.intake.view(session.id, wb.ctx)
-    assert summary['issue_count'] == len(summary['preview']['issues']) == 2
+    assert summary['issue_count'] == summary['preview']['issue_count'] == 1
+    assert summary['preview']['issue_row_count'] == 2
+    assert summary['preview']['issue_item_count'] == len(summary['preview']['issues']) == 2
     assert not any(issue['code'] == 'ontology.required_value_missing'
                    for issue in summary['preview']['issues'])
     status = invoke(wb, 'intake_status', {'session_id': session.id}).data
-    assert status['issue_count'] == len(status['issues']) == 2
+    assert status['issue_count'] == len(status['issues']) == 1
     page = ViewService(wb).object_page(session.id, wb.ctx)
+    assert page['issue_count'] == 1 and page['issue_row_count'] == 2
     assert len(page['issues']) == 2
     assert [issue['code'] for issue in page['issues']] == \
         ['ontology.conversion_failed', 'ontology.conversion_failed']

@@ -1,6 +1,6 @@
 import {useEffect,useRef,useState} from 'react';
 import {api,ApiError,display,transformNames,propertyLabel,entityTypeLabel,sourceProblem,issueReasons,conceptOf} from '../client';
-import type {View,Draft,FieldBinding,IntakeSession,MappingSpec,SourceProfile,CorrectionView,DispositionOption} from '../client';
+import type {View,Draft,FieldBinding,IntakeSession,MappingSpec,SourceProfile,CorrectionView,DispositionOption,Issue} from '../client';
 import {SourceViewer} from '../components/SourceViewer';
 import {DiscoveryPage} from './DiscoveryPage';
 import {MappingDetail} from '../components/MappingDetail';
@@ -263,10 +263,19 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession
  const anchor=direct?.[1][0]||proof[0]||(!instance?profile?.anchors?.[`${sourceRow}.${binding?.source_field}`]?.[0]:undefined);
  const conceptProperties=conceptOf(view.ontology,view.ontology_concept).properties;
  const fields=Object.keys(conceptProperties).filter(k=>!onlyProblems||!bindings[k]||view.preview?.issues.some(i=>(i as Record<string,unknown>).target===k));
- const problemCount=(view.preview?.issues||view.session.issues||[]).length;
- // 预览问题已带对象标签与中文理由（issue_summary）；会话问题是探查失败，
- // 点出材料名而不是内部来源哈希。
- const issueItems=(view.preview?.issues||view.session.issues||[]) as {code?:string;target?:string;object?:string;reason?:string;source_id?:string}[];
+ // 计数按根因：同一列跨多行的转换失败只算 1 项，受影响行数单列（FDE2-06）。
+ // issues 仍逐行保留，供逐行定位与纠正。
+ const issueItems=(view.preview?.issues||view.session.issues||[]) as Issue[];
+ const problemCount=view.preview?.issue_count??issueItems.length;
+ const issueRowCount=view.preview?.issue_row_count
+  ??new Set(issueItems.filter(issue=>issue.row!==undefined).map(issue=>`${issue.source_id??''}|${issue.row}`)).size;
+ // 来源级问题（未映射来源、来源不完整）及操作永远排在最前，不参与只显示
+ // 前 8 条的截断；否则前面的行级问题一多，「纳入映射」入口就不可达。
+ const sourceLevelIssue=(issue:Issue)=>issue.code==='ontology.source_unmapped'
+  ||issue.code==='ontology.incomplete_source';
+ const sourceIssues=issueItems.filter(sourceLevelIssue);
+ const rowIssues=issueItems.filter(issue=>!sourceLevelIssue(issue));
+ const visibleIssues=[...sourceIssues,...rowIssues.slice(0,8)];
  const issueText=(issue:{code?:string;target?:string;object?:string;reason?:string;source_id?:string})=>{
   if(issue.code==='intake.probe_failed'){
    const name=view.session.sources.find(s=>s.source_id===issue.source_id);
@@ -294,7 +303,7 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession
   <td className="mapped-value">{dirty?'待更新':display(instance?.values?.[name])}{correction&&!dirty&&<small className="warn">纠正值生效 · 映射值 {display(correction.mapping_value)}</small>}</td></tr>;})}</tbody></table></div>
  <div className="mapping-actions"><span className="muted">{draftState||'原值与转换后的值均可核对'}</span><button className="primary" disabled={busy||working||done||!profile} onClick={preview}>{busy?'正在校验…':'生成映射预览'}</button></div>
  {correctionNotice&&<div className={correctionNotice.kind==='green'?'notice green':'notice amber'} data-testid="mapping-correction-notice" role="status">{correctionNotice.text}</div>}
- {problemCount>0&&<div className="notice amber"><strong>{problemCount} 项待核对</strong><ul data-testid="mapping-issues">{issueItems.slice(0,8).map((issue,i)=><li key={i}>{issueText(issue)}
+ {problemCount>0&&<div className="notice amber"><strong>{problemCount} 项待核对{issueRowCount?` · 涉及 ${issueRowCount} 行`:''}</strong><ul data-testid="mapping-issues">{visibleIssues.map((issue,i)=><li key={i}>{issueText(issue)}
    {/* 未映射来源的第一条出路：显式纳入映射。点一次即记录来源范围选择，
        沿用当前绑定（未改过时就是默认同名绑定）重新提案，不要求先改绑定。 */}
    {issue.code==='ontology.source_unmapped'&&issue.source_id&&(()=>{
@@ -317,7 +326,7 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession
       <button className="secondary" disabled={busy||done||!(disposalReasons[key]||'').trim()} onClick={()=>submitDisposal(option,disposalReasons[key])}>提交处置</button>
      </div>
     </div>;})}
-  </li>)}</ul>{issueItems.length>8&&<p className="help">共 {issueItems.length} 项，打开对象页查看全部。</p>}</div>}
+  </li>)}</ul>{issueItems.length>visibleIssues.length&&<p className="help">共 {problemCount} 项根因，打开对象页查看全部逐行问题。</p>}</div>}
  <div className="object-section"><div className="panel-heading"><strong>对象预览</strong><span className="badge">{view.preview?.instances?.length||0} 个对象</span>{onOpenObjects&&view.preview&&<button className="secondary" onClick={onOpenObjects}>打开对象页</button>}</div>{view.preview?<><div className="sample-controls"><button className="icon-button" disabled={record===0} onClick={()=>setRecord(record-1)}>←</button><span>对象 {record+1} / {view.preview.instances?.length||0}</span><button className="icon-button" disabled={record>=(view.preview.instances?.length||0)-1} onClick={()=>setRecord(record+1)}>→</button></div><dl className="object-values">{Object.keys(conceptProperties).map(k=><div key={k}><dt title={k}>{propertyLabel(k)}</dt><dd>{display(instance?.values?.[k])}</dd></div>)}</dl></>:<div className="empty">生成映射预览后，在这里查看真实对象。</div>}</div>
  {instance?.extensions&&<details className="extension-box"><summary>查看扩展字段</summary><pre>{JSON.stringify(instance.extensions,null,2)}</pre></details>}
  </section><MappingDetail readOnly={done} view={view} field={field} binding={binding} raw={profile?.records?.[sourceRow]?.[binding?.source_field||'']} dirty={dirty} recordIndex={record} onCorrect={correct} onAdopt={adopt} onSchema={async(name,reason)=>{try{await review('ontology',{property:name,value_type:'string',reason});}catch(error){onError(error);}}}/></div>

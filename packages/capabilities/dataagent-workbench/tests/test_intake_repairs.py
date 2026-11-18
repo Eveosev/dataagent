@@ -385,8 +385,14 @@ def test_candidate_objects_get_readable_labels_not_hashes(tmp_path):
 def test_issue_list_is_not_truncated_and_reports_the_total(tmp_path):
     wb, session_id, _ = candidate_setup(tmp_path)
     summary = invoke(wb, 'mapping_preview', {'session_id': session_id}).data
-    assert summary['issue_count'] == len(summary['issues']) == 12
-    assert summary['issue_count'] > 5
+    # 12 per-row problems for locating/correcting each row.  The six missing
+    # numbers are object-level gaps (kept one per row), while the six
+    # unresolved identities are one row-level root cause with six rows.
+    assert len(summary['issues']) == 12
+    assert summary['issue_count'] == 7
+    view = wb.intake.view(session_id, wb.ctx)
+    assert view['preview']['issue_row_count'] == 6
+    assert summary['issue_count'] > 1
     assert {issue['object'] for issue in summary['issues']} == {
         f'第 {row + 1} 行' for row in range(6)}
 

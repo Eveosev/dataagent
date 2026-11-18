@@ -5,7 +5,9 @@ import type {MappingSpec,FieldBinding} from './generated/MappingSpec';
 import type {MappingPreview} from './generated/MappingPreview';
 import type {Discovery} from './pages/DiscoveryPage';
 export type {SourceProfile,IntakeSession,OntologyRevision,MappingSpec,FieldBinding};
-export type Preview=MappingPreview & {review_state:string; mapping_reused?:boolean; corrections?:unknown[]};
+export type Preview=MappingPreview & {review_state:string; mapping_reused?:boolean; corrections?:unknown[];
+ // issue_count 是根因数；issue_row_count 是受影响行数；issues 仍逐行保留供定位纠正。
+ issue_count?:number; issue_row_count?:number; issue_item_count?:number};
 export type Draft={bindings?:Record<string,FieldBinding>;source_bindings?:Record<string,Record<string,FieldBinding>>;selected_field?:string;source_id?:string;record_index?:number};
 // ontology_concept：任务固定映射目标的概念名（后端 _target 解析）；多概念本体
 // 的页面一律按它取概念，legacy 单概念本体忽略它走旧字段。
@@ -27,6 +29,7 @@ export type DispositionOption={action:'partition_not_applicable'|'exclude_record
 export type DispositionEntry={action:string;source_id:string;reason:string;partition?:number|string;record?:number;record_values?:Record<string,unknown>;decision_ref?:string;recorded_at?:string};
 export type ObjectView={session:IntakeSession;ontology:OntologyRevision;ontology_revision:string;ontology_concept?:string;ontology_draft:Record<string,unknown>|null;
  sources:(SourceProfile&{display_name:string})[];objects:WorkObject[];corrections:Correction[];correction_views:CorrectionView[];issues:Issue[];
+ issue_count?:number;issue_row_count?:number;
  conflicts:ConflictDetail[];dispositions:DispositionEntry[];disposition_options:DispositionOption[];
  review_state:string|null;preview_ref?:string;mapping_revision:string|null;draft:Draft};
 // 本体注册表（GET /api/ontologies）：内置 / 发现发布 / 已停用；default_ontology 为
@@ -69,7 +72,9 @@ export const issueReasons:Record<string,string>={
 };
 export const issueBlocksSave=(issue:Issue)=>!correctableIssueCodes.has(issue.code||'');
 // 按行重复的问题 code（FDE2-06）：同一列同一类问题跨多行时按根因合并成一条。
-export const rowLevelIssueCodes=new Set(['ontology.conversion_failed','ontology.required_value_missing','ontology.identity_unresolved','ontology.evidence_missing','record_attribution_unverified']);
+// 必填值缺失不在此列：每个对象要各自补值/纠正，逐行保留；转换失败等
+// 同一列缺陷才按根因合并。
+export const rowLevelIssueCodes=new Set(['ontology.conversion_failed','ontology.identity_unresolved','ontology.evidence_missing','record_attribution_unverified']);
 // 同一行同一列：转换失败的记录不再重复报「缺少必填值」（后端同款去重，
 // 页面在这里再做一遍，路由改写注入的原始问题也能按同一口径计数）。
 export function dedupeIssues(issues:Issue[]):Issue[]{

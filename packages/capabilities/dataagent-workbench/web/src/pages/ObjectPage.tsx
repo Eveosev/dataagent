@@ -229,11 +229,19 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
  const latestCorrections=corrections.filter((correction,i)=>!corrections.slice(i+1).some(c=>c.property===correction.property));
  // 待核对问题列出全部（不再截前 5 条）：阻断（对象页纠正解除不了，须修订映射或
  // 来源）排在可纠正前面，头部并列总数与阻断数；超过 10 条时折叠尾部。
- // FDE2-06：同一行同一列的转换失败不再重复报「缺少必填值」，阻断数按整批
- // 保存实际被拦的问题计——任何未解决问题都会拦下整批保存。
+ // FDE2-06：同一行同一列的转换失败不再重复报「缺少必填值」；计数按根因，
+ // 同一列跨多行的转换失败算 1 项，受影响行数单列（后端同款分组）。
+ // 任何未解决问题都会拦下整批保存，所以阻断数等于根因数。
  const problemIssues=dedupeIssues(view.issues);
- const sortedIssues=[...problemIssues].sort((a,b)=>Number(issueBlocksSave(b))-Number(issueBlocksSave(a)));
- const blockingCount=problemIssues.length;
+ // 行数从页面实际渲染的逐行问题算，和根因数、分组条目共用同一份列表。
+ const issueRowCount=new Set(problemIssues
+  .filter(issue=>issue.row!==undefined).map(issue=>`${issue.source_id??''}|${issue.row}`)).size;
+ // 来源级问题（未映射来源、来源不完整）排最前：行级问题再多也不能把
+ // 「返回映射页纳入」等整源操作挤出折叠区。
+ const sourceLevelIssue=(issue:Issue)=>issue.code==='ontology.source_unmapped'
+  ||issue.code==='ontology.incomplete_source';
+ const sortedIssues=[...problemIssues].sort((a,b)=>Number(sourceLevelIssue(b))-Number(sourceLevelIssue(a))
+  ||Number(issueBlocksSave(b))-Number(issueBlocksSave(a)));
  // 按根因分组（FDE2-06）：同一列同一类问题跨多行合并成一条「× N 行」，各行
  // 收进折叠详情；处置与对象入口逐行保留。
  const groupKey=(issue:Issue)=>`${issue.code}|${issue.target??''}|${issue.source_id??''}`;
@@ -248,6 +256,10 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
    else{(issueEntries[at] as {group:Issue[]}).group.push(issue);}
   }
  }
+ // 页面按同一根因键重新分组；用分组条目数计数，路由改写注入的逐行问题
+ // 也能与渲染出的条目数一致。
+ const problemCount=issueEntries.length;
+ const blockingCount=problemCount;
  // 来源名：SQLite 上传的显示名在 extensions 里，options 里没有时后端会回退到内部上传路径。
  const sourceName=(sourceId:string,data:ObjectView=view)=>{
   const selection=data.session.sources.find(s=>s.source_id===sourceId);
@@ -356,7 +368,7 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
   {notice&&<div className={notice.kind==='green'?'notice green':'notice amber'} data-testid={notice.kind==='green'?'correction-success':'correction-blocked'} role="status">{notice.text}
    {notice.detail&&<details className="tech-detail"><summary>详情</summary><pre>{technicalDetail(notice.detail)}</pre></details>}</div>}
   {/* 待核对问题不依赖选中对象：预览没有实例时（如 no_records）仍要全部列出。 */}
-  {problemIssues.length>0&&<div className="notice amber" data-testid="pending-issues"><strong>{problemIssues.length} 项待核对 · 阻断 {blockingCount} 项</strong>
+  {problemCount>0&&<div className="notice amber" data-testid="pending-issues"><strong>{problemCount} 项待核对{issueRowCount?` · 涉及 ${issueRowCount} 行`:''} · 阻断 {blockingCount} 项</strong>
    {/* FDE2-06：同一列同一类问题跨多行按根因合并成一条「× N 行」，各行收进
        折叠详情；处置与对象入口逐行保留。类型转换失败给两条出路（纠正当前值、
        修订映射转换），不再提供「排除表头行」。 */}

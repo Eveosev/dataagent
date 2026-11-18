@@ -214,6 +214,13 @@ class ViewService:
         if body and inheritance is None:
             inheritance = wb.intake.inheritance_hint(s, body)
         ontology, concept_name, _ = wb.intake._target(s)
+        page_issues = (wb.intake._deduped_issues((body or {}).get('issues') or [])
+                       if body else list(s.issues))
+        if body:
+            issue_groups, issue_row_count = wb.intake._issue_groups(page_issues)
+        else:
+            issue_groups = page_issues
+            issue_row_count = wb.intake._issue_row_count(page_issues)
         return {'session': s.model_dump(mode='json'), 'ontology': ontology.model_dump(mode='json'),
                 'ontology_revision': f'{ontology.id}@{ontology.revision}',
                 'ontology_concept': concept_name,
@@ -221,11 +228,13 @@ class ViewService:
                 'sources': sources, 'objects': objects,
                 'corrections': (body or {}).get('corrections', []),
                 'correction_views': self._correction_views(s, body),
-                # One problem per row and root cause (FDE2-06): a failed
-                # conversion already explains the required value missing on
-                # the same row and column, so the page does not count twice.
-                'issues': wb.intake._deduped_issues((body or {}).get('issues') or [])
-                if body else list(s.issues),
+                # Per-row issues stay available for locating/correcting a
+                # row; issue_count collapses repeated row-level defects by
+                # root cause and issue_row_count reports affected rows
+                # (FDE2-06).
+                'issues': page_issues,
+                'issue_count': len(issue_groups),
+                'issue_row_count': issue_row_count,
                 'conflicts': conflicts,
                 'dispositions': wb.intake.disposition_entries(s),
                 'disposition_options': wb.intake.disposition_options(s, body),

@@ -209,11 +209,14 @@ test('xlsx 日期列错绑为 decimal：按根因合并计数，处置按类型�
  await expect(page.getByText('识别与探查已完成')).toBeVisible();
  // 默认绑定把日期列绑到金额（decimal）：5 行全部转换失败。
  await page.getByRole('button',{name:'生成映射预览'}).click();
- await expect(page.getByText('5 项待核对')).toBeVisible();
+ await expect(page.getByText('1 项待核对')).toBeVisible();
+ await expect(page.getByText('涉及 5 行')).toBeVisible();
  await page.getByRole('button',{name:'打开对象页'}).click();
- // FDE2-06：计数与实际一致——5 行各 1 项（不是 5×2），阻断计入整批被拦的问题。
- await expect(page.getByTestId('pending-issues')).toContainText('5 项待核对');
- await expect(page.getByTestId('pending-issues')).toContainText('阻断 5 项');
+ // FDE2-06：同一列 5 行转换失败是 1 条根因、影响 5 行（不是 5×2 项），
+ // 阻断数按根因数计，整批保存仍被这一条根因拦下。
+ await expect(page.getByTestId('pending-issues')).toContainText('1 项待核对');
+ await expect(page.getByTestId('pending-issues')).toContainText('涉及 5 行');
+ await expect(page.getByTestId('pending-issues')).toContainText('阻断 1 项');
  // 同根因合并成一条「金额 × 5 行」，说明全中文，原始英文异常不出现。
  const group=page.getByTestId('pending-issue').filter({hasText:'× 5 行'});
  await expect(group).toHaveCount(1);
@@ -439,6 +442,54 @@ test('未映射来源可沿用默认绑定纳入映射并重新提案',async({pa
   session:{selected_versions:Record<string,string>};preview:{issues:unknown[]}|null};
  expect(after.session.selected_versions[`mapping:${other.source_id}`]).toBeTruthy();
  expect(after.preview?.issues).toEqual([]);
+});
+
+test('前面的行级问题超过 8 条时未映射来源的纳入按钮仍可见可点',async({page})=>{
+ test.setTimeout(60000);
+ // 9 行的金额列全部转换失败：按根因合并是 1 条问题、影响 9 行，但逐行问题
+ // 仍有 9 条。未映射来源的 source_unmapped 追加在这些行级问题之后；页面必须
+ // 把来源级问题固定在最前，不能因为只展示前 8 条而藏掉「纳入映射」。
+ const badLedger=Buffer.from('number,amount_minor,currency\n'
+  +Array.from({length:9},(_,i)=>`INV-${String(i+1).padStart(3,'0')},not-a-number,CNY`).join('\n')+'\n');
+ await page.goto('/');
+ await page.getByLabel('接入目标').fill('行级问题很多时仍能纳入未映射来源');
+ await page.getByLabel('选择材料').setInputFiles([
+  {name:'ledger.csv',mimeType:'text/csv',buffer:badLedger},
+  {name:'other.csv',mimeType:'text/csv',buffer:otherCsv},
+ ]);
+ await page.getByRole('button',{name:'开始接入'}).click();
+ await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ const sid=new URLSearchParams(new URL(page.url()).hash.slice(1)).get('session')!;
+ expect(sid).toBeTruthy();
+ const view=await (await page.request.get(`/api/sessions/${sid}/view`)).json() as {
+  session:{revision:string};ontology:{id:string;revision:string};ontology_concept:string;
+  profiles:{source_id:string;fields:string[];metadata:{structure_fingerprint:string}}[];
+ };
+ const mapped=view.profiles.find(profile=>!profile.fields.includes('note'))!;
+ const other=view.profiles.find(profile=>profile.fields.includes('note'))!;
+ const proposalFor=(source:typeof mapped)=>({id:'candidate',revision:'1',
+  ontology_revision:`${view.ontology.id}@${view.ontology.revision}`,concept:view.ontology_concept,
+  source_fingerprint:source.metadata.structure_fingerprint,
+  bindings:{number:{source_field:'number'},
+   amount:{source_field:'amount_minor',transform:'minor_to_major'},
+   currency:{source_field:'currency'}}});
+ const narrow=await page.request.post(`/api/sessions/${sid}/source-proposals`,{
+  data:{proposals:{[mapped.source_id]:proposalFor(mapped)},expected_revision:view.session.revision}});
+ expect(narrow.ok(),await narrow.text()).toBeTruthy();
+ await page.reload();
+ // 10 条逐行问题（9 条转换失败 + 1 条未映射来源），合并为 2 条根因、9 行。
+ await expect(page.getByTestId('mapping-issues').locator('li')).toHaveCount(9);
+ await expect(page.getByText('2 项待核对')).toBeVisible();
+ await expect(page.getByText('涉及 9 行')).toBeVisible();
+ const include=page.getByTestId('include-mapping-option');
+ await expect(include).toContainText(`把「other.csv」纳入映射`);
+ await expect(page.getByTestId('mapping-issues').locator('li').first())
+  .toContainText('该来源未用于当前映射');
+ const button=include.getByRole('button',{name:'纳入映射'});
+ await expect(button).toBeEnabled();
+ await button.click();
+ await expect(page.getByTestId('mapping-correction-notice'))
+  .toContainText('已将「other.csv」纳入映射范围');
 });
 
 // FDE2-05 回归：先全量映射两份材料，再缩窄为只映射 ledger，最后在网页点
