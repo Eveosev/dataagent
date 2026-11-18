@@ -43,7 +43,13 @@ def write_skeleton(run_dir: pathlib.Path, status: str = "pending") -> None:
         "round_id": ROUND,
         "task_id": "B01",
         "status": status,
-        "env": {"adapter": "oracle", "model": None},
+        "env": {
+            "adapter": "oracle",
+            "model": None,
+            "agent_kernel": "agent-kernel@test",
+            "dataagent": None,
+            "harness": "09-benchmark@v0.1",
+        },
         "dataset_ref": {"revision": "v0.2", "splits": list(SPLITS)},
         "samples": {"total": 0, "scored": 0, "missing": []},
         "started_at": "2026-11-18T00:00:00+08:00",
@@ -153,6 +159,48 @@ class TestPendingSkeleton(unittest.TestCase):
 
     def test_corrupt_scorecard_is_not_skeleton(self):
         (self.run_dir / "scorecard.json").write_text("{not json\n", encoding="utf-8")
+        self.assertFalse(RUN.is_pending_skeleton(self.run_dir))
+
+    def test_extra_top_level_fields_are_not_skeleton(self):
+        for name in ("run.json", "scorecard.json"):
+            with self.subTest(name=name):
+                write_skeleton(self.run_dir)
+                obj = self._load(name)
+                obj["evaluation"] = {"score": 1.0}
+                self._dump(name, obj)
+                self.assertFalse(RUN.is_pending_skeleton(self.run_dir))
+
+    def test_extra_nested_run_fields_are_not_skeleton(self):
+        for owner in ("env", "dataset_ref", "samples"):
+            with self.subTest(owner=owner):
+                write_skeleton(self.run_dir)
+                run = self._load("run.json")
+                run[owner]["evaluation"] = {"score": 1.0}
+                self._dump("run.json", run)
+                self.assertFalse(RUN.is_pending_skeleton(self.run_dir))
+
+    def test_extra_nested_card_fields_are_not_skeleton(self):
+        for target in ("gate", "split"):
+            with self.subTest(target=target):
+                write_skeleton(self.run_dir)
+                card = self._load("scorecard.json")
+                if target == "gate":
+                    card["gate"]["evaluation"] = {"score": 1.0}
+                else:
+                    card["split_scores"]["development"]["evaluation"] = {"score": 1.0}
+                self._dump("scorecard.json", card)
+                self.assertFalse(RUN.is_pending_skeleton(self.run_dir))
+
+    def test_artifacts_symlink_is_not_skeleton(self):
+        external = pathlib.Path(self._tmp.name) / "external-artifacts"
+        external.mkdir()
+        (self.run_dir / "artifacts").rmdir()
+        (self.run_dir / "artifacts").symlink_to(external, target_is_directory=True)
+        self.assertFalse(RUN.is_pending_skeleton(self.run_dir))
+
+    def test_artifacts_regular_file_is_not_skeleton(self):
+        (self.run_dir / "artifacts").rmdir()
+        (self.run_dir / "artifacts").write_text("not a directory\n", encoding="utf-8")
         self.assertFalse(RUN.is_pending_skeleton(self.run_dir))
 
 
@@ -267,6 +315,34 @@ class TestNewRoundSkeletonRun(unittest.TestCase):
         self.assertNotEqual(proc.returncode, 0)
         self.assertIn("run 目录已存在且非空", proc.stderr)
         self.assertEqual(card_path.read_text(encoding="utf-8"), before)
+
+    def test_extra_result_field_is_rejected_without_overwrite(self):
+        """骨架里混入额外结果字段时拒绝，且不删除/改写原文件。"""
+        run_dir = self.bench / TASK_DIR / "history" / "runs" / ROUND
+        card_path = run_dir / "scorecard.json"
+        card = json.loads(card_path.read_text(encoding="utf-8"))
+        card["evaluation"] = {"score": 1.0}
+        before = json.dumps(card, ensure_ascii=False, indent=2) + "\n"
+        card_path.write_text(before, encoding="utf-8")
+        proc = self._run()
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn("run 目录已存在且非空", proc.stderr)
+        self.assertEqual(card_path.read_text(encoding="utf-8"), before)
+        run = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
+        self.assertEqual(run["status"], "pending")
+
+    def test_artifacts_symlink_is_rejected_without_writing_outside(self):
+        """artifacts 指向外部目录的符号链接不得被接受。"""
+        run_dir = self.bench / TASK_DIR / "history" / "runs" / ROUND
+        external = pathlib.Path(self._tmp.name) / "outside-artifacts"
+        external.mkdir()
+        (run_dir / "artifacts").symlink_to(external, target_is_directory=True)
+        proc = self._run()
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn("run 目录已存在且非空", proc.stderr)
+        self.assertEqual(list(external.iterdir()), [])
+        run = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
+        self.assertEqual(run["status"], "pending")
 
     def test_previously_run_dir_is_still_rejected(self):
         first = self._run()

@@ -28,18 +28,37 @@ BENCH = HERE.parent
 SPLITS = ("development", "regression", "unseen_acceptance")
 # new_round.py 只写 run.json / scorecard.json；artifacts 是 run.py 自己建的空目录。
 SKELETON_ENTRIES = {"run.json", "scorecard.json", "artifacts"}
-RUN_SKELETON_KEYS = {"run_id", "round_id", "status", "samples", "finished_at", "cost", "artifacts"}
-CARD_SKELETON_KEYS = {"run_id", "task_id", "split_scores", "deltas", "verdict", "gate", "notes"}
+RUN_SKELETON_KEYS = frozenset({
+    "run_id", "round_id", "task_id", "status", "env", "dataset_ref",
+    "samples", "started_at", "finished_at", "cost", "artifacts",
+})
+RUN_ENV_KEYS = frozenset({"adapter", "model", "agent_kernel", "dataagent", "harness"})
+RUN_DATASET_KEYS = frozenset({"revision", "splits"})
+RUN_SAMPLES_KEYS = frozenset({"total", "scored", "missing"})
+CARD_SKELETON_KEYS = frozenset({
+    "run_id", "task_id", "baseline_run", "split_scores",
+    "deltas", "verdict", "gate", "notes",
+})
+CARD_GATE_KEYS = frozenset({"tier", "decision", "blockers"})
+CARD_SPLIT_KEYS = frozenset({"count", "metrics"})
 
 
 def _is_pending_run(run: dict, run_dir: pathlib.Path) -> bool:
     """run.json 是否仍是 new_round.py 写的待跑占位（无样本、无完成时间/成本/产物）。"""
-    if not isinstance(run, dict) or not RUN_SKELETON_KEYS <= set(run):
+    if not isinstance(run, dict) or set(run) != RUN_SKELETON_KEYS:
         return False
+    env = run["env"]
+    dataset_ref = run["dataset_ref"]
     samples = run["samples"]
-    if not isinstance(samples, dict):
+    if not isinstance(env, dict) or set(env) != RUN_ENV_KEYS:
         return False
-    if samples.get("total") != 0 or samples.get("scored") != 0 or samples.get("missing") != []:
+    if not isinstance(dataset_ref, dict) or set(dataset_ref) != RUN_DATASET_KEYS:
+        return False
+    if dataset_ref["splits"] != list(SPLITS):
+        return False
+    if not isinstance(samples, dict) or set(samples) != RUN_SAMPLES_KEYS:
+        return False
+    if samples["total"] != 0 or samples["scored"] != 0 or samples["missing"] != []:
         return False
     return (
         run["status"] == "pending"
@@ -53,16 +72,18 @@ def _is_pending_run(run: dict, run_dir: pathlib.Path) -> bool:
 
 def _is_pending_card(card: dict, run: dict) -> bool:
     """scorecard.json 是否仍是 new_round.py 写的空记分卡（无评分、无裁定、无 Δ）。"""
-    if not isinstance(card, dict) or not CARD_SKELETON_KEYS <= set(card):
+    if not isinstance(card, dict) or set(card) != CARD_SKELETON_KEYS:
         return False
     gate = card["gate"]
-    if not isinstance(gate, dict) or gate.get("decision") != "pending" or gate.get("blockers") != []:
+    if not isinstance(gate, dict) or set(gate) != CARD_GATE_KEYS:
+        return False
+    if gate["decision"] != "pending" or gate["blockers"] != []:
         return False
     splits = card["split_scores"]
     if not isinstance(splits, dict) or set(splits) != set(SPLITS):
         return False
     for slot in splits.values():
-        if not isinstance(slot, dict) or set(slot) != {"count", "metrics"}:
+        if not isinstance(slot, dict) or set(slot) != CARD_SPLIT_KEYS:
             return False
         if slot["count"] != 0 or slot["metrics"] != {}:
             return False
@@ -78,9 +99,10 @@ def _is_pending_card(card: dict, run: dict) -> bool:
 def is_pending_skeleton(run_dir: pathlib.Path) -> bool:
     """run 目录是否只有 new_round.py 生成的待跑骨架（尚无任何预测产物）。
 
-    条件：目录里只有骨架文件、artifacts 为空、run.json 与 scorecard.json 都还是
-    new_round.py 写的待跑占位（samples 全零、finished_at/cost 为 null、artifacts 空、
-    verdict/gate 为 pending、split_scores 为空）。任何真实结果或额外文件都不允许复用。
+    条件：目录里只有骨架文件；artifacts 必须是普通空目录（拒绝符号链接）；run.json
+    与 scorecard.json 的顶层及嵌套对象必须与 new_round.py 的固定字段集合完全一致，
+    且 samples 全零、finished_at/cost 为 null、artifacts 空、verdict/gate 为 pending、
+    split_scores 为空。任何真实结果、额外字段或额外文件都不允许复用。
     """
     if not run_dir.is_dir():
         return False
@@ -93,7 +115,9 @@ def is_pending_skeleton(run_dir: pathlib.Path) -> bool:
     except (OSError, json.JSONDecodeError):
         return False
     artifacts = run_dir / "artifacts"
-    if artifacts.exists() and any(artifacts.rglob("*")):
+    if artifacts.is_symlink():
+        return False
+    if artifacts.exists() and (not artifacts.is_dir() or any(artifacts.iterdir())):
         return False
     return _is_pending_run(run, run_dir) and _is_pending_card(card, run)
 
