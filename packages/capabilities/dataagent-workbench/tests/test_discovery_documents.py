@@ -1,8 +1,10 @@
 """Discovery evidence for document sources: sections, clauses and tables."""
 import io
 import json
+import os
 import shutil
 import subprocess
+import sys
 import zipfile
 from pathlib import Path
 
@@ -315,14 +317,13 @@ def test_document_proposals_reject_unanchored_input(tmp_path, change, message):
 
 
 @pytest.mark.parametrize('policy_fields', [
-    None,  # no disclosure policy at all
     [],  # an empty policy for the source
     ['城市等级', '职级', '费用类型', '限额', '币种'],  # table columns only
 ])
-def test_document_text_stays_hidden_without_paragraph_text_disclosure(tmp_path, policy_fields):
+def test_document_text_stays_hidden_under_an_explicit_policy_without_paragraph_text(
+        tmp_path, policy_fields):
     document_workspace(tmp_path)
-    allowed = None if policy_fields is None else {'policy': policy_fields}
-    wb = workbench(tmp_path, allowed=allowed)
+    wb = workbench(tmp_path, allowed={'policy': policy_fields})
     data = request(wb, start(wb, document_sources()))
 
     document, = data['catalog']['documents']
@@ -332,23 +333,38 @@ def test_document_text_stays_hidden_without_paragraph_text_disclosure(tmp_path, 
     # The heading structure and anchors are still evidence.
     assert title['level'] == 1 and title['paragraph_range'] == [1, 7]
     assert document['clauses'][0]['anchor']['selector']['unit_ref'] == 'paragraph:3'
+    # An explicit policy keeps only the fields it lists, and their samples.
+    tables = {table['name']: table for table in data['catalog']['tables']}
+    if policy_fields:
+        assert set(tables['table:1']['columns']) == set(policy_fields)
+        assert tables['table:1']['columns']['限额']['samples'] == ['400', '200', '350']
+    else:
+        assert all(not table['columns'] for table in tables.values())
 
 
-def test_document_text_stays_hidden_without_a_disclosure_policy(tmp_path):
+def test_default_local_owner_disclosure_returns_samples_and_document_text(tmp_path):
+    """No model-context policy means local-owner mode: observed text is shown."""
     document_workspace(tmp_path)
     wb = workbench(tmp_path)
     data = request(wb, start(wb, document_sources()))
 
     document, = data['catalog']['documents']
     title, = document['sections']
-    assert title['title'] is None
-    assert all(clause['text'] is None for clause in document['clauses'])
+    assert title['title'] == '差旅报销标准'
+    assert [clause['text'] for clause in document['clauses']] == [
+        '第一条 本标准适用于全体员工出差费用报销。',
+        '第二条 城市等级分为一线、二线两档。',
+        '第三条 本标准自发布之日起执行。']
     standard = {table['name']: table for table in data['catalog']['tables']}['table:1']
-    assert standard['columns']['限额']['samples'] == []
+    assert standard['columns']['限额']['samples'] == ['400', '200', '350']
     assert standard['columns']['限额']['distinct_values'] == 6
 
 
-def test_disclosed_document_text_is_truncated_like_a_table_sample(tmp_path):
+@pytest.mark.parametrize('allowed', [
+    None,  # no policy: the local owner sees the sampled prose
+    {'policy': ['text']},  # an explicit paragraph-text permission
+])
+def test_disclosed_document_text_is_truncated_like_a_table_sample(tmp_path, allowed):
     clause = '第一条 ' + '本' * 200
     document = (
         '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
@@ -357,7 +373,7 @@ def test_disclosed_document_text_is_truncated_like_a_table_sample(tmp_path):
         + _paragraph(clause)
         + '<w:sectPr/></w:body></w:document>')
     (tmp_path / 'policy.docx').write_bytes(_docx_zip(document))
-    wb = workbench(tmp_path, allowed={'policy': ['text']})
+    wb = workbench(tmp_path, allowed=allowed)
     data = request(wb, start(wb, [
         {'source_id': 'policy', 'kind': 'file', 'locator_ref': 'policy.docx'},
     ], goal='从制度文件发现对象'))
@@ -454,10 +470,11 @@ def test_pdf_sections_nest_across_pages_and_skip_non_headings():
     subsection, = chapter['sections']
     assert subsection['level'] == 2 and subsection['page'] == 2
     assert subsection['line_range'] == [5, 6]
-    # No title without a disclosure: structure and anchors only.
-    assert title['title'] is None and subsection['title'] is None
+    # No policy means local-owner disclosure: titles and clause text are shown.
+    assert title['title'] == '差旅报销标准'
+    assert subsection['title'] == '第一节 适用范围'
     assert [clause['number'] for clause in document['clauses']] == ['1.']
-    assert document['clauses'][0]['text'] is None
+    assert document['clauses'][0]['text'] == '1. 覆盖全部流程。'
 
 
 def test_pdf_ordinary_short_prose_is_not_a_section():
@@ -514,8 +531,10 @@ def test_pdf_unnumbered_heading_needs_title_position_or_larger_font():
 def test_docx_table_anchor_resolves_through_the_anchor_contract(tmp_path):
     """The table anchor is a contract cell anchor the replay engine resolves.
 
-    The replay runs in the data layer's own interpreter, like the probe itself:
-    the workbench process must not import ``dataagent_data``.
+    The replay runs in a child of the current test interpreter with the data
+    package's source added on its path: the workbench process itself never
+    imports ``dataagent_data``, and no prepared data-package interpreter is
+    needed (the data checkout's own .venv is gitignored).
     """
     units = {
         'table:1/row:2/col:1': '一线',
@@ -565,13 +584,22 @@ def test_docx_table_anchor_resolves_through_the_anchor_contract(tmp_path):
         'print(json.dumps({"text": resolved.text, "reason": resolved.reason},\n'
         '                 ensure_ascii=False))\n', encoding='utf-8')
 
+    # The data checkout is a source tree here (its own .venv is gitignored),
+    # so put that source on the child interpreter's PYTHONPATH instead of
+    # depending on a prepared data-package environment.
+    data_src = str(PACKAGES / 'dataagent-data/src')
+    env = {**os.environ,
+           'PYTHONPATH': os.pathsep.join(
+               [data_src] + ([os.environ['PYTHONPATH']]
+                             if os.environ.get('PYTHONPATH') else []))}
+
     def replay(anchor_dict):
         payload = tmp_path / 'anchor.json'
         payload.write_text(json.dumps({'anchor': anchor_dict, 'units': units}),
                            encoding='utf-8')
         result = subprocess.run(
-            [str(PACKAGES / 'dataagent-data/.venv/bin/python'), str(script), str(payload)],
-            capture_output=True, text=True)
+            [sys.executable, str(script), str(payload)],
+            capture_output=True, text=True, env=env)
         assert result.returncode == 0, result.stderr
         return json.loads(result.stdout)
 

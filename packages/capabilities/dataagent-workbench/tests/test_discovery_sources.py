@@ -179,16 +179,23 @@ def test_new_source_proposal_rejects_unanchored_input(tmp_path, change, message)
         })
 
 
-def test_default_disclosure_returns_statistics_without_samples(tmp_path):
-    csv_sources(tmp_path)
+def test_default_local_owner_disclosure_returns_samples(tmp_path):
+    """No model-context policy: the local owner sees observed values."""
+    write(tmp_path / 'customers.csv',
+          'customer_no,name\n'
+          'C-1001,' + '甲' * 200 + '\n'
+          'C-1002,Blue\n')
     wb = workbench(tmp_path)
     data = request(wb, start(wb, [
         {'source_id': 'customers', 'kind': 'file', 'locator_ref': 'customers.csv'},
     ]))
     table, = data['catalog']['tables']
-    assert table['columns']['customer_no']['samples'] == []
-    assert table['columns']['customer_no']['distinct_values'] == 3
-    assert table['rows_observed'] == 3
+    assert table['columns']['customer_no']['samples'] == ['C-1001', 'C-1002']
+    name_samples = table['columns']['name']['samples']
+    assert name_samples[0] == '甲' * 160 and len(name_samples[0]) == 160
+    assert all(len(sample) == 160 for sample in name_samples if sample.startswith('甲'))
+    assert table['columns']['customer_no']['distinct_values'] == 2
+    assert table['rows_observed'] == 2
 
 
 def test_excel_two_table_regions_are_separate_evidence(tmp_path):

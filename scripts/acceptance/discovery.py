@@ -81,8 +81,8 @@ def _csv_and_json(project):
     assert column['affinity'] == 'text'
     assert column['null_rows'] == 0 and column['null_rate'] == 0.0
     assert column['distinct_values'] == 2 and column['unique'] is False
-    # No allowed_fields policy was configured: counts and type statistics only.
-    assert column['samples'] == []
+    # No allowed_fields policy is configured: local-owner mode discloses samples.
+    assert column['samples'] == ['C-1001', 'C-1002']
     assert ['order_no'] in tables['orders']['keys']
     assert ['customer_no'] not in tables['orders']['keys']
     assert ['customer_no'] in tables['customers']['identity_keys']
@@ -297,7 +297,7 @@ def _rest_and_csv(project):
         billing = tables['billing']
         assert billing['rows_observed'] == 3
         assert billing['columns']['/customer_no']['affinity'] == 'text'
-        assert billing['columns']['/customer_no']['samples'] == []
+        assert billing['columns']['/customer_no']['samples'] == ['C-1001', 'C-1002']
         assert ['/invoice_no'] in billing['identity_keys']
         link = _link(request['catalog']['relationships'], 'billing', '/customer_no')
         assert link['target_table'] == 'rest_customers'
@@ -477,9 +477,10 @@ def _document_sources(project):
     document, = request['catalog']['documents']
     assert document['source_id'] == 'policy' and document['kind'] == 'docx'
     title, = document['sections']
-    # No field-disclosure policy is configured in acceptance, so the evidence
-    # carries the heading structure and anchors without the titles themselves.
-    assert title['level'] == 1 and title['title'] is None
+    # No field-disclosure policy is configured: local-owner mode shows titles
+    # and clause text, still truncated like a table sample (none here exceeds
+    # 160 characters).
+    assert title['level'] == 1 and title['title'] == '差旅报销标准'
     assert title['paragraph_range'] == [1, 7]
     assert title['ref'] == 'section:policy:1'
     assert title['anchor']['selector']['unit_ref'] == 'paragraph:1'
@@ -490,7 +491,10 @@ def _document_sources(project):
     assert [clause['number'] for clause in document['clauses']] == ['第一条', '第二条', '第三条']
     assert [clause['ref'] for clause in document['clauses']] == [
         'clause:policy:1', 'clause:policy:2', 'clause:policy:3']
-    assert all(clause['text'] is None and clause['anchor'] for clause in document['clauses'])
+    assert [clause['text'] for clause in document['clauses']] == [
+        '第一条 本标准适用于全体员工出差费用报销。',
+        '第二条 城市等级分为一线、二线两档。',
+        '第三条 本标准自发布之日起执行。']
     assert document['record_sets'] == [
         {'name': 'paragraphs', 'kind': 'paragraph', 'count': 7},
         {'name': 'table:1', 'kind': 'table', 'count': 6},

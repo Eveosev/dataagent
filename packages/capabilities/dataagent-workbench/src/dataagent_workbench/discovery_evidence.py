@@ -116,7 +116,10 @@ def _column_evidence(field, declared, rows, allowed):
         observed_type, type_family = _observed_type(values)
         type_origin = 'observed'
     samples = []
-    if allowed is not None:
+    # Callers narrow fields to the effective policy before this point.  A
+    # workspace without a model-context policy has no allowlist (local-owner
+    # mode), so its observed fields keep samples too.
+    if allowed is None or field in allowed:
         seen = set()
         for binary, value in non_null:
             if binary:
@@ -727,15 +730,17 @@ def _paragraph_text_fields(profile):
 
 
 def _document_evidence(profile, allowed):
-    """Section structure and clause candidates; text only under a disclosure.
+    """Section structure and clause candidates; text under the effective policy.
 
-    A configured policy alone is not consent to publish prose: the paragraph
-    text field itself must be allowed -- a policy of table columns only keeps
+    Without a model-context policy the workspace is in local-owner mode: the
+    owner is the data owner, so section titles and clause text are disclosed
+    like table samples.  With an explicit policy, prose needs the paragraph
+    text field itself: a policy of table columns only (or an empty one) keeps
     titles and clause text hidden.  Disclosed text is truncated like a table
     sample; structure and anchors are always given.
     """
-    disclose = (allowed is not None
-                and any(field in allowed for field in _paragraph_text_fields(profile)))
+    disclose = (allowed is None
+                or any(field in allowed for field in _paragraph_text_fields(profile)))
     record_sets = []
     if profile.kind == 'docx':
         paragraphs = list(_docx_paragraphs(profile))
