@@ -1,8 +1,31 @@
 """Session, goal and real job creation in one local transaction."""
+from pathlib import Path
 from uuid import uuid4
 from dataagent_contracts.intake import IntakeSession, JobHandle, EventPage
 from dataagent_runtime.ports.workbench_store import Write, ChangeSet, VersionConflict
 from .ontology_discovery import DISCOVERY_MODE, MODE_EXTENSION
+
+
+DISCOVERY_FILE_SUFFIXES = {'.csv', '.tsv', '.json', '.jsonl', '.xlsx', '.xlsm'}
+DISCOVERY_DOCUMENT_SUFFIXES = {'.pdf', '.docx'}
+DISCOVERY_SOURCE_KINDS = {'sqlite', 'rest'}
+
+
+def _check_discovery_source(source):
+    """Discovery accepts table-shaped sources; documents wait for D2b."""
+    if source.kind in DISCOVERY_SOURCE_KINDS:
+        return
+    if source.kind == 'file':
+        suffix = Path(source.locator_ref).suffix.lower()
+        if suffix in DISCOVERY_DOCUMENT_SUFFIXES:
+            raise ValueError(
+                f'ontology discovery does not support document sources yet '
+                f'({source.source_id}); wait for D2b')
+        if suffix in DISCOVERY_FILE_SUFFIXES:
+            return
+    raise ValueError(
+        'ontology discovery supports CSV, TSV, Excel, JSON/JSONL, REST and SQLite '
+        'sources')
 
 
 class SessionService:
@@ -22,8 +45,9 @@ class SessionService:
             raise ValueError('sources must have distinct identifiers')
         if mode not in ('mapping', DISCOVERY_MODE):
             raise ValueError('unknown intake mode')
-        if mode == DISCOVERY_MODE and (len(sources) != 1 or sources[0].kind != 'sqlite'):
-            raise ValueError('ontology discovery requires exactly one SQLite source')
+        if mode == DISCOVERY_MODE:
+            for source in sources:
+                _check_discovery_source(source)
         sid, jid, gid = uuid4().hex, uuid4().hex, uuid4().hex
         session = IntakeSession(id=sid,revision='1',goal_ref=gid+'@1',sources=sources,
             job_ref=jid,next_actions=['probe'],

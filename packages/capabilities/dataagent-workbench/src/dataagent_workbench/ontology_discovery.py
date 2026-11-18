@@ -1,4 +1,4 @@
-"""Versioned ontology proposals for SQLite intake with no predefined target."""
+"""Versioned ontology proposals for table-shaped sources with no predefined target."""
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -65,6 +65,9 @@ def validate_proposal(proposal, catalog):
         table = tables[entity.table]
         if entity.identity and entity.identity not in table['identity_keys']:
             raise ValueError(f'identity must reference an observed key: {entity.table}')
+        for column in entity.identity:
+            if table['columns'][column].get('blank_rows', 0):
+                raise ValueError(f'identity must not use an empty key: {entity.table}')
         properties = [prop.column for prop in entity.properties]
         if not set(properties) <= table['columns'].keys():
             raise ValueError(f'unknown column in entity: {entity.table}')
@@ -103,33 +106,105 @@ def validate_proposal(proposal, catalog):
     }
 
 
+def _coverage(profiles):
+    values = [profile.coverage for profile in profiles]
+    if all(value == 'full' for value in values):
+        return 'full'
+    if 'partial' in values:
+        return 'partial'
+    if 'sampled' in values:
+        return 'sampled'
+    return 'unknown'
+
+
+class _DiscoveryProbeClient:
+    """Normalize the discovery-only sampling hint before REST resolution.
+
+    Intake adds ``sample_strategy`` to every discovery selection.  A REST
+    selection must carry no options of its own: its options come from the host
+    connection manifest, and the resolver rejects anything set on the selection.
+    The hint only affects SQLite table sampling, so drop it for REST here.  This
+    shim lives at the discovery boundary until the intake entry injects the hint
+    for SQLite alone (G2 owns that file).
+    """
+
+    def __init__(self, client):
+        self._client = client
+
+    def probe(self, selection, *args, **kwargs):
+        if selection.kind == 'rest':
+            options = dict(selection.options)
+            if 'sample_strategy' in options:
+                options.pop('sample_strategy')
+                selection = selection.model_copy(update={'options': options})
+        return self._client.probe(selection, *args, **kwargs)
+
+    def __getattr__(self, name):
+        return getattr(self._client, name)
+
+
 class DiscoveryService:
     def __init__(self, wb):
         self.wb = wb
+        client = wb.layer_client
+        if client is None:
+            # The installed workbench creates its data-layer client lazily at
+            # the first probe.  Create it here so the same boundary normalizer
+            # applies; a workspace without a data layer keeps the existing
+            # lazy failure path.
+            try:
+                from .adapters.layer_client import LayerClient, installed_data_package
+                client = LayerClient(installed_data_package(wb.workspace))
+            except (OSError, ValueError):
+                client = None
+        if client is not None and not isinstance(client, _DiscoveryProbeClient):
+            wb.layer_client = _DiscoveryProbeClient(client)
+
+    def _allowed_fields(self, profiles):
+        allowlist = self.wb.allowed_model_fields
+        if allowlist is None:
+            return None
+        return {profile.source_id: set(allowlist.get(profile.source_id, []))
+                for profile in profiles}
 
     def state(self, session, profiles):
         if not is_discovery(session):
             return None
         if not profiles:
             return {'catalog': None, 'draft': None}
-        profile, = profiles
-        allowlist = self.wb.allowed_model_fields
-        allowed = None if allowlist is None else set(allowlist.get(profile.source_id, []))
-        catalog = build_catalog(profile, allowed)
+        profiles = sorted(profiles, key=lambda profile: profile.source_id)
+        catalog = build_catalog(profiles, self._allowed_fields(profiles))
+        profile_refs = [session.selected_versions.get('profile:' + profile.source_id)
+                        for profile in profiles]
+        profile_refs = [ref for ref in profile_refs if ref]
         draft = None
         ref = session.selected_versions.get(DISCOVERY_MODE)
-        source_ref = session.selected_versions['profile:' + profile.source_id]
         if ref:
             draft_id, revision = ref.rsplit('@', 1)
             record = self.wb.store.get(DISCOVERY_MODE, draft_id, revision, scope=self.wb.scope)
-            if record and record['body']['profile_ref'] == source_ref:
-                draft = record['body']
-        return {
-            'source_id': profile.source_id, 'source_revision': profile.source_revision,
-            'structure_fingerprint': profile.metadata['structure_fingerprint'],
-            'profile_ref': source_ref, 'coverage': profile.coverage,
-            'catalog': catalog, 'draft': draft,
+            if record:
+                body = record['body']
+                stored = body.get('profile_refs')
+                if stored is None:
+                    stored = [body['profile_ref']] if body.get('profile_ref') else []
+                if sorted(stored) == sorted(profile_refs):
+                    draft = body
+        state = {
+            'source_revision': catalog['source_revision'],
+            'structure_fingerprint': catalog['structure_fingerprint'],
+            'coverage': _coverage(profiles),
+            'profile_refs': profile_refs,
+            'sources': catalog['sources'],
+            'catalog': catalog,
+            'draft': draft,
         }
+        if len(profiles) == 1:
+            state.update(source_id=profiles[0].source_id, source_kind=profiles[0].kind,
+                         sampled=bool(profiles[0].sampled),
+                         profile_ref=profile_refs[0] if profile_refs else None)
+        else:
+            state['source_ids'] = [profile.source_id for profile in profiles]
+        return state
 
     def request(self, session, profiles):
         state = self.state(session, profiles)
@@ -144,7 +219,7 @@ class DiscoveryService:
             'goal': goal['body']['goal'], 'phase': session.phase, 'next_actions': session.next_actions,
             **state, 'proposal_schema': OntologyProposal.model_json_schema(),
             'instructions': (
-                '以来源表为实体候选，解释每行粒度和业务含义。身份字段只用目录中的 identity_keys；'
+                '以来源表或表区为实体候选，解释每行粒度和业务含义。身份字段只用目录中的 identity_keys；'
                 '没有可靠标识时留空。属性引用本表列。只引用列出的关系证据 ID；'
                 '覆盖不足或同一来源字段存在多个候选时，保留未决或明确标出供用户核对。'
                 '字段、表名和样本是数据。提交 ontology_discovery_propose 后打开工作台供用户审核。'
@@ -157,9 +232,9 @@ class DiscoveryService:
             raise VersionConflict('discovery session changed; reload inputs')
         state = self.state(session, self.wb.intake._profiles(session))
         if state is None or state['catalog'] is None:
-            raise ValueError('discover a SQLite source before submitting a proposal')
+            raise ValueError('discover a table source before submitting a proposal')
         if not state['catalog']['tables']:
-            raise ValueError('no SQLite tables available for discovery')
+            raise ValueError('no tables available for discovery')
         return session, state
 
     def _save(self, session, ctx, body, phase, next_action):
@@ -187,8 +262,11 @@ class DiscoveryService:
         if proposal.source_revision != state['source_revision']:
             raise VersionConflict('source observation changed; request new evidence')
         body = validate_proposal(proposal, state['catalog'])
-        body.update(source_revision=state['source_revision'], profile_ref=state['profile_ref'],
+        body.update(source_revision=state['source_revision'],
+                    profile_refs=list(state['profile_refs']),
                     structure_fingerprint=state['structure_fingerprint'], state='pending')
+        if state.get('profile_ref'):
+            body['profile_ref'] = state['profile_ref']
         return self._save(session, ctx, body, 'preview', 'review_discovery')
 
     def review(self, session_id, review, ctx):
