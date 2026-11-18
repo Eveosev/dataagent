@@ -5,6 +5,7 @@ from dataagent_contracts.core import CapabilityResult, CapabilityStatus, Continu
 from dataagent_contracts.intake import WorkSpec, SourceSelection
 from dataagent_contracts.core import Issue
 from dataagent_contracts.ontology import ReviewDecision
+from .ontology_discovery import DISCOVERY_MODE, discovery_detail, evidence_summary
 from .tool_schema import MODELS
 
 
@@ -35,6 +36,27 @@ def _review_decision(value):
                           changes=changes, decision=value.decision)
 
 
+def _with_discovery_detail(request, typed):
+    """Attach one on-demand table/section view to a discovery request.
+
+    The base request stays complete in memory (and in the result file); only
+    the named slice is added under a private key so the model-facing summary
+    can expose it as ``details`` without reading the result file repeatedly.
+    """
+    wants_detail = bool(typed.detail_table or typed.detail_section)
+    if not wants_detail:
+        if typed.detail_offset or typed.detail_limit != 50:
+            raise ValueError(
+                'detail_offset/detail_limit require detail_table or detail_section')
+        return request
+    if request.get('kind') != DISCOVERY_MODE:
+        raise ValueError(
+            'detail_table/detail_section are only available for ontology discovery evidence')
+    return {**request, '_discovery_detail': discovery_detail(
+        request, table=typed.detail_table, section=typed.detail_section,
+        offset=typed.detail_offset, limit=typed.detail_limit)}
+
+
 def _invoke(wb, name, args):
     if name not in MODELS:raise ValueError('unknown aggregate tool')
     typed=MODELS[name].model_validate(args)
@@ -55,6 +77,12 @@ def _invoke(wb, name, args):
         session=(wb.intake.advance(args['session_id'],wb.ctx) if name=='intake_advance'
             else wb.sessions.get(args['session_id'],wb.ctx))
         request=wb.intake.inference_request(session.id,wb.ctx)
+        if request.get('kind') == DISCOVERY_MODE:
+            request = _with_discovery_detail(request, typed)
+        elif (typed.detail_table or typed.detail_section
+              or typed.detail_offset or typed.detail_limit != 50):
+            raise ValueError(
+                'detail_table/detail_section are only available for ontology discovery evidence')
         if request['kind'] == 'ontology_discovery':
             if session.phase == 'needs_input':
                 action, = session.next_actions
@@ -186,6 +214,20 @@ def result_summary(wb, result):
     payload = result.model_dump(mode='json')
     path = wb.root/'results'/f'{uuid4().hex}.json'
     path.parent.mkdir(exist_ok=True)
+    data = payload.get('data')
+    if (isinstance(data, dict) and data.get('kind') == DISCOVERY_MODE
+            and isinstance(data.get('catalog'), dict)):
+        # The model sees the structural summary (plus one requested detail
+        # slice); the result file stays complete for the web and for an
+        # explicit single read by a human or agent.
+        detail = data.pop('_discovery_detail', None)
+        summary = evidence_summary(data)
+        if detail is not None:
+            summary['details'] = detail
+        path.write_text(json.dumps(payload,ensure_ascii=False,indent=2))
+        return {'status':payload['status'],
+                'result_path':str(path.relative_to(wb.workspace)),
+                'summary':True,'result':summary}
     path.write_text(json.dumps(payload,ensure_ascii=False,indent=2))
     summary = {'status':payload['status'],'result_path':str(path.relative_to(wb.workspace))}
     encoded = json.dumps(payload,ensure_ascii=False)
