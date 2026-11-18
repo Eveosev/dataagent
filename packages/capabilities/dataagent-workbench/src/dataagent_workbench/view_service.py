@@ -221,7 +221,11 @@ class ViewService:
                 'sources': sources, 'objects': objects,
                 'corrections': (body or {}).get('corrections', []),
                 'correction_views': self._correction_views(s, body),
-                'issues': (body or {}).get('issues') if body else list(s.issues),
+                # One problem per row and root cause (FDE2-06): a failed
+                # conversion already explains the required value missing on
+                # the same row and column, so the page does not count twice.
+                'issues': wb.intake._deduped_issues((body or {}).get('issues') or [])
+                if body else list(s.issues),
                 'conflicts': conflicts,
                 'dispositions': wb.intake.disposition_entries(s),
                 'disposition_options': wb.intake.disposition_options(s, body),
