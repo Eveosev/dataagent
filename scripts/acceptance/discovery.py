@@ -81,7 +81,7 @@ def _csv_and_json(project):
     assert column['affinity'] == 'text'
     assert column['null_rows'] == 0 and column['null_rate'] == 0.0
     assert column['distinct_values'] == 2 and column['unique'] is False
-    # No allowed_fields policy was configured: counts and type statistics only.
+    # No allowed_fields policy is configured: counts and type statistics only.
     assert column['samples'] == []
     assert ['order_no'] in tables['orders']['keys']
     assert ['customer_no'] not in tables['orders']['keys']
@@ -463,6 +463,16 @@ def _document_sources(project):
     assert standard['kind'] == 'docx' and standard['rows_observed'] == 6
     assert set(standard['columns']) == {'城市等级', '职级', '费用类型', '限额', '币种'}
     assert ['城市等级', '职级', '费用类型'] in standard['identity_keys']
+    # The table and its columns carry the record set's cell anchors, so the
+    # key and the link below replay to a concrete table position.  The table
+    # anchor is the record set's top-left cell and validates as a contract
+    # text_span anchor.
+    from dataagent_contracts.core import SourceAnchor
+    table_anchor = SourceAnchor.model_validate(standard['anchor'])
+    assert table_anchor.selector.kind == 'text_span'
+    assert table_anchor.selector.unit_ref == 'table:1/row:2/col:1'
+    city = standard['columns']['城市等级']['anchor']['selector']
+    assert (city['kind'], city['unit_ref']) == ('text_span', 'table:1/row:2/col:1')
 
     document, = request['catalog']['documents']
     assert document['source_id'] == 'policy' and document['kind'] == 'docx'
@@ -471,10 +481,15 @@ def _document_sources(project):
     # carries the heading structure and anchors without the titles themselves.
     assert title['level'] == 1 and title['title'] is None
     assert title['paragraph_range'] == [1, 7]
+    assert title['ref'] == 'section:policy:1'
     assert title['anchor']['selector']['unit_ref'] == 'paragraph:1'
     assert [(section['level'], section['paragraph_range'])
             for section in title['sections']] == [(2, [2, 4]), (2, [5, 5]), (2, [6, 7])]
+    assert [section['ref'] for section in title['sections']] == [
+        'section:policy:2', 'section:policy:3', 'section:policy:4']
     assert [clause['number'] for clause in document['clauses']] == ['第一条', '第二条', '第三条']
+    assert [clause['ref'] for clause in document['clauses']] == [
+        'clause:policy:1', 'clause:policy:2', 'clause:policy:3']
     assert all(clause['text'] is None and clause['anchor'] for clause in document['clauses'])
     assert document['record_sets'] == [
         {'name': 'paragraphs', 'kind': 'paragraph', 'count': 7},
@@ -492,6 +507,8 @@ def _document_sources(project):
     assert link['origin'] == 'sample_supported' and link['ambiguous'] is False
     assert link['matched_rows'] == 4 and link['checked_rows'] == 4
     assert link['matched_distinct_keys'] == 4
+    # The link's document endpoint replays to a contract cell anchor of its table.
+    assert tables[link['target_table']]['anchor']['selector']['unit_ref'].startswith('table:1/')
 
     draft = call_workbench(project, 'ontology_discovery_propose', {
         **args, 'expected_revision': request['expected_revision'],
@@ -499,7 +516,10 @@ def _document_sources(project):
             'source_revision': request['source_revision'],
             'entities': [
                 {'table': 'table:1', 'name': 'ExpenseStandard', 'grain': '每档费用标准一行',
-                 'identity': ['城市等级', '职级', '费用类型']},
+                 'identity': ['城市等级', '职级', '费用类型'],
+                 # The standard cites the section that carries its table and
+                 # the clause that defines the city tiers.
+                 'evidence_sections': ['section:policy:3', 'clause:policy:2']},
                 {'table': '明细', 'name': 'ExpenseClaim', 'grain': '每笔报销一行',
                  'identity': ['报销单号'],
                  'properties': [{'column': '金额', 'name': 'amount'}]},
@@ -510,12 +530,15 @@ def _document_sources(project):
         },
     })
     assert draft['state'] == 'pending' and draft['unresolved_tables'] == []
+    standard_entity, = [entity for entity in draft['entities'] if entity['table'] == 'table:1']
+    assert standard_entity['evidence_sections'] == ['section:policy:3', 'clause:policy:2']
     return {
         'session_id': session_id,
         'sections': [{'level': section['level'],
                       'paragraph_range': section['paragraph_range']}
                      for section in title['sections']],
         'clauses': [clause['number'] for clause in document['clauses']],
+        'evidence_sections': standard_entity['evidence_sections'],
         'standard': {'name': standard['name'], 'rows_observed': standard['rows_observed'],
                      'columns': sorted(standard['columns']),
                      'identity_keys': standard['identity_keys']},

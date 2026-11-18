@@ -262,7 +262,8 @@ def _excel_regions(profile):
 
 
 def _table(base, source_id, kind, rows, columns, keys, *, sampled, coverage,
-           key_origin, partition=None, rows_total=None, key_search=None):
+           key_origin, partition=None, rows_total=None, key_search=None,
+           anchor=None):
     identity_keys = [key for key in keys
                      if all(columns[column]['blank_rows'] == 0 for column in key)]
     table = {
@@ -270,6 +271,7 @@ def _table(base, source_id, kind, rows, columns, keys, *, sampled, coverage,
         'source_id': source_id,
         'kind': kind,
         'partition': partition,
+        'anchor': anchor,
         'rows_observed': len(rows),
         'rows_total': rows_total,
         'sampled': bool(sampled),
@@ -374,8 +376,72 @@ def _flat_table(profile, allowed):
 # the clause identity; the rest of the paragraph is its content.
 _CLAUSE_NUMBER = (r'(?:第[一二三四五六七八九十百千零〇两\d]+条|\d{1,3}[.、．](?!\d)'
                   r'|[（(][一二三四五六七八九十\d]{1,4}[)）])')
-_CLAUSE_LINE = re.compile(r'(?m)^' + _CLAUSE_NUMBER)
 _CLAUSE_START = re.compile(_CLAUSE_NUMBER)
+
+# PDF heading levels from the leading numbering, in the common document
+# hierarchy: 章 above 节 above 「一、」.  A numbered line is only a heading when
+# the rest of the line is short and does not end like a sentence, so a running
+# clause such as 「1. 住宿按标准执行。」 stays a clause lead.
+_SENTENCE_END = frozenset('。！？；!?;，,')
+_PDF_HEADING_LEVELS = (
+    (re.compile(r'第[一二三四五六七八九十百千零〇两\d]+篇'), 1),
+    (re.compile(r'第[一二三四五六七八九十百千零〇两\d]+章'), 1),
+    (re.compile(r'第[一二三四五六七八九十百千零〇两\d]+节'), 2),
+    (re.compile(r'[一二三四五六七八九十]+、'), 3),
+    (re.compile(r'\d{1,2}[.、．](?!\d)'), 3),
+)
+# A taller-than-body block is heading-sized font evidence for an unnumbered
+# line (12pt title over 10pt body is already above this ratio).
+_PDF_TITLE_HEIGHT_RATIO = 1.2
+
+
+def _pdf_numbered_heading_level(line):
+    stripped = line.strip()
+    if not stripped:
+        return None
+    for pattern, level in _PDF_HEADING_LEVELS:
+        match = pattern.match(stripped)
+        if match:
+            rest = stripped[match.end():].strip()
+            if not rest or (len(rest) <= 40 and rest[-1] not in _SENTENCE_END):
+                return level
+            return None
+    return None
+
+
+def _pdf_standalone_heading_level(line, leading, height, body_height):
+    """Whether an unnumbered line is a heading, from line layout alone.
+
+    Ordinary short prose must not become a section just because it happens to
+    lack ending punctuation: an unnumbered line qualifies only as the
+    document's leading line (the title position) or when its block is taller
+    than the page's body text (a title font).  Without layout evidence the
+    line is body text.
+    """
+    stripped = line.strip()
+    if (not stripped or _CLAUSE_START.match(stripped) or len(stripped) > 30
+            or stripped[-1] in _SENTENCE_END or '：' in stripped or ':' in stripped
+            or stripped[0].isdigit()):
+        return None
+    if leading:
+        return 1
+    if height is not None and body_height and height >= body_height * _PDF_TITLE_HEIGHT_RATIO:
+        return 1
+    return None
+
+
+def _pdf_block_heights(page):
+    """(char_start, char_end, height) per text block, when block evidence exists."""
+    heights = []
+    for block in page.get('blocks') or []:
+        if not isinstance(block, dict):
+            continue
+        bbox = block.get('bbox')
+        start, end = block.get('char_start'), block.get('char_end')
+        if (isinstance(bbox, list) and len(bbox) == 4
+                and isinstance(start, int) and isinstance(end, int)):
+            heights.append((start, end, bbox[3] - bbox[1]))
+    return heights
 
 
 def _anchor(profile, selector):
@@ -407,8 +473,13 @@ def _docx_paragraphs(profile):
 
 
 def _docx_sections(paragraphs, profile, disclose):
-    """Heading hierarchy with the paragraph range each section covers."""
+    """Heading hierarchy with the paragraph range each section covers.
+
+    Every section carries a document-wide ``ref`` a proposal can cite as
+    evidence; the ref is structural and always present.
+    """
     root, stack = [], []
+    ordinal = 0
     for paragraph in paragraphs:
         number, text = paragraph['paragraph'], paragraph['text']
         if not text.strip():
@@ -417,8 +488,10 @@ def _docx_sections(paragraphs, profile, disclose):
         if isinstance(level, int) and 1 <= level <= 6:
             while stack and stack[-1]['level'] >= level:
                 stack.pop()
+            ordinal += 1
             section = {
                 'level': level, 'paragraph': number,
+                'ref': f'section:{profile.source_id}:{ordinal}',
                 'title': _sample_value(text) if disclose else None,
                 'anchor': _anchor(profile, {'kind': 'text_span',
                                             'unit_ref': paragraph.get('unit_ref'),
@@ -435,13 +508,16 @@ def _docx_sections(paragraphs, profile, disclose):
 
 def _docx_clauses(paragraphs, profile, disclose):
     clauses = []
+    ordinal = 0
     for paragraph in paragraphs:
         text = paragraph['text']
         match = _CLAUSE_START.match(text)
         if not match:
             continue
+        ordinal += 1
         clauses.append({
             'number': match.group(0), 'paragraph': paragraph['paragraph'],
+            'ref': f'clause:{profile.source_id}:{ordinal}',
             'anchor': _anchor(profile, {'kind': 'text_span',
                                         'unit_ref': paragraph.get('unit_ref'),
                                         'char_start': match.start(), 'char_end': match.end()}),
@@ -450,8 +526,48 @@ def _docx_clauses(paragraphs, profile, disclose):
     return clauses
 
 
+_UNIT_CELL = re.compile(r'^table:(\d+)/row:(\d+)/col:(\d+)$')
+
+
+def _docx_cell_anchor(entry, field):
+    """The first cell anchor a record set carries for a column, if any."""
+    for key, values in (entry.get('anchors') or {}).items():
+        _, separator, name = key.partition('.')
+        if separator and name == field and values:
+            value = values[0]
+            if isinstance(value, dict) and isinstance(value.get('selector'), dict):
+                return value
+    return None
+
+
+def _docx_table_anchor(entry):
+    """The record set's top-left cell anchor locates the table.
+
+    The anchor stays a contract ``text_span`` cell anchor -- the same kind the
+    record set and the replay engine already use -- so a link or a key
+    replays to a concrete table position through the existing contract.
+    """
+    best = None
+    for values in (entry.get('anchors') or {}).values():
+        for value in values or []:
+            selector = value.get('selector') if isinstance(value, dict) else None
+            if not isinstance(selector, dict) or selector.get('kind') != 'text_span':
+                continue
+            match = _UNIT_CELL.match(selector.get('unit_ref') or '')
+            if match:
+                position = (int(match.group(2)), int(match.group(3)))
+                if best is None or position < best[0]:
+                    best = (position, value)
+                break
+    return best[1] if best else None
+
+
 def _docx_tables(profile, allowed):
-    """One evidence table per Word table record set; paragraphs stay prose."""
+    """One evidence table per Word table record set; paragraphs stay prose.
+
+    The table and every column carry the anchors the record set already has,
+    so a candidate key or a link replays to the table position it came from.
+    """
     sets = profile.metadata.get('record_sets')
     tables = []
     if not isinstance(sets, dict):
@@ -468,35 +584,93 @@ def _docx_tables(profile, allowed):
         columns = {field: _column_evidence(field, {}, rows, allowed) for field in fields}
         if not columns:
             continue
+        for field, column in columns.items():
+            cell = _docx_cell_anchor(entry, field)
+            if cell is not None:
+                column['anchor'] = cell
         keys, key_search = _inferred_keys(columns, rows)
         tables.append(_table(name, profile.source_id, profile.kind, rows, columns, keys,
                              sampled=profile.sampled, coverage=profile.coverage,
                              key_origin='observed', partition=entry.get('table'),
-                             key_search=key_search))
+                             key_search=key_search, anchor=_docx_table_anchor(entry)))
     return tables
 
 
-def _pdf_pages(profile, disclose):
-    """Text pages as top-level sections, with in-page clause candidates."""
+def _pdf_sections(profile, disclose):
+    """Heading-line sections with line ranges and in-page anchors.
+
+    A page is never promoted wholesale to a section: only lines that look
+    like headings become sections, nested by level across pages.  Each
+    section's anchor points at its heading line inside the page, and its
+    line/page range covers the lines until the next heading of any level.
+    """
     sections, clauses = [], []
+    stack = []
+    line_number = 0
+    section_ordinal = clause_ordinal = 0
+    leading = True
     pages = profile.metadata.get('pages')
     for page in pages if isinstance(pages, list) else []:
         if not isinstance(page, dict) or not isinstance(page.get('page'), int):
             continue
         number, text = page['page'], page.get('text') or ''
-        sections.append({
-            'level': 1, 'page': number,
-            'anchor': _anchor(profile, {'kind': 'pdf_text_span', 'page': number,
-                                        'char_start': 0, 'char_end': len(text)}),
-        })
-        for match in _CLAUSE_LINE.finditer(text):
-            clauses.append({
-                'number': match.group(0), 'page': number,
-                'anchor': _anchor(profile, {'kind': 'pdf_text_span', 'page': number,
-                                            'char_start': match.start(),
-                                            'char_end': match.end()}),
-            })
+        blocks = _pdf_block_heights(page)
+        body_heights = sorted(height for _, _, height in blocks)
+        body_height = body_heights[len(body_heights) // 2] if body_heights else 0
+        offset = 0
+        for line in text.split('\n'):
+            start, end = offset, offset + len(line)
+            offset = end + 1
+            line_number += 1
+            level = _pdf_numbered_heading_level(line)
+            if level is None:
+                height = next((block_height for block_start, block_end, block_height
+                               in blocks if block_start <= start < block_end), None)
+                level = _pdf_standalone_heading_level(line, leading, height, body_height)
+            if line.strip():
+                leading = False
+            if level is not None:
+                while stack and stack[-1]['level'] >= level:
+                    stack.pop()
+                section_ordinal += 1
+                section = {
+                    'level': level, 'page': number, 'line': line_number,
+                    'ref': f'section:{profile.source_id}:{section_ordinal}',
+                    'title': _sample_value(line.strip()) if disclose else None,
+                    'anchor': _anchor(profile, {'kind': 'pdf_text_span', 'page': number,
+                                                'char_start': start, 'char_end': end}),
+                    'line_range': [line_number, line_number],
+                    'page_range': [number, number],
+                    'sections': [],
+                }
+                (stack[-1]['sections'] if stack else sections).append(section)
+                stack.append(section)
+            for section in stack:
+                section['line_range'][1] = line_number
+                section['page_range'][1] = number
+            match = _CLAUSE_START.match(line)
+            if match:
+                clause_ordinal += 1
+                clauses.append({
+                    'number': match.group(0), 'page': number, 'line': line_number,
+                    'ref': f'clause:{profile.source_id}:{clause_ordinal}',
+                    'anchor': _anchor(profile, {'kind': 'pdf_text_span', 'page': number,
+                                                'char_start': start + match.start(),
+                                                'char_end': start + match.end()}),
+                    'text': _sample_value(line) if disclose else None,
+                })
     return sections, clauses
+
+
+def _pdf_table_anchor(profile, entry, page):
+    """The upstream bbox anchor of a detected PDF table, as stored."""
+    anchor = entry.get('anchor')
+    if isinstance(anchor, dict) and isinstance(anchor.get('selector'), dict):
+        return anchor
+    bbox = entry.get('bbox')
+    if isinstance(bbox, list) and len(bbox) == 4:
+        return _anchor(profile, {'kind': 'pdf_bbox', 'page': page, 'bbox': bbox})
+    return None
 
 
 def _pdf_tables(profile, allowed):
@@ -523,15 +697,16 @@ def _pdf_tables(profile, allowed):
         if not columns:
             continue
         keys, key_search = _inferred_keys(columns, rows)
-        grouped[page].append((rows, columns, keys, key_search))
+        grouped[page].append((rows, columns, keys, key_search,
+                              _pdf_table_anchor(profile, entry, page)))
     for page in sorted(grouped):
         entries = grouped[page]
-        for ordinal, (rows, columns, keys, key_search) in enumerate(entries, 1):
+        for ordinal, (rows, columns, keys, key_search, anchor) in enumerate(entries, 1):
             base = f'page:{page}' + (f'#{ordinal}' if len(entries) > 1 else '')
             tables.append(_table(base, profile.source_id, profile.kind, rows, columns, keys,
                                  sampled=profile.sampled, coverage=profile.coverage,
                                  key_origin='observed', partition=page,
-                                 key_search=key_search))
+                                 key_search=key_search, anchor=anchor))
     return tables
 
 
@@ -572,7 +747,7 @@ def _document_evidence(profile, allowed):
                 record_sets.append({'name': name, 'kind': entry.get('kind'),
                                     'count': entry.get('count')})
     else:
-        sections, clauses = _pdf_pages(profile, disclose)
+        sections, clauses = _pdf_sections(profile, disclose)
         for table in _pdf_tables(profile, allowed):
             record_sets.append({'name': table['_base'], 'kind': 'table',
                                 'count': table['rows_observed']})
