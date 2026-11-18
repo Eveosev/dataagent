@@ -73,6 +73,226 @@ def is_discovery(session):
     return (session.extensions or {}).get(MODE_EXTENSION) == DISCOVERY_MODE
 
 
+_EVIDENCE_HINT = (
+    '默认返回结构摘要：表/文档的名称、列名与类型、候选键、关联候选、章节标题和条款清单。'
+    '样本与条款原文不内联；用 intake_inference（或 intake_advance）的 detail_table 取该表完整列证据，'
+    '用 detail_section（章节 ref、条款 ref 或来源 ID）取条款原文，并按 detail_offset/detail_limit 分页。'
+    '完整结果仍写入 result_path，供网页或用户核对；不要按 offset 反复读结果文件。'
+)
+
+
+def _summary_section(section):
+    keys = ('level', 'ref', 'title', 'paragraph', 'page', 'line',
+            'paragraph_range', 'line_range', 'page_range')
+    out = {key: section[key] for key in keys if key in section}
+    children = section.get('sections') or []
+    if children:
+        out['sections'] = [_summary_section(child) for child in children]
+    return out
+
+
+def _summary_clause(clause):
+    keys = ('number', 'ref', 'paragraph', 'page', 'line')
+    return {key: clause[key] for key in keys if key in clause}
+
+
+def evidence_summary(request):
+    """The model-facing structural summary of a discovery request.
+
+    The full catalog still goes to the result file, and the web reads the
+    full discovery state, so this view must not invent or widen disclosure:
+    it is built only from the already-disclosed catalog.  It removes the two
+    payloads that are only useful for one table or one section at a time:
+    column samples and clause text.
+    """
+    catalog = request.get('catalog')
+    if not isinstance(catalog, dict):
+        return request
+    tables = []
+    for table in catalog.get('tables') or []:
+        columns = {}
+        for name, column in (table.get('columns') or {}).items():
+            evidence = {key: value for key, value in column.items()
+                        if key not in {'samples', 'anchor'}}
+            evidence['samples_included'] = False
+            evidence['sample_count'] = len(column.get('samples') or [])
+            columns[name] = evidence
+        summary = {key: table[key] for key in
+                   ('name', 'source_id', 'kind', 'partition', 'rows_observed',
+                    'rows_total', 'sampled', 'coverage', 'keys', 'identity_keys',
+                    'key_origin', 'key_search')
+                   if key in table}
+        summary['columns'] = columns
+        summary['anchor_included'] = 'anchor' in table
+        tables.append(summary)
+    documents = []
+    for document in catalog.get('documents') or []:
+        clauses = list(document.get('clauses') or [])
+        entry = {
+            'source_id': document.get('source_id'),
+            'kind': document.get('kind'),
+            'sections': [_summary_section(section)
+                         for section in document.get('sections') or []],
+            'clauses': [_summary_clause(clause) for clause in clauses],
+            'clause_count': len(clauses),
+            'clause_text_included': False,
+            'record_sets': document.get('record_sets') or [],
+        }
+        documents.append(entry)
+    summary_catalog = {
+        'summary': True,
+        'tables': tables,
+        'relationships': list(catalog.get('relationships') or []),
+        'gaps': list(catalog.get('gaps') or []),
+        'sources': list(catalog.get('sources') or []),
+        'documents': documents,
+        'source_revision': catalog.get('source_revision'),
+        'structure_fingerprint': catalog.get('structure_fingerprint'),
+        'table_count': len(tables),
+        'relationship_count': len(catalog.get('relationships') or []),
+        'document_count': len(documents),
+    }
+    result = {key: value for key, value in request.items() if key != 'catalog'}
+    result['catalog'] = summary_catalog
+    result['evidence_summary'] = {
+        'summary': True,
+        'table_count': len(tables),
+        'relationship_count': len(summary_catalog['relationships']),
+        'document_count': len(documents),
+        'tables': [table['name'] for table in tables],
+        'documents': [document['source_id'] for document in documents],
+        'sections': [section['ref'] for section in
+                     _walk_sections([document.get('sections') or []
+                                     for document in documents])],
+        'detail_parameters': ['detail_table', 'detail_section',
+                              'detail_offset', 'detail_limit'],
+        'hint': _EVIDENCE_HINT,
+    }
+    return result
+
+
+def _walk_sections(groups):
+    for group in groups:
+        stack = list(group)
+        while stack:
+            section = stack.pop(0)
+            if not isinstance(section, dict):
+                continue
+            yield section
+            stack[0:0] = section.get('sections') or []
+
+
+def _find_section(sections, ref):
+    for section in sections or []:
+        if section.get('ref') == ref:
+            return section
+        found = _find_section(section.get('sections') or [], ref)
+        if found is not None:
+            return found
+    return None
+
+
+def _document_clauses(document):
+    return list(document.get('clauses') or [])
+
+
+def _clause_in_section(clause, section):
+    paragraph = clause.get('paragraph')
+    paragraph_range = section.get('paragraph_range')
+    if isinstance(paragraph, int) and isinstance(paragraph_range, list):
+        return paragraph_range[0] <= paragraph <= paragraph_range[1]
+    line = clause.get('line')
+    line_range = section.get('line_range')
+    if isinstance(line, int) and isinstance(line_range, list):
+        return line_range[0] <= line <= line_range[1]
+    page = clause.get('page')
+    page_range = section.get('page_range')
+    if isinstance(page, int) and isinstance(page_range, list):
+        return page_range[0] <= page <= page_range[1]
+    return True
+
+
+def _clause_page(clauses, offset, limit):
+    total = len(clauses)
+    offset = max(0, int(offset or 0))
+    limit = max(1, int(limit or 50))
+    page = clauses[offset:offset + limit]
+    return {
+        'clauses': page,
+        'total': total,
+        'offset': offset,
+        'limit': limit,
+        'count': len(page),
+        'has_more': offset + limit < total,
+        'next_offset': offset + limit if offset + limit < total else None,
+    }
+
+
+def discovery_detail(request, *, table: str | None = None,
+                     section: str | None = None, offset: int = 0,
+                     limit: int = 50):
+    """One table's full column evidence or one section's clause text.
+
+    Called only when the caller names a table/section; the catalog is the
+    already-disclosed one, so this cannot bypass an explicit policy.
+    """
+    if table and section:
+        raise ValueError('detail_table and detail_section cannot be combined')
+    if not table and not section:
+        raise ValueError('detail_table or detail_section is required')
+    catalog = request.get('catalog') or {}
+    if table:
+        available = [item.get('name') for item in catalog.get('tables') or []]
+        found = next((item for item in catalog.get('tables') or []
+                      if item.get('name') == table), None)
+        if found is None:
+            raise ValueError('unknown detail_table %r; available tables: %s'
+                             % (table, available[:20]))
+        return {'kind': 'table', 'table': found}
+    documents = list(catalog.get('documents') or [])
+    # A clause ref is exact and needs no section traversal.
+    for document in documents:
+        for clause in _document_clauses(document):
+            if clause.get('ref') == section:
+                return {'kind': 'clause', 'source_id': document.get('source_id'),
+                        'clause': clause}
+    # A document/source id selects all of its clauses.
+    document = next((item for item in documents
+                     if item.get('source_id') == section), None)
+    if document is not None:
+        page = _clause_page(_document_clauses(document), offset, limit)
+        return {
+            'kind': 'document',
+            'source_id': document.get('source_id'),
+            'title': None,
+            'sections': [_summary_section(item)
+                         for item in document.get('sections') or []],
+            **page,
+        }
+    # Otherwise the caller names a section ref.
+    for document in documents:
+        found = _find_section(document.get('sections') or [], section)
+        if found is None:
+            continue
+        clauses = [clause for clause in _document_clauses(document)
+                   if _clause_in_section(clause, found)]
+        page = _clause_page(clauses, offset, limit)
+        return {
+            'kind': 'section',
+            'source_id': document.get('source_id'),
+            'ref': found.get('ref'),
+            'title': found.get('title'),
+            'sections': [_summary_section(item)
+                         for item in found.get('sections') or []],
+            **page,
+        }
+    available = [item['ref'] for item in
+                 _walk_sections([document.get('sections') or []
+                                 for document in documents])]
+    raise ValueError('unknown detail_section %r; available sections: %s'
+                     % (section, available[:20]))
+
+
 def _document_refs(catalog):
     """Every section and clause ref the catalog's document evidence carries."""
     refs = set()

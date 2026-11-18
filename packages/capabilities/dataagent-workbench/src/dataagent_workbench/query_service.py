@@ -15,12 +15,16 @@ from __future__ import annotations
 
 import base64
 import json
+from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
+from itertools import permutations
 from typing import Any, Iterable, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from dataagent_contracts.ontology import ConceptDefinition, OntologyRevision
+from dataagent_contracts.ontology import (
+    ConceptDefinition, OntologyRevision, RelationDefinition,
+)
 from dataagent_ontology.identity import digest
 from dataagent_ontology.registry import entry_row, parse_entry
 
@@ -28,15 +32,35 @@ from dataagent_ontology.registry import entry_row, parse_entry
 MAX_LIMIT = 200
 DEFAULT_LIMIT = 50
 _READ_LIMIT = 1000
+# Relations are materialized as role values, so a composite target identity is
+# usually carried as one joined string (a ``combine`` binding).  Well-known
+# separators are tried instead of asking the caller to repeat the binding.
+_RELATED_SEPARATORS = ('|', ',', '/', '·', '-', ' ', '_', '\t', '::',
+                       '\x1f', '\x01', '')
 
 
 class OntologyQueryCondition(BaseModel):
-    """One attribute predicate: ``eq``, ``in`` or ``contains``."""
+    """One attribute predicate.
+
+    ``gt``/``gte``/``lt``/``lte`` compare by value and are accepted only for
+    ``decimal``, ``integer`` and ``date`` properties; other comparisons keep
+    the string/array semantics.
+    """
     model_config = ConfigDict(extra='forbid')
 
     property: str = Field(min_length=1, description='概念已定义的属性名')
-    op: Literal['eq', 'in', 'contains'] = Field(default='eq', description='比较方式')
+    op: Literal['eq', 'in', 'contains', 'gt', 'gte', 'lt', 'lte'] = Field(
+        default='eq', description='比较方式；gt/gte/lt/lte 只用于 decimal/integer/date 属性')
     value: Any = Field(default=None, description='比较值；in 必须是数组')
+
+
+class OntologyQueryRelated(BaseModel):
+    """Read one related object along a published relation for every row."""
+    model_config = ConfigDict(extra='forbid')
+
+    relation: str = Field(min_length=1, description='本体已发布的关系名')
+    fields: list[str] = Field(default_factory=list, max_length=50,
+        description='要带回的关联对象属性；留空时只带身份字段')
 
 
 class OntologyQuery(BaseModel):
@@ -49,7 +73,9 @@ class OntologyQuery(BaseModel):
     revision: str | None = Field(default=None,
         description='本体修订号（如 "1" 或 "sales-model@1"）；缺省用注册表当前修订')
     where: list[OntologyQueryCondition] = Field(default_factory=list, max_length=50,
-        description='属性条件，多个条件按与（AND）组合')
+        description='属性条件，多个条件按与（AND）组合；支持 eq/in/contains/gt/gte/lt/lte')
+    include_related: OntologyQueryRelated | None = Field(default=None,
+        description='沿已发布关系带回关联对象的指定属性；每条结果附 related，未命中为 null 并计数')
     limit: int = Field(default=DEFAULT_LIMIT, ge=1, le=MAX_LIMIT,
         description='本页条数，最大 200')
     cursor: str | None = Field(default=None, description='上一页返回的 next_cursor')
@@ -102,6 +128,31 @@ def parse_where(text: str | None) -> list[OntologyQueryCondition]:
     raise ValueError('where must be a JSON object or array')
 
 
+def parse_related(text: str | None = None, relation: str | None = None,
+                  fields: str | None = None) -> OntologyQueryRelated | None:
+    """Decode the HTTP ``include_related`` parameter.
+
+    ``include_related`` is a JSON object or relation name.  ``related`` plus
+    ``related_fields`` (comma separated) is the plain query-string form.
+    """
+    if text:
+        try:
+            data = json.loads(text)
+        except json.JSONDecodeError as exc:
+            raise ValueError('include_related must be valid JSON') from exc
+        if isinstance(data, str):
+            data = {'relation': data}
+        if not isinstance(data, dict):
+            raise ValueError('include_related must be a JSON object or relation name')
+        return OntologyQueryRelated.model_validate(data)
+    if relation:
+        names = [item.strip() for item in (fields or '').split(',') if item.strip()]
+        return OntologyQueryRelated(relation=relation, fields=names)
+    if fields:
+        raise ValueError('related_fields requires related')
+    return None
+
+
 def _encode_cursor(key: tuple[str, str]) -> str:
     raw = json.dumps(list(key), separators=(',', ':')).encode()
     return base64.urlsafe_b64encode(raw).decode().rstrip('=')
@@ -148,6 +199,40 @@ def _coerce(value: Any, value_type: str) -> Any:
     return str(value)
 
 
+def _order(value: Any, value_type: str, *, query: bool = False) -> Any:
+    """The ordered value of a comparison on the ontology's terms.
+
+    Only ``decimal``, ``integer`` and ``date`` properties are ordered.  A
+    stored value that does not parse never matches; a query value that does
+    not parse is an input error the caller can fix.
+    """
+    if value is None:
+        return None
+    try:
+        if value_type == 'decimal':
+            return Decimal(str(value))
+        if value_type == 'integer':
+            if isinstance(value, bool):
+                raise ValueError('boolean is not an integer')
+            number = Decimal(str(value))
+            if number != number.to_integral_value():
+                raise ValueError('not an integer')
+            return int(number)
+        if value_type == 'date':
+            text = str(value).strip()
+            try:
+                return date.fromisoformat(text)
+            except ValueError:
+                return datetime.fromisoformat(text).date()
+        raise ValueError('comparison is only supported on decimal/integer/date')
+    except (InvalidOperation, TypeError, ValueError) as exc:
+        if query:
+            raise ValueError(
+                f'query value {value!r} does not match ordered {value_type}'
+            ) from exc
+        return None
+
+
 def _matches(actual: Any, expected: Any, op: str, value_type: str) -> bool:
     if op == 'eq':
         if isinstance(expected, list):
@@ -166,7 +251,84 @@ def _matches(actual: Any, expected: Any, op: str, value_type: str) -> bool:
         if isinstance(actual, list):
             return expected in actual
         return False
+    if op in {'gt', 'gte', 'lt', 'lte'}:
+        if expected is None or isinstance(expected, list):
+            raise ValueError('%s requires a single value' % op)
+        left = _order(actual, value_type)
+        right = _order(expected, value_type, query=True)
+        if left is None or right is None:
+            return False
+        return {'gt': left > right, 'gte': left >= right,
+                'lt': left < right, 'lte': left <= right}[op]
     raise ValueError(f'unknown comparison: {op}')
+
+
+def _norm_scalar(value: Any) -> str:
+    """A comparison form for numbers; text stays exactly as observed."""
+    if isinstance(value, bool):
+        return 'true' if value else 'false'
+    if isinstance(value, str):
+        return value.strip()
+    try:
+        number = Decimal(str(value).strip())
+        if number.is_finite():
+            return format(number.normalize(), 'f')
+    except (InvalidOperation, TypeError, ValueError):
+        pass
+    return str(value).strip()
+
+
+def _identity_keys(values: dict, concept: ConceptDefinition) -> set[str]:
+    """Joined forms of one object's identity, for relation-role matching.
+
+    A composite identity reaches a relation fact as one ``combine`` value, so
+    every common separator (and the reversed field order) is tried.  Missing
+    identity parts produce no key at all.
+    """
+    parts = [values.get(field) for field in concept.identity_fields]
+    if not parts or any(part is None or
+                        (isinstance(part, str) and not part.strip())
+                        for part in parts):
+        return set()
+    if len(parts) == 1:
+        return {str(parts[0]).strip(), _norm_scalar(parts[0])}
+    orders = [parts]
+    if len(parts) <= 3:
+        for order in permutations(parts):
+            if list(order) != parts:
+                orders.append(list(order))
+    keys = set()
+    for order in orders:
+        raw = [str(part).strip() for part in order]
+        numeric = [_norm_scalar(part) for part in order]
+        for separator in _RELATED_SEPARATORS:
+            keys.add(separator.join(raw))
+            keys.add(separator.join(numeric))
+    return keys
+
+
+def _binding_hits(binding: dict, instance_id: str, current_keys: set[str]) -> bool:
+    value = binding.get('value')
+    if value is None:
+        return False
+    if str(value).strip() == str(instance_id):
+        return True
+    return str(value).strip() in current_keys or _norm_scalar(value) in current_keys
+
+
+def _target_ids(binding: dict, targets: dict) -> list[str]:
+    """Target ids a relation fact's role value resolves to, if any."""
+    value = binding.get('value')
+    if value is None:
+        return []
+    raw = targets['raw']
+    candidates = set()
+    text = str(value).strip()
+    if text in raw:
+        candidates.add(text)
+    for key in {text, _norm_scalar(value)}:
+        candidates.update(targets['index'].get(key) or [])
+    return [item for item in candidates if item in raw]
 
 
 class QueryService:
@@ -314,12 +476,30 @@ class QueryService:
             request.ontology_id, request.revision or default_revision)
         concept_name, concept = self._concept(definition, request.concept)
         self._validate_conditions(request.where, concept)
+        related = self._related_spec(definition, concept_name, request.include_related)
 
         cursor_key = _decode_cursor(request.cursor) if request.cursor else None
         session_index = self._session_index()
+        releases = list(self._releases(request.ontology_id, revision))
+        targets = (self._related_targets(releases, definition, related)
+                   if related is not None else None)
+        related_facts = []
+        if related is not None:
+            seen_facts = set()
+            for _, snapshot in releases:
+                for fact in snapshot['body'].get('facts') or []:
+                    if fact.get('relation') != related['relation']:
+                        continue
+                    if fact.get('id') in seen_facts:
+                        continue
+                    seen_facts.add(fact.get('id'))
+                    related_facts.append(fact)
         items = []
         warnings = []
-        for release, snapshot in self._releases(request.ontology_id, revision):
+        related_matched = related_missing = related_ambiguous = 0
+        related_missing_items = []
+        hidden_related_fields = set()
+        for release, snapshot in releases:
             release_ref = release['ref']
             hidden = self._hidden_properties(snapshot['body'])
             concept_by_entity = {
@@ -343,11 +523,7 @@ class QueryService:
                 values, anchors = self._disclosed(instance, hidden)
                 if not self._conditions_match(values, request.where, concept):
                     continue
-                source_refs = sorted({
-                    anchor.get('source_ref') for items in anchors.values()
-                    for anchor in items if anchor.get('source_ref')
-                })
-                items.append({
+                item = {
                     'ontology_id': request.ontology_id,
                     'ontology_revision': '%s@%s' % (request.ontology_id, revision),
                     'revision': revision,
@@ -357,7 +533,10 @@ class QueryService:
                     'entity_id': instance.get('id'),
                     'id': instance.get('id'),
                     'values': values,
-                    'source_refs': source_refs,
+                    'source_refs': sorted({
+                        anchor.get('source_ref') for items in anchors.values()
+                        for anchor in items if anchor.get('source_ref')
+                    }),
                     'source_anchors': anchors,
                     'locations': self._locations(anchors),
                     'release_ref': release_ref,
@@ -367,7 +546,33 @@ class QueryService:
                     'task': task.get('task') or '',
                     'deactivated': state != 'active',
                     'unresolved': list(instance.get('unresolved') or []),
-                })
+                }
+                if related is not None:
+                    related_value, status, hidden_fields = self._related_for(
+                        instance=instance, concept=concept, spec=related,
+                        facts=related_facts, targets=targets)
+                    item['related'] = related_value
+                    if related_value is None:
+                        related_missing += 1
+                        related_missing_items.append({
+                            'release_ref': release_ref,
+                            'instance_id': instance.get('id'),
+                            'values': values,
+                        })
+                    else:
+                        related_matched += 1
+                    if status == 'ambiguous':
+                        related_ambiguous += 1
+                    for name in hidden_fields:
+                        if name not in hidden_related_fields:
+                            hidden_related_fields.add(name)
+                            warnings.append({
+                                'code': 'ontology.related_field_hidden',
+                                'relation': related['relation'],
+                                'property': name,
+                                'detail': '该属性不在披露范围内，未带回',
+                            })
+                items.append(item)
         items.sort(key=lambda item: (item['release_ref'], item['instance_id'] or ''))
         if cursor_key is not None:
             items = [item for item in items
@@ -378,7 +583,7 @@ class QueryService:
         next_cursor = (_encode_cursor((page[-1]['release_ref'],
                                        page[-1]['instance_id'] or ''))
                        if has_more and page else None)
-        return {
+        response = {
             'ontology_id': request.ontology_id,
             'ontology_revision': '%s@%s' % (request.ontology_id, revision),
             'revision': revision,
@@ -396,6 +601,25 @@ class QueryService:
             'filters': [condition.model_dump(mode='json') for condition in request.where],
             'warnings': warnings,
         }
+        if related is not None:
+            response.update({
+                'include_related': {
+                    'relation': related['relation'],
+                    'fields': list(related['fields']),
+                    'target_concept': related['target_concept'],
+                    'direction': 'subject_to_object' if related['forward']
+                                 else 'object_to_subject',
+                },
+                'related_stats': {
+                    'relation': related['relation'],
+                    'matched': related_matched,
+                    'missing': related_missing,
+                    'ambiguous': related_ambiguous,
+                },
+                'related_missing': related_missing_items,
+                'related_missing_count': len(related_missing_items),
+            })
+        return response
 
     # ------------------------------------------------------------------ helper
     def _definition(self, ontology_id: str, revision: str):
@@ -432,10 +656,19 @@ class QueryService:
                 raise ValueError(
                     'property %r is not defined on concept %r'
                     % (condition.property, concept.entity_type))
+            value_type = concept.properties[condition.property].value_type
             if condition.op == 'in' and not isinstance(condition.value, list):
                 raise ValueError('in requires a JSON array')
             if condition.op == 'contains' and condition.value is None:
                 raise ValueError('contains requires a value')
+            if condition.op in {'gt', 'gte', 'lt', 'lte'}:
+                if value_type not in {'decimal', 'integer', 'date'}:
+                    raise ValueError(
+                        'comparison %s is only supported on decimal/integer/date '
+                        'properties; %r is %s'
+                        % (condition.op, condition.property, value_type))
+                if condition.value is None or isinstance(condition.value, list):
+                    raise ValueError('%s requires a single value' % condition.op)
 
     @staticmethod
     def _conditions_match(values: dict, conditions: Iterable[OntologyQueryCondition],
@@ -446,6 +679,124 @@ class QueryService:
                             condition.op, value_type):
                 return False
         return True
+
+    @staticmethod
+    def _related_spec(definition: OntologyRevision, concept_name: str,
+                      request: OntologyQueryRelated | None):
+        """Resolve a published relation into a traversal in one direction."""
+        if request is None:
+            return None
+        relation = definition.relations.get(request.relation)
+        if relation is None:
+            raise ValueError('unknown relation in ontology %s: %s'
+                             % (definition.id, request.relation))
+        if not isinstance(relation, RelationDefinition):
+            raise ValueError('relation %r has no endpoint concepts' % request.relation)
+        if relation.subject_concept == concept_name:
+            forward = True
+            target_concept = relation.object_concept
+        elif relation.object_concept == concept_name:
+            forward = False
+            target_concept = relation.subject_concept
+        else:
+            raise ValueError('relation %r does not touch concept %r'
+                             % (request.relation, concept_name))
+        if not target_concept:
+            raise ValueError('relation %r has no endpoint concepts' % request.relation)
+        try:
+            target_name, target = definition.resolve_concept(target_concept)
+        except (KeyError, ValueError):
+            raise ValueError('relation %r names an unknown concept: %s'
+                             % (request.relation, target_concept)) from None
+        fields = list(dict.fromkeys(request.fields)) or list(target.identity_fields)
+        for field in fields:
+            if field not in target.properties:
+                raise ValueError(
+                    'property %r is not defined on related concept %r'
+                    % (field, target.entity_type))
+        roles = relation.roles
+        return {
+            'relation': request.relation,
+            'fields': fields,
+            'target_concept': target_name,
+            'target_definition': target,
+            'subject_role': roles[0],
+            'object_role': roles[-1],
+            'forward': forward,
+        }
+
+    def _related_targets(self, releases, definition: OntologyRevision, spec: dict):
+        """Index every published target object by its identity key.
+
+        A relation fact may point at an object published by a different task
+        of the same ontology revision, so the index spans releases.  Identity
+        values used only for matching stay internal; output uses the disclosed
+        values of the release that carried the target.
+        """
+        concept_by_entity = {
+            item.entity_type: name for name, item in definition.concepts.items()
+        }
+        target = spec['target_definition']
+        raw, disclosed, hidden, index = {}, {}, {}, {}
+        for release, snapshot in releases:
+            release_hidden = self._hidden_properties(snapshot['body'])
+            for instance in snapshot['instances']:
+                name = concept_by_entity.get(instance.get('entity_type'))
+                if name is None and len(definition.concepts) == 1:
+                    name = next(iter(definition.concepts))
+                if name != spec['target_concept']:
+                    continue
+                instance_id = instance.get('id')
+                values = instance.get('values') or {}
+                raw[instance_id] = values
+                disclosed[instance_id] = {
+                    key: value for key, value in values.items()
+                    if key not in release_hidden
+                }
+                hidden[instance_id] = release_hidden
+                for key in _identity_keys(values, target):
+                    index.setdefault(key, []).append(instance_id)
+        return {'raw': raw, 'disclosed': disclosed, 'hidden': hidden,
+                'index': index}
+
+    def _related_for(self, *, instance: dict, concept: ConceptDefinition, spec: dict,
+                     facts: list, targets: dict):
+        """Return (related|null, status, requested fields hidden by policy)."""
+        values = instance.get('values') or {}
+        instance_id = instance.get('id')
+        current_keys = _identity_keys(values, concept)
+        current_keys.add(str(instance_id))
+        source_role = spec['subject_role'] if spec['forward'] else spec['object_role']
+        target_role = spec['object_role'] if spec['forward'] else spec['subject_role']
+        for fact in facts:
+            bindings = {binding.get('role'): binding
+                        for binding in fact.get('role_bindings') or []}
+            source_binding = bindings.get(source_role)
+            target_binding = bindings.get(target_role)
+            if source_binding is None or target_binding is None:
+                continue
+            if not _binding_hits(source_binding, instance_id, current_keys):
+                continue
+            target_ids = _target_ids(target_binding, targets)
+            if not target_ids:
+                continue
+            ambiguous = len(target_ids) > 1
+            target_id = sorted(target_ids)[0]
+            disclosed = targets['disclosed'].get(target_id) or {}
+            hidden = targets['hidden'].get(target_id) or set()
+            fields, hidden_fields = {}, []
+            for name in spec['fields']:
+                if name in disclosed:
+                    fields[name] = disclosed[name]
+                elif name in hidden:
+                    hidden_fields.append(name)
+                else:
+                    fields[name] = None
+            return ({'relation': spec['relation'],
+                     'target_instance_id': target_id,
+                     'fields': fields},
+                    'ambiguous' if ambiguous else 'matched', hidden_fields)
+        return None, 'missing', []
 
     def _all(self, kind: str):
         rows = []

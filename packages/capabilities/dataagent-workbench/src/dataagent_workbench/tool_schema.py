@@ -32,6 +32,24 @@ class Session(Input):
     session_id:str
 
 
+class EvidenceRead(Session):
+    """Read a task's evidence, with optional discovery detail paging.
+
+    Discovery evidence is returned to the model as a structural summary; a
+    table's controlled samples or a section's clause text are fetched on
+    demand, one table/section at a time, so one large result is never read
+    repeatedly by offset.
+    """
+    detail_table: str | None = Field(default=None,
+        description='只取该表的完整列证据（含受控样本）；用于发现证据摘要')
+    detail_section: str | None = Field(default=None,
+        description='只取该章节/条款的原文（章节 ref、条款 ref 或来源 ID）；按 detail_offset/detail_limit 分页')
+    detail_offset: int = Field(default=0, ge=0,
+        description='detail_section 的起始条目（0 起）')
+    detail_limit: int = Field(default=50, ge=1, le=200,
+        description='detail_section 每页条数，最大 200')
+
+
 class Propose(Session):
     proposal:MappingSpec
     expected_revision:str
@@ -186,7 +204,9 @@ class WorkflowView(Input):
     run_id: str
 
 
-MODELS={'intake_start':Start,**{name:Session for name in ['intake_status','intake_advance','intake_inference','mapping_preview','workbench_view']},
+MODELS={'intake_start':Start,
+    **{name:Session for name in ['intake_status','mapping_preview','workbench_view']},
+    **{name:EvidenceRead for name in ['intake_advance','intake_inference']},
     'intake_propose':Propose,'intake_propose_sources':ProposeSources,'mapping_apply':Apply,
     'intake_dispose':Dispose,'intake_inherit':Inherit,'intake_extract':Extract,
     'ontology_discovery_propose':DiscoveryPropose,'ontology_registry':Registry,
@@ -198,8 +218,8 @@ MODELS={'intake_start':Start,**{name:Session for name in ['intake_status','intak
 # Read-only tools carry the MCP annotation so a host can show them as safe.
 READ_ONLY_TOOLS={'ontology_query','ontology_instances_summary'}
 DESCRIPTIONS={'intake_start':'建立接入任务。陌生 SQLite 库用 mode=ontology_discovery 发现本体',
-    'intake_advance':'探查来源并返回映射或本体发现所需的来源证据',
-    'intake_inference':'读取经披露范围过滤的提案请求，含当前来源与任务修订',
+    'intake_advance':'探查来源并返回映射或本体发现证据；发现证据默认是结构摘要，样本/条款原文用 detail_table/detail_section 按需分页取',
+    'intake_inference':'读取经披露范围过滤的提案请求（默认结构摘要）；用 detail_table/detail_section 取样本或条款原文',
     'intake_extract':'将已观察 PDF 的原文片段提取为有精确锚点的新字段',
     'intake_propose':'提交结构化映射；组件验证和试算，不直接发布',
     'intake_propose_sources':'按来源 ID 提交所有映射，一起验证并试算同一组本体对象',
@@ -212,7 +232,7 @@ DESCRIPTIONS={'intake_start':'建立接入任务。陌生 SQLite 库用 mode=ont
     'ontology_registry':'列出工作区内未停用本体注册表（只读）；include_deactivated=true 时包含已停用本体',
     'ontology_publish_prepare':'把发现草稿补全为多概念本体候选（值类型、必需性、身份、关系端点与未决处置）；只生成候选，不发布',
     'ontology_publish_confirm':'确认发布候选本体（仅工作台网页人工通道；Agent 调用只返回需要人工确认）',
-    'ontology_query':'按本体与概念查询已发布实例（只读）：属性 eq/in/contains 过滤、分页，带来源定位、release_ref 与接入任务',
+    'ontology_query':'按本体与概念查询已发布实例（只读）：属性 eq/in/contains/gt/gte/lt/lte 过滤（比较只用于 decimal/integer/date）、include_related 沿关系带回关联对象属性、分页，带来源定位、release_ref 与接入任务',
     'ontology_instances_summary':'汇总每个本体/概念的已发布实例数与最近发布时间（只读；默认不列停用本体）',
     'source_connections':'列出宿主已配置的来源连接名和类型（只读，不含凭据）',
     'workflow_call':'探查宿主配置的业务环境，提交、推进或查看已验证的流程和动作回执',
