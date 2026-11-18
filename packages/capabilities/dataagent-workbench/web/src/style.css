@@ -66,3 +66,5 @@
 .discovery-review label{display:flex;align-items:center;gap:7px;font-size:12px}
 .ontology-page .mapping-table small{display:block;margin-top:6px}
 .ontology-page .notice{margin:18px 0 0}
+/* 窄屏下全局规则会隐藏 .save-buttons .secondary，本体库页头的操作保持可见。 */
+@media(max-width:760px){.ontology-page .save-buttons .secondary{display:inline-flex}}

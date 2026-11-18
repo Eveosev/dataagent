@@ -17,7 +17,7 @@ function defaultBindings(view:View,sourceId:string){
   .map(k=>[k,{source_field:k,transform:'identity' as const}]));
 }
 
-export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenOntologies}:{sessionId:string;onNew:()=>void;onError:(e:unknown)=>void;onOpenObjects?:()=>void;onOpenOntologies?:()=>void}){
+export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession,onOpenOntologies}:{sessionId:string;onNew:()=>void;onError:(e:unknown)=>void;onOpenObjects?:()=>void;onOpenSession:(id:string)=>void;onOpenOntologies?:()=>void}){
  const [view,setView]=useState<View|null>(null),[bindings,setBindings]=useState<Record<string,FieldBinding>>({});
  const [field,setField]=useState(''),[sourceId,setSourceId]=useState(''),[record,setRecord]=useState(0),[dirty,setDirty]=useState(false),[busy,setBusy]=useState(false),[onlyProblems,setOnlyProblems]=useState(false),[draftState,setDraftState]=useState('');
  // FDE-12：字段详情里的纠正同样给绿色成功提示；被其他问题挡住时点名，不走红色错误条。
@@ -147,7 +147,7 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenOntolog
   }catch(error){onError(error);}
  }
  if(!view)return <main className="loading">正在恢复任务…</main>;
- if(view.discovery)return <DiscoveryPage view={view} reload={load} onNew={onNew} onError={onError} onOpenOntologies={onOpenOntologies}/>;
+ if(view.discovery)return <DiscoveryPage view={view} reload={load} onNew={onNew} onError={onError} onOpenSession={onOpenSession} onOpenOntologies={onOpenOntologies}/>;
  const phase=view.session.phase,done=phase==='saved',working=phase==='queued'||phase==='probing';
  const canRetry=view.session.next_actions?.includes('retry_probe');
  // FDE-10：任一来源探查失败时进度标红，副标题不再宣称「识别与探查已完成」。

@@ -70,14 +70,15 @@ const shortDigest=(value:string|undefined)=>value?value.replace('sha256:','').sl
 
 // 草案通过审核后的发布区块：候选定义摘要、来源快照摘要、未决项处置状态；
 // 未处置项点名并阻断，确认由人勾选后提交（网页是唯一确认通道）。
-function PublishBlock({session,discovery,reload,onError,onOpenOntologies}:{
+function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOntologies}:{
  session:IntakeSession;discovery:Discovery;reload:()=>Promise<void>;
- onError:(error:unknown)=>void;onOpenOntologies?:()=>void;
+ onError:(error:unknown)=>void;onOpenSession:(id:string)=>void;onOpenOntologies?:()=>void;
 }){
  const draft=discovery.draft!;
  const base=`/api/sessions/${session.id}`;
  const [candidate,setCandidate]=useState<PublishCandidate|null>(null),[checked,setChecked]=useState(false),[busy,setBusy]=useState(false);
  const [failure,setFailure]=useState<{text:string;action:'rediscover'|'refresh'}|null>(null),[copied,setCopied]=useState(false);
+ const [staleHint,setStaleHint]=useState(false);
  const summary=discovery.publish_candidate||null;
  const fetchCandidate=async()=>setCandidate(await api<PublishCandidate|null>(base+'/publish/candidate'));
  useEffect(()=>{let cancelled=false;
@@ -88,12 +89,15 @@ function PublishBlock({session,discovery,reload,onError,onOpenOntologies}:{
  const published=summary?.state==='published';
  // 候选必须锚定当前草案；草案更新后的旧候选不可确认。
  const current=candidate&&candidate.draft_ref===draft.ref?candidate:null;
+ // 过期候选（D1 会拒绝）：任务修订已越过候选记录的修订时，确认被禁用并提示
+ // 重新准备，避免反复提交同一失效候选。
+ const expired=staleHint||(!!current&&String(current.session_revision)!==String(session.revision));
  const items=openItems(draft);
  const dispositionOf=(item:OpenItem)=>(current?.dispositions||[]).find((entry:PublishDisposition)=>entry.kind===item.kind&&entry.ref===item.ref);
  const undisposed=items.filter(item=>!dispositionOf(item));
  const completionPrompt=`继续当前工作区的本体发现任务 ${session.id}。草案 ${draft.ref} 已通过审核；调用 ontology_publish_prepare 补全每个概念的属性值类型、必需性与身份字段，对关系给出端点与角色，并对未决项与覆盖缺口逐项给出排除或接受的处置，生成发布候选供我在工作台确认。`;
  async function confirm(){
-  if(!current)return;
+  if(!current||expired)return;
   setBusy(true);
   try{
    await api(base+'/publish/confirm','POST',{
@@ -104,16 +108,28 @@ function PublishBlock({session,discovery,reload,onError,onOpenOntologies}:{
    setChecked(false);setFailure(null);
    await reload();await fetchCandidate();
   }catch(error){
-   // 过期 / 来源变更 / 重复确认：中文说明 + 重新探查或刷新候选入口。
+   // 来源变更给新建发现任务入口；过期/重复确认给刷新候选入口，并标记候选
+   // 已过期，避免「刷新候选」后反复提交同一失效候选。
    const raw=error instanceof ApiError?error.raw:'';
+   if(/stale|task changed|draft changed|does not name the prepared/.test(raw))setStaleHint(true);
    setFailure({text:error instanceof Error?error.message:String(error),
     action:/discover again/.test(raw)?'rediscover':'refresh'});
   }finally{setBusy(false);}
  }
- async function rediscover(){
+ // 来源变更后的出路：已审核的发现任务（phase saved）不能重新探查，后端也没有
+ // 重开任务修订的接口；用相同来源新建发现任务，由新任务重新观察变更后的来源。
+ async function startRediscovery(){
   setBusy(true);
-  try{await api(base+'/advance','POST',{});await reload();setFailure(null);}
-  catch(error){onError(error);}finally{setBusy(false);}
+  try{
+   const sources=session.sources.map(source=>({
+    source_id:crypto.randomUUID(),kind:source.kind,locator_ref:source.locator_ref,
+    ...(source.options?{options:source.options}:{}),
+    ...(source.extensions?{extensions:source.extensions}:{}),
+   }));
+   const result=await api<{session_id:string}>('/api/sessions','POST',{
+    goal:`来源已变更，重新发现本体（原任务 ${session.id}）`,sources,mode:'ontology_discovery'});
+   onOpenSession(result.session_id);
+  }catch(error){onError(error);}finally{setBusy(false);}
  }
  async function refreshCandidate(){
   setBusy(true);
@@ -127,9 +143,13 @@ function PublishBlock({session,discovery,reload,onError,onOpenOntologies}:{
   </section>;
  return <section className="discovery-card" data-testid="publish-card"><div className="panel-heading"><h2>发布为本体</h2><span className="badge">{current?'待人工确认':'待补全'}</span></div>
   {failure&&<div className="notice amber" data-testid="publish-failure"><p>{failure.text}</p>
-   {failure.action==='rediscover'
-    ?<button className="secondary" disabled={busy} onClick={rediscover}>重新探查</button>
-    :<button className="secondary" disabled={busy} onClick={refreshCandidate}>刷新候选</button>}
+   {failure.action==='rediscover'?<>
+    <p className="help">该发现任务的草案已审核，无法在原任务上重新探查来源；需用相同来源新建发现任务，由新任务重新观察变更后的来源。</p>
+    <button className="secondary" disabled={busy} onClick={startRediscovery}>用相同来源新建发现任务</button>
+   </>:<button className="secondary" disabled={busy} onClick={refreshCandidate}>刷新候选</button>}
+  </div>}
+  {expired&&current&&<div className="notice amber" data-testid="publish-stale">
+   <p>候选已过期：任务修订已更新，后端会拒绝该候选。请让 Agent 重新调用 ontology_publish_prepare 生成新候选后再确认。</p>
   </div>}
   {current?<><h3>候选定义摘要 · {current.title||current.ontology_id}</h3>
    <div className="discovery-entities">{Object.entries(current.definition.concepts).map(([name,concept])=>
@@ -168,15 +188,16 @@ function PublishBlock({session,discovery,reload,onError,onOpenOntologies}:{
   </div>}
   <p className="help">发布后将成为新任务的默认目标本体；既有任务与已发布实例不受影响。</p>
   <div className="discovery-review">
-   <label><input type="checkbox" checked={checked} disabled={!current||undisposed.length>0}
+   <label><input type="checkbox" checked={checked} disabled={!current||undisposed.length>0||expired}
     onChange={e=>setChecked(e.target.checked)}/> 我已核对候选定义与来源摘要，确认发布</label>
-   <button className="primary" disabled={!current||undisposed.length>0||!checked||busy} onClick={confirm}>{busy?'正在发布…':'确认发布'}</button>
+   <button className="primary" disabled={!current||undisposed.length>0||expired||!checked||busy} onClick={confirm}>{busy?'正在发布…':'确认发布'}</button>
   </div>
  </section>;
 }
 
-export function DiscoveryPage({view,reload,onNew,onError,onOpenOntologies}:{
- view:View;reload:()=>Promise<void>;onNew:()=>void;onError:(error:unknown)=>void;onOpenOntologies?:()=>void;
+export function DiscoveryPage({view,reload,onNew,onError,onOpenSession,onOpenOntologies}:{
+ view:View;reload:()=>Promise<void>;onNew:()=>void;onError:(error:unknown)=>void;
+ onOpenSession:(id:string)=>void;onOpenOntologies?:()=>void;
 }){
  const [busy,setBusy]=useState(false),[copied,setCopied]=useState(false);
  const {session,discovery}=view;
@@ -257,7 +278,7 @@ export function DiscoveryPage({view,reload,onNew,onError,onOpenOntologies}:{
    </div>}
   </section>}
   {draft&&draft.state==='approved'&&<PublishBlock session={session} discovery={discovery} reload={reload}
-   onError={onError} onOpenOntologies={onOpenOntologies}/>}
+   onError={onError} onOpenSession={onOpenSession} onOpenOntologies={onOpenOntologies}/>}
   {catalog&&<section className="discovery-card">
    <h2>来源证据</h2>
    <p className="muted">{catalog.tables.length} 张表 · 来源修订 <code title={discovery.source_revision}>{shortDigest(discovery.source_revision)}</code></p>

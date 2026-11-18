@@ -16,12 +16,18 @@ function App(){
    e instanceof Error?translateError(e.message):String(e));
  }
  useEffect(()=>{(async()=>{
-  const nonce=hash.get('nonce');if(nonce){await api('/api/auth','POST',{nonce});history.replaceState(null,'',workflow?'#workflow='+workflow:session?'#session='+session:'#');}
+  const nonce=hash.get('nonce');if(nonce){await api('/api/auth','POST',{nonce});history.replaceState(null,'',ontologies?'#ontologies=1':workflow?'#workflow='+workflow:session?'#session='+session:'#');}
   await api('/api/identity');setAuthenticated(true);
  })().catch(()=>setAuthenticated(false));},[]);
- function openSession(id:string){setSession(id);setError('');setOntologies(false);history.replaceState(null,'','#session='+id);api(`/api/sessions/${id}/advance`,'POST',{}).catch(failure);}
+ // 路由状态成组清理：切换页面时明确清掉或恢复上一路由（对象页 / 工作流页 /
+ // 任务页 / 本体库），避免残留状态把「新建接入」「返回任务」带回旧页面。
+ function openSession(id:string){setSession(id);setObject('');setWorkflow('');setOntologies(false);setError('');history.replaceState(null,'','#session='+id);api(`/api/sessions/${id}/advance`,'POST',{}).catch(failure);}
  function openOntologies(){setOntologies(true);setError('');history.replaceState(null,'','#ontologies=1');}
- function closeOntologies(){setOntologies(false);history.replaceState(null,'',session?'#session='+session:'#');}
+ function closeOntologies(){
+  setOntologies(false);
+  history.replaceState(null,'',object?'#object='+object:workflow?'#workflow='+workflow:session?'#session='+session:'#');
+ }
+ function startNew(){setSession('');setObject('');setWorkflow('');setOntologies(false);history.replaceState(null,'','#');}
  async function openLocal(){
   setOpenState(null);
   try{
@@ -36,7 +42,7 @@ function App(){
  {error&&<div className="error-banner" role="alert"><span>{error}</span><button aria-label="关闭提示" onClick={()=>setError('')}>×</button></div>}
  {authenticated===null?<main className="loading">正在连接工作区…</main>:!authenticated?<main className="intake-home"><h1>打开本地工作台</h1><p className="muted">通过本机浏览器入口查看你的材料与接入任务。</p><button className="primary" onClick={openLocal}>打开本地工作台</button>
   {openState&&<p className={openState.ok?'local-open-result ok':'local-open-result warn'} data-testid="local-open-result" role="status">{openState.text}{openState.url&&<>　若浏览器没有自动打开，请在同一台机器上访问 <code>{openState.url}</code></>}</p>}
- </main>:workflow?<WorkflowPage id={workflow} onError={failure}/>:ontologies?<OntologiesPage onNew={()=>{setSession('');setOntologies(false);history.replaceState(null,'','#');}} onBack={session?closeOntologies:undefined} onError={failure}/>:object?<ObjectPage key={object} sessionId={object} onBack={()=>{setSession(object);setObject('');history.replaceState(null,'','#session='+object);}} onError={failure}/>:session?<MappingPage key={session} sessionId={session} onNew={()=>{setSession('');history.replaceState(null,'','#');}} onOpenObjects={()=>{setObject(session);history.replaceState(null,'','#object='+session);}} onOpenOntologies={openOntologies} onError={failure}/>:<IntakePage onStart={openSession} onError={failure}/>}
+ </main>:ontologies?<OntologiesPage onNew={startNew} onBack={object||workflow||session?closeOntologies:undefined} onError={failure}/>:workflow?<WorkflowPage id={workflow} onError={failure}/>:object?<ObjectPage key={object} sessionId={object} onBack={()=>{setSession(object);setObject('');history.replaceState(null,'','#session='+object);}} onError={failure}/>:session?<MappingPage key={session} sessionId={session} onNew={startNew} onOpenObjects={()=>{setObject(session);history.replaceState(null,'','#object='+session);}} onOpenSession={openSession} onOpenOntologies={openOntologies} onError={failure}/>:<IntakePage onStart={openSession} onError={failure}/>}
  </>;
 }
 createRoot(document.getElementById('root')!).render(<App/>);
