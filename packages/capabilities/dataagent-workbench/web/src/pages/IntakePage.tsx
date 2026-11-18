@@ -43,7 +43,7 @@ export function IntakePage({onStart,onError}:{onStart:(id:string)=>void;onError:
    onStart(result.session_id);
   }catch(error){onError(error);}finally{setBusy(false);}
  }
- return <main className="intake-home"><div className="eyebrow">多源接入 · 本地工作区</div><h1>接入数据</h1><p className="muted">添加材料，查看探查结果并核对 Ontology 映射。</p>
+ return <main className="intake-home"><div className="eyebrow">多源接入 · 本地工作区</div><h1>接入数据</h1><p className="muted">添加材料，查看探查结果并核对本体映射。</p>
   <section className="intake-card"><label className="label" htmlFor="goal">接入目标</label><textarea id="goal" value={goal} onChange={e=>setGoal(e.target.value)} placeholder="例如：接入采购发票，核对单据编号、金额和币种" rows={3}/>
   <div className="file-drop"><span className="upload-mark">＋</span><strong>添加本地材料</strong><p>PDF、Excel、Word、CSV、JSON、SQLite · 每份材料不超过 32 MB</p><input aria-label="选择材料" type="file" multiple accept=".pdf,.xlsx,.xlsm,.csv,.tsv,.json,.jsonl,.docx,.sqlite,.sqlite3,.db" onChange={e=>setFiles(Array.from(e.target.files||[]))}/></div>
   {files.length>0&&<ul className="file-list">{files.map((file,index)=><li key={index}><span>▤ {file.name}</span><span className="muted">{Math.max(1,Math.round(file.size/1024))} KB</span></li>)}</ul>}

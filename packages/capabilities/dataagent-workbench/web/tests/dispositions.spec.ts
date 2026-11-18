@@ -23,7 +23,7 @@ async function openObjectPage(page:import('@playwright/test').Page,files:Paramet
  await expect(page.getByText('识别与探查已完成')).toBeVisible();
  await page.getByRole('button',{name:'生成映射预览'}).click();
  // 预览问题用中文说明并点名对象，不再显示内部代码。
- await expect(page.getByTestId('mapping-issues')).toContainText('缺少单据号，无法确定对象');
+ await expect(page.getByTestId('mapping-issues')).toContainText('缺少身份字段值，无法确定对象');
  await expect(page.getByTestId('mapping-issues')).not.toContainText('ontology.');
  await page.getByRole('button',{name:'打开对象页'}).click();
  await expect(page.getByRole('heading',{name:'核对业务对象'})).toBeVisible();
@@ -33,7 +33,7 @@ test('缺键对象显示来源描述，处置需要填写原因',async({page})=>
  slowTimeout(40000);
  await openObjectPage(page,{name:'发票.csv',mimeType:'text/csv',buffer:missingNumberCsv});
  // FDE-11：缺键对象不显示 candidate:<哈希>，改用来源描述点名（第 3 行是文件里的原始行号）。
- await expect(page.locator('.source-tab').filter({hasText:'来源行 3'})).toContainText('发票.csv · 来源行 3（无单号）');
+ await expect(page.locator('.source-tab').filter({hasText:'来源行 3'})).toContainText('发票.csv · 来源行 3（缺少单据编号）');
  await expect(page.getByText(/candidate:/)).toHaveCount(0);
  // FDE-11：徽标与列名是中文。
  await expect(page.locator('.mapping-panel .panel-heading .badge')).toContainText('采购单据');
@@ -41,7 +41,7 @@ test('缺键对象显示来源描述，处置需要填写原因',async({page})=>
  await expect(page.locator('.mapping-table thead th').first()).toHaveText('本体属性');
  // 缺键记录的阻断问题旁给出排除记录的处置；行号与对象标签统一用「来源行 N」
  //（record 是 0 起的记录序号 1，锚点定位到文件里的原始行号 3）。
- const issue=page.getByTestId('pending-issue').filter({hasText:'缺少单据号'});
+ const issue=page.getByTestId('pending-issue').filter({hasText:'缺少身份字段值'});
  await expect(issue).toContainText('阻断');
  const disposal=issue.getByTestId('disposal-option');
  await expect(disposal).toContainText('排除「发票.csv」来源行 3');
@@ -55,7 +55,7 @@ test('缺键对象显示来源描述，处置需要填写原因',async({page})=>
 test('排除记录处置走真实后端并刷新视图',async({page})=>{
  slowTimeout(40000);
  await openObjectPage(page,{name:'发票.csv',mimeType:'text/csv',buffer:missingNumberCsv});
- const issue=page.getByTestId('pending-issue').filter({hasText:'缺少单据号'});
+ const issue=page.getByTestId('pending-issue').filter({hasText:'缺少身份字段值'});
  const disposal=issue.getByTestId('disposal-option');
  await disposal.getByLabel(/处置原因/).fill('表头行混入数据，排除该行');
  const [response]=await Promise.all([

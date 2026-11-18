@@ -229,6 +229,11 @@ test('SQLite 发现 → 草案 → 补全 → 网页确认发布 → 新接入�
  await expect(page.getByText('候选定义摘要 · 销售单据模型')).toBeVisible({timeout:20000});
  await expect(page.getByTestId('publish-concept-SalesOrder')).toContainText('book + doc_no');
  await expect(page.getByText('来源快照摘要')).toBeVisible();
+ // FDE2-11：来源修订等内部哈希收进折叠「技术详情」，正文不铺哈希；值类型用中文。
+ await expect(page.getByTestId('publish-tech-detail').getByText('来源修订')).toBeHidden();
+ // 收进折叠后可见的快照摘要只剩本体标识；「来源修订」在折叠的第二个 dl 里。
+ await expect(page.locator('.publish-snapshot').first()).not.toContainText('来源修订');
+ await expect(page.getByTestId('publish-concept-SalesOrder')).toContainText('文本');
  await expect(page.getByText('发布后将成为新任务的默认目标本体')).toBeVisible();
  await expect(page.getByRole('button',{name:'确认发布'})).toBeDisabled();
 
@@ -343,7 +348,7 @@ test('SQLite 发现 → 草案 → 补全 → 网页确认发布 → 新接入�
  await page.getByLabel('目标概念').selectOption('SalesOrder');
  await expect(page.getByText('目标本体 · 销售单据模型 · SalesOrder')).toBeVisible();
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByRole('heading',{name:'核对来源与 Ontology 映射'})).toBeVisible({timeout:20000});
+ await expect(page.getByRole('heading',{name:'核对来源与本体映射'})).toBeVisible({timeout:20000});
 
  // 目标在任务创建时已固定；立即停用，缩短默认指针偏离内置的窗口，既有任务不受影响。
  await page.getByRole('button',{name:'本体库'}).click();

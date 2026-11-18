@@ -117,17 +117,22 @@ export function browsePropertyLabel(name:string):string{
  const known=propertyLabel(name);
  return known!==name?known:(browsePropertyNames[name]||name);
 }
-export const browseConceptNames:Record<string,string>={
- SalesOrder:'销售单',
- SalesOrderLine:'销售明细',
- Customer:'客户',
- PurchaseDocument:'采购单据',
-};
+// 实体类型的中文说法统一收在 client.entityTypeNames（FDE2-11）；
+// 这里只补本体库浏览特有的概念名，避免两处维护同一份字典。
+export const browseConceptNames:Record<string,string>={};
 export function browseConceptLabel(name:string):string{
  const known=entityTypeLabel(name);
  return known!==name?known:(browseConceptNames[name]||name);
 }
-export const filterOpNames:Record<'eq'|'contains',string>={eq:'等于',contains:'包含'};
+// 筛选条件中文说法（FDE2-13）：比较条件只对 decimal/integer/date 属性开放。
+export type FilterOp='eq'|'contains'|'gt'|'gte'|'lt'|'lte';
+export const filterOpNames:Record<FilterOp,string>={
+ eq:'等于',contains:'包含',gt:'大于',gte:'大于等于',lt:'小于',lte:'小于等于',
+};
+export const comparisonOps:FilterOp[]=['gt','gte','lt','lte'];
+export const isComparisonOp=(op:FilterOp)=>comparisonOps.includes(op);
+// 可比较的值类型：后端 gt/gte/lt/lte 只接受 decimal/integer/date。
+export const comparableValueTypes=['decimal','integer','date'];
 
 // 已发布实例的来源名只显示可读名，不显示上传 UUID 或本机路径。
 export function sourceDisplayName(value:unknown):string{

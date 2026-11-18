@@ -58,7 +58,7 @@ test('对象页列出全部待核对问题：总数、阻断数与折叠展开',
  await expect(page.getByRole('button',{name:'收起其余问题'})).toBeVisible();
  // 问题文案是中文理由，不是裸 code。
  await expect(page.getByTestId('pending-issues')).toContainText('各来源的字段值不一致');
- await expect(page.getByTestId('pending-issues')).toContainText('缺少单据号，无法确定对象');
+ await expect(page.getByTestId('pending-issues')).toContainText('缺少身份字段值，无法确定对象');
 });
 
 test('每条问题能点到对应对象',async({page})=>{
@@ -68,7 +68,7 @@ test('每条问题能点到对应对象',async({page})=>{
  await page.getByTestId('pending-issue').filter({hasText:'各来源的字段值不一致'}).nth(1).getByRole('button',{name:'INV-002'}).click();
  await expect(page.locator('.source-tab.active')).toContainText('INV-002');
  // 行号问题来源不明：不给对象入口，显示行号与来源待定。
- const rowIssue=page.getByTestId('pending-issue').filter({hasText:'缺少单据号'}).first();
+ const rowIssue=page.getByTestId('pending-issue').filter({hasText:'缺少身份字段值'}).first();
  await expect(rowIssue).toContainText('第 1 行 · 来源待定');
  await expect(rowIssue.getByRole('button')).toHaveCount(0);
  // 来源级问题（无对象可点）显示具体来源名，条目可区分、可处理。
@@ -123,7 +123,7 @@ test('跨来源同序号的行号问题不链接到错误对象',async({page})=>
  await page.getByRole('button',{name:'生成映射预览'}).click();
  await page.getByRole('button',{name:'打开对象页'}).click();
  await expect(page.getByRole('heading',{name:'核对业务对象'})).toBeVisible();
- const issue=page.getByTestId('pending-issue').filter({hasText:'缺少单据号'});
+ const issue=page.getByTestId('pending-issue').filter({hasText:'缺少身份字段值'});
  await expect(issue).toHaveCount(1);
  await expect(issue).toContainText('第 1 行 · 来源待定');
  await expect(issue.getByRole('button')).toHaveCount(0);

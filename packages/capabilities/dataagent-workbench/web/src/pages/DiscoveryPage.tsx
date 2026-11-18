@@ -1,5 +1,5 @@
 import {useEffect,useRef,useState} from 'react';
-import {api,ApiError,display,humanDetail,technicalDetail} from '../client';
+import {api,ApiError,display,humanDetail,technicalDetail,valueTypeLabel} from '../client';
 import type {View,PublishCandidate,PublishDisposition} from '../client';
 import type {IntakeSession} from '../generated/IntakeSession';
 import {DiscoveryConcepts} from '../components/DiscoveryConcepts';
@@ -219,10 +219,10 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
      content:<>
       <h3>{name}</h3><dl><dt>实体类型</dt><dd><code>{concept.entity_type}</code></dd>
        <dt>身份字段</dt><dd>{concept.identity_fields.join(' + ')}</dd></dl>
-      <table className="mapping-table"><thead><tr><th>属性</th><th>值类型</th><th>必需</th></tr></thead>
+      <div className="mapping-table-scroll"><table className="mapping-table"><thead><tr><th>属性</th><th>值类型</th><th>必需</th></tr></thead>
        <tbody>{Object.entries(concept.properties).map(([prop,definition])=><tr key={prop}>
-        <td>{prop}</td><td>{definition.value_type}</td><td>{definition.required?'必需':'可选'}</td></tr>)}</tbody>
-      </table>
+        <td>{prop}</td><td>{valueTypeLabel(definition.value_type)}</td><td>{definition.required?'必需':'可选'}</td></tr>)}</tbody>
+      </table></div>
      </>};
    })}/>
    {Object.keys(current.definition.relations||{}).length>0&&<><h3>拟登记的关系</h3>
@@ -231,10 +231,15 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
      return <li key={name}><div><strong>{name}</strong> · <code>{Array.isArray(relation)?name:relation.subject_concept}</code>（{roles[0]}） → <code>{Array.isArray(relation)?name:relation.object_concept}</code>（{roles[1]}）</div></li>;
     })}</ul></>}
    <h3>来源快照摘要</h3>
-   <dl className="publish-snapshot"><div><dt>来源修订</dt><dd><code title={current.source_revision}>{shortDigest(current.source_revision)}</code></dd></div>
-    <div><dt>结构指纹</dt><dd><code title={current.structure_fingerprint}>{shortDigest(current.structure_fingerprint)}</code></dd></div>
-    <div><dt>快照摘要</dt><dd><code title={current.source_snapshot}>{shortDigest(current.source_snapshot)}</code></dd></div>
-    <div><dt>本体标识</dt><dd><code>{current.ontology_id}</code> · 修订 {current.ontology_revision}</dd></div></dl>
+   {/* 内部哈希（来源修订、结构指纹、快照摘要）收进折叠的「技术详情」（FDE2-11），
+       正文只保留本体标识与修订号。 */}
+   <dl className="publish-snapshot"><div><dt>本体标识</dt><dd><code>{current.ontology_id}</code> · 修订 {current.ontology_revision}</dd></div></dl>
+   <details className="tech-detail publish-tech-detail" data-testid="publish-tech-detail"><summary>技术详情</summary>
+    <dl className="publish-snapshot">
+     <div><dt>来源修订</dt><dd><code title={current.source_revision}>{shortDigest(current.source_revision)}</code></dd></div>
+     <div><dt>结构指纹</dt><dd><code title={current.structure_fingerprint}>{shortDigest(current.structure_fingerprint)}</code></dd></div>
+     <div><dt>快照摘要</dt><dd><code title={current.source_snapshot}>{shortDigest(current.source_snapshot)}</code></dd></div>
+    </dl></details>
   </>:<div className="notice amber"><p>草案{draft.state==='pending'?'待审核':'已通过审核'}。让 Agent 补全值类型、必需性与身份字段并生成发布候选后，在这里人工确认发布；Agent 工具不能代为确认。</p>
    <div className="discovery-prompt"><code>{completionPrompt}</code><button className="secondary" onClick={()=>copyPrompt(completionPrompt,()=>setCopied(true))}>{copied?'已复制':'复制指令'}</button></div>
   </div>}
@@ -335,11 +340,11 @@ export function DiscoveryPage({view,reload,onNew,onError,onOpenSession,onOpenOnt
      <h3>{entity.name}</h3><p>{entity.grain}</p>
      <dl><dt>来源表</dt><dd><code>{label(entity.table)}</code></dd>
       <dt>标识</dt><dd>{entity.identity.length?entity.identity.join(' + '):'待确认'}</dd></dl>
-     {entity.properties.length>0&&<table className="mapping-table">
+     {entity.properties.length>0&&<div className="mapping-table-scroll"><table className="mapping-table">
       <thead><tr><th>属性</th><th>来源列</th><th>声明类型</th></tr></thead>
       <tbody>{entity.properties.map(prop=><tr key={prop.column}><td>{prop.name}</td>
-       <td><code>{prop.column}</code></td><td>{tables.find(item=>item.name===entity.table)?.columns[prop.column]?.type||'—'}</td></tr>)}</tbody>
-     </table>}
+       <td><code>{prop.column}</code></td><td>{valueTypeLabel(tables.find(item=>item.name===entity.table)?.columns[prop.column]?.type)}</td></tr>)}</tbody>
+     </table></div>}
      {entity.extension_columns.length>0&&<p className="muted">保留为扩展字段 · {entity.extension_columns.join(', ')}</p>}
     </>}))}/>
    <h3>拟采用的关系</h3><RelationshipList items={draft.relationships} tableName={label}/>
@@ -368,7 +373,11 @@ export function DiscoveryPage({view,reload,onNew,onError,onOpenSession,onOpenOnt
    onError={onError} onOpenSession={onOpenSession} onOpenOntologies={onOpenOntologies}/>}
   {catalog&&<section className="discovery-card">
    <h2>来源证据</h2>
-   <p className="muted">{catalog.tables.length} 张表 · 来源修订 <code title={discovery.source_revision}>{shortDigest(discovery.source_revision)}</code></p>
+   {/* 来源修订是内部哈希，收进折叠「技术详情」（FDE2-11）；details 是块级元素，
+       不嵌在 <p> 内。 */}
+   <p className="muted">{catalog.tables.length} 张表</p>
+   <details className="tech-detail"><summary>技术详情</summary>
+    来源修订 <code title={discovery.source_revision}>{shortDigest(discovery.source_revision)}</code></details>
    {catalog.tables.map(table=>{
     // 样本记录按表所属的来源取，多来源时不串表。
     const profile=table.source_id?profilesById.get(table.source_id):view.profiles[0];
@@ -380,11 +389,11 @@ export function DiscoveryPage({view,reload,onNew,onError,onOpenSession,onOpenOnt
     <summary><code>{label(table.name)}</code> <span className="muted">{table.rows_observed} 行{table.sampled?'抽样':'已观察'}{sourceNameOf(session,table.source_id)?` · ${sourceNameOf(session,table.source_id)}`:''}</span></summary>
     <p>主键与唯一键 · {table.keys.map(key=>key.join(' + ')).join(' / ')||'未观察到'}</p>
     {table.identity_keys.length<table.keys.length&&<p className="muted">含已观察空值的键不可用作标识。</p>}
-    <table className="mapping-table"><thead><tr><th>字段</th><th>声明类型</th><th>空值行</th><th>观测去重值</th>{rows.map((_,index)=><th key={index}>样本 {index+1}</th>)}</tr></thead>
+    <div className="mapping-table-scroll"><table className="mapping-table"><thead><tr><th>字段</th><th>声明类型</th><th>空值行</th><th>观测去重值</th>{rows.map((_,index)=><th key={index}>样本 {index+1}</th>)}</tr></thead>
      <tbody>{fields.map(column=><tr key={column.name}>
-      <td><code>{column.name}</code></td><td>{column.type||'—'}</td><td>{column.null_rows}</td><td>{column.distinct_values}</td>
+      <td><code>{column.name}</code></td><td>{valueTypeLabel(column.type)}</td><td>{column.null_rows}</td><td>{column.distinct_values}</td>
       {rows.map((row,index)=><td key={index}>{row.binary?.includes(column.name)?'二进制':display(row.values?.[column.name]).slice(0,160)}</td>)}
-     </tr>)}</tbody></table>
+     </tr>)}</tbody></table></div>
    </details>;})}
    {!draft&&<><h3>关系证据</h3><RelationshipList items={catalog.relationships} tableName={label}/></>}
    {catalog.gaps.length>0&&<ul>{catalog.gaps.map((gap,i)=><li key={i}>{gap.table?label(gap.table)+' · ':''}{gapLabels[gap.code]||gap.code}</li>)}</ul>}

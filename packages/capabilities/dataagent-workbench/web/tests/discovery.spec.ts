@@ -91,6 +91,14 @@ test('SQLite 上传、工具提交本体草案、工作台审核',async({page})=
  if(process.env.DATAAGENT_SCREENSHOT)await page.screenshot({
   path:path.join(path.dirname(process.env.DATAAGENT_SCREENSHOT),'discovery-live.png'),fullPage:true,
  });
+ // FDE2-13：390px 窄屏下发现页不横向溢出（草案表与证据表各自横向滚动）。
+ await page.setViewportSize({width:390,height:844});
+ const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
+ expect(overflow).toBeLessThanOrEqual(0);
+ if(process.env.DATAAGENT_SCREENSHOT)await page.screenshot({
+  path:path.join(path.dirname(process.env.DATAAGENT_SCREENSHOT),'discovery-narrow.png'),fullPage:true,
+ });
+ await page.setViewportSize({width:1280,height:720});
 });
 
 // 两张表的合成 Word 制度：发现页的表名显示「文件名 · 第 N 张表」，而不是

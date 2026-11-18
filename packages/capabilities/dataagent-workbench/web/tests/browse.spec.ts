@@ -127,7 +127,11 @@ test('发布本体后按本体浏览已发布实例',async({page})=>{
  const token=process.env.DATAAGENT_TEST_TOKEN||'';
  const auth={'x-dataagent-token':token};
  const ordersName=`browse-orders-${tag}.csv`;
- const csv='book,doc_no\n'+Array.from({length:12},(_,i)=>`SALE,${1001+i}`).join('\n')+'\n';
+ // 上传顺序故意打乱：实例列表默认按身份字段（book、doc_no）升序，
+ // 不能按插入顺序展示（FDE2-13）。
+ const csv='book,doc_no\n'
+  +['SALE,1005','SALE,1001','SALE,1012','SALE,1003','SALE,1010','SALE,1002',
+    'SALE,1007','SALE,1004','SALE,1009','SALE,1006','SALE,1011','SALE,1008'].join('\n')+'\n';
  const upload=await page.request.post('/api/files',{
   headers:{...auth,'x-file-name':ordersName},data:csv});
  expect(upload.ok(),await upload.text()).toBeTruthy();
@@ -187,13 +191,15 @@ test('发布本体后按本体浏览已发布实例',async({page})=>{
 
  await page.goto('/#session='+mappingSid);
  await page.reload();
- await expect(page.getByRole('heading',{name:'核对来源与 Ontology 映射'})).toBeVisible({timeout:20000});
+ await expect(page.getByRole('heading',{name:'核对来源与本体映射'})).toBeVisible({timeout:20000});
  await expect(page.getByText('识别与探查已完成')).toBeVisible({timeout:20000});
+ // FDE2-11：面包屑跟随任务目标本体（browse-sales 的注册表标题），不再写死「采购资料」。
+ await expect(page.locator('.eyebrow')).toContainText('浏览用销售模型 / 接入任务');
 
  // 4. 生成未保存的预览：预览对象存在，但已发布实例列表仍为空。
  await page.getByLabel('doc_no 转换方式').selectOption('integer');
  await page.getByRole('button',{name:'生成映射预览'}).click();
- await expect(page.getByTestId('preview-doc_no')).toHaveText('1001',{timeout:20000});
+ await expect(page.getByTestId('preview-doc_no')).toHaveText('1005',{timeout:20000});
  await page.getByRole('button',{name:'本体库'}).click();
  await page.getByTestId('concept-count-browse-sales-SalesOrder').click();
  await expect(page.getByTestId('instances-empty')).toContainText('发布后才会出现');
@@ -201,7 +207,7 @@ test('发布本体后按本体浏览已发布实例',async({page})=>{
  await expect(page.getByText('1001')).toHaveCount(0);
  await page.getByRole('button',{name:'返回本体库'}).click();
  await page.getByRole('button',{name:'返回任务'}).click();
- await expect(page.getByTestId('preview-doc_no')).toHaveText('1001',{timeout:20000});
+ await expect(page.getByTestId('preview-doc_no')).toHaveText('1005',{timeout:20000});
 
  // 4b. 在对象页人工纠正一个非标识字段，再保存发布；实例列表必须显示纠正后的值，
  // 来源必须是中文的“人工纠正 · 对象页 · 原因”，不能露出决定 ID 或 JSON 指针。
@@ -213,7 +219,7 @@ test('发布本体后按本体浏览已发布实例',async({page})=>{
  await page.getByRole('button',{name:'保存当前值并校验'}).click();
  await expect(page.getByText(/纠正已保存/)).toBeVisible({timeout:20000});
  await page.getByRole('button',{name:'返回映射页'}).click();
- await expect(page.getByTestId('preview-doc_no')).toHaveText('1001',{timeout:20000});
+ await expect(page.getByTestId('preview-doc_no')).toHaveText('1005',{timeout:20000});
 
  // 5. 保存后实例数出现，按概念列对象并显示来源定位、所属任务与修订。
  const save=page.getByRole('button',{name:'保存接入'});
@@ -235,6 +241,9 @@ test('发布本体后按本体浏览已发布实例',async({page})=>{
  await expect(page.getByTestId('instance-value-book').first()).toHaveText('SALE');
  const firstPageDocNos=await page.getByTestId('instance-value-doc_no').allTextContents();
  expect(firstPageDocNos).toHaveLength(10);
+ // 上传顺序打乱时默认仍按身份字段升序展示（FDE2-13）。
+ const firstPageNumbers=firstPageDocNos.map(Number);
+ expect(firstPageNumbers).toEqual([...firstPageNumbers].sort((a,b)=>a-b));
  await expect(page.getByTestId('instance-source').first()).toContainText(ordersName);
  await expect(page.getByTestId('instance-source').first()).toContainText('来源行');
  await expect(page.getByTestId('instance-task').first()).toContainText('接入浏览用的销售订单');
@@ -304,16 +313,66 @@ test('发布本体后按本体浏览已发布实例',async({page})=>{
  await page.getByRole('button',{name:'清除筛选'}).click();
  await expect(page.getByTestId('instance-row')).toHaveCount(10);
 
+ // 7b. 数值属性的比较筛选（FDE2-13）：doc_no 是 integer，大于 1008 命中 4 条；
+ // 字符串属性（book）不提供比较条件。
+ const compareFilter=page.getByTestId('instance-filter');
+ await compareFilter.getByLabel('属性').selectOption('doc_no');
+ await expect(compareFilter.getByLabel('条件').locator('option[value="gt"]')).toHaveCount(1);
+ await expect(compareFilter.getByLabel('条件').locator('option[value="lte"]')).toHaveCount(1);
+ await compareFilter.getByLabel('条件').selectOption('gt');
+ await compareFilter.getByLabel('值').fill('1008');
+ await page.getByRole('button',{name:'筛选',exact:true}).click();
+ await expect(page.getByTestId('instance-row')).toHaveCount(4);
+ await expect(page.getByTestId('instance-filter-summary')).toContainText('单据号 大于 1008');
+ await expect(page.getByTestId('instance-value-doc_no').first()).toHaveText('1009');
+ await page.getByRole('button',{name:'清除筛选'}).click();
+ await expect(page.getByTestId('instance-row')).toHaveCount(10);
+ await compareFilter.getByLabel('属性').selectOption('book');
+ await expect(compareFilter.getByLabel('条件').locator('option[value="gt"]')).toHaveCount(0);
+
+ // 7c. 点列头切换排序方向，恢复按钮回到身份字段升序（FDE2-13）。
+ await page.getByTestId('instance-sort-doc_no').click();
+ await page.getByTestId('instance-sort-doc_no').click();
+ const descDocNos=(await page.getByTestId('instance-value-doc_no').allTextContents()).map(Number);
+ expect(descDocNos).toEqual([...descDocNos].sort((a,b)=>b-a));
+ await page.getByTestId('instance-sort-reset').click();
+ const ascDocNos=(await page.getByTestId('instance-value-doc_no').allTextContents()).map(Number);
+ expect(ascDocNos).toEqual([...ascDocNos].sort((a,b)=>a-b));
+
+ // 7d. 390px 窄屏下实例表横向滚动，身份列（账簿、单据号）粘性固定可见（FDE2-13）。
+ await page.setViewportSize({width:390,height:844});
+ await expect(page.getByTestId('instance-table')).toBeVisible();
+ for(const cell of [page.getByTestId('instance-value-book').first(),
+  page.getByTestId('instance-value-doc_no').first()]){
+  await expect(cell).toBeVisible();
+  const box=await cell.boundingBox();
+  expect(box).toBeTruthy();
+  expect(box!.x).toBeGreaterThanOrEqual(0);
+  expect(box!.x+box!.width).toBeLessThanOrEqual(390);
+ }
+ const horizontallyScrollable=await page.locator('.instance-card .mapping-table-scroll')
+  .evaluate(el=>el.scrollWidth>el.clientWidth);
+ expect(horizontallyScrollable).toBe(true);
+ if(process.env.DATAAGENT_SCREENSHOT)await page.screenshot({
+  path:path.join(path.dirname(process.env.DATAAGENT_SCREENSHOT),'browse-narrow.png')});
+ await page.setViewportSize({width:1280,height:720});
+
  await page.getByTestId('concept-tab-Customer').click();
  await expect(page.getByTestId('instances-empty')).toContainText('发布后才会出现');
  await expect(page.getByTestId('instance-table')).toHaveCount(0);
  await page.getByTestId('concept-tab-SalesOrder').click();
  await expect(page.getByTestId('instance-row')).toHaveCount(10);
 
- // 8. 所属任务可点到只读对象页。
- await page.getByTestId('instance-task').first().getByRole('button').click();
+ // 8. 所属任务可点到只读对象页，并选中刚点的对象（FDE2-10）：跳转带 instance
+ // 参数。后端实例页返回的行集合在并行用例间不稳定，动态点一行非默认对象
+ // （默认第一个对象是 1005），再断言对象页高亮的正是刚点的那一行。
+ const docNos=await page.getByTestId('instance-value-doc_no').allTextContents();
+ const pickIndex=docNos.findIndex(doc=>doc&&doc!=='1005');
+ expect(pickIndex).toBeGreaterThan(-1);
+ await page.getByTestId('instance-row').nth(pickIndex).getByTestId('instance-task').getByRole('button').click();
  await expect(page.getByRole('heading',{name:'核对业务对象'})).toBeVisible({timeout:20000});
  await expect(page.getByText('接入已保存，对象为只读')).toBeVisible();
+ await expect(page.locator('.source-tab.active')).toContainText(`SALE · ${docNos[pickIndex]}`);
 
  // 9. M1 只允许发布一次；浏览器只模拟“注册表已切到尚无实例的修订 2”，
  // 历史修订 1 的实例查询仍走真实后端。这样不写共享 SQLite，也不会在并行
