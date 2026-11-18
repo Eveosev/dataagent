@@ -21,20 +21,16 @@ def mapping_target(session):
 
 
 def _check_discovery_source(source):
-    """Discovery accepts table-shaped sources; documents wait for D2b."""
+    """Discovery accepts table-shaped and document (docx, PDF) sources."""
     if source.kind in DISCOVERY_SOURCE_KINDS:
         return
     if source.kind == 'file':
         suffix = Path(source.locator_ref).suffix.lower()
-        if suffix in DISCOVERY_DOCUMENT_SUFFIXES:
-            raise ValueError(
-                f'ontology discovery does not support document sources yet '
-                f'({source.source_id}); wait for D2b')
-        if suffix in DISCOVERY_FILE_SUFFIXES:
+        if suffix in DISCOVERY_FILE_SUFFIXES | DISCOVERY_DOCUMENT_SUFFIXES:
             return
     raise ValueError(
-        'ontology discovery supports CSV, TSV, Excel, JSON/JSONL, REST and SQLite '
-        'sources')
+        'ontology discovery supports CSV, TSV, Excel, JSON/JSONL, REST, SQLite '
+        'and document (docx, PDF) sources')
 
 
 class SessionService:

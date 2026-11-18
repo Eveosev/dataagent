@@ -4,7 +4,9 @@ Every supported table source -- database tables, delimited/JSON record sets,
 REST record pages and Excel table regions -- is described with the same shape
 the SQLite discovery evidence already used: columns with an inferred type and
 affinity, null rates, observed distinct counts, candidate keys, controlled
-samples and explicit coverage.  Cross-source link candidates are produced by
+samples and explicit coverage.  Document sources contribute their table record
+sets (G4) plus section structure and numbered clause candidates, all with
+paragraph or in-page anchors.  Cross-source link candidates are produced by
 ``discovery_catalog`` from these tables.
 """
 from collections import Counter, defaultdict
@@ -368,6 +370,199 @@ def _flat_table(profile, allowed):
                    rows_total=total_rows, key_search=key_search)]
 
 
+# Numbered clause leads: 「第一条」, 「1.」 and 「（一）」.  The number itself is
+# the clause identity; the rest of the paragraph is its content.
+_CLAUSE_NUMBER = (r'(?:第[一二三四五六七八九十百千零〇两\d]+条|\d{1,3}[.、．](?!\d)'
+                  r'|[（(][一二三四五六七八九十\d]{1,4}[)）])')
+_CLAUSE_LINE = re.compile(r'(?m)^' + _CLAUSE_NUMBER)
+_CLAUSE_START = re.compile(_CLAUSE_NUMBER)
+
+
+def _anchor(profile, selector):
+    return {'source_ref': profile.source_id, 'source_revision': profile.source_revision,
+            'selector': selector}
+
+
+def _dedupe_names(names):
+    """Deterministic collision-free header names, in the data layer's style."""
+    used = set()
+    out = []
+    for index, raw in enumerate(names):
+        base = re.sub(r'\s+', ' ', str(raw or '').strip()) or f'column_{index + 1}'
+        name, suffix = base, 2
+        while name in used:
+            name = f'{base}_{suffix}'
+            suffix += 1
+        used.add(name)
+        out.append(name)
+    return out
+
+
+def _docx_paragraphs(profile):
+    paragraphs = profile.metadata.get('paragraphs')
+    for paragraph in paragraphs if isinstance(paragraphs, list) else []:
+        if (isinstance(paragraph, dict) and isinstance(paragraph.get('paragraph'), int)
+                and isinstance(paragraph.get('text'), str)):
+            yield paragraph
+
+
+def _docx_sections(paragraphs, profile, disclose):
+    """Heading hierarchy with the paragraph range each section covers."""
+    root, stack = [], []
+    for paragraph in paragraphs:
+        number, text = paragraph['paragraph'], paragraph['text']
+        if not text.strip():
+            continue
+        level = paragraph.get('heading_level')
+        if isinstance(level, int) and 1 <= level <= 6:
+            while stack and stack[-1]['level'] >= level:
+                stack.pop()
+            section = {
+                'level': level, 'paragraph': number,
+                'title': text if disclose else None,
+                'anchor': _anchor(profile, {'kind': 'text_span',
+                                            'unit_ref': paragraph.get('unit_ref'),
+                                            'char_start': 0, 'char_end': len(text)}),
+                'paragraph_range': [number, number],
+                'sections': [],
+            }
+            (stack[-1]['sections'] if stack else root).append(section)
+            stack.append(section)
+        for section in stack:
+            section['paragraph_range'][1] = number
+    return root
+
+
+def _docx_clauses(paragraphs, profile, disclose):
+    clauses = []
+    for paragraph in paragraphs:
+        text = paragraph['text']
+        match = _CLAUSE_START.match(text)
+        if not match:
+            continue
+        clauses.append({
+            'number': match.group(0), 'paragraph': paragraph['paragraph'],
+            'anchor': _anchor(profile, {'kind': 'text_span',
+                                        'unit_ref': paragraph.get('unit_ref'),
+                                        'char_start': match.start(), 'char_end': match.end()}),
+            'text': text if disclose else None,
+        })
+    return clauses
+
+
+def _docx_tables(profile, allowed):
+    """One evidence table per Word table record set; paragraphs stay prose."""
+    sets = profile.metadata.get('record_sets')
+    tables = []
+    if not isinstance(sets, dict):
+        return tables
+    for name in sorted(sets):
+        entry = sets[name]
+        if not isinstance(entry, dict) or entry.get('kind') != 'table':
+            continue
+        records = [row for row in entry.get('records') or [] if isinstance(row, dict)]
+        rows = [(row, set()) for row in records]
+        fields = [field for field in (entry.get('fields') or
+                                      dict.fromkeys(key for row in records for key in row))
+                  if allowed is None or field in allowed]
+        columns = {field: _column_evidence(field, {}, rows, allowed) for field in fields}
+        if not columns:
+            continue
+        keys, key_search = _inferred_keys(columns, rows)
+        tables.append(_table(name, profile.source_id, profile.kind, rows, columns, keys,
+                             sampled=profile.sampled, coverage=profile.coverage,
+                             key_origin='observed', partition=entry.get('table'),
+                             key_search=key_search))
+    return tables
+
+
+def _pdf_pages(profile, disclose):
+    """Text pages as top-level sections, with in-page clause candidates."""
+    sections, clauses = [], []
+    pages = profile.metadata.get('pages')
+    for page in pages if isinstance(pages, list) else []:
+        if not isinstance(page, dict) or not isinstance(page.get('page'), int):
+            continue
+        number, text = page['page'], page.get('text') or ''
+        sections.append({
+            'level': 1, 'page': number,
+            'anchor': _anchor(profile, {'kind': 'pdf_text_span', 'page': number,
+                                        'char_start': 0, 'char_end': len(text)}),
+        })
+        for match in _CLAUSE_LINE.finditer(text):
+            clauses.append({
+                'number': match.group(0), 'page': number,
+                'anchor': _anchor(profile, {'kind': 'pdf_text_span', 'page': number,
+                                            'char_start': match.start(),
+                                            'char_end': match.end()}),
+            })
+    return sections, clauses
+
+
+def _pdf_tables(profile, allowed):
+    """One evidence table per detected PDF table, named by its page."""
+    tables = []
+    grouped = defaultdict(list)
+    entries = profile.metadata.get('tables')
+    for entry in entries if isinstance(entries, list) else []:
+        if not isinstance(entry, dict):
+            continue
+        raw, page = entry.get('rows'), entry.get('page')
+        if not isinstance(raw, list) or len(raw) < 2 or not isinstance(page, int):
+            continue
+        header = _dedupe_names(['' if value is None else str(value) for value in raw[0]])
+        rows = []
+        for values in raw[1:]:
+            if not isinstance(values, list):
+                continue
+            record = dict(zip(header, values))
+            if any(value not in (None, '') for value in record.values()):
+                rows.append((record, set()))
+        fields = [field for field in header if allowed is None or field in allowed]
+        columns = {field: _column_evidence(field, {}, rows, allowed) for field in fields}
+        if not columns:
+            continue
+        keys, key_search = _inferred_keys(columns, rows)
+        grouped[page].append((rows, columns, keys, key_search))
+    for page in sorted(grouped):
+        entries = grouped[page]
+        for ordinal, (rows, columns, keys, key_search) in enumerate(entries, 1):
+            base = f'page:{page}' + (f'#{ordinal}' if len(entries) > 1 else '')
+            tables.append(_table(base, profile.source_id, profile.kind, rows, columns, keys,
+                                 sampled=profile.sampled, coverage=profile.coverage,
+                                 key_origin='observed', partition=page,
+                                 key_search=key_search))
+    return tables
+
+
+def _document_tables(profile, allowed):
+    if profile.kind == 'docx':
+        return _docx_tables(profile, allowed)
+    return _pdf_tables(profile, allowed)
+
+
+def _document_evidence(profile, allowed):
+    """Section structure and clause candidates; text only under a disclosure."""
+    disclose = allowed is not None
+    record_sets = []
+    if profile.kind == 'docx':
+        paragraphs = list(_docx_paragraphs(profile))
+        sections = _docx_sections(paragraphs, profile, disclose)
+        clauses = _docx_clauses(paragraphs, profile, disclose)
+        sets = profile.metadata.get('record_sets')
+        for name, entry in sorted((sets or {}).items()):
+            if isinstance(entry, dict):
+                record_sets.append({'name': name, 'kind': entry.get('kind'),
+                                    'count': entry.get('count')})
+    else:
+        sections, clauses = _pdf_pages(profile, disclose)
+        for table in _pdf_tables(profile, allowed):
+            record_sets.append({'name': table['_base'], 'kind': 'table',
+                                'count': table['rows_observed']})
+    return {'source_id': profile.source_id, 'kind': profile.kind,
+            'sections': sections, 'clauses': clauses, 'record_sets': record_sets}
+
+
 def _profile_tables(profile, allowed):
     if profile.kind in DB_KINDS:
         return _database_tables(profile, allowed)
@@ -375,6 +570,8 @@ def _profile_tables(profile, allowed):
         return _sheet_tables(profile, allowed)
     if profile.kind in FLAT_KINDS:
         return _flat_table(profile, allowed)
+    if profile.kind in DOCUMENT_KINDS:
+        return _document_tables(profile, allowed)
     return []
 
 
@@ -532,9 +729,12 @@ def collect_tables(profiles, allowed_fields):
     profiles = list(profiles)
     allowed = _normalize_allowed(profiles, allowed_fields)
     tables = []
+    documents = []
     for profile in profiles:
-        tables.extend(_profile_tables(profile, None if allowed is None
-                                      else allowed.get(profile.source_id, set())))
+        scope = None if allowed is None else allowed.get(profile.source_id, set())
+        tables.extend(_profile_tables(profile, scope))
+        if profile.kind in DOCUMENT_KINDS:
+            documents.append(_document_evidence(profile, scope))
     _assign_names(tables)
     gaps = []
     for profile in profiles:
@@ -552,6 +752,7 @@ def collect_tables(profiles, allowed_fields):
         'gaps': gaps,
         'declared': links,
         'declared_slots': slots,
+        'documents': documents,
         'source_revision': _revision(profiles),
         'structure_fingerprint': _fingerprint(profiles),
         'coverage': _coverage(profiles),

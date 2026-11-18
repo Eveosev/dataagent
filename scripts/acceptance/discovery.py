@@ -1,16 +1,23 @@
-"""Discovery phase: ontology discovery over table-shaped sources.
+"""Discovery phase: ontology discovery over table-shaped and document sources.
 
 It keeps the original SQLite acceptance and adds the D2a cases: two CSV files
 linked by a customer number plus a JSON record set, one Excel workbook with two
 table regions, an ambiguity with two equally matching targets, a REST connection
-probed end to end, composite-key inference with its search gap, and the explicit
-"wait for D2b" refusal for document sources.  All inputs are synthetic.
+probed end to end, composite-key inference with its search gap.  The D2b case
+runs a synthetic 差旅报销标准 docx (headings, numbered clauses and a standard
+table) against a 报销明细 Excel and a department CSV whose codes coincidentally
+equal the table limits: the evidence must carry sections, clause candidates and
+the table's composite candidate key, the detail must link to the standard table
+through the three-column combination, and the coincidental codes must not link.
+All inputs are synthetic.
 """
 
+import io
 import json
 import os
 import shutil
 import sqlite3
+import zipfile
 
 from .common import ROOT, call_workbench, loopback
 
@@ -327,14 +334,199 @@ def _rest_and_csv(project):
     }
 
 
-def _document_refusal(project):
-    shutil.copy2(INTAKE/'invoice.pdf', project/'policy.pdf')
-    error = call_workbench(project, 'intake_start', {
-        'goal': '从制度文件发现对象', 'mode': 'ontology_discovery',
-        'sources': [{'source_id': 'policy', 'kind': 'file', 'locator_ref': 'policy.pdf'}],
-    }, error=True)
-    assert 'D2b' in error['detail'], error
-    return {'code': error.get('error'), 'detail': error['detail']}
+STANDARD_ROWS = [
+    ['城市等级', '职级', '费用类型', '限额', '币种'],
+    ['一线', 'P1', '住宿', '400', 'CNY'],
+    ['一线', 'P1', '交通', '200', 'CNY'],
+    ['一线', 'P2', '住宿', '350', 'CNY'],
+    ['二线', 'P1', '住宿', '300', 'CNY'],
+    ['二线', 'P2', '住宿', '280', 'CNY'],
+    ['二线', 'P2', '交通', '150', 'CNY'],
+]
+DETAIL_ROWS = [
+    ['报销单号', '日期', '城市等级', '职级', '费用类型', '金额', '币种'],
+    ['BX-001', '2026-11-01', '一线', 'P1', '住宿', '380', 'CNY'],
+    ['BX-002', '2026-11-02', '一线', 'P1', '交通', '180', 'CNY'],
+    ['BX-003', '2026-11-03', '一线', 'P2', '住宿', '340', 'CNY'],
+    ['BX-004', '2026-11-04', '二线', 'P1', '住宿', '290', 'CNY'],
+]
+DEPARTMENTS_CSV = (
+    '部门编号,部门名称\n'
+    '400,华东区\n'
+    '200,华南区\n'
+    '350,华西区\n'
+    '300,华北区\n'
+    '280,华中区\n'
+    '150,东北区\n'
+)
+
+_DOCX_TYPES = (
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+    '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+    '<Default Extension="xml" ContentType="application/xml"/>'
+    '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>'
+    '</Types>')
+_DOCX_RELS = (
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+    '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>'
+    '</Relationships>')
+
+
+def _docx_paragraph(text, level=None):
+    # An explicit outline level marks the heading without needing styles.xml.
+    properties = (f'<w:pPr><w:outlineLvl w:val="{level - 1}"/></w:pPr>'
+                  if level is not None else '')
+    return f'<w:p>{properties}<w:r><w:t>{text}</w:t></w:r></w:p>'
+
+
+def _write_policy_docx(project):
+    rows = ('<w:tr>' + ''.join(
+        f'<w:tc><w:tcPr/><w:p><w:r><w:t>{cell}</w:t></w:r></w:p></w:tc>'
+        for cell in row) + '</w:tr>' for row in STANDARD_ROWS)
+    table = ('<w:tbl><w:tblPr/><w:tblGrid>' + '<w:gridCol/>' * len(STANDARD_ROWS[0])
+             + '</w:tblGrid>' + ''.join(rows) + '</w:tbl>')
+    document = (
+        '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+        '<w:body>'
+        + _docx_paragraph('差旅报销标准', 1)
+        + _docx_paragraph('总则', 2)
+        + _docx_paragraph('第一条 本标准适用于全体员工出差费用报销。')
+        + _docx_paragraph('第二条 城市等级分为一线、二线两档。')
+        + _docx_paragraph('费用标准', 2)
+        + table
+        + _docx_paragraph('附则', 2)
+        + _docx_paragraph('第三条 本标准自发布之日起执行。')
+        + '<w:sectPr/></w:body></w:document>')
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr('[Content_Types].xml', _DOCX_TYPES)
+        archive.writestr('_rels/.rels', _DOCX_RELS)
+        archive.writestr('word/document.xml', document)
+    (project/'policy.docx').write_bytes(buffer.getvalue())
+
+
+def _write_detail_xlsx(project):
+    sheet_rows = []
+    for row_number, values in enumerate(DETAIL_ROWS, start=1):
+        cells = ''.join(
+            f'<c r="{chr(ord("A") + column)}{row_number}" t="inlineStr">'
+            f'<is><t>{value}</t></is></c>'
+            for column, value in enumerate(values))
+        sheet_rows.append(f'<row r="{row_number}">{cells}</row>')
+    with zipfile.ZipFile(project/'detail.xlsx', 'w', zipfile.ZIP_DEFLATED) as book:
+        book.writestr('[Content_Types].xml', (
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+            '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+            '<Default Extension="xml" ContentType="application/xml"/>'
+            '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+            '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+            '</Types>'))
+        book.writestr('_rels/.rels', (
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
+            '</Relationships>'))
+        book.writestr('xl/workbook.xml', (
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"'
+            ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+            '<sheets><sheet name="明细" sheetId="1" r:id="rId1"/></sheets></workbook>'))
+        book.writestr('xl/_rels/workbook.xml.rels', (
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
+            '</Relationships>'))
+        book.writestr('xl/worksheets/sheet1.xml', (
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+            f'<sheetData>{"".join(sheet_rows)}</sheetData></worksheet>'))
+
+
+def _document_sources(project):
+    """A policy docx, a claim workbook and a CSV with coincidentally equal codes."""
+    _write_policy_docx(project)
+    _write_detail_xlsx(project)
+    (project/'departments.csv').write_text(DEPARTMENTS_CSV, encoding='utf-8')
+    session_id = _start(project, '从差旅报销标准和报销明细发现对象', [
+        {'source_id': 'policy', 'kind': 'file', 'locator_ref': 'policy.docx'},
+        {'source_id': 'detail', 'kind': 'file', 'locator_ref': 'detail.xlsx'},
+        {'source_id': 'departments', 'kind': 'file', 'locator_ref': 'departments.csv'},
+    ])
+    args, request = _advance(project, session_id)
+    assert request['kind'] == 'ontology_discovery'
+    tables = {table['name']: table for table in request['catalog']['tables']}
+    assert set(tables) == {'table:1', '明细', 'departments'}
+    standard = tables['table:1']
+    assert standard['kind'] == 'docx' and standard['rows_observed'] == 6
+    assert set(standard['columns']) == {'城市等级', '职级', '费用类型', '限额', '币种'}
+    assert ['城市等级', '职级', '费用类型'] in standard['identity_keys']
+
+    document, = request['catalog']['documents']
+    assert document['source_id'] == 'policy' and document['kind'] == 'docx'
+    title, = document['sections']
+    # No field-disclosure policy is configured in acceptance, so the evidence
+    # carries the heading structure and anchors without the titles themselves.
+    assert title['level'] == 1 and title['title'] is None
+    assert title['paragraph_range'] == [1, 7]
+    assert title['anchor']['selector']['unit_ref'] == 'paragraph:1'
+    assert [(section['level'], section['paragraph_range'])
+            for section in title['sections']] == [(2, [2, 4]), (2, [5, 5]), (2, [6, 7])]
+    assert [clause['number'] for clause in document['clauses']] == ['第一条', '第二条', '第三条']
+    assert all(clause['text'] is None and clause['anchor'] for clause in document['clauses'])
+    assert document['record_sets'] == [
+        {'name': 'paragraphs', 'kind': 'paragraph', 'count': 7},
+        {'name': 'table:1', 'kind': 'table', 'count': 6},
+    ]
+
+    # The detail links through the three-column composite key; the department
+    # codes that coincidentally equal the limits must not become a link.
+    links = request['catalog']['relationships']
+    assert [(link['source_table'], link['source_columns'], link['target_table'],
+             link['target_columns']) for link in links] == [
+        ('明细', ['城市等级', '职级', '费用类型'], 'table:1',
+         ['城市等级', '职级', '费用类型'])]
+    link, = links
+    assert link['origin'] == 'sample_supported' and link['ambiguous'] is False
+    assert link['matched_rows'] == 4 and link['checked_rows'] == 4
+    assert link['matched_distinct_keys'] == 4
+
+    draft = call_workbench(project, 'ontology_discovery_propose', {
+        **args, 'expected_revision': request['expected_revision'],
+        'proposal': {
+            'source_revision': request['source_revision'],
+            'entities': [
+                {'table': 'table:1', 'name': 'ExpenseStandard', 'grain': '每档费用标准一行',
+                 'identity': ['城市等级', '职级', '费用类型']},
+                {'table': '明细', 'name': 'ExpenseClaim', 'grain': '每笔报销一行',
+                 'identity': ['报销单号'],
+                 'properties': [{'column': '金额', 'name': 'amount'}]},
+                {'table': 'departments', 'name': 'Department', 'grain': '每个部门一行',
+                 'identity': ['部门编号']},
+            ],
+            'relationships': [{'evidence_id': link['id'], 'name': 'followsStandard'}],
+        },
+    })
+    assert draft['state'] == 'pending' and draft['unresolved_tables'] == []
+    return {
+        'session_id': session_id,
+        'sections': [{'level': section['level'],
+                      'paragraph_range': section['paragraph_range']}
+                     for section in title['sections']],
+        'clauses': [clause['number'] for clause in document['clauses']],
+        'standard': {'name': standard['name'], 'rows_observed': standard['rows_observed'],
+                     'columns': sorted(standard['columns']),
+                     'identity_keys': standard['identity_keys']},
+        'relationship': {'source': link['source_table'],
+                         'source_columns': link['source_columns'],
+                         'target': link['target_table'],
+                         'target_columns': link['target_columns'],
+                         'matched_rows': link['matched_rows'],
+                         'matched_distinct_keys': link['matched_distinct_keys']},
+        'draft_ref': draft['ref'],
+    }
 
 
 def verify(project):
@@ -386,7 +578,7 @@ def verify(project):
         'ambiguous_targets': _ambiguous_targets(project),
         'rest_sources': _rest_and_csv(project),
         'composite_keys': _composite_keys(project),
-        'document_refusal': _document_refusal(project),
+        'document_sources': _document_sources(project),
     }
 
 
