@@ -596,8 +596,14 @@ def _relation_specs(relations, evidence_relations, catalog_links):
             continue
         evidence = (evidence_relations or {}).get(name) or {}
         link = (catalog_links or {}).get(evidence.get('evidence_id')) or {}
-        pairs = list(zip(evidence.get('source_columns') or [],
-                         evidence.get('target_columns') or []))
+        source_columns = evidence.get('source_columns') or []
+        target_columns = evidence.get('target_columns') or []
+        # Both sides of the join are compared at full length: zip() silently
+        # truncates, so a four-against-three mapping used to pass as a
+        # three-column join.  Unequal widths leave no pairs, which no gold
+        # relation can match and which the width check counts as wrong.
+        pairs = list(zip(source_columns, target_columns)) \
+            if len(source_columns) == len(target_columns) else []
         specs.append({
             'name': name, 'definition': definition, 'evidence': evidence,
             'link': link, 'pairs': pairs,
@@ -2094,19 +2100,30 @@ def _detail(payload):
     return str(payload.get('detail') or '')
 
 
+# The workbench's exact wordings for "the source changed since it was
+# observed" (dataagent-workbench ontology_publish).  They are matched as
+# whole phrases: a fuzzy "mentions source and something snapshot-ish" test
+# also accepted ``source snapshot reference is missing``, which is a
+# different defect and must fail N2.
+_SOURCE_CHANGE_DETAILS = (
+    'source changed since it was observed',
+    'source snapshot changed',
+    'source structure changed',
+    'source observation changed',
+    '来源已变更',
+    '来源已变化',
+)
+
+
 def _is_source_change_rejection(payload):
     """Whether a refused confirmation names the source snapshot change.
 
-    A refusal for a stale candidate, a task-revision mismatch or any other
-    gate must not be accepted as the N2 source-change case.
+    Only the exact change wordings above count.  A refusal for a stale
+    candidate, a task-revision mismatch, a missing snapshot reference or an
+    unreadable source is a different gate and must not pass N2.
     """
-    text = ' '.join((_detail(payload), _code(payload))).casefold()
-    mentions_source = 'source' in text or '来源' in text
-    mentions_change = any(token in text for token in (
-        'changed', 'change', 'snapshot', 'observation',
-        '变更', '变化', '快照', '观察',
-    ))
-    return mentions_source and mentions_change
+    text = _detail(payload).casefold()
+    return any(phrase in text for phrase in _SOURCE_CHANGE_DETAILS)
 
 
 def _issue_reasons(payload, limit=4):
