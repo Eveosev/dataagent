@@ -160,7 +160,7 @@ def _check_native_mapping(ontology: OntologyRevision, mapping: MappingSpec) -> N
         if name not in ontology.properties:
             raise OssieValidationError(f"{pointer('mapping', 'bindings', name)} is not an ontology property")
     for name, bindings in mapping.relation_bindings.items():
-        if name not in ontology.relations or set(bindings) != set(ontology.relations[name]):
+        if name not in ontology.relations or set(bindings) != set(ontology.relation_roles(name)):
             raise OssieValidationError(f"{pointer('mapping', 'relation_bindings', name)} has unknown or missing roles")
 
 
@@ -197,7 +197,8 @@ def _definition_document(ontology, mapping, facts, assertions, loss):
 
     observed_types = _role_concepts(facts, assertions)
     relations = {}
-    for name, roles in ontology.relations.items():
+    for name in ontology.relations:
+        roles = ontology.relation_roles(name)
         path = pointer("ontology", "relations", name)
         bindings = mapping.relation_bindings.get(name)
         if name in properties:
@@ -267,7 +268,7 @@ def _export_bindings(ontology, mapping, property_defs, relation_defs, loss):
         if definition is None:
             loss("unsupported_relation_binding", path, "The relation definition travels in the sidecar")
             continue
-        role_names = ontology.relations[name]
+        role_names = ontology.relation_roles(name)
         root_binding = bindings[role_names[0]]
         if root_binding.extensions:
             loss("dataagent_extensions", f"{path}/{pointer(role_names[0]).lstrip('/')}/extensions",
@@ -319,6 +320,10 @@ def export_ossie(
     source: str | None = None,
 ) -> OssieExchange:
     """Project the supported subset and retain the original DataAgent JSON contracts."""
+    if len(ontology.concepts) != 1:
+        raise OssieValidationError(
+            f"/ontology: OSSIE exchange supports a single concept for now; "
+            f"{ontology.id}@{ontology.revision} defines {len(ontology.concepts)}")
     _check_native_mapping(ontology, mapping)
     instances, assertions, facts = list(instances), list(assertions), list(facts)
     losses: list[OssieLoss] = []
@@ -609,7 +614,7 @@ def _import_mapping(document, ontology, role_concepts, dataset, columns, fingerp
                 if name in ontology.properties:
                     properties[name] = values[0]
                 else:
-                    first_role, *other_roles = ontology.relations[name]
+                    first_role, *other_roles = ontology.relation_roles(name)
                     relations[name] = {
                         first_role: FieldBinding(source_field="$entity"),
                         **dict(zip(other_roles, values, strict=True)),

@@ -99,3 +99,106 @@ def test_materialized_nary_relation_has_ontology_role_order_and_evidence():
     assert [r.role for r in facts[0].role_bindings]==['invoice','amount','currency']
     assert facts[0].role_bindings[1].value==Decimal('1')
     assert facts[0].assertion_refs
+
+
+def multi_concept_ontology():
+    return OntologyRevision.model_validate({
+        'id': 'expense', 'revision': '1',
+        'concepts': {
+            'expense_line': {
+                'entity_type': 'ExpenseLine',
+                'properties': {'line_no': {'value_type': 'string', 'required': True},
+                               'city': {'value_type': 'string'},
+                               'amount': {'value_type': 'decimal', 'required': True}},
+                'identity_fields': ['line_no']},
+            'expense_standard': {
+                'entity_type': 'ExpenseStandard',
+                'properties': {'standard_no': {'value_type': 'string', 'required': True},
+                               'city': {'value_type': 'string'},
+                               'limit': {'value_type': 'decimal', 'required': True}},
+                'identity_fields': ['standard_no']}},
+        'relations': {'applies_to': {'roles': ['line', 'standard'],
+                                      'subject_concept': 'expense_line',
+                                      'object_concept': 'expense_standard'}}})
+
+
+def test_second_concept_materializes_with_its_own_identity_and_type():
+    onto=multi_concept_ontology()
+    m=MappingSpec(id='m',revision='1',ontology_revision='expense@1',concept='expense_standard',
+        source_fingerprint='schema',bindings={'standard_no':{'source_field':'number'},
+        'city':{'source_field':'city'},'limit':{'source_field':'amount','transform':'decimal'}})
+    p=profile([{'number':'STD-1','city':'北京','amount':'500'}])
+    result=materialize(onto,m,[p],scope='T')
+    assert [i.entity_type for i in result.instances]==['ExpenseStandard']
+    assert result.instances[0].values=={'standard_no':'STD-1','city':'北京','limit':Decimal('500')}
+    assert not result.issues
+
+
+def test_mapping_without_concept_cannot_target_a_multi_concept_ontology():
+    onto=multi_concept_ontology()
+    m=MappingSpec(id='m',revision='1',ontology_revision='expense@1',
+        source_fingerprint='schema',bindings={'standard_no':{'source_field':'number'}})
+    with pytest.raises(ValueError):
+        materialize(onto,m,[profile([{'number':'STD-1'}])],scope='T')
+
+
+def test_mapping_cannot_bind_properties_of_another_concept():
+    onto=multi_concept_ontology()
+    m=MappingSpec(id='m',revision='1',ontology_revision='expense@1',concept='expense_standard',
+        source_fingerprint='schema',bindings={'line_no':{'source_field':'number'}})
+    with pytest.raises(ValueError):
+        materialize(onto,m,[profile([{'number':'L1'}])],scope='T')
+
+
+def test_relation_bindings_require_the_subject_concept():
+    onto=multi_concept_ontology()
+    m=MappingSpec(id='m',revision='1',ontology_revision='expense@1',concept='expense_standard',
+        source_fingerprint='schema',bindings={'standard_no':{'source_field':'number'}},
+        relation_bindings={'applies_to':{
+            'standard':{'source_field':'number'},
+            'line':{'source_field':'$entity'}}})
+    with pytest.raises(ValueError):
+        materialize(onto,m,[profile([{'number':'STD-1'}])],scope='T')
+
+
+def test_relation_on_the_mapped_concept_materializes():
+    onto=multi_concept_ontology()
+    m=MappingSpec(id='m',revision='1',ontology_revision='expense@1',concept='expense_line',
+        source_fingerprint='schema',bindings={'line_no':{'source_field':'number'},
+        'city':{'source_field':'city'},'amount':{'source_field':'amount','transform':'decimal'}},
+        relation_bindings={'applies_to':{
+            'line':{'source_field':'$entity'},
+            'standard':{'source_field':'city'}}})
+    p=profile([{'number':'L1','city':'STD-1','amount':'100'}])
+    result=materialize(onto,m,[p],scope='T')
+    assert [i.entity_type for i in result.instances]==['ExpenseLine']
+    facts=[f for f in result.facts if f.relation=='applies_to']
+    assert [r.role for r in facts[0].role_bindings]==['line','standard']
+
+
+def test_legacy_definition_still_materializes_without_a_concept():
+    m=mapping()
+    result=materialize(ontology(),m,[profile([{'number':'A','company':'C','minor':'100'}])],scope='T')
+    assert result.instances[0].entity_type=='Invoice'
+
+
+def test_row_issues_carry_source_and_entity_for_web_jumps():
+    m=MappingSpec(id='m',revision='1',ontology_revision='invoice@1',
+        source_fingerprint='schema',bindings={'number':{'source_field':'number'},
+        'company':{'source_field':'company'},'amount':{'source_field':'minor','transform':'decimal'}})
+    p=profile([{'number':'A','company':'C','minor':'not-a-number'}])
+    result=materialize(ontology(),m,[p],scope='T')
+    for code in ('ontology.conversion_failed','ontology.required_value_missing'):
+        issue=next(i for i in result.issues if i['code']==code)
+        assert issue['source_id']=='source'
+        assert issue['entity_id']
+
+
+def test_ossie_export_rejects_a_multi_concept_ontology():
+    from dataagent_ontology.adapters.ossie import OssieValidationError, export_ossie
+    onto=multi_concept_ontology()
+    m=MappingSpec(id='m',revision='1',ontology_revision='expense@1',concept='expense_line',
+        source_fingerprint='schema',bindings={'line_no':{'source_field':'number'}})
+    with pytest.raises(OssieValidationError) as raised:
+        export_ossie(onto,m)
+    assert 'single concept' in str(raised.value)

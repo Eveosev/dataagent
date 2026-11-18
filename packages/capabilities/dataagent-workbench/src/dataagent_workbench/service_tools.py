@@ -42,7 +42,8 @@ def _invoke(wb, name, args):
     if name == 'intake_start':
         goal = WorkSpec(id=uuid4().hex,goal=args['goal'],
             acceptance_criteria=args.get('acceptance_criteria',['来源可核对']),authorization_ref=wb.authorization)
-        handle = wb.sessions.start([SourceSelection.model_validate(s) for s in args['sources']],goal,wb.ctx,mode=typed.mode)
+        handle = wb.sessions.start([SourceSelection.model_validate(s) for s in args['sources']],goal,wb.ctx,
+            mode=typed.mode,target=typed.target)
         return CapabilityResult(status=CapabilityStatus.pending,data=handle.model_dump(mode='json'),
             continuation=Continuation(job_ref=handle.job_ref))
     if name == 'intake_status':

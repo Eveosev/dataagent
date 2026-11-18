@@ -17,6 +17,7 @@ from .adapters.layer_client import DataLayerProbeError, LayerClient,installed_da
 from .inference_requests import mapping_request
 from .document_fields import ReplayError, extract_fields, replay_fields
 from .ontology_discovery import is_discovery
+from .session_service import mapping_target
 
 
 BUDGET_GAP = 'time_budget_exceeded'
@@ -152,6 +153,22 @@ class IntakeService:
             if row is None:raise ValueError('selected source observation missing')
             out.append(SourceProfile.model_validate(row['body']))
         return out
+
+    def _target(self,session):
+        """(ontology, concept name, concept definition) fixed on this task.
+
+        The builtin definition remains the default target for tasks that
+        predate pinned targets or were started without one.
+        """
+        wb=self.wb
+        ext=mapping_target(session)
+        if ext is not None:
+            ontology=wb.ontology.definition(f"{ext['ontology_id']}@{ext['revision']}",wb.ctx)
+            name,concept=ontology.resolve_concept(ext.get('concept',''))
+        else:
+            ontology=wb.definition
+            name,concept=ontology.resolve_concept()
+        return ontology,name,concept
 
     def _source_descriptors(self, session):
         """Stable source identity shown next to original values and positions."""
@@ -388,14 +405,14 @@ class IntakeService:
         identity-unresolved candidates are reported separately and never block
         the other objects.
         """
-        definition = self.wb.definition
+        _, _, concept = self._target(session)
         labels = self._object_labels(session, body)
         sources = self._source_descriptors(session)
         instances = {instance['id']: instance for instance in body.get('instances') or []}
         keyed, unidentified = {}, []
         for entity_id, instance in instances.items():
             values = instance.get('values') or {}
-            keys = [values.get(field) for field in definition.identity_fields]
+            keys = [values.get(field) for field in concept.identity_fields]
             if entity_id.startswith('candidate:') or any(value in (None, '') for value in keys):
                 anchors = [anchor for field_anchors in (instance.get('source_anchors') or {}).values()
                            for anchor in field_anchors]
@@ -666,11 +683,12 @@ class IntakeService:
         """Order-independent fingerprint set identifying the source combination."""
         return sorted({profile.metadata['structure_fingerprint'] for profile in profiles})
 
-    def _verified_mapping_keys(self,profiles):
+    def _verified_mapping_keys(self,ontology,concept_name,profiles):
         wb=self.wb
-        revision=f'{wb.definition.id}@{wb.definition.revision}'
-        keys=[digest([wb.scope,self._fingerprints(profiles),revision])]
-        # Older builds registered a single source under the bare fingerprint string.
+        revision=f'{ontology.id}@{ontology.revision}'
+        keys=[digest([wb.scope,self._fingerprints(profiles),revision,concept_name])]
+        # Older builds cached without the concept component.
+        keys.append(digest([wb.scope,self._fingerprints(profiles),revision]))
         if len(profiles)==1:
             keys.append(digest([wb.scope,profiles[0].metadata['structure_fingerprint'],revision]))
         return keys
@@ -728,7 +746,8 @@ class IntakeService:
         return proposals if len(used)==len(records) else None
 
     def _reuse_verified_mapping(self,session,profiles,ctx):
-        for key in self._verified_mapping_keys(profiles):
+        ontology,concept_name,_=self._target(session)
+        for key in self._verified_mapping_keys(ontology,concept_name,profiles):
             cached=self.wb.store.current('verified_mapping',key,scope=self.wb.scope)
             if cached is None:continue
             session,profiles,failures=self._replay_derived_fields(session,profiles,cached,ctx)
@@ -787,7 +806,7 @@ class IntakeService:
             if profile.source_id in updates:continue
             try:
                 updated=replay_fields(profile,specs,
-                                      identity_fields=tuple(self.wb.definition.identity_fields))
+                                      identity_fields=tuple(self._target(session)[2].identity_fields))
             except ReplayError as exc:
                 failures.append({'source_id':profile.source_id,
                                  'fields':exc.failures,
@@ -879,7 +898,8 @@ class IntakeService:
                 request['resume']=profiles[0].metadata.get('resume')
             request['issues']=list(s.issues)
             return request
-        request=mapping_request(s, profiles, self.wb.definition, self.wb.allowed_model_fields)
+        ontology,concept_name,_=self._target(s)
+        request=mapping_request(s, profiles, ontology, self.wb.allowed_model_fields, concept_name)
         # The agent needs the failure code and the continuation point on the
         # same request that tells it to retry, not only in an internal log.
         request['issues']=list(s.issues)
@@ -916,8 +936,9 @@ class IntakeService:
         record = wb.store.get('profile', profile_id, revision, scope=wb.scope)
         profile = SourceProfile.model_validate(record['body'])
         allowed = None if wb.allowed_model_fields is None else wb.allowed_model_fields.get(source_id, [])
+        _, _, concept = self._target(session)
         updated = extract_fields(profile, fields, allowed, remember=True,
-                                 identity_fields=tuple(self.wb.definition.identity_fields))
+                                 identity_fields=tuple(concept.identity_fields))
         versions = dict(session.selected_versions)
         if 'preview' in versions:
             # Re-proposing after extraction must still find the web corrections
@@ -952,9 +973,9 @@ class IntakeService:
                 return ref, body
         return None, None
 
-    def _object_label(self, instance, names):
+    def _object_label(self, instance, names, identity_fields):
         values = instance.get('values') or {}
-        keys = [str(values[field]) for field in self.wb.definition.identity_fields
+        keys = [str(values[field]) for field in identity_fields
                 if values.get(field) not in (None, '')]
         if keys:
             return ' · '.join(keys)
@@ -978,7 +999,8 @@ class IntakeService:
     def _object_labels(self, session, body):
         names = {source.source_id: str(source.options.get('display_name') or source.locator_ref)
                  for source in session.sources}
-        return {instance['id']: self._object_label(instance, names)
+        identity_fields = self._target(session)[2].identity_fields
+        return {instance['id']: self._object_label(instance, names, identity_fields)
                 for instance in body.get('instances', []) if instance.get('id')}
 
     def issue_summary(self, session, body):
@@ -1024,7 +1046,7 @@ class IntakeService:
             summary.append(item)
         return summary
 
-    def _refresh_preview(self, body):
+    def _refresh_preview(self, body, concept):
         fields = MappingPreview.model_fields
         data = {key: value for key, value in body.items() if key in fields}
         # The stored body is JSON; restore typed business values on a copy so
@@ -1034,7 +1056,7 @@ class IntakeService:
         for instance in data.get('instances', []):
             instance = dict(instance)
             values = dict(instance.get('values') or {})
-            for prop, definition in self.wb.definition.properties.items():
+            for prop, definition in concept.properties.items():
                 if values.get(prop) is None:
                     continue
                 try:
@@ -1088,7 +1110,7 @@ class IntakeService:
 
     def _apply_corrections(self, session, body, corrections, prior_labels):
         """Apply retained/inherited corrections and rebuild the affected preview evidence."""
-        ontology = self.wb.definition
+        _, _, concept = self._target(session)
         mapping = body.get('mapping') or {}
         instances = {instance['id']: instance for instance in body.get('instances', [])}
         applied, conflicts, unresolved = [], [], []
@@ -1098,7 +1120,7 @@ class IntakeService:
                           if key != 'object_label'}
             entity_id = correction.get('entity_id')
             prop = correction.get('property')
-            definition = ontology.properties.get(prop) if isinstance(prop, str) else None
+            definition = concept.properties.get(prop) if isinstance(prop, str) else None
             target = instances.get(entity_id)
             label = (prior_labels.get(entity_id) or label_hint
                      or entity_id or '未知对象')
@@ -1110,7 +1132,7 @@ class IntakeService:
                 conflicts.append((label, prop, '目标属性不在当前本体中', entity_id))
                 unresolved.append({**correction, 'object_label': label})
                 continue
-            if prop in ontology.identity_fields:
+            if prop in concept.identity_fields:
                 conflicts.append((label, prop, '身份字段纠正会改变对象标识，需要在网页重新核对', entity_id))
                 unresolved.append({**correction, 'object_label': label})
                 continue
@@ -1140,7 +1162,7 @@ class IntakeService:
             touched = {(correction.get('entity_id'), correction.get('property'))
                        for correction, _, _, _, _ in applied}
             selected = [fact for fact in body.get('facts', [])
-                        if not (fact.get('relation') in ontology.properties
+                        if not (fact.get('relation') in concept.properties
                                 and any((role.get('value'), fact.get('relation')) in touched
                                         for role in fact.get('role_bindings', [])
                                         if role.get('role') == 'subject'))]
@@ -1150,7 +1172,7 @@ class IntakeService:
                 entity_id = target['id']
                 roles = [RoleBinding(role='subject', value=entity_id, value_type='reference'),
                          RoleBinding(role='value', value=value,
-                                     value_type=ontology.properties[prop].value_type)]
+                                     value_type=concept.properties[prop].value_type)]
                 relations = [(prop, roles)]
                 binding = bindings.get(prop)
                 for fact in list(selected):
@@ -1240,7 +1262,7 @@ class IntakeService:
         current_keys = {(correction.get('entity_id'), correction.get('property'))
                         for correction in (*((body.get('extensions') or {}).get(_PENDING_CORRECTIONS) or []),
                                            *(body.get('corrections') or []))}
-        ontology = self.wb.definition
+        _, _, concept = self._target(session)
 
         def anchor_keys(instance, source_ids, prop=None):
             anchors = instance.get('source_anchors') or {}
@@ -1283,13 +1305,13 @@ class IntakeService:
                         continue
                     if entity_id not in current_instances:
                         continue
-                    if prop not in ontology.properties or prop in ontology.identity_fields:
+                    if prop not in concept.properties or prop in concept.identity_fields:
                         continue
                     if str(correction.get('reason') or '').startswith('撤销纠正'):
                         continue
                     try:
                         value = _typed(correction.get('value'),
-                                       ontology.properties[prop].value_type)
+                                       concept.properties[prop].value_type)
                     except (ValueError, ArithmeticError):
                         continue
                     if value is None:
@@ -1311,7 +1333,7 @@ class IntakeService:
                         if not old_evidence or not old_evidence <= current_evidence:
                             continue
                     values = instance.get('values') or {}
-                    label = ' · '.join(str(values[field]) for field in ontology.identity_fields
+                    label = ' · '.join(str(values[field]) for field in concept.identity_fields
                                        if values.get(field) not in (None, ''))
                     found[(entity_id, prop)] = {
                         'decision_ref': correction.get('decision_ref'),
@@ -1411,7 +1433,12 @@ class IntakeService:
         if is_discovery(s):
             raise ValueError('use ontology_discovery_propose for this intake')
         if s.revision!=expected_revision:raise VersionConflict('session changed; reload proposal inputs')
-        if proposal.ontology_revision!=f'{wb.definition.id}@{wb.definition.revision}':raise ValueError('target ontology outside task')
+        ontology,concept_name,concept=self._target(s)
+        if proposal.ontology_revision!=f'{ontology.id}@{ontology.revision}':raise ValueError('target ontology outside task')
+        try:
+            named,_=ontology.resolve_concept(proposal.concept)
+        except KeyError as exc:raise ValueError(f'unknown concept in ontology {ontology.id}: {proposal.concept}')from exc
+        if named!=concept_name:raise ValueError('target concept outside task')
         observations=[p for p in self._profiles(s) if p.metadata['structure_fingerprint']==proposal.source_fingerprint]
         if not observations:raise ValueError('proposal does not match a selected source')
         mid=s.id+':mapping'
@@ -1425,7 +1452,7 @@ class IntakeService:
         hint=self.inheritance_hint(s,body)
         if hint:body['inheritance']=hint
         else:body.pop('inheritance',None)
-        preview=self._refresh_preview(body)
+        preview=self._refresh_preview(body,concept)
         versions={**s.selected_versions,'preview':preview.id+'@1','mapping':mid+'@'+revision}
         if prior_ref and pending:versions['corrections_from']=prior_ref
         else:versions.pop('corrections_from',None)
@@ -1446,8 +1473,16 @@ class IntakeService:
         selected = {source.source_id for source in session.sources}
         if set(proposals) != selected or {profile.source_id for profile in observations} != selected:
             raise ValueError('provide one mapping for each observed source')
-        if {proposal.ontology_revision for proposal in proposals.values()} != {f'{wb.definition.id}@{wb.definition.revision}'}:
+        ontology, concept_name, concept = self._target(session)
+        if {proposal.ontology_revision for proposal in proposals.values()} != {f'{ontology.id}@{ontology.revision}'}:
             raise ValueError('target ontology outside task')
+        for proposal in proposals.values():
+            try:
+                named, _ = ontology.resolve_concept(proposal.concept)
+            except KeyError as exc:
+                raise ValueError(f'unknown concept in ontology {ontology.id}: {proposal.concept}') from exc
+            if named != concept_name:
+                raise ValueError('target concept outside task')
         if len({proposal.identity_strategy for proposal in proposals.values()}) != 1:
             raise ValueError('all mappings must use the same identity strategy')
         versions = dict(session.selected_versions)
@@ -1472,7 +1507,7 @@ class IntakeService:
         hint=self.inheritance_hint(session,body)
         if hint:body['inheritance']=hint
         else:body.pop('inheritance',None)
-        preview=self._refresh_preview(body)
+        preview=self._refresh_preview(body, concept)
         versions.update(preview=preview.id+'@1', mapping=f'{primary.id}@{primary.revision}')
         if prior_ref and pending:versions['corrections_from']=prior_ref
         else:versions.pop('corrections_from',None)
@@ -1557,7 +1592,8 @@ class IntakeService:
                                 source.kind if source else None,mapping)]
             if len(records)==len(selected):
                 fingerprints=sorted({record['mapping']['source_fingerprint'] for record in records})
-                key=digest([wb.scope,fingerprints,f'{wb.definition.id}@{wb.definition.revision}'])
+                ontology,concept_name,_=self._target(s)
+                key=digest([wb.scope,fingerprints,f'{ontology.id}@{ontology.revision}',concept_name])
                 cached=wb.store.current('verified_mapping',key,scope=wb.scope)
                 entry={'source_fingerprints':fingerprints,'sources':records,'release_ref':versions['release']}
                 if len(records)==1:entry['mapping']=records[0]['mapping']
@@ -1592,9 +1628,10 @@ class IntakeService:
         draft=self.wb.store.current('ui_draft',s.id,scope=wb.scope)
         profiles = self._profiles(s)
         failure = self._replay_failure(s)
+        ontology,concept_name,_=self._target(s)
         return {'session':s.model_dump(mode='json'),'profiles':[p.model_dump(mode='json') for p in profiles],
             'discovery':wb.discovery.state(s, profiles),
-            'ontology':wb.definition.model_dump(mode='json'),'preview':body,
+            'ontology':ontology.model_dump(mode='json'),'ontology_concept':concept_name,'preview':body,
             'draft':draft['body'] if draft else {},
             'issue_count':body['issue_count'] if body else len(s.issues),
             'dispositions':self.disposition_entries(s),
@@ -1620,7 +1657,7 @@ class IntakeService:
         id,rev=s.selected_versions['preview'].rsplit('@',1)
         row=wb.store.get('preview',id,rev,scope=wb.scope)
         if row['body']['review_state']!='needs_revalidation':raise ValueError('preview does not need correction validation')
-        body=revalidate_corrections(row['body'],wb.definition,wb.scope)
+        body=revalidate_corrections(row['body'],self._target(s)[0],wb.scope)
         next_rev=str(int(rev)+1);body['revision']=next_rev
         wb.sessions.update(s.id,s.revision,{'selected_versions':{**s.selected_versions,'preview':id+'@'+next_rev},
             'issues':body['issues'],'next_actions':['review_mapping']},ctx,

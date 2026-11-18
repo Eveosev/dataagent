@@ -25,12 +25,14 @@ class OntologyService:
         if ontology.revision!=revision:raise VersionConflict('ontology revision must advance exactly once')
         self.store.commit(ChangeSet(writes=[Write('ontology',ontology.id,self.scope,body,current['revision'] if current else None)]))
 
-    def definition(self,ref,ctx):
+    def definition(self,ref,ctx,concept=None):
         self.check(ctx)
         id,revision=ref.rsplit('@',1)
         row=self.store.get('ontology',id,revision,scope=self.scope)
         if row is None:raise KeyError('ontology not registered')
-        return OntologyRevision.model_validate(row['body'])
+        model=OntologyRevision.model_validate(row['body'])
+        if concept:model.resolve_concept(concept)
+        return model
 
     def prepare_preview(self,mapping,observations,ctx,*,source_mappings=None,dispositions=None):
         self.check(ctx)
@@ -90,12 +92,14 @@ class OntologyService:
                 raise ValueError('instance correction needs entity_id, property, value and reason '
                                  '(use entity_id, not entity)')
             ontology=self.definition(body['ontology_revision'],ctx)
+            mapping=body.get('mapping') or {}
+            _,concept=ontology.resolve_concept(mapping.get('concept','') if isinstance(mapping,dict) else '')
             prop=changes['property']
-            if prop not in ontology.properties:raise ValueError('unknown target property')
+            if prop not in concept.properties:raise ValueError('unknown target property')
             targets=[i for i in body['instances'] if i['id']==changes['entity_id']]
             if len(targets)!=1:raise ValueError('unknown correction target')
-            value=_typed(changes['value'],ontology.properties[prop].value_type)
-            if value is None and ontology.properties[prop].required:raise ValueError('required property cannot be null')
+            value=_typed(changes['value'],concept.properties[prop].value_type)
+            if value is None and concept.properties[prop].required:raise ValueError('required property cannot be null')
             from pydantic_core import to_jsonable_python
             targets[0]['values'][prop]=to_jsonable_python(value)
             targets[0]['unresolved']=[item for item in targets[0].get('unresolved',[]) if item!=prop]

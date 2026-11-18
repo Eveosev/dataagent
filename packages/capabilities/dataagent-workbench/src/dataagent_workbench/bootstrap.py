@@ -24,7 +24,6 @@ class Workbench:
         self.subject = 'local-owner:'+str(os.getuid())
         self.authorization = 'local-owner:'+hashlib.sha256((self.scope+self.subject).encode()).hexdigest()[:24]
         self.store = SqliteWorkbenchStore(self.root/'db/workbench.sqlite3')
-        self.sessions = SessionService(self.store,self.scope,self.subject,self.authorization)
         self.layer_client=layer_client
         policy=self.root/'model-context.json'
         self.allowed_model_fields=(allowed_model_fields if allowed_model_fields is not None
@@ -32,8 +31,13 @@ class Workbench:
         from dataagent_ontology.service import OntologyService
         from dataagent_ontology.registry import load_definition
         self.ontology=OntologyService(self.store,scope=self.scope,subject=self.subject,authorization=self.authorization)
+        # The builtin procurement ontology stays registered as the default
+        # mapping target for tasks that do not name one.
         self.definition=load_definition(Path(__file__).parent/'ontologies/procurement.json')
         self.ontology.register(self.definition,self.ctx)
+        # Read lazily: a host may swap the builtin and register its new revision.
+        self.sessions = SessionService(self.store,self.scope,self.subject,self.authorization,
+            default_target=lambda:self.definition)
         from .intake_service import IntakeService
         self.intake=IntakeService(self)
         from .ontology_discovery import DiscoveryService

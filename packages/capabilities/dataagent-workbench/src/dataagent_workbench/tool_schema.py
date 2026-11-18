@@ -11,10 +11,18 @@ class Input(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
 
+class StartTarget(Input):
+    """Mapping target pinned on the task (D0)."""
+    ontology_id: str = Field(min_length=1, description='目标本体 ID（已注册）')
+    concept: str | None = Field(default=None, description='目标概念；单概念本体可省略')
+
+
 class Start(Input):
     goal:str=Field(min_length=1)
     sources:list[SourceSelection]=Field(min_length=1)
     mode: Mode = "mapping"
+    target: StartTarget | None = Field(default=None,
+        description='映射目标（本体与概念）；缺省用内置采购本体的唯一概念')
 
 
 class Session(Input):

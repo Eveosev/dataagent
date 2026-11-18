@@ -122,6 +122,7 @@ export type Extensions10 = {
 export type SourceField = string;
 export type Transform =
   "identity" | "decimal" | "minor_to_major" | "integer" | "date" | "datetime" | "enum" | "combine" | "choose";
+export type Concept = string;
 /**
  * Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.
  */
@@ -222,6 +223,7 @@ export interface Values {
 }
 export interface MappingSpec {
   bindings: Bindings;
+  concept?: Concept;
   extensions?: Extensions11;
   id: Id2;
   identity_strategy?: IdentityStrategy;

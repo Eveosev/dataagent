@@ -1,0 +1,97 @@
+{
+  "$comment": "generated from dataagent_contracts.ontology:ConceptDefinition; do not edit",
+  "$defs": {
+    "PropertyDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "default": "",
+          "title": "Description",
+          "type": "string"
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "required": {
+          "default": false,
+          "title": "Required",
+          "type": "boolean"
+        },
+        "value_type": {
+          "enum": [
+            "string",
+            "decimal",
+            "integer",
+            "boolean",
+            "date",
+            "datetime",
+            "reference"
+          ],
+          "title": "Value Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "value_type"
+      ],
+      "title": "PropertyDefinition",
+      "type": "object"
+    }
+  },
+  "$id": "dataagent-contracts/0.1/ontology/ConceptDefinition",
+  "additionalProperties": false,
+  "description": "One concept of a domain ontology: its entities, attributes and identity.",
+  "properties": {
+    "entity_type": {
+      "title": "Entity Type",
+      "type": "string"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "identity_fields": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Identity Fields",
+      "type": "array"
+    },
+    "properties": {
+      "additionalProperties": {
+        "$ref": "#/$defs/PropertyDefinition"
+      },
+      "title": "Properties",
+      "type": "object"
+    }
+  },
+  "required": [
+    "entity_type",
+    "properties",
+    "identity_fields"
+  ],
+  "title": "ConceptDefinition",
+  "type": "object"
+}
