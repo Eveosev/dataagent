@@ -8,6 +8,7 @@ of other packages that name no workbench tool are out of scope.
 """
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
@@ -108,3 +109,28 @@ def test_query_comparison_and_evidence_bounds_are_part_of_the_skill():
     assert {'property', 'field', 'related_field'} <= set(condition['properties'])
     evidence = MODELS['intake_inference'].model_json_schema()['properties']
     assert {'detail_table', 'detail_section', 'detail_offset', 'detail_limit'} <= set(evidence)
+
+
+def test_skill_comparison_example_is_a_where_array():
+    """The comparison example must be one where element, not three filters.
+
+    A bare object after ``where`` is not a list; the MCP layer would not parse
+    it as one cross-field condition.  The example is extracted from the skill
+    and validated against the same model the tool schema declares.
+    """
+    skill = (REPOSITORY / 'packages/capabilities/dataagent-intake/skills/'
+             'dataagent-intake/SKILL.md').read_text(encoding='utf-8')
+    match = re.search(r'`where` 写 `(\[[^`]+\])`', skill)
+    assert match, 'skill must show the comparison inside a where array'
+    example = json.loads(match.group(1))
+    assert isinstance(example, list) and len(example) == 1
+    query = MODELS['ontology_query'].model_validate(
+        {'ontology_id': 'demo', 'where': example})
+    condition, = query.where
+    assert condition.field == '金额'
+    assert condition.related_field == '限额'
+    assert condition.op == 'gt'
+    assert condition.value is None
+    # One cross-field comparison, not field=金额 + op=gt + related_field=限额.
+    assert condition.property_name() == '金额'
+    assert condition.related_name() == '限额'
