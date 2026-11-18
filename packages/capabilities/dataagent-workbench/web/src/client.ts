@@ -9,7 +9,7 @@ export type Preview=MappingPreview & {review_state:string; mapping_reused?:boole
 export type Draft={bindings?:Record<string,FieldBinding>;source_bindings?:Record<string,Record<string,FieldBinding>>;selected_field?:string;source_id?:string;record_index?:number};
 // ontology_concept：任务固定映射目标的概念名（后端 _target 解析）；多概念本体
 // 的页面一律按它取概念，legacy 单概念本体忽略它走旧字段。
-export type View={session:IntakeSession;profiles:SourceProfile[];ontology:OntologyRevision;ontology_concept?:string;preview:Preview|null;draft:Draft;mapping_reused:boolean;discovery:Discovery|null;correction_views?:CorrectionView[]};
+export type View={session:IntakeSession;profiles:SourceProfile[];ontology:OntologyRevision;ontology_concept?:string;preview:Preview|null;draft:Draft;mapping_reused:boolean;discovery:Discovery|null;correction_views?:CorrectionView[];dispositions?:DispositionEntry[];disposition_options?:DispositionOption[];mappings?:Record<string,MappingSpec>};
 export type Selector={kind:string;page?:number;char_start?:number;char_end?:number;bbox?:number[];pointer?:string;range?:string;sheet?:string;keys?:Record<string,unknown>;field?:string;unit_ref?:string;extensions?:Record<string,unknown>|null};
 export type Evidence={source_id:string;selector:Selector};
 export type WorkObject={id:string;entity_type:string;values:Record<string,unknown>;evidence:Record<string,Evidence[]>;unresolved:string[];extensions?:Record<string,unknown>|null;conflicts?:ConflictDetail[]};
@@ -21,7 +21,9 @@ export type Issue={code?:string;target?:string;row?:number;entity_id?:string;det
 export type ConflictValue={source_id:string;source_name:string;locator_ref:string;kind:string;value:unknown;values:unknown[];locations:string[]};
 export type ConflictDetail={entity_id:string;object?:string;field:string;reason?:string;values:ConflictValue[]};
 // 来源处置（后端 disposition_options / dispositions）：被拦问题的出路。
-export type DispositionOption={action:'partition_not_applicable'|'exclude_record';source_id:string;source_name:string;partition?:number|string;record?:number;gap?:string;reason_hint?:string};
+// scope:'source' 是整源处置（本任务不使用该来源）——线上仍是 partition_not_applicable
+// 不带分区（工具 schema 的 literal 没有第三个动作），审计记录由后端写成 ignore_source。
+export type DispositionOption={action:'partition_not_applicable'|'exclude_record';scope?:'source';source_id:string;source_name:string;partition?:number|string|null;record?:number;gap?:string;reason_hint?:string};
 export type DispositionEntry={action:string;source_id:string;reason:string;partition?:number|string;record?:number;record_values?:Record<string,unknown>;decision_ref?:string;recorded_at?:string};
 export type ObjectView={session:IntakeSession;ontology:OntologyRevision;ontology_revision:string;ontology_concept?:string;ontology_draft:Record<string,unknown>|null;
  sources:(SourceProfile&{display_name:string})[];objects:WorkObject[];corrections:Correction[];correction_views:CorrectionView[];issues:Issue[];
@@ -73,11 +75,23 @@ export const issueReasons:Record<string,string>={
  'ontology.conversion_failed':'值无法按目标类型转换',
  'ontology.evidence_missing':'值没有来源定位',
  'ontology.incomplete_source':'来源未完整读取',
+ 'ontology.source_unmapped':'该来源未用于当前映射',
  'ontology.relation_unresolved':'关联字段不完整',
  'ontology.correction_conflict':'网页纠正无法沿用',
  'ontology.no_records':'没有可映射的记录',
+ 'record_attribution_unverified':'该记录的引文归属未核实',
 };
 export const issueBlocksSave=(issue:Issue)=>!correctableIssueCodes.has(issue.code||'');
+// 按行重复的问题 code（FDE2-06）：同一列同一类问题跨多行时按根因合并成一条。
+export const rowLevelIssueCodes=new Set(['ontology.conversion_failed','ontology.required_value_missing','ontology.identity_unresolved','ontology.evidence_missing','record_attribution_unverified']);
+// 同一行同一列：转换失败的记录不再重复报「缺少必填值」（后端同款去重，
+// 页面在这里再做一遍，路由改写注入的原始问题也能按同一口径计数）。
+export function dedupeIssues(issues:Issue[]):Issue[]{
+ const failed=new Set(issues.filter(issue=>issue.code==='ontology.conversion_failed'&&issue.row!==undefined)
+  .map(issue=>`${issue.source_id??''}|${issue.row}|${issue.target??''}`));
+ return issues.filter(issue=>!(issue.code==='ontology.required_value_missing'
+  &&failed.has(`${issue.source_id??''}|${issue.row??''}|${issue.target??''}`)));
+}
 // 问题点回对象（不误链优先）：只有能唯一确定对象时才给入口——带 entity_id 的直接
 // 命中，或行号与来源都明确且该行在问题来源里有锚点。只有行号、来源不明、或该行在
 // 问题来源里没有锚点时不给入口，绝不链接到另一来源同序号的对象（问题归属标识待后端
@@ -112,6 +126,8 @@ const errorTexts:Record<string,string>={
  'identity correction would merge objects; resolve the mapping explicitly':'标识纠正会使多个对象合并，请先调整映射',
  'preview contains unresolved issues':'预览仍有未解决的问题，请逐项核对后再保存',
  'preview does not need correction validation':'当前预览不需要重新校验，请刷新页面后重试',
+ 'source is used by the current mapping; dispose a partition or a record instead':'该来源正被当前映射使用，请改为处置分区或记录',
+ 'partition is not part of the source observation':'该分区不在来源观察范围内',
  'unsupported file type':'暂不支持该文件类型',
  'file exceeds 32 MiB limit':'文件超过 32 MB 限制',
  'Failed to fetch':'网络连接失败，请稍后重试',
@@ -152,17 +168,25 @@ const detailTexts:Record<string,string>={
  'relation role has no value':'关联字段没有值',
  'probe returned the same checkpoint without progress':'探查没有新进展，已暂停',
  'segment limit reached in one advance':'单次探查分段数达到上限',
+ "[<class 'decimal.ConversionSyntax'>]":'不是有效的数字',
 };
 // 前缀匹配：后端在固定原文后拼接具体项（如不再可解析的字段名），中文说法
 // 保留拼接部分，字段名原样透出。
 const detailPrefixes:[string,string][]=[
  ['recorded fields no longer resolve in the source','来源字段在当前来源中已不再可解析'],
 ];
+// 原始异常（可能带无效来源值）只给中文摘要；完整原文保留在折叠「详情」里。
+const exceptionPrefixes:[string,string][]=[
+ ['Invalid isoformat string','日期时间格式无法解析'],
+];
 export type HumanDetail={summary:string;detail?:string};
 export function humanDetail(raw:unknown):HumanDetail{
  const text=String(raw??'').trim();
  if(!text)return {summary:''};
  if(detailTexts[text])return {summary:detailTexts[text]};
+ for(const [prefix,summary] of exceptionPrefixes){
+  if(text.startsWith(prefix))return {summary,detail:text};
+ }
  for(const [prefix,summary] of detailPrefixes){
   if(text.startsWith(prefix)){
    const rest=text.slice(prefix.length).replace(/^[\s:：]+/,'');

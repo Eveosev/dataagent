@@ -44,17 +44,19 @@ async function openObjectPageWith13Issues(page:import('@playwright/test').Page){
 test('对象页列出全部待核对问题：总数、阻断数与折叠展开',async({page})=>{
  slowTimeout(40000);
  await openObjectPageWith13Issues(page);
- // 头部并列总数与阻断数：13 条里 5 条阻断（对象页纠正解除不了）。
- await expect(page.getByTestId('pending-issues')).toContainText('13 项待核对');
- await expect(page.getByTestId('pending-issues')).toContainText('阻断 5 项');
+ // 头部并列总数与阻断数（FDE2-06）：13 条原始问题里「金额 第 3 行」的缺必填
+ // 与转换失败同根因，去重后 12 项；整批保存被任何未解决问题拦下，阻断也计 12。
+ await expect(page.getByTestId('pending-issues')).toContainText('12 项待核对');
+ await expect(page.getByTestId('pending-issues')).toContainText('阻断 12 项');
+ // 去重后 12 项问题按根因合并成 11 条条目（两行缺单号合并为一条「2 行」）。
  // 超过 10 条时折叠尾部：默认 10 条可见，阻断类排在最前。
  await expect(page.getByTestId('pending-issue')).toHaveCount(10);
  await expect(page.getByTestId('pending-issue').first()).toContainText('阻断');
  await expect(page.getByTestId('pending-issue').nth(5)).toContainText('可纠正');
- await expect(page.getByText('展开其余 3 条')).toBeVisible();
+ await expect(page.getByText('展开其余 1 条')).toBeVisible();
  // 展开后每条问题都可见。
- await page.getByRole('button',{name:'展开其余 3 条'}).click();
- await expect(page.getByTestId('pending-issue')).toHaveCount(13);
+ await page.getByRole('button',{name:'展开其余 1 条'}).click();
+ await expect(page.getByTestId('pending-issue')).toHaveCount(11);
  await expect(page.getByRole('button',{name:'收起其余问题'})).toBeVisible();
  // 问题文案是中文理由，不是裸 code。
  await expect(page.getByTestId('pending-issues')).toContainText('各来源的字段值不一致');
@@ -67,10 +69,16 @@ test('每条问题能点到对应对象',async({page})=>{
  // 对象级冲突问题（entity_id 唯一确定）点回冲突对象 INV-002（默认选中的是 INV-001）。
  await page.getByTestId('pending-issue').filter({hasText:'各来源的字段值不一致'}).nth(1).getByRole('button',{name:'INV-002'}).click();
  await expect(page.locator('.source-tab.active')).toContainText('INV-002');
- // 行号问题来源不明：不给对象入口，显示行号与来源待定。
- const rowIssue=page.getByTestId('pending-issue').filter({hasText:'缺少身份字段值'}).first();
- await expect(rowIssue).toContainText('第 1 行 · 来源待定');
- await expect(rowIssue.getByRole('button')).toHaveCount(0);
+ // 行号问题来源不明：两行缺身份字段值合并为一条（FDE2-06），组内不给对象入口，
+ // 各行显示行号与来源待定（问题文案沿用 FDE2-11 的通用说法「缺少身份字段值」）。
+ const group=page.getByTestId('pending-issue').filter({hasText:'缺少身份字段值'});
+ await expect(group).toHaveCount(1);
+ await expect(group).toContainText('2 行 · 缺少身份字段值，无法确定对象');
+ await group.getByText('查看各行').click();
+ await expect(group.locator('.group-rows li')).toHaveCount(2);
+ await expect(group.locator('.group-rows li').first()).toContainText('第 1 行 · 来源待定');
+ await expect(group.locator('.group-rows li').last()).toContainText('第 2 行 · 来源待定');
+ await expect(group.locator('.group-rows li').first().getByRole('button')).toHaveCount(0);
  // 来源级问题（无对象可点）显示具体来源名，条目可区分、可处理。
  const sourceIssue=page.getByTestId('pending-issue').filter({hasText:'必填属性没有映射'});
  await expect(sourceIssue).toContainText('invoice.csv');
@@ -160,4 +168,33 @@ test('问题来源该行无锚点时不出现对象入口',async({page})=>{
  await expect(issue).toContainText('第 1 行 · 来源待定');
  await expect(issue).not.toContainText('INV-101');
  await expect(issue.getByRole('button')).toHaveCount(0);
+});
+
+test('未知问题码也只显示中文原因，原始异常进折叠详情',async({page})=>{
+ test.setTimeout(40000);
+ await page.route('**/api/sessions/*/objects',async route=>{
+  const response=await route.fetch();
+  const body=await response.json();
+  body.issues=[{code:'ontology.future_failure',target:'amount',
+   entity_id:body.objects[0]?.id,
+   detail:"Invalid isoformat string: 'not-a-date'"}];
+  await route.fulfill({response,json:body});
+ });
+ await page.goto('/');
+ await page.getByLabel('接入目标').fill('接入发票并核对未知问题码');
+ await page.getByLabel('选择材料').setInputFiles({name:'invoice.csv',mimeType:'text/csv',buffer:csv});
+ await page.getByRole('button',{name:'开始接入'}).click();
+ await expect(page.getByRole('button',{name:'生成映射预览'})).toBeEnabled();
+ await page.getByRole('button',{name:'生成映射预览'}).click();
+ await page.getByRole('button',{name:'打开对象页'}).click();
+ await expect(page.getByRole('heading',{name:'核对业务对象'})).toBeVisible();
+ const issue=page.getByTestId('pending-issue');
+ await expect(issue).toHaveCount(1);
+ // 未识别的问题码给中文兜底，不把 code 或原始异常铺在列表里。
+ await expect(issue).toContainText('该项未通过核对');
+ await expect(issue).toContainText('日期时间格式无法解析');
+ expect(await issue.innerText()).not.toContain('Invalid isoformat');
+ // 完整原文仍保留在可展开的「详情」里。
+ await expect(issue.locator('.tech-detail pre'))
+  .toContainText("Invalid isoformat string: 'not-a-date'");
 });

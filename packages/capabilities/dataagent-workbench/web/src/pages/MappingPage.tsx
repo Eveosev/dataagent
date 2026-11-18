@@ -1,6 +1,6 @@
 import {useEffect,useRef,useState} from 'react';
 import {api,ApiError,display,transformNames,propertyLabel,sourceProblem,issueReasons,conceptOf,conceptLabel,builtinTitles,ontologyTitles} from '../client';
-import type {View,Draft,FieldBinding,IntakeSession,MappingSpec,SourceProfile,CorrectionView} from '../client';
+import type {View,Draft,FieldBinding,IntakeSession,MappingSpec,SourceProfile,CorrectionView,DispositionOption} from '../client';
 import {SourceViewer} from '../components/SourceViewer';
 import {DiscoveryPage} from './DiscoveryPage';
 import {MappingDetail} from '../components/MappingDetail';
@@ -17,25 +17,77 @@ function defaultBindings(view:View,sourceId:string){
   .map(k=>[k,{source_field:k,transform:'identity' as const}]));
 }
 
+// FDE2-05：已固定的映射来源范围（提案写进 selected_versions 的 mapping:<来源>）。
+// 重新生成预览沿用这个范围，而不是把任务里所有来源都自动映射进去；被整源处置
+// （本任务不使用该来源）的来源不再纳入。
+function scopedSourceIds(view:View):Set<string>{
+ const ignored=new Set((view.dispositions||[]).filter(entry=>entry.action==='ignore_source').map(entry=>entry.source_id));
+ const scoped=new Set<string>();
+ for(const key of Object.keys(view.session.selected_versions||{}))
+  if(key.startsWith('mapping:'))scoped.add(key.slice('mapping:'.length));
+ for(const id of ignored)scoped.delete(id);
+ return scoped;
+}
+
+// 用户是否改过该来源的绑定（与同名默认绑定比较）：改过说明是有意纳入，
+// 未改过的未映射来源保持「该来源未用于当前映射」。
+function bindingsEdited(view:View,sourceId:string,sourceBindings:Record<string,Record<string,FieldBinding>>):boolean{
+ const current=sourceBindings[sourceId];
+ if(!current)return false;
+ const defaults=defaultBindings(view,sourceId);
+ const keys=new Set([...Object.keys(current),...Object.keys(defaults)]);
+ if(keys.size!==Object.keys(current).length||keys.size!==Object.keys(defaults).length)return true;
+ const same=(a:FieldBinding|undefined,b:FieldBinding|undefined)=>(!a&&!b)||(!!a&&!!b
+  &&(a.source_field??'')===(b.source_field??'')&&(a.transform??'identity')===(b.transform??'identity'));
+ for(const key of keys)if(!same(current[key],defaults[key]))return true;
+ return false;
+}
+
+// 最新提案写入的来源范围签名。范围变化（例如代理缩窄）时，旧草稿里的绑定
+// 不能再把来源加回来；只有本次页面里新做的绑定编辑才算显式纳入。
+function mappingScopeKey(view:View):string{
+ return Object.entries(view.session.selected_versions||{})
+  .filter(([key])=>key.startsWith('mapping:'))
+  .sort(([a],[b])=>a.localeCompare(b))
+  .map(([key,value])=>`${key}=${value}`).join('|');
+}
+
+function sourceInScope(view:View,sourceId:string,sourceBindings:Record<string,Record<string,FieldBinding>>,
+ editedSources:Set<string>):boolean{
+ if((view.dispositions||[]).some(entry=>entry.action==='ignore_source'&&entry.source_id===sourceId))return false;
+ const scoped=scopedSourceIds(view);
+ if(!scoped.size)return true; // 尚无任何提案固定范围：保持全部来源一起提案。
+ return scoped.has(sourceId)
+  ||(editedSources.has(sourceId)&&bindingsEdited(view,sourceId,sourceBindings));
+}
+
 export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession,onOpenOntologies}:{sessionId:string;onNew:()=>void;onError:(e:unknown)=>void;onOpenObjects?:()=>void;onOpenSession:(id:string)=>void;onOpenOntologies?:()=>void}){
  const [view,setView]=useState<View|null>(null),[bindings,setBindings]=useState<Record<string,FieldBinding>>({});
+ const editedSources=useRef<Set<string>>(new Set()),scopeKey=useRef('');
  const [field,setField]=useState(''),[sourceId,setSourceId]=useState(''),[record,setRecord]=useState(0),[dirty,setDirty]=useState(false),[busy,setBusy]=useState(false),[onlyProblems,setOnlyProblems]=useState(false),[draftState,setDraftState]=useState('');
  // FDE-12：字段详情里的纠正同样给绿色成功提示；被其他问题挡住时点名，不走红色错误条。
  const [correctionNotice,setCorrectionNotice]=useState<{kind:'green'|'amber';text:string}|null>(null);
  // 面包屑用的本体名：任务目标本体的注册表标题（FDE2-11）。
  const [ontologyName,setOntologyName]=useState('');
+ // FDE2-05：未映射来源的整源处置（本任务不使用该来源），原因必填、写入审计。
+ const [disposalReasons,setDisposalReasons]=useState<Record<string,string>>({});
  const revision=useRef(''),initialized=useRef(false),dirtyRef=useRef(false),queue=useRef(Promise.resolve()),draftError=useRef<unknown>(null),bindingsRef=useRef<Record<string,FieldBinding>>({});
- const sourceBindings=useRef<Record<string,Record<string,FieldBinding>>>({}),selectedSource=useRef('');
+ const sourceBindings=useRef<Record<string,Record<string,FieldBinding>>>({}),selectedSource=useRef(''),viewRef=useRef<View|null>(null);
  const base=`/api/sessions/${sessionId}`;const localKey=`dataagent-draft:${sessionId}`;
  async function load(reset=false){
   const data=await api<View>(base+'/view');
   if(Number(data.session.revision)<Number(revision.current))return;
-  setView(data);
+  setView(data);viewRef.current=data;
+  const nextScope=mappingScopeKey(data);
+  if(nextScope!==scopeKey.current){
+   scopeKey.current=nextScope;editedSources.current.clear();
+  }
   if(dirtyRef.current&&!reset)return;
   revision.current=data.session.revision;
   if(data.discovery)return;
   if(reset){
    sessionStorage.removeItem(localKey);setDirty(false);dirtyRef.current=false;draftError.current=null;setDraftState('');
+   editedSources.current.clear();
   }
   let local:Draft|undefined;
   const pending=sessionStorage.getItem(localKey);
@@ -57,7 +109,8 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession
    const mappings=savedMappings(data);
    sourceBindings.current=Object.fromEntries(data.profiles.map(p=>[p.source_id,
     local?.source_bindings?.[p.source_id]||data.draft.source_bindings?.[p.source_id]||
-    mappings[p.source_id]?.bindings||defaultBindings(data,p.source_id)]));
+    mappings[p.source_id]?.bindings||data.mappings?.[p.source_id]?.bindings||
+    defaultBindings(data,p.source_id)]));
    const id=selectedSource.current||local?.source_id||data.draft.source_id||data.profiles[0]?.source_id||'';
    const chosen=sourceBindings.current[id]||{};
    selectedSource.current=id;setSourceId(id);setBindings(chosen);bindingsRef.current=chosen;
@@ -90,7 +143,10 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession
  function draft(next:Record<string,FieldBinding>,selected=field){
   setDraftState('正在保存草稿…');
   if(multiple)sourceBindings.current={...sourceBindings.current,[sourceId]:next};
-  const draftData={...(multiple?{source_bindings:sourceBindings.current}:{bindings:next}),
+  // 草稿只保存范围内来源的绑定：范围外的来源保持未映射，保存时的草稿比对
+  // 也不会把它们当作待提交的映射（FDE2-05）。
+  const inScope=(id:string)=>!viewRef.current||!multiple||sourceInScope(viewRef.current,id,sourceBindings.current,editedSources.current);
+  const draftData={...(multiple?{source_bindings:Object.fromEntries(Object.entries(sourceBindings.current).filter(([id])=>inScope(id)))}:{bindings:next}),
    selected_field:selected,source_id:sourceId,record_index:record};
   const pending=JSON.stringify({revision:revision.current,draft:draftData});
   sessionStorage.setItem(localKey,pending);
@@ -101,12 +157,12 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession
    if(sessionStorage.getItem(localKey)===pending)sessionStorage.removeItem(localKey);
   }).catch(error=>{draftError.current=error;setDraftState('编辑已保留，任务有更新');onError(error);});
  }
- function change(target:string,binding:FieldBinding){const next={...bindingsRef.current,[target]:binding};if(!binding.source_field)delete next[target];bindingsRef.current=next;setBindings(next);setField(target);setDirty(true);dirtyRef.current=true;draft(next,target);}
+ function change(target:string,binding:FieldBinding){const next={...bindingsRef.current,[target]:binding};if(!binding.source_field)delete next[target];bindingsRef.current=next;setBindings(next);setField(target);setDirty(true);dirtyRef.current=true;if(multiple)editedSources.current.add(sourceId);draft(next,target);}
  async function preview(){
   setBusy(true);try{
    await queue.current;if(draftError.current)throw draftError.current;
    if(!profile||!view)throw new Error('来源尚未探查');
-   const loaded=view;
+   const loaded=viewRef.current||view;
    function propose(source:SourceProfile,fields:Record<string,FieldBinding>,prior?:MappingSpec):MappingSpec{
     const used=new Set(Object.values(fields).map(b=>b.source_field));
     return {...prior,id:'candidate',revision:'1',ontology_revision:`${loaded.ontology.id}@${loaded.ontology.revision}`,
@@ -116,12 +172,17 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession
      unmapped:Object.fromEntries((source.fields||[]).filter(f=>!used.has(f)).map(f=>[f,'extension']))};
    }
    if(multiple){
-    const existing=savedMappings(view);
-    const proposals=Object.fromEntries(view.profiles.map(source=>[source.source_id,
-     propose(source,sourceBindings.current[source.source_id]||defaultBindings(view,source.source_id),existing[source.source_id])]));
+    // FDE2-05：只提交范围内的来源（Agent 已映射的 + 用户改过绑定的），
+    // 未映射来源保持来源级问题，而不是自动映射后逐行报错。
+    const existing=savedMappings(loaded);
+    const proposals=Object.fromEntries(loaded.profiles
+     .filter(source=>sourceInScope(loaded,source.source_id,sourceBindings.current,editedSources.current))
+     .map(source=>[source.source_id,
+      propose(source,sourceBindings.current[source.source_id]||defaultBindings(loaded,source.source_id),existing[source.source_id])]));
+    if(!Object.keys(proposals).length)throw new Error('没有可映射的来源，请先绑定至少一个来源');
     await api(base+'/source-proposals','POST',{proposals,expected_revision:revision.current});
    }else{
-    const proposal=propose(profile,bindingsRef.current,view.preview?.mapping);
+    const proposal=propose(profile,bindingsRef.current,loaded.preview?.mapping);
     await api(base+'/proposal','POST',{proposal,expected_revision:revision.current});
    }
    setDirty(false);dirtyRef.current=false;sessionStorage.removeItem(localKey);await load();
@@ -154,6 +215,23 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession
     entity_id:correction.entity_id,property:correction.property});
    await load();
   }catch(error){onError(error);}
+ }
+ // FDE2-05：整源处置（本任务不使用该来源）走真实后端，原因必填、写入审计。
+ async function submitDisposal(option:DispositionOption,why:string){
+  // Keep the regenerate button disabled until the new revision is loaded;
+  // otherwise a quick click can send the pre-disposition revision and 409.
+  setBusy(true);
+  try{
+   await api(base+'/dispositions','POST',{expected_revision:revision.current,
+    action:option.action,source_id:option.source_id,
+    ...(option.scope==='source'?{}:option.action==='partition_not_applicable'
+     ?{partition:option.partition}:{record:option.record}),
+    reason:why});
+   setDisposalReasons(previous=>({...previous,[`${option.action}:${option.source_id}`]:''}));
+   setCorrectionNotice({kind:'green',text:'处置已记录。请重新生成映射预览后核对。'});
+   await load();
+  }catch(error){onError(error);}
+  finally{setBusy(false);}
  }
  if(!view)return <main className="loading">正在恢复任务…</main>;
  if(view.discovery)return <DiscoveryPage view={view} reload={load} onNew={onNew} onError={onError} onOpenSession={onOpenSession} onOpenOntologies={onOpenOntologies}/>;
@@ -205,7 +283,18 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession
   <td className="mapped-value">{dirty?'待更新':display(instance?.values?.[name])}{correction&&!dirty&&<small className="warn">纠正值生效 · 映射值 {display(correction.mapping_value)}</small>}</td></tr>;})}</tbody></table></div>
  <div className="mapping-actions"><span className="muted">{draftState||'原值与转换后的值均可核对'}</span><button className="primary" disabled={busy||working||done||!profile} onClick={preview}>{busy?'正在校验…':'生成映射预览'}</button></div>
  {correctionNotice&&<div className={correctionNotice.kind==='green'?'notice green':'notice amber'} data-testid="mapping-correction-notice" role="status">{correctionNotice.text}</div>}
- {problemCount>0&&<div className="notice amber"><strong>{problemCount} 项待核对</strong><ul data-testid="mapping-issues">{issueItems.slice(0,8).map((issue,i)=><li key={i}>{issueText(issue)}</li>)}</ul>{issueItems.length>8&&<p className="help">共 {issueItems.length} 项，打开对象页查看全部。</p>}</div>}
+ {problemCount>0&&<div className="notice amber"><strong>{problemCount} 项待核对</strong><ul data-testid="mapping-issues">{issueItems.slice(0,8).map((issue,i)=><li key={i}>{issueText(issue)}
+   {/* 未映射来源给整源处置：写审计、必填原因，处置后重新生成预览即可。 */}
+   {issue.code==='ontology.source_unmapped'&&(view.disposition_options||[]).filter(option=>option.scope==='source'&&option.source_id===issue.source_id).map(option=>{
+    const key=`${option.action}:${option.source_id}`;
+    return <div key={key} className="disposal" data-testid="disposal-option">
+     <span className="muted">本任务不使用「{option.source_name}」 · {option.reason_hint}</span>
+     <div className="disposal-controls">
+      <input aria-label={`处置原因：本任务不使用「${option.source_name}」`} value={disposalReasons[key]||''} onChange={e=>setDisposalReasons(previous=>({...previous,[key]:e.target.value}))} placeholder="处置原因（必填，写入审计）"/>
+      <button className="secondary" disabled={busy||done||!(disposalReasons[key]||'').trim()} onClick={()=>submitDisposal(option,disposalReasons[key])}>提交处置</button>
+     </div>
+    </div>;})}
+  </li>)}</ul>{issueItems.length>8&&<p className="help">共 {issueItems.length} 项，打开对象页查看全部。</p>}</div>}
  <div className="object-section"><div className="panel-heading"><strong>对象预览</strong><span className="badge">{view.preview?.instances?.length||0} 个对象</span>{onOpenObjects&&view.preview&&<button className="secondary" onClick={onOpenObjects}>打开对象页</button>}</div>{view.preview?<><div className="sample-controls"><button className="icon-button" disabled={record===0} onClick={()=>setRecord(record-1)}>←</button><span>对象 {record+1} / {view.preview.instances?.length||0}</span><button className="icon-button" disabled={record>=(view.preview.instances?.length||0)-1} onClick={()=>setRecord(record+1)}>→</button></div><dl className="object-values">{Object.keys(conceptProperties).map(k=><div key={k}><dt title={k}>{propertyLabel(k)}</dt><dd>{display(instance?.values?.[k])}</dd></div>)}</dl></>:<div className="empty">生成映射预览后，在这里查看真实对象。</div>}</div>
  {instance?.extensions&&<details className="extension-box"><summary>查看扩展字段</summary><pre>{JSON.stringify(instance.extensions,null,2)}</pre></details>}
  </section><MappingDetail readOnly={done} view={view} field={field} binding={binding} raw={profile?.records?.[sourceRow]?.[binding?.source_field||'']} dirty={dirty} recordIndex={record} onCorrect={correct} onAdopt={adopt} onSchema={async(name,reason)=>{try{await review('ontology',{property:name,value_type:'string',reason});}catch(error){onError(error);}}}/></div>
