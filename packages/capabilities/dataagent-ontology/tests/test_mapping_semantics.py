@@ -48,6 +48,47 @@ def test_date_binding_accepts_the_midnight_iso_form_the_sheet_reader_emits():
     assert not result.issues
 
 
+def _date_ontology():
+    return OntologyRevision(id='invoice',revision='1',entity_type='Invoice',
+        properties={'number':{'value_type':'string','required':True},
+                    'day':{'value_type':'date','required':True}},
+        identity_fields=['number'])
+
+
+def test_date_binding_rejects_a_non_midnight_iso_time_instead_of_truncating_it():
+    m=MappingSpec(id='m',revision='1',ontology_revision='invoice@1',source_fingerprint='schema',
+        bindings={'number':{'source_field':'number'},
+                  'day':{'source_field':'day','transform':'date'}})
+    p=profile([{'number':'A','day':'2026-04-08T09:30:00'}]).model_copy(
+        update={'fields':['number','day']})
+    result=materialize(_date_ontology(),m,[p],scope='T')
+    assert result.instances[0].values=={'number':'A'}
+    issue=next(i for i in result.issues
+               if i['code']=='ontology.conversion_failed' and i['target']=='day')
+    assert issue['detail']=='时间不是零点，不能按日期保存'
+    assert any(i['code']=='ontology.required_value_missing' and i['target']=='day'
+               for i in result.issues)
+
+
+def test_date_binding_with_an_explicit_format_also_refuses_a_non_midnight_time():
+    m=MappingSpec(id='m',revision='1',ontology_revision='invoice@1',source_fingerprint='schema',
+        bindings={'number':{'source_field':'number'},
+                  'day':{'source_field':'day','transform':'date',
+                         'options':{'format':'%Y-%m-%d %H:%M:%S'}}})
+    p=profile([{'number':'A','day':'2026-04-08 09:30:00'}]).model_copy(
+        update={'fields':['number','day']})
+    result=materialize(_date_ontology(),m,[p],scope='T')
+    issue=next(i for i in result.issues
+               if i['code']=='ontology.conversion_failed' and i['target']=='day')
+    assert issue['detail']=='时间不是零点，不能按日期保存'
+
+    midnight=profile([{'number':'B','day':'2026-04-08 00:00:00'}]).model_copy(
+        update={'fields':['number','day']})
+    accepted=materialize(_date_ontology(),m,[midnight],scope='T')
+    assert accepted.instances[0].values=={'number':'B','day':'2026-04-08'}
+    assert not accepted.issues
+
+
 def test_missing_required_binding_is_reported():
     m=mapping();m.bindings.pop('amount');m.unmapped['minor']='extension'
     result=materialize(ontology(),m,[profile([{'number':'A','company':'C','minor':'100'}])],scope='T')
