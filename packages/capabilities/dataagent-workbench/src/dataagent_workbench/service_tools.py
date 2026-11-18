@@ -69,7 +69,11 @@ def _invoke(wb, name, args):
         return CapabilityResult(status=CapabilityStatus.pending,data=handle.model_dump(mode='json'),
             continuation=Continuation(job_ref=handle.job_ref))
     if name == 'intake_status':
-        data=wb.sessions.get(args['session_id'],wb.ctx).model_dump(mode='json')
+        session=wb.sessions.get(args['session_id'],wb.ctx)
+        data=session.model_dump(mode='json')
+        # Root-cause count and affected-row count travel together so callers do
+        # not have to reconstruct rows from the filtered issue summaries.
+        data['issue_row_count']=wb.intake._issue_row_count(session.issues)
         data['issues']=[{k:i[k] for k in ['code','source_id','target','detail'] if k in i} for i in data['issues']]
         data['issue_count']=len(data['issues'])
         return CapabilityResult.ok(data)

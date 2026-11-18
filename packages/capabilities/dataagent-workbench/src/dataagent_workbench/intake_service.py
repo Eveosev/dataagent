@@ -50,6 +50,15 @@ _RESOLVABLE_ISSUES = {
     'ontology.conflicting_values', 'ontology.required_value_missing',
     'ontology.conversion_failed',
 }
+# Row-level problems that one mapping defect can repeat across many rows.
+# They are counted once per (code, property, source) and carry the affected
+# row count separately; the web groups them with the same key (FDE2-06).
+# A missing required value is deliberately not here: each object needs its own
+# value/correction even when the column is the same, so its rows stay separate.
+_ROW_LEVEL_ISSUE_CODES = frozenset({
+    'ontology.conversion_failed', 'ontology.identity_unresolved',
+    'ontology.evidence_missing', 'record_attribution_unverified',
+})
 _ISSUE_REASONS = {
     'ontology.conflicting_values': '各来源的字段值不一致',
     'ontology.required_value_missing': '缺少必填值',
@@ -353,6 +362,77 @@ class IntakeService:
                         and (issue.get('source_id'), issue.get('row'),
                              issue.get('target')) in failed)]
 
+    @classmethod
+    def _issue_groups(cls, issues):
+        """Collapse per-row problems into root causes plus an affected-row count.
+
+        Two rows failing the same column conversion are one mapping defect, so
+        the cause count is one and the row count is two.  Non-row problems stay
+        one entry each.  The web uses the same grouping key, and the per-row
+        list is still returned separately for locating and correcting values.
+        """
+        deduped = cls._deduped_issues(issues)
+        groups, by_key = [], {}
+        for issue in deduped:
+            row = issue.get('row')
+            code = issue.get('code')
+            if code not in _ROW_LEVEL_ISSUE_CODES:
+                groups.append(dict(issue))
+                continue
+            key = (code, issue.get('target'), issue.get('source_id'))
+            entry = by_key.get(key)
+            if entry is None:
+                entry = dict(issue)
+                entry['rows'] = []
+                entry['row_count'] = 0
+                by_key[key] = entry
+                groups.append(entry)
+            if row is not None and row not in entry['rows']:
+                entry['rows'].append(row)
+                entry['row_count'] += 1
+        return groups, cls._issue_row_count(deduped)
+
+    @staticmethod
+    def _issue_row_count(issues):
+        """Distinct (source, row) pairs, accepting per-row or grouped entries."""
+        rows = set()
+        for issue in issues:
+            source = issue.get('source_id')
+            grouped = issue.get('rows')
+            if isinstance(grouped, list) and grouped:
+                for row in grouped:
+                    if row is not None:
+                        rows.add((source, row))
+            elif issue.get('row') is not None:
+                rows.add((source, issue.get('row')))
+        return len(rows)
+
+    @classmethod
+    def _session_issues(cls, issues):
+        """The root-cause list stored on the session for ``intake_status``.
+
+        Its length is the unified root-cause count; the stored preview keeps
+        the per-row list so every row can still be located and corrected.
+        """
+        return cls._issue_groups(issues)[0]
+
+    @staticmethod
+    def _clause_record_source(profile):
+        """True when the profile's selected rows come from clause extraction.
+
+        Clause rows are verified text spans, not table records: they have no
+        header-like or filler row to drop.  Decide by the source's record-set
+        type rather than by one issue code, so every problem on such a row is
+        handled by correcting/re-extracting the clause record.
+        """
+        metadata = profile.metadata if isinstance(profile.metadata, dict) else {}
+        selected = str(metadata.get('selected_record_set') or '')
+        if selected.startswith('clause_records:'):
+            return True
+        sets = metadata.get('record_sets')
+        entry = sets.get(selected) if isinstance(sets, dict) else None
+        return isinstance(entry, dict) and entry.get('kind') == 'clause'
+
     @staticmethod
     def _suspected_irrelevant_row(profile, row):
         """True when one source record reads like the header or like filler.
@@ -433,28 +513,16 @@ class IntakeService:
                     continue
                 # FDE2-06: only a row that itself reads like the header (or is
                 # entirely blank) may be excluded; a real data row with a bad
-                # value must be corrected or re-mapped instead.  A clause
-                # record may still be dropped when its quote attribution or a
-                # required value is missing (the clause never stated it), but
-                # a real clause value that failed conversion must be corrected
-                # or re-mapped, not excluded as an irrelevant row.
-                record_set = str((profile.metadata or {}).get('selected_record_set')
-                                 or '')
-                clause = record_set.startswith('clause_records:')
-                # A clause row with a failed conversion is not an exclusion
-                # candidate at all: the same real preview also emits
-                # required_value_missing for that field/row, and offering the
-                # row escape on either issue would hide that correction is
-                # required.  Gate every issue on that row, not one issue code,
-                # while missing/attribution-only records keep their escape.
-                clause_conversion_rows = {
-                    item.get('row') for item in body.get('issues') or []
-                    if item.get('code') == 'ontology.conversion_failed'
-                    and item.get('source_id') == profile.source_id}
-                suspected = self._suspected_irrelevant_row(profile, row)
-                if clause and row in clause_conversion_rows:
+                # value must be corrected or re-mapped instead.  Clause rows
+                # are never exclusion candidates: a missing required value or
+                # an unverified quote is a real clause record to correct or
+                # re-extract, not an irrelevant table row.  Gate by the
+                # source/record-set type, not by one issue code, so a failed
+                # conversion and the required gap it causes cannot reopen the
+                # row escape.
+                if self._clause_record_source(profile):
                     continue
-                if not clause and not suspected:
+                if not self._suspected_irrelevant_row(profile, row):
                     continue
                 key = (source_id, 'exclude_record', None, row)
                 if key in done:
@@ -494,6 +562,8 @@ class IntakeService:
         if profile is None:
             raise ValueError('source has no observation in this task')
         action = disposition.action
+        if action == 'exclude_record' and self._clause_record_source(profile):
+            raise ValueError('条款记录不能按无关行排除；请纠正值或重新提取条款记录')
         source_level = action == 'ignore_source' or (
             action == 'partition_not_applicable' and disposition.partition is None)
         entry = {'action': 'ignore_source' if source_level else action,
@@ -1657,6 +1727,9 @@ class IntakeService:
         body['inheritance'] = self.inheritance_hint(session, body)
         if body['inheritance'] is None:
             body.pop('inheritance', None)
+        # An older stored preview may predate the deduplicated list; inheriting
+        # must not write the duplicate rows back into the session count.
+        body['issues'] = self._deduped_issues(body.get('issues') or [])
         body['revision'] = str(int(revision) + 1)
         decision_id = uuid4().hex
         recorded_at = datetime.now(timezone.utc).isoformat()
@@ -1665,7 +1738,8 @@ class IntakeService:
         wb.sessions.update(session.id, expected_revision, {
             'phase': 'preview', 'selected_versions': {
                 **session.selected_versions, 'preview': preview_id + '@' + body['revision']},
-            'issues': body.get('issues') or [], 'next_actions': ['review_mapping'],
+            'issues': self._session_issues(body.get('issues') or []),
+            'next_actions': ['review_mapping'],
         }, ctx, extra_writes=[
             Write('preview', preview_id, wb.scope, body, revision),
             Write('review', decision_id, wb.scope, {
@@ -1817,9 +1891,13 @@ class IntakeService:
         proposal=proposal.model_copy(update={'id':mid,'revision':revision,'scope':wb.scope})
         preview,body=wb.ontology.prepare_preview(proposal,observations,ctx,
             dispositions=self.disposition_entries(s))
-        body['issues']=[*(body.get('issues') or []),*self._unmapped_source_issues(
-            s,{observation.source_id for observation in observations}),
-            *self._clause_attribution_issues(s,body)]
+        # Keep the per-row, same-row deduplicated list on the preview so every
+        # row stays locatable; the session stores the same problems collapsed
+        # to root causes so intake_status counts a column defect once (FDE2-06).
+        body['issues']=self._deduped_issues([*(body.get('issues') or []),
+            *self._unmapped_source_issues(
+                s,{observation.source_id for observation in observations}),
+            *self._clause_attribution_issues(s,body)])
         body['mapping_reused']=reused
         prior_ref,_,conflicts,pending=self._carry_corrections(s,body)
         hint=self.inheritance_hint(s,body)
@@ -1845,7 +1923,8 @@ class IntakeService:
                 Write('mapping',mid,wb.scope,proposal.model_dump(mode='json'),prior['revision'] if prior else None)]
         if draft_write:writes.append(draft_write)
         wb.sessions.update(s.id,s.revision,{'phase':'preview','selected_versions':versions,
-            'issues':preview.issues,'next_actions':['review_mapping']},ctx,extra_writes=writes)
+            'issues':self._session_issues(preview.issues),
+            'next_actions':['review_mapping']},ctx,extra_writes=writes)
         return preview
 
     def submit_source_proposals(self, session_id, proposals, expected_revision, ctx, *, reused=False):
@@ -1900,9 +1979,12 @@ class IntakeService:
         preview, body = wb.ontology.prepare_preview(
             primary, observations, ctx, source_mappings=mappings,
             dispositions=self.disposition_entries(session))
-        body['issues'] = [*(body.get('issues') or []),
-                         *self._unmapped_source_issues(session, set(proposals)),
-                         *self._clause_attribution_issues(session, body)]
+        # Same outward list as the session/status path: one issue per row and
+        # root cause, so every count reports the same number (FDE2-06).
+        body['issues'] = self._deduped_issues([
+            *(body.get('issues') or []),
+            *self._unmapped_source_issues(session, set(proposals)),
+            *self._clause_attribution_issues(session, body)])
         body['mapping_reused'] = reused
         prior_ref,_,conflicts,pending=self._carry_corrections(session,body)
         hint=self.inheritance_hint(session,body)
@@ -1916,7 +1998,8 @@ class IntakeService:
         if draft_ref:versions['draft']=draft_ref
         if draft_write:writes.append(draft_write)
         wb.sessions.update(session_id, expected_revision, {
-            'phase': 'preview', 'selected_versions': versions, 'issues': preview.issues,
+            'phase': 'preview', 'selected_versions': versions,
+            'issues': self._session_issues(preview.issues),
             'next_actions': ['review_mapping'],
         }, ctx, extra_writes=[*writes, Write('preview', preview.id, wb.scope, body)])
         return preview
@@ -2034,10 +2117,16 @@ class IntakeService:
         if body is not None:
             # The stored preview keeps the machine codes; the view adds the
             # affected object labels and reasons, and never truncates the list.
+            # ``issue_count`` is the root-cause count; ``issue_item_count`` is
+            # the per-row list kept for locating/correcting each affected row.
             body=dict(body)
             body['conflicts']=self.conflict_details(s,body)
-            body['issues']=self.issue_summary(s,body)
-            body['issue_count']=len(body['issues'])
+            summary=self.issue_summary(s,body)
+            groups,row_count=self._issue_groups(body.get('issues') or [])
+            body['issues']=summary
+            body['issue_count']=len(groups)
+            body['issue_row_count']=row_count
+            body['issue_item_count']=len(summary)
             body['object_labels']=self._object_labels(s,body)
             body['object_count']=len(body.get('instances',[]))
             body['dispositions']=self.disposition_entries(s)
@@ -2056,6 +2145,8 @@ class IntakeService:
             # Mapping specs per source for the web's regenerate step (FDE2-05).
             'mappings':self._selected_mappings(s),
             'issue_count':body['issue_count'] if body else len(s.issues),
+            'issue_row_count':(body['issue_row_count'] if body else
+                self._issue_row_count(s.issues)),
             'dispositions':self.disposition_entries(s),
             'disposition_options':self.disposition_options(s,body),
             'conflicts':body.get('conflicts',[]) if body else [],
@@ -2080,9 +2171,13 @@ class IntakeService:
         row=wb.store.get('preview',id,rev,scope=wb.scope)
         if row['body']['review_state']!='needs_revalidation':raise ValueError('preview does not need correction validation')
         body=revalidate_corrections(row['body'],self._target(s)[0],wb.scope)
+        # Revalidation may re-add the required gap next to the same failed
+        # conversion; keep the stored preview and the session on one list.
+        body['issues']=self._deduped_issues(body.get('issues') or [])
         next_rev=str(int(rev)+1);body['revision']=next_rev
         wb.sessions.update(s.id,s.revision,{'selected_versions':{**s.selected_versions,'preview':id+'@'+next_rev},
-            'issues':body['issues'],'next_actions':['review_mapping']},ctx,
+            'issues':self._session_issues(body['issues']),
+            'next_actions':['review_mapping']},ctx,
             extra_writes=[Write('preview',id,wb.scope,body,rev)])
         fields=MappingPreview.model_fields
         return MappingPreview.model_validate({k:v for k,v in body.items() if k in fields})

@@ -16,6 +16,7 @@ from dataagent_contracts.ontology import FieldBinding, MappingSpec, ReviewDecisi
 from dataagent_workbench.bootstrap import Workbench
 from dataagent_workbench.intake_service import PreviewBlocked
 from dataagent_workbench.interfaces.http_api import create_app
+from dataagent_workbench.service_tools import invoke
 from dataagent_workbench.view_service import ViewService
 from test_intake_repairs import StubProbeClient, csv_profile, start
 from test_clause_records import (clause_records, extract_records,
@@ -416,18 +417,55 @@ def test_partial_save_reason_is_chinese_and_raw_detail_is_separate(tmp_path):
     assert all('Invalid' not in item['reason'] for item in reasons.values())
 
 
-def test_failed_conversion_is_counted_once_per_row_and_column(tmp_path):
+def two_real_failures_setup(tmp_path):
+    """Two ordinary data rows whose amount column cannot be converted."""
+    wb = Workbench(tmp_path)
+    wb.layer_client = StubProbeClient({'ledger': csv_profile('ledger', [
+        {'number': 'INV-1', 'amount_minor': 'bad-one', 'currency': 'CNY'},
+        {'number': 'INV-2', 'amount_minor': 'bad-two', 'currency': 'CNY'},
+    ])})
+    session = wb.intake.advance(start(wb, [SourceSelection(
+        source_id='ledger', kind='file', locator_ref='ledger.csv')]).session_id, wb.ctx)
+    return wb, session
+
+
+def test_intake_status_reports_one_cause_and_two_affected_rows(tmp_path):
+    wb, session = two_real_failures_setup(tmp_path)
+    preview = wb.intake.submit_proposal(session.id, proposal_for(wb, session, 'ledger'),
+                                        session.revision, wb.ctx)
+    # Two ordinary rows fail the same amount column: one mapping root cause,
+    # two affected rows.  The status call must expose both counts separately.
+    assert len(preview.issues) == 2
+    status = invoke(wb, 'intake_status', {'session_id': session.id}).data
+    assert status['issue_count'] == len(status['issues']) == 1
+    assert status['issue_row_count'] == 2
+    assert status['issues'][0]['code'] == 'ontology.conversion_failed'
+    summary = wb.intake.view(session.id, wb.ctx)
+    assert summary['issue_count'] == 1
+    assert summary['preview']['issue_row_count'] == 2
+
+
+def test_failed_conversion_counts_one_root_cause_and_two_rows(tmp_path):
     wb, session = bad_rows_setup(tmp_path)
     preview = wb.intake.submit_proposal(session.id, proposal_for(wb, session, 'ledger'),
                                         session.revision, wb.ctx)
-    # Two rows fail; each failed column must not also count as a missing
-    # required value on the same row (FDE2-06: 20 rows read as 40 problems).
-    assert len(preview.issues) == 4
+    # Two rows fail in the same column, and the failed column must not also
+    # count as a missing required value on the same row.  That is one mapping
+    # root cause affecting two rows, while the per-row list stays available
+    # for locating/correcting each row (FDE2-06).
+    assert len(preview.issues) == 2
     summary = wb.intake.view(session.id, wb.ctx)
-    assert len(summary['preview']['issues']) == 2
+    assert summary['issue_count'] == summary['preview']['issue_count'] == 1
+    assert summary['preview']['issue_row_count'] == 2
+    assert summary['preview']['issue_item_count'] == len(summary['preview']['issues']) == 2
     assert not any(issue['code'] == 'ontology.required_value_missing'
                    for issue in summary['preview']['issues'])
+    status = invoke(wb, 'intake_status', {'session_id': session.id}).data
+    assert status['issue_count'] == len(status['issues']) == 1
+    assert status['issue_row_count'] == 2
     page = ViewService(wb).object_page(session.id, wb.ctx)
+    assert page['issue_count'] == 1 and page['issue_row_count'] == 2
+    assert len(page['issues']) == 2
     assert [issue['code'] for issue in page['issues']] == \
         ['ontology.conversion_failed', 'ontology.conversion_failed']
     blocked = wb.sessions.get(session.id, wb.ctx)
@@ -533,24 +571,25 @@ def clause_conversion_setup(tmp_path):
     return wb, session
 
 
-def test_clause_conversion_failure_has_no_exclude_record_option(tmp_path):
+def test_clause_record_never_gets_exclude_record_option(tmp_path):
     wb, session = clause_conversion_setup(tmp_path)
-    conversion = wb.intake.disposition_options(session, {'issues': [{
-        'code': 'ontology.conversion_failed', 'source_id': 'clause', 'row': 0}]})
-    assert not [option for option in conversion if option['action'] == 'exclude_record']
-    # 引文归属失败仍可按条款记录逐条排除（不是真实数据字段转换失败）。
-    attribution = wb.intake.disposition_options(session, {'issues': [{
-        'code': 'record_attribution_unverified', 'source_id': 'clause', 'row': 0}]})
-    assert [option['record'] for option in attribution
-            if option['action'] == 'exclude_record'] == [0]
+    # 条款记录没有表头/无关行：转换失败、必填缺失、引文归属未核实都不提供
+    # 「排除记录」，只能纠正值或重新提取条款记录。
+    for code in ('ontology.conversion_failed', 'ontology.required_value_missing',
+                 'record_attribution_unverified'):
+        options = wb.intake.disposition_options(session, {'issues': [{
+            'code': code, 'source_id': 'clause', 'row': 0}]})
+        assert not [option for option in options
+                    if option['action'] == 'exclude_record'], code
 
 
-def test_clause_conversion_plus_missing_required_has_no_exclude_option(tmp_path):
+def test_clause_conversion_with_required_gap_stays_one_issue(tmp_path):
     wb, session = clause_setup(tmp_path)
     records = clause_records()
-    # Same clause record: the required currency was never stated, and the
-    # limit is bound to a text field so its conversion fails.  The real
-    # preview emits both issues; neither may offer the row-level escape.
+    # Same clause record: the limit is bound to a text field so its conversion
+    # fails, and because the limit is required the engine also sees a missing
+    # value on that row/column.  The real preview keeps one root cause and
+    # offers no row-level escape for it.
     records[0]['values'] = [item for item in records[0]['values']
                              if item['property'] != '币种']
     extract_records(wb, session, records)
@@ -559,12 +598,14 @@ def test_clause_conversion_plus_missing_required_has_no_exclude_option(tmp_path)
     mapping.bindings['限额'] = FieldBinding(source_field='城市等级', transform='decimal')
     preview = wb.intake.submit_proposal(
         session.id, mapping, session.revision, wb.ctx)
-    codes = {issue['code'] for issue in preview.issues}
-    assert 'ontology.conversion_failed' in codes
-    assert 'ontology.required_value_missing' in codes
+    # The failed 限额 conversion also leaves the required 限额 missing on the
+    # same row/column; the stored preview keeps one root cause per record and
+    # does not repeat the missing value.
+    assert {issue['code'] for issue in preview.issues} == \
+        {'ontology.conversion_failed'}
+    assert len(preview.issues) == 4
     body = wb.intake.view(session.id, wb.ctx)['preview']
-    # The converted 限额 and the missing 币种 are the same real clause record;
-    # the view must not attach an exclude action to either issue.
+    # Those real clause records must not get an exclude action.
     assert not [action for issue in body['issues']
                 for action in issue.get('actions', [])
                 if action['action'] == 'exclude_record']
@@ -572,3 +613,41 @@ def test_clause_conversion_plus_missing_required_has_no_exclude_option(tmp_path)
         wb.sessions.get(session.id, wb.ctx), body)
     assert not [option for option in options
                 if option['action'] == 'exclude_record' and option['record'] == 0]
+
+
+def test_real_clause_required_gap_has_no_exclude_record_option(tmp_path):
+    """Review round 8: a real clause row missing a required value is not filler.
+
+    The record has identity values but never states the required limit.  The
+    preview's required_value_missing is a real gap to correct or re-extract,
+    so neither the issue nor the disposition list may offer the table-row
+    escape hatch.
+    """
+    wb, session = clause_setup(tmp_path)
+    records = clause_records()
+    records[0]['values'] = [item for item in records[0]['values']
+                             if item['property'] != '限额']
+    extract_records(wb, session, records)
+    session = wb.sessions.get(session.id, wb.ctx)
+    preview = wb.intake.submit_proposal(
+        session.id, standard_proposal(wb, session), session.revision, wb.ctx)
+    missing = [issue for issue in preview.issues
+               if issue['code'] == 'ontology.required_value_missing']
+    assert missing and missing[0]['row'] == 0 and missing[0]['target'] == '限额'
+    assert not [issue for issue in preview.issues
+                if issue['code'] == 'ontology.conversion_failed']
+    body = wb.intake.view(session.id, wb.ctx)['preview']
+    assert not [action for issue in body['issues']
+                for action in issue.get('actions', [])
+                if action['action'] == 'exclude_record']
+    options = wb.intake.disposition_options(
+        wb.sessions.get(session.id, wb.ctx), body)
+    assert not [option for option in options
+                if option['action'] == 'exclude_record']
+    # The audited endpoint enforces the same rule; re-extraction (or a value
+    # correction) is the way out, not dropping the verified clause record.
+    current = wb.sessions.get(session.id, wb.ctx)
+    with pytest.raises(ValueError, match='条款记录不能按无关行排除'):
+        wb.intake.dispose(session.id,
+                          _dispose('exclude_record', source_id='policy', record=0),
+                          current.revision, wb.ctx)

@@ -12,6 +12,7 @@ refuses reuse with a Chinese reason when the file changed.
 import io
 import zipfile
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -355,7 +356,9 @@ def test_missing_required_property_is_a_gap_not_an_invention(tmp_path):
     assert '限额' not in profile['records'][0]
     assert '限额' in profile['fields']
 
-    # The gap surfaces as a preview issue on that record and can be disposed.
+    # The gap surfaces as a preview issue on that record.  It is a real clause
+    # record, not an irrelevant table row: no exclude-record escape may be
+    # attached, even though the clause never stated the required value.
     session = wb.sessions.get(session.id, wb.ctx)
     preview = wb.intake.submit_proposal(session.id, standard_proposal(wb, session),
                                         session.revision, wb.ctx)
@@ -367,18 +370,30 @@ def test_missing_required_property_is_a_gap_not_an_invention(tmp_path):
     assert '限额' in preview.instances[0].unresolved
 
     body = wb.intake.view(session.id, wb.ctx)['preview']
+    assert not [action for issue in body['issues']
+                for action in issue.get('actions', [])
+                if action['action'] == 'exclude_record']
     options = wb.intake.disposition_options(wb.sessions.get(session.id, wb.ctx), body)
-    assert [option for option in options
-            if option['action'] == 'exclude_record' and option['record'] == 0]
-    session = wb.sessions.get(session.id, wb.ctx)
-    invoke(wb, 'intake_dispose', {
-        'session_id': session.id, 'expected_revision': session.revision,
-        'action': 'exclude_record', 'source_id': 'policy', 'record': 0,
-        'reason': '该条款记录缺限额，先排除'})
+    assert not [option for option in options
+                if option['action'] == 'exclude_record']
+    current = wb.sessions.get(session.id, wb.ctx)
+    with pytest.raises(ValueError, match='条款记录不能按无关行排除'):
+        wb.intake.dispose(session.id, SimpleNamespace(
+            action='exclude_record', source_id='policy', record=0,
+            partition=None, reason='该条款记录缺限额，先排除'),
+            current.revision, wb.ctx)
+
+    # The way out is a verified value or re-extraction: correcting the gap on
+    # the object page clears it while all four clause records stay in scope.
+    wb.intake.apply(session.id, ReviewDecision(
+        preview_ref=preview.id + '@' + preview.revision, target_scope='instance',
+        changes={'entity_id': preview.instances[0].id, 'property': '限额',
+                 'value': '800', 'reason': '条款未写明，按同条同类标准核对'}),
+        current.revision, wb.ctx)
     session = wb.sessions.get(session.id, wb.ctx)
     preview = wb.intake.submit_proposal(session.id, standard_proposal(wb, session),
                                         session.revision, wb.ctx)
-    assert len(preview.instances) == 3 and not preview.issues
+    assert len(preview.instances) == 4 and not preview.issues
 
 
 def test_clause_records_require_paragraph_text_disclosure(tmp_path):
@@ -419,7 +434,7 @@ def test_tightened_disclosure_refuses_clause_record_replay(tmp_path):
     assert view['preview'] is None
 
 
-def test_swapped_limit_quotes_flag_attribution_and_dispose(tmp_path):
+def test_swapped_limit_quotes_flag_attribution_without_exclusion(tmp_path):
     # 第三条里把 800 与 500 的引文和值互换：这两条记录的限额引文落在对方
     # 的记录区间里，归属无法核实，但整批不被拒绝、其余记录不受影响。
     wb, session = setup(tmp_path)
@@ -454,21 +469,27 @@ def test_swapped_limit_quotes_flag_attribution_and_dispose(tmp_path):
     assert by_row[0]['entity_id'] != by_row[1]['entity_id']
     assert len(preview.instances) == 4
 
-    # The flagged records can be disposed; the unflagged ones then save.
+    # Clause records are never exclusion candidates, not even for an
+    # attribution issue: correct the extracted spans and re-extract instead.
     body = wb.intake.view(session.id, wb.ctx)['preview']
     options = wb.intake.disposition_options(wb.sessions.get(session.id, wb.ctx), body)
-    assert {option['record'] for option in options
-            if option['action'] == 'exclude_record'} == {0, 1}
-    for row in (0, 1):
-        session = wb.sessions.get(session.id, wb.ctx)
-        invoke(wb, 'intake_dispose', {
-            'session_id': session.id, 'expected_revision': session.revision,
-            'action': 'exclude_record', 'source_id': 'policy', 'record': row,
-            'reason': '限额引文归属未核实，先排除'})
+    assert not [option for option in options
+                if option['action'] == 'exclude_record']
+    current = wb.sessions.get(session.id, wb.ctx)
+    with pytest.raises(ValueError, match='条款记录不能按无关行排除'):
+        wb.intake.dispose(session.id, SimpleNamespace(
+            action='exclude_record', source_id='policy', record=0,
+            partition=None, reason='限额引文归属未核实，先排除'),
+            current.revision, wb.ctx)
+
+    # Re-extract the same four records with correct spans: the batch still has
+    # four objects and the attribution issue is gone, without dropping rows.
+    session = wb.sessions.get(session.id, wb.ctx)
+    extract_records(wb, session, clause_records())
     session = wb.sessions.get(session.id, wb.ctx)
     preview = wb.intake.submit_proposal(session.id, standard_proposal(wb, session),
                                         session.revision, wb.ctx)
-    assert len(preview.instances) == 2 and not preview.issues
+    assert len(preview.instances) == 4 and not preview.issues
     session = wb.sessions.get(session.id, wb.ctx)
     wb.intake.apply(session.id, ReviewDecision(
         preview_ref=preview.id + '@' + preview.revision, target_scope='mapping'),

@@ -44,15 +44,18 @@ async function openObjectPageWith13Issues(page:import('@playwright/test').Page){
 test('对象页列出全部待核对问题：总数、阻断数与折叠展开',async({page})=>{
  slowTimeout(40000);
  await openObjectPageWith13Issues(page);
- // 头部并列总数与阻断数（FDE2-06）：13 条原始问题里「金额 第 3 行」的缺必填
- // 与转换失败同根因，去重后 12 项；整批保存被任何未解决问题拦下，阻断也计 12。
- await expect(page.getByTestId('pending-issues')).toContainText('12 项待核对');
- await expect(page.getByTestId('pending-issues')).toContainText('阻断 12 项');
- // 去重后 12 项问题按根因合并成 11 条条目（两行缺单号合并为一条「2 行」）。
- // 超过 10 条时折叠尾部：默认 10 条可见，阻断类排在最前。
+ // 头部并列根因数、受影响行数与阻断数（FDE2-06）：13 条原始问题里「金额
+ // 第 3 行」的缺必填与转换失败同根因，去重并按根因合并后 11 项、涉及 3 行；
+ // 整批保存被任何未解决问题拦下，阻断也按 11 项根因计。
+ await expect(page.getByTestId('pending-issues')).toContainText('11 项待核对');
+ await expect(page.getByTestId('pending-issues')).toContainText('涉及 3 行');
+ await expect(page.getByTestId('pending-issues')).toContainText('阻断 11 项');
+ // 11 项问题按根因合并成 11 条条目；来源级「读取不完整」固定排最前，
+ // 即使超过 10 条也不会被折叠掉。默认 10 条可见，阻断类在前。
  await expect(page.getByTestId('pending-issue')).toHaveCount(10);
  await expect(page.getByTestId('pending-issue').first()).toContainText('阻断');
- await expect(page.getByTestId('pending-issue').nth(5)).toContainText('可纠正');
+ await expect(page.getByTestId('pending-issue').first()).toContainText('来源未完整读取');
+ await expect(page.getByTestId('pending-issue').filter({hasText:'可纠正'}).first()).toBeVisible();
  await expect(page.getByText('展开其余 1 条')).toBeVisible();
  // 展开后每条问题都可见。
  await page.getByRole('button',{name:'展开其余 1 条'}).click();
