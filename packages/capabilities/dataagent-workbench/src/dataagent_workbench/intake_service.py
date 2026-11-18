@@ -13,7 +13,7 @@ from dataagent_ontology.identity import digest
 from dataagent_ontology.mapping import _typed
 from .adapters.layer_client import DataLayerProbeError, LayerClient,installed_data_package
 from .inference_requests import mapping_request
-from .document_fields import extract_fields, replay_fields
+from .document_fields import ReplayError, extract_fields, replay_fields
 from .ontology_discovery import is_discovery
 
 
@@ -28,6 +28,7 @@ _BUDGET_RESERVE_RATIO = 0.1
 _MIN_PROBE_SECONDS = 0.01
 
 _PREVIEW_BLOCK_DETAIL = 'preview contains unresolved issues'
+_REPLAY_FAILED = 'intake.mapping_replay_failed'
 _PENDING_CORRECTIONS = 'intake.pending_corrections'
 _RESOLVABLE_ISSUES = {
     'ontology.conflicting_values', 'ontology.required_value_missing',
@@ -211,8 +212,10 @@ class IntakeService:
                 profiles=list(prior_profiles.values())
                 if (not is_discovery(s) and profiles and not s.issues
                         and all(profile.coverage=='full' for profile in profiles)):
-                    if self._reuse_verified_mapping(s,profiles,ctx):
-                        return wb.sessions.get(s.id,ctx)
+                    self._reuse_verified_mapping(s,profiles,ctx)
+                    # Reload even when reuse was refused: the refusal records
+                    # the fields that must be extracted again.
+                    return wb.sessions.get(s.id,ctx)
                 return s
         client=wb.layer_client or LayerClient(installed_data_package(wb.workspace))
         versions=s.selected_versions.copy()
@@ -307,8 +310,8 @@ class IntakeService:
             extra_writes=[Write('job',s.job_ref,wb.scope,{**job['body'],'state':'needs_input','checkpoint':'profiles'},job['revision'])])
         if (not is_discovery(s) and profiles and not errors and not retry
                 and all(profile.coverage=='full' for profile in profiles)):
-            if self._reuse_verified_mapping(s,profiles,ctx):
-                return wb.sessions.get(s.id,ctx)
+            self._reuse_verified_mapping(s,profiles,ctx)
+            return wb.sessions.get(s.id,ctx)
         return s
 
     def _fingerprints(self,profiles):
@@ -380,7 +383,13 @@ class IntakeService:
         for key in self._verified_mapping_keys(profiles):
             cached=self.wb.store.current('verified_mapping',key,scope=self.wb.scope)
             if cached is None:continue
-            session,profiles=self._replay_derived_fields(session,profiles,cached,ctx)
+            session,profiles,failures=self._replay_derived_fields(session,profiles,cached,ctx)
+            if failures:
+                # One unresolved field is enough: reusing the mapping would
+                # present a preview that silently misses that value.  Keep the
+                # session in needs_input and name the fields to extract again.
+                self._record_replay_failure(session,failures,ctx)
+                return False
             if self._reuse_cached_mapping(session,profiles,cached,ctx):
                 return True
         return False
@@ -407,22 +416,42 @@ class IntakeService:
         The fingerprint deliberately ignores extracted fields.  Replaying the
         recorded exact spans keeps a reusable mapping executable instead of
         submitting bindings for fields the fresh probe has not produced.
+
+        Returns ``(session, profiles, failures)``.  When the recorded quote of
+        any field cannot be relocated in the new original, no replay is
+        persisted and ``failures`` explains why reuse must be refused.
         """
         records=self._cached_sources(cached['body'])
-        if not records:return session,profiles
+        if not records:return session,profiles,[]
         current={profile.source_id:profile for profile in profiles}
         sources={source.source_id:source for source in session.sources}
         updates={}
+        failures=[]
         for record in records:
             specs=record.get('derived_fields')
             if not specs:continue
             profile=self._match_cached_profile(record,current,sources)
-            if profile is None or profile.source_id in updates:continue
-            updated=replay_fields(profile,specs,
-                                  identity_fields=tuple(self.wb.definition.identity_fields))
+            if profile is None:
+                failures.append({'source_id':record.get('source_id'),
+                                 'fields':[],
+                                 'detail':'cached source no longer matches the observation'})
+                continue
+            if profile.source_id in updates:continue
+            try:
+                updated=replay_fields(profile,specs,
+                                      identity_fields=tuple(self.wb.definition.identity_fields))
+            except ReplayError as exc:
+                failures.append({'source_id':profile.source_id,
+                                 'fields':exc.failures,
+                                 'detail':str(exc)})
+                continue
             if updated.model_dump(mode='json')!=profile.model_dump(mode='json'):
                 updates[profile.source_id]=updated
-        if not updates:return session,profiles
+        if failures:
+            # Never persist a partial replay: a later successful extraction
+            # must report all derived fields as freshly located.
+            return session,profiles,failures
+        if not updates:return session,profiles,[]
         versions=dict(session.selected_versions)
         writes=[]
         for source_id,updated in updates.items():
@@ -432,10 +461,39 @@ class IntakeService:
             versions['profile:'+source_id]=f'{profile_id}@{int(revision)+1}'
             writes.append(Write('profile',profile_id,self.wb.scope,
                                 updated.model_dump(mode='json'),revision))
-        if not writes:return session,profiles
+        if not writes:return session,profiles,[]
         session=self.wb.sessions.update(session.id,session.revision,
             {'selected_versions':versions},ctx,extra_writes=writes)
-        return session,self._profiles(session)
+        return session,self._profiles(session),[]
+
+    def _record_replay_failure(self,session,failures,ctx):
+        """Leave the task in needs_input with the reason reuse was refused.
+
+        The issue is the stable hand-off to ``intake_extract``: after new
+        quotes are extracted, that call clears the issue and the agent can
+        submit a fresh proposal.
+        """
+        issues=[issue for issue in session.issues
+                if issue.get('code')!=_REPLAY_FAILED]
+        for failure in failures:
+            fields=failure.get('fields') or []
+            names=[str(item.get('name')) for item in fields if item.get('name')]
+            detail=failure.get('detail') or 'recorded fields no longer resolve in the source'
+            if names and not all(name in detail for name in names):
+                detail=f'{detail}: {", ".join(names)}'
+            issues.append({'code':_REPLAY_FAILED,
+                           'source_id':failure.get('source_id'),
+                           'target':failure.get('source_id'),
+                           'detail':detail,'fields':fields,
+                           'next_action':'intake_extract'})
+        return self.wb.sessions.update(session.id,session.revision,
+            {'issues':issues,'next_actions':['intake_extract']},ctx)
+
+    @staticmethod
+    def _replay_failure(session):
+        """The recorded reason a verified mapping was not reused, if any."""
+        return next((issue for issue in session.issues
+                     if issue.get('code')==_REPLAY_FAILED),None)
 
     def _reuse_cached_mapping(self,session,profiles,cached,ctx):
         records=self._cached_sources(cached['body'])
@@ -477,6 +535,18 @@ class IntakeService:
         # The agent needs the failure code and the continuation point on the
         # same request that tells it to retry, not only in an internal log.
         request['issues']=list(s.issues)
+        failure=self._replay_failure(s)
+        if failure is not None:
+            # A mapping was not reused because the new original moved some of
+            # the recorded spans.  Say so on the same payload the agent sees,
+            # and point at intake_extract instead of a fresh proposal built on
+            # a profile that still lacks those values.
+            request['mapping_reused']=False
+            request['mapping_reuse_reason']=failure.get('detail')
+            request['mapping_reuse_blocked']={
+                'source_id':failure.get('source_id'),
+                'fields':failure.get('fields') or [],
+                'next_action':failure.get('next_action') or 'intake_extract'}
         for item,profile in zip(request.get('sources',[]),profiles):
             item['completed_partitions']=profile.completed_partitions
             item['total_partitions']=profile.total_partitions
@@ -925,12 +995,14 @@ class IntakeService:
             body['object_count']=len(body.get('instances',[]))
         draft=self.wb.store.current('ui_draft',s.id,scope=wb.scope)
         profiles = self._profiles(s)
+        failure = self._replay_failure(s)
         return {'session':s.model_dump(mode='json'),'profiles':[p.model_dump(mode='json') for p in profiles],
             'discovery':wb.discovery.state(s, profiles),
             'ontology':wb.definition.model_dump(mode='json'),'preview':body,
             'draft':draft['body'] if draft else {},
             'issue_count':body['issue_count'] if body else len(s.issues),
-            'mapping_reused':bool(body and body.get('mapping_reused'))}
+            'mapping_reused':bool(body and body.get('mapping_reused')) and failure is None,
+            'mapping_reuse_reason':failure.get('detail') if failure else None}
 
     def save_draft(self,session_id,draft,expected_revision,ctx):
         wb=self.wb;s=wb.sessions.get(session_id,ctx)

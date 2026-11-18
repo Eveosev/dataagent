@@ -5,7 +5,9 @@ on different pages: a field may be associated with a row observed on another
 page only when the span owner and the target row share document identity.  The
 anchor keeps the page it was read from.  The source structure fingerprint stays
 the fingerprint of the source itself, so a mapping saved after text extraction
-is still reusable for the next intake of the same structure.
+is still reusable for the next intake of the same structure.  Reuse is only
+claimed when every recorded span still resolves; a changed scan falls back to
+a fresh extraction instead of presenting a reused mapping with missing values.
 """
 
 import re
@@ -423,23 +425,61 @@ def extract_fields(profile, fields, allowed_fields, *, remember=False, identity_
     return updated
 
 
+class ReplayError(ValueError):
+    """A recorded extraction no longer resolves against the fresh observation.
+
+    ``failures`` names each recorded field that moved, so the intake service
+    can explain why a verified mapping must not be reused.  Returning the
+    unreplayed profile instead would let a changed scan be presented as a
+    successful reuse whose preview silently lacks those fields.
+    """
+
+    def __init__(self, source_id, failures):
+        self.source_id = source_id
+        self.failures = list(failures)
+        names = ', '.join(str(item.get('name')) for item in self.failures
+                          if item.get('name')) or 'unknown field'
+        super().__init__('recorded fields no longer resolve in the source: ' + names)
+
+
 def replay_fields(profile, specs, *, identity_fields=None, identity_aliases=None):
-    """Re-apply recorded extractions to a fresh probe of the same structure."""
+    """Re-apply recorded extractions to a fresh probe of the same structure.
+
+    Every recorded field must still resolve to its exact observed span.  If
+    any field moved -- for example the second scan carries a new document
+    number or amount -- :class:`ReplayError` is raised instead of returning
+    the unreplayed profile, so the caller can fall back to ``intake_extract``.
+    """
     fields = []
+    failures = []
+    pages = {page['page']: page['text'] for page in profile.metadata.get('pages', [])}
     for spec in specs or []:
+        name = str(spec.get('name')) if isinstance(spec, dict) and spec.get('name') else '?'
         try:
-            fields.append(DocumentField(row=int(spec['row']), name=str(spec['name']),
-                                        page=int(spec['page']), quote=str(spec['quote']),
-                                        char_start=spec.get('char_start')))
+            field = DocumentField(row=int(spec['row']), name=str(spec['name']),
+                                  page=int(spec['page']), quote=str(spec['quote']),
+                                  char_start=spec.get('char_start'))
         except (KeyError, TypeError, ValueError):
-            return profile
+            failures.append({'name': name,
+                             'page': spec.get('page') if isinstance(spec, dict) else None,
+                             'reason': 'recorded extraction is malformed'})
+            continue
+        try:
+            _span(field, pages)
+        except ValueError as exc:
+            failures.append({'name': field.name, 'page': field.page,
+                             'reason': str(exc)})
+            continue
+        fields.append(field)
+    if failures:
+        raise ReplayError(profile.source_id, failures)
     if not fields:
         return profile
     try:
         return extract_fields(profile, fields, None, remember=True,
                               identity_fields=identity_fields,
                               identity_aliases=identity_aliases)
-    except (ValueError, PermissionError):
-        # A changed page or quote must not turn automatic reuse into a crash;
-        # the preview will still report the missing values explicitly.
-        return profile
+    except (ValueError, PermissionError) as exc:
+        failures = [{'name': field.name, 'page': field.page, 'reason': str(exc)}
+                    for field in fields]
+        raise ReplayError(profile.source_id, failures) from exc
