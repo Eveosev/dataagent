@@ -16,6 +16,8 @@ from dataagent_ontology.mapping import _typed
 from .adapters.layer_client import DataLayerProbeError, LayerClient,installed_data_package
 from .inference_requests import mapping_request
 from .document_fields import ReplayError, extract_fields, replay_fields
+from .clause_records import (ClauseReplayError, extract_clause_records as build_clause_records,
+                             replay_clause_records)
 from .ontology_discovery import is_discovery
 from .session_service import mapping_target
 
@@ -59,6 +61,7 @@ _ISSUE_REASONS = {
     'ontology.relation_unresolved': '关联字段不完整',
     'ontology.correction_conflict': '网页纠正无法沿用',
     'ontology.no_records': '没有可映射的记录',
+    'record_attribution_unverified': '该记录的引文归属未核实',
 }
 
 
@@ -293,7 +296,8 @@ class IntakeService:
             for issue in body.get('issues') or []:
                 if issue.get('code') not in {'ontology.identity_unresolved',
                                              'ontology.required_value_missing',
-                                             'ontology.conversion_failed'}:
+                                             'ontology.conversion_failed',
+                                             'record_attribution_unverified'}:
                     continue
                 source_id, row = issue.get('source_id'), issue.get('row')
                 if source_id is None or row is None:
@@ -708,7 +712,8 @@ class IntakeService:
             try:
                 return [{'source_id':record.get('source_id'),'locator_ref':record.get('locator_ref'),
                          'kind':record.get('kind'),'mapping':MappingSpec.model_validate(record['mapping']),
-                         'derived_fields':record.get('derived_fields')}
+                         'derived_fields':record.get('derived_fields'),
+                         'clause_records':record.get('clause_records')}
                         for record in records]
             except (AttributeError,KeyError,TypeError,ValueError):return None
         mappings=body.get('mappings')
@@ -778,7 +783,7 @@ class IntakeService:
         return matches[0] if len(matches)==1 else None
 
     def _replay_derived_fields(self,session,profiles,cached,ctx):
-        """Restore text-extracted fields before reusing a verified mapping.
+        """Restore text-extracted fields and clause records before reusing a verified mapping.
 
         The fingerprint deliberately ignores extracted fields.  Replaying the
         recorded exact spans keeps a reusable mapping executable instead of
@@ -796,7 +801,8 @@ class IntakeService:
         failures=[]
         for record in records:
             specs=record.get('derived_fields')
-            if not specs:continue
+            clause=record.get('clause_records')
+            if not specs and not clause:continue
             profile=self._match_cached_profile(record,current,sources)
             if profile is None:
                 failures.append({'source_id':record.get('source_id'),
@@ -804,13 +810,24 @@ class IntakeService:
                                  'detail':'cached source no longer matches the observation'})
                 continue
             if profile.source_id in updates:continue
+            updated=profile
             try:
-                updated=replay_fields(profile,specs,
-                                      identity_fields=tuple(self._target(session)[2].identity_fields))
-            except ReplayError as exc:
+                if specs:
+                    updated=replay_fields(updated,specs,
+                                          identity_fields=tuple(self._target(session)[2].identity_fields))
+                if clause:
+                    ontology,concept_name,concept=self._target(session)
+                    allowed=(None if self.wb.allowed_model_fields is None
+                             else self.wb.allowed_model_fields.get(profile.source_id,[]))
+                    updated,_=replay_clause_records(updated,clause,concept,
+                        concept_name=concept_name,
+                        ontology_revision=f'{ontology.id}@{ontology.revision}',
+                        allowed_fields=allowed)
+            except (ReplayError,ClauseReplayError) as exc:
                 failures.append({'source_id':profile.source_id,
                                  'fields':exc.failures,
-                                 'detail':str(exc)})
+                                 'detail':str(exc),
+                                 'next_action':'intake_extract_records' if clause else 'intake_extract'})
                 continue
             if updated.model_dump(mode='json')!=profile.model_dump(mode='json'):
                 updates[profile.source_id]=updated
@@ -852,9 +869,11 @@ class IntakeService:
                            'source_id':failure.get('source_id'),
                            'target':failure.get('source_id'),
                            'detail':detail,'fields':fields,
-                           'next_action':'intake_extract'})
+                           'next_action':failure.get('next_action') or 'intake_extract'})
+        next_action=next((failure.get('next_action') for failure in failures
+                          if failure.get('next_action')),'intake_extract')
         return self.wb.sessions.update(session.id,session.revision,
-            {'issues':issues,'next_actions':['intake_extract']},ctx)
+            {'issues':issues,'next_actions':[next_action]},ctx)
 
     @staticmethod
     def _replay_failure(session):
@@ -953,6 +972,49 @@ class IntakeService:
             Write('profile', profile_id, wb.scope, updated.model_dump(mode='json'), revision),
         ])
         return self.inference_request(session_id, ctx)
+
+    def extract_clause_records(self, session_id, source_id, records, expected_revision, ctx):
+        """Turn disclosed clause text into anchored records for the pinned concept.
+
+        The agent submits one record per rule instance read from the clause
+        candidates; the service re-verifies every quote against the observed
+        paragraph or page text, keeps missing required attributes as explicit
+        gaps and installs the records as the source's
+        ``clause_records:<concept>`` record set so a normal mapping proposal
+        can bind them.
+        """
+        wb = self.wb
+        session = wb.sessions.get(session_id, ctx)
+        if is_discovery(session):
+            raise ValueError('clause records need a mapping intake with a pinned target concept')
+        if session.revision != expected_revision:
+            raise VersionConflict('session changed; reload clause candidates')
+        key = 'profile:' + source_id
+        ref = session.selected_versions.get(key)
+        if ref is None:
+            raise ValueError('source has no observation in this task')
+        profile_id, revision = ref.rsplit('@', 1)
+        record = wb.store.get('profile', profile_id, revision, scope=wb.scope)
+        profile = SourceProfile.model_validate(record['body'])
+        allowed = None if wb.allowed_model_fields is None else wb.allowed_model_fields.get(source_id, [])
+        ontology, concept_name, concept = self._target(session)
+        updated, summary = build_clause_records(
+            profile, records, concept, concept_name=concept_name,
+            ontology_revision=f'{ontology.id}@{ontology.revision}', allowed_fields=allowed)
+        versions = dict(session.selected_versions)
+        if 'preview' in versions:
+            versions['corrections_from'] = versions['preview']
+        versions.pop('preview', None)
+        versions[key] = f'{profile_id}@{int(revision) + 1}'
+        wb.sessions.update(session_id, expected_revision, {
+            'phase': 'needs_input', 'selected_versions': versions,
+            'issues': [], 'next_actions': ['propose_mapping'],
+        }, ctx, extra_writes=[
+            Write('profile', profile_id, wb.scope, updated.model_dump(mode='json'), revision),
+        ])
+        request = self.inference_request(session_id, ctx)
+        request['clause_records'] = summary
+        return request
 
     def _prior_preview(self, session):
         """Load the newest preview that still carries web corrections or pending ones."""
@@ -1428,6 +1490,71 @@ class IntakeService:
                 'inherited': [correction for correction, _, _, _, _ in applied],
                 'inheritance': body.get('inheritance')}
 
+    def _clause_attribution_issues(self,session,body):
+        """Preview issues for clause records whose quote attribution failed.
+
+        Extraction already verified every quote against the observed text;
+        attribution (which record a quote belongs to) is softer: a record whose
+        non-shared quotes fall outside its declared record_span, whose span
+        overlaps another record's, or whose shared quote is not the nearest
+        same-property value is listed here instead of blocking the batch.  A
+        record excluded by an audited disposition is no longer listed.  When
+        no preview instance is uniquely identified by the record's own spans,
+        the issue carries no entity_id and blocks the whole batch: a partial
+        release must not save a record whose attribution is unverified.
+        """
+        issues=[]
+        excluded={}
+        for entry in self.disposition_entries(session):
+            if entry.get('action')=='exclude_record':
+                excluded.setdefault(entry.get('source_id'),set()).add(entry.get('record'))
+        instances=body.get('instances') or []
+        for profile in self._profiles(session):
+            name=profile.metadata.get('selected_record_set') or ''
+            if not str(name).startswith('clause_records:'):continue
+            entry=(profile.metadata.get('record_sets') or {}).get(name) or {}
+            for item in entry.get('attribution_issues') or []:
+                row=item.get('record')
+                if not isinstance(row,int) or row in excluded.get(profile.source_id,()):
+                    continue
+                issue={'code':'record_attribution_unverified',
+                       'target':item.get('target'),'row':row,
+                       'source_id':profile.source_id,
+                       'detail':item.get('reason') or _ISSUE_REASONS['record_attribution_unverified']}
+                entity=self._row_instance(instances,entry,row)
+                if entity is not None:issue['entity_id']=entity
+                issues.append(issue)
+        return issues
+
+    @staticmethod
+    def _row_instance(instances,entry,row):
+        """The one preview instance this record's own anchors identify.
+
+        A span shared by several records proves nothing about which record
+        became which instance, so only spans cited by this record alone count
+        here.  When no instance carries them, or more than one does, the
+        caller must not guess: the issue stays without an entity_id and
+        blocks the whole batch instead of suspending one object.
+        """
+        cited_by={}
+        for key,anchors in (entry.get('anchors') or {}).items():
+            row_key=key.split('.',1)[0]
+            for anchor in anchors or []:
+                selector=anchor.get('selector') or {}
+                cited_by.setdefault((anchor.get('source_ref'),
+                    json.dumps(selector,sort_keys=True,default=str)),set()).add(row_key)
+        own={selector for selector,rows in cited_by.items() if rows=={str(row)}}
+        if not own:return None
+        matched=set()
+        for instance in instances:
+            anchors=[anchor for field in (instance.get('source_anchors') or {}).values()
+                     for anchor in field or []]
+            if any((anchor.get('source_ref'),
+                json.dumps(anchor.get('selector') or {},sort_keys=True,default=str))
+                in own for anchor in anchors):
+                matched.add(instance.get('id'))
+        return matched.pop() if len(matched)==1 else None
+
     def submit_proposal(self,session_id,proposal,expected_revision,ctx,*,reused=False):
         wb=self.wb;s=wb.sessions.get(session_id,ctx)
         if is_discovery(s):
@@ -1447,6 +1574,7 @@ class IntakeService:
         proposal=proposal.model_copy(update={'id':mid,'revision':revision,'scope':wb.scope})
         preview,body=wb.ontology.prepare_preview(proposal,observations,ctx,
             dispositions=self.disposition_entries(s))
+        body['issues']=[*(body.get('issues') or []),*self._clause_attribution_issues(s,body)]
         body['mapping_reused']=reused
         prior_ref,_,conflicts,pending=self._carry_corrections(s,body)
         hint=self.inheritance_hint(s,body)
@@ -1502,6 +1630,8 @@ class IntakeService:
         preview, body = wb.ontology.prepare_preview(
             primary, observations, ctx, source_mappings=mappings,
             dispositions=self.disposition_entries(session))
+        body['issues'] = [*(body.get('issues') or []),
+                         *self._clause_attribution_issues(session, body)]
         body['mapping_reused'] = reused
         prior_ref,_,conflicts,pending=self._carry_corrections(session,body)
         hint=self.inheritance_hint(session,body)
@@ -1580,6 +1710,10 @@ class IntakeService:
                     # Keep the exact text spans so the next intake can rebuild
                     # fields that the source structure alone cannot reproduce.
                     entry['derived_fields']=profile.metadata['derived_fields']
+                if profile is not None and profile.metadata.get('clause_records'):
+                    # The same for clause records: the quotes and positions are
+                    # what a later intake replays against a fresh observation.
+                    entry['clause_records']=profile.metadata['clause_records']
                 return entry
             if source_mappings:
                 records=[record(source_id,selections[source_id].locator_ref,
