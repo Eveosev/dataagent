@@ -614,7 +614,7 @@ class Flow:
         self.digests = {source_id: _sha256(path) for source_id, path in self.paths.items()}
 
     # ------------------------------------------------------------------ plan
-    def plan_for(self, request, source_ids):
+    def plan_for(self, request, source_ids, *, all_relations=False):
         catalog = request['catalog']
         entities = []
         names = {}
@@ -644,7 +644,7 @@ class Flow:
             entities.append(entity)
         relationships = []
         for index, link in enumerate(catalog.get('relationships') or [], 1):
-            if _relation_affine(link):
+            if all_relations or _relation_affine(link):
                 relationships.append({'evidence_id': link['id'],
                                       'name': 'Relation%d' % index})
         return {
@@ -756,9 +756,8 @@ class Flow:
         except ToolRejected as exc:
             artifact['error'] = 'tool'
             self.results.fail('N1', '无可靠标识链路在工具层被拒（%s）' % _code(exc.payload))
-        except Exception as exc:  # noqa: BLE001 - a check, not a crash
-            artifact['error'] = type(exc).__name__
-            self.results.fail('N1', '无可靠标识链路未完成（%s）' % type(exc).__name__)
+        except HttpError as exc:
+            self.results.fail('N1', '无可靠标识链路 HTTP 失败（状态 %s）' % exc.status)
             self.results.fail('N1.evidence', '无可靠标识链路未完成')
 
     def stage_main(self):
@@ -803,10 +802,6 @@ class Flow:
             artifact['error'] = 'tool'
             self.results.fail('CHAIN.discovery', '发现链路被工具拒绝（%s）' % _code(exc.payload))
             self.results.fail('CHAIN.review', '发现链路未完成')
-        except Exception as exc:  # noqa: BLE001
-            artifact['error'] = type(exc).__name__
-            self.results.fail('CHAIN.discovery', '发现链路未完成（%s）' % type(exc).__name__)
-            self.results.fail('CHAIN.review', '发现链路未完成')
 
     @staticmethod
     def _measure_table_name(catalog, types):
@@ -849,9 +844,8 @@ class Flow:
         except ToolRejected as exc:
             artifact['error'] = 'tool'
             self.results.fail('CHAIN.publish', '补全被工具拒绝（%s）' % _code(exc.payload))
-        except Exception as exc:  # noqa: BLE001
-            artifact['error'] = type(exc).__name__
-            self.results.fail('CHAIN.publish', '补全未完成（%s）' % type(exc).__name__)
+        except HttpError as exc:
+            self.results.fail('CHAIN.publish', '补全 HTTP 失败（状态 %s）' % exc.status)
 
     def stage_n4_n5(self):
         artifact = self.art['main']
@@ -865,33 +859,27 @@ class Flow:
         plan = artifact['plan']
         names, types, units = artifact['names'], artifact['types'], artifact['units']
         before = self.candidate(artifact['session'])['ref']
-        try:
-            tampered = self.completion_for(draft, plan, names, types, units, 'expense-policy',
-                                           limit_string=artifact.get('mode') == 'fallback',
-                                           extra_property='__unobserved_attribute__')
-            payload = self.rejected('ontology_publish_prepare', tampered)
-            if payload is None:
-                self.results.fail('N4.property', '虚构属性仍生成了候选')
-            else:
-                self.results.ok('N4.property', '虚构属性被发布前校验拒绝')
-        except Exception as exc:  # noqa: BLE001
-            self.results.fail('N4.property', '虚构属性校验未完成（%s）' % type(exc).__name__)
-        try:
-            tampered = self.completion_for(
-                draft, plan, names, types, units, 'expense-policy',
-                limit_string=artifact.get('mode') == 'fallback',
-                relations=[{'evidence_id': '__missing_relationship_evidence__',
-                            'name': 'RelationX',
-                            'subject_concept': names[draft['entities'][0]['table']],
-                            'object_concept': names[draft['entities'][-1]['table']],
-                            'roles': ['from', 'to']}])
-            payload = self.rejected('ontology_publish_prepare', tampered)
-            if payload is None:
-                self.results.fail('N4.relation', '无证据关系仍生成了候选')
-            else:
-                self.results.ok('N4.relation', '无证据关系被发布前校验拒绝')
-        except Exception as exc:  # noqa: BLE001
-            self.results.fail('N4.relation', '无证据关系校验未完成（%s）' % type(exc).__name__)
+        tampered = self.completion_for(draft, plan, names, types, units, 'expense-policy',
+                                       limit_string=artifact.get('mode') == 'fallback',
+                                       extra_property='__unobserved_attribute__')
+        payload = self.rejected('ontology_publish_prepare', tampered)
+        if payload is None:
+            self.results.fail('N4.property', '虚构属性仍生成了候选')
+        else:
+            self.results.ok('N4.property', '虚构属性被发布前校验拒绝')
+        tampered = self.completion_for(
+            draft, plan, names, types, units, 'expense-policy',
+            limit_string=artifact.get('mode') == 'fallback',
+            relations=[{'evidence_id': '__missing_relationship_evidence__',
+                        'name': 'RelationX',
+                        'subject_concept': names[draft['entities'][0]['table']],
+                        'object_concept': names[draft['entities'][-1]['table']],
+                        'roles': ['from', 'to']}])
+        payload = self.rejected('ontology_publish_prepare', tampered)
+        if payload is None:
+            self.results.fail('N4.relation', '无证据关系仍生成了候选')
+        else:
+            self.results.ok('N4.relation', '无证据关系被发布前校验拒绝')
         after = self.candidate(artifact['session'])['ref']
         if before == after:
             self.results.ok('N4', '提案/发布前校验拒绝无证据属性与关系，未写入新候选')
@@ -921,8 +909,8 @@ class Flow:
                 self.results.ok('N5', 'Agent 工具确认被拒，候选未发布且无本体修订')
             else:
                 self.results.fail('N5', 'Agent 工具确认后出现发布结果')
-        except Exception as exc:  # noqa: BLE001
-            self.results.fail('N5', 'Agent 工具确认未完成（%s）' % type(exc).__name__)
+        except HttpError as exc:
+            self.results.fail('N5', 'Agent 工具确认 HTTP 失败（状态 %s）' % exc.status)
 
     def stage_n3(self):
         artifact = self.art['n3']
@@ -944,7 +932,8 @@ class Flow:
             self._catalog = catalog
             tables = {table['name']: table for table in catalog['tables']}
             artifact['tables'] = tables
-            plan, names, types, units = self.plan_for(request, ['lines', 'n3'])
+            plan, names, types, units = self.plan_for(request, ['lines', 'n3'],
+                                                     all_relations=True)
             artifact.update(plan=plan, names=names, types=types, units=units)
             artifact['keys'] = {table['name']: ('C1' if table.get('kind') == 'docx' else 'C2')
                                 for table in request['catalog']['tables']}
@@ -969,9 +958,8 @@ class Flow:
         except ToolRejected as exc:
             artifact['error'] = 'tool'
             self.results.fail('N3', '值重合反例链路被工具拒绝（%s）' % _code(exc.payload))
-        except Exception as exc:  # noqa: BLE001
-            artifact['error'] = type(exc).__name__
-            self.results.fail('N3', '值重合反例链路未完成（%s）' % type(exc).__name__)
+        except HttpError as exc:
+            self.results.fail('N3', '值重合反例链路 HTTP 失败（状态 %s）' % exc.status)
 
     def stage_publish(self):
         artifact = self.art['main']
@@ -1009,25 +997,25 @@ class Flow:
             self.results.fail('CHAIN.review', '草案 r2 提案/审核未完成（%s）' % _code(exc.payload))
             self.results.fail('N6', 'r2 提案/候选被拒（%s）' % _code(exc.payload))
             return
-        except Exception as exc:  # noqa: BLE001
-            artifact['error'] = type(exc).__name__
-            self.results.fail('CHAIN.review', '草案 r2 提案/审核未完成（%s）' % type(exc).__name__)
-            self.results.fail('N6', 'r2 候选未完成（%s）' % type(exc).__name__)
+        except HttpError as exc:
+            self.results.fail('CHAIN.review', '草案 r2 HTTP 失败（状态 %s）' % exc.status)
+            self.results.fail('N6', 'r2 候选未完成')
             return
         try:
-            # The candidate endpoint returns the current candidate; the
-            # first attempt is recovered from its recorded summary.
+            # Send the old candidate with the *current* task revision so the
+            # request reaches the candidate-staleness gate, not the task
+            # revision check.
+            c2 = self.candidate(artifact['session'])
             stale_status, stale_body = self.http.request(
                 'POST', '/api/sessions/%s/publish/confirm' % artifact['session'], {
                     'candidate_ref': artifact['candidate1'].get('candidate_ref'),
                     'draft_ref': draft['ref'],
                     'source_snapshot': artifact['candidate1']['source_snapshot'],
                     'definition_digest': artifact['candidate1']['definition_digest'],
-                    'expected_revision': artifact['candidate1']['session_revision'],
+                    'expected_revision': c2['session_revision'],
                     'confirmed': True, 'reason': 'D7 N6 stale confirmation',
                 })
             artifact['stale'] = (stale_status, stale_body)
-            c2 = self.candidate(artifact['session'])
             published = self.publish(artifact['session'], c2)
             artifact['published'] = published
             again_status, again_body = self.http.request(
@@ -1045,24 +1033,26 @@ class Flow:
                 self.results.ok('CHAIN.publish', 'HTTP 人工确认发布成功，注册表只有一个修订')
             else:
                 self.results.fail('CHAIN.publish', '发布后注册表修订不是 1')
-            stale_ok = stale_status == 409
-            duplicate_ok = again_status == 409 or (
-                again_status == 200 and again_body.get('publication_ref') == published.get('publication_ref'))
+            stale_detail = _detail(stale_body).lower()
+            duplicate_detail = _detail(again_body).lower()
+            stale_ok = stale_status == 409 and ('stale' in stale_detail or '过期' in stale_detail) \
+                and 'task changed' not in stale_detail
+            duplicate_ok = (again_status == 409
+                            and ('already published' in duplicate_detail
+                                 or '已发布' in duplicate_detail)) or (
+                again_status == 200
+                and again_body.get('publication_ref') == published.get('publication_ref'))
             if stale_ok and duplicate_ok and entry is not None \
                     and entry.get('ontology_revision') == '1':
-                self.results.ok('N6', '过期候选被拒，重复确认被拒或幂等，只有一个本体修订')
+                self.results.ok('N6', '过期候选与重复确认分别命中候选过期/已发布门禁，只有一个本体修订')
             else:
-                self.results.fail('N6', '过期/重复确认或修订数不符合要求')
+                self.results.fail('N6', '过期/重复确认未命中对应门禁或修订数不符合要求')
         except ToolRejected as exc:
             self.results.fail('N6', '确认链路被工具拒绝（%s）' % _code(exc.payload))
         except HttpError as exc:
             artifact['publish_error'] = (exc.status, _code(exc.payload))
             self.results.fail('N6', 'HTTP 确认失败（状态 %s）' % exc.status)
             self.results.fail('CHAIN.publish', 'HTTP 确认失败（状态 %s）' % exc.status)
-        except Exception as exc:  # noqa: BLE001
-            artifact['publish_error'] = type(exc).__name__
-            self.results.fail('N6', '确认链路未完成（%s）' % type(exc).__name__)
-            self.results.fail('CHAIN.publish', '发布未完成（%s）' % type(exc).__name__)
 
     def stage_mapping(self):
         entry = self.entry('expense-policy')
@@ -1125,8 +1115,6 @@ class Flow:
                 }
             except ToolRejected as exc:
                 self.art['mapping'][key] = {'error': _code(exc.payload)}
-            except Exception as exc:  # noqa: BLE001
-                self.art['mapping'][key] = {'error': type(exc).__name__}
         mapped = [item for item in self.art['mapping'].values()
                   if item.get('receipt') and not item.get('issue_count')]
         if len(mapped) == 2:
@@ -1169,8 +1157,6 @@ class Flow:
                 collected[key] = page
             except ToolRejected:
                 collected[key] = None
-            except Exception:  # noqa: BLE001
-                collected[key] = None
         self.art['query'] = collected
         if collected.get('C1') and collected.get('C2') \
                 and collected['C1']['total'] and collected['C2']['total']:
@@ -1210,7 +1196,7 @@ class Flow:
                                       if value == key), None)),
                             'limit': 200,
                         })
-                    except Exception:  # noqa: BLE001
+                    except ToolRejected:
                         queries[key] = None
             self.art['retire']['queries'] = queries
             new_start = self.call('intake_start', {
@@ -1228,13 +1214,23 @@ class Flow:
             old_queries_ok = all(queries.get(key) and queries[key].get('total') ==
                                  (before_query.get(key) or {}).get('total')
                                  for key in ('C1', 'C2') if before_query.get(key))
-            if updated and updated.get('state') == 'retired' \
-                    and listing.get('default_ontology') == 'procurement' \
-                    and old_target and old_target.get('ontology_id') == 'expense-policy' \
-                    and old_queries_ok:
-                self.results.ok('N7', '停用后新任务回退内置本体，旧任务目标与已发布快照保持')
+            default_id = listing.get('default_ontology')
+            new_id = fallback_target.get('ontology_id')
+            new_rev = str(fallback_target.get('revision') or '')
+            old_rev = str(old_target.get('revision') or '') if old_target else ''
+            old_target_ok = bool(old_target) and old_target.get('ontology_id') == 'expense-policy' \
+                and old_rev == str(entry.get('ontology_revision') or '') \
+                and old_target.get('concept') in (entry.get('concepts') or [])
+            new_target_ok = bool(default_id) and new_id == default_id \
+                and new_id != 'expense-policy' and bool(new_rev) \
+                and fallback.get('ontology_id') == new_id \
+                and fallback.get('concept') == fallback_target.get('concept') \
+                and str(fallback.get('ontology_revision') or '') == '%s@%s' % (new_id, new_rev)
+            if updated and updated.get('state') == 'retired' and old_target_ok \
+                    and new_target_ok and old_queries_ok:
+                self.results.ok('N7', '停用后新任务固定默认本体；旧任务目标/修订固定，旧快照仍可查')
             else:
-                self.results.fail('N7', '停用后的回退或旧任务行为不符合要求')
+                self.results.fail('N7', '停用后的回退、目标固定或旧任务行为不符合要求')
             payload = self.rejected('intake_start', {
                 'goal': 'D7 显式选择已停用本体', 'mode': 'mapping',
                 'sources': [{'source_id': 'source', 'kind': 'file',
@@ -1254,9 +1250,6 @@ class Flow:
             self.results.fail('N8', '停用链路未完成')
         except HttpError as exc:
             self.results.fail('N7', '停用 HTTP 失败（状态 %s）' % exc.status)
-            self.results.fail('N8', '停用链路未完成')
-        except Exception as exc:  # noqa: BLE001
-            self.results.fail('N7', '停用链路未完成（%s）' % type(exc).__name__)
             self.results.fail('N8', '停用链路未完成')
 
     def stage_n2(self):
@@ -1316,17 +1309,18 @@ class Flow:
             artifact['confirm'] = (status, body)
             artifact['entry_after'] = self.entry('expense-policy-n2')
             artifact['pointer_after'] = self.ontologies().get('pointer')
+            pointer_same = pointer_before == artifact['pointer_after']
             if status == 422 and artifact['entry_after'] is None \
-                    and artifact.get('digest_changed'):
+                    and artifact.get('digest_changed') and pointer_same:
                 self.results.ok('N2', '来源快照已变时确认被拒，未写本体修订，指针未变')
             else:
                 self.results.fail('N2', '来源变更后的确认未被正确拒绝')
         except ToolRejected as exc:
             artifact['error'] = _code(exc.payload)
             self.results.fail('N2', '来源变更反例被工具拒绝（%s）' % _code(exc.payload))
-        except Exception as exc:  # noqa: BLE001
-            artifact['error'] = type(exc).__name__
-            self.results.fail('N2', '来源变更反例未完成（%s）' % type(exc).__name__)
+        except HttpError as exc:
+            artifact['error'] = 'http_%s' % exc.status
+            self.results.fail('N2', '来源变更反例 HTTP 失败（状态 %s）' % exc.status)
         self._n2_rediscover()
 
     def _n2_rediscover(self):
@@ -1371,8 +1365,8 @@ class Flow:
                 self.results.ok('N2.rediscover', '重新探查 21 行、身份不变、关联覆盖 17/21')
             else:
                 self.results.fail('N2.rediscover', '重新探查的行数/身份/覆盖与金标不一致')
-        except Exception as exc:  # noqa: BLE001
-            self.results.fail('N2.rediscover', '重新探查未完成（%s）' % type(exc).__name__)
+        except ToolRejected as exc:
+            self.results.fail('N2.rediscover', '重新探查被工具拒绝（%s）' % _code(exc.payload))
 
     # ---------------------------------------------------------------- scoring
     def score(self, gold):
@@ -1514,9 +1508,9 @@ class Flow:
                     if entry.get('paragraph') == paragraph + 1:
                         expected_ref = entry.get('ref')
         if sentence and sentence in description and expected_ref and expected_ref in cited:
-            self.results.ok('C1.unit', '限额单位口径写入了发布定义，草案引用了对应条款段落')
+            self.results.ok('C1.unit', '数值字段的单位口径写入了发布定义，草案引用了对应条款段落')
         else:
-            self.results.fail('C1.unit', '限额单位口径或条款段落引用缺失')
+            self.results.fail('C1.unit', '数值字段的单位口径或条款段落引用缺失')
 
     def _entity_index(self, key):
         table = next((name for name, value in (self.art['main'].get('keys') or {}).items()
@@ -1547,7 +1541,7 @@ class Flow:
         c1 = artifact['names'].get(by_key.get('C1'))
         c2 = artifact['names'].get(by_key.get('C2'))
         if definition.get('subject_concept') == c2 and definition.get('object_concept') == c1:
-            self.results.ok('R1', '关系端点为明细→标准，方向正确')
+            self.results.ok('R1', '关系端点与方向符合金标')
         else:
             self.results.fail('R1', '关系端点或方向与金标不一致')
         pairs = list(zip(evidence.get('source_columns') or [], evidence.get('target_columns') or []))
@@ -1575,8 +1569,9 @@ class Flow:
             self.results.ok('R1.forbidden', '未出现单列/反向/100% 匹配')
 
     def _score_query(self):
-        gold = self.gold['query_expectations']
-        expected = gold.get('Q1 列出一类城市住宿标准') or []
+        expectations = self.gold['query_expectations']
+        q1_key = next((key for key in expectations if str(key).startswith('Q1')), None)
+        expected = expectations.get(q1_key) or [] if q1_key else []
         page = self.art['query'].get('C1')
         evidence, _ = self._concept_evidence('C1')
         if not expected:
@@ -1587,33 +1582,15 @@ class Flow:
             return
         by_column = {item.get('column'): name for name, item in
                      (evidence.get('properties') or {}).items()}
-        matched = []
+        matched = set()
         for item in page.get('items') or []:
             row = {column: item['values'].get(name)
                    for column, name in by_column.items() if name in item.get('values', {})}
-            for entry in expected:
-                same = True
-                for key, value in entry.items():
-                    if key == 'evidence':
-                        continue
-                    actual = row.get(key)
-                    if key == '限额':
-                        if not _same_number(actual, value):
-                            same = False
-                    elif str(actual) != str(value):
-                        same = False
-                if same:
-                    matched.append((item, row))
-                    break
-        found = set()
-        for _, row in matched:
-            for entry in expected:
-                if all(_same_number(row.get(key), value) if key == '限额'
-                       else str(row.get(key)) == str(value)
-                       for key, value in entry.items() if key != 'evidence'):
-                    found.add(str(entry.get('职级')))
-        if len(matched) == len(expected) and len(found) == len(expected):
-            self.results.ok('Q1', '查询返回两类城市住宿标准，限额值符合金标')
+            for index, entry in enumerate(expected):
+                if _entry_matches(row, entry):
+                    matched.add(index)
+        if len(matched) == len(expected):
+            self.results.ok('Q1', '查询结果覆盖金标 Q1 的全部实例，字段值一致')
         else:
             self.results.fail('Q1', '查询结果与金标 Q1 不一致')
 
@@ -1658,6 +1635,29 @@ class Flow:
         else:
             self.results.fail('E1', '有锚点无法回放到同一值或来源摘要不一致（%d 处）' % max(1, len(issues)))
 
+    def _value_overlap_pairs(self, tables):
+        values = {}
+        for name, table in tables.items():
+            source = self.sources.get(table.get('source_id'))
+            if source is None:
+                continue
+            table_name = table['name']
+            if not source.matrix(table_name, table.get('partition')) and source.rows:
+                table_name = next(iter(source.rows))
+            values[name] = source.column_values(table_name, table.get('partition'),
+                                                list(table['columns']))
+        pairs = []
+        names = list(values)
+        for index, left in enumerate(names):
+            for right in names[index + 1:]:
+                for left_col, left_values in values[left].items():
+                    left_set = {str(value) for value in left_values if value is not None}
+                    for right_col, right_values in values[right].items():
+                        right_set = {str(value) for value in right_values if value is not None}
+                        if left_set & right_set:
+                            pairs.append((left, left_col, right, right_col))
+        return pairs
+
     def _score_n3(self):
         artifact = self.art['n3']
         if artifact.get('error'):
@@ -1671,6 +1671,7 @@ class Flow:
         links = (artifact.get('request') or {}).get('catalog', {}).get('relationships') or []
         overlap = [link for link in links
                    if link.get('source_table') in tables and link.get('target_table') in tables]
+        value_overlap = self._value_overlap_pairs(tables)
         if overlap:
             unresolved = {str(item.get('id')) for item in draft.get('unresolved_relationships') or []}
             excluded = {(item.get('kind'), item.get('ref')) for item in candidate.get('dispositions') or []}
@@ -1682,6 +1683,11 @@ class Flow:
                 self.results.ok('N3.evidence', '值重合候选被标为待核对/否决，未进入关系')
             else:
                 self.results.fail('N3.evidence', '值重合候选未被显式处置')
+        elif value_overlap:
+            if any(_norm(left) != _norm(right) for _, left, _, right in value_overlap):
+                self.results.ok('N3.evidence', '值重合但列名不相近，未生成跨来源关系候选')
+            else:
+                self.results.fail('N3.evidence', '值重合且列名相近，但未生成关系候选')
         else:
             self.results.ok('N3.evidence', '证据层没有值重合候选（允许），草案未采纳')
         relations = definition.get('relations') or {}
@@ -1690,9 +1696,9 @@ class Flow:
                    for name in concepts}
         merged = len(set(sources.values())) != len(sources)
         if not relations and len(concepts) == 2 and not merged and artifact.get('entry'):
-            self.results.ok('N3', '保修工单为独立概念，草案/已发布本体无跨来源关系')
+            self.results.ok('N3', '第三个来源为独立概念，草案/已发布本体无跨来源关系')
         else:
-            self.results.fail('N3', '保修工单被合并或出现跨来源关系')
+            self.results.fail('N3', '第三个来源被合并或出现跨来源关系')
 
     # ------------------------------------------------------------------- run
     def run(self):
@@ -1720,6 +1726,12 @@ def _code(payload):
     return str(payload.get('error') or payload.get('code') or 'invalid_input')
 
 
+def _detail(payload):
+    if not isinstance(payload, dict):
+        return ''
+    return str(payload.get('detail') or '')
+
+
 def _same_number(left, right):
     try:
         return Decimal(str(left)) == Decimal(str(right))
@@ -1737,6 +1749,21 @@ def _same_cell(value, cell):
     if isinstance(value, (int, float, Decimal)) or (isinstance(value, str) and _NUMBER.fullmatch(value)):
         return _same_number(value, cell)
     return str(value) == str(cell)
+
+
+def _entry_matches(row, entry):
+    for key, value in entry.items():
+        if key in {'evidence', 'cell'}:
+            continue
+        actual = row.get(key)
+        numeric = isinstance(value, (int, float, Decimal)) or (
+            isinstance(value, str) and _NUMBER.fullmatch(value))
+        if numeric:
+            if not _same_number(actual, value):
+                return False
+        elif str(actual) != str(value):
+            return False
+    return True
 
 
 def apply(report, project, args, context):
