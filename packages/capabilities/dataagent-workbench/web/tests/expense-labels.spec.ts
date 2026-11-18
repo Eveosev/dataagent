@@ -184,7 +184,23 @@ test('差旅本体：英文实体名统一中文标签；发布后同页签面�
  await expect(entry).not.toContainText('ExpenseLine');
  await expect(page.getByTestId('concept-count-expense-model-ExpenseLine')).toContainText('费用明细');
 
- // 6. 同页签新建映射任务：目标概念选项与目标提示显示中文；面包屑拿到
+ // 6. 差旅本体的实例页：多概念空状态与概念页签显示中文概念名。
+ await page.getByTestId('concept-count-expense-model-ExpenseLine').click();
+ await expect(page.getByTestId('instances-empty')).toContainText('概念 费用明细 还没有已发布实例');
+ await expect(page.getByTestId('instances-empty')).not.toContainText('ExpenseLine');
+ await expect(page.locator('.concept-tabs')).toContainText('费用明细');
+ await expect(page.locator('.concept-tabs')).toContainText('费用报销单');
+ await page.getByRole('button',{name:'返回本体库'}).click();
+ await expect(page.getByRole('heading',{name:'本体',exact:true})).toBeVisible();
+ // 内置采购本体是单概念（英文概念名）：徽标也显示中文概念名。
+ await page.getByTestId('concept-count-procurement-PurchaseDocument').click();
+ await expect(page.locator('.concept-tabs')).toHaveCount(0);
+ await expect(page.locator('nav.instance-controls .badge')).toHaveText('概念 采购单据');
+ await expect(page.getByText('PurchaseDocument')).toHaveCount(0);
+ await page.getByRole('button',{name:'返回本体库'}).click();
+ await expect(page.getByRole('heading',{name:'本体',exact:true})).toBeVisible();
+
+ // 7. 同页签新建映射任务：目标概念选项与目标提示显示中文；面包屑拿到
  //    新本体的注册表标题（标题缓存在发布后已失效重取，而不是沿用第 1 步
  //    预热的旧结果退回概念名）。
  await page.getByRole('button',{name:'新建接入'}).click();

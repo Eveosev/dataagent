@@ -122,6 +122,10 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,initial
  // 或对象短暂套到新概念上。
  const visiblePage=page&&page.concept===concept&&page.revision===revision?page:null;
  const items=visiblePage?.items||NO_ITEMS;
+ // 行的身份字段要等发布任务的视图（contexts）到齐才能确定；默认按身份字段
+ // 排序时先不渲染行，避免短暂出现未排序的一页（任务视图读不到时才退回
+ // 已发布值，维持既有降级路径）。
+ const contextsPending=items.some(item=>item.session_id&&!contexts[item.session_id]);
  const total=totalCount??visiblePage?.total??0;
  const conceptTotal=entry?.instance_counts?.[concept]??0;
  const currentCounts=entry?.current_revision_instance_counts;
@@ -383,7 +387,7 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,initial
    <button className="secondary" onClick={clearFilter}>清除筛选</button>
   </div>;
   return <div className="empty ontology-instance-empty" data-testid="instances-empty">
-   <strong>{entry&&entry.concepts.length>1?`概念 ${concept} 还没有已发布实例`:'这个本体还没有已发布实例'}</strong>
+   <strong>{entry&&entry.concepts.length>1?`概念 ${browseConceptLabel(concept)} 还没有已发布实例`:'这个本体还没有已发布实例'}</strong>
    <p>发布后才会出现；未发布的预览不会显示在这里。</p>
    <button className="primary" onClick={onNew}>新建接入</button>
   </div>;
@@ -414,7 +418,7 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,initial
        className={name===concept?'concept-tab active':'concept-tab'}
        aria-pressed={name===concept} onClick={()=>chooseConcept(name)}>{browseConceptLabel(name)}</button>)}
      </div>
-     :entry.concepts[0]&&<span className="badge">概念 {entry.concepts[0]}</span>}
+     :entry.concepts[0]&&<span className="badge">概念 {browseConceptLabel(entry.concepts[0])}</span>}
     <div className="instance-control-row">
      <div className="instance-control">
       <label className="label" htmlFor="instance-revision">修订</label>
@@ -498,7 +502,8 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,initial
     </p>}
    </nav>
    {failure&&<div className="notice red" data-testid="instances-failure" role="alert">{failure}</div>}
-   {loading?<div className="empty" data-testid="instances-loading">正在读取已发布实例…</div>:
+   {loading||(sort.property===IDENTITY_SORT&&!conceptDef&&contextsPending)
+    ?<div className="empty" data-testid="instances-loading">正在读取已发布实例…</div>:
     !visiblePage?(!failure&&emptyState()):
     visiblePage.items.length===0?emptyState():
     <section className="discovery-card instance-card">
