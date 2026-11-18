@@ -137,15 +137,18 @@ def create_app(wb):
     def ontology_instances(ontology_id:str,concept:str|None=None,
             revision:str|None=None,cursor:str|None=None,limit:int=50,
             where:str|None=None,include_related:str|None=None,
-            related:str|None=None,related_fields:str|None=None):
+            related:str|None=None,related_fields:str|None=None,
+            detail:str|None=None):
         """Published instances for one ontology (same service as ontology_query).
 
         ``include_related`` accepts a JSON object or a relation name; the
         query-string shorthand is ``related=<relation>&related_fields=a,b``.
+        Rows are slim by default; ``detail=anchors`` adds per-property source
+        anchors.  The ontology browser only consumes the slim shape.
         """
         request=OntologyQuery(ontology_id=ontology_id,concept=concept or None,
             revision=revision or None,where=parse_where(where),limit=limit,
-            cursor=cursor or None,
+            cursor=cursor or None,detail=detail or 'slim',
             include_related=parse_related(include_related,related,related_fields))
         return wb.queries.query(request,wb.ctx)
 
@@ -226,6 +229,15 @@ def create_app(wb):
         data=wb.intake.view(sid,wb.ctx)
         # Read-only comparison of retained corrections with the current mapping.
         data['correction_views']=views.correction_views(sid,wb.ctx)
+        # The propose response tells the caller which session revision it
+        # advanced to. Mirror it on the retained discovery draft so the web
+        # view describes the same revision without a second tool call.
+        discovery=data.get('discovery')
+        if isinstance(discovery,dict) and isinstance(discovery.get('draft'),dict):
+            discovery=dict(discovery)
+            discovery['draft']={**discovery['draft'],
+                'session_revision':data['session']['revision']}
+            data['discovery']=discovery
         return data
 
     @app.get('/api/sessions/{sid}/objects')
