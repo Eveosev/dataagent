@@ -209,3 +209,17 @@ def open_view(wb, session_id=None, *, run_id=None):
         data=json.dumps({'session_id':session_id,'run_id':run_id}).encode(),headers={'Content-Type':'application/json'},method='POST')
     with urllib.request.urlopen(request,timeout=10) as response:
         return json.load(response)
+
+
+def home_url(wb):
+    """Home page URL for a workspace with no task to open (FDE2-15).
+
+    Starts the workspace service if needed, then returns the unauthenticated
+    home page without calling ``/local/open``: the CLI prints a URL a human can
+    open, and the page's own "打开本地工作台" button mints the one-time nonce
+    link (60 s). No browser is launched here, so headless/SSH use is the same
+    code path as a desktop run.
+    """
+
+    data = ensure_service(wb)
+    return {'opened': False, 'url': data['url'].rstrip('/') + '/#'}

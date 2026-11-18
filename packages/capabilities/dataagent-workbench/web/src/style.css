@@ -68,3 +68,24 @@
 .ontology-page .notice{margin:18px 0 0}
 /* 窄屏下全局规则会隐藏 .save-buttons .secondary，本体库页头的操作保持可见。 */
 @media(max-width:760px){.ontology-page .save-buttons .secondary{display:inline-flex}}
+/* 概念分组（FDE2-08）：概念多时按概念折叠，顶部目录与「只看有待决项」筛选。 */
+.concept-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:4px 0 12px}
+.concept-toc{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:11px}
+.concept-toc a{color:var(--green);border-bottom:1px dashed #b7d2c6}
+.concept-filter{font-size:11px;color:#536761;white-space:nowrap}
+.concept-group{border:1px solid var(--line);border-radius:8px;margin-bottom:10px;padding:0 15px}
+.concept-group summary{cursor:pointer;padding:13px 0;display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;list-style:none}
+.concept-group summary::-webkit-details-marker{display:none}
+.concept-group[open] summary{border-bottom:1px solid var(--line);margin-bottom:12px}
+.concept-group .warn{margin:10px 0 0}
+.concept-meta{font-size:11px;color:var(--muted)}
+/* Agent 处置的逐项核对（FDE2-07）与退回入口。 */
+.publish-items label.publish-disposition{display:flex;gap:7px;align-items:flex-start;font-size:12px}
+.publish-items .help{margin:4px 0 0}
+.publish-return{margin-top:10px;font-size:11px}
+.publish-return summary{cursor:pointer;color:var(--green)}
+.publish-return .discovery-prompt{margin-top:8px}
+/* 草案确认收进次要操作（FDE2-12）：发布区存在时的折叠入口。 */
+.draft-only-review{margin-top:18px;font-size:11px}
+.draft-only-review summary{cursor:pointer;color:var(--muted)}
+.draft-only-review[open] summary{margin-bottom:8px}

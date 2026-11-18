@@ -359,6 +359,23 @@ setup_cmd() {
     echo "setup: ok"
 }
 
+# The project's own [core.sandbox] policy, if it declares one. `mint add`
+# never merges this table; the quickstart appends it from preset-intake.
+project_sandbox_policy() {
+    [ -f mint.toml ] || return 0
+    awk '
+        /^[[:space:]]*\[core\.sandbox\][[:space:]]*$/ { section=1; next }
+        /^[[:space:]]*\[/ { section=0 }
+        section && /^[[:space:]]*policy[[:space:]]*=/ {
+            value=$0
+            sub(/^[^=]*=[[:space:]]*/, "", value)
+            gsub(/^"|"[[:space:]]*$/, "", value)
+            print value
+            exit
+        }
+    ' mint.toml
+}
+
 # doctor: report, don't die — collect every failing check into one exit
 # status (3). A missing policy is a failing check, not a success with a
 # note (r5-review D14): enforce-mode runs would exit 3 on the next
@@ -500,6 +517,19 @@ except Exception:
         echo "policy:   governance layer unavailable" >&2
         status=3
     fi
+    # FDE2-03: the project fragment tightens the effective sandbox to
+    # workspace-write/read-only. With a trusted user `approval_policy=never`,
+    # Mint's `full-access + never` auto-allow shortcut no longer applies and
+    # every tool that needs approval is rejected before it runs. Query only
+    # this one policy value; config and credential contents are never printed.
+    project_policy=$(project_sandbox_policy)
+    if [ -n "$project_policy" ] && [ "$project_policy" != "full-access" ] && command -v mint >/dev/null 2>&1; then
+        approval=$(mint config get core.approval_policy 2>/dev/null | sed -n 's/.*= "\([^"]*\)".*/\1/p' | head -1)
+        if [ "$approval" = "never" ]; then
+            echo "approval: never + project sandbox $project_policy — DataAgent 的 MCP 工具需要审批，never 下会被全部拒绝（FDE2-03）；交互使用先运行: mint config set core.approval_policy on-request" >&2
+            status=3
+        fi
+    fi
     echo "mode:     DATAAGENT_ENFORCEMENT_MODE=${DATAAGENT_ENFORCEMENT_MODE:-warn (default)}"
     if [ "$status" -ne 0 ]; then
         echo "doctor: failing checks above (exit 3)" >&2
@@ -514,7 +544,8 @@ usage: dataagent <layer> <command> [flags]
        dataagent link
        dataagent setup [--ocr-root <verified ocr dir>]
        dataagent doctor
-       dataagent workbench list|status <session id>|stop
+       dataagent view [<session id>]
+       dataagent workbench serve|list|status <session id>|view [<session id>]|stop
 
 layers: data | app | gov | workbench | ops
 
@@ -528,8 +559,14 @@ layer commands (see `dataagent <layer> <op> --help` for the parameter table):
                                                   run one 09-benchmark case
   dataagent gov policy apply <file>                write an access policy
   dataagent gov confirm <file>                     confirm acceptance criteria
+  dataagent workbench serve [--port <n>]           start this workspace service
   dataagent workbench list                         tasks, phases and releases
+  dataagent workbench status <session id>          task status
+  dataagent workbench view [<session id>]          open a task, or print the
+                                                   home page URL with no task
   dataagent workbench stop                         stop this workspace service
+  dataagent view [<session id>]                    same as `workbench view`;
+                                                   no id prints the home page URL
 
 stdout is a summary JSON (status, issues, handles, result_path); the full
 result lands in .dataagent/results/<invocation_id>.json. exit: 0 ok/partial/
@@ -555,6 +592,7 @@ case $1 in
     link) [ $# -eq 1 ] && link_cmd || usage ;;
     setup) shift; setup_cmd "$@" ;;
     doctor) [ $# -eq 1 ] && doctor_cmd || usage ;;
+    view) shift; dispatch workbench view "$@" ;;
     -h|--help|help) usage ;;
     *) usage ;;
 esac

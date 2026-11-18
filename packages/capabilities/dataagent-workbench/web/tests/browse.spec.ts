@@ -74,7 +74,7 @@ function completion(sid:string,draftRef:string,expectedRevision:string,catalog:C
    {entity:'SalesOrder',properties:{
     book:{column:'book',value_type:'string',required:true},
     doc_no:{column:'doc_no',value_type:'integer',required:true},
-    note:{column:'note',value_type:'string',required:false},
+    party_no:{column:'party_no',value_type:'string',required:false},
    },identity_fields:['book','doc_no']},
    {entity:'SalesOrderLine',properties:{
     book:{column:'book',value_type:'string',required:true},
@@ -103,7 +103,7 @@ test('发布本体后按本体浏览已发布实例',async({page})=>{
  workspace=await resolveWorkspace(page);
  const database=path.join(workspace,'browse-discovery.db');
  fs.rmSync(database,{force:true});
- execFileSync('sqlite3',[database],{input:fs.readFileSync(SEED)+'\nALTER TABLE doc_hdr ADD COLUMN note TEXT;\n'});
+ execFileSync('sqlite3',[database],{input:fs.readFileSync(SEED)});
  const token=process.env.DATAAGENT_TEST_TOKEN||'';
  const auth={'x-dataagent-token':token};
  const csv='book,doc_no\n'+Array.from({length:12},(_,i)=>`SALE,${1001+i}`).join('\n')+'\n';
@@ -138,17 +138,17 @@ test('发布本体后按本体浏览已发布实例',async({page})=>{
  await page.getByRole('button',{name:'确认发布'}).click();
  await expect(page.getByTestId('publish-done')).toContainText('browse-sales',{timeout:20000});
 
- // 2. 立刻停用本体，把工作区默认目标还给内置本体。停用只影响新任务的默认选择；
- // 本用例随后通过真实接口显式指定 target 创建映射任务（与任务固定目标同一机制），
- // 避免长时间占用其它并行用例的默认指针。
- const retired=await page.request.post('/api/ontologies/browse-sales/retire',{
-  headers:auth,data:{reason:'浏览用例结束后停用，验证停用后仍可只读浏览',confirmed:true}});
- expect(retired.ok(),await retired.text()).toBeTruthy();
+ // 2. 先用显式 target 创建映射任务，再停用本体。后端现在拒绝已停用本体
+ // 作为新任务目标；先创建才能覆盖「停用后仍可只读浏览」，停用也会把工作区
+ // 默认目标还给内置本体，避免长时间占用其它并行用例的默认指针。
  const created=await page.request.post('/api/sessions',{headers:auth,data:{
   goal:'接入浏览用的销售订单',sources:[orderSource],mode:'mapping',
   target:{ontology_id:'browse-sales',concept:'SalesOrder'}}});
  expect(created.ok(),await created.text()).toBeTruthy();
  const mappingSid=(await created.json()).session_id as string;
+ const retired=await page.request.post('/api/ontologies/browse-sales/retire',{
+  headers:auth,data:{reason:'浏览用例结束后停用，验证停用后仍可只读浏览',confirmed:true}});
+ expect(retired.ok(),await retired.text()).toBeTruthy();
  const advanced=await page.request.post(`/api/sessions/${mappingSid}/advance`,{headers:auth});
  expect(advanced.ok(),await advanced.text()).toBeTruthy();
 
@@ -186,7 +186,7 @@ test('发布本体后按本体浏览已发布实例',async({page})=>{
  // 来源必须是中文的“人工纠正 · 对象页 · 原因”，不能露出决定 ID 或 JSON 指针。
  await page.getByRole('button',{name:'打开对象页'}).click();
  await expect(page.getByRole('heading',{name:'核对业务对象'})).toBeVisible({timeout:20000});
- await page.getByLabel('纠正的属性').selectOption('note');
+ await page.getByLabel('纠正的属性').selectOption('party_no');
  await page.getByLabel('纠正后的值').fill('加急');
  await page.getByLabel('修改原因').fill('客户电话确认加急');
  await page.getByRole('button',{name:'保存当前值并校验'}).click();
@@ -220,15 +220,15 @@ test('发布本体后按本体浏览已发布实例',async({page})=>{
  await expect(page.getByTestId('instance-revision').first()).toContainText('修订 1');
  await expect(page.getByTestId('instance-table')).not.toContainText('/Users/');
  await expect(page.getByTestId('instance-table')).not.toContainText('sha256:');
- await expect(page.getByRole('columnheader',{name:'备注'})).toBeVisible();
+ await expect(page.getByRole('columnheader',{name:'客户编号'})).toBeVisible();
  const correctionFilter=page.getByTestId('instance-filter');
- await correctionFilter.getByLabel('属性').selectOption('note');
+ await correctionFilter.getByLabel('属性').selectOption('party_no');
  await correctionFilter.getByLabel('条件').selectOption('eq');
  await correctionFilter.getByLabel('值').fill('加急');
  await page.getByRole('button',{name:'筛选',exact:true}).click();
  await expect(page.getByTestId('instance-row')).toHaveCount(1);
  const correctedRow=page.getByTestId('instance-row').first();
- await expect(correctedRow.getByTestId('instance-value-note')).toHaveText('加急');
+ await expect(correctedRow.getByTestId('instance-value-party_no')).toHaveText('加急');
  const correctedSource=correctedRow.getByTestId('instance-source');
  await expect(correctedSource).toContainText('人工纠正');
  await expect(correctedSource).toContainText('对象页');

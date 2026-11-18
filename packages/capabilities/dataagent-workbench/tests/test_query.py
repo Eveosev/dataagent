@@ -534,3 +534,191 @@ def test_schema_and_mcp_registration_mark_query_tools_read_only(tmp_path):
               handle(Workbench(tmp_path), {'method': 'tools/list'})['tools']}
     assert listed['ontology_query']['annotations'] == {'readOnlyHint': True}
     assert listed['ontology_instances_summary']['annotations'] == {'readOnlyHint': True}
+
+
+# ---------------------------------------------------------------- ordered queries
+EXPENSE_DEFINITION = None
+
+
+def _expense_definition():
+    from dataagent_contracts.ontology import (
+        ConceptDefinition, OntologyRevision, PropertyDefinition, RelationDefinition,
+    )
+    return OntologyRevision(id='expense-model', revision='1', concepts={
+        'ExpenseLine': ConceptDefinition(entity_type='ExpenseLine', properties={
+            'number': PropertyDefinition(value_type='string', required=True),
+            'line': PropertyDefinition(value_type='integer', required=True),
+            'spent_on': PropertyDefinition(value_type='date'),
+            'category': PropertyDefinition(value_type='string', required=True),
+            'amount': PropertyDefinition(value_type='decimal', required=True),
+        }, identity_fields=['number', 'line']),
+        'ExpenseStandard': ConceptDefinition(entity_type='ExpenseStandard', properties={
+            'category': PropertyDefinition(value_type='string', required=True),
+            'limit': PropertyDefinition(value_type='decimal', required=True),
+        }, identity_fields=['category']),
+    }, relations={'usesStandard': RelationDefinition(
+        roles=['line', 'standard'], subject_concept='ExpenseLine',
+        object_concept='ExpenseStandard')})
+
+
+def _save_concept(wb, concept, rows, bindings, relation_bindings=None):
+    from dataagent_contracts.intake import WorkSpec
+    source_id = 'src-' + concept
+    wb.layer_client = StubProbeClient({source_id: csv_profile(source_id, rows)})
+    goal = WorkSpec(id='goal-' + concept, goal='按本体接入', acceptance_criteria=['来源可核对'],
+                    authorization_ref=wb.authorization)
+    handle = wb.sessions.start(
+        [SourceSelection(source_id=source_id, kind='file',
+                         locator_ref=source_id + '.csv')],
+        goal, wb.ctx, mode='mapping',
+        target={'ontology_id': 'expense-model', 'concept': concept})
+    wb.intake.advance(handle.session_id, wb.ctx)
+    session = wb.sessions.get(handle.session_id, wb.ctx)
+    request = wb.intake.inference_request(handle.session_id, wb.ctx)
+    source = request['sources'][0]
+    mapping = MappingSpec(id='candidate', revision='1',
+                          ontology_revision='expense-model@1', concept=concept,
+                          source_fingerprint=source['structure_fingerprint'],
+                          bindings=bindings,
+                          relation_bindings=relation_bindings or {})
+    preview = wb.intake.submit_proposal(handle.session_id, mapping,
+                                        session.revision, wb.ctx)
+    session = wb.sessions.get(handle.session_id, wb.ctx)
+    wb.intake.apply(handle.session_id, ReviewDecision(
+        preview_ref=preview.id + '@' + preview.revision,
+        target_scope='mapping'), session.revision, wb.ctx)
+    assert wb.sessions.get(handle.session_id, wb.ctx).phase == 'saved'
+    return handle.session_id
+
+
+def expense_model(tmp_path):
+    """Standards and lines published by separate tasks of one revision."""
+    wb = Workbench(tmp_path)
+    wb.ontology.register(_expense_definition(), wb.ctx)
+    _save_concept(wb, 'ExpenseStandard', [
+        {'category': '住宿', 'limit': '500'},
+        {'category': '伙食', 'limit': '80'},
+    ], {'category': {'source_field': 'category'},
+        'limit': {'source_field': 'limit', 'transform': 'decimal'}})
+    _save_concept(wb, 'ExpenseLine', [
+        {'number': 'BX-1', 'line': '1', 'spent_on': '2026-03-01',
+         'category': '住宿', 'amount': '600'},
+        {'number': 'BX-1', 'line': '2', 'spent_on': '2026-03-02',
+         'category': '住宿', 'amount': '450'},
+        {'number': 'BX-2', 'line': '1', 'spent_on': '2026-03-03',
+         'category': '伙食', 'amount': '90'},
+        {'number': 'BX-2', 'line': '2', 'spent_on': '2026-03-04',
+         'category': '交通', 'amount': '30'},
+    ], {'number': {'source_field': 'number'},
+        'line': {'source_field': 'line', 'transform': 'integer'},
+        'spent_on': {'source_field': 'spent_on', 'transform': 'date'},
+        'category': {'source_field': 'category'},
+        'amount': {'source_field': 'amount', 'transform': 'decimal'}},
+        {'usesStandard': {
+            'line': {'source_field': '$entity'},
+            'standard': {'source_field': 'category'},
+        }})
+    return wb
+
+
+def _amounts(page):
+    return sorted(str(item['values']['amount']) for item in page['items'])
+
+
+def test_ordered_conditions_compare_numbers_and_dates(tmp_path):
+    wb = expense_model(tmp_path)
+    over = query(wb, ontology_id='expense-model', concept='ExpenseLine',
+                 where=[{'property': 'amount', 'op': 'gt', 'value': '500'}], limit=200)
+    assert over['total'] == 1 and _amounts(over) == ['600']
+
+    at_least = query(wb, ontology_id='expense-model', concept='ExpenseLine',
+                     where=[{'property': 'amount', 'op': 'gte', 'value': 450}], limit=200)
+    assert at_least['total'] == 2
+
+    under = query(wb, ontology_id='expense-model', concept='ExpenseLine',
+                  where=[{'property': 'amount', 'op': 'lt', 'value': '90'}], limit=200)
+    assert under['total'] == 1 and _amounts(under) == ['30']
+
+    dated = query(wb, ontology_id='expense-model', concept='ExpenseLine',
+                  where=[{'property': 'spent_on', 'op': 'gte', 'value': '2026-03-02'}],
+                  limit=200)
+    assert dated['total'] == 3
+    before = query(wb, ontology_id='expense-model', concept='ExpenseLine',
+                   where=[{'property': 'spent_on', 'op': 'lt', 'value': '2026-03-02'}],
+                   limit=200)
+    assert before['total'] == 1
+
+    combined = query(wb, ontology_id='expense-model', concept='ExpenseLine',
+                     where=[{'property': 'amount', 'op': 'lte', 'value': '450'},
+                            {'property': 'category', 'op': 'eq', 'value': '住宿'}],
+                     limit=200)
+    assert combined['total'] == 1
+
+
+def test_ordered_conditions_reject_unsupported_types_and_values(tmp_path):
+    wb = expense_model(tmp_path)
+    with pytest.raises(ValueError, match='only supported on decimal/integer/date'):
+        query(wb, ontology_id='expense-model', concept='ExpenseLine',
+              where=[{'property': 'category', 'op': 'gt', 'value': '住宿'}])
+    with pytest.raises(ValueError, match='single value'):
+        query(wb, ontology_id='expense-model', concept='ExpenseLine',
+              where=[{'property': 'amount', 'op': 'gt', 'value': ['500']}])
+    with pytest.raises(ValueError, match='does not match ordered decimal'):
+        query(wb, ontology_id='expense-model', concept='ExpenseLine',
+              where=[{'property': 'amount', 'op': 'gt', 'value': 'not-a-number'}])
+
+
+def test_include_related_fetches_the_standard_limit_for_each_line(tmp_path):
+    wb = expense_model(tmp_path)
+    page = query(wb, ontology_id='expense-model', concept='ExpenseLine',
+                 include_related={'relation': 'usesStandard', 'fields': ['limit']},
+                 limit=200)
+    assert page['total'] == 4
+    by_id = {item['values']['number'] + '-' + str(item['values']['line']): item
+             for item in page['items']}
+    assert by_id['BX-1-1']['related'] == {
+        'relation': 'usesStandard',
+        'target_instance_id': by_id['BX-1-1']['related']['target_instance_id'],
+        'fields': {'limit': '500'},
+    }
+    assert by_id['BX-1-2']['related']['fields'] == {'limit': '500'}
+    assert by_id['BX-2-1']['related']['fields'] == {'limit': '80'}
+    assert by_id['BX-2-2']['related'] is None
+    assert page['related_missing_count'] == 1
+    assert page['related_missing'] == [{
+        'release_ref': page['related_missing'][0]['release_ref'],
+        'instance_id': page['related_missing'][0]['instance_id'],
+        'values': by_id['BX-2-2']['values'],
+    }]
+    assert page['related_stats'] == {
+        'relation': 'usesStandard', 'matched': 3, 'missing': 1, 'ambiguous': 0,
+    }
+    assert page['include_related']['target_concept'] == 'ExpenseStandard'
+    assert page['include_related']['direction'] == 'subject_to_object'
+
+    # The two-step business answer: fetch the amounts and the related limits,
+    # then compare in the agent.  Exactly the over-limit rows survive.
+    flagged = [(item['values']['number'], item['values']['line'])
+               for item in page['items']
+               if item['related'] is not None
+               and float(item['values']['amount']) > float(item['related']['fields']['limit'])]
+    assert sorted(flagged) == [('BX-1', 1), ('BX-2', 1)]
+
+
+def test_include_related_can_traverse_in_reverse_and_defaults_to_identity(tmp_path):
+    wb = expense_model(tmp_path)
+    page = query(wb, ontology_id='expense-model', concept='ExpenseStandard',
+                 include_related={'relation': 'usesStandard'}, limit=200)
+    assert page['include_related']['target_concept'] == 'ExpenseLine'
+    assert page['include_related']['direction'] == 'object_to_subject'
+    assert page['include_related']['fields'] == ['number', 'line']
+    related = [item['related'] for item in page['items'] if item['related']]
+    assert len(related) == 2
+    assert all(set(item['fields']) == {'number', 'line'} for item in related)
+
+    with pytest.raises(ValueError, match='unknown relation'):
+        query(wb, ontology_id='expense-model', concept='ExpenseLine',
+              include_related={'relation': 'missing', 'fields': ['limit']})
+    with pytest.raises(ValueError, match='not defined on related concept'):
+        query(wb, ontology_id='expense-model', concept='ExpenseLine',
+              include_related={'relation': 'usesStandard', 'fields': ['secret']})

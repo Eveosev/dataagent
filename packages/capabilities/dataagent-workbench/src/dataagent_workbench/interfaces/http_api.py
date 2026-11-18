@@ -19,7 +19,7 @@ from dataagent_runtime.ports.workbench_store import VersionConflict,Write
 from pydantic_core import to_jsonable_python
 from ..ontology_discovery import DiscoveryReview
 from ..ontology_publish import PublishConfirmation, RetireRequest
-from ..query_service import OntologyQuery, parse_where
+from ..query_service import OntologyQuery, parse_related, parse_where
 from ..tool_schema import Dispose,StartTarget
 from ..view_service import ViewService
 
@@ -136,11 +136,17 @@ def create_app(wb):
     @app.get('/api/ontologies/{ontology_id}/instances')
     def ontology_instances(ontology_id:str,concept:str|None=None,
             revision:str|None=None,cursor:str|None=None,limit:int=50,
-            where:str|None=None):
-        """Published instances for one ontology (same service as ontology_query)."""
+            where:str|None=None,include_related:str|None=None,
+            related:str|None=None,related_fields:str|None=None):
+        """Published instances for one ontology (same service as ontology_query).
+
+        ``include_related`` accepts a JSON object or a relation name; the
+        query-string shorthand is ``related=<relation>&related_fields=a,b``.
+        """
         request=OntologyQuery(ontology_id=ontology_id,concept=concept or None,
             revision=revision or None,where=parse_where(where),limit=limit,
-            cursor=cursor or None)
+            cursor=cursor or None,
+            include_related=parse_related(include_related,related,related_fields))
         return wb.queries.query(request,wb.ctx)
 
     @app.get('/api/connections')

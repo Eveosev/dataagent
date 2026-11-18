@@ -92,6 +92,23 @@ _UNIT_CELL = re.compile(r'^table:(\d+)/row:(\d+)/col:(\d+)$')
 
 _DATE_FMT_IDS = set(range(14, 23)) | set(range(27, 37)) | set(range(45, 48)) | set(range(50, 59))
 
+# Issue codes whose report ``reason`` is a workbench-authored Chinese summary.
+# For any other code the workbench falls back to the raw issue ``detail``,
+# which can be a Python exception string; that text must not reach the report.
+_KNOWN_ISSUE_CODES = frozenset({
+    'ontology.conflicting_values',
+    'ontology.required_value_missing',
+    'ontology.required_binding_missing',
+    'ontology.identity_unresolved',
+    'ontology.conversion_failed',
+    'ontology.evidence_missing',
+    'ontology.incomplete_source',
+    'ontology.relation_unresolved',
+    'ontology.correction_conflict',
+    'ontology.no_records',
+    'record_attribution_unverified',
+})
+
 _HELPER = r'''
 import json, socket, sys
 from dataagent_workbench.bootstrap import Workbench
@@ -571,6 +588,150 @@ def _unit_clause(catalog, sources, table, measure):
     return clause, sentence
 
 
+def _relation_specs(relations, evidence_relations, catalog_links):
+    """Every published relation with the evidence link behind it."""
+    specs = []
+    for name, definition in (relations or {}).items():
+        if not isinstance(definition, dict):
+            continue
+        evidence = (evidence_relations or {}).get(name) or {}
+        link = (catalog_links or {}).get(evidence.get('evidence_id')) or {}
+        source_columns = evidence.get('source_columns') or []
+        target_columns = evidence.get('target_columns') or []
+        # Both sides of the join are compared at full length: zip() silently
+        # truncates, so a four-against-three mapping used to pass as a
+        # three-column join.  Unequal widths leave no pairs, which no gold
+        # relation can match and which the width check counts as wrong.
+        pairs = list(zip(source_columns, target_columns)) \
+            if len(source_columns) == len(target_columns) else []
+        specs.append({
+            'name': name, 'definition': definition, 'evidence': evidence,
+            'link': link, 'pairs': pairs,
+            'subject': definition.get('subject_concept'),
+            'object': definition.get('object_concept'),
+        })
+    return specs
+
+
+def _gold_direction(gold_relations, c1, c2):
+    first = (gold_relations or [{}])[0]
+    if str(first.get('from') or '').startswith('C1') \
+            and str(first.get('to') or '').startswith('C2'):
+        return c1, c2
+    return c2, c1
+
+
+def _relation_coverage_ok(link):
+    return bool(link) and link.get('matched_rows') == 16 \
+        and link.get('checked_rows') == 20 \
+        and link.get('matched_distinct_keys') == 12
+
+
+def _relation_checks(specs, gold_relations, c1, c2):
+    """Compare every published relation with every gold relation.
+
+    Matching is one-to-one on concept endpoints, direction and the complete
+    join-column tuple.  A gold relation with no counterpart, an extra
+    published relation, a reversed relation or a wrong join all fail; scoring
+    the first relation and ignoring the rest would hide exactly those cases.
+    """
+    expected_subject, expected_object = _gold_direction(gold_relations, c1, c2)
+    used = set()
+    unmatched = 0
+    coverage_bad = 0
+    for gold in gold_relations:
+        expected = sorted(tuple(pair) for pair in gold.get('join') or [])
+        match = next((index for index, spec in enumerate(specs)
+                      if index not in used and spec['pairs']
+                      and sorted(spec['pairs']) == expected
+                      and spec['subject'] == expected_subject
+                      and spec['object'] == expected_object), None)
+        if match is None:
+            unmatched += 1
+            continue
+        used.add(match)
+        if not _relation_coverage_ok(specs[match]['link']):
+            coverage_bad += 1
+    extras = len(specs) - len(used)
+    expected_widths = {len(gold.get('join') or []) for gold in gold_relations}
+    wrong_direction = sum(1 for spec in specs
+                          if spec['subject'] != expected_subject
+                          or spec['object'] != expected_object)
+    wrong_width = sum(1 for spec in specs
+                      if expected_widths and len(spec['pairs']) not in expected_widths)
+    no_evidence = sum(1 for spec in specs
+                      if not spec['evidence'].get('evidence_id') or not spec['link'])
+    claimed_full = sum(1 for spec in specs
+                       if spec['link'].get('checked_rows')
+                       and spec['link'].get('matched_rows')
+                       == spec['link'].get('checked_rows'))
+    fingerprints = [(spec['subject'], spec['object'], tuple(sorted(spec['pairs'])))
+                    for spec in specs]
+    duplicates = len(fingerprints) - len(set(fingerprints))
+    complete = len(used) == len(gold_relations) and extras == 0
+    checks = {}
+    if len(specs) == len(gold_relations) and complete and not wrong_direction:
+        checks['R1'] = (True, '关系端点与方向逐条符合金标（%d 条）' % len(specs))
+    else:
+        checks['R1'] = (
+            False, '关系端点/方向/数量与金标不一致（发布 %d 条，匹配 %d 条）'
+            % (len(specs), len(used)))
+    if complete and not unmatched and not wrong_width:
+        checks['R1.join'] = (True, '三列连接字段逐条与金标一一对应（%d 条）' % len(used))
+    else:
+        checks['R1.join'] = (
+            False, '连接字段与金标不一一对应（未匹配 %d 条，列数不符 %d 条）'
+            % (unmatched, wrong_width))
+    if complete and not coverage_bad:
+        checks['R1.coverage'] = (True, '逐条覆盖 16/20，标准端 12/12')
+    else:
+        checks['R1.coverage'] = (
+            False, '关系覆盖不是 16/20 或标准端不是 12/12（不符 %d 条）'
+            % (coverage_bad or max(1, unmatched)))
+    forbidden = []
+    if extras:
+        forbidden.append('多出 %d 条金标之外的关系' % extras)
+    if wrong_direction:
+        forbidden.append('方向或端点不符合金标 %d 条' % wrong_direction)
+    if wrong_width:
+        forbidden.append('连接列数与金标不一致 %d 条' % wrong_width)
+    if no_evidence:
+        forbidden.append('关系缺少来源证据 %d 条' % no_evidence)
+    if claimed_full:
+        forbidden.append('声称 100%% 匹配 %d 条' % claimed_full)
+    if duplicates:
+        forbidden.append('重复关系 %d 条' % duplicates)
+    if forbidden:
+        checks['R1.forbidden'] = (False, '；'.join(forbidden))
+    else:
+        checks['R1.forbidden'] = (True, '未出现多余、反向、单列或 100% 匹配的关系')
+    return checks
+
+
+def _compare_value_types(gold_properties, by_column, definitions):
+    """(failures, date-to-datetime deviations) for the published definition.
+
+    J6 allows a ``date`` property to be published as ``datetime``; it stays a
+    pass but is counted here so the report can record the deviation.
+    """
+    failures = []
+    deviations = 0
+    for item in gold_properties:
+        name = by_column.get(item['name'])
+        if name is None or name not in definitions:
+            failures.append('missing')
+            continue
+        actual = definitions[name].get('value_type')
+        expected = item['value_type']
+        if expected == 'date' and actual in {'date', 'datetime'}:
+            if actual == 'datetime':
+                deviations += 1
+            continue
+        if actual != expected:
+            failures.append('%s->%s' % (expected, actual))
+    return failures, deviations
+
+
 class Flow:
     def __init__(self, project, http, inputs, results, args):
         self.project = project
@@ -580,6 +741,7 @@ class Flow:
         self.args = args
         self.sources = {}
         self.paths = {}
+        self.deviations = []
         self.art = {'main': {}, 'n1': {}, 'n2': {}, 'n3': {},
                     'mapping': {}, 'query': {}, 'retire': {}}
 
@@ -867,7 +1029,8 @@ class Flow:
             artifact['candidate_body'] = self.candidate(artifact['session'])
             if candidate.get('state') == 'awaiting_human_confirmation':
                 self.results.fail('CHAIN.publish',
-                                  '候选已生成，等待网页人工确认（补全模式 %s）' % artifact['mode'])
+                                  '候选已生成，发布尚未执行：等待 HTTP 人工确认（补全模式 %s）'
+                                  % artifact['mode'])
             else:
                 self.results.fail('CHAIN.publish', '候选状态不是等待人工确认')
         except ToolRejected as exc:
@@ -994,6 +1157,7 @@ class Flow:
         artifact = self.art['main']
         if not artifact.get('candidate1') or not artifact.get('draft'):
             self.results.fail('N6', '没有 r1 候选')
+            self.results.fail('CHAIN.publish', '发布未执行：没有可确认的 r1 候选')
             return
         draft = artifact['draft']
         plan = artifact['plan']
@@ -1210,18 +1374,21 @@ class Flow:
     def _query(self):
         collected = {}
         for key in ('C1', 'C2'):
-            concept = self.art['mapping'].get(key) or {}
-            if not concept.get('receipt'):
+            mapped = self.art['mapping'].get(key) or {}
+            if not mapped.get('receipt'):
                 continue
+            concept = self.art['main']['names'].get(
+                next((name for name, value in (self.art['main'].get('keys') or {}).items()
+                      if value == key), None))
             try:
                 page = self.call('ontology_query', {
                     'ontology_id': 'expense-policy',
-                    'concept': self.art['main']['names'].get(
-                        next((name for name, value in (self.art['main'].get('keys') or {}).items()
-                              if value == key), None)),
+                    'concept': concept,
                     'limit': 200,
                 })
                 collected[key] = page
+                if key == 'C1':
+                    collected['C1_filters'] = self._filtered_queries(concept, page)
             except ToolRejected:
                 collected[key] = None
         self.art['query'] = collected
@@ -1242,6 +1409,64 @@ class Flow:
             self.results.fail(
                 'CHAIN.query',
                 '按本体查询未返回已发布实例' + ('（%s）' % '；'.join(details) if details else ''))
+
+    def _filtered_query(self, concept, where):
+        try:
+            return self.call('ontology_query', {
+                'ontology_id': 'expense-policy',
+                'concept': concept,
+                'where': where,
+                'limit': 200,
+            })
+        except ToolRejected:
+            return None
+
+    def _filtered_queries(self, concept, page):
+        """Equality queries on the observed low-cardinality attributes.
+
+        Q1 must go through the tool's attribute-filter path instead of
+        scanning the whole concept.  Candidate attributes and values come only
+        from the published page, never from gold.  One- and two-condition
+        filters are both issued so the comparison can require an exact match;
+        the result set is kept on the artifact for scoring.
+        """
+        definition = ((self.art['main'].get('candidate_body') or {})
+                      .get('definition') or {}).get('concepts', {}).get(concept) or {}
+        items = page.get('items') or []
+        singles = []
+        for name, spec in (definition.get('properties') or {}).items():
+            if spec.get('value_type') != 'string':
+                continue
+            values = []
+            for item in items:
+                value = (item.get('values') or {}).get(name)
+                if isinstance(value, str) and value.strip() and value not in values:
+                    values.append(value)
+            if not 1 < len(values) <= 4:
+                continue
+            for value in values:
+                where = [{'property': name, 'op': 'eq', 'value': value}]
+                filtered = self._filtered_query(concept, where)
+                singles.append({'where': where, 'page': filtered,
+                                'ids': _item_ids(filtered)})
+        results = list(singles)
+        pairs = []
+        for index, left in enumerate(singles):
+            for right in singles[index + 1:]:
+                if not left['ids'] or not right['ids']:
+                    continue
+                if left['where'][0]['property'] == right['where'][0]['property']:
+                    continue
+                overlap = left['ids'] & right['ids']
+                if not overlap or len(overlap) >= min(len(left['ids']), len(right['ids'])):
+                    continue
+                where = left['where'] + right['where']
+                key = frozenset((item['property'], str(item['value'])) for item in where)
+                pairs.append((len(overlap), sorted(key), where))
+        pairs.sort(key=lambda item: (item[0], item[1]))
+        for _, _, where in pairs[:6]:
+            results.append({'where': where, 'page': self._filtered_query(concept, where)})
+        return results
 
     def stage_retire(self):
         entry = self.entry('expense-policy')
@@ -1389,9 +1614,13 @@ class Flow:
             artifact['entry_after'] = self.entry('expense-policy-n2')
             artifact['pointer_after'] = self.ontologies().get('pointer')
             pointer_same = pointer_before == artifact['pointer_after']
+            source_change = _is_source_change_rejection(body)
+            artifact['confirm_reason'] = _detail(body)
             if status == 422 and artifact['entry_after'] is None \
-                    and artifact.get('digest_changed') and pointer_same:
-                self.results.ok('N2', '来源快照已变时确认被拒，未写本体修订，指针未变')
+                    and artifact.get('digest_changed') and pointer_same and source_change:
+                self.results.ok('N2', '来源快照已变时确认被拒（原因为来源变更），未写本体修订，指针未变')
+            elif status == 422 and not source_change:
+                self.results.fail('N2', '确认被拒，但拒绝原因不是来源变更（%s）' % _code(body))
             else:
                 self.results.fail('N2', '来源变更后的确认未被正确拒绝')
         except ToolRejected as exc:
@@ -1507,18 +1736,14 @@ class Flow:
                 self.results.ok(prefix + '.properties', '全部金标属性都由对应来源列支撑')
             else:
                 self.results.fail(prefix + '.properties', '属性未覆盖全部金标来源列')
-            type_failures = []
-            for item in gold['properties']:
-                name = by_column.get(item['name'])
-                if name is None or name not in definition.get('properties', {}):
-                    type_failures.append('missing')
-                    continue
-                actual = definition['properties'][name].get('value_type')
-                expected = item['value_type']
-                if expected == 'date' and actual in {'date', 'datetime'}:
-                    continue
-                if actual != expected:
-                    type_failures.append('%s->%s' % (expected, actual))
+            type_failures, datetime_deviations = _compare_value_types(
+                gold['properties'], by_column, definition.get('properties', {}))
+            if datetime_deviations:
+                self.deviations.append({
+                    'check': prefix + '.types', 'gold': 'J6',
+                    'note': '%d 个 date 属性的发布类型为 datetime（J6 允许，记偏差不判失败）'
+                            % datetime_deviations,
+                })
             if type_failures:
                 self.results.fail(
                     prefix + '.types',
@@ -1604,77 +1829,76 @@ class Flow:
 
     def _score_relation(self):
         artifact = self.art['main']
-        draft = artifact.get('draft') or {}
         candidate = artifact.get('candidate_body') or {}
         relations = (candidate.get('definition') or {}).get('relations') or {}
         evidence_relations = (candidate.get('evidence') or {}).get('relations') or {}
         catalog_links = {item['id']: item for item in
                          (artifact.get('request') or {}).get('catalog', {}).get('relationships', [])}
-        gold = self.gold['relations'][0]
+        gold_relations = list(self.gold.get('relations') or [])
+        if not gold_relations:
+            for key in ('R1', 'R1.join', 'R1.coverage', 'R1.forbidden'):
+                self.results.fail(key, '金标没有关系期望')
+            return
         if not relations:
             reason = '草案/候选没有关系（复合关联未由证据产出）'
             for key in ('R1', 'R1.join', 'R1.coverage', 'R1.forbidden'):
                 self.results.fail(key, reason)
             return
-        name, definition = next(iter(relations.items()))
-        evidence = evidence_relations.get(name) or {}
-        link = catalog_links.get(evidence.get('evidence_id')) or {}
+        names = artifact.get('names') or {}
         by_key = {value: name for name, value in (artifact.get('keys') or {}).items()}
-        c1 = artifact['names'].get(by_key.get('C1'))
-        c2 = artifact['names'].get(by_key.get('C2'))
-        if definition.get('subject_concept') == c2 and definition.get('object_concept') == c1:
-            self.results.ok('R1', '关系端点与方向符合金标')
-        else:
-            self.results.fail('R1', '关系端点或方向与金标不一致')
-        pairs = list(zip(evidence.get('source_columns') or [], evidence.get('target_columns') or []))
-        expected_pairs = [tuple(pair) for pair in gold['join']]
-        if sorted(pairs) == sorted(expected_pairs):
-            self.results.ok('R1.join', '三列连接字段一一对应')
-        else:
-            self.results.fail('R1.join', '连接字段不是金标的三列组合')
-        coverage = gold['coverage']
-        if link.get('matched_rows') == 16 and link.get('checked_rows') == 20 \
-                and link.get('matched_distinct_keys') == 12:
-            self.results.ok('R1.coverage', '覆盖 16/20，标准端 12/12')
-        else:
-            self.results.fail('R1.coverage', '覆盖不是 16/20 或标准端不是 12/12')
-        forbidden = ''
-        if len(pairs) != 3:
-            forbidden = '连接不是三列组合'
-        elif definition.get('subject_concept') == c1 and definition.get('object_concept') == c2:
-            forbidden = '方向反过来'
-        elif link.get('matched_rows') == link.get('checked_rows'):
-            forbidden = '声称 100% 匹配'
-        if forbidden:
-            self.results.fail('R1.forbidden', forbidden)
-        else:
-            self.results.ok('R1.forbidden', '未出现单列/反向/100% 匹配')
+        c1 = names.get(by_key.get('C1'))
+        c2 = names.get(by_key.get('C2'))
+        if not c1 or not c2:
+            for key in ('R1', 'R1.join', 'R1.coverage', 'R1.forbidden'):
+                self.results.fail(key, '缺少 C1/C2 概念映射，无法核对关系')
+            return
+        specs = _relation_specs(relations, evidence_relations, catalog_links)
+        checks = _relation_checks(specs, gold_relations, c1, c2)
+        for key in ('R1', 'R1.join', 'R1.coverage', 'R1.forbidden'):
+            passed, reason = checks[key]
+            (self.results.ok if passed else self.results.fail)(key, reason)
 
     def _score_query(self):
         expectations = self.gold['query_expectations']
         q1_key = next((key for key in expectations if str(key).startswith('Q1')), None)
         expected = expectations.get(q1_key) or [] if q1_key else []
-        page = self.art['query'].get('C1')
-        evidence, _ = self._concept_evidence('C1')
         if not expected:
             self.results.fail('Q1', '金标没有 Q1 期望')
             return
-        if not page or not evidence:
-            self.results.fail('Q1', '没有 C1 的已发布查询结果')
+        evidence, _ = self._concept_evidence('C1')
+        if not evidence:
+            self.results.fail('Q1', '没有 C1 的候选证据')
             return
         by_column = {item.get('column'): name for name, item in
                      (evidence.get('properties') or {}).items()}
-        matched = set()
-        for item in page.get('items') or []:
-            row = {column: item['values'].get(name)
-                   for column, name in by_column.items() if name in item.get('values', {})}
-            for index, entry in enumerate(expected):
-                if _entry_matches(row, entry):
-                    matched.add(index)
-        if len(matched) == len(expected):
-            self.results.ok('Q1', '查询结果覆盖金标 Q1 的全部实例，字段值一致')
+        filters = self.art['query'].get('C1_filters') or []
+        exact = []
+        for entry in filters:
+            page = entry.get('page') or {}
+            if not _filter_echo_ok(page, entry.get('where') or []):
+                continue
+            if page.get('total') != len(expected):
+                continue
+            matched = set()
+            for item in page.get('items') or []:
+                row = {column: item['values'].get(name)
+                       for column, name in by_column.items() if name in item.get('values', {})}
+                for index, wanted in enumerate(expected):
+                    if _entry_matches(row, wanted):
+                        matched.add(index)
+            if len(matched) == len(expected):
+                exact.append(entry)
+        if exact:
+            self.results.ok(
+                'Q1',
+                '属性条件查询（%d 项条件）命中金标 Q1 的全部实例，字段值一致'
+                % len(exact[0]['where']))
+        elif filters:
+            self.results.fail(
+                'Q1',
+                '已下发 %d 组属性条件，但没有一组与金标 Q1 实例完全一致' % len(filters))
         else:
-            self.results.fail('Q1', '查询结果与金标 Q1 不一致')
+            self.results.fail('Q1', '没有下发属性过滤条件，无法覆盖属性条件查询路径')
 
     def _score_evidence(self):
         issues = []
@@ -1797,7 +2021,7 @@ class Flow:
                 self.results.fail('N3.evidence', '证据层未生成值重合候选，但草案/发布采纳了跨来源关系')
             elif value_overlap:
                 self.results.ok('N3.evidence',
-                                '源值存在重合但列名不相近，证据层未生成关系候选（金标 J8 允许）；'
+                                '源值存在重合，但证据层未生成关系候选（金标 J8 允许）；'
                                 '草案与发布未采纳跨来源关系')
             else:
                 self.results.ok('N3.evidence',
@@ -1832,9 +2056,36 @@ class Flow:
 
 
 def _payload(exc):
-    if exc.args and isinstance(exc.args[0], dict):
-        return exc.args[0]
-    return {}
+    """The workbench payload carried by an exception.
+
+    ``call_workbench`` raises ``AssertionError`` with either the raw MCP
+    response envelope (``content[0].text`` is the JSON tool payload) or, on a
+    failed result file, its issue list.  Callers need the payload itself:
+    keeping the transport frame here made every mapping refusal look like
+    ``invalid_input`` and hid the workbench's issue codes and reasons.
+    """
+    argument = exc.args[0] if exc.args else None
+    if isinstance(argument, list):
+        return {'issues': [item for item in argument if isinstance(item, dict)]}
+    if not isinstance(argument, dict):
+        return {}
+    content = argument.get('content')
+    if isinstance(content, list):
+        for block in content:
+            if not isinstance(block, dict):
+                continue
+            text = block.get('text')
+            if not isinstance(text, str):
+                continue
+            try:
+                inner = json.loads(text)
+            except ValueError:
+                continue
+            if isinstance(inner, dict):
+                return inner
+            if isinstance(inner, list):
+                return {'issues': [item for item in inner if isinstance(item, dict)]}
+    return argument
 
 
 def _code(payload):
@@ -1849,11 +2100,39 @@ def _detail(payload):
     return str(payload.get('detail') or '')
 
 
+# The workbench's exact wordings for "the source changed since it was
+# observed" (dataagent-workbench ontology_publish).  They are matched as
+# whole phrases: a fuzzy "mentions source and something snapshot-ish" test
+# also accepted ``source snapshot reference is missing``, which is a
+# different defect and must fail N2.
+_SOURCE_CHANGE_DETAILS = (
+    'source changed since it was observed',
+    'source snapshot changed',
+    'source structure changed',
+    'source observation changed',
+    '来源已变更',
+    '来源已变化',
+)
+
+
+def _is_source_change_rejection(payload):
+    """Whether a refused confirmation names the source snapshot change.
+
+    Only the exact change wordings above count.  A refusal for a stale
+    candidate, a task-revision mismatch, a missing snapshot reference or an
+    unreadable source is a different gate and must not pass N2.
+    """
+    text = _detail(payload).casefold()
+    return any(phrase in text for phrase in _SOURCE_CHANGE_DETAILS)
+
+
 def _issue_reasons(payload, limit=4):
     """The workbench's stable issue code plus its Chinese reason.
 
     Object labels and row numbers are deliberately dropped: the report must
     stay free of sample values while still naming what the save was blocked on.
+    For an unknown code the workbench may have copied the raw exception detail
+    into ``reason``; only the code is reported then, never the exception text.
     """
     reasons = []
     issues = payload.get('issues') if isinstance(payload, dict) else None
@@ -1863,8 +2142,10 @@ def _issue_reasons(payload, limit=4):
         code = str(issue.get('code') or '').strip()
         # Only the workbench's own summary reason is copied.  Raw ``detail``
         # can carry an exception string or a source value, so it never enters
-        # the report.
-        reason = str(issue.get('reason') or '').strip()
+        # the report; an unknown code gets a fixed placeholder instead.
+        reason = str(issue.get('reason') or '').strip() if code in _KNOWN_ISSUE_CODES else ''
+        if not reason:
+            reason = '（未知问题码，原因未展示）' if code else '（未提供问题码）'
         text = ('%s %s' % (code, reason)).strip()
         if not text or text in reasons:
             continue
@@ -1937,6 +2218,50 @@ def _same_cell(value, cell):
     return str(left) == str(right)
 
 
+def _is_temporal_like(value):
+    if isinstance(value, (date, datetime)):
+        return True
+    return isinstance(value, str) and bool(
+        _DATE.fullmatch(value.strip()) or _DATETIME.fullmatch(value.strip()))
+
+
+def _item_ids(page):
+    if not isinstance(page, dict):
+        return set()
+    ids = set()
+    for item in page.get('items') or []:
+        key = item.get('id') or item.get('instance_id')
+        if key is None:
+            key = json.dumps(item.get('values') or {}, sort_keys=True, ensure_ascii=False)
+        ids.add(str(key))
+    return ids
+
+
+def _filter_echo_ok(page, where):
+    """The page echoes exactly the attribute conditions that were sent.
+
+    Guards the Q1 check against a tool that ignores ``where`` and returns the
+    whole concept; every returned instance must also satisfy the predicate.
+    """
+    if not isinstance(page, dict) or not where:
+        return False
+    echoed = page.get('filters') or []
+    if len(echoed) != len(where):
+        return False
+    for condition in where:
+        if not any(str(item.get('property')) == str(condition.get('property'))
+                   and str(item.get('op')) == str(condition.get('op'))
+                   and str(item.get('value')) == str(condition.get('value'))
+                   for item in echoed if isinstance(item, dict)):
+            return False
+    for item in page.get('items') or []:
+        values = item.get('values') or {}
+        for condition in where:
+            if str(values.get(condition.get('property'))) != str(condition.get('value')):
+                return False
+    return True
+
+
 def _entry_matches(row, entry):
     for key, value in entry.items():
         if key in {'evidence', 'cell'}:
@@ -1944,6 +2269,11 @@ def _entry_matches(row, entry):
         actual = row.get(key)
         if _is_number(value):
             if not _same_number(actual, value):
+                return False
+        elif _is_temporal_like(actual) or _is_temporal_like(value):
+            # A calendar value can arrive as ``YYYY-MM-DD`` or as its
+            # midnight ``YYYY-MM-DDT00:00:00`` form; both are the same day.
+            if _canonical_temporal(actual) != _canonical_temporal(value):
                 return False
         elif str(actual) != str(value):
             return False
@@ -1985,6 +2315,8 @@ def apply(report, project, args, context):
         except (OSError, ValueError) as exc:
             raise SetupError('gold.json is not readable') from exc
         flow.score(gold)
+        if flow.deviations:
+            report['deviations'] = flow.deviations
         if flow.art.get('n3', {}).get('gate_unverified'):
             report.setdefault('not_verified', []).append(
                 'N3 wrong cross-source relationship disposition gate '
@@ -1999,6 +2331,10 @@ def apply(report, project, args, context):
         report['script_error'] = type(exc).__name__
         report['reason'] = '脚本异常：%s' % type(exc).__name__
         results.pending('脚本异常：%s' % type(exc).__name__)
+    for row in results.rows.values():
+        if row['reason'] == '尚未执行':
+            row['status'] = 'fail'
+            row['reason'] = '本阶段未执行到该检查'
     checks = results.checks()
     summary = results.summary()
     report['checks'] = checks

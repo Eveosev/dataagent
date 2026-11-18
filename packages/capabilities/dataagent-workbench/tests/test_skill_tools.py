@@ -69,3 +69,29 @@ def test_skill_tool_names_exist_in_tool_schema():
     assert checked, 'no skill references workbench tools; the check went stale'
     assert not missing, (
         '技能里出现 tool_schema 不存在的工具名:\n' + '\n'.join(missing))
+
+
+def test_query_comparison_and_evidence_bounds_are_part_of_the_skill():
+    """FDE2-04/07/09: the skill must name the bounded way to answer."""
+    skill = (REPOSITORY / 'packages/capabilities/dataagent-intake/skills/'
+             'dataagent-intake/SKILL.md').read_text(encoding='utf-8')
+    # FDE2-04: tool cannot answer -> say so, never compute by reading originals.
+    assert '当前工具无法回答' in skill
+    assert 'shell_exec' in skill and 'fs_read' in skill
+    # FDE2-04: no per-turn workspace listing.
+    assert '不在每轮开始列出工作区' in skill
+    # FDE2-04: comparison questions use the ontology query surface.
+    assert 'include_related' in skill
+    for op in ('gt', 'gte', 'lt', 'lte'):
+        assert op in skill
+    # FDE2-07: publish prepare dispositions need an explicit user decision.
+    assert 'accept' in skill and 'exclude' in skill
+    assert '第 10 条' in skill
+
+    schema = MODELS['ontology_query'].model_json_schema()
+    assert 'include_related' in schema['properties']
+    condition = schema['$defs']['OntologyQueryCondition']
+    assert set(condition['properties']['op']['enum']) == {
+        'eq', 'in', 'contains', 'gt', 'gte', 'lt', 'lte'}
+    evidence = MODELS['intake_inference'].model_json_schema()['properties']
+    assert {'detail_table', 'detail_section', 'detail_offset', 'detail_limit'} <= set(evidence)
