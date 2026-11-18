@@ -45,6 +45,43 @@ def _same_span(anchor, page, start, end):
             and getattr(selector, 'char_end', None) == end)
 
 
+_IDENTITY_HINTS = {
+    'number', 'id', 'code', 'document_number', 'document_no', 'invoice_number',
+    'invoice_no', 'bill_number', 'bill_no',
+}
+
+
+def _identity_names(profile, identity_fields):
+    if identity_fields is not None:
+        return [name for name in identity_fields
+                if any(name in record for record in profile.records)]
+    names = []
+    for name in profile.fields:
+        low = name.lower()
+        if low in _IDENTITY_HINTS or low.endswith(('_number', '_no', '_id')):
+            names.append(name)
+    return names
+
+
+def _move_conflict(profile, target_row, source_row, identity_fields):
+    """Refuse a move whose rows point at different business documents."""
+    target = profile.records[target_row]
+    source = profile.records[source_row]
+    for name in _identity_names(profile, identity_fields):
+        target_value, source_value = target.get(name), source.get(name)
+        if target_value not in (None, '') and source_value not in (None, ''):
+            if str(target_value) != str(source_value):
+                return f'{name} differs'
+        elif source_value not in (None, '') and target_value in (None, ''):
+            return f'source row is identified by {name} but target row is not'
+    # A shared field with a different value is also evidence that the rows
+    # describe different documents, even when neither carries a known key.
+    for name, value in source.items():
+        if name in target and str(target[name]) != str(value):
+            return f'{name} differs'
+    return None
+
+
 def _drop_moved_rows(updated, moved):
     """Remove rows whose only fields were moved to another row, then renumber."""
     drop = {row for row in moved
@@ -64,7 +101,7 @@ def _drop_moved_rows(updated, moved):
     return renumber
 
 
-def extract_fields(profile, fields, allowed_fields, *, remember=False):
+def extract_fields(profile, fields, allowed_fields, *, remember=False, identity_fields=None):
     if profile.kind != 'pdf':
         raise ValueError('exact text extraction requires a PDF observation')
     if allowed_fields is not None and (
@@ -91,6 +128,10 @@ def extract_fields(profile, fields, allowed_fields, *, remember=False):
                   and profile.records[row].get(field.name) == field.quote
                   and any(_same_span(anchor, field.page, start, end)
                           for anchor in profile.anchors.get(f'{row}.{field.name}', []))]
+        for row in moving:
+            conflict = _move_conflict(profile, field.row, row, identity_fields)
+            if conflict:
+                raise ValueError('fields of different documents cannot be associated: ' + conflict)
         if field.name in original_fields and not moving:
             raise ValueError('choose an observed row and a new field name')
         resolved.append({'row': field.row, 'name': field.name, 'page': field.page,
@@ -141,7 +182,7 @@ def extract_fields(profile, fields, allowed_fields, *, remember=False):
     return updated
 
 
-def replay_fields(profile, specs):
+def replay_fields(profile, specs, *, identity_fields=None):
     """Re-apply recorded extractions to a fresh probe of the same structure."""
     fields = []
     for spec in specs or []:
@@ -154,7 +195,8 @@ def replay_fields(profile, specs):
     if not fields:
         return profile
     try:
-        return extract_fields(profile, fields, None, remember=True)
+        return extract_fields(profile, fields, None, remember=True,
+                              identity_fields=identity_fields)
     except (ValueError, PermissionError):
         # A changed page or quote must not turn automatic reuse into a crash;
         # the preview will still report the missing values explicitly.

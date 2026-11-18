@@ -28,6 +28,7 @@ _BUDGET_RESERVE_RATIO = 0.1
 _MIN_PROBE_SECONDS = 0.01
 
 _PREVIEW_BLOCK_DETAIL = 'preview contains unresolved issues'
+_PENDING_CORRECTIONS = 'intake.pending_corrections'
 _RESOLVABLE_ISSUES = {
     'ontology.conflicting_values', 'ontology.required_value_missing',
     'ontology.conversion_failed',
@@ -417,7 +418,8 @@ class IntakeService:
             if not specs:continue
             profile=self._match_cached_profile(record,current,sources)
             if profile is None or profile.source_id in updates:continue
-            updated=replay_fields(profile,specs)
+            updated=replay_fields(profile,specs,
+                                  identity_fields=tuple(self.wb.definition.identity_fields))
             if updated.model_dump(mode='json')!=profile.model_dump(mode='json'):
                 updates[profile.source_id]=updated
         if not updates:return session,profiles
@@ -494,7 +496,8 @@ class IntakeService:
         record = wb.store.get('profile', profile_id, revision, scope=wb.scope)
         profile = SourceProfile.model_validate(record['body'])
         allowed = None if wb.allowed_model_fields is None else wb.allowed_model_fields.get(source_id, [])
-        updated = extract_fields(profile, fields, allowed, remember=True)
+        updated = extract_fields(profile, fields, allowed, remember=True,
+                                 identity_fields=tuple(self.wb.definition.identity_fields))
         versions = dict(session.selected_versions)
         if 'preview' in versions:
             # Re-proposing after extraction must still find the web corrections
@@ -511,7 +514,7 @@ class IntakeService:
         return self.inference_request(session_id, ctx)
 
     def _prior_preview(self, session):
-        """Load the newest preview that still carries web corrections."""
+        """Load the newest preview that still carries web corrections or pending ones."""
         for key in ('preview', 'corrections_from'):
             ref = session.selected_versions.get(key)
             if not ref:
@@ -523,8 +526,10 @@ class IntakeService:
             row = self.wb.store.get('preview', preview_id, revision, scope=self.wb.scope)
             if row is None:
                 continue
-            if row['body'].get('corrections'):
-                return ref, row['body']
+            body = row['body']
+            pending = (body.get('extensions') or {}).get(_PENDING_CORRECTIONS)
+            if body.get('corrections') or pending:
+                return ref, body
         return None, None
 
     def _object_label(self, instance, names):
@@ -611,34 +616,67 @@ class IntakeService:
         """
         prior_ref, prior = self._prior_preview(session)
         if prior is None:
-            return prior_ref, [], []
+            return prior_ref, [], [], []
+        # A legacy preview may reference a prior preview through
+        # corrections_from instead of carrying pending conflicts itself.
+        bodies = []
+        extra_ref = session.selected_versions.get('corrections_from')
+        if extra_ref and extra_ref != prior_ref:
+            try:
+                preview_id, revision = extra_ref.rsplit('@', 1)
+            except ValueError:
+                pass
+            else:
+                row = self.wb.store.get('preview', preview_id, revision, scope=self.wb.scope)
+                if row is not None:
+                    bodies.append(row['body'])
+        bodies.append(prior)
+        # Pending conflicts must survive every subsequent proposal until they
+        # are applied or explicitly replaced.  Aggregate by decision_ref so a
+        # partially applied batch cannot hide the rest on the next round.
+        collected = {}
+        prior_labels = {}
+        for source in bodies:
+            prior_labels.update(self._object_labels(session, source))
+            for correction in (*((source.get('extensions') or {}).get(_PENDING_CORRECTIONS) or []),
+                               *(source.get('corrections') or [])):
+                key = correction.get('decision_ref') or digest(correction)
+                collected[key] = correction
         ontology = self.wb.definition
         mapping = body.get('mapping') or {}
         instances = {instance['id']: instance for instance in body.get('instances', [])}
-        prior_labels = self._object_labels(session, prior)
-        applied, conflicts = [], []
-        for correction in prior.get('corrections') or []:
+        applied, conflicts, unresolved = [], [], []
+        for correction in collected.values():
+            label_hint = correction.get('object_label')
+            correction = {key: value for key, value in correction.items()
+                          if key != 'object_label'}
             entity_id = correction.get('entity_id')
             prop = correction.get('property')
             definition = ontology.properties.get(prop) if isinstance(prop, str) else None
             target = instances.get(entity_id)
-            label = prior_labels.get(entity_id) or entity_id or '未知对象'
+            label = (prior_labels.get(entity_id) or label_hint
+                     or entity_id or '未知对象')
             if target is None:
                 conflicts.append((label, prop, '纠正对象在新预览中不存在'))
+                unresolved.append({**correction, 'object_label': label})
                 continue
             if definition is None:
                 conflicts.append((label, prop, '目标属性不在当前本体中'))
+                unresolved.append({**correction, 'object_label': label})
                 continue
             if prop in ontology.identity_fields:
                 conflicts.append((label, prop, '身份字段纠正会改变对象标识，需要在网页重新核对'))
+                unresolved.append({**correction, 'object_label': label})
                 continue
             try:
                 value = _typed(correction.get('value'), definition.value_type)
             except (ValueError, ArithmeticError):
                 conflicts.append((label, prop, '纠正值无法按目标类型解析'))
+                unresolved.append({**correction, 'object_label': label})
                 continue
             if value is None:
                 conflicts.append((label, prop, '纠正值不能为空'))
+                unresolved.append({**correction, 'object_label': label})
                 continue
             target.setdefault('values', {})[prop] = to_jsonable_python(value)
             target['unresolved'] = [item for item in target.get('unresolved', []) if item != prop]
@@ -702,13 +740,13 @@ class IntakeService:
             body['corrections'] = [correction for correction, _, _, _, _ in applied]
             corrected = {(correction.get('entity_id'), correction.get('property'))
                          for correction, _, _, _, _ in applied}
-            unresolved = {prop for instance in body.get('instances', [])
-                          for prop in instance.get('unresolved', [])}
+            still_unresolved = {prop for instance in body.get('instances', [])
+                                for prop in instance.get('unresolved', [])}
             def replaced(issue):
                 key = (issue.get('entity_id'), issue.get('target'))
                 if issue.get('entity_id') is not None:
                     return key in corrected
-                return issue.get('target') not in unresolved
+                return issue.get('target') not in still_unresolved
             body['issues'] = [issue for issue in body.get('issues', [])
                               if not (issue.get('code') in _RESOLVABLE_ISSUES
                                       and replaced(issue))]
@@ -717,13 +755,22 @@ class IntakeService:
                 'code': 'ontology.correction_conflict',
                 'target': prop or 'unknown', 'object': label, 'detail': reason,
             })
+        extensions = dict(body.get('extensions') or {})
+        if unresolved:
+            extensions[_PENDING_CORRECTIONS] = unresolved
+        else:
+            extensions.pop(_PENDING_CORRECTIONS, None)
+        if extensions:
+            body['extensions'] = extensions
+        else:
+            body.pop('extensions', None)
         if applied or conflicts:
             content = {key: body[key] for key in
                        ('ontology_revision', 'mapping', 'source_revisions', 'instances', 'issues')}
             if body.get('extensions'):
                 content['extensions'] = body['extensions']
             body['digest'] = digest(content)
-        return prior_ref, applied, conflicts
+        return prior_ref, applied, conflicts, unresolved
 
     def submit_proposal(self,session_id,proposal,expected_revision,ctx,*,reused=False):
         wb=self.wb;s=wb.sessions.get(session_id,ctx)
@@ -739,11 +786,11 @@ class IntakeService:
         proposal=proposal.model_copy(update={'id':mid,'revision':revision,'scope':wb.scope})
         preview,body=wb.ontology.prepare_preview(proposal,observations,ctx)
         body['mapping_reused']=reused
-        prior_ref,_,conflicts=self._carry_corrections(s,body)
+        prior_ref,_,conflicts,pending=self._carry_corrections(s,body)
         preview=self._refresh_preview(body)
         versions={**s.selected_versions,'preview':preview.id+'@1','mapping':mid+'@'+revision}
-        if prior_ref and conflicts:versions['corrections_from']=prior_ref
-        elif not conflicts:versions.pop('corrections_from',None)
+        if prior_ref and pending:versions['corrections_from']=prior_ref
+        else:versions.pop('corrections_from',None)
         wb.sessions.update(s.id,s.revision,{'phase':'preview','selected_versions':versions,
             'issues':preview.issues,'next_actions':['review_mapping']},ctx,extra_writes=[
             Write('preview',preview.id,wb.scope,body),
@@ -781,11 +828,11 @@ class IntakeService:
         primary = next(iter(mappings.values()))
         preview, body = wb.ontology.prepare_preview(primary, observations, ctx, source_mappings=mappings)
         body['mapping_reused'] = reused
-        prior_ref,_,conflicts=self._carry_corrections(session,body)
+        prior_ref,_,conflicts,pending=self._carry_corrections(session,body)
         preview=self._refresh_preview(body)
         versions.update(preview=preview.id+'@1', mapping=f'{primary.id}@{primary.revision}')
-        if prior_ref and conflicts:versions['corrections_from']=prior_ref
-        elif not conflicts:versions.pop('corrections_from',None)
+        if prior_ref and pending:versions['corrections_from']=prior_ref
+        else:versions.pop('corrections_from',None)
         wb.sessions.update(session_id, expected_revision, {
             'phase': 'preview', 'selected_versions': versions, 'issues': preview.issues,
             'next_actions': ['review_mapping'],

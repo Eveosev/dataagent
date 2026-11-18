@@ -387,3 +387,105 @@ def test_source_connections_tool_lists_names_and_kinds_only(tmp_path, monkeypatc
     assert result.data == {'connections': [
         {'id': 'accounting', 'kind': 'rest', 'label': '发票 API'}]}
     assert sentinel not in json.dumps(result.data)
+
+
+def test_cross_page_move_rejects_fields_from_another_document():
+    pages = [{'page': 1, 'text': 'number: INV-A\namount_minor: 100'},
+             {'page': 2, 'text': 'number: INV-B\ncurrency: CNY'}]
+    profile = pdf_profile('two-docs', [
+        {'number': 'INV-A', 'amount_minor': '100'},
+        {'number': 'INV-B', 'currency': 'CNY'},
+    ], pages, {(0, 'number'): (1, 'INV-A'), (0, 'amount_minor'): (1, '100'),
+               (1, 'number'): (2, 'INV-B'), (1, 'currency'): (2, 'CNY')},
+        digest(['two-documents', 'one-pdf']))
+    with pytest.raises(ValueError, match='different documents'):
+        extract_fields(profile, [DocumentField(row=0, name='currency', page=2, quote='CNY')],
+                       None, identity_fields=('number',))
+
+
+def test_cross_page_move_allows_the_same_document_number():
+    pages = [{'page': 1, 'text': 'number: INV-A\namount_minor: 100'},
+             {'page': 2, 'text': 'number: INV-A\ncurrency: CNY'}]
+    profile = pdf_profile('same-doc', [
+        {'number': 'INV-A', 'amount_minor': '100'},
+        {'number': 'INV-A', 'currency': 'CNY'},
+    ], pages, {(0, 'number'): (1, 'INV-A'), (0, 'amount_minor'): (1, '100'),
+               (1, 'number'): (2, 'INV-A'), (1, 'currency'): (2, 'CNY')},
+        digest(['same-document', 'one-pdf']))
+    updated = extract_fields(profile, [DocumentField(
+        row=0, name='currency', page=2, quote='CNY')], None, identity_fields=('number',))
+    assert updated.records[0] == {'number': 'INV-A', 'amount_minor': '100', 'currency': 'CNY'}
+    assert updated.anchors['0.currency'][0].selector.page == 2
+
+
+def two_source_setup(tmp_path):
+    wb = Workbench(tmp_path)
+    wb.layer_client = StubProbeClient({
+        'a': csv_profile('a', [{'number': 'INV-A', 'amount_minor': '100000', 'currency': 'CNY'}]),
+        'b': csv_profile('b', [{'number': 'INV-B', 'amount_minor': '200000', 'currency': 'CNY'}]),
+    })
+    sources = [SourceSelection(source_id='a', kind='file', locator_ref='a.csv'),
+               SourceSelection(source_id='b', kind='file', locator_ref='b.csv')]
+    session = wb.intake.advance(start(wb, sources).session_id, wb.ctx)
+    request = wb.intake.inference_request(session.id, wb.ctx)
+    proposals = {source['source_id']: MappingSpec(
+        id='candidate', revision='1', ontology_revision='procurement@1',
+        source_fingerprint=source['structure_fingerprint'],
+        bindings=basic_bindings()) for source in request['sources']}
+    preview = wb.intake.submit_source_proposals(
+        session.id, proposals, session.revision, wb.ctx)
+    return wb, session.id, preview
+
+
+def correct_amount(wb, session_id, preview, number, value):
+    instances = preview.instances if hasattr(preview, 'instances') else preview['instances']
+    def number_of(instance):
+        values = instance.get('values', {}) if isinstance(instance, dict) else instance.values
+        return values.get('number')
+    entity = next(instance for instance in instances if number_of(instance) == number)
+    entity_id = entity.get('id') if isinstance(entity, dict) else entity.id
+    session = wb.sessions.get(session_id, wb.ctx)
+    return wb.intake.apply(session_id, ReviewDecision(
+        preview_ref=session.selected_versions['preview'], target_scope='instance',
+        changes={'entity_id': entity_id, 'property': 'amount', 'value': value,
+                 'reason': '用户核对'}), session.revision, wb.ctx)
+
+
+def test_pending_correction_conflicts_survive_repeated_proposals(tmp_path):
+    wb, session_id, preview = two_source_setup(tmp_path)
+    correct_amount(wb, session_id, preview, 'INV-A', '1000')
+    correct_amount(wb, session_id, wb.intake.view(session_id, wb.ctx)['preview'],
+                   'INV-B', '2000')
+    assert {item['value'] for item in
+            wb.intake.view(session_id, wb.ctx)['preview']['corrections']} == {'1000', '2000'}
+
+    # Re-propose with only source a: INV-B disappears, but its correction must
+    # remain visible instead of being discarded with the replaced preview.
+    for _ in range(2):
+        session = wb.sessions.get(session_id, wb.ctx)
+        mapping = proposal_for(session, wb, 'a', basic_bindings())
+        wb.intake.submit_proposal(session_id, mapping, session.revision, wb.ctx)
+        view = wb.intake.view(session_id, wb.ctx)
+        conflicts = [issue for issue in view['preview']['issues']
+                     if issue['code'] == 'ontology.correction_conflict']
+        assert any(issue['object'] == 'INV-B' for issue in conflicts), view['preview']['issues']
+        assert all(issue['target'] == 'amount' for issue in conflicts)
+
+    # Bringing source b back resolves the pending correction instead of
+    # reporting it forever.
+    session = wb.sessions.get(session_id, wb.ctx)
+    request = wb.intake.inference_request(session_id, wb.ctx)
+    proposals = {source['source_id']: MappingSpec(
+        id='candidate', revision='1', ontology_revision='procurement@1',
+        source_fingerprint=source['structure_fingerprint'], bindings=basic_bindings())
+        for source in request['sources']}
+    preview = wb.intake.submit_source_proposals(
+        session_id, proposals, session.revision, wb.ctx)
+    assert preview.issues == []
+    view = wb.intake.view(session_id, wb.ctx)
+    assert {item['value'] for item in view['preview']['corrections']} == {'1000', '2000'}
+    session = wb.sessions.get(session_id, wb.ctx)
+    wb.intake.apply(session_id, ReviewDecision(
+        preview_ref=preview.id + '@' + preview.revision, target_scope='mapping'),
+        session.revision, wb.ctx)
+    assert wb.sessions.get(session_id, wb.ctx).phase == 'saved'
