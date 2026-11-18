@@ -13,7 +13,7 @@ type Column = {
 };
 export type Discovery = {
  source_revision?:string; coverage?:string;
- publish_candidate?:{ref:string;state?:string;ontology_id?:string;ontology_revision?:string}|null;
+ publish_candidate?:{ref:string;state?:string;ontology_id?:string;ontology_revision?:string;draft_ref?:string}|null;
  catalog:null|{
   tables:{name:string;source_id?:string;rows_observed:number;sampled:boolean;columns:Record<string,Column>;keys:string[][];identity_keys:string[][]}[];
   relationships:Relationship[];gaps:{table?:string;code:string}[];
@@ -68,8 +68,9 @@ function openItems(draft:NonNullable<Discovery['draft']>):OpenItem[]{
 }
 const shortDigest=(value:string|undefined)=>value?value.replace('sha256:','').slice(0,12):'—';
 
-// 草案通过审核后的发布区块：候选定义摘要、来源快照摘要、未决项处置状态；
-// 未处置项点名并阻断，确认由人勾选后提交（网页是唯一确认通道）。
+// 发布区块：候选定义摘要、来源快照摘要、未决项处置状态。草案 pending 但
+// 已有有效候选时也直接显示，用户核对后一次确认即发布；未处置项点名并阻断，
+// 确认由人勾选后提交（网页是唯一确认通道）。
 function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOntologies}:{
  session:IntakeSession;discovery:Discovery;reload:()=>Promise<void>;
  onError:(error:unknown)=>void;onOpenSession:(id:string)=>void;onOpenOntologies?:()=>void;
@@ -107,7 +108,7 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
  const items=openItems(draft);
  const dispositionOf=(item:OpenItem)=>(current?.dispositions||[]).find((entry:PublishDisposition)=>entry.kind===item.kind&&entry.ref===item.ref);
  const undisposed=items.filter(item=>!dispositionOf(item));
- const completionPrompt=`继续当前工作区的本体发现任务 ${session.id}。草案 ${draft.ref} 已通过审核；调用 ontology_publish_prepare 补全每个概念的属性值类型、必需性与身份字段，对关系给出端点与角色，并对未决项与覆盖缺口逐项给出排除或接受的处置，生成发布候选供我在工作台确认。`;
+ const completionPrompt=`继续当前工作区的本体发现任务 ${session.id}。草案 ${draft.ref} ${draft.state==='pending'?'仍待审核':'已通过审核'}；调用 ontology_publish_prepare 补全每个概念的属性值类型、必需性与身份字段，对关系给出端点与角色，并对未决项与覆盖缺口逐项给出排除或接受的处置，生成发布候选供我在工作台确认。`;
  async function confirm(){
   if(!current||expired)return;
   setBusy(true);
@@ -185,7 +186,7 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
     <div><dt>结构指纹</dt><dd><code title={current.structure_fingerprint}>{shortDigest(current.structure_fingerprint)}</code></dd></div>
     <div><dt>快照摘要</dt><dd><code title={current.source_snapshot}>{shortDigest(current.source_snapshot)}</code></dd></div>
     <div><dt>本体标识</dt><dd><code>{current.ontology_id}</code> · 修订 {current.ontology_revision}</dd></div></dl>
-  </>:<div className="notice amber"><p>草案已通过审核。让 Agent 补全值类型、必需性与身份字段并生成发布候选后，在这里人工确认发布；Agent 工具不能代为确认。</p>
+  </>:<div className="notice amber"><p>草案{draft.state==='pending'?'待审核':'已通过审核'}。让 Agent 补全值类型、必需性与身份字段并生成发布候选后，在这里人工确认发布；Agent 工具不能代为确认。</p>
    <div className="discovery-prompt"><code>{completionPrompt}</code><button className="secondary" onClick={()=>
     navigator.clipboard.writeText(completionPrompt).then(()=>setCopied(true)).catch(onError)}>{copied?'已复制':'复制指令'}</button></div>
   </div>}
@@ -246,6 +247,11 @@ export function DiscoveryPage({view,reload,onNew,onError,onOpenSession,onOpenOnt
  const status=draft?.state==='approved'?'已通过审核':draft?.state==='rejected'?'已退回':
   draft?.state==='pending'?'待审核':catalog?.tables.length?'等待 Agent 提案':
   catalog?'未找到可探查的表':'正在探查';
+ // pending 草案只在候选仍锚定当前草案时开放发布区；rejected 永不显示。
+ const candidateSummary=discovery.publish_candidate;
+ const pendingCandidate=!!draft&&draft.state==='pending'
+  &&candidateSummary?.state==='candidate'
+  &&candidateSummary.draft_ref===draft.ref;
  // 重新探查的原因统一中文化：已知原文进主文案，未知英文折叠为「详情」。
  const probe=humanDetail((session.issues?.[0] as {detail?:string}|undefined)?.detail||'来源探查未完成');
  return <main className="workspace discovery-page">
@@ -291,7 +297,7 @@ export function DiscoveryPage({view,reload,onNew,onError,onOpenSession,onOpenOnt
     <button className="primary" disabled={busy} onClick={()=>review('approve')}>确认当前草案</button>
    </div>}
   </section>}
-  {draft&&draft.state==='approved'&&<PublishBlock session={session} discovery={discovery} reload={reload}
+  {draft&&(draft.state==='approved'||pendingCandidate)&&<PublishBlock session={session} discovery={discovery} reload={reload}
    onError={onError} onOpenSession={onOpenSession} onOpenOntologies={onOpenOntologies}/>}
   {catalog&&<section className="discovery-card">
    <h2>来源证据</h2>

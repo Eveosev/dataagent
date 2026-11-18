@@ -1001,11 +1001,11 @@ def test_rejected_draft_confirmation_is_refused(tmp_path):
 
 
 def test_pending_candidate_is_available_to_the_page_without_a_review(tmp_path):
-    """The page can confirm a pending draft's candidate in one step.
+    """The page data for a pending draft's candidate is confirmable.
 
     This pins the data contract the workbench page reads (view draft, candidate
-    reference and task revision); the page render change that exposes the
-    publish card for pending drafts is tracked separately.
+    reference and task revision); the browser path is covered by
+    web/tests/publish.spec.ts.
     """
     wb, session_id, request = workbench(tmp_path)
     current = full_draft(wb, session_id, request)
