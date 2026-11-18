@@ -43,15 +43,27 @@ function bindingsEdited(view:View,sourceId:string,sourceBindings:Record<string,R
  return false;
 }
 
-function sourceInScope(view:View,sourceId:string,sourceBindings:Record<string,Record<string,FieldBinding>>):boolean{
+// 最新提案写入的来源范围签名。范围变化（例如代理缩窄）时，旧草稿里的绑定
+// 不能再把来源加回来；只有本次页面里新做的绑定编辑才算显式纳入。
+function mappingScopeKey(view:View):string{
+ return Object.entries(view.session.selected_versions||{})
+  .filter(([key])=>key.startsWith('mapping:'))
+  .sort(([a],[b])=>a.localeCompare(b))
+  .map(([key,value])=>`${key}=${value}`).join('|');
+}
+
+function sourceInScope(view:View,sourceId:string,sourceBindings:Record<string,Record<string,FieldBinding>>,
+ editedSources:Set<string>):boolean{
  if((view.dispositions||[]).some(entry=>entry.action==='ignore_source'&&entry.source_id===sourceId))return false;
  const scoped=scopedSourceIds(view);
  if(!scoped.size)return true; // 尚无任何提案固定范围：保持全部来源一起提案。
- return scoped.has(sourceId)||bindingsEdited(view,sourceId,sourceBindings);
+ return scoped.has(sourceId)
+  ||(editedSources.has(sourceId)&&bindingsEdited(view,sourceId,sourceBindings));
 }
 
 export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession,onOpenOntologies}:{sessionId:string;onNew:()=>void;onError:(e:unknown)=>void;onOpenObjects?:()=>void;onOpenSession:(id:string)=>void;onOpenOntologies?:()=>void}){
  const [view,setView]=useState<View|null>(null),[bindings,setBindings]=useState<Record<string,FieldBinding>>({});
+ const editedSources=useRef<Set<string>>(new Set()),scopeKey=useRef('');
  const [field,setField]=useState(''),[sourceId,setSourceId]=useState(''),[record,setRecord]=useState(0),[dirty,setDirty]=useState(false),[busy,setBusy]=useState(false),[onlyProblems,setOnlyProblems]=useState(false),[draftState,setDraftState]=useState('');
  // FDE-12：字段详情里的纠正同样给绿色成功提示；被其他问题挡住时点名，不走红色错误条。
  const [correctionNotice,setCorrectionNotice]=useState<{kind:'green'|'amber';text:string}|null>(null);
@@ -64,11 +76,16 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession
   const data=await api<View>(base+'/view');
   if(Number(data.session.revision)<Number(revision.current))return;
   setView(data);viewRef.current=data;
+  const nextScope=mappingScopeKey(data);
+  if(nextScope!==scopeKey.current){
+   scopeKey.current=nextScope;editedSources.current.clear();
+  }
   if(dirtyRef.current&&!reset)return;
   revision.current=data.session.revision;
   if(data.discovery)return;
   if(reset){
    sessionStorage.removeItem(localKey);setDirty(false);dirtyRef.current=false;draftError.current=null;setDraftState('');
+   editedSources.current.clear();
   }
   let local:Draft|undefined;
   const pending=sessionStorage.getItem(localKey);
@@ -119,7 +136,7 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession
   if(multiple)sourceBindings.current={...sourceBindings.current,[sourceId]:next};
   // 草稿只保存范围内来源的绑定：范围外的来源保持未映射，保存时的草稿比对
   // 也不会把它们当作待提交的映射（FDE2-05）。
-  const inScope=(id:string)=>!viewRef.current||!multiple||sourceInScope(viewRef.current,id,sourceBindings.current);
+  const inScope=(id:string)=>!viewRef.current||!multiple||sourceInScope(viewRef.current,id,sourceBindings.current,editedSources.current);
   const draftData={...(multiple?{source_bindings:Object.fromEntries(Object.entries(sourceBindings.current).filter(([id])=>inScope(id)))}:{bindings:next}),
    selected_field:selected,source_id:sourceId,record_index:record};
   const pending=JSON.stringify({revision:revision.current,draft:draftData});
@@ -131,7 +148,7 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession
    if(sessionStorage.getItem(localKey)===pending)sessionStorage.removeItem(localKey);
   }).catch(error=>{draftError.current=error;setDraftState('编辑已保留，任务有更新');onError(error);});
  }
- function change(target:string,binding:FieldBinding){const next={...bindingsRef.current,[target]:binding};if(!binding.source_field)delete next[target];bindingsRef.current=next;setBindings(next);setField(target);setDirty(true);dirtyRef.current=true;draft(next,target);}
+ function change(target:string,binding:FieldBinding){const next={...bindingsRef.current,[target]:binding};if(!binding.source_field)delete next[target];bindingsRef.current=next;setBindings(next);setField(target);setDirty(true);dirtyRef.current=true;if(multiple)editedSources.current.add(sourceId);draft(next,target);}
  async function preview(){
   setBusy(true);try{
    await queue.current;if(draftError.current)throw draftError.current;
@@ -150,7 +167,7 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession
     // 未映射来源保持来源级问题，而不是自动映射后逐行报错。
     const existing=savedMappings(loaded);
     const proposals=Object.fromEntries(loaded.profiles
-     .filter(source=>sourceInScope(loaded,source.source_id,sourceBindings.current))
+     .filter(source=>sourceInScope(loaded,source.source_id,sourceBindings.current,editedSources.current))
      .map(source=>[source.source_id,
       propose(source,sourceBindings.current[source.source_id]||defaultBindings(loaded,source.source_id),existing[source.source_id])]));
     if(!Object.keys(proposals).length)throw new Error('没有可映射的来源，请先绑定至少一个来源');
@@ -192,6 +209,9 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession
  }
  // FDE2-05：整源处置（本任务不使用该来源）走真实后端，原因必填、写入审计。
  async function submitDisposal(option:DispositionOption,why:string){
+  // Keep the regenerate button disabled until the new revision is loaded;
+  // otherwise a quick click can send the pre-disposition revision and 409.
+  setBusy(true);
   try{
    await api(base+'/dispositions','POST',{expected_revision:revision.current,
     action:option.action,source_id:option.source_id,
@@ -202,6 +222,7 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession
    setCorrectionNotice({kind:'green',text:'处置已记录。请重新生成映射预览后核对。'});
    await load();
   }catch(error){onError(error);}
+  finally{setBusy(false);}
  }
  if(!view)return <main className="loading">正在恢复任务…</main>;
  if(view.discovery)return <DiscoveryPage view={view} reload={load} onNew={onNew} onError={onError} onOpenSession={onOpenSession} onOpenOntologies={onOpenOntologies}/>;

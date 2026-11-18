@@ -3,6 +3,7 @@ import {execFileSync} from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import {humanDetail} from '../src/client';
 
 // G2 处置入口 + FDE-11 可读性 + FDE2-06 按问题类型给处置：真实数据行的缺键、
 // 转换失败不再给「排除表头行」（只有疑似表头或无关行才给排除）；类型转换失败
@@ -11,6 +12,12 @@ import path from 'node:path';
 // 处置提交走真实后端路由 POST /api/sessions/<id>/dispositions 与 /review 的
 // allow_partial（B1 已挂出）：请求与响应契约从真实网络交互里核对，不拦截；
 // 视图刷新（处置使预览失效、部分保存使接入落盘）用页面状态断言。
+// 原始异常只保留在折叠「详情」，列表摘要只能是中文（FDE2-06）。
+test('异常原文只进详情，列表摘要用中文',()=>{
+ const raw="Invalid isoformat string: 'not-a-date'";
+ expect(humanDetail(raw)).toEqual({summary:'日期时间格式无法解析',detail:raw});
+});
+
 const disposalUrl=/\/api\/sessions\/[^/]+\/dispositions$/;
 const reviewUrl=/\/api\/sessions\/[^/]+\/review$/;
 const python=process.env.DATAAGENT_TEST_PYTHON;
@@ -400,3 +407,66 @@ test('全量映射后缩窄来源，网页重建不再加回已移除的来源',
 async function postResponse(page:import('@playwright/test').Page,url:RegExp){
  return page.waitForResponse(response=>response.request().method()==='POST'&&url.test(response.url()));
 }
+
+// 旧草稿回归：用户先改过来源 B 的绑定，代理随后把范围缩窄为只含 A。刷新
+// 网页时服务端草稿仍带着 B 的绑定，但最新提案范围必须优先；B 不能被旧草稿
+// 重新纳入，否则预览又会多出 B 的对象和行级问题。
+test('缩窄提案后旧草稿不会把来源重新纳入预览',async({page})=>{
+ test.setTimeout(60000);
+ await page.goto('/');
+ await page.getByLabel('接入目标').fill('缩窄提案后核对旧草稿范围');
+ await page.getByLabel('选择材料').setInputFiles([
+  {name:'ledger.csv',mimeType:'text/csv',buffer:ledgerCsv},
+  {name:'other.csv',mimeType:'text/csv',buffer:otherCsv},
+ ]);
+ await page.getByRole('button',{name:'开始接入'}).click();
+ await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ const sid=new URLSearchParams(new URL(page.url()).hash.slice(1)).get('session')!;
+ const view=await (await page.request.get(`/api/sessions/${sid}/view`)).json() as {
+  session:{revision:string};ontology:{id:string;revision:string};ontology_concept:string;
+  profiles:{source_id:string;fields:string[];metadata:{structure_fingerprint:string}}[];
+ };
+ const mapped=view.profiles.find(profile=>!profile.fields.includes('note'))!;
+ const other=view.profiles.find(profile=>profile.fields.includes('note'))!;
+ const proposalFor=(source:typeof mapped)=>({id:'candidate',revision:'1',
+  ontology_revision:`${view.ontology.id}@${view.ontology.revision}`,concept:view.ontology_concept,
+  source_fingerprint:source.metadata.structure_fingerprint,
+  bindings:{number:{source_field:'number'},
+   amount:source.fields.includes('amount_minor')
+    ?{source_field:'amount_minor',transform:'minor_to_major'}
+    :{source_field:'amount'},
+   currency:{source_field:'currency'}}});
+ // 先建立 A、B 都在范围内的映射，再让用户在页面上改 B 的币种绑定。
+ const full=await page.request.post(`/api/sessions/${sid}/source-proposals`,{
+  data:{proposals:{[mapped.source_id]:proposalFor(mapped),[other.source_id]:proposalFor(other)},
+   expected_revision:view.session.revision}});
+ expect(full.ok(),await full.text()).toBeTruthy();
+ await page.reload();
+ await expect(page.getByRole('button',{name:'生成映射预览'})).toBeVisible();
+ await page.getByRole('button',{name:/other\.csv/}).click();
+ await page.getByLabel('币种 来源字段').selectOption('note');
+ await expect(page.getByText('草稿已保存')).toBeVisible();
+ const edited=await (await page.request.get(`/api/sessions/${sid}/view`)).json() as {
+  session:{revision:string};draft:{source_bindings:Record<string,Record<string,{source_field:string}>>};
+ };
+ expect(edited.draft.source_bindings[other.source_id].currency.source_field).toBe('note');
+ // 代理缩窄为只含 A；服务端草稿仍保留 B 的旧绑定。
+ const narrow=await page.request.post(`/api/sessions/${sid}/proposal`,{
+  data:{proposal:proposalFor(mapped),expected_revision:edited.session.revision}});
+ expect(narrow.ok(),await narrow.text()).toBeTruthy();
+ await page.reload();
+ await expect(page.getByRole('button',{name:'生成映射预览'})).toBeVisible();
+ const [rebuilt]=await Promise.all([
+  page.waitForResponse(response=>response.request().method()==='POST'&&/source-proposals$/.test(response.url())),
+  page.getByRole('button',{name:'生成映射预览'}).click(),
+ ]);
+ expect(rebuilt.status()).toBe(200);
+ const body=await rebuilt.json() as {instances:{values:{number?:string}}[];
+  issues:{code?:string;source_id?:string;row?:number}[];source_revisions:Record<string,string>};
+ expect(body.instances).toHaveLength(3);
+ expect(Object.keys(body.source_revisions)).toEqual([mapped.source_id]);
+ const otherIssues=body.issues.filter(issue=>issue.source_id===other.source_id);
+ expect(otherIssues).toHaveLength(1);
+ expect(otherIssues[0]).toMatchObject({code:'ontology.source_unmapped'});
+ expect(otherIssues[0].row).toBeUndefined();
+});

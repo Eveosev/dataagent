@@ -404,3 +404,83 @@ def test_failed_conversion_is_counted_once_per_row_and_column(tmp_path):
     assert len(rejection.value.issues) == 2
     assert all(issue['reason'] == '值无法按目标类型转换'
                for issue in rejection.value.issues)
+
+
+def same_structure_setup(tmp_path):
+    """Two materials whose structure fingerprint is identical on purpose."""
+    wb = Workbench(tmp_path)
+    wb.layer_client = StubProbeClient({
+        'left': csv_profile('left', [
+            {'number': 'L-1', 'amount_minor': '126000', 'currency': 'CNY'}],
+            fingerprint='shared-structure'),
+        'right': csv_profile('right', [
+            {'number': 'R-1', 'amount_minor': '90000', 'currency': 'CNY'}],
+            fingerprint='shared-structure'),
+    })
+    session = wb.intake.advance(start(wb, [
+        SourceSelection(source_id='left', kind='file', locator_ref='left.csv'),
+        SourceSelection(source_id='right', kind='file', locator_ref='right.csv')]).session_id, wb.ctx)
+    return wb, session
+
+
+def test_single_proposal_names_one_of_two_same_structure_sources(tmp_path):
+    wb, session = same_structure_setup(tmp_path)
+    # A fingerprint alone cannot choose between the two observations.  Do not
+    # map both: ask for the explicit source id instead.
+    with pytest.raises(ValueError, match='multiple sources'):
+        wb.intake.submit_proposal(session.id, proposal_for(wb, session, 'left'),
+                                  session.revision, wb.ctx)
+    named = proposal_for(wb, session, 'left').model_copy(
+        update={'extensions': {'intake.source_id': 'left'}})
+    preview = wb.intake.submit_proposal(session.id, named, session.revision, wb.ctx)
+    assert set(preview.source_revisions) == {'left'}
+    assert [instance.values['number'] for instance in preview.instances] == ['L-1']
+    assert [(issue['code'], issue['source_id']) for issue in preview.issues
+            if issue['code'] == 'ontology.source_unmapped'] == \
+        [('ontology.source_unmapped', 'right')]
+
+
+def test_disposed_source_cannot_be_reintroduced_by_a_proposal(tmp_path):
+    wb, session = unmapped_regeneration_setup(tmp_path)
+    wb.intake.submit_source_proposals(
+        session.id, {'ledger': proposal_for(wb, session, 'ledger')}, session.revision, wb.ctx)
+    current = wb.sessions.get(session.id, wb.ctx)
+    wb.intake.dispose(session.id, _dispose('ignore_source', source_id='unused'),
+                      current.revision, wb.ctx)
+    current = wb.sessions.get(session.id, wb.ctx)
+    # Re-proposing the disposed material, alone or with the mapped one, must
+    # be rejected instead of materializing its rows again.
+    with pytest.raises(ValueError, match='disposed'):
+        wb.intake.submit_source_proposals(session.id, {
+            'ledger': proposal_for(wb, current, 'ledger'),
+            'unused': proposal_for(wb, current, 'unused'),
+        }, current.revision, wb.ctx)
+    with pytest.raises(ValueError, match='disposed'):
+        wb.intake.submit_proposal(session.id, proposal_for(wb, current, 'unused'),
+                                  current.revision, wb.ctx)
+    unused = proposal_for(wb, current, 'unused').model_copy(
+        update={'extensions': {'intake.source_id': 'unused'}})
+    with pytest.raises(ValueError, match='disposed'):
+        wb.intake.submit_proposal(session.id, unused, current.revision, wb.ctx)
+    # The allowed scope still regenerates: no object or row issue from the
+    # disposed source, and no source-level "unmapped" prompt for it either.
+    regenerated = wb.intake.submit_source_proposals(
+        session.id, {'ledger': proposal_for(wb, current, 'ledger')},
+        current.revision, wb.ctx)
+    assert {instance.values['number'] for instance in regenerated.instances} == \
+        {'number', 'INV-1', 'INV-2', 'INV-3'}
+    assert not any(issue.get('source_id') == 'unused' for issue in regenerated.issues)
+
+
+def test_issue_summary_uses_chinese_reason_for_unknown_code(tmp_path):
+    wb, session = bad_rows_setup(tmp_path)
+    preview = wb.intake.submit_proposal(session.id, proposal_for(wb, session, 'ledger'),
+                                        session.revision, wb.ctx)
+    body = wb.store.get('preview', preview.id, preview.revision, scope=wb.scope)['body']
+    raw = "Invalid isoformat string: 'not-a-date'"
+    body = {**body, 'issues': [
+        {'code': 'ontology.future_failure', 'target': 'amount', 'detail': raw}]}
+    item = wb.intake.issue_summary(session, body)[0]
+    assert item['reason'] == '该项未通过核对'
+    assert 'Invalid' not in item['reason']
+    assert item['detail'] == raw

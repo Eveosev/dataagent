@@ -1065,7 +1065,8 @@ class IntakeService:
                 if matched is None:return False
                 proposals.update(matched)
         if len(profiles)==1:
-            self.submit_proposal(session.id,proposals[profiles[0].source_id],session.revision,ctx,reused=True)
+            self.submit_proposal(session.id,proposals[profiles[0].source_id],session.revision,ctx,
+                                 reused=True,source_id=profiles[0].source_id)
         else:
             self.submit_source_proposals(session.id,proposals,session.revision,ctx,reused=True)
         return True
@@ -1249,10 +1250,10 @@ class IntakeService:
                 label = '来源 ' + names.get(source_id, source_id)
             if label is None and issue.get('row') is not None:
                 label = f'第 {int(issue["row"]) + 1} 行'
-            # The human-readable reason wins for known issue codes; the raw
-            # detail is often a Python exception class and must not replace
-            # the Chinese explanation shown to the operator.
-            reason = _ISSUE_REASONS.get(code) or issue.get('detail') or code
+            # The list always shows a Chinese reason.  Raw parser/exception
+            # text is often a Python exception or an invalid source value; it
+            # stays in the expandable detail instead of becoming the reason.
+            reason = _ISSUE_REASONS.get(code) or '该项未通过核对'
             item = {'code': code, 'target': issue.get('target'),
                     'object': label or '全部对象',
                     'reason': reason}
@@ -1729,7 +1730,26 @@ class IntakeService:
                 matched.add(instance.get('id'))
         return matched.pop() if len(matched)==1 else None
 
-    def submit_proposal(self,session_id,proposal,expected_revision,ctx,*,reused=False):
+    @staticmethod
+    def _proposal_source(proposal,profiles,source_id=None):
+        """The single source a standalone proposal names, if it names one.
+
+        A fingerprint alone cannot tell two materials with the same structure
+        apart.  An explicit ``intake.source_id`` extension (or a source id in
+        the proposal id) pins the intended source; without one the caller must
+        use the per-source endpoint instead of mapping every match.
+        """
+        explicit=source_id or (proposal.extensions or {}).get('intake.source_id')
+        if explicit is None and proposal.id in {profile.source_id for profile in profiles}:
+            explicit=proposal.id
+        if explicit is None:return None
+        matches=[profile for profile in profiles if profile.source_id==explicit]
+        if not matches:raise ValueError('proposal names a source outside this task')
+        if matches[0].metadata.get('structure_fingerprint')!=proposal.source_fingerprint:
+            raise ValueError('proposal source fingerprint does not match the named source')
+        return matches[0]
+
+    def submit_proposal(self,session_id,proposal,expected_revision,ctx,*,reused=False,source_id=None):
         wb=self.wb;s=wb.sessions.get(session_id,ctx)
         if is_discovery(s):
             raise ValueError('use ontology_discovery_propose for this intake')
@@ -1740,8 +1760,23 @@ class IntakeService:
             named,_=ontology.resolve_concept(proposal.concept)
         except KeyError as exc:raise ValueError(f'unknown concept in ontology {ontology.id}: {proposal.concept}')from exc
         if named!=concept_name:raise ValueError('target concept outside task')
-        observations=[p for p in self._profiles(s) if p.metadata['structure_fingerprint']==proposal.source_fingerprint]
-        if not observations:raise ValueError('proposal does not match a selected source')
+        profiles=self._profiles(s)
+        ignored=self._ignored_source_ids(s)
+        named_source=self._proposal_source(proposal,profiles,source_id)
+        if named_source is not None:
+            if named_source.source_id in ignored:
+                raise ValueError('source is disposed as not used')
+            observations=[named_source]
+        else:
+            matches=[profile for profile in profiles
+                     if profile.metadata['structure_fingerprint']==proposal.source_fingerprint]
+            if not matches:raise ValueError('proposal does not match a selected source')
+            # A disposed source cannot be materialized again, but it must not
+            # turn an otherwise unambiguous active source into an ambiguity.
+            observations=[profile for profile in matches if profile.source_id not in ignored]
+            if not observations:raise ValueError('source is disposed as not used')
+            if len(observations)>1:
+                raise ValueError('proposal matches multiple sources; name one with extensions.intake.source_id')
         mid=s.id+':mapping'
         prior=wb.store.current('mapping',mid,scope=wb.scope)
         revision=str(int(prior['revision'])+1) if prior else '1'
@@ -1789,6 +1824,8 @@ class IntakeService:
         if (not proposals or not set(proposals) <= selected
                 or {profile.source_id for profile in all_profiles} != selected):
             raise ValueError('provide one mapping for each observed source')
+        if self._ignored_source_ids(session) & set(proposals):
+            raise ValueError('source is disposed as not used')
         observations = [profile for profile in all_profiles if profile.source_id in proposals]
         ontology, concept_name, concept = self._target(session)
         if {proposal.ontology_revision for proposal in proposals.values()} != {f'{ontology.id}@{ontology.revision}'}:

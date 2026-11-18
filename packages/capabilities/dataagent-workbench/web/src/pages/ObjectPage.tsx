@@ -391,7 +391,7 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
      const human=humanDetail(issue.detail);
      return <><small className={issueBlocksSave(issue)?'warn':'ok'}>{issueBlocksSave(issue)?'阻断':'可纠正'}</small>
       {' · '}{target?<button className="field-button" title={issue.target?`定位到 ${propertyLabel(issue.target)}`:undefined} onClick={()=>correctIssue(issue)}>{objectLabel(target)}</button>:<span className="muted">{issueLocation(issue)}</span>}
-      {issue.target?` · ${propertyLabel(issue.target)}`:''} · {issueReasons[issue.code||'']||display(issue.code)}{issue.detail&&human.summary?` · ${human.summary}`:''}
+      {issue.target?` · ${propertyLabel(issue.target)}`:''} · {issueReasons[issue.code||'']||'该项未通过核对'}{issue.detail&&human.summary?` · ${human.summary}`:''}
       {issue.detail&&human.detail&&<details className="tech-detail"><summary>详情</summary><pre>{technicalDetail(human.detail)}</pre></details>}
       {issueDisposals(issue).map(option=><div key={disposalKey(option)} className="disposal" data-testid="disposal-option">
        <span className="muted">{disposalText(option)} · {option.reason_hint}</span>
@@ -409,7 +409,7 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
     const human=humanDetail(group.find(issue=>issue.detail)?.detail);
     return <li key={i} data-testid="pending-issue" className="issue-group">
      <small className={blocked?'warn':'ok'}>{blocked?'阻断':'可纠正'}</small>
-     {' · '}{group[0].target?`「${propertyLabel(group[0].target as string)}」 × ${group.length} 行`:`${group.length} 行`} · {issueReasons[group[0].code||'']||display(group[0].code||'')}{human.summary?` · ${human.summary}`:''}
+     {' · '}{group[0].target?`「${propertyLabel(group[0].target as string)}」 × ${group.length} 行`:`${group.length} 行`} · {issueReasons[group[0].code||'']||'该项未通过核对'}{human.summary?` · ${human.summary}`:''}
      {human.detail&&<details className="tech-detail"><summary>详情</summary><pre>{technicalDetail(human.detail)}</pre></details>}
      {conversionActions(group[0],'group')}
      <details className="group-rows"><summary>查看各行</summary><ul>

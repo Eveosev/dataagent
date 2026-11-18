@@ -160,6 +160,9 @@ const detailTexts:Record<string,string>={
 // 保留拼接部分，字段名原样透出。
 const detailPrefixes:[string,string][]=[
  ['recorded fields no longer resolve in the source','来源字段在当前来源中已不再可解析'],
+];
+// 原始异常（可能带无效来源值）只给中文摘要；完整原文保留在折叠「详情」里。
+const exceptionPrefixes:[string,string][]=[
  ['Invalid isoformat string','日期时间格式无法解析'],
 ];
 export type HumanDetail={summary:string;detail?:string};
@@ -167,6 +170,9 @@ export function humanDetail(raw:unknown):HumanDetail{
  const text=String(raw??'').trim();
  if(!text)return {summary:''};
  if(detailTexts[text])return {summary:detailTexts[text]};
+ for(const [prefix,summary] of exceptionPrefixes){
+  if(text.startsWith(prefix))return {summary,detail:text};
+ }
  for(const [prefix,summary] of detailPrefixes){
   if(text.startsWith(prefix)){
    const rest=text.slice(prefix.length).replace(/^[\s:：]+/,'');

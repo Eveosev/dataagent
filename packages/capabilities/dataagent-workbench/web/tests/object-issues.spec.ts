@@ -164,3 +164,32 @@ test('问题来源该行无锚点时不出现对象入口',async({page})=>{
  await expect(issue).not.toContainText('INV-101');
  await expect(issue.getByRole('button')).toHaveCount(0);
 });
+
+test('未知问题码也只显示中文原因，原始异常进折叠详情',async({page})=>{
+ test.setTimeout(40000);
+ await page.route('**/api/sessions/*/objects',async route=>{
+  const response=await route.fetch();
+  const body=await response.json();
+  body.issues=[{code:'ontology.future_failure',target:'amount',
+   entity_id:body.objects[0]?.id,
+   detail:"Invalid isoformat string: 'not-a-date'"}];
+  await route.fulfill({response,json:body});
+ });
+ await page.goto('/');
+ await page.getByLabel('接入目标').fill('接入发票并核对未知问题码');
+ await page.getByLabel('选择材料').setInputFiles({name:'invoice.csv',mimeType:'text/csv',buffer:csv});
+ await page.getByRole('button',{name:'开始接入'}).click();
+ await expect(page.getByRole('button',{name:'生成映射预览'})).toBeEnabled();
+ await page.getByRole('button',{name:'生成映射预览'}).click();
+ await page.getByRole('button',{name:'打开对象页'}).click();
+ await expect(page.getByRole('heading',{name:'核对业务对象'})).toBeVisible();
+ const issue=page.getByTestId('pending-issue');
+ await expect(issue).toHaveCount(1);
+ // 未识别的问题码给中文兜底，不把 code 或原始异常铺在列表里。
+ await expect(issue).toContainText('该项未通过核对');
+ await expect(issue).toContainText('日期时间格式无法解析');
+ expect(await issue.innerText()).not.toContain('Invalid isoformat');
+ // 完整原文仍保留在可展开的「详情」里。
+ await expect(issue.locator('.tech-detail pre'))
+  .toContainText("Invalid isoformat string: 'not-a-date'");
+});
