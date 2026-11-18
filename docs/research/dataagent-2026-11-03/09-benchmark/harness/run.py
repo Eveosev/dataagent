@@ -8,6 +8,8 @@
 
 约束：
 - 只写 tasks/<task>/history/runs/<round-id>/，不动 cases/expected；
+- new_round.py 生成的待跑骨架（run.json status=pending、无预测产物）可直接续跑并覆盖；
+  已有真实产物的 run 目录拒绝复用，换一个 round-id；
 - 适配器失败必须如实进 cases.jsonl 与 run.json.samples.missing，不伪造输出；
 - 跑完自动调用 grade.py 写 scorecard.json，再跑 tools/check.py 可校验一致性。
 """
@@ -24,6 +26,100 @@ from datetime import datetime, timezone
 HERE = pathlib.Path(__file__).resolve().parent
 BENCH = HERE.parent
 SPLITS = ("development", "regression", "unseen_acceptance")
+# new_round.py 只写 run.json / scorecard.json；artifacts 是 run.py 自己建的空目录。
+SKELETON_ENTRIES = {"run.json", "scorecard.json", "artifacts"}
+RUN_SKELETON_KEYS = frozenset({
+    "run_id", "round_id", "task_id", "status", "env", "dataset_ref",
+    "samples", "started_at", "finished_at", "cost", "artifacts",
+})
+RUN_ENV_KEYS = frozenset({"adapter", "model", "agent_kernel", "dataagent", "harness"})
+RUN_DATASET_KEYS = frozenset({"revision", "splits"})
+RUN_SAMPLES_KEYS = frozenset({"total", "scored", "missing"})
+CARD_SKELETON_KEYS = frozenset({
+    "run_id", "task_id", "baseline_run", "split_scores",
+    "deltas", "verdict", "gate", "notes",
+})
+CARD_GATE_KEYS = frozenset({"tier", "decision", "blockers"})
+CARD_SPLIT_KEYS = frozenset({"count", "metrics"})
+
+
+def _is_pending_run(run: dict, run_dir: pathlib.Path) -> bool:
+    """run.json 是否仍是 new_round.py 写的待跑占位（无样本、无完成时间/成本/产物）。"""
+    if not isinstance(run, dict) or set(run) != RUN_SKELETON_KEYS:
+        return False
+    env = run["env"]
+    dataset_ref = run["dataset_ref"]
+    samples = run["samples"]
+    if not isinstance(env, dict) or set(env) != RUN_ENV_KEYS:
+        return False
+    if not isinstance(dataset_ref, dict) or set(dataset_ref) != RUN_DATASET_KEYS:
+        return False
+    if dataset_ref["splits"] != list(SPLITS):
+        return False
+    if not isinstance(samples, dict) or set(samples) != RUN_SAMPLES_KEYS:
+        return False
+    if samples["total"] != 0 or samples["scored"] != 0 or samples["missing"] != []:
+        return False
+    return (
+        run["status"] == "pending"
+        and run["run_id"] == run_dir.name
+        and run["round_id"] == run_dir.name
+        and run["finished_at"] is None
+        and run["cost"] is None
+        and run["artifacts"] == []
+    )
+
+
+def _is_pending_card(card: dict, run: dict) -> bool:
+    """scorecard.json 是否仍是 new_round.py 写的空记分卡（无评分、无裁定、无 Δ）。"""
+    if not isinstance(card, dict) or set(card) != CARD_SKELETON_KEYS:
+        return False
+    gate = card["gate"]
+    if not isinstance(gate, dict) or set(gate) != CARD_GATE_KEYS:
+        return False
+    if gate["decision"] != "pending" or gate["blockers"] != []:
+        return False
+    splits = card["split_scores"]
+    if not isinstance(splits, dict) or set(splits) != set(SPLITS):
+        return False
+    for slot in splits.values():
+        if not isinstance(slot, dict) or set(slot) != CARD_SPLIT_KEYS:
+            return False
+        if slot["count"] != 0 or slot["metrics"] != {}:
+            return False
+    return (
+        card["verdict"] == "pending"
+        and card["deltas"] == {}
+        and card["notes"] is None
+        and card["run_id"] == run["run_id"]
+        and card["task_id"] == run["task_id"]
+    )
+
+
+def is_pending_skeleton(run_dir: pathlib.Path) -> bool:
+    """run 目录是否只有 new_round.py 生成的待跑骨架（尚无任何预测产物）。
+
+    条件：目录里只有骨架文件；artifacts 必须是普通空目录（拒绝符号链接）；run.json
+    与 scorecard.json 的顶层及嵌套对象必须与 new_round.py 的固定字段集合完全一致，
+    且 samples 全零、finished_at/cost 为 null、artifacts 空、verdict/gate 为 pending、
+    split_scores 为空。任何真实结果、额外字段或额外文件都不允许复用。
+    """
+    if not run_dir.is_dir():
+        return False
+    entries = {p.name for p in run_dir.iterdir()}
+    if not entries or not entries <= SKELETON_ENTRIES:
+        return False
+    try:
+        run = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
+        card = json.loads((run_dir / "scorecard.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    artifacts = run_dir / "artifacts"
+    if artifacts.is_symlink():
+        return False
+    if artifacts.exists() and (not artifacts.is_dir() or any(artifacts.iterdir())):
+        return False
+    return _is_pending_run(run, run_dir) and _is_pending_card(card, run)
 
 
 def load_task(task_id: str) -> tuple[dict, pathlib.Path]:
@@ -68,8 +164,14 @@ def main() -> int:
 
     run_id = args.round_id
     run_dir = tdir / "history" / "runs" / run_id
-    if run_dir.exists() and any(run_dir.iterdir()):
-        raise SystemExit(f"run 目录已存在且非空，换一个 round-id: {run_dir}")
+    if run_dir.exists() and not run_dir.is_dir():
+        raise SystemExit(f"run 路径已存在且不是目录: {run_dir}")
+    if run_dir.is_dir() and any(run_dir.iterdir()):
+        if not is_pending_skeleton(run_dir):
+            raise SystemExit(f"run 目录已存在且非空，换一个 round-id: {run_dir}")
+        # 待跑骨架：删掉占位文件后按正式运行重新写；空 artifacts 目录保留复用。
+        for name in ("run.json", "scorecard.json"):
+            (run_dir / name).unlink(missing_ok=True)
     (run_dir / "artifacts").mkdir(parents=True, exist_ok=True)
 
     base_cfg = json.loads(pathlib.Path(args.config).read_text(encoding="utf-8"))
