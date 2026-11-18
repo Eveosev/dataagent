@@ -29,6 +29,18 @@ SQL
 
 TSV、JSONL 的样本和独立期望在 `packages/capabilities/dataagent-scenarios/fixtures/intake/p1-files/`：`samples/` 是材料，`expected/` 是逐字段期望和锚点。docx 目前没有放进 `p1-files`；用仓库内 `packages/capabilities/dataagent-data/tests/observation/test_docx_record_sets.py` 的 `build_invoice_docx` 构造同结构样本（标题「采购单」、3 行表格、末尾备注段），或直接使用财务提供的 Word 文件。`p1-files` 的 docx 样本与 `expected/` 待补（待确认）。
 
+## 运行验收脚本的 OCR 前提
+
+`scripts/verify_local.sh` 的六个阶段（`bootstrap`、`files`、`sources`、`discovery`、`api-workflow`、`mixed-workflow`）都在开头执行 `bootstrap.prepare`，因此每个阶段都必须先装好验证过的本机 OCR，并导出同一个目录：
+
+```sh
+export OCR_ROOT="$HOME/.dataagent/ocr-rapidocr/ocr"
+"$DATAAGENT" setup --ocr-root "$OCR_ROOT"
+"$DATAAGENT" doctor          # 必须有 ocr: ... version= 行；其他失败项按提示修复
+```
+
+`bootstrap.prepare` 用 `OCR_ROOT` 调 `setup --ocr-root`，随后断言 `doctor` 输出包含 `ocr: ... version=` 行；未设置 `OCR_ROOT` 会直接抛 `RuntimeError`。`--ocr-root` 只给 `files` 阶段的扫描用例，不能替代 `OCR_ROOT`。「可跳过 OCR」只适用于不跑验收脚本的手工试用（例如只上传 CSV/SQLite）。
+
 ## 文件输入
 
 在工作台上传对应文件并填写表中目标。Mint 可发送「用 dataagent-intake 接入当前项目的〈文件名〉，〈目标〉。完成表中核对步骤，打开工作台等我确认」。需要多源合并时，在同一任务同时提交两份材料。预览有多个对象时，用对象区域的左右箭头切换，再点 `amount` 查看对应来源。
@@ -58,7 +70,7 @@ export OCR_ROOT="$HOME/.dataagent/ocr-rapidocr/ocr"
 "$DATAAGENT" doctor          # OCR 行变为 engine rapidocr ...，退出码 0
 ```
 
-已有验证目录时只执行 `setup --ocr-root`。`setup` 会复制整个 OCR 目录到项目的 `.dataagent/ocr`，幂等；目标已有不同固定时拒绝替换。工作树回归用 `bash scripts/verify_local.sh --phase files --ocr-root "$OCR_ROOT"`，脚本自行复制 OCR 目录。
+已有验证目录时只执行 `setup --ocr-root`。`setup` 会复制整个 OCR 目录到项目的 `.dataagent/ocr`，幂等；目标已有不同固定时拒绝替换。工作树回归用 `bash scripts/verify_local.sh --phase files --ocr-root "$OCR_ROOT"`；该阶段仍要求已 `export OCR_ROOT`，`--ocr-root` 只用于扫描用例。
 
 ## 数据库和 API 输入
 
@@ -171,7 +183,7 @@ SQL
 }
 ```
 
-从工作区根目录启动工作台或 Mint。若测试角色可通过本机认证直接登录，可从工作树运行 `bash scripts/verify_local.sh --phase sources --postgres-locator "$LOCAL_TEST_POSTGRES"`。预期 CSV、SQLite、PostgreSQL、REST 对齐为一个 `INV-003`，REST 第 2 页重试后完成，第 1 页读取一次（P1 参考，不验收）。
+从工作区根目录启动工作台或 Mint。`sources` 阶段同样先跑 `bootstrap.prepare`；若测试角色可通过本机认证直接登录，先从工作树按[验收脚本的 OCR 前提](#运行验收脚本的-ocr-前提)导出 `OCR_ROOT`，再运行 `bash scripts/verify_local.sh --phase sources --postgres-locator "$LOCAL_TEST_POSTGRES"`。预期 CSV、SQLite、PostgreSQL、REST 对齐为一个 `INV-003`，REST 第 2 页重试后完成，第 1 页读取一次（P1 参考，不验收）。
 
 ## 保存被拦怎么办
 
@@ -229,7 +241,7 @@ SQL
 
 ## 业务 API 和 GUI 操作
 
-这两条用例使用合成报销系统。脚本在本机启动业务服务和临时数据库，提交固定工作流，并返回验收报告。
+这两条用例使用合成报销系统。脚本在本机启动业务服务和临时数据库，提交固定工作流，并返回验收报告。W01/W02 也会先跑 `bootstrap.prepare`；运行前按[验收脚本的 OCR 前提](#运行验收脚本的-ocr-前提)导出 `OCR_ROOT`，并确认 `doctor` 的 `ocr: ... version=` 行存在。
 
 | 用例 | 从工作树执行 | 通过条件 |
 | --- | --- | --- |

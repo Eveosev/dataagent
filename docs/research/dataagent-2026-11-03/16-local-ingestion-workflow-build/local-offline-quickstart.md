@@ -86,6 +86,7 @@ cd "$DATAAGENT_TEST"
 ```sh
 mkdir -p .dataagent/runtime
 "$DATAAGENT" workbench serve --port 8765 > .dataagent/runtime/serve.log 2>&1 &
+sleep 2   # 等描述文件和 /health 就绪；也可先跑 doctor 看 service 行
 "$DATAAGENT" workbench list
 "$DATAAGENT" workbench stop
 ```
@@ -128,8 +129,9 @@ packages/capabilities/dataagent-workbench/.venv/bin/python scripts/verify_browse
 
 预期覆盖 CSV、文本 PDF、两来源归并、并发映射编辑和 SQLite 发现审核。SQLite 用例通过公开工具提交固定草案，并在 Chrome 确认和刷新复核。
 
-装包后的文件阶段回归用：
+装包后的文件阶段回归用。`verify_local.sh` 的所有阶段都会先跑 `bootstrap.prepare`，所以运行前要先装好 OCR 并 `export OCR_ROOT`，且 `doctor` 要有 `ocr: ... version=` 行；下面的 `--ocr-root` 只用于 `files` 的扫描用例：
 
 ```sh
-bash scripts/verify_local.sh --phase files --ocr-root "$OCR_STAGE/ocr"
+export OCR_ROOT="$OCR_STAGE/ocr"
+bash scripts/verify_local.sh --phase files --ocr-root "$OCR_ROOT"
 ```

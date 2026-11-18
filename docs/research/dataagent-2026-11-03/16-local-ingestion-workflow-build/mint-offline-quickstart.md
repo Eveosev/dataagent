@@ -189,7 +189,7 @@ cd "$DATAAGENT_TEST"
 mint gui -y
 ```
 
-`mint gui` 等于 `mint chat --ui mint/gui`，使用 cpmrt 非 Kernel 布局；首次会安装 `mint/gui`（离线运行需要已有缓存或联网），启动后能看到 DataAgent 的 MCP 工具（实测 80 个工具，其中 DataAgent 56 个：workbench 13、data 32、operations 11）。
+`mint gui` 等于 `mint chat --ui mint/gui`，使用 cpmrt 非 Kernel 布局；首次会安装 `mint/gui`（离线运行需要已有缓存或联网），启动后能看到 DataAgent 的 MCP 工具。工具数以当时实测为准：`gui-channel-check.md` 当时记录 80 个、DataAgent 56 个；当前 `tool_schema.py` 为 16 个。
 
 不要用打包版 `Mint Agent.app` 做接入验收：它的 `kernel-stdio-v1` 布局只装配少量内建工具，技能能加载，但 DataAgent 的 MCP 工具不可见（IF-13）。核实记录见[打包桌面版 GUI 工具通道核实](gui-channel-check.md)。
 
@@ -204,6 +204,6 @@ bash scripts/verify_local.sh --phase bootstrap
 bash scripts/verify_local.sh --phase discovery
 ```
 
-`bootstrap` 需要 `OCR_ROOT` 指向已通过 `dataagent-ocr verify` 的 `ocr` 目录（含 `active.json`）；`files` 阶段另加 `--ocr-root "$OCR_ROOT"`。`discovery` 输出 `project`、`session_id` 和报告路径。进入输出中的项目，运行项目内的 DataAgent CLI `workbench view` 打开待审核草案。文件、连接和工作流的单项检查见[测试用例](offline-input-cases.md)。
+`scripts/verify_local.sh` 的六个阶段（`bootstrap`、`files`、`sources`、`discovery`、`api-workflow`、`mixed-workflow`）都会先执行 `bootstrap.prepare`，所以每个阶段都必须先装好验证过的本机 OCR，并 `export OCR_ROOT` 指向 `.../ocr`；脚本还会断言 `doctor` 有 `ocr: ... version=` 行。未设置 `OCR_ROOT` 会在 `bootstrap.prepare` 直接抛 `RuntimeError`。`files` 阶段另加 `--ocr-root "$OCR_ROOT"`，它只供扫描用例，不能替代 `OCR_ROOT`；`可跳过 OCR` 只适用于不跑验收脚本的手工试用。`discovery` 输出 `project`、`session_id` 和报告路径。进入输出中的项目，运行项目内的 DataAgent CLI `workbench view` 打开待审核草案。文件、连接和工作流的单项检查见[测试用例](offline-input-cases.md)。
 
 已验证离线装包、安装产物上的 SQLite 固定草案和工作台审核。SQLite 的真实模型提案和 Mint 原生 GUI 的端到端操作待验收。
