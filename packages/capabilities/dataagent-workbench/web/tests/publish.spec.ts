@@ -40,8 +40,9 @@ function fullProposal(request:{expected_revision:string;source_revision:string;
 }
 
 // 与 test_publish_gate.full_completion 相同的补全；关系证据按各任务自己的目录取。
+// requireName 为 true 时 Customer.name 必填，用来生成定义摘要不同的候选变体。
 function fullCompletion(sid:string,draftRef:string,expectedRevision:string,
- catalog:{relationships:{id:string;origin:string}[]}|null){
+ catalog:{relationships:{id:string;origin:string}[]}|null,requireName=false){
  const declared=catalog!.relationships.find(link=>link.origin==='declared')!;
  const inferred=catalog!.relationships.find(link=>link.origin==='sample_supported')!;
  return {
@@ -60,7 +61,7 @@ function fullCompletion(sid:string,draftRef:string,expectedRevision:string,
    },identity_fields:['book','doc_no','seq']},
    {entity:'Customer',properties:{
     party_no:{column:'party_no',value_type:'string',required:true},
-    name:{column:'nm',value_type:'string'},
+    name:{column:'nm',value_type:'string',required:requireName},
    },identity_fields:['party_no']},
   ],
   relations:[
@@ -133,6 +134,13 @@ test('SQLite 发现 → 草案 → 补全 → 网页确认发布 → 新接入�
  await expect(page.getByText('发布后将成为新任务的默认目标本体')).toBeVisible();
  await expect(page.getByRole('button',{name:'确认发布'})).toBeDisabled();
 
+ // 反例：核对过候选 A 后，Agent 用不同定义重新准备候选 B；页面换上 B 时人工
+ // 核对勾选被重置，不能用对旧定义的确认发布新定义。
+ await page.getByLabel('我已核对候选定义与来源摘要，确认发布').check();
+ callTool('ontology_publish_prepare',fullCompletion(publishSid,fresh.draft!.ref,fresh.expected_revision,fresh.catalog,true));
+ await expect(page.getByLabel('我已核对候选定义与来源摘要，确认发布')).not.toBeChecked({timeout:20000});
+ await expect(page.getByRole('button',{name:'确认发布'})).toBeDisabled();
+
  // 反例：任务修订越过后候选过期，确认被禁用并提示重新准备，不反复提交失效候选。
  // 说明：已审核发现任务的会话修订被后端冻结（sessions.update 拒绝 saved 阶段、
  // advance 原样返回），真实操作无法让候选的 session_revision 落后；这里只改写
@@ -155,6 +163,32 @@ test('SQLite 发现 → 草案 → 补全 → 网页确认发布 → 新接入�
  await page.reload();
  await expect(page.getByText('候选定义摘要 · 销售单据模型')).toBeVisible({timeout:20000});
  await expect(page.getByTestId('publish-stale')).toHaveCount(0);
+
+ // 反例：页面尚未换上新候选时提交旧候选（Agent 已重新准备、页面更新前的窗口，
+ // 这里按住候选接口复现），后端 409 拒绝；换到一致的新候选后发布流程恢复。
+ const candidateRoute=`**/api/sessions/${publishSid}/publish/candidate`;
+ const heldResponse=await page.request.get(`/api/sessions/${publishSid}/publish/candidate`);
+ const held=await heldResponse.json();
+ let holdCandidate=false;
+ await page.route(candidateRoute,async route=>{
+  await route.fulfill(holdCandidate?{json:held}:{response:await route.fetch()});
+ });
+ holdCandidate=true;
+ callTool('ontology_publish_prepare',fullCompletion(publishSid,fresh.draft!.ref,fresh.expected_revision,fresh.catalog,true));
+ await page.getByLabel('我已核对候选定义与来源摘要，确认发布').check();
+ await page.getByRole('button',{name:'确认发布'}).click();
+ await expect(page.getByTestId('publish-failure')).toContainText('候选已过期',{timeout:20000});
+ await expect(page.getByTestId('publish-stale')).toContainText('候选已过期');
+ await expect(page.getByRole('button',{name:'确认发布'})).toBeDisabled();
+ // 刷新取得与当前任务修订一致的新候选：过期标记清除、勾选重置，重新核对后可发布。
+ holdCandidate=false;
+ await page.getByRole('button',{name:'刷新候选'}).click();
+ await expect(page.getByTestId('publish-stale')).toHaveCount(0,{timeout:20000});
+ await expect(page.getByTestId('publish-failure')).toHaveCount(0);
+ await expect(page.getByRole('button',{name:'确认发布'})).toBeDisabled();
+ await page.getByLabel('我已核对候选定义与来源摘要，确认发布').check();
+ await expect(page.getByRole('button',{name:'确认发布'})).toBeEnabled();
+ await page.unroute(candidateRoute);
 
  // 反例：来源在观察后变化，确认被后端拒绝；已审核任务不能重探，只能新建发现任务。
  // 文件不恢复，后续发布由新任务在变更后的来源上完成。

@@ -1,4 +1,4 @@
-import {useEffect,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import {api,ApiError,display,humanDetail,technicalDetail} from '../client';
 import type {View,PublishCandidate,PublishDisposition} from '../client';
 import type {IntakeSession} from '../generated/IntakeSession';
@@ -79,6 +79,8 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
  const [candidate,setCandidate]=useState<PublishCandidate|null>(null),[checked,setChecked]=useState(false),[busy,setBusy]=useState(false);
  const [failure,setFailure]=useState<{text:string;action:'rediscover'|'refresh'}|null>(null),[copied,setCopied]=useState(false);
  const [staleHint,setStaleHint]=useState(false);
+ // 记录被后端按过期拒绝的候选引用；只有换到不同且一致的候选才清除过期标记。
+ const rejectedRef=useRef('');
  const summary=discovery.publish_candidate||null;
  const fetchCandidate=async()=>setCandidate(await api<PublishCandidate|null>(base+'/publish/candidate'));
  useEffect(()=>{let cancelled=false;
@@ -86,6 +88,16 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
    catch(error){if(!cancelled)onError(error);}})();
   return()=>{cancelled=true;};
  },[summary?.ref,summary?.state]);
+ // 候选替换（引用或定义摘要变化）时重置人工核对勾选：核对必须绑定实际确认的候选，
+ // 不能用对旧定义的确认发布新定义。
+ useEffect(()=>{setChecked(false);},[candidate?.ref,candidate?.definition_digest]);
+ // 刷新取得与被拒候选不同、且与当前任务修订一致的候选时清除过期标记，发布流程可恢复；
+ // 候选仍过期时派生校验会继续禁用确认。
+ useEffect(()=>{
+  if(staleHint&&candidate&&candidate.ref!==rejectedRef.current
+   &&candidate.draft_ref===draft.ref&&String(candidate.session_revision)===String(session.revision))
+   setStaleHint(false);
+ },[staleHint,candidate,session.revision,draft.ref]);
  const published=summary?.state==='published';
  // 候选必须锚定当前草案；草案更新后的旧候选不可确认。
  const current=candidate&&candidate.draft_ref===draft.ref?candidate:null;
@@ -111,7 +123,9 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
    // 来源变更给新建发现任务入口；过期/重复确认给刷新候选入口，并标记候选
    // 已过期，避免「刷新候选」后反复提交同一失效候选。
    const raw=error instanceof ApiError?error.raw:'';
-   if(/stale|task changed|draft changed|does not name the prepared/.test(raw))setStaleHint(true);
+   if(/stale|task changed|draft changed|definition changed|does not name the prepared/.test(raw)){
+    rejectedRef.current=current?.ref||'';setStaleHint(true);
+   }
    setFailure({text:error instanceof Error?error.message:String(error),
     action:/discover again/.test(raw)?'rediscover':'refresh'});
   }finally{setBusy(false);}
