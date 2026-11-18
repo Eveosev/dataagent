@@ -140,18 +140,19 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
   }finally{running.current=false;setBusy(false);}
  }
  // FDE-5：冲突字段一键采用某个来源的原值，作为一次用户纠正保存并重新校验。
- async function adoptSourceValue(prop:string,entry:ConflictValue){
+ // 同一来源合并出的多个原值也逐个可采（W1 补审），value 由调用方点名。
+ async function adoptSourceValue(prop:string,entry:ConflictValue,value:unknown){
   if(running.current)return;
   running.current=true;setBusy(true);try{
    const active=view;
    if(!active||!object||!active.preview_ref)throw new Error('请先生成映射预览');
    await api(base_url+'/review','POST',{expected_revision:base.current,decision:{preview_ref:active.preview_ref,
-    target_scope:'instance',changes:{entity_id:object.id,property:prop,value:entry.value,
+    target_scope:'instance',changes:{entity_id:object.id,property:prop,value,
      reason:`采用来源「${entry.source_name}」的原值`},decision:'save'}});
    editing.current=false;editObject.current='';
    sessionStorage.removeItem(localKey);
    setValue('');setReason('');setConflict(false);
-   await afterCorrection(prop,entry.value);
+   await afterCorrection(prop,value);
   }catch(error){
    onError(error);
    if(error instanceof ApiError&&error.status===409)setConflict(true);
@@ -304,12 +305,18 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
    {/* 同一字段每个冲突来源各报一条问题，这里按字段归并后并排展示原值。 */}
    {(object.conflicts||[]).filter((conflict,i,all)=>all.findIndex(other=>other.field===conflict.field)===i).map(conflict=><div key={conflict.field} className="conflict-field" data-testid={`object-conflict-${conflict.field}`}>
     <span>{propertyLabel(conflict.field)} · {conflict.reason||issueReasons['ontology.conflicting_values']}</span>
-    {conflict.values.map(entry=><div key={`${entry.source_id}:${display(entry.value)}`} className="conflict-source">
-     <span>{entry.source_name}：<strong>{display(entry.value)}</strong>{entry.locations.length?`（${entry.locations.join('；')}）`:''}</span>
-     <button className="secondary" disabled={busy||done} onClick={()=>adoptSourceValue(conflict.field,entry)}>采用此值</button>
+    {/* 后端按 source_id 合并断言：同一来源的多个原值收在同一 values 里，这里逐个
+        展示并都可采用；定位是平铺列表，数量与原值一致时按序配对，否则整组并列。 */}
+    {conflict.values.flatMap(entry=>{
+     const originals=entry.values.length?entry.values:[entry.value];
+     const paired=originals.length===entry.locations.length;
+     return originals.map((value,i)=>({entry,value,location:paired?entry.locations[i]:entry.locations.join('；')}));
+    }).map(item=><div key={`${item.entry.source_id}:${display(item.value)}`} className="conflict-source">
+     <span>{item.entry.source_name}：<strong>{display(item.value)}</strong>{item.location?`（${item.location}）`:''}</span>
+     <button className="secondary" disabled={busy||done} onClick={()=>adoptSourceValue(conflict.field,item.entry,item.value)}>采用此值</button>
     </div>)}
    </div>)}
-   <p className="help">各来源原值并排显示；点「采用此值」把该来源的值作为用户纠正保存并重新校验。</p>
+   <p className="help">各来源与同一来源的每个原值并排显示；点「采用此值」把该原值作为用户纠正保存并重新校验。</p>
   </div>}
   {corrections.length>0&&<div className="notice"><strong>纠正记录</strong><ul>{latestCorrections.map((correction,i)=><li key={i}>{propertyLabel(correction.property)} → {display(correction.value)} · {correction.reason}</li>)}</ul>
    {view.correction_views.filter(c=>c.entity_id===object.id).map(c=><div key={c.property} className="correction-conflict" data-testid={`object-correction-${c.property}`}>

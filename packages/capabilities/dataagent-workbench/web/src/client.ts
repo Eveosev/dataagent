@@ -155,8 +155,11 @@ export function humanDetail(raw:unknown):HumanDetail{
    return {summary:rest?`${summary}：${rest}`:summary};
   }
  }
- // 中文原文按原文进主文案；未识别的英文原文只进折叠详情。
- if(/[\u4e00-\u9fff]/.test(text))return {summary:text};
+ // 中文为主的原文按原文进主文案；未识别的英文或中英混合原文只进折叠详情——
+ // 含少量中文的英文原文（如夹着中文值的报错）不能凭几个汉字直通主文案。
+ const chinese=(text.match(/[\u4e00-\u9fff]/g)||[]).length;
+ const latin=(text.match(/[A-Za-z]/g)||[]).length;
+ if(chinese>0&&chinese>=latin)return {summary:text};
  return {summary:'',detail:text};
 }
 // 探查缺口（FDE-10）：分区级缺口用中文直说，不显示内部代码。
