@@ -82,6 +82,11 @@ def _anchor(profile, index, field):
     return found[0]['selector'] if found else None
 
 
+def _record_set_anchor(record_set, index, field):
+    found = record_set.get('anchors', {}).get(f'{index}.{field}')
+    return found[0]['selector'] if found else None
+
+
 def _value_equal(expected, actual):
     """Field comparison with the tolerances the expectation files state:
     numbers compare numerically, Excel dates may carry a midnight time
@@ -610,16 +615,19 @@ document.save(sys.argv[1])
     return path
 
 
-def _record_location(profile, index):
-    return next((location for location in profile['metadata'].get('record_locations', [])
+def _record_location(profile, index, *, locations=None):
+    if locations is None:
+        locations = profile['metadata'].get('record_locations', [])
+    return next((location for location in locations
                  if location.get('record') == index), None)
 
 
 def verify_docx(project):
     """T26/T26b: a runtime-generated policy docx through the installed
     artifact. Assertions use the fixed values above, not values derived from
-    the probe: coverage is full, the body paragraph is readable with a
-    paragraph anchor, and the 一线 row's 600 is anchored at table 1, row 2,
+    the probe: coverage is full, the body paragraph is readable from the
+    paragraphs record set with a paragraph anchor, the default record view is
+    the data table, and the 一线 row's 600 is anchored at table 1, row 2,
     column 2 (1-based per T26)."""
     with tempfile.TemporaryDirectory(prefix='dataagent-docx-') as directory:
         fixture = _build_docx(project, directory)
@@ -634,18 +642,23 @@ def verify_docx(project):
         profile['metadata']['paragraphs']
 
     # Body paragraph: exact text plus a paragraph anchor (T26 paragraph:<n>).
-    index = next((i for i, record in enumerate(profile['records'])
+    # The default profile contains the data table only; prose lives in the
+    # separate paragraphs record set.
+    paragraphs = profile['metadata']['record_sets']['paragraphs']
+    index = next((i for i, record in enumerate(paragraphs['records'])
                   if record.get('text') == DOCX_BODY), None)
-    assert index is not None, profile['records']
-    selector = _anchor(profile, index, 'text')
+    assert index is not None, paragraphs['records']
+    selector = _record_set_anchor(paragraphs, index, 'text')
     assert selector is not None and selector['kind'] == 'text_span', selector
     assert re.fullmatch(r'paragraph:\d+', selector['unit_ref'] or ''), selector
     body_anchor = selector['unit_ref']
-    location = _record_location(profile, index)
+    location = _record_location(
+        profile, index, locations=paragraphs.get('record_locations', []))
     assert location is not None and location['kind'] == 'paragraph', location
     assert profile['metadata']['units'][body_anchor] == DOCX_BODY, selector
 
     # Table row 一线: the value 600 and its 1-based cell anchor.
+    assert all('text' not in record for record in profile['records']), profile['records']
     rows = [record.get('城市') for record in profile['records']]
     assert rows.count('一线') == 1 and '其他' in rows, rows
     index = rows.index('一线')

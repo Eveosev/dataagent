@@ -51,13 +51,16 @@ def test_docx_header_is_labels_and_paragraphs_are_a_separate_record_set(workspac
     assert record_sets['table:1']['count'] == 3
     assert record_sets['paragraphs']['count'] == 2
 
-    table_records = [profile.records[index]
-                     for index in record_sets['table:1']['record_indices']]
+    table_records = record_sets['table:1']['records']
     assert table_records == [dict(zip(HEADERS, row)) for row in ROWS]
+    # The default profile carries only the data table; paragraphs are a
+    # separate set, so prose can no longer become a candidate object.
+    assert len(profile.records) == 3 and profile.records == table_records
+    assert all('text' not in row for row in profile.records)
     assert not any(row.get('number') == 'number' for row in profile.records)
 
     # Cell anchors use the T26 table coordinate, not a document character span.
-    first = record_sets['table:1']['record_indices'][0]
+    first = 0
     assert profile.anchors[f'{first}.amount'][0].selector.unit_ref == (
         'table:1/row:2/col:2')
     assert profile.anchors[f'{first}.currency'][0].selector.unit_ref == (
@@ -83,6 +86,42 @@ def test_docx_header_is_labels_and_paragraphs_are_a_separate_record_set(workspac
     assert [record['text'] for record in paragraphs.records] == [
         '采购单', '备注：发票登记表由财务复核。']
     assert paragraphs.fields == ['text']
+
+
+def test_docx_default_preview_is_only_the_data_table(workspace, ctx):
+    build_invoice_docx(workspace / 'invoice.docx')
+    profile = probe_file(selection(), ctx, workspace=workspace)
+
+    assert len(profile.records) == 3
+    assert profile.fields == HEADERS
+    assert profile.records == [dict(zip(HEADERS, row)) for row in ROWS]
+    assert all('text' not in record for record in profile.records)
+    assert profile.metadata['selected_record_set'] == 'table:1'
+
+
+def test_docx_defaults_to_the_largest_table(workspace, ctx):
+    from docx import Document
+
+    document = Document()
+    document.add_paragraph('说明')
+    larger = document.add_table(rows=3, cols=2)
+    for index, row in enumerate([['name', 'amount'], ['A', '1'], ['B', '2']]):
+        for column, value in enumerate(row):
+            larger.cell(index, column).text = value
+    smaller = document.add_table(rows=2, cols=2)
+    for index, row in enumerate([['code', 'quantity'], ['X', '1']]):
+        for column, value in enumerate(row):
+            smaller.cell(index, column).text = value
+    document.save(str(workspace / 'two-tables.docx'))
+
+    profile = probe_file(selection('two-tables.docx'), ctx, workspace=workspace)
+    assert profile.metadata['default_record_set'] == 'table:1'
+    assert profile.records == [{'name': 'A', 'amount': '1'},
+                               {'name': 'B', 'amount': '2'}]
+    assert profile.metadata['record_sets']['table:2']['count'] == 1
+
+    other = select_record_set(profile, 'table:2')
+    assert other.records == [{'code': 'X', 'quantity': '1'}]
 
 
 def test_docx_record_set_option_selects_the_table(workspace, ctx):
@@ -117,5 +156,4 @@ def test_docx_known_field_labels_mark_a_text_only_header(workspace, ctx):
     assert table['header_detected'] is True
     assert table['headers'] == ['姓名', '部门']
     assert profile.metadata['record_sets']['table:1']['count'] == 2
-    assert profile.records[profile.metadata['record_sets']['table:1']['record_indices'][0]] == {
-        '姓名': '张三', '部门': '销售部'}
+    assert profile.records[0] == {'姓名': '张三', '部门': '销售部'}

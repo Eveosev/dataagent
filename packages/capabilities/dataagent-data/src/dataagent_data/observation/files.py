@@ -18,7 +18,7 @@ from dataagent_contracts.core.refs import SourceAnchor
 from dataagent_contracts.intake import SourceProfile, CoverageGap
 from ..adapters.parsers.delimited import parse_delimited
 from ..adapters.parsers.json_records import parse_json_records
-from .documents import _build_record_sets, probe_document
+from .documents import probe_document
 
 
 BUDGET_GAP = 'time_budget_exceeded'
@@ -89,6 +89,10 @@ def _positive_int(value, default, maximum):
     return value
 
 
+def _source_anchor(value):
+    return value if isinstance(value, SourceAnchor) else SourceAnchor.model_validate(value)
+
+
 def select_record_set(profile, name=None):
     """Return a profile view restricted to one Word record set.
 
@@ -96,7 +100,9 @@ def select_record_set(profile, name=None):
     ``metadata.record_sets`` (``paragraphs`` and ``table:<n>``).  The default
     is the table set with the most data rows; ``name=None`` selects it.  Pass
     ``'paragraphs'`` explicitly to work with prose records, or ``'all'`` to
-    keep every record.  Non-Word profiles pass through unchanged.
+    keep the profile's current records.  Each set carries its own records,
+    anchors and locations, so a filtered profile can switch sets without
+    reparsing the document.  Non-Word profiles pass through unchanged.
     """
     metadata = profile.metadata if isinstance(profile.metadata, dict) else {}
     sets = metadata.get('record_sets')
@@ -111,37 +117,43 @@ def select_record_set(profile, name=None):
     if chosen not in sets:
         available = ', '.join(sorted(sets))
         raise ValueError(f'unknown record set {chosen!r}; available: {available}')
-    indices = [index for index in sets[chosen].get('record_indices', [])
-               if isinstance(index, int) and 0 <= index < len(profile.records)]
-    index_map = {old: new for new, old in enumerate(indices)}
-    records = [profile.records[index] for index in indices]
+    entry = sets[chosen]
+    records = [dict(row) for row in entry.get('records', [])]
     anchors = {}
-    for key, values in profile.anchors.items():
-        head, separator, field = key.partition('.')
-        if not separator:
-            continue
-        try:
-            old_index = int(head)
-        except ValueError:
-            continue
-        if old_index in index_map:
-            anchors[f'{index_map[old_index]}.{field}'] = list(values)
-    locations = []
-    for location in metadata.get('record_locations', []):
-        if not isinstance(location, dict):
-            continue
-        old_index = location.get('record')
-        if isinstance(old_index, int) and old_index in index_map:
-            item = dict(location)
-            item['record'] = index_map[old_index]
-            locations.append(item)
-    fields = list(dict.fromkeys(field for row in records for field in row))
-    selected_sets, default = _build_record_sets(
-        records, locations, metadata.get('tables', []))
+    for key, values in entry.get('anchors', {}).items():
+        anchors[key] = [_source_anchor(value) for value in values]
+    locations = [dict(location) for location in entry.get('record_locations', [])
+                 if isinstance(location, dict)]
+    if 'records' not in entry:
+        # Compatibility with profiles that only carried record indices.
+        indices = [index for index in entry.get('record_indices', [])
+                   if isinstance(index, int) and 0 <= index < len(profile.records)]
+        index_map = {old: new for new, old in enumerate(indices)}
+        records = [profile.records[index] for index in indices]
+        for key, values in profile.anchors.items():
+            head, separator, field = key.partition('.')
+            if not separator:
+                continue
+            try:
+                old_index = int(head)
+            except ValueError:
+                continue
+            if old_index in index_map:
+                anchors[f'{index_map[old_index]}.{field}'] = list(values)
+        for location in metadata.get('record_locations', []):
+            if not isinstance(location, dict):
+                continue
+            old_index = location.get('record')
+            if isinstance(old_index, int) and old_index in index_map:
+                item = dict(location)
+                item['record'] = index_map[old_index]
+                locations.append(item)
+    fields = list(entry.get('fields') or
+                  dict.fromkeys(field for row in records for field in row))
     summary = {set_name: {
-        'kind': entry.get('kind'), 'count': entry.get('count'),
-        'headers': list(entry.get('headers', [])),
-    } for set_name, entry in sets.items()}
+        'kind': set_entry.get('kind'), 'count': set_entry.get('count'),
+        'headers': list(set_entry.get('headers', [])),
+    } for set_name, set_entry in sets.items()}
     selected_metadata = {
         **metadata, 'record_locations': locations,
         'selected_record_set': chosen, 'source_record_sets': summary,
@@ -149,9 +161,6 @@ def select_record_set(profile, name=None):
                                                          for row in records)}
                         for field in fields},
     }
-    if selected_sets:
-        selected_metadata['record_sets'] = selected_sets
-        selected_metadata['default_record_set'] = default
     return profile.model_copy(update={
         'records': records, 'fields': fields, 'anchors': anchors,
         'metadata': selected_metadata})
@@ -354,7 +363,9 @@ def probe_file(selection, ctx, *, workspace, budget_rows=200, engine=None,
     profile=SourceProfile(source_id=selection.source_id,source_revision=revision,kind=suffix.lstrip('.'),
         records=records,fields=fields,anchors=anchors,metadata=metadata,total_partitions=total,
         completed_partitions=completed,gaps=gaps,issues=issues,sampled=sampled)
-    if requested_record_set and resume is None:
+    # A Word document with a data table defaults to that table; prose stays in
+    # metadata.record_sets and is opt-in through options['record_set'].
+    if resume is None and metadata.get('record_sets'):
         profile=select_record_set(profile,requested_record_set)
     return profile
 

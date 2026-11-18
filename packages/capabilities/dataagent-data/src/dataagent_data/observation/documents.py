@@ -395,23 +395,61 @@ def _detect_header_row(values, table, known_fields=None):
     return any(_row_has_data_value(row) for row in values[1:])
 
 
-def _build_record_sets(records, record_locations, tables_meta):
+def _record_set_payload(name, kind, indices, records, anchors, record_locations, **extra):
+    """A self-contained record set: its records, anchors and locations.
+
+    The payload stays in metadata so a filtered profile can switch to another
+    set (for example from the default table view to ``paragraphs``) without
+    reparsing the document.  ``record_indices`` keeps the original positions
+    in the unfiltered profile for provenance.
+    """
+    local = {old: new for new, old in enumerate(indices)}
+    set_records = [records[index] for index in indices]
+    set_anchors = {}
+    for key, values in anchors.items():
+        head, separator, field = key.partition('.')
+        if not separator:
+            continue
+        try:
+            old_index = int(head)
+        except ValueError:
+            continue
+        if old_index in local:
+            set_anchors[f'{local[old_index]}.{field}'] = [
+                value.model_dump(mode='json') if hasattr(value, 'model_dump') else value
+                for value in values]
+    set_locations = []
+    for location in record_locations:
+        old_index = location.get('record')
+        if old_index in local:
+            item = dict(location)
+            item['record'] = local[old_index]
+            set_locations.append(item)
+    entry = {
+        'name': name, 'kind': kind,
+        'fields': list(dict.fromkeys(field for row in set_records for field in row)),
+        'record_indices': indices, 'count': len(indices),
+        'records': set_records, 'anchors': set_anchors,
+        'record_locations': set_locations,
+    }
+    entry.update(extra)
+    return entry
+
+
+def _build_record_sets(records, anchors, record_locations, tables_meta):
     """Group records into independent paragraph/table record sets.
 
-    Indices point into the profile-wide ``records`` list so one probe keeps a
-    single evidence store.  The table set with the most data rows is the
-    default candidate for object generation; a paragraph set never wins over
-    a non-empty table set.
+    The table set with the most data rows is the default candidate for object
+    generation; a paragraph set never wins over a non-empty table set.
     """
     sets = {}
     paragraph_indices = [location['record'] for location in record_locations
                          if location.get('kind') == 'paragraph'
                          and 0 <= location['record'] < len(records)]
     if paragraph_indices:
-        sets['paragraphs'] = {
-            'name': 'paragraphs', 'kind': 'paragraph', 'fields': ['text'],
-            'record_indices': paragraph_indices, 'count': len(paragraph_indices),
-        }
+        sets['paragraphs'] = _record_set_payload(
+            'paragraphs', 'paragraph', paragraph_indices, records, anchors,
+            record_locations)
     table_sets = []
     for table in tables_meta:
         number = table.get('table')
@@ -421,13 +459,10 @@ def _build_record_sets(records, record_locations, tables_meta):
                    if 0 <= location['record'] < len(records)]
         if not indices:
             continue
-        fields = list(dict.fromkeys(field for index in indices for field in records[index]))
-        entry = {
-            'name': f'table:{number}', 'kind': 'table', 'table': number,
-            'headers': list(table.get('headers', [])), 'fields': fields,
-            'record_indices': indices, 'count': len(indices),
-            'row_numbers': [location.get('row') for location in locations],
-        }
+        entry = _record_set_payload(
+            f'table:{number}', 'table', indices, records, anchors, record_locations,
+            table=number, headers=list(table.get('headers', [])),
+            row_numbers=[location.get('row') for location in locations])
         sets[entry['name']] = entry
         table_sets.append(entry)
     default = None
@@ -588,7 +623,7 @@ def probe_docx(path, source_id, revision, *, previous=None, deadline=None,
 
     next_block = start_block + processed
     record_sets, default_record_set = _build_record_sets(
-        records, record_locations, tables_meta)
+        records, anchors, record_locations, tables_meta)
     metadata = {
         'format': 'docx',
         'paragraphs': paragraphs_meta,
