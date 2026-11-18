@@ -1,6 +1,6 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
-import {api,display,registryTitle,translateError} from '../client';
-import type {RegistryEntry,View} from '../client';
+import {api,display,isDecisionSelector,registryTitle,translateError} from '../client';
+import type {Correction,RegistryEntry,View} from '../client';
 import {
  anchorLocation,browseConceptLabel,browsePropertyLabel,conceptMap,filterOpNames,sourceDisplayName,
 } from '../ontologyBrowse';
@@ -26,9 +26,14 @@ function contextOf(view:View):SessionContext{
    ??source.locator_ref;
   names[source.source_id]=sourceDisplayName(raw);
  }
+ const corrections:Record<string,string>={};
+ for(const correction of (view.preview?.corrections as Correction[]|undefined)||[]){
+  if(correction.reason)corrections[`${correction.entity_id}:${correction.property}`]=correction.reason;
+ }
  return {
   sources:names,
   concepts:conceptMap(view.ontology),
+  corrections,
   revision:String(view.ontology?.revision||''),
  };
 }
@@ -122,7 +127,7 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,initial
   (async()=>{
    const loaded=await Promise.all(pending.map(async sid=>{
     try{return [sid,contextOf(await api<View>(`/api/sessions/${sid}/view`))] as const;}
-    catch{return [sid,{sources:{},concepts:{},revision:''}] as const;}
+    catch{return [sid,{sources:{},concepts:{},corrections:{},revision:''}] as const;}
    }));
    if(cancelled)return;
    setContexts(previous=>{
@@ -286,10 +291,21 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,initial
     ?anchorMap[property]
     :(item.locations||[]).filter(location=>location.property===property);
    for(const anchor of anchors){
-    const located=anchorLocation(anchor);
-    if(!located)continue;
-    const source=sourceName(item,anchor.source_ref);
+    const decision=isDecisionSelector(anchor.selector);
+    const located=decision?'':anchorLocation(anchor);
+    if(!decision&&!located)continue;
     const label=browsePropertyLabel(property);
+    if(decision){
+     // 人工纠正的证据锚点是审核决定里的 /decision/changes/value，不是来源文件。
+     // 用任务里的纠正原因显示中文来源，绝不把内部 JSON 指针或决定 ID 露给用户。
+     const reason=contexts[item.session_id]?.corrections?.[`${item.instance_id}:${property}`];
+     const location=reason?`对象页 · ${reason}`:'对象页';
+     const group=groups.find(entry=>entry.source==='人工纠正'&&entry.location===location);
+     if(group){if(!group.labels.includes(label))group.labels.push(label);}
+     else groups.push({source:'人工纠正',location,labels:[label]});
+     continue;
+    }
+    const source=sourceName(item,anchor.source_ref);
     const group=groups.find(entry=>entry.source===source&&entry.location===located);
     if(group){if(!group.labels.includes(label))group.labels.push(label);}
     else groups.push({source,location:located,labels:[label]});

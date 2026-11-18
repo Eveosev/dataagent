@@ -26,6 +26,9 @@ export type ConceptProperties={
 export type SessionContext={
  sources:Record<string,string>;
  concepts:Record<string,ConceptProperties>;
+ // 人工纠正按“对象:属性”记录原因，实例列表据此显示中文纠正来源；
+ // 纠正是审核决定，不是文件里的 JSON 指针。
+ corrections:Record<string,string>;
  revision:string;
 };
 export type InstanceAnchor={
@@ -108,6 +111,7 @@ export const browsePropertyNames:Record<string,string>={
  level:'职级',
  expense_type:'费用类型',
  limit_amount:'限额',
+ note:'备注',
 };
 export function browsePropertyLabel(name:string):string{
  const known=propertyLabel(name);

@@ -74,6 +74,7 @@ function completion(sid:string,draftRef:string,expectedRevision:string,catalog:C
    {entity:'SalesOrder',properties:{
     book:{column:'book',value_type:'string',required:true},
     doc_no:{column:'doc_no',value_type:'integer',required:true},
+    note:{column:'note',value_type:'string',required:false},
    },identity_fields:['book','doc_no']},
    {entity:'SalesOrderLine',properties:{
     book:{column:'book',value_type:'string',required:true},
@@ -102,7 +103,7 @@ test('发布本体后按本体浏览已发布实例',async({page})=>{
  workspace=await resolveWorkspace(page);
  const database=path.join(workspace,'browse-discovery.db');
  fs.rmSync(database,{force:true});
- execFileSync('sqlite3',[database],{input:fs.readFileSync(SEED)});
+ execFileSync('sqlite3',[database],{input:fs.readFileSync(SEED)+'\nALTER TABLE doc_hdr ADD COLUMN note TEXT;\n'});
  const token=process.env.DATAAGENT_TEST_TOKEN||'';
  const auth={'x-dataagent-token':token};
  const csv='book,doc_no\n'+Array.from({length:12},(_,i)=>`SALE,${1001+i}`).join('\n')+'\n';
@@ -181,6 +182,18 @@ test('发布本体后按本体浏览已发布实例',async({page})=>{
  await page.getByRole('button',{name:'返回任务'}).click();
  await expect(page.getByTestId('preview-doc_no')).toHaveText('1001',{timeout:20000});
 
+ // 4b. 在对象页人工纠正一个非标识字段，再保存发布；实例列表必须显示纠正后的值，
+ // 来源必须是中文的“人工纠正 · 对象页 · 原因”，不能露出决定 ID 或 JSON 指针。
+ await page.getByRole('button',{name:'打开对象页'}).click();
+ await expect(page.getByRole('heading',{name:'核对业务对象'})).toBeVisible({timeout:20000});
+ await page.getByLabel('纠正的属性').selectOption('note');
+ await page.getByLabel('纠正后的值').fill('加急');
+ await page.getByLabel('修改原因').fill('客户电话确认加急');
+ await page.getByRole('button',{name:'保存当前值并校验'}).click();
+ await expect(page.getByText(/纠正已保存/)).toBeVisible({timeout:20000});
+ await page.getByRole('button',{name:'返回映射页'}).click();
+ await expect(page.getByTestId('preview-doc_no')).toHaveText('1001',{timeout:20000});
+
  // 5. 保存后实例数出现，按概念列对象并显示来源定位、所属任务与修订。
  const save=page.getByRole('button',{name:'保存接入'});
  await expect(save).toBeEnabled({timeout:20000});
@@ -207,6 +220,23 @@ test('发布本体后按本体浏览已发布实例',async({page})=>{
  await expect(page.getByTestId('instance-revision').first()).toContainText('修订 1');
  await expect(page.getByTestId('instance-table')).not.toContainText('/Users/');
  await expect(page.getByTestId('instance-table')).not.toContainText('sha256:');
+ await expect(page.getByRole('columnheader',{name:'备注'})).toBeVisible();
+ const correctionFilter=page.getByTestId('instance-filter');
+ await correctionFilter.getByLabel('属性').selectOption('note');
+ await correctionFilter.getByLabel('条件').selectOption('eq');
+ await correctionFilter.getByLabel('值').fill('加急');
+ await page.getByRole('button',{name:'筛选',exact:true}).click();
+ await expect(page.getByTestId('instance-row')).toHaveCount(1);
+ const correctedRow=page.getByTestId('instance-row').first();
+ await expect(correctedRow.getByTestId('instance-value-note')).toHaveText('加急');
+ const correctedSource=correctedRow.getByTestId('instance-source');
+ await expect(correctedSource).toContainText('人工纠正');
+ await expect(correctedSource).toContainText('对象页');
+ await expect(correctedSource).toContainText('客户电话确认加急');
+ await expect(correctedSource).not.toContainText('/decision');
+ await expect(correctedSource).not.toContainText('decision:');
+ await page.getByRole('button',{name:'清除筛选'}).click();
+ await expect(page.getByTestId('instance-row')).toHaveCount(10);
  const revisionSelect=page.locator('#instance-revision');
  await expect(revisionSelect).toHaveValue('1');
  await expect(revisionSelect.locator('option').first()).toContainText('（当前）');
