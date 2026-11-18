@@ -419,7 +419,7 @@ def _docx_sections(paragraphs, profile, disclose):
                 stack.pop()
             section = {
                 'level': level, 'paragraph': number,
-                'title': text if disclose else None,
+                'title': _sample_value(text) if disclose else None,
                 'anchor': _anchor(profile, {'kind': 'text_span',
                                             'unit_ref': paragraph.get('unit_ref'),
                                             'char_start': 0, 'char_end': len(text)}),
@@ -445,7 +445,7 @@ def _docx_clauses(paragraphs, profile, disclose):
             'anchor': _anchor(profile, {'kind': 'text_span',
                                         'unit_ref': paragraph.get('unit_ref'),
                                         'char_start': match.start(), 'char_end': match.end()}),
-            'text': text if disclose else None,
+            'text': _sample_value(text) if disclose else None,
         })
     return clauses
 
@@ -541,9 +541,26 @@ def _document_tables(profile, allowed):
     return _pdf_tables(profile, allowed)
 
 
+def _paragraph_text_fields(profile):
+    """The field names G4's paragraphs record set uses for paragraph text."""
+    sets = profile.metadata.get('record_sets')
+    entry = sets.get('paragraphs') if isinstance(sets, dict) else None
+    fields = entry.get('fields') if isinstance(entry, dict) else None
+    if isinstance(fields, list) and fields:
+        return [field for field in fields if isinstance(field, str)]
+    return ['text']
+
+
 def _document_evidence(profile, allowed):
-    """Section structure and clause candidates; text only under a disclosure."""
-    disclose = allowed is not None
+    """Section structure and clause candidates; text only under a disclosure.
+
+    A configured policy alone is not consent to publish prose: the paragraph
+    text field itself must be allowed -- a policy of table columns only keeps
+    titles and clause text hidden.  Disclosed text is truncated like a table
+    sample; structure and anchors are always given.
+    """
+    disclose = (allowed is not None
+                and any(field in allowed for field in _paragraph_text_fields(profile)))
     record_sets = []
     if profile.kind == 'docx':
         paragraphs = list(_docx_paragraphs(profile))

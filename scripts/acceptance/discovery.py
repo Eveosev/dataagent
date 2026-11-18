@@ -354,10 +354,10 @@ DEPARTMENTS_CSV = (
     '部门编号,部门名称\n'
     '400,华东区\n'
     '200,华南区\n'
+    '400,东南区\n'
     '350,华西区\n'
     '300,华北区\n'
     '280,华中区\n'
-    '150,东北区\n'
 )
 
 _DOCX_TYPES = (
@@ -504,7 +504,7 @@ def _document_sources(project):
                  'identity': ['报销单号'],
                  'properties': [{'column': '金额', 'name': 'amount'}]},
                 {'table': 'departments', 'name': 'Department', 'grain': '每个部门一行',
-                 'identity': ['部门编号']},
+                 'identity': ['部门名称']},
             ],
             'relationships': [{'evidence_id': link['id'], 'name': 'followsStandard'}],
         },

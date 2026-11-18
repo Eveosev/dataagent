@@ -36,10 +36,10 @@ DEPARTMENTS_CSV = (
     '部门编号,部门名称\n'
     '400,华东区\n'
     '200,华南区\n'
+    '400,东南区\n'
     '350,华西区\n'
     '300,华北区\n'
     '280,华中区\n'
-    '150,东北区\n'
 )
 
 
@@ -69,7 +69,9 @@ def document_sources():
 
 def document_allowed():
     return {
-        'policy': ['城市等级', '职级', '费用类型', '限额', '币种'],
+        # 'text' is the G4 paragraphs record set field; allowing it is what
+        # discloses section titles and clause text.
+        'policy': ['城市等级', '职级', '费用类型', '限额', '币种', 'text'],
         'detail': ['报销单号', '日期', '城市等级', '职级', '费用类型', '金额', '币种'],
         'departments': ['部门编号', '部门名称'],
     }
@@ -239,7 +241,7 @@ def test_document_sources_build_sections_clauses_and_table_evidence(tmp_path):
                  'identity': ['报销单号'],
                  'properties': [{'column': '金额', 'name': 'amount'}]},
                 {'table': 'departments', 'name': 'Department', 'grain': '每个部门一行',
-                 'identity': ['部门编号']},
+                 'identity': ['部门名称']},
             ],
             'relationships': [{'evidence_id': link['id'], 'name': 'followsStandard'}],
         },
@@ -269,7 +271,7 @@ def test_document_proposals_reject_unanchored_input(tmp_path, change, message):
             {'table': '明细', 'name': 'ExpenseClaim', 'grain': '每笔报销一行',
              'identity': ['报销单号']},
             {'table': 'departments', 'name': 'Department', 'grain': '每个部门一行',
-             'identity': ['部门编号']},
+             'identity': ['部门名称']},
         ],
         'relationships': [{'evidence_id': link['id'], 'name': 'followsStandard'}],
     }
@@ -280,6 +282,26 @@ def test_document_proposals_reject_unanchored_input(tmp_path, change, message):
             'expected_revision': data['expected_revision'],
             'proposal': proposal,
         })
+
+
+@pytest.mark.parametrize('policy_fields', [
+    None,  # no disclosure policy at all
+    [],  # an empty policy for the source
+    ['城市等级', '职级', '费用类型', '限额', '币种'],  # table columns only
+])
+def test_document_text_stays_hidden_without_paragraph_text_disclosure(tmp_path, policy_fields):
+    document_workspace(tmp_path)
+    allowed = None if policy_fields is None else {'policy': policy_fields}
+    wb = workbench(tmp_path, allowed=allowed)
+    data = request(wb, start(wb, document_sources()))
+
+    document, = data['catalog']['documents']
+    title, = document['sections']
+    assert title['title'] is None
+    assert all(clause['text'] is None for clause in document['clauses'])
+    # The heading structure and anchors are still evidence.
+    assert title['level'] == 1 and title['paragraph_range'] == [1, 7]
+    assert document['clauses'][0]['anchor']['selector']['unit_ref'] == 'paragraph:3'
 
 
 def test_document_text_stays_hidden_without_a_disclosure_policy(tmp_path):
@@ -294,6 +316,27 @@ def test_document_text_stays_hidden_without_a_disclosure_policy(tmp_path):
     standard = {table['name']: table for table in data['catalog']['tables']}['table:1']
     assert standard['columns']['限额']['samples'] == []
     assert standard['columns']['限额']['distinct_values'] == 6
+
+
+def test_disclosed_document_text_is_truncated_like_a_table_sample(tmp_path):
+    clause = '第一条 ' + '本' * 200
+    document = (
+        '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+        '<w:body>'
+        + _paragraph('报销制度', 1)
+        + _paragraph(clause)
+        + '<w:sectPr/></w:body></w:document>')
+    (tmp_path / 'policy.docx').write_bytes(_docx_zip(document))
+    wb = workbench(tmp_path, allowed={'policy': ['text']})
+    data = request(wb, start(wb, [
+        {'source_id': 'policy', 'kind': 'file', 'locator_ref': 'policy.docx'},
+    ], goal='从制度文件发现对象'))
+    document, = data['catalog']['documents']
+    title, = document['sections']
+    assert title['title'] == '报销制度'
+    entry, = document['clauses']
+    assert entry['text'] == clause[:160]
+    assert len(entry['text']) == 160
 
 
 def test_pdf_pages_become_sections_tables_and_clause_candidates(tmp_path):
