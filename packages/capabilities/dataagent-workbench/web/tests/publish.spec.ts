@@ -1,11 +1,39 @@
 import {expect,test} from '@playwright/test';
+import type {Page} from '@playwright/test';
 import {execFileSync} from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
-const workspace=process.env.DATAAGENT_TEST_WORKSPACE;
+let workspace=process.env.DATAAGENT_TEST_WORKSPACE||'';
 const python=process.env.DATAAGENT_TEST_PYTHON;
 const SEED=path.resolve('../../dataagent-scenarios/fixtures/intake/sales-discovery.sql');
+
+// verify_browser.py 只把服务 URL/token/解释器传给 Playwright，不传工作区路径。
+// 上传一个探针文件取得 locator_ref，再到系统临时目录里找到同一文件，从而定位
+// 当前服务的工作区；测试自身仍走真实后端。
+async function resolveWorkspace(page:Page){
+ if(workspace)return;
+ const response=await page.request.post('/api/files',{
+  headers:{'x-dataagent-token':process.env.DATAAGENT_TEST_TOKEN||'',
+   'x-file-name':'publish-workspace-probe.csv'},
+  data:'probe\n',
+ });
+ expect(response.ok(),await response.text()).toBeTruthy();
+ const {locator_ref}=await response.json() as {locator_ref?:string};
+ const root=os.tmpdir();
+ const found=fs.readdirSync(root).filter(name=>name.startsWith('dataagent-ui-'))
+  .map(name=>path.join(root,name))
+  .filter(dir=>fs.existsSync(path.join(dir,'.dataagent','db','workbench.sqlite3')))
+  .find(dir=>{
+   const file=path.resolve(dir,String(locator_ref||''));
+   return file.startsWith(path.resolve(dir)+path.sep)&&fs.existsSync(file);
+  });
+ if(!found||!locator_ref)throw new Error(`cannot find the running workspace for ${locator_ref}`);
+ fs.rmSync(path.resolve(found,locator_ref),{force:true});
+ workspace=found;
+}
+test.beforeEach(async({page})=>{await resolveWorkspace(page);});
 
 // 与网页共享同一个工作区：草案与补全走真实 MCP 工具，发布确认、停用与目标
 // 选择只走网页人工通道。
@@ -118,6 +146,52 @@ test('SQLite 发现 → 草案 → 补全 → 网页确认发布 → 新接入�
  await expect(page.getByTestId('publish-open-items')).toContainText('doc_hdr');
  await expect(page.getByTestId('publish-blocked')).toContainText('doc_hdr');
  await expect(page.getByRole('button',{name:'确认发布'})).toBeDisabled();
+ // 补全指令只用业务话术，不出现内部工具名（FDE2-12）。
+ await expect(page.getByText(/intake_inference|ontology_discovery_propose|ontology_publish_prepare/)).toHaveCount(0);
+
+ // FDE2-07：Agent 补全时对未决项自行下了处置，发布区逐项列出「Agent 处置，
+ // 待你核对」并给出影响说明；逐项勾选同意前确认发布保持禁用。
+ // intake_inference 的 draft 只是引用摘要；未决项在网页 view 的完整草案里。
+ const partial=callTool('intake_inference',{session_id:sid});
+ const partialView=await page.request.get(`/api/sessions/${sid}/view`);
+ expect(partialView.ok(),await partialView.text()).toBeTruthy();
+ const partialDraft=(await partialView.json() as {discovery:{draft:{
+  ref:string;unresolved_tables:string[];unresolved_relationships:{id:string}[];
+  gaps?:{ref?:string}[];coverage?:string}}}).discovery.draft;
+ const partialDispositions=[
+  ...partialDraft.unresolved_tables.map((name:string)=>({kind:'unresolved_table',ref:name,action:'exclude',reason:'不在本次登记范围'})),
+  ...partialDraft.unresolved_relationships.map((link:{id:string})=>({kind:'unresolved_relationship',ref:link.id,action:'exclude',reason:'与本次登记无关'})),
+  ...(partialDraft.gaps||[]).map((gap:{ref?:string})=>({kind:'coverage_gap',ref:String(gap.ref||''),action:'accept',reason:'接受该缺口'})),
+  ...(partialDraft.coverage&&partialDraft.coverage!=='full'?[{kind:'coverage',ref:partialDraft.coverage,action:'accept',reason:'接受覆盖水平'}]:[]),
+ ];
+ callTool('ontology_publish_prepare',{
+  session_id:sid,expected_revision:partial.expected_revision,draft_ref:partialDraft.ref,
+  ontology_id:'partial-model',title:'部分登记模型',
+  concepts:[{entity:'Customer',properties:{
+   party_no:{column:'party_no',value_type:'string',required:true},
+   name:{column:'nm',value_type:'string',required:false},
+  },identity_fields:['party_no']}],
+  relations:[],
+  dispositions:partialDispositions,
+ });
+ await expect(page.getByTestId('publish-blocked')).toHaveCount(0,{timeout:20000});
+ await expect(page.getByText('Agent 处置，待你核对').first()).toBeVisible();
+ await expect(page.getByText('影响：').first()).toBeVisible();
+ const dispositionBoxes=page.locator('.publish-disposition input');
+ await expect(dispositionBoxes).toHaveCount(partialDispositions.length);
+ // 勾选总核对后，未逐项同意 Agent 处置前确认发布仍禁用。
+ await page.getByLabel('我已核对候选定义与来源摘要，确认发布').check();
+ await expect(page.getByRole('button',{name:'确认发布'})).toBeDisabled();
+ for(let index=0;index<partialDispositions.length;index++)await dispositionBoxes.nth(index).check();
+ await expect(page.getByRole('button',{name:'确认发布'})).toBeEnabled();
+ // 漏勾一项时重新禁用：逐项同意必须全部满足，不是任意一项。
+ await dispositionBoxes.first().uncheck();
+ await expect(page.getByRole('button',{name:'确认发布'})).toBeDisabled();
+ await dispositionBoxes.first().check();
+ await expect(page.getByRole('button',{name:'确认发布'})).toBeEnabled();
+ // 退回让 Agent 重做的入口给业务话术指令，不出现内部工具名。
+ await page.getByTestId('publish-return').locator('summary').click();
+ await expect(page.getByTestId('publish-return')).not.toContainText('ontology_publish_prepare');
 
  // 完整链路换新任务：通过审核的发现任务已关闭，不能再次提案。
  const publishSid=await startDiscovery(page,'从销售数据库发现完整本体并发布',database);
@@ -155,7 +229,8 @@ test('SQLite 发现 → 草案 → 补全 → 网页确认发布 → 新接入�
   await route.fulfill({response,json:body});
  });
  await expect(page.getByTestId('publish-stale')).toContainText('候选已过期',{timeout:20000});
- await expect(page.getByTestId('publish-stale')).toContainText('ontology_publish_prepare');
+ await expect(page.getByTestId('publish-stale')).toContainText('重新生成发布候选');
+ await expect(page.getByTestId('publish-stale')).not.toContainText('ontology_publish_prepare');
  await expect(page.getByRole('button',{name:'确认发布'})).toBeDisabled();
  await expect(page.getByLabel('我已核对候选定义与来源摘要，确认发布')).toBeDisabled();
  await page.unroute(viewRoute);
@@ -194,10 +269,14 @@ test('SQLite 发现 → 草案 → 补全 → 网页确认发布 → 新接入�
  // 反例：来源在观察后变化，确认被后端拒绝；已审核任务不能重探，只能新建发现任务。
  // 文件不恢复，后续发布由新任务在变更后的来源上完成。
  await page.getByLabel('我已核对候选定义与来源摘要，确认发布').check();
- const uploadsDir=path.join(workspace!,'.dataagent','uploads');
- const uploaded=fs.readdirSync(uploadsDir).filter(name=>/\.(db|sqlite3?)$/.test(name))
-  .map(name=>path.join(uploadsDir,name))
-  .sort((a,b)=>fs.statSync(b).mtimeMs-fs.statSync(a).mtimeMs)[0];
+ // 直接取当前任务固定的来源文件：并行用例也会上传 SQLite，按 mtime 选会
+ // 选到别人的文件，导致改错快照、发布反而成功。
+ const sourceView=await page.request.get(`/api/sessions/${publishSid}/view`);
+ expect(sourceView.ok(),await sourceView.text()).toBeTruthy();
+ const sourceRef=(await sourceView.json() as {session:{sources:{locator_ref:string}[]}})
+  .session.sources.find(source=>/\.(db|sqlite3?)$/.test(source.locator_ref))?.locator_ref;
+ expect(sourceRef).toBeTruthy();
+ const uploaded=path.resolve(workspace!,sourceRef!);
  execFileSync('sqlite3',[uploaded],{input:"INSERT INTO party VALUES ('P-9','Extra');\n"});
  await page.getByRole('button',{name:'确认发布'}).click();
  await expect(page.getByTestId('publish-failure')).toContainText('来源');
@@ -298,6 +377,17 @@ test('pending 草案 + 候选 → 网页一次确认发布 → 草案 approved',
   fresh.expected_revision,fresh.catalog,false,'pending-model','待审核一次确认模型'));
  await expect(page.getByTestId('publish-card')).toBeVisible({timeout:20000});
  await expect(page.getByText('候选定义摘要 · 待审核一次确认模型')).toBeVisible({timeout:20000});
+ // FDE2-12：发布区存在时「确认当前草案」收进「只审核草案，不发布」，不与
+ // 「确认发布」并列造成要点两次的误解；发布区写明确认即一并审核。
+ await expect(page.getByRole('button',{name:'确认当前草案'})).not.toBeVisible();
+ await expect(page.getByTestId('publish-pending-note')).toContainText('一并审核');
+ await expect(page.getByTestId('draft-only-review')).toBeVisible();
+ await expect(page.getByTestId('draft-only-review')).not.toHaveAttribute('open');
+ await page.getByTestId('draft-only-review').locator('summary').click();
+ await expect(page.getByRole('button',{name:'确认当前草案'})).toBeVisible();
+ // 展开后不用它：一次确认即审核并发布。
+ await page.getByTestId('draft-only-review').locator('summary').click();
+ await expect(page.getByRole('button',{name:'确认当前草案'})).not.toBeVisible();
  await expect(page.getByRole('button',{name:'确认发布'})).toBeDisabled();
  await page.getByLabel('我已核对候选定义与来源摘要，确认发布').check();
  await page.getByRole('button',{name:'确认发布'}).click();
@@ -306,4 +396,50 @@ test('pending 草案 + 候选 → 网页一次确认发布 → 草案 approved',
 
  const view=await page.request.get(`/api/sessions/${sid}/view`);
  expect((await view.json()).discovery.draft.state).toBe('approved');
+});
+
+test('prepare → 网页审核草案 → 发布区仍显示候选 → 确认发布成功',async({page})=>{
+ test.skip(!workspace||!python,'run scripts/verify_browser.py to share the test workspace with MCP');
+ test.setTimeout(300000);
+ const database=path.join(workspace!,'publish-review-candidate.db');
+ fs.rmSync(database,{force:true});
+ execFileSync('sqlite3',[database],{input:fs.readFileSync(SEED)});
+
+ await page.goto('/');
+ await page.getByLabel('接入目标').fill('审核草案后继续确认发布');
+ await page.getByLabel('选择材料').setInputFiles(database);
+ await page.getByRole('radio',{name:'从数据库发现本体'}).check();
+ await page.getByRole('button',{name:'开始接入'}).click();
+ await expect(page.getByRole('heading',{name:'来源证据'})).toBeVisible({timeout:20000});
+ const sid=sessionId(page);
+ const request=callTool('intake_inference',{session_id:sid});
+ callTool('ontology_discovery_propose',{session_id:sid,...fullProposal(request)});
+ await expect(page.getByRole('heading',{name:'本体草案',exact:true})).toBeVisible({timeout:20000});
+ await expect(page.getByText('待审核').first()).toBeVisible();
+
+ const fresh=callTool('intake_inference',{session_id:sid});
+ callTool('ontology_publish_prepare',fullCompletion(sid,fresh.draft!.ref,
+  fresh.expected_revision,fresh.catalog,false,'review-candidate-model','审核草案后继续发布模型'));
+ await expect(page.getByTestId('publish-card')).toBeVisible({timeout:20000});
+ await expect(page.getByText('候选定义摘要 · 审核草案后继续发布模型')).toBeVisible({timeout:20000});
+
+ // 发布区存在时先单独审核草案。旧实现 review() 只 reload，候选 effect 的
+ // 依赖不包含 draft.ref/session.revision，审核后发布区退回「待补全」。
+ await page.getByTestId('draft-only-review').locator('summary').click();
+ await page.getByRole('button',{name:'确认当前草案'}).click();
+ await expect(page.getByText('已通过审核').first()).toBeVisible({timeout:20000});
+ await expect(page.getByTestId('publish-card')).toBeVisible();
+ await expect(page.getByText('候选定义摘要 · 审核草案后继续发布模型')).toBeVisible({timeout:20000});
+ await expect(page.getByTestId('publish-card')).not.toContainText('让 Agent 补全');
+
+ await page.getByLabel('我已核对候选定义与来源摘要，确认发布').check();
+ await page.getByRole('button',{name:'确认发布'}).click();
+ await expect(page.getByTestId('publish-done')).toContainText('review-candidate-model',{timeout:20000});
+ const view=await page.request.get(`/api/sessions/${sid}/view`);
+ expect((await view.json()).discovery.draft.state).toBe('approved');
+ // 不把测试发布的本体留成默认目标，避免影响并行用例。
+ const retired=await page.request.post('/api/ontologies/review-candidate-model/retire',{
+  headers:{'x-dataagent-token':process.env.DATAAGENT_TEST_TOKEN||''},
+  data:{reason:'用例结束停用',confirmed:true}});
+ expect(retired.ok(),await retired.text()).toBeTruthy();
 });
