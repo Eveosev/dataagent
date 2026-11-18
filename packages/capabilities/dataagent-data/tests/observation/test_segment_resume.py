@@ -1,8 +1,10 @@
 """Segmented probing: each call is bounded, resumable and lossless."""
 from __future__ import annotations
 
-from dataagent_contracts.intake import SourceSelection
-from dataagent_data.observation.files import probe_file
+import json
+
+from dataagent_contracts.intake import SourceProfile, SourceSelection
+from dataagent_data.observation.files import probe_file, select_record_set
 from conftest import build_pdf_pages, build_xlsx
 from fixtures.docx_policy import build_policy_docx
 
@@ -87,6 +89,73 @@ def test_docx_segments_by_body_block_and_recomputes_structure(workspace, ctx):
     assert final.anchors == one_shot.anchors
     assert final.metadata['units'] == one_shot.metadata['units']
     assert final.metadata['structure_fingerprint'] == one_shot.metadata['structure_fingerprint']
+
+
+def build_invoice_docx(path):
+    from docx import Document
+
+    document = Document()
+    document.add_heading('采购单', level=1)
+    headers = ['number', 'amount', 'currency']
+    rows = [['INV-301', '1260.00', 'CNY'],
+            ['INV-302', '900.50', 'CNY'],
+            ['INV-303', '3300.00', 'CNY']]
+    table = document.add_table(rows=len(rows) + 1, cols=len(headers))
+    for column, value in enumerate(headers):
+        table.cell(0, column).text = value
+    for row_index, row in enumerate(rows, 1):
+        for column, value in enumerate(row):
+            table.cell(row_index, column).text = value
+    document.add_paragraph('备注：发票登记表由财务复核。')
+    document.save(str(path))
+
+
+def test_docx_partial_segments_hide_prose_until_table(workspace, ctx):
+    build_invoice_docx(workspace / 'invoice.docx')
+    profiles = run_to_completion(workspace, ctx, 'invoice.docx', segment_blocks=1)
+
+    assert len(profiles) == 3
+    first = profiles[0]
+    assert first.coverage == 'partial'
+    assert first.records == []
+    assert first.metadata['selected_record_set'] == 'pending_table'
+    assert first.metadata['record_sets']['paragraphs']['count'] == 1
+    assert [record['text'] for record in first.metadata['resume_data']['records']] == ['采购单']
+    assert select_record_set(first).records == []
+    assert select_record_set(first, 'paragraphs').records == [{'text': '采购单'}]
+    assert all('text' not in record
+               for profile in profiles[:-1] for record in profile.records)
+
+    second = profiles[1]
+    assert second.coverage == 'partial'
+    assert len(second.records) == 3
+    assert second.metadata['selected_record_set'] == 'table:1'
+
+    final = profiles[-1]
+    assert final.coverage == 'full'
+    assert len(final.records) == 3
+    assert final.metadata['selected_record_set'] == 'table:1'
+    assert 'resume_data' not in final.metadata
+    assert [record['text'] for record
+            in final.metadata['record_sets']['paragraphs']['records']] == [
+        '采购单', '备注：发票登记表由财务复核。']
+
+    # Resuming from the filtered view must still accumulate the unfiltered
+    # paragraphs and table rows exactly like a one-shot probe.
+    one_shot = probe_file(selection('invoice.docx'), ctx, workspace=workspace)
+    assert final.records == one_shot.records
+    assert final.anchors == one_shot.anchors
+
+    # Workbench passes the previous profile through JSON; resume_data must
+    # survive that round-trip just like it does in-process.
+    wire = SourceProfile.model_validate(json.loads(first.model_dump_json()))
+    wire = probe_file(selection('invoice.docx'), ctx, workspace=workspace,
+                      previous=wire, segment_blocks=1)
+    wire = SourceProfile.model_validate(json.loads(wire.model_dump_json()))
+    wire = probe_file(selection('invoice.docx'), ctx, workspace=workspace,
+                      previous=wire, segment_blocks=1)
+    assert wire.records == final.records
+    assert wire.metadata['record_sets']['paragraphs']['count'] == 2
 
 
 def test_xlsx_segments_by_sheet_and_keeps_completed_sheets(workspace, ctx):

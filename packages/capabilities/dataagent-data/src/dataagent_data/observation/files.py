@@ -89,6 +89,95 @@ def _positive_int(value, default, maximum):
     return value
 
 
+def _source_anchor(value):
+    return value if isinstance(value, SourceAnchor) else SourceAnchor.model_validate(value)
+
+
+def _pending_table_view(profile):
+    """A partial Word profile before any table data must not expose prose."""
+    metadata = {**profile.metadata, 'record_locations': [], 'field_stats': {},
+                'selected_record_set': 'pending_table'}
+    return profile.model_copy(update={'records': [], 'fields': [], 'anchors': {},
+                                      'metadata': metadata})
+
+
+def select_record_set(profile, name=None):
+    """Return a profile view restricted to one Word record set.
+
+    A .docx profile exposes independent record sets in
+    ``metadata.record_sets`` (``paragraphs`` and ``table:<n>``).  The default
+    is the table set with the most data rows; ``name=None`` selects it.  Pass
+    ``'paragraphs'`` explicitly to work with prose records, or ``'all'`` to
+    keep the profile's current records.  Each set carries its own records,
+    anchors and locations, so a filtered profile can switch sets without
+    reparsing the document.  Non-Word profiles pass through unchanged.
+    """
+    metadata = profile.metadata if isinstance(profile.metadata, dict) else {}
+    sets = metadata.get('record_sets')
+    if not isinstance(sets, dict) or not sets:
+        if name not in (None, '', 'all'):
+            raise ValueError('the source profile has no selectable record sets')
+        return profile
+    if name in (None, '') and metadata.get('selected_record_set') == 'pending_table':
+        # A partial profile has not reached its data table yet; keep the safe
+        # empty view unless the caller explicitly asks for paragraphs.
+        return profile
+    chosen = name or metadata.get('default_record_set')
+    if chosen in (None, '', 'all'):
+        return profile.model_copy(update={
+            'metadata': {**metadata, 'selected_record_set': 'all'}})
+    if chosen not in sets:
+        available = ', '.join(sorted(sets))
+        raise ValueError(f'unknown record set {chosen!r}; available: {available}')
+    entry = sets[chosen]
+    records = [dict(row) for row in entry.get('records', [])]
+    anchors = {}
+    for key, values in entry.get('anchors', {}).items():
+        anchors[key] = [_source_anchor(value) for value in values]
+    locations = [dict(location) for location in entry.get('record_locations', [])
+                 if isinstance(location, dict)]
+    if 'records' not in entry:
+        # Compatibility with profiles that only carried record indices.
+        indices = [index for index in entry.get('record_indices', [])
+                   if isinstance(index, int) and 0 <= index < len(profile.records)]
+        index_map = {old: new for new, old in enumerate(indices)}
+        records = [profile.records[index] for index in indices]
+        for key, values in profile.anchors.items():
+            head, separator, field = key.partition('.')
+            if not separator:
+                continue
+            try:
+                old_index = int(head)
+            except ValueError:
+                continue
+            if old_index in index_map:
+                anchors[f'{index_map[old_index]}.{field}'] = list(values)
+        for location in metadata.get('record_locations', []):
+            if not isinstance(location, dict):
+                continue
+            old_index = location.get('record')
+            if isinstance(old_index, int) and old_index in index_map:
+                item = dict(location)
+                item['record'] = index_map[old_index]
+                locations.append(item)
+    fields = list(entry.get('fields') or
+                  dict.fromkeys(field for row in records for field in row))
+    summary = {set_name: {
+        'kind': set_entry.get('kind'), 'count': set_entry.get('count'),
+        'headers': list(set_entry.get('headers', [])),
+    } for set_name, set_entry in sets.items()}
+    selected_metadata = {
+        **metadata, 'record_locations': locations,
+        'selected_record_set': chosen, 'source_record_sets': summary,
+        'field_stats': {field: {'missing_in_sample': sum(row.get(field) is None
+                                                         for row in records)}
+                        for field in fields},
+    }
+    return profile.model_copy(update={
+        'records': records, 'fields': fields, 'anchors': anchors,
+        'metadata': selected_metadata})
+
+
 def probe_file(selection, ctx, *, workspace, budget_rows=200, engine=None,
                previous=None, deadline=None, segment_rows=DEFAULT_SEGMENT_ROWS,
                segment_pages=DEFAULT_SEGMENT_PAGES,
@@ -100,6 +189,10 @@ def probe_file(selection, ctx, *, workspace, budget_rows=200, engine=None,
     segment_pages=_positive_int(segment_pages, DEFAULT_SEGMENT_PAGES, 1000)
     segment_blocks=_positive_int(segment_blocks, DEFAULT_SEGMENT_BLOCKS, 100000)
     segment_sheets=_positive_int(segment_sheets, DEFAULT_SEGMENT_SHEETS, 1000)
+    requested_record_set=selection.options.get('record_set')
+    if requested_record_set is not None and not isinstance(requested_record_set, str):
+        raise ValueError('record_set option must be a string')
+    requested_record_set=requested_record_set or None
     workspace=Path(workspace).resolve()
     path=_safe_path(workspace,selection.locator_ref)
     locator_ref=path.relative_to(workspace).as_posix()
@@ -266,7 +359,8 @@ def probe_file(selection, ctx, *, workspace, budget_rows=200, engine=None,
     else:
         records,anchors,metadata,completed,gaps,issues=probe_document(
             snapshot,selection.source_id,revision,engine=engine,previous=previous,
-            deadline=deadline,segment_pages=segment_pages,segment_blocks=segment_blocks)
+            deadline=deadline,segment_pages=segment_pages,segment_blocks=segment_blocks,
+            known_fields=selection.options.get('known_fields'))
         total=metadata.get('total_pages',metadata.get('total_blocks',1))
         if isinstance(metadata.get('resume'),dict):resume=metadata['resume']
     fields=list(dict.fromkeys(k for row in records for k in row))
@@ -276,9 +370,39 @@ def probe_file(selection, ctx, *, workspace, budget_rows=200, engine=None,
         'field_stats':{k:{'missing_in_sample':sum(row.get(k) is None for row in records)} for k in fields}})
     if resume is not None:
         metadata['resume']=resume
-    return SourceProfile(source_id=selection.source_id,source_revision=revision,kind=suffix.lstrip('.'),
+        if requested_record_set:
+            metadata['requested_record_set']=requested_record_set
+        # The partial profile only exposes a safe selected view; keep the
+        # unfiltered evidence for the next segment.
+        if suffix == '.docx' and metadata.get('record_sets'):
+            metadata['resume_data']={
+                'records':[dict(row) for row in records],
+                'anchors':{key:[anchor.model_dump(mode='json') for anchor in values]
+                           for key,values in anchors.items()},
+                'record_locations':[dict(location) for location in metadata.get('record_locations', [])],
+            }
+    profile=SourceProfile(source_id=selection.source_id,source_revision=revision,kind=suffix.lstrip('.'),
         records=records,fields=fields,anchors=anchors,metadata=metadata,total_partitions=total,
         completed_partitions=completed,gaps=gaps,issues=issues,sampled=sampled)
+    # A Word document with a data table defaults to that table; prose stays in
+    # metadata.record_sets and is opt-in through options['record_set'].
+    if metadata.get('record_sets'):
+        pending_requested_table = (
+            resume is not None and suffix == '.docx' and requested_record_set
+            and requested_record_set.startswith('table:')
+            and requested_record_set not in metadata['record_sets'])
+        if pending_requested_table:
+            # The requested table has not been reached by this segment yet;
+            # return the safe empty view and keep resuming.
+            profile=_pending_table_view(profile)
+        else:
+            profile=select_record_set(profile,requested_record_set)
+            if (resume is not None and suffix == '.docx' and not requested_record_set
+                    and profile.metadata.get('selected_record_set') == 'paragraphs'):
+                # The first segment may only contain prose.  Do not let it become
+                # a candidate before the data table is reached.
+                profile=_pending_table_view(profile)
+    return profile
 
 
 def _xlsx_layout(sheet, hint, trim_empty_edges_with_offset):

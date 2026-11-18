@@ -8,7 +8,7 @@ from conftest import file_ref
 from fixtures.docx_policy import build_policy_docx
 from dataagent_contracts.intake import SourceSelection
 from dataagent_data.anchors import AnchorResolver
-from dataagent_data.observation.files import probe_file
+from dataagent_data.observation.files import probe_file, select_record_set
 
 
 def selection(name: str) -> SourceSelection:
@@ -30,12 +30,14 @@ def test_docx_extracts_paragraphs_headings_tables_and_merged_cells(workspace, ct
     assert profile.metadata['paragraph_count'] == 4
     assert profile.metadata['table_count'] == 1
 
-    assert [row['text'] for row in profile.records if row.get('text')] == [
+    paragraphs = select_record_set(profile, 'paragraphs')
+    assert [row['text'] for row in paragraphs.records if row.get('text')] == [
         '费用报销制度',
         '第一条 本制度适用于全体员工。',
         '审批权限',
         '金额超过 5000 元须经部门负责人审批。',
     ]
+    assert all('text' not in row for row in profile.records)
     assert [item['heading_level'] for item in profile.metadata['paragraphs']] == [1, None, 2, None]
     assert [item['style'] for item in profile.metadata['paragraphs']] == [
         'Heading 1', 'Normal', 'Heading 2', 'Normal']
@@ -49,17 +51,24 @@ def test_docx_extracts_paragraphs_headings_tables_and_merged_cells(workspace, ct
         ['招待费', '800', '实报实销'],
     ]
     assert table['header_detected'] is True and table['header_row'] == 1
-    header_index = table['header_record']
-    assert profile.records[header_index] == {
-        '项目': '项目', '金额': '金额', '说明': '说明'}
-    assert profile.anchors[f'{header_index}.项目'][0].selector.unit_ref == (
-        'table:1/row:1/col:1')
+    assert table['header_record'] is None
+    assert table['headers'] == ['项目', '金额', '说明']
+    assert table['header_cells'][0]['unit_ref'] == 'table:1/row:1/col:1'
+    assert all(row.get('项目') != '项目' for row in profile.records)
+
+    record_sets = profile.metadata['record_sets']
+    assert profile.metadata['default_record_set'] == 'table:1'
+    assert record_sets['paragraphs']['count'] == 4
+    table_records = record_sets['table:1']['records']
+    assert len(table_records) == 2
+    assert profile.records == table_records
+    assert table_records[0]['项目'] == '差旅费'
 
     by_item = {row['项目']: index for index, row in enumerate(profile.records) if row.get('项目')}
     assert profile.records[by_item['差旅费']]['说明'] == '实报实销'
     assert profile.records[by_item['招待费']]['说明'] == '实报实销'
 
-    paragraph_anchor = profile.anchors['1.text'][0]
+    paragraph_anchor = paragraphs.anchors['1.text'][0]
     assert paragraph_anchor.selector.kind == 'text_span'
     assert paragraph_anchor.selector.unit_ref == 'paragraph:2'
     assert paragraph_anchor.source_revision == profile.source_revision
@@ -75,16 +84,17 @@ def test_docx_extracts_paragraphs_headings_tables_and_merged_cells(workspace, ct
     assert units['table:1/row:2/col:3'] == '实报实销'
 
     resolver = AnchorResolver(units=units)
-    for key, anchors in profile.anchors.items():
-        row_index, field = key.split('.', 1)
-        resolved = resolver.resolve(anchors[0])
-        assert resolved.reason == '', (key, resolved.reason)
-        assert resolved.text == str(profile.records[int(row_index)][field])
+    for source, view in ((profile, profile.records), (paragraphs, paragraphs.records)):
+        for key, anchors in source.anchors.items():
+            row_index, field = key.split('.', 1)
+            resolved = resolver.resolve(anchors[0])
+            assert resolved.reason == '', (key, resolved.reason)
+            assert resolved.text == str(view[int(row_index)][field])
 
     # Headers and footers live outside w:body and must not enter the profile.
     dumped = repr(profile.metadata)
     assert '页眉' not in dumped and '页脚' not in dumped
-    assert all('页眉' not in (row.get('text') or '') for row in profile.records)
+    assert all('页眉' not in (row.get('text') or '') for row in paragraphs.records)
 
 
 def test_docx_horizontal_merge_is_expanded(workspace, ctx):

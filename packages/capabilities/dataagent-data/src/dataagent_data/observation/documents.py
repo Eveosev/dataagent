@@ -5,7 +5,10 @@ partitions. Word anchors are character spans inside stable unit refs:
 ``paragraph:<n>`` for a body paragraph and
 ``table:<t>/row:<r>/col:<c>`` for a table cell (all 1-based).  Merged cells
 are expanded; an expanded cell keeps the anchor of the cell that owns the
-value, and the merge geometry is reported in metadata.
+value, and the merge geometry is reported in metadata.  Word records are
+grouped into independent ``paragraphs`` and ``table:<t>`` record sets under
+``metadata.record_sets``; a detected header row labels its table instead of
+becoming a data record.
 """
 import hashlib
 import io
@@ -44,16 +47,46 @@ def _carry(previous):
             list(previous.completed_partitions), gaps, list(previous.issues))
 
 
+def _resume_evidence(previous):
+    """Restore the unfiltered accumulated records from a partial profile.
+
+    A partial Word profile exposes only its safe default view (the data table,
+    or no records while the table has not been reached), so its
+    ``records``/``anchors`` cannot be used as the resume base.  ``probe_file``
+    stores the unfiltered evidence in ``metadata.resume_data`` for this case.
+    """
+    data = previous.metadata.get('resume_data') if isinstance(previous.metadata, dict) else None
+    if not isinstance(data, dict):
+        return None
+    records, anchors, locations = data.get('records'), data.get('anchors'), data.get('record_locations')
+    if (not isinstance(records, list) or not isinstance(anchors, dict)
+            or not isinstance(locations, list)
+            or any(not isinstance(record, dict) for record in records)
+            or any(not isinstance(location, dict) for location in locations)):
+        return None
+    try:
+        restored_anchors = {
+            key: [value if isinstance(value, SourceAnchor) else SourceAnchor.model_validate(value)
+                  for value in values]
+            for key, values in anchors.items()}
+    except Exception:  # noqa: BLE001 - a malformed resume payload falls back safely
+        return None
+    return ([dict(record) for record in records], restored_anchors,
+            [dict(location) for location in locations])
+
+
 def _expired(deadline):
     return deadline is not None and time.monotonic() >= deadline
 
 
 def probe_document(path, source_id, revision, *, engine=None, max_pages=200,
-                   previous=None, deadline=None, segment_pages=10, segment_blocks=200):
+                   previous=None, deadline=None, segment_pages=10, segment_blocks=200,
+                   known_fields=None):
     """Dispatch a document snapshot to the Word or PDF probe."""
     if Path(path).suffix.lower() == ".docx":
         return probe_docx(path, source_id, revision, previous=previous,
-                          deadline=deadline, segment_blocks=segment_blocks)
+                          deadline=deadline, segment_blocks=segment_blocks,
+                          known_fields=known_fields)
     return _probe_pdf(path, source_id, revision, engine=engine, max_pages=max_pages,
                       previous=previous, deadline=deadline, segment_pages=segment_pages)
 
@@ -318,6 +351,19 @@ def _table_grid(table):
 
 _DATA_TYPES = frozenset({'number', 'date', 'boolean'})
 
+# Labels that are very unlikely to be data values.  They only matter for a
+# text-only first row whose lower rows carry no typed value (a table of names
+# and departments, for example); numeric/date data still wins over this list.
+_KNOWN_HEADER_NAMES = frozenset({
+    'amount', 'category', 'city', 'code', 'currency', 'date', 'department',
+    'description', 'id', 'issuer', 'item', 'name', 'notes', 'number', 'price',
+    'quantity', 'remark', 'status', 'total', 'type', 'unit',
+    '单位', '单价', '单号', '发票号', '备注', '姓名', '客户', '市', '城市',
+    '币种', '日期', '数量', '材料', '标准', '税率', '税额', '类型', '编号',
+    '联系人', '职务', '说明', '金额', '部门', '项目', '供应商', '电话',
+    '地址', '合计', '状态', '商品', '名称', '规格', '型号',
+})
+
 
 def _row_is_marked_header(tr):
     """Word's repeat-header marker is an explicit statement about the row."""
@@ -337,13 +383,33 @@ def _row_has_data_value(row):
                for value in row)
 
 
-def _detect_header_row(values, table):
+def _header_names(known_fields):
+    names = set(_KNOWN_HEADER_NAMES)
+    if isinstance(known_fields, str):
+        known_fields = [known_fields]
+    elif not isinstance(known_fields, (list, tuple, set, frozenset)):
+        known_fields = ()
+    for value in known_fields or ():
+        text = str(value).strip().casefold()
+        if text:
+            names.add(text)
+    return names
+
+
+def _row_matches_known_headers(row, names):
+    labels = [str(value).strip().casefold() for value in row
+              if value not in (None, '')]
+    return len(labels) >= 2 and all(label in names for label in labels)
+
+
+def _detect_header_row(values, table, known_fields=None):
     """Whether the first row labels data below it.
 
-    Text-only tables have no reliable label signal, so they stay headerless:
-    keeping every row as a record is safer than silently turning a real first
-    row into field names.  An explicit ``w:tblHeader`` marker overrides the
-    heuristic, and a numeric/date/boolean first row is always data.
+    A first row is a header when Word marked it as one, when it carries only
+    known field labels, or when it is text while a lower row carries a typed
+    value (number/date/boolean).  A text-only first row with neither signal
+    stays data: keeping every row is safer than silently turning a real first
+    row into field names.
     """
     if len(values) < 2 or not any(value not in (None, '') for value in values[0]):
         return False
@@ -352,7 +418,87 @@ def _detect_header_row(values, table):
         return True
     if _row_has_data_value(values[0]):
         return False
+    if _row_matches_known_headers(values[0], _header_names(known_fields)):
+        return True
     return any(_row_has_data_value(row) for row in values[1:])
+
+
+def _record_set_payload(name, kind, indices, records, anchors, record_locations, **extra):
+    """A self-contained record set: its records, anchors and locations.
+
+    The payload stays in metadata so a filtered profile can switch to another
+    set (for example from the default table view to ``paragraphs``) without
+    reparsing the document.  ``record_indices`` keeps the original positions
+    in the unfiltered profile for provenance.
+    """
+    local = {old: new for new, old in enumerate(indices)}
+    set_records = [records[index] for index in indices]
+    set_anchors = {}
+    for key, values in anchors.items():
+        head, separator, field = key.partition('.')
+        if not separator:
+            continue
+        try:
+            old_index = int(head)
+        except ValueError:
+            continue
+        if old_index in local:
+            set_anchors[f'{local[old_index]}.{field}'] = [
+                value.model_dump(mode='json') if hasattr(value, 'model_dump') else value
+                for value in values]
+    set_locations = []
+    for location in record_locations:
+        old_index = location.get('record')
+        if old_index in local:
+            item = dict(location)
+            item['record'] = local[old_index]
+            set_locations.append(item)
+    entry = {
+        'name': name, 'kind': kind,
+        'fields': list(dict.fromkeys(field for row in set_records for field in row)),
+        'record_indices': indices, 'count': len(indices),
+        'records': set_records, 'anchors': set_anchors,
+        'record_locations': set_locations,
+    }
+    entry.update(extra)
+    return entry
+
+
+def _build_record_sets(records, anchors, record_locations, tables_meta):
+    """Group records into independent paragraph/table record sets.
+
+    The table set with the most data rows is the default candidate for object
+    generation; a paragraph set never wins over a non-empty table set.
+    """
+    sets = {}
+    paragraph_indices = [location['record'] for location in record_locations
+                         if location.get('kind') == 'paragraph'
+                         and 0 <= location['record'] < len(records)]
+    if paragraph_indices:
+        sets['paragraphs'] = _record_set_payload(
+            'paragraphs', 'paragraph', paragraph_indices, records, anchors,
+            record_locations)
+    table_sets = []
+    for table in tables_meta:
+        number = table.get('table')
+        locations = [location for location in record_locations
+                     if location.get('kind') == 'table' and location.get('table') == number]
+        indices = [location['record'] for location in locations
+                   if 0 <= location['record'] < len(records)]
+        if not indices:
+            continue
+        entry = _record_set_payload(
+            f'table:{number}', 'table', indices, records, anchors, record_locations,
+            table=number, headers=list(table.get('headers', [])),
+            row_numbers=[location.get('row') for location in locations])
+        sets[entry['name']] = entry
+        table_sets.append(entry)
+    default = None
+    if table_sets:
+        default = max(table_sets, key=lambda entry: (entry['count'], -entry['table']))['name']
+    elif 'paragraphs' in sets:
+        default = 'paragraphs'
+    return sets, default
 
 
 def _docx_fingerprint(paragraph_structure, table_structure):
@@ -361,7 +507,8 @@ def _docx_fingerprint(paragraph_structure, table_structure):
     return hashlib.sha256(json.dumps(payload, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
 
 
-def probe_docx(path, source_id, revision, *, previous=None, deadline=None, segment_blocks=200):
+def probe_docx(path, source_id, revision, *, previous=None, deadline=None,
+               segment_blocks=200, known_fields=None):
     """Extract body paragraphs/headings and tables from a .docx snapshot."""
     _check_docx_archive(path)
     try:
@@ -375,8 +522,12 @@ def probe_docx(path, source_id, revision, *, previous=None, deadline=None, segme
     prior = _resume(previous, revision, 'docx')
     if prior:
         records, anchors, completed, gaps, issues = _carry(previous)
+        saved = _resume_evidence(previous)
+        if saved is not None:
+            records, anchors, record_locations = saved
+        else:
+            record_locations = list(previous.metadata.get('record_locations', []))
         units = dict(previous.metadata.get('units', {}))
-        record_locations = list(previous.metadata.get('record_locations', []))
         paragraphs_meta = list(previous.metadata.get('paragraphs', []))
         tables_meta = list(previous.metadata.get('tables', []))
         paragraph_structure = list(prior.get('paragraph_structure', []))
@@ -422,7 +573,8 @@ def probe_docx(path, source_id, revision, *, previous=None, deadline=None, segme
                     selector={'kind': 'text_span', 'unit_ref': unit_ref,
                               'char_start': 0, 'char_end': len(text)})]
                 record_locations.append({'record': index, 'kind': 'paragraph',
-                                         'paragraph': paragraph_number, 'unit_ref': unit_ref})
+                                         'paragraph': paragraph_number, 'unit_ref': unit_ref,
+                                         'label': f'第 {paragraph_number} 段'})
             else:
                 table_number += 1
                 values, origins, merges = _table_grid(block)
@@ -430,11 +582,10 @@ def probe_docx(path, source_id, revision, *, previous=None, deadline=None, segme
                 column_count = max((len(row) for row in values), default=0)
                 table_structure.append({'row_count': row_count, 'column_count': column_count,
                                         'merges': merges})
-                # A text-only or one-row table has no reliable header: keep
-                # every row as a record.  When a header is detected it also
-                # becomes a record, so its cells are anchored too rather than
-                # disappearing into ``metadata.tables``.
-                header_detected = _detect_header_row(values, block)
+                # A header row labels data; it is not itself a data record.
+                # Its cells remain in ``units`` and ``header_cells`` so the
+                # column names still have table-position evidence.
+                header_detected = _detect_header_row(values, block, known_fields)
                 header_row = 1 if header_detected else 0
                 if header_detected:
                     headers = dedupe_names(['' if value is None else str(value)
@@ -442,28 +593,24 @@ def probe_docx(path, source_id, revision, *, previous=None, deadline=None, segme
                 else:
                     headers = dedupe_names([f'column_{index + 1}'
                                             for index in range(column_count)])
-                header_record = None
+                header_cells = []
                 if header_detected:
-                    header_record = len(records)
-                    records.append({field: (None if value == '' else value)
-                                    for field, value in zip(headers, values[0])})
-                    record_locations.append({'record': header_record, 'kind': 'table_header',
-                                             'table': table_number, 'row': 1})
                     for column_index, field in enumerate(headers):
                         value = values[0][column_index]
                         if value in (None, ''):
                             continue
                         origin_row, origin_column = origins[0][column_index]
-                        unit_ref = (f'table:{table_number}/row:{origin_row + 1}'
-                                    f'/col:{origin_column + 1}')
-                        anchors[f'{header_record}.{field}'] = [SourceAnchor(source_ref=source_id,
-                            source_revision=revision,
-                            selector={'kind': 'text_span', 'unit_ref': unit_ref,
-                                      'char_start': 0, 'char_end': len(value)})]
+                        header_cells.append({
+                            'field': field, 'column': origin_column + 1,
+                            'unit_ref': (f'table:{table_number}/row:{origin_row + 1}'
+                                         f'/col:{origin_column + 1}'),
+                            'text': '' if value is None else str(value),
+                        })
                 tables_meta.append({'table': table_number, 'row_count': row_count,
                                     'column_count': column_count, 'header_row': header_row,
                                     'header_detected': header_detected,
-                                    'header_record': header_record,
+                                    'header_record': None,
+                                    'header_cells': header_cells,
                                     'headers': headers, 'merges': merges, 'rows': values})
                 for row_index, row in enumerate(values):
                     for column_index, value in enumerate(row):
@@ -477,8 +624,7 @@ def probe_docx(path, source_id, revision, *, previous=None, deadline=None, segme
                     index = len(records)
                     records.append({field: (None if value == '' else value)
                                     for field, value in zip(headers, row)})
-                    record_locations.append({'record': index, 'kind': 'table',
-                                             'table': table_number, 'row': row_index + 1})
+                    cells = {}
                     for column_index, field in enumerate(headers):
                         value = row[column_index] if column_index < len(row) else None
                         if value in (None, ''):
@@ -490,6 +636,15 @@ def probe_docx(path, source_id, revision, *, previous=None, deadline=None, segme
                             source_revision=revision,
                             selector={'kind': 'text_span', 'unit_ref': unit_ref,
                                       'char_start': 0, 'char_end': len(value)})]
+                        cells[field] = {'table': table_number, 'row': origin_row + 1,
+                                        'col': origin_column + 1, 'unit_ref': unit_ref}
+                    record_locations.append({
+                        'record': index, 'kind': 'table', 'table': table_number,
+                        'row': row_index + 1,
+                        'columns': {field: cell['col'] for field, cell in cells.items()},
+                        'cells': cells,
+                        'label': f'表 {table_number} 第 {row_index + 1} 行',
+                    })
             completed.append(block_number)
         except Exception as exc:  # noqa: BLE001 - a bad block must not abort the document
             gap_code = 'docx_block_failed'
@@ -499,12 +654,16 @@ def probe_docx(path, source_id, revision, *, previous=None, deadline=None, segme
                            'kind': kind, 'detail': type(exc).__name__})
 
     next_block = start_block + processed
+    record_sets, default_record_set = _build_record_sets(
+        records, anchors, record_locations, tables_meta)
     metadata = {
         'format': 'docx',
         'paragraphs': paragraphs_meta,
         'tables': tables_meta,
         'units': units,
         'record_locations': record_locations,
+        'record_sets': record_sets,
+        'default_record_set': default_record_set,
         'paragraph_count': paragraph_number,
         'table_count': table_number,
         'total_blocks': total,
