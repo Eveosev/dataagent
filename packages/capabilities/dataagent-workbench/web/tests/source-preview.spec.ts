@@ -1,10 +1,14 @@
 import {test,expect} from '@playwright/test';
 import path from 'node:path';
 
+// 每个接入都显式固定内置采购本体：publish.spec 并行运行时会短暂把注册表默认指针
+// 移到新发布的本体，这里不依赖默认值，避免并行用例互相干扰。
+
 test('CSV 对象值的来源定位',async({page})=>{
  await page.goto('/');
  await page.getByLabel('接入目标').fill('接入发票并核对来源行');
  await page.getByLabel('选择材料').setInputFiles(path.resolve('../../dataagent-scenarios/fixtures/intake/invoices.csv'));
+ await page.getByLabel('映射到的本体').selectOption('procurement');
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByText('识别与探查已完成')).toBeVisible();
  await page.getByLabel('金额 来源字段').selectOption('amount_minor');
@@ -29,6 +33,7 @@ test('PDF 对象值定位到页面与原文',async({page})=>{
  await page.goto('/');
  await page.getByLabel('接入目标').fill('接入文本发票并核对页面定位');
  await page.getByLabel('选择材料').setInputFiles(path.resolve('../../dataagent-scenarios/fixtures/intake/invoice.pdf'));
+ await page.getByLabel('映射到的本体').selectOption('procurement');
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByText('识别与探查已完成')).toBeVisible();
  await page.getByLabel('金额 来源字段').selectOption('amount_minor');

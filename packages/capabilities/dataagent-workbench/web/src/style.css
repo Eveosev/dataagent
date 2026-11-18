@@ -54,3 +54,17 @@
 .tech-detail{margin-top:8px;font-size:10px;color:#8a7a70}
 .tech-detail summary{cursor:pointer;user-select:none}
 .tech-detail pre{margin:6px 0 0;padding:8px 10px;background:#fffdf9;border:1px solid #f0e4c9;border-radius:5px;white-space:pre-wrap;word-break:break-word;font-size:10px;line-height:1.6}
+/* D5b：顶部「本体库」入口与发布 / 本体库页面元素。 */
+.header-side{display:flex;align-items:center;gap:16px}
+.header-link{font-size:12px;color:#5c6f64;padding:6px 10px;border-radius:5px}
+.header-link:hover{background:#f0f4f1}
+.publish-items{margin:8px 0 0;padding-left:19px}
+.publish-items li{margin-bottom:6px}
+.publish-snapshot{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px;margin:0}
+.publish-snapshot dt{font-size:10px;color:#8d9b90;margin-bottom:5px}
+.publish-snapshot dd{margin:0;font-size:12px;word-break:break-all}
+.discovery-review label{display:flex;align-items:center;gap:7px;font-size:12px}
+.ontology-page .mapping-table small{display:block;margin-top:6px}
+.ontology-page .notice{margin:18px 0 0}
+/* 窄屏下全局规则会隐藏 .save-buttons .secondary，本体库页头的操作保持可见。 */
+@media(max-width:760px){.ontology-page .save-buttons .secondary{display:inline-flex}}
