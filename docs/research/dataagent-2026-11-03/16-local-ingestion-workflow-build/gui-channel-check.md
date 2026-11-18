@@ -1,7 +1,7 @@
 ---
 version: 1
 date: 2026-11-18
-status: 已核实（T02）
+status: 已核实（T02）；11-18 补：非 Kernel 布局可用
 ---
 
 # 打包桌面版 GUI 工具通道核实
@@ -39,3 +39,11 @@ status: 已核实（T02）
 1. 最小 MVP 以 TUI 为主（T50）；T51（GUI 证据包）登记为外部阻断，依据是本记录。
 2. 07 的 T43（PR-4 打包桌面版 bundle 工具可见）的触发条件「T02 结论为看不到」已成立；P1 暂缓不提 PR，转为向 Mint 负责人提需求。
 3. 给 Mint 开发者的问题说明（背景、现象、原因、建议、复现）在本机 `$PRIVATE_DIR/t02-mint-gui-issue.md`，可直接转。
+
+## 补充：非 Kernel 布局（03 的 Q1 选项 A，11-18）
+
+1. 入口：命令行 `mint gui`（等于 `mint chat --ui mint/gui`），首次会安装 `mint/gui@0.1.47` 到项目，启动时 core 为 cpmrt（`~/.mint/cores/0.1.47-std/bin/cpmrt`），回合不进 Kernel。
+2. 冒烟：同一个已装 preset-intake 的全新工作区，`.mint/packages/mint/gui@0.1.47/bin/mint-gui --core <cpmrt> --cwd <工作区> --smoke "<列出全部工具名>"`。会话 `packages` 含 mint/gui 与 5 个 DataAgent 包，模型 deepseek-v4.1-flash-mb，core 0.1.47。
+3. 结果：80 个工具，DataAgent 工具 56 个（workbench 13、data 32、operations 11），与命令行 `mint run` 一致。
+4. 结论：GUI 用非 Kernel 布局可以完成 G1.4 的 GUI 部分；T51 不再是外部阻断，改为按 `mint gui` 执行。打包版 Mint Agent.app（kernel-stdio-v1）看不到工具的问题仍在（IF-13），但不挡 P1。
+5. 选项 B（Kernel command 组件通道）不做：要管理员在启动计划里装配，不随 `mint add` 生效，属于一次性胶水，不通用（payne 11-18）。
