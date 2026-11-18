@@ -285,18 +285,17 @@ def test_blank_observed_key_is_rejected_as_identity(tmp_path):
 
 
 @pytest.mark.parametrize('suffix', ['.pdf', '.docx'])
-def test_document_sources_wait_for_d2b(tmp_path, suffix):
+def test_document_sources_enter_discovery_intake(tmp_path, suffix):
+    # D2b replaced the "wait for D2b" refusal: document sources now enter
+    # discovery intake.  Their evidence is covered by test_discovery_documents.py.
     locator = 'policy' + suffix
     if suffix == '.pdf':
         shutil.copy2(FIXTURES / 'invoice.pdf', tmp_path / locator)
     else:
         (tmp_path / locator).write_bytes(b'not a real document')
     wb = workbench(tmp_path)
-    with pytest.raises(ValueError, match='D2b'):
-        invoke(wb, 'intake_start', {
-            'goal': '从制度文件发现对象', 'mode': 'ontology_discovery',
-            'sources': [{'source_id': 'policy', 'kind': 'file', 'locator_ref': locator}],
-        })
+    assert start(wb, [{'source_id': 'policy', 'kind': 'file', 'locator_ref': locator}],
+                 goal='从制度文件发现对象')
 
 
 def test_excel_parallel_regions_with_same_header_are_separate(tmp_path):

@@ -4,14 +4,26 @@ Column evidence is normalized per source by ``discovery_evidence``.  This
 module adds the relationship rules the SQLite discovery flow already used:
 declared foreign keys for database sources, and observed-value candidates that
 require an equal field affinity, a unique target key and at least two distinct
-non-null source values that all match.  Several matching targets are marked
-ambiguous instead of being silently chosen.
+non-null source values that all match.  Composite target keys are matched by
+column combination.  Several matching targets are marked ambiguous instead of
+being silently chosen.  A candidate that involves a document table also needs
+an affine field name: coincidental value overlap (a code that just happens to
+equal a limit, or numbering that overlaps) must not become a link.
 """
+import re
 from collections import defaultdict
 
 from dataagent_ontology.identity import digest
 
-from .discovery_evidence import affinity, collect_tables, key_counts  # noqa: F401
+from .discovery_evidence import (DOCUMENT_KINDS, affinity, collect_tables,  # noqa: F401
+                                  key_counts)
+
+_NAME_NOISE = re.compile(r'[\s_/-]+')
+
+
+def _name_key(name):
+    """Field names compared modulo separators, so 费用类型 and /fee_type match."""
+    return _NAME_NOISE.sub('', str(name)).casefold()
 
 
 def build_catalog(profiles, allowed_fields=None):
@@ -63,6 +75,7 @@ def build_catalog(profiles, allowed_fields=None):
                                           link['target_columns'], 'declared'))
 
     # Candidate generation uses the observed key index. A shared ID alone is weak evidence.
+    document_tables = {name for name, table in tables.items() if table['kind'] in DOCUMENT_KINDS}
     key_index = defaultdict(list)
     for target, table in tables.items():
         for columns in table['keys']:
@@ -97,6 +110,11 @@ def build_catalog(profiles, allowed_fields=None):
             for target, target_col in smallest:
                 if target == source or not observed.keys() <= counts(target, [target_col]).keys():
                     continue
+                # A document pair must also share a field name: values alone
+                # do not tell a referenced limit from a coincidental code.
+                if ((source in document_tables or target in document_tables)
+                        and _name_key(column) != _name_key(target_col)):
+                    continue
                 alternatives.append(relationship(source, columns, target, [target_col],
                                                  'sample_supported'))
             if len(alternatives) > 1:
@@ -107,6 +125,49 @@ def build_catalog(profiles, allowed_fields=None):
             else:
                 relationships.extend(alternatives)
                 inferred_limit -= len(alternatives)
+
+    # Composite target keys are matched by column combination: the source must
+    # carry one name-affine column per key column, and at least two distinct
+    # non-null combinations must all exist as target keys.
+    composite_slots = defaultdict(list)
+    for target, table in tables.items():
+        for key in table['keys']:
+            if len(key) < 2 or any(table['columns'][column]['affinity'] in {'blob', 'unknown'}
+                                   for column in key):
+                continue
+            target_keys = counts(target, key).keys()
+            for source, source_table in tables.items():
+                if source == target:
+                    continue
+                source_cols = []
+                for column in key:
+                    affine = [candidate for candidate in source_table['columns']
+                              if _name_key(candidate) == _name_key(column)]
+                    if len(affine) != 1:
+                        source_cols = None
+                        break
+                    source_cols.append(affine[0])
+                if source_cols is None:
+                    continue
+                slot = (source, tuple(source_cols))
+                if slot in declared_slots:
+                    continue
+                if any(set(source_cols) < set(existing) for existing in source_table['keys']):
+                    continue  # a proper identity prefix is not reference evidence
+                observed = counts(source, source_cols)
+                if len(observed) < 2 or not observed.keys() <= target_keys:
+                    continue
+                composite_slots[slot].append(
+                    relationship(source, source_cols, target, list(key), 'sample_supported'))
+    for candidates in composite_slots.values():
+        if len(candidates) > 1:
+            for candidate in candidates:
+                candidate['ambiguous'] = True
+        if len(candidates) > inferred_limit:
+            truncated = True
+        else:
+            relationships.extend(candidates)
+            inferred_limit -= len(candidates)
     if truncated:
         gaps.append({'code': 'candidate_budget_exceeded'})
 
@@ -118,6 +179,7 @@ def build_catalog(profiles, allowed_fields=None):
                                for candidate in relationships}.values()),
         'gaps': gaps,
         'sources': evidence['sources'],
+        'documents': evidence['documents'],
         'source_revision': revision,
         'structure_fingerprint': evidence['structure_fingerprint'],
     }
