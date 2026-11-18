@@ -1,4 +1,4 @@
-"""Versioned ontology proposals for SQLite intake with no predefined target."""
+"""Versioned ontology proposals for table-shaped sources with no predefined target."""
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -117,9 +117,48 @@ def _coverage(profiles):
     return 'unknown'
 
 
+class _DiscoveryProbeClient:
+    """Normalize the discovery-only sampling hint before REST resolution.
+
+    Intake adds ``sample_strategy`` to every discovery selection.  A REST
+    selection must carry no options of its own: its options come from the host
+    connection manifest, and the resolver rejects anything set on the selection.
+    The hint only affects SQLite table sampling, so drop it for REST here.  This
+    shim lives at the discovery boundary until the intake entry injects the hint
+    for SQLite alone (G2 owns that file).
+    """
+
+    def __init__(self, client):
+        self._client = client
+
+    def probe(self, selection, *args, **kwargs):
+        if selection.kind == 'rest':
+            options = dict(selection.options)
+            if 'sample_strategy' in options:
+                options.pop('sample_strategy')
+                selection = selection.model_copy(update={'options': options})
+        return self._client.probe(selection, *args, **kwargs)
+
+    def __getattr__(self, name):
+        return getattr(self._client, name)
+
+
 class DiscoveryService:
     def __init__(self, wb):
         self.wb = wb
+        client = wb.layer_client
+        if client is None:
+            # The installed workbench creates its data-layer client lazily at
+            # the first probe.  Create it here so the same boundary normalizer
+            # applies; a workspace without a data layer keeps the existing
+            # lazy failure path.
+            try:
+                from .adapters.layer_client import LayerClient, installed_data_package
+                client = LayerClient(installed_data_package(wb.workspace))
+            except (OSError, ValueError):
+                client = None
+        if client is not None and not isinstance(client, _DiscoveryProbeClient):
+            wb.layer_client = _DiscoveryProbeClient(client)
 
     def _allowed_fields(self, profiles):
         allowlist = self.wb.allowed_model_fields

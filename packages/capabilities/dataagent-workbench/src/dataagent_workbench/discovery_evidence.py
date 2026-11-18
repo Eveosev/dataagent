@@ -8,6 +8,7 @@ samples and explicit coverage.  Cross-source link candidates are produced by
 ``discovery_catalog`` from these tables.
 """
 from collections import Counter, defaultdict
+from itertools import combinations
 import re
 from string import ascii_lowercase, ascii_uppercase
 
@@ -24,6 +25,8 @@ SQLITE_CASE_FOLD = str.maketrans(ascii_uppercase, ascii_lowercase)
 _CELL = re.compile(r'^([A-Z]+)([0-9]+)$')
 _MAX_SAMPLES = 3
 _MAX_KEY_COLUMNS = 12
+_MAX_KEY_WIDTH = 5
+_MAX_KEY_COMBINATIONS = 5000
 _MAX_INFERRED_KEYS = 20
 _SAMPLE_LIMIT = 160
 
@@ -143,23 +146,46 @@ def _column_evidence(field, declared, rows, allowed):
 
 
 def _inferred_keys(columns, rows):
-    """Candidate keys under the observed rule: no blank value and all rows distinct."""
+    """Candidate keys under the observed rule: no blank value and all rows distinct.
+
+    Singles are exhaustive.  When none exists, minimal composites are searched
+    in increasing width; the search is bounded and reports whether a bound cut
+    the space, so callers can disclose the gap instead of implying no key.
+    """
+    search = {'max_columns': _MAX_KEY_COLUMNS, 'max_width': _MAX_KEY_WIDTH,
+              'max_combinations': _MAX_KEY_COMBINATIONS, 'truncated': False}
     if len(rows) < 2:
-        return []
+        return [], search
     singles = [field for field, column in columns.items()
                if column['blank_rows'] == 0 and column['distinct_values'] == len(rows)]
     if singles:
-        return [[field] for field in singles]
-    usable = [field for field in columns if columns[field]['blank_rows'] == 0][:_MAX_KEY_COLUMNS]
-    pairs = []
-    for index, first in enumerate(usable):
-        for second in usable[index + 1:]:
-            counts = key_counts(rows, [first, second], skip_blank=True)
-            if len(counts) == len(rows):
-                pairs.append([first, second])
-                if len(pairs) >= _MAX_INFERRED_KEYS:
-                    return pairs
-    return pairs
+        return [[field] for field in singles], search
+    usable = [field for field in columns if columns[field]['blank_rows'] == 0]
+    if len(usable) > _MAX_KEY_COLUMNS:
+        usable = usable[:_MAX_KEY_COLUMNS]
+        search['truncated'] = True
+    if len(usable) > _MAX_KEY_WIDTH:
+        search['truncated'] = True
+    keys = []
+    examined = 0
+    for width in range(2, min(_MAX_KEY_WIDTH, len(usable)) + 1):
+        stopped = False
+        for fields in combinations(usable, width):
+            if examined >= _MAX_KEY_COMBINATIONS:
+                search['truncated'] = True
+                stopped = True
+                break
+            examined += 1
+            if any(set(key) <= set(fields) for key in keys):
+                continue
+            if len(key_counts(rows, list(fields), skip_blank=True)) == len(rows):
+                keys.append(list(fields))
+                if len(keys) >= _MAX_INFERRED_KEYS:
+                    search['truncated'] = True
+                    return keys, search
+        if stopped:
+            break
+    return keys, search
 
 
 def _selector_value(anchor, key):
@@ -170,24 +196,41 @@ def _selector_value(anchor, key):
 
 
 def _excel_position(profile, index, record):
+    sheet = row = None
+    columns = []
     for field in record:
         for anchor in profile.anchors.get(f'{index}.{field}') or []:
             if _selector_value(anchor, 'kind') != 'excel_cell':
                 continue
             cell = _selector_value(anchor, 'range') or ''
             match = _CELL.match(cell)
-            return (_selector_value(anchor, 'sheet'),
-                    int(match.group(2)) if match else None)
-    return None, None
+            if not match:
+                continue
+            if sheet is None:
+                sheet = _selector_value(anchor, 'sheet')
+            if row is None:
+                row = int(match.group(2))
+            column = 0
+            for letter in match.group(1):
+                column = column * 26 + ord(letter) - ord('A') + 1
+            columns.append(column)
+            break
+    if columns:
+        return sheet, row, min(columns), max(columns)
+    return sheet, row, None, None
 
 
 def _excel_regions(profile):
-    """Split worksheet rows into table regions using header signature and row bands."""
+    """Split worksheet rows into table regions by sheet, column span, header and row band.
+
+    Side-by-side regions can share a sheet and an identical header; the column
+    span from the cell anchors keeps them apart.
+    """
     buckets = {}
     order = []
     for index, record in enumerate(profile.records):
-        sheet, row = _excel_position(profile, index, record)
-        signature = (sheet, tuple(record.keys()))
+        sheet, row, first, last = _excel_position(profile, index, record)
+        signature = (sheet, first, last, tuple(record.keys()))
         if signature not in buckets:
             buckets[signature] = []
             order.append(signature)
@@ -212,10 +255,10 @@ def _excel_regions(profile):
 
 
 def _table(base, source_id, kind, rows, columns, keys, *, sampled, coverage,
-           key_origin, partition=None, rows_total=None):
+           key_origin, partition=None, rows_total=None, key_search=None):
     identity_keys = [key for key in keys
                      if all(columns[column]['blank_rows'] == 0 for column in key)]
-    return {
+    table = {
         'name': base,
         'source_id': source_id,
         'kind': kind,
@@ -232,6 +275,9 @@ def _table(base, source_id, kind, rows, columns, keys, *, sampled, coverage,
         '_rows': rows,
         '_skip_blank': kind not in DB_KINDS,
     }
+    if key_search is not None:
+        table['key_search'] = key_search
+    return table
 
 
 def _database_tables(profile, allowed):
@@ -287,13 +333,14 @@ def _sheet_tables(profile, allowed):
                 if field in columns or (allowed is not None and field not in allowed):
                     continue
                 columns[field] = _column_evidence(field, {}, rows, allowed)
-        keys = _inferred_keys(columns, rows)
+        keys, key_search = _inferred_keys(columns, rows)
         label = sheet or 'sheet'
         base = (label if per_sheet[sheet] == 1
                 else f'{label}#{ordinals[sheet]}')
         tables.append(_table(base, profile.source_id, profile.kind, rows, columns, keys,
                              sampled=profile.sampled, coverage=profile.coverage,
-                             key_origin='observed', partition=sheet))
+                             key_origin='observed', partition=sheet,
+                             key_search=key_search))
     return tables
 
 
@@ -308,12 +355,12 @@ def _flat_table(profile, allowed):
                 fields.append(field)
     rows = [(record, set()) for record in profile.records]
     columns = {field: _column_evidence(field, {}, rows, allowed) for field in fields}
-    keys = _inferred_keys(columns, rows)
+    keys, key_search = _inferred_keys(columns, rows)
     total_rows = profile.metadata.get('total_rows')
     total_rows = total_rows if isinstance(total_rows, int) else None
     return [_table(profile.source_id, profile.source_id, profile.kind, rows, columns, keys,
                    sampled=profile.sampled, coverage=profile.coverage, key_origin='observed',
-                   rows_total=total_rows)]
+                   rows_total=total_rows, key_search=key_search)]
 
 
 def _profile_tables(profile, allowed):
@@ -487,6 +534,11 @@ def collect_tables(profiles, allowed_fields):
     gaps = []
     for profile in profiles:
         gaps.extend(_source_gaps(profile, tables))
+    for table in tables:
+        search = table.get('key_search') or {}
+        if search.get('truncated'):
+            gaps.append({'source_id': table['source_id'], 'table': table['name'],
+                         'code': 'key_search_truncated'})
     links, slots = _declared_links(profiles, tables, gaps)
     sources = [_source_entry(profile, tables) for profile in profiles]
     return {

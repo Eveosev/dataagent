@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from dataagent_contracts.intake import SourceAnchor, SourceProfile
 from dataagent_workbench.adapters.layer_client import LayerClient
 from dataagent_workbench.bootstrap import Workbench
 from dataagent_workbench.service_tools import invoke
@@ -298,8 +299,159 @@ def test_document_sources_wait_for_d2b(tmp_path, suffix):
         })
 
 
+def test_excel_parallel_regions_with_same_header_are_separate(tmp_path):
+    from dataagent_workbench.discovery_catalog import build_catalog
+
+    cells = [('A1', 'B1'), ('A2', 'B2'), ('D1', 'E1'), ('D2', 'E2')]
+    records = [{'id': 'A-1', 'name': 'Alpha'}, {'id': 'A-2', 'name': 'Beta'},
+               {'id': 'B-1', 'name': 'Gamma'}, {'id': 'B-2', 'name': 'Delta'}]
+    anchors = {}
+    for index, (first, second) in enumerate(cells):
+        anchors[f'{index}.id'] = [SourceAnchor(
+            source_ref='book', source_revision='sha256:book',
+            selector={'kind': 'excel_cell', 'sheet': 'Sheet1', 'range': first})]
+        anchors[f'{index}.name'] = [SourceAnchor(
+            source_ref='book', source_revision='sha256:book',
+            selector={'kind': 'excel_cell', 'sheet': 'Sheet1', 'range': second})]
+    profile = SourceProfile(
+        source_id='book', source_revision='sha256:book', kind='xlsx',
+        records=records, fields=['id', 'name'], anchors=anchors,
+        metadata={'structure_fingerprint': 'book', 'total_rows': 4})
+    catalog = build_catalog([profile], {'book': {'id', 'name'}})
+    tables = catalog['tables']
+    assert len(tables) == 2
+    assert {table['rows_observed'] for table in tables} == {2}
+    assert sorted(table['name'] for table in tables) == ['Sheet1#1', 'Sheet1#2']
+    assert all(['id'] in table['identity_keys'] for table in tables)
+    assert all(table['partition'] == 'Sheet1' for table in tables)
+
+
+def test_excel_side_by_side_same_header_workbook_keeps_two_regions(tmp_path):
+    import zipfile
+
+    rows = (['id', 'name', None, 'id', 'name'],
+            ['A-1', 'Alpha', None, 'B-1', 'Gamma'],
+            ['A-2', 'Beta', None, 'B-2', 'Delta'])
+    sheet_rows = []
+    for row_number, values in enumerate(rows, start=1):
+        cells = ''.join(
+            f'<c r="{chr(ord("A") + column)}{row_number}" t="inlineStr">'
+            f'<is><t>{value}</t></is></c>'
+            for column, value in enumerate(values) if value is not None)
+        sheet_rows.append(f'<row r="{row_number}">{cells}</row>')
+    path = tmp_path / 'parallel.xlsx'
+    with zipfile.ZipFile(path, 'w', zipfile.ZIP_DEFLATED) as book:
+        book.writestr('[Content_Types].xml', (
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+            '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+            '<Default Extension="xml" ContentType="application/xml"/>'
+            '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+            '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+            '</Types>'))
+        book.writestr('_rels/.rels', (
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
+            '</Relationships>'))
+        book.writestr('xl/workbook.xml', (
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"'
+            ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+            '<sheets><sheet name="Sheet1" sheetId="1" r:id="rId1"/></sheets></workbook>'))
+        book.writestr('xl/_rels/workbook.xml.rels', (
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
+            '</Relationships>'))
+        book.writestr('xl/worksheets/sheet1.xml', (
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+            f'<sheetData>{"".join(sheet_rows)}</sheetData></worksheet>'))
+
+    wb = workbench(tmp_path)
+    data = request(wb, start(wb, [
+        {'source_id': 'parallel', 'kind': 'file', 'locator_ref': 'parallel.xlsx'},
+    ]))
+    tables = data['catalog']['tables']
+    assert len(tables) == 2, [(table['name'], table['rows_observed'],
+                               sorted(table['columns'])) for table in tables]
+    assert {table['rows_observed'] for table in tables} == {2}
+    assert all(sorted(table['columns']) == ['id', 'name'] for table in tables)
+    assert all(['id'] in table['identity_keys'] for table in tables)
+
+
+def test_three_column_composite_key_is_observed_and_accepted(tmp_path):
+    write(tmp_path / 'matrix.csv',
+          'a,b,c\n'
+          '0,0,0\n'
+          '0,0,1\n'
+          '0,1,0\n'
+          '1,0,0\n')
+    wb = workbench(tmp_path)
+    data = request(wb, start(wb, [
+        {'source_id': 'matrix', 'kind': 'file', 'locator_ref': 'matrix.csv'},
+    ]))
+    table, = data['catalog']['tables']
+    assert table['keys'] == [['a', 'b', 'c']]
+    assert table['identity_keys'] == [['a', 'b', 'c']]
+    assert table['key_search'] == {
+        'max_columns': 12, 'max_width': 5, 'max_combinations': 5000,
+        'truncated': False,
+    }
+    assert not any(gap['code'] == 'key_search_truncated'
+                   for gap in data['catalog']['gaps'])
+    draft = invoke(wb, 'ontology_discovery_propose', {
+        'session_id': data['session_id'],
+        'expected_revision': data['expected_revision'],
+        'proposal': {
+            'source_revision': data['source_revision'],
+            'entities': [{'table': 'matrix', 'name': 'Matrix', 'grain': '每行一条观测',
+                          'identity': ['a', 'b', 'c']}],
+        },
+    }).data
+    assert draft['state'] == 'pending' and draft['unresolved_tables'] == []
+
+
+def test_key_search_limit_is_disclosed(tmp_path):
+    write(tmp_path / 'wide.csv',
+          'a,b,c,d,e,f\n'
+          '1,1,1,1,1,1\n'
+          '1,1,1,1,1,1\n')
+    wb = workbench(tmp_path)
+    data = request(wb, start(wb, [
+        {'source_id': 'wide', 'kind': 'file', 'locator_ref': 'wide.csv'},
+    ]))
+    table, = data['catalog']['tables']
+    assert table['keys'] == []
+    assert table['key_search']['truncated'] is True
+    assert table['key_search']['max_width'] == 5
+    gap, = [gap for gap in data['catalog']['gaps']
+            if gap['code'] == 'key_search_truncated']
+    assert gap['source_id'] == 'wide' and gap['table'] == 'wide'
+
+
+def test_discovery_probe_strips_the_sampling_hint_only_for_rest(tmp_path):
+    from dataagent_contracts.intake import SourceSelection
+
+    seen = []
+
+    class Client:
+        def probe(self, selection, *args, **kwargs):
+            seen.append(selection)
+
+    wb = Workbench(tmp_path, layer_client=Client())
+    rest = SourceSelection(source_id='api', kind='rest', locator_ref='api',
+                           options={'sample_strategy': 'per_table'})
+    wb.layer_client.probe(rest, None, None)
+    sqlite = SourceSelection(source_id='db', kind='sqlite', locator_ref='db',
+                             options={'sample_strategy': 'per_table'})
+    wb.layer_client.probe(sqlite, None, None)
+    assert seen[0].options == {}
+    assert seen[1].options == {'sample_strategy': 'per_table'}
+
+
 def test_rest_records_share_the_table_evidence_and_link_rules(tmp_path):
-    from dataagent_contracts.intake import SourceProfile
     from dataagent_workbench.discovery_catalog import build_catalog
 
     rest = SourceProfile(
