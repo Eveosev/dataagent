@@ -1,11 +1,15 @@
-"""Human-gated publication of a completed discovery draft into a new ontology.
+"""Human-gated publication of a completed discovery draft into an ontology.
 
 The agent may complete a discovery draft into a multi-concept definition and
 store it as a candidate.  Only the local web channel may confirm it: the
 confirmation names the exact draft, the source snapshot digest and the
 candidate definition digest, and every check is repeated server-side inside
-one transaction.  M1 publishes a definition once; changing an existing
-definition stays in P2.
+one transaction.  A discovery task may instead name a published ontology as
+its revision target: the candidate is then the next revision of that
+ontology, the human sees the structural difference against the current
+revision, and the same transaction registers the new revision, advances the
+registry and pointer, and writes the publication audit.  Older revisions and
+tasks pinned to them are never migrated or deleted.
 """
 from __future__ import annotations
 
@@ -24,10 +28,12 @@ from dataagent_contracts.ontology import (
 from dataagent_ontology.identity import digest
 from dataagent_ontology.registry import (
     POINTER_ID, POINTER_KIND, REGISTRY_KIND, build_entry, entry_row, parse_entry,
-    pointer_row,
+    pointer_row, revision_record,
 )
+from dataagent_ontology.revisions import definition_diff
 from dataagent_runtime.ports.workbench_store import ChangeSet, VersionConflict, Write
 from .ontology_discovery import DISCOVERY_MODE, is_discovery
+from .session_service import revision_target
 
 
 CANDIDATE_KIND = 'ontology_candidate'
@@ -114,6 +120,10 @@ class PublishConfirmation(_Input):
     expected_revision: str
     confirmed: StrictBool
     reason: str = ''
+    # A destructive revision (identity change, deleted property or concept)
+    # needs a second, explicit acknowledgement that old published objects stay
+    # on the old revision and are not migrated.
+    acknowledge_no_migration: StrictBool = False
 
 
 class PublishConfirm(PublishConfirmation):
@@ -278,7 +288,7 @@ def _allowed_columns(allowlist, source_id):
     return set(allowlist)
 
 
-def build_candidate(wb, draft, catalog, completion):
+def build_candidate(wb, draft, catalog, completion, *, revision='1'):
     """Validate a completion against its draft and catalog; return the definition.
 
     Every annotation comes from the server-side evidence: a concept names an
@@ -497,7 +507,7 @@ def build_candidate(wb, draft, catalog, completion):
             'publication: %s' % ', '.join('%s:%s' % key for key in missing))
     dispositions = [item.model_dump(mode='json') for item in completion.dispositions]
 
-    definition = OntologyRevision(id=completion.ontology_id, revision='1',
+    definition = OntologyRevision(id=completion.ontology_id, revision=revision,
         concepts=concepts, relations=relations)
     return {
         'definition': definition,
@@ -639,15 +649,57 @@ class PublishService:
         if draft.get('source_revision') != catalog.get('source_revision'):
             raise ValueError('source observation changed; discover again')
 
-        if wb.store.current('ontology', completion.ontology_id, scope=wb.scope) is not None:
-            raise ValueError('ontology id is already registered: %s' % completion.ontology_id)
-        if entry_row(wb.store, wb.scope, completion.ontology_id) is not None:
-            raise ValueError('ontology id is already registered: %s' % completion.ontology_id)
+        target = revision_target(session)
+        previous_definition = None
+        entry = None
+        entry_current = None
+        if target is not None:
+            # Revision publication: the exact ontology named at intake start is
+            # the only one this task may amend, and the revision it pinned must
+            # still be the current one.
+            if completion.ontology_id != target.get('ontology_id'):
+                raise ValueError(
+                    'completion ontology_id must equal revise_ontology_id: %s'
+                    % target.get('ontology_id'))
+            entry_current = entry_row(wb.store, wb.scope, completion.ontology_id)
+            entry = parse_entry(entry_current)
+            if entry is None:
+                raise ValueError('ontology not registered: %s' % completion.ontology_id)
+            if entry.origin != 'discovery':
+                raise ValueError('the builtin ontology cannot be revised: %s'
+                                 % completion.ontology_id)
+            if entry.state != 'active':
+                raise ValueError('ontology is retired for new tasks: %s'
+                                 % completion.ontology_id)
+            if (entry.ontology_revision != target.get('base_revision')
+                    or entry_current['revision'] != target.get('registry_revision')):
+                raise VersionConflict('ontology revision changed; start discovery again')
+            current_definition = wb.store.current('ontology', completion.ontology_id,
+                                                  scope=wb.scope)
+            if current_definition is None:
+                raise ValueError('ontology not registered: %s' % completion.ontology_id)
+            previous_definition = OntologyRevision.model_validate(
+                current_definition['body'])
+            next_revision = str(int(previous_definition.revision) + 1)
+        else:
+            if wb.store.current('ontology', completion.ontology_id, scope=wb.scope) is not None:
+                raise ValueError('ontology id is already registered: %s' % completion.ontology_id)
+            if entry_row(wb.store, wb.scope, completion.ontology_id) is not None:
+                raise ValueError('ontology id is already registered: %s' % completion.ontology_id)
+            next_revision = '1'
 
         self._verify_probe_sources(session)
         source_files = self._live_sources(session, profiles)
         snapshot_files = self._snapshot_files(profiles)
-        candidate = build_candidate(wb, draft, catalog, completion)
+        candidate = build_candidate(wb, draft, catalog, completion,
+                                    revision=next_revision)
+        diff = {}
+        destructive = False
+        previous_revision = ''
+        if previous_definition is not None:
+            previous_revision = previous_definition.revision
+            diff = definition_diff(previous_definition, candidate['definition'])
+            destructive = diff['destructive']
         profile_refs = list(draft.get('profile_refs') or state.get('profile_refs') or [])
         source_snapshot = source_snapshot_digest(catalog, profile_refs)
 
@@ -666,8 +718,16 @@ class PublishService:
             'profile_refs': profile_refs,
             'source_snapshot': source_snapshot,
             'source_files': source_files, 'snapshot_files': snapshot_files,
-            'ontology_id': completion.ontology_id, 'ontology_revision': '1',
-            'title': completion.title or completion.ontology_id,
+            'ontology_id': completion.ontology_id,
+            'ontology_revision': candidate['definition'].revision,
+            'previous_revision': previous_revision,
+            'registry_revision': (entry_current['revision']
+                                  if entry_current is not None else None),
+            'revision_diff': diff,
+            'destructive': destructive,
+            'title': (completion.title
+                      or (entry.title if entry is not None else '')
+                      or completion.ontology_id),
             'definition': candidate['definition'].model_dump(mode='json'),
             'definition_digest': candidate['definition_digest'],
             'default_concept': candidate['default_concept'],
@@ -687,6 +747,10 @@ class PublishService:
             'human_confirmation_required': True,
             'ontology_id': body['ontology_id'],
             'ontology_revision': body['ontology_revision'],
+            'previous_revision': body.get('previous_revision') or '',
+            'revision_diff': body.get('revision_diff') or {},
+            'destructive': bool(body.get('destructive')),
+            'requires_no_migration_ack': bool(body.get('destructive')),
             'title': body['title'],
             'default_concept': body['default_concept'],
             'concept_names': list((body['definition'].get('concepts') or {}).keys()),
@@ -803,12 +867,55 @@ class PublishService:
         self._verify_sources(session, profiles, body)
 
         completion = PublishPrepare.model_validate(body['completion'])
-        rebuilt = build_candidate(wb, draft, catalog, completion)
+        target = revision_target(session)
+        is_revision = bool(body.get('previous_revision'))
+        entry_current = None
+        if is_revision:
+            # The registry is the concurrency gate: a revision may only be
+            # published against the exact registry row and current revision the
+            # candidate was built from.  A second revision prepared from the
+            # same base therefore loses here (or at the transactional write),
+            # never by overwriting the first one.
+            if target is None or target.get('ontology_id') != body['ontology_id']:
+                raise ValueError('candidate is not a revision target of this task')
+            entry_current = entry_row(wb.store, wb.scope, body['ontology_id'])
+            registry_entry = parse_entry(entry_current)
+            if registry_entry is None:
+                raise ValueError('ontology not registered: %s' % body['ontology_id'])
+            if registry_entry.origin != 'discovery':
+                raise ValueError('the builtin ontology cannot be revised: %s'
+                                 % body['ontology_id'])
+            if registry_entry.state != 'active':
+                raise ValueError('ontology is retired for new tasks: %s'
+                                 % body['ontology_id'])
+            if (registry_entry.ontology_revision != body['previous_revision']
+                    or entry_current['revision'] != body.get('registry_revision')):
+                raise VersionConflict(
+                    'ontology revision changed; prepare the candidate again')
+            if body.get('destructive') and not confirmation.acknowledge_no_migration:
+                raise ValueError(
+                    'destructive ontology revision requires acknowledging that '
+                    'old data will not be migrated')
+        rebuilt = build_candidate(wb, draft, catalog, completion,
+                                  revision=body['ontology_revision'])
         if rebuilt['definition_digest'] != body['definition_digest']:
             raise VersionConflict('candidate definition changed; prepare it again')
         definition = rebuilt['definition']
-        if wb.store.current('ontology', definition.id, scope=wb.scope) is not None:
-            raise ValueError('ontology id is already registered: %s' % definition.id)
+        current_definition = wb.store.current('ontology', definition.id,
+                                              scope=wb.scope)
+        if is_revision:
+            if definition.revision != str(int(registry_entry.ontology_revision) + 1):
+                raise VersionConflict(
+                    'ontology revision changed; prepare the candidate again')
+            if current_definition is None:
+                raise ValueError('ontology not registered: %s' % definition.id)
+            definition_expected = current_definition['revision']
+            registry_expected = entry_current['revision']
+        else:
+            if current_definition is not None:
+                raise ValueError('ontology id is already registered: %s' % definition.id)
+            definition_expected = None
+            registry_expected = None
 
         now = _now()
         writes = []
@@ -858,9 +965,45 @@ class PublishService:
                 'type': 'intake.updated', 'phase': 'saved',
                 'revision': updated_session['revision'],
             })
-        entry = build_entry(definition, origin='discovery', title=body['title'],
-            source_snapshot=body['source_snapshot'], published_by=ctx.subject_ref,
-            published_at=now)
+        diff = body.get('revision_diff') or {}
+        previous_revision = body.get('previous_revision') or ''
+        if is_revision:
+            record = revision_record(definition, published_at=now,
+                published_by=ctx.subject_ref,
+                source_snapshot=body['source_snapshot'],
+                definition_digest=body['definition_digest'],
+                previous_revision=previous_revision, diff=diff,
+                destructive=bool(body.get('destructive')))
+            history = list(registry_entry.revisions or [])
+            if not history:
+                # A workspace published before revision history existed still
+                # gets its first revision listed, from the entry and the
+                # definition that entry names.
+                previous_row = wb.store.get('ontology', definition.id,
+                                            previous_revision, scope=wb.scope)
+                if previous_row is not None:
+                    history.append(revision_record(
+                        OntologyRevision.model_validate(previous_row['body']),
+                        published_at=registry_entry.published_at,
+                        published_by=registry_entry.published_by,
+                        source_snapshot=registry_entry.source_snapshot))
+            history.append(record)
+            default_concept = (registry_entry.default_concept
+                               if registry_entry.default_concept in definition.concepts
+                               else next(iter(definition.concepts)))
+            entry = registry_entry.model_copy(update={
+                'ontology_revision': definition.revision,
+                'concepts': list(definition.concepts),
+                'default_concept': default_concept,
+                'source_snapshot': body['source_snapshot'],
+                'published_by': ctx.subject_ref,
+                'published_at': now,
+                'revisions': history,
+            })
+        else:
+            entry = build_entry(definition, origin='discovery', title=body['title'],
+                source_snapshot=body['source_snapshot'], published_by=ctx.subject_ref,
+                published_at=now, definition_digest=body['definition_digest'])
         pointer = pointer_row(wb.store, wb.scope)
         publication_extensions = None
         if bundled_review is not None:
@@ -874,6 +1017,7 @@ class PublishService:
             definition_digest=body['definition_digest'],
             source_snapshot=body['source_snapshot'], draft_ref=body['draft_ref'],
             subject_ref=ctx.subject_ref, recorded_at=now, reason=confirmation.reason,
+            previous_revision=previous_revision, diff=diff,
             extensions=publication_extensions)
         publication_id = uuid4().hex
         updated = {**body, 'state': 'published', 'publication_ref': publication_id,
@@ -885,16 +1029,22 @@ class PublishService:
             'draft_ref': body['draft_ref'],
             'source_snapshot': body['source_snapshot'],
             'definition_digest': body['definition_digest'],
+            'previous_revision': previous_revision,
+            'revision_diff': diff,
+            'destructive': bool(body.get('destructive')),
             'subject_ref': ctx.subject_ref, 'recorded_at': now,
             'reason': confirmation.reason,
         }
+        if is_revision:
+            publish_audit['acknowledge_no_migration'] = bool(
+                confirmation.acknowledge_no_migration)
         if bundled_review is not None:
             publish_audit['draft_review'] = bundled_review
         writes.extend([
             Write('ontology', definition.id, wb.scope,
-                  definition.model_dump(mode='json')),
+                  definition.model_dump(mode='json'), definition_expected),
             Write(REGISTRY_KIND, definition.id, wb.scope,
-                  entry.model_dump(mode='json')),
+                  entry.model_dump(mode='json'), registry_expected),
             Write(POINTER_KIND, POINTER_ID, wb.scope, {
                 'ontology_id': definition.id, 'concept': entry.default_concept,
                 'updated_at': now, 'updated_by': ctx.subject_ref,
@@ -912,6 +1062,9 @@ class PublishService:
         return {
             'state': 'published', 'ontology_id': definition.id,
             'ontology_revision': definition.revision,
+            'previous_revision': previous_revision,
+            'revision_diff': diff,
+            'destructive': bool(body.get('destructive')),
             'definition_digest': body['definition_digest'],
             'source_snapshot': body['source_snapshot'],
             'draft_ref': body['draft_ref'], 'candidate_ref': body['ref'],

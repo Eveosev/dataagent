@@ -255,6 +255,12 @@ class OntologyRegistryEntry(ExtModel):
     retired_at: str | None = None
     retired_by: str | None = None
     retire_reason: str | None = None
+    # Every revision this workspace ontology has published, oldest first:
+    # {revision, published_at, published_by, source_snapshot,
+    #  definition_digest, previous_revision, destructive, diff}.  The current
+    # revision is ``ontology_revision``; older revisions stay registered and
+    # keep serving tasks and releases pinned to them.
+    revisions: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class OntologyPublication(ExtModel):
@@ -268,3 +274,7 @@ class OntologyPublication(ExtModel):
     subject_ref: str
     recorded_at: str
     reason: str = ''
+    # A revision publication names the revision it replaced and the structural
+    # difference the human confirmed; an initial publication leaves both empty.
+    previous_revision: str = ''
+    diff: dict[str, Any] = Field(default_factory=dict)

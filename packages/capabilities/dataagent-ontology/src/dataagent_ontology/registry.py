@@ -54,11 +54,38 @@ def pointer_row(store, scope):
 
 
 def build_entry(definition, *, origin='builtin', title='', source_snapshot='',
-                published_by='', published_at=''):
+                published_by='', published_at='', definition_digest='',
+                previous_revision='', diff=None, destructive=False):
     concepts = list(definition.concepts)
+    record = revision_record(definition, published_at=published_at,
+        published_by=published_by, source_snapshot=source_snapshot,
+        definition_digest=definition_digest, previous_revision=previous_revision,
+        diff=diff, destructive=destructive)
     return OntologyRegistryEntry(
         id=definition.id, ontology_revision=definition.revision, origin=origin,
         title=title or definition.id, concepts=concepts,
         default_concept=concepts[0] if concepts else '',
         source_snapshot=source_snapshot, published_by=published_by,
-        published_at=published_at)
+        published_at=published_at, revisions=[record])
+
+
+def revision_record(definition, *, published_at='', published_by='',
+                    source_snapshot='', definition_digest='',
+                    previous_revision='', diff=None, destructive=False):
+    """One entry of an ontology's visible revision history.
+
+    The definition itself stays in the immutable ``ontology`` revision store;
+    this record only carries what the library page shows: which revision was
+    published when and by whom, what changed against its predecessor, and
+    whether that change was destructive.
+    """
+    return {
+        'revision': definition.revision,
+        'published_at': published_at,
+        'published_by': published_by,
+        'source_snapshot': source_snapshot,
+        'definition_digest': definition_digest,
+        'previous_revision': previous_revision,
+        'destructive': bool(destructive),
+        'diff': dict(diff or {}),
+    }
