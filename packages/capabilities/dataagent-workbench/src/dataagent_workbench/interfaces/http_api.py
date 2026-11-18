@@ -11,13 +11,35 @@ from urllib.parse import unquote, urlencode
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse,FileResponse
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel,ConfigDict,StrictBool
 from dataagent_contracts.intake import SourceSelection, WorkSpec
 from dataagent_contracts.ontology import MappingSpec,ReviewDecision
 from dataagent_ontology.corrections import revalidate_corrections
 from dataagent_runtime.ports.workbench_store import VersionConflict,Write
 from pydantic_core import to_jsonable_python
 from ..ontology_discovery import DiscoveryReview
+from ..tool_schema import Dispose
 from ..view_service import ViewService
+
+
+class ReviewBody(BaseModel):
+    """Validated /review payload; mirrors tool_schema.Apply field typing.
+
+    ``allow_partial`` must be a JSON boolean and ``reason`` a string, so a
+    body like ``"false"`` or ``1`` is rejected before anything is saved.
+    """
+    model_config = ConfigDict(extra='forbid')
+
+    decision: ReviewDecision
+    expected_revision: str
+    allow_partial: StrictBool = False
+    reason: str = ''
+
+
+def _object_body(data):
+    if not isinstance(data, dict):
+        raise ValueError('request body must be a JSON object')
+    return data
 
 
 def create_app(wb):
@@ -190,10 +212,32 @@ def create_app(wb):
         proposals = {key: MappingSpec.model_validate(value) for key, value in data['proposals'].items()}
         return wb.intake.submit_source_proposals(sid, proposals, data['expected_revision'], wb.ctx)
 
+    @app.post('/api/sessions/{sid}/dispositions')
+    async def dispose(sid:str,request:Request):
+        """Record an audited source disposition (intake_dispose over HTTP).
+
+        The acting subject is the host context; the body only carries the
+        disposition itself, and session identity comes from the route.
+        """
+        data=_object_body(await request.json())
+        disposition=Dispose.model_validate({**data,'session_id':sid})
+        return wb.intake.dispose(sid,disposition,disposition.expected_revision,wb.ctx)
+
     @app.post('/api/sessions/{sid}/review')
     async def review(sid:str,request:Request):
-        data=await request.json()
-        return wb.intake.apply(sid,ReviewDecision.model_validate(data['decision']),data['expected_revision'],wb.ctx)
+        data=_object_body(await request.json())
+        body=ReviewBody.model_validate(data)
+        receipt=wb.intake.apply(sid,body.decision,body.expected_revision,wb.ctx,
+            allow_partial=body.allow_partial,reason=body.reason)
+        # Flatten the partial-save audit to top level, matching mapping_apply.
+        data=receipt.model_dump(mode='json')
+        partial=(data.get('extensions') or {}).pop('intake.partial_save',None)
+        if partial:
+            for key in ('saved','suspended','unidentified_records','release_ref',
+                        'reason','recorded_at','subject_ref'):
+                if key in partial:data[key]=partial[key]
+            data['partial']=True
+        return data
 
     @app.post('/api/sessions/{sid}/revalidate')
     async def revalidate(sid:str,request:Request):
