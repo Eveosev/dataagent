@@ -138,15 +138,39 @@ class QueryScoringTests(unittest.TestCase):
 
 
 class SourceChangeTests(unittest.TestCase):
-    def test_source_snapshot_change_is_recognised(self):
-        self.assertTrue(ontology._is_source_change_rejection(
-            {'error': 'invalid_input', 'detail': 'source snapshot changed; discover again'}))
+    def test_every_source_change_wording_is_recognised(self):
+        for detail in (
+            'source snapshot changed; discover again',
+            'source changed since it was observed; discover again',
+            'source structure changed; discover again',
+            'source observation changed; discover again',
+            '来源已变更；请重新发现',
+        ):
+            self.assertTrue(ontology._is_source_change_rejection(
+                {'error': 'invalid_input', 'detail': detail}), detail)
 
     def test_other_refusals_are_not_accepted(self):
         self.assertFalse(ontology._is_source_change_rejection(
             {'error': 'version_conflict', 'detail': 'candidate expired; reload'}))
         self.assertFalse(ontology._is_source_change_rejection(
             {'error': 'invalid_input', 'detail': 'task changed; reload'}))
+
+    def test_missing_snapshot_reference_is_not_a_source_change(self):
+        # Negative case for the N2 gate: this 422 names a missing snapshot
+        # reference, not a changed source, and must fail N2 even though it
+        # mentions both "source" and "snapshot".
+        self.assertFalse(ontology._is_source_change_rejection(
+            {'error': 'invalid_input',
+             'detail': 'source snapshot reference is missing; discover again'}))
+
+    def test_unrelated_source_refusals_are_not_source_changes(self):
+        for detail in (
+            'source file is no longer readable; discover again',
+            'source observation version was not recorded; discover again',
+            'source observation version is missing; discover again',
+        ):
+            self.assertFalse(ontology._is_source_change_rejection(
+                {'error': 'invalid_input', 'detail': detail}), detail)
 
 
 class TypeComparisonTests(unittest.TestCase):
@@ -234,6 +258,21 @@ class RelationTests(unittest.TestCase):
             self._gold([('a', 'a'), ('b', 'b'), ('c', 'c')]), 'Standard', 'Detail')
         self.assertFalse(reversed_direction['R1'][0])
         self.assertFalse(reversed_direction['R1.forbidden'][0])
+
+    def test_four_columns_against_three_do_not_match(self):
+        # Negative case for the R1 join comparison: the first three columns
+        # line up with the gold join, but the mapping sides have different
+        # lengths.  zip() used to truncate the four-column side to three
+        # pairs, which then matched the gold three-column join exactly.
+        checks = ontology._relation_checks(
+            self._specs([('Relation1', 'Detail', 'Standard',
+                          (['a', 'b', 'c', 'd'], ['a', 'b', 'c']))]),
+            self._gold([('a', 'a'), ('b', 'b'), ('c', 'c')]), 'Standard', 'Detail')
+        self.assertFalse(checks['R1'][0])
+        self.assertFalse(checks['R1.join'][0])
+        self.assertFalse(checks['R1.coverage'][0])
+        self.assertFalse(checks['R1.forbidden'][0])
+        self.assertIn('连接列数与金标不一致', checks['R1.forbidden'][1])
 
 
 if __name__ == '__main__':
