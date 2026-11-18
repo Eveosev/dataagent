@@ -1,6 +1,7 @@
 import {useEffect,useState} from 'react';
 import {api,translateError,originNames,ontologyStateNames,registryTitle} from '../client';
 import type {BrowseRegistry,BrowseRegistryEntry} from '../ontologyBrowse';
+import {RevisionHistory,localDate} from '../components/RevisionHistory';
 
 // 本体库：工作区注册表（内置 / 发现发布 / 已停用）。停用只作用于新任务的默认
 // 选择（原因必填、二次确认），内置本体是工作区兜底，不提供停用。
@@ -70,9 +71,9 @@ export function OntologiesPage({onNew,onBack,onError,onOpenInstances}:{
   <section className="discovery-card">
    {entries.length===0?<p className="muted">正在读取注册表…</p>:
    <div className="mapping-table-scroll"><table className="mapping-table" data-testid="ontology-entries">
-    <thead><tr><th>名称</th><th>修订</th><th>来源</th><th>概念</th><th>已发布实例</th><th>状态</th><th>操作</th></tr></thead>
+    <thead><tr><th>名称</th><th>修订</th><th>来源</th><th>概念</th><th>已发布实例</th><th>修订历史</th><th>状态</th><th>操作</th></tr></thead>
     <tbody>{entries.map(entry=><tr key={entry.id} data-testid={`ontology-${entry.id}`}>
-     <td><strong>{registryTitle(entry)}</strong><small><code>{entry.id}</code>{entry.published_at?` · 发布于 ${entry.published_at.slice(0,10)}`:''}</small></td>
+     <td><strong>{registryTitle(entry)}</strong><small><code>{entry.id}</code>{entry.published_at?` · 发布于 ${localDate(entry.published_at)}`:''}</small></td>
      <td>{entry.ontology_revision}</td>
      <td><span className="badge">{originNames[entry.origin]||entry.origin}</span></td>
      <td>{entry.concepts.length>1?`${entry.concepts.length} 个概念 · ${entry.concepts.join('、')}`:entry.concepts[0]||'—'}</td>
@@ -95,6 +96,7 @@ export function OntologiesPage({onNew,onBack,onError,onOpenInstances}:{
        :<span className="muted">—</span>}
       <small className="ontology-count-total">{revisionSummary(entry)}</small>
      </div></td>
+     <td><RevisionHistory entry={entry}/></td>
      <td><span className="badge">{ontologyStateNames[entry.state]||entry.state}</span>
       {entry.is_default&&entry.state==='active'&&<small className="ok">新任务默认</small>}
       {entry.state==='retired'&&<small className="warn">{entry.retire_reason||''}</small>}</td>

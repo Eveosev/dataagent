@@ -3,6 +3,8 @@ import {api,ApiError,display,humanDetail,technicalDetail} from '../client';
 import type {View,PublishCandidate,PublishDisposition} from '../client';
 import type {IntakeSession} from '../generated/IntakeSession';
 import {DiscoveryConcepts} from '../components/DiscoveryConcepts';
+import {RevisionPublishNotice,isRevisionCandidate,revisionBlocksConfirm} from '../components/RevisionPublishNotice';
+import type {RevisionCandidate} from '../components/RevisionPublishNotice';
 import {conceptPending,gapLabels,sourceNameOf,tableLabel} from '../discoveryView';
 import type {CatalogTable} from '../discoveryView';
 
@@ -16,7 +18,7 @@ type Column = {
 };
 export type Discovery = {
  source_revision?:string; coverage?:string;
- publish_candidate?:{ref:string;state?:string;ontology_id?:string;ontology_revision?:string;draft_ref?:string}|null;
+ publish_candidate?:{ref:string;state?:string;ontology_id?:string;ontology_revision?:string;draft_ref?:string;previous_revision?:string;destructive?:boolean}|null;
  catalog:null|{
   tables:{name:string;source_id?:string;kind?:string;rows_observed:number;sampled:boolean;columns:Record<string,Column>;keys:string[][];identity_keys:string[][]}[];
   relationships:Relationship[];gaps:{table?:string;source_id?:string;code:string}[];
@@ -100,6 +102,7 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
  const base=`/api/sessions/${session.id}`;
  const [candidate,setCandidate]=useState<PublishCandidate|null>(null),[checked,setChecked]=useState(false),[busy,setBusy]=useState(false);
  const [agreed,setAgreed]=useState<Record<string,boolean>>({});
+ const [migrationAck,setMigrationAck]=useState(false);
  const [failure,setFailure]=useState<{text:string;action:'rediscover'|'refresh'}|null>(null),[copied,setCopied]=useState(false),[copiedReturn,setCopiedReturn]=useState(false);
  const [staleHint,setStaleHint]=useState(false);
  // 记录被后端按过期拒绝的候选引用；只有换到不同且一致的候选才清除过期标记。
@@ -113,7 +116,7 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
  },[summary?.ref,summary?.state,draft.ref,session.revision]);
  // 候选替换（引用或定义摘要变化）时重置人工核对勾选：核对必须绑定实际确认的候选，
  // 不能用对旧定义的确认发布新定义；Agent 处置的逐项同意也一并重置。
- useEffect(()=>{setChecked(false);setAgreed({});},[candidate?.ref,candidate?.definition_digest]);
+ useEffect(()=>{setChecked(false);setAgreed({});setMigrationAck(false);},[candidate?.ref,candidate?.definition_digest]);
  // 刷新取得与被拒候选不同、且与当前任务修订一致的候选时清除过期标记，发布流程可恢复；
  // 候选仍过期时派生校验会继续禁用确认。
  useEffect(()=>{
@@ -122,8 +125,11 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
    setStaleHint(false);
  },[staleHint,candidate,session.revision,draft.ref]);
  const published=summary?.state==='published';
+ const publishedRevision=isRevisionCandidate(candidate)?candidate as RevisionCandidate:null;
  // 候选必须锚定当前草案；草案更新后的旧候选不可确认。
  const current=candidate&&candidate.draft_ref===draft.ref?candidate:null;
+ const revision=isRevisionCandidate(current)?current as RevisionCandidate:null;
+ const revisionId=(session.extensions?.['dataagent.revision_target'] as {ontology_id?:string}|undefined)?.ontology_id;
  // 过期候选（D1 会拒绝）：任务修订已越过候选记录的修订时，确认被禁用并提示
  // 重新准备，避免反复提交同一失效候选。
  const expired=staleHint||(!!current&&String(current.session_revision)!==String(session.revision));
@@ -138,15 +144,16 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
  const completionPrompt=`继续当前工作区的本体发现任务 ${session.id}。草案 ${draft.ref} ${draft.state==='pending'?'仍待审核':'已通过审核'}；请补全每个概念的属性值类型、必需性与身份字段，对关系给出端点与角色，对未决项与覆盖缺口逐项给出排除或接受的处置并说明影响，生成发布候选供我在工作台确认。`;
  const returnPrompt=`继续当前工作区的本体发现任务 ${session.id}。草案 ${draft.ref} 的发布候选里，对未决项与覆盖缺口的处置我不认可，请逐项重新给出排除或接受的处置、说明理由与影响，生成新的发布候选供我在工作台确认。`;
  async function confirm(){
-  if(!current||expired)return;
+  if(!current||expired||revisionBlocksConfirm(current,migrationAck))return;
   setBusy(true);
   try{
    await api(base+'/publish/confirm','POST',{
     candidate_ref:current.ref,draft_ref:current.draft_ref,
     source_snapshot:current.source_snapshot,definition_digest:current.definition_digest,
     expected_revision:session.revision,confirmed:true,reason:'工作台人工确认发布',
+    ...(revision?{acknowledge_no_migration:migrationAck}:{}),
    });
-   setChecked(false);setFailure(null);
+   setChecked(false);setMigrationAck(false);setFailure(null);
    await reload();await fetchCandidate();
   }catch(error){
    // 来源变更给新建发现任务入口；过期/重复确认给刷新候选入口，并标记候选
@@ -170,7 +177,11 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
     ...(source.extensions?{extensions:source.extensions}:{}),
    }));
    const result=await api<{session_id:string}>('/api/sessions','POST',{
-    goal:`来源已变更，重新发现本体（原任务 ${session.id}）`,sources,mode:'ontology_discovery'});
+    goal:`来源已变更，重新发现本体（原任务 ${session.id}）`,sources,mode:'ontology_discovery',
+    // HTTP 入口把发现页的修订目标放在既有 target 通道；服务端据此重新钉住
+    // 同一本体，不会把新任务退化成“新建本体”。
+    ...(revisionId?{target:{ontology_id:revisionId}}:{}),
+   });
    onOpenSession(result.session_id);
   }catch(error){onError(error);}finally{setBusy(false);}
  }
@@ -181,7 +192,9 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
  }
  if(published)
   return <section className="discovery-card" data-testid="publish-card"><div className="panel-heading"><h2>发布为本体</h2><span className="badge">已发布</span></div>
-   <div className="notice green" data-testid="publish-done">草案已发布为正式本体 <code>{summary?.ontology_id}</code>（修订 {summary?.ontology_revision}），新任务将默认使用它。
+   <div className="notice green" data-testid="publish-done">{publishedRevision
+    ?<>修订 {publishedRevision.previous_revision} → {publishedRevision.ontology_revision} 已发布到本体 <code>{publishedRevision.ontology_id}</code>，旧修订与实例保留，新任务将默认使用新修订。</>
+    :<>草案已发布为正式本体 <code>{summary?.ontology_id}</code>（修订 {summary?.ontology_revision}），新任务将默认使用它。</>}
     {onOpenOntologies&&<button className="secondary" onClick={onOpenOntologies}>查看本体库</button>}</div>
   </section>;
  return <section className="discovery-card" data-testid="publish-card"><div className="panel-heading"><h2>发布为本体</h2><span className="badge">{current?'待人工确认':'待补全'}</span></div>
@@ -194,7 +207,9 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
   {expired&&current&&<div className="notice amber" data-testid="publish-stale">
    <p>候选已过期：任务修订已更新，后端会拒绝该候选。请让 Agent 重新生成发布候选后再确认。</p>
   </div>}
-  {current?<><h3>候选定义摘要 · {current.title||current.ontology_id}</h3>
+  {current?<><RevisionPublishNotice candidate={current} acknowledged={migrationAck}
+    onAcknowledge={setMigrationAck} disabled={expired}/>
+   <h3>候选定义摘要 · {current.title||current.ontology_id}</h3>
    <DiscoveryConcepts testid={name=>`publish-concept-${name}`} concepts={Object.entries(current.definition.concepts).map(([name,concept])=>{
     const entity=draft.entities.find(item=>item.name===name);
     return {name,identity:concept.identity_fields.join(' + '),
@@ -250,7 +265,7 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
   <div className="discovery-review">
    <label><input type="checkbox" checked={checked} disabled={!current||undisposed.length>0||expired}
     onChange={e=>setChecked(e.target.checked)}/> 我已核对候选定义与来源摘要，确认发布</label>
-   <button className="primary" disabled={!current||undisposed.length>0||expired||!checked||!dispositionsAgreed||busy} onClick={confirm}>{busy?'正在发布…':'确认发布'}</button>
+   <button className="primary" disabled={!current||undisposed.length>0||expired||!checked||!dispositionsAgreed||revisionBlocksConfirm(current,migrationAck)||busy} onClick={confirm}>{busy?'正在发布…':'确认发布'}</button>
   </div>
  </section>;
 }

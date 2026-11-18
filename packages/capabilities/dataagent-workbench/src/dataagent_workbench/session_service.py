@@ -14,11 +14,20 @@ DISCOVERY_SOURCE_KINDS = {'sqlite', 'rest'}
 
 # The mapping target pinned on a task: {ontology_id, revision, concept}.
 TARGET_EXTENSION = 'dataagent.mapping_target'
+# The revision target of a discovery task: {ontology_id, base_revision,
+# registry_revision}.  A discovery task that names one may only publish a new
+# revision of that ontology; an unset value publishes a new ontology.
+REVISION_EXTENSION = 'dataagent.revision_target'
 
 
 def mapping_target(session):
     """The mapping target pinned on one task, or None when it was never set."""
     return (session.extensions or {}).get(TARGET_EXTENSION) or None
+
+
+def revision_target(session):
+    """The published ontology a discovery task intends to revise, if any."""
+    return (session.extensions or {}).get(REVISION_EXTENSION) or None
 
 
 def _check_discovery_source(source):
@@ -70,7 +79,35 @@ class SessionService:
                              f'{target.get("concept")}') from exc
         return {'ontology_id': ontology_id, 'revision': row['revision'], 'concept': name}
 
-    def start(self, sources, goal, ctx, *, mode="mapping", target=None):
+    def _pin_revision_target(self, ontology_id):
+        """Resolve a discovery task's revision target to the revision it amends.
+
+        Only an ontology published from this workspace's discovery flow can be
+        revised: the builtin is the workspace fallback and its revision belongs
+        to the host, and a retired ontology is closed for new work.  The task
+        pins both the definition revision and the registry row so a revision
+        published while this task is open makes the candidate stale instead of
+        silently merging two changes.
+        """
+        entry_row_ = entry_row(self.store, self.scope, ontology_id)
+        entry = parse_entry(entry_row_)
+        if entry is None:
+            raise ValueError(f'unknown ontology: {ontology_id}')
+        if entry.origin != 'discovery':
+            raise ValueError(
+                f'the builtin ontology cannot be revised: {ontology_id}')
+        if entry.state != 'active':
+            raise ValueError(f'ontology is retired for new tasks: {ontology_id}')
+        row = self.store.current('ontology', ontology_id, scope=self.scope)
+        if row is None:
+            raise ValueError(f'unknown ontology: {ontology_id}')
+        definition = OntologyRevision.model_validate(row['body'])
+        return {'ontology_id': ontology_id,
+                'base_revision': definition.revision,
+                'registry_revision': entry_row_['revision']}
+
+    def start(self, sources, goal, ctx, *, mode="mapping", target=None,
+              revise_ontology_id=None):
         self.check(ctx)
         if goal.authorization_ref != self.authorization:
             raise PermissionError('goal authorization is not the host authorization')
@@ -78,10 +115,26 @@ class SessionService:
             raise ValueError('sources must have distinct identifiers')
         if mode not in ('mapping', DISCOVERY_MODE):
             raise ValueError('unknown intake mode')
+        if revise_ontology_id is not None and mode != DISCOVERY_MODE:
+            raise ValueError('revise_ontology_id requires ontology_discovery mode')
+        if revise_ontology_id is not None and target is not None:
+            raise ValueError('name either revise_ontology_id or target, not both')
         pinned = None
+        revision = None
         if mode == DISCOVERY_MODE:
+            # The agent tool exposes ``revise_ontology_id``; the HTTP start
+            # route carries the same choice as ``target`` because it shares the
+            # tool input contract.  A discovery target therefore names the
+            # ontology to revise, never a mapping target.
             if target is not None:
-                raise ValueError('discovery intake does not fix a mapping target')
+                if hasattr(target, 'model_dump'):
+                    target = target.model_dump(mode='json')
+                if not isinstance(target, dict) or target.get('concept'):
+                    raise ValueError(
+                        'discovery intake does not fix a mapping target')
+                revise_ontology_id = target.get('ontology_id')
+            if revise_ontology_id is not None:
+                revision = self._pin_revision_target(revise_ontology_id)
             for source in sources:
                 _check_discovery_source(source)
         elif target is not None:
@@ -95,6 +148,8 @@ class SessionService:
         extensions = {}
         if mode == DISCOVERY_MODE:
             extensions[MODE_EXTENSION] = mode
+        if revision:
+            extensions[REVISION_EXTENSION] = revision
         if pinned:
             extensions[TARGET_EXTENSION] = pinned
         session = IntakeSession(id=sid,revision='1',goal_ref=gid+'@1',sources=sources,
