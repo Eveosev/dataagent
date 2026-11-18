@@ -1,6 +1,6 @@
 import {useEffect,useState} from 'react';
 import type {SourceProfile} from '../client';
-import {display,locate,translateError} from '../client';
+import {display,locate,translateError,isDecisionSelector,decisionSourceName} from '../client';
 type Anchor={source_ref:string;selector:{kind:string;page?:number;bbox?:number[];char_start?:number;char_end?:number;field?:string;range?:string;sheet?:string;pointer?:string;keys?:Record<string,unknown>}};
 export function SourceViewer({sessionId,profile,anchor,recordIndex,sourceField}:{sessionId:string;profile?:SourceProfile;anchor?:Anchor;recordIndex:number;sourceField?:string}){
  const [image,setImage]=useState('');const [problem,setProblem]=useState('');const page=anchor?.selector.page||1;
@@ -17,7 +17,8 @@ export function SourceViewer({sessionId,profile,anchor,recordIndex,sourceField}:
  const pages=(metadata.pages||[]) as {page:number;text:string;width:number;height:number;blocks?:{bbox:number[];char_start:number;char_end:number}[]}[];
  const info=pages.find(p=>p.page===page);let box=anchor?.selector.bbox?.map(Number);
  if(!box&&anchor?.selector.kind==='pdf_text_span')box=info?.blocks?.find(b=>b.char_start<=(anchor.selector.char_start||0)&&b.char_end>=(anchor.selector.char_end||0))?.bbox;
- const recordLocation=anchor?locate(anchor.selector):'';
+ // 纠正证据在左侧显示决定定位，不显示内部 JSON 路径，也不定位来源行。
+ const recordLocation=anchor?(isDecisionSelector(anchor.selector)?decisionSourceName(anchor.source_ref):locate(anchor.selector)):'';
  const rowStart=Math.max(0,recordIndex-15);
  return <div className="source-viewer"><div className="source-meta"><span className="badge">{profile.kind.toUpperCase()}</span><span>{profile.coverage==='full'?'当前范围已探查':profile.coverage==='sampled'?'样本探查':profile.coverage==='partial'?'部分结果':'范围待确认'}</span></div>
  {profile.kind==='pdf'?<><div className="source-location">第 {page} 页 / {String(metadata.total_pages||'?')} 页</div><div className="pdf-page">

@@ -32,7 +32,13 @@ const errorTexts:Record<string,string>={
 };
 export function translateError(message:string):string{return errorTexts[message.trim()]||message;}
 export async function api<T>(path:string,method='GET',body?:unknown):Promise<T>{
- const response=await fetch(path,{method,credentials:'same-origin',headers:body?{'Content-Type':'application/json'}:{},body:body?JSON.stringify(body):undefined});
+ let response:Response;
+ try{
+  response=await fetch(path,{method,credentials:'same-origin',headers:body?{'Content-Type':'application/json'}:{},body:body?JSON.stringify(body):undefined});
+ }catch(error){
+  // 断网等 fetch 直接失败的情况不走 HTTP 响应路径，同样翻成中文。
+  throw new ApiError(0,translateError(error instanceof Error?error.message:'Failed to fetch'));
+ }
  const data=await response.json();
  if(!response.ok)throw new ApiError(response.status,translateError(String(data.detail||data.error||'请求未完成')));
  return data as T;
@@ -72,11 +78,12 @@ function locateRecordKey(selector:Selector):string{
  return Object.entries(keys).map(([k,v])=>`${k} = ${display(v)}`).join(' · ');
 }
 // 用户纠正作为证据保存时，来源是审核决定本身，不是内部 JSON 路径。
-export function isDecisionEvidence(evidence:Evidence):boolean{
- return evidence.selector?.kind==='json_pointer'&&evidence.selector.pointer==='/decision/changes/value';
+export function isDecisionSelector(selector:Selector|undefined):boolean{
+ return selector?.kind==='json_pointer'&&selector.pointer==='/decision/changes/value';
 }
-export function decisionSourceName(evidence:Evidence):string{
- return `用户纠正 · 决定 ${evidence.source_id.slice(0,12)}…`;
+export function isDecisionEvidence(evidence:Evidence):boolean{return isDecisionSelector(evidence.selector);}
+export function decisionSourceName(sourceId:string):string{
+ return `用户纠正 · 决定 ${sourceId.slice(0,12)}…`;
 }
 type AnchorLike={source_ref:string;selector:unknown};
 const withoutPage=(selector:unknown)=>{
@@ -85,7 +92,8 @@ const withoutPage=(selector:unknown)=>{
  return JSON.stringify(rest);
 };
 // 来源行定位：selector 带页序号时按页取对应记录（REST 分页的 JSON Pointer 各页从 0 计，
-// 会重复）；没有页序号时退回只比对 selector 的旧逻辑，命中第一条。
+// 会重复）。兼容回退只适用于无页码的旧锚点；双方页码都明确但不相等时（如锚点数据陈旧）
+// 不回退到其他页的同名 pointer，宁可不定位来源行。
 export function findAnchorRow(profile:{anchors?:Record<string,AnchorLike[]>}|undefined,evidence:Evidence):{row:number;field:string}|undefined{
  if(!profile)return undefined;
  const page=typeof evidence.selector?.page==='number'?evidence.selector.page:undefined;
@@ -99,8 +107,8 @@ export function findAnchorRow(profile:{anchors?:Record<string,AnchorLike[]>}|und
   for(const anchor of anchors){
    if(anchor.source_ref!==evidence.source_id||withoutPage(anchor.selector)!==target)continue;
    const anchorPage=typeof (anchor.selector as {page?:unknown}|null)?.page==='number'?(anchor.selector as {page:number}).page:undefined;
-   if(page===undefined||anchorPage===page)return {row,field};
-   if(!fallback)fallback={row,field};
+   if(anchorPage===page)return {row,field};
+   if(anchorPage===undefined){if(!fallback)fallback={row,field};if(page===undefined)return fallback;}
   }
  }
  return fallback;

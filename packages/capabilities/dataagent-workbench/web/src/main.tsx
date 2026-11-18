@@ -1,6 +1,6 @@
 import {useEffect,useState} from 'react';
 import {createRoot} from 'react-dom/client';
-import {api,ApiError} from './client';
+import {api,ApiError,translateError} from './client';
 import {IntakePage} from './pages/IntakePage';
 import {MappingPage} from './pages/MappingPage';
 import {ObjectPage} from './pages/ObjectPage';
@@ -10,7 +10,7 @@ function App(){
  const hash=new URLSearchParams(location.hash.slice(1));const [session,setSession]=useState(hash.get('session')||''),[workflow,setWorkflow]=useState(hash.get('workflow')||''),[object,setObject]=useState(hash.get('object')||''),[authenticated,setAuthenticated]=useState<boolean|null>(null),[error,setError]=useState('');
  function failure(e:unknown){
   setError(e instanceof ApiError&&e.status===409?'任务已有更新，当前编辑已保留。请重新载入并核对。':
-   e instanceof Error?e.message:String(e));
+   e instanceof Error?translateError(e.message):String(e));
  }
  useEffect(()=>{(async()=>{
   const nonce=hash.get('nonce');if(nonce){await api('/api/auth','POST',{nonce});history.replaceState(null,'',workflow?'#workflow='+workflow:session?'#session='+session:'#');}
