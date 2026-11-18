@@ -348,13 +348,13 @@ class IntakeService:
 
         FDE3-04: a limit-table document proposed into an expense-line task used
         to turn every one of its rows into an unidentified object plus a
-        missing-value problem.  A source is held out of the preview instead
-        when the concept declares identity fields and none of them binds to an
-        observed field (every row would be unidentified, however many other
-        properties match), or — for a concept without identity fields — when
-        no more than half of the required properties bind.  ``bindings`` comes
-        from a proposal, or falls back to the same-name defaults the web would
-        use when the source has no proposal at all.
+        missing-value problem.  A source is held out of the preview when any
+        declared identity field cannot bind to an observed field (the row
+        would lack part of its identity), or when no more than half of the
+        required properties bind.  Both checks apply when the concept has
+        identity fields; a concept without them uses the coverage check alone.
+        ``bindings`` comes from a proposal, or falls back to the same-name
+        defaults the web would use when the source has no proposal at all.
         """
         fields = set(profile.fields or [])
         if not fields:
@@ -368,15 +368,18 @@ class IntakeService:
             bound = {name for name, binding in bindings.items()
                      if binding and binding.source_field in fields}
         identity = list(concept.identity_fields)
-        if identity:
-            # An identity column is what turns a row into a named object.  A
-            # source that cannot bind any identity field would only add
-            # unidentified objects, even if most other properties match.
-            return any(name in bound for name in identity)
+        # Every identity field is needed to name an object.  Binding only one
+        # of several (or skipping it while other required columns bind) still
+        # leaves the row unidentified, so a partial identity is a mismatch.
+        if identity and not set(identity) <= bound:
+            return False
         required = [name for name, definition in concept.properties.items()
                      if definition.required]
         if not required:
             return True
+        # A source that binds only a minority of required properties cannot
+        # carry the concept; one missing required column is still a real,
+        # incomplete mapping with a per-column problem to correct.
         return 2 * sum(1 for name in required if name in bound) > len(required)
 
     def _source_scope_issues(self, session, used, proposals=None):
@@ -400,7 +403,7 @@ class IntakeService:
                     proposal.bindings if proposal is not None else None):
                 issues.append({'code': _SOURCE_CONCEPT_MISMATCH,
                                'source_id': profile.source_id,
-                               'detail': '该来源没有任务目标概念的身份字段，'
+                               'detail': '该来源缺少任务目标概念的身份字段，'
                                          '或必需属性大多无法绑定'})
             else:
                 issues.append({'code': 'ontology.source_unmapped',

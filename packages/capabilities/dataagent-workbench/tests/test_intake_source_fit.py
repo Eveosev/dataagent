@@ -11,8 +11,8 @@ cause with an affected-row count, not one problem per row.
 """
 import pytest
 
-from dataagent_contracts.intake import SourceSelection
-from dataagent_contracts.ontology import ReviewDecision
+from dataagent_contracts.intake import SourceSelection, WorkSpec
+from dataagent_contracts.ontology import MappingSpec, OntologyRevision, ReviewDecision
 from dataagent_workbench.bootstrap import Workbench
 from dataagent_workbench.intake_service import PreviewBlocked
 from dataagent_workbench.service_tools import invoke
@@ -227,7 +227,6 @@ def test_identity_column_missing_is_a_mismatch_even_when_others_bind(tmp_path):
             {'amount_minor': '3400', 'currency': 'CNY', 'issuer': '乙'}])})
     session = wb.intake.advance(start(wb, [SourceSelection(
         source_id='no_identity', kind='file', locator_ref='no_identity.csv')]).session_id, wb.ctx)
-    from dataagent_contracts.ontology import MappingSpec
     source = wb.intake.inference_request(session.id, wb.ctx)['sources'][0]
     # amount + currency bind (2 of 3 required); only the identity is missing.
     proposal = MappingSpec(id='candidate', revision='1', ontology_revision='procurement@1',
@@ -245,4 +244,97 @@ def test_identity_column_missing_is_a_mismatch_even_when_others_bind(tmp_path):
     item = next(issue for issue in summary['preview']['issues']
                 if issue['code'] == 'ontology.source_concept_mismatch')
     assert item['reason'] == '该来源与目标概念不符'
+    assert [option['reason_hint'] for option in item['actions']] == ['本任务不使用该来源']
+
+
+def test_identity_bound_but_required_coverage_missing_is_a_mismatch(tmp_path):
+    """Binding the identity does not excuse most required columns missing.
+
+    FDE3-04 review: a source with ``number/category/limit`` bound only
+    ``number``; the old identity shortcut returned True and every row became
+    an unidentified object with per-row problems, and the whole-source
+    disposition was refused because no source-level mismatch was recorded.
+    """
+    wb = Workbench(tmp_path)
+    wb.layer_client = StubProbeClient({
+        'mostly_unrelated': csv_profile('mostly_unrelated', [
+            {'number': 'R-1', 'category': '办公', 'limit': '100'},
+            {'number': 'R-2', 'category': '差旅', 'limit': '200'}])})
+    session = wb.intake.advance(start(wb, [SourceSelection(
+        source_id='mostly_unrelated', kind='file',
+        locator_ref='mostly_unrelated.csv')]).session_id, wb.ctx)
+    source = wb.intake.inference_request(session.id, wb.ctx)['sources'][0]
+    # Identity binds, but amount and currency (2 of 3 required) do not.
+    proposal = MappingSpec(id='candidate', revision='1', ontology_revision='procurement@1',
+                           source_fingerprint=source['structure_fingerprint'],
+                           bindings={'number': {'source_field': 'number'}})
+    preview = wb.intake.submit_proposal(session.id, proposal, session.revision, wb.ctx)
+    assert not preview.instances
+    assert {issue['code'] for issue in preview.issues} == \
+        {'ontology.source_concept_mismatch', 'ontology.no_records'}
+    summary = wb.intake.view(session.id, wb.ctx)
+    item = next(issue for issue in summary['preview']['issues']
+                if issue['code'] == 'ontology.source_concept_mismatch')
+    assert [option['reason_hint'] for option in item['actions']] == ['本任务不使用该来源']
+    # The whole-source disposition must succeed from this flagged preview.
+    from test_disposition_types import _dispose
+    current = wb.sessions.get(session.id, wb.ctx)
+    wb.intake.dispose(session.id, _dispose('ignore_source', source_id='mostly_unrelated'),
+                      current.revision, wb.ctx)
+    entry, = wb.store.query('disposition', wb.scope)[0]['body']['entries']
+    assert entry['action'] == 'ignore_source'
+    assert entry['source_id'] == 'mostly_unrelated'
+
+
+def composite_shipment_ontology():
+    """A concept whose identity is three columns, so one alone is not enough."""
+    return OntologyRevision.model_validate({
+        'id': 'composite', 'revision': '1',
+        'concepts': {'shipment': {
+            'entity_type': 'Shipment',
+            'properties': {
+                'book': {'value_type': 'string', 'required': True},
+                'doc_no': {'value_type': 'string', 'required': True},
+                'seq': {'value_type': 'integer', 'required': True},
+                'amount': {'value_type': 'decimal', 'required': True}},
+            'identity_fields': ['book', 'doc_no', 'seq']}},
+        'relations': {}})
+
+
+def test_partial_multi_identity_binding_is_a_mismatch(tmp_path):
+    """A composite identity needs every column; two of three is not enough.
+
+    Required coverage still passes (three of four), so only the all-identity
+    check can hold this source out; the whole-source disposition must remain
+    available from the same source-level issue.
+    """
+    wb = Workbench(tmp_path)
+    wb.ontology.register(composite_shipment_ontology(), wb.ctx)
+    wb.layer_client = StubProbeClient({
+        'partial_identity': csv_profile('partial_identity', [
+            {'book': 'B-1', 'doc_no': 'D-1', 'amount': '100'},
+            {'book': 'B-2', 'doc_no': 'D-2', 'amount': '200'}])})
+    goal = WorkSpec(id='g', goal='接入复合身份资料', acceptance_criteria=['来源可核对'],
+                    authorization_ref=wb.authorization)
+    started = wb.sessions.start(
+        [SourceSelection(source_id='partial_identity', kind='file',
+                         locator_ref='partial_identity.csv')], goal, wb.ctx,
+        target={'ontology_id': 'composite', 'concept': 'shipment'})
+    session = wb.intake.advance(started.session_id, wb.ctx)
+    request = wb.intake.inference_request(session.id, wb.ctx)
+    assert request['allowed_target']['concept'] == 'shipment'
+    source = request['sources'][0]
+    proposal = MappingSpec(
+        id='candidate', revision='1', ontology_revision='composite@1',
+        concept='shipment', source_fingerprint=source['structure_fingerprint'],
+        bindings={'book': {'source_field': 'book'},
+                  'doc_no': {'source_field': 'doc_no'},
+                  'amount': {'source_field': 'amount', 'transform': 'decimal'}})
+    preview = wb.intake.submit_proposal(session.id, proposal, session.revision, wb.ctx)
+    assert not preview.instances
+    assert {issue['code'] for issue in preview.issues} == \
+        {'ontology.source_concept_mismatch', 'ontology.no_records'}
+    summary = wb.intake.view(session.id, wb.ctx)
+    item = next(issue for issue in summary['preview']['issues']
+                if issue['code'] == 'ontology.source_concept_mismatch')
     assert [option['reason_hint'] for option in item['actions']] == ['本任务不使用该来源']
