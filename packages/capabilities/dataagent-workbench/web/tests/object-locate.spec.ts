@@ -15,7 +15,7 @@ test('SQLite 对象值的来源定位显示表与主键',async({page})=>{
  await expect(page.getByText('ledger.db · 表 invoice · 主键 id = 1').first()).toBeVisible();
  await expect(page.getByText('[object Object]')).toHaveCount(0);
  // 选中金额后左侧来源表定位到该记录。
- await page.getByRole('button',{name:'amount',exact:true}).click();
+ await page.getByRole('button',{name:'金额',exact:true}).click();
  await expect(page.locator('.selected-source-row .selected-cell').first()).toHaveText('1260');
 });
 
@@ -70,7 +70,7 @@ test('REST 分页记录按页序号定位到正确来源行',async({page})=>{
  await openPagedObjectPage(page,'with');
  // INV-003 在第 2 页 /items/0，与第 1 页的 INV-001 同 pointer，只能靠页序号区分。
  await page.getByRole('button',{name:'INV-003'}).click();
- await page.getByRole('button',{name:'amount',exact:true}).click();
+ await page.getByRole('button',{name:'金额',exact:true}).click();
  await expect(page.getByText('invoice.csv · 第 2 页 · /items/0/amount_minor').first()).toBeVisible();
  await expect(page.locator('.selected-source-row .selected-cell').first()).toHaveText('75000');
 });
@@ -79,7 +79,7 @@ test('selector 无页序号时退回旧逻辑命中第一条来源记录',async(
  test.setTimeout(40000);
  await openPagedObjectPage(page,'without');
  await page.getByRole('button',{name:'INV-003'}).click();
- await page.getByRole('button',{name:'amount',exact:true}).click();
+ await page.getByRole('button',{name:'金额',exact:true}).click();
  // 旧逻辑只比对 selector：同 pointer 的第一条（INV-001）被高亮，定位不带页码。
  await expect(page.getByText('invoice.csv · /items/0/amount_minor').first()).toBeVisible();
  await expect(page.locator('.selected-source-row .selected-cell').first()).toHaveText('126000');
@@ -89,7 +89,7 @@ test('页码明确但不匹配时不回退到其他页的同名 pointer',async({
  test.setTimeout(40000);
  await openPagedObjectPage(page,'mismatch');
  await page.getByRole('button',{name:'INV-003'}).click();
- await page.getByRole('button',{name:'amount',exact:true}).click();
+ await page.getByRole('button',{name:'金额',exact:true}).click();
  // 证据是第 2 页，锚点全部停在第 1 页：定位仍显示证据页码，但不高亮任何来源行。
  await expect(page.getByText('invoice.csv · 第 2 页 · /items/0/amount_minor').first()).toBeVisible();
  await expect(page.locator('.selected-source-row')).toHaveCount(0);
@@ -99,13 +99,13 @@ test('新证据页号与旧锚点 extensions:null 混用时回退匹配',async({
  test.setTimeout(40000);
  await openPagedObjectPage(page,'legacy');
  await page.getByRole('button',{name:'INV-003'}).click();
- await page.getByRole('button',{name:'amount',exact:true}).click();
+ await page.getByRole('button',{name:'金额',exact:true}).click();
  // 证据带页号（第 2 页），旧锚点 extensions:null 且无页号：兼容回退命中同 pointer 第一条。
  await expect(page.getByText('invoice.csv · 第 2 页 · /items/0/amount_minor').first()).toBeVisible();
  await expect(page.locator('.selected-source-row .selected-cell').first()).toHaveText('126000');
 });
 
-test('纠正后必填属性未解决时提示为中文',async({page})=>{
+test('纠正成功但其他必填属性挡住时用琥珀色说明点名（FDE-12）',async({page})=>{
  test.setTimeout(40000);
  await page.goto('/');
  await page.getByLabel('接入目标').fill('接入发票并核对纠正提示');
@@ -113,9 +113,9 @@ test('纠正后必填属性未解决时提示为中文',async({page})=>{
   buffer:Buffer.from('number,amount_minor,currency\nINV-001,126000,CNY\n')});
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByText('识别与探查已完成')).toBeVisible();
- // currency 不映射：纠正金额后必填属性仍未解决，重验被拦。
- await page.getByLabel('currency 来源字段').selectOption('');
- await page.getByLabel('amount 来源字段').selectOption('amount_minor');
+ // currency 不映射：纠正金额后必填属性仍未解决，重新校验被拦。
+ await page.getByLabel('币种 来源字段').selectOption('');
+ await page.getByLabel('金额 来源字段').selectOption('amount_minor');
  await page.getByRole('button',{name:'生成映射预览'}).click();
  await expect(page.getByTestId('preview-amount')).toHaveText('1260');
  await page.getByRole('button',{name:'打开对象页'}).click();
@@ -123,8 +123,41 @@ test('纠正后必填属性未解决时提示为中文',async({page})=>{
  await page.getByLabel('纠正后的值').fill('1250');
  await page.getByLabel('修改原因').fill('用户核对金额');
  await page.getByRole('button',{name:'保存当前值并校验'}).click();
- await expect(page.getByRole('alert')).toContainText('必填属性仍未解决');
- await expect(page.getByRole('alert')).not.toContainText('required property');
+ // 纠正已保存但整批保存被其他必填属性挡住：琥珀色说明点名对象与属性，
+ // 不再用红色错误条（FDE-12）。
+ await expect(page.getByTestId('correction-blocked')).toBeVisible();
+ await expect(page.getByTestId('correction-blocked')).toContainText('纠正已保存');
+ await expect(page.getByTestId('correction-blocked')).toContainText('INV-001 · 币种 缺少必填值');
+ await expect(page.getByTestId('correction-blocked')).not.toContainText('required property');
+ await expect(page.getByRole('alert')).toHaveCount(0);
+ // 再补上币种的纠正：绿色成功提示，说明已重新校验。
+ await page.getByLabel('纠正的属性').selectOption('currency');
+ await page.getByLabel('纠正后的值').fill('CNY');
+ await page.getByLabel('修改原因').fill('用户补充币种');
+ await page.getByRole('button',{name:'保存当前值并校验'}).click();
+ await expect(page.getByTestId('correction-success')).toContainText('纠正已保存：币种 → CNY');
+ await expect(page.getByRole('alert')).toHaveCount(0);
+});
+
+test('映射页字段纠正成功给绿色提示（FDE-12）',async({page})=>{
+ test.setTimeout(40000);
+ await page.goto('/');
+ await page.getByLabel('接入目标').fill('接入发票并在映射页核对纠正提示');
+ await page.getByLabel('选择材料').setInputFiles({name:'invoice.csv',mimeType:'text/csv',
+  buffer:Buffer.from('number,amount_minor,currency\nINV-001,126000,CNY\n')});
+ await page.getByRole('button',{name:'开始接入'}).click();
+ await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ await page.getByLabel('金额 来源字段').selectOption('amount_minor');
+ await page.getByRole('button',{name:'生成映射预览'}).click();
+ await expect(page.getByTestId('preview-amount')).toHaveText('1260');
+ // 字段详情里纠正当前对象：成功给绿色提示，不弹红色错误条。
+ await page.getByRole('radio',{name:'纠正当前对象的值'}).check();
+ await page.getByLabel('纠正后的值').fill('1250');
+ await page.getByLabel('修改原因').fill('用户核对金额');
+ await page.getByRole('button',{name:'保存当前值并校验'}).click();
+ await expect(page.getByTestId('mapping-correction-notice')).toContainText('纠正已保存：金额 → 1250，已重新校验');
+ await expect(page.getByRole('alert')).toHaveCount(0);
+ await expect(page.getByTestId('preview-amount')).toHaveText('1250');
 });
 
 test('纠正后的值显示用户纠正来源而不是内部路径',async({page})=>{
@@ -135,7 +168,7 @@ test('纠正后的值显示用户纠正来源而不是内部路径',async({page}
   buffer:Buffer.from('number,amount_minor,currency\nINV-001,126000,CNY\n')});
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByText('识别与探查已完成')).toBeVisible();
- await page.getByLabel('amount 来源字段').selectOption('amount_minor');
+ await page.getByLabel('金额 来源字段').selectOption('amount_minor');
  await page.getByRole('button',{name:'生成映射预览'}).click();
  await expect(page.getByTestId('preview-amount')).toHaveText('1260');
  await page.getByRole('button',{name:'打开对象页'}).click();

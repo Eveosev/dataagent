@@ -29,3 +29,24 @@
 .notice>.secondary{padding:6px 10px;font-size:10px;white-space:normal;margin-top:8px}
 .notice ul small{margin-right:2px}
 .detail-panel .correction-conflict{margin:0 18px 18px}
+/* FDE-10：坏输入与失败步骤用红色直说，不用绿色完成态掩盖失败。 */
+.notice.red{background:#fdf0ec;color:#a34d40;border:1px solid #f2d7cf}
+.notice.red p{margin:6px 0 0}
+.step.failed{color:#b04a37}
+.step.failed>span{background:#fbe7e1;color:#b04a37}
+.problem-text{color:#a34d40}
+/* FDE-12：纠正成功绿色提示；处置入口与冲突原值并排展示。 */
+.notice.green{background:#eef7f0;color:#2e6b4f;border:1px solid #d3e8da}
+.conflict-values .conflict-field{margin-top:10px}
+.conflict-values .conflict-field>span{display:block;margin-bottom:6px}
+.conflict-source{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 10px;background:#fff;border:1px solid #f0e4c9;border-radius:5px;margin-bottom:5px}
+.conflict-source .secondary{padding:4px 10px;font-size:10px;white-space:nowrap}
+.disposal{margin:8px 0;padding:8px 10px;background:#fff;border:1px solid #eadfc4;border-radius:5px}
+.disposal>span{display:block;margin-bottom:6px;line-height:1.6}
+.disposal-controls{display:flex;gap:8px;align-items:center}
+.disposal-controls input{flex:1}
+.disposal-controls .secondary{white-space:nowrap;font-size:10px;padding:6px 10px}
+.local-open-result{margin-top:18px;font-size:12px;line-height:1.8}
+.local-open-result.ok{color:#2e6b4f}
+.local-open-result.warn{color:#a34d40}
+.local-open-result code{background:#f5f8f5;padding:2px 5px;border-radius:4px}

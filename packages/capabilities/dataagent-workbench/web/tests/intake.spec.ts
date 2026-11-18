@@ -13,8 +13,8 @@ test('对象页完成当前值纠正、映射修订与本体草案',async({page}
  await page.getByLabel('选择材料').setInputFiles(path.resolve('../../dataagent-scenarios/fixtures/intake/invoices.csv'));
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByText('识别与探查已完成')).toBeVisible();
- await page.getByLabel('amount 来源字段').selectOption('amount_minor');
- await page.getByLabel('amount 转换方式').selectOption('minor_to_major');
+ await page.getByLabel('金额 来源字段').selectOption('amount_minor');
+ await page.getByLabel('金额 转换方式').selectOption('minor_to_major');
  await page.getByRole('button',{name:'生成映射预览'}).click();
  await expect(page.getByTestId('preview-amount')).toHaveText('1260');
  await page.getByRole('button',{name:'打开对象页'}).click();
@@ -34,11 +34,11 @@ test('对象页完成当前值纠正、映射修订与本体草案',async({page}
  await page.getByRole('button',{name:'保存当前值并校验'}).click();
  await expect(page.getByTestId('object-amount')).toHaveText('1250');
  await expect(page.getByText('纠正记录')).toBeVisible();
- await expect(page.getByText('amount → 1250')).toBeVisible();
+ await expect(page.getByText('金额 → 1250 · 用户核对金额')).toBeVisible();
  // 映射修订：回到映射页改绑定并生成新预览，同类输入重跑。
  await page.getByRole('radio',{name:'修改这类来源的映射'}).check();
  await page.getByRole('button',{name:'去映射页修订'}).click();
- await page.getByLabel('amount 转换方式').selectOption('integer');
+ await page.getByLabel('金额 转换方式').selectOption('integer');
  await page.getByRole('button',{name:'生成映射预览'}).click();
  // 映射修订改变来源值后，纠正值仍生效，但必须把映射新算得的值和采用操作摆出来。
  await expect(page.getByTestId('preview-amount')).toHaveText('1250');
@@ -70,8 +70,8 @@ test('采用新映射值后保存只发布最新金额',async({page,request})=>{
  await page.getByLabel('选择材料').setInputFiles(csv);
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByText('识别与探查已完成')).toBeVisible();
- await page.getByLabel('amount 来源字段').selectOption('amount_minor');
- await page.getByLabel('amount 转换方式').selectOption('minor_to_major');
+ await page.getByLabel('金额 来源字段').selectOption('amount_minor');
+ await page.getByLabel('金额 转换方式').selectOption('minor_to_major');
  await page.getByRole('button',{name:'生成映射预览'}).click();
  await expect(page.getByTestId('preview-amount')).toHaveText('1260');
  await page.getByRole('button',{name:'打开对象页'}).click();
@@ -82,7 +82,7 @@ test('采用新映射值后保存只发布最新金额',async({page,request})=>{
  await expect(page.getByTestId('object-amount')).toHaveText('1250');
  await page.getByRole('radio',{name:'修改这类来源的映射'}).check();
  await page.getByRole('button',{name:'去映射页修订'}).click();
- await page.getByLabel('amount 转换方式').selectOption('integer');
+ await page.getByLabel('金额 转换方式').selectOption('integer');
  await page.getByRole('button',{name:'生成映射预览'}).click();
  await expect(page.getByTestId('preview-amount')).toHaveText('1250');
  await page.getByRole('button',{name:'采用新映射值'}).click();
@@ -103,8 +103,8 @@ async function openObjectPageWithPreview(page:import('@playwright/test').Page){
  await page.getByLabel('选择材料').setInputFiles(path.resolve('../../dataagent-scenarios/fixtures/intake/invoices.csv'));
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByText('识别与探查已完成')).toBeVisible();
- await page.getByLabel('amount 来源字段').selectOption('amount_minor');
- await page.getByLabel('amount 转换方式').selectOption('minor_to_major');
+ await page.getByLabel('金额 来源字段').selectOption('amount_minor');
+ await page.getByLabel('金额 转换方式').selectOption('minor_to_major');
  await page.getByRole('button',{name:'生成映射预览'}).click();
  await expect(page.getByTestId('preview-amount')).toHaveText('1260');
  await page.getByRole('button',{name:'打开对象页'}).click();
@@ -171,9 +171,9 @@ test('准备重启恢复的任务状态',async({page})=>{
  await page.getByLabel('选择材料').setInputFiles(path.resolve('../../dataagent-scenarios/fixtures/intake/invoices.csv'));
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByText('识别与探查已完成')).toBeVisible();
- await page.getByLabel('currency 来源字段').selectOption('');
- await page.getByLabel('amount 来源字段').selectOption('amount_minor');
- await page.getByLabel('amount 转换方式').selectOption('integer');
+ await page.getByLabel('币种 来源字段').selectOption('');
+ await page.getByLabel('金额 来源字段').selectOption('amount_minor');
+ await page.getByLabel('金额 转换方式').selectOption('integer');
  await expect(page.getByText('草稿已保存')).toBeVisible();
  await page.getByRole('button',{name:'生成映射预览'}).click();
  await expect(page.getByTestId('preview-amount')).toHaveText('126000');
@@ -196,5 +196,5 @@ test('服务重启后恢复材料、草稿与未解决项',async({page})=>{
  await expect(page.getByText('3 项待核对')).toBeVisible();
  // 草稿恢复。
  await page.getByRole('button',{name:'返回映射页'}).click();
- await expect(page.getByLabel('amount 转换方式')).toHaveValue('integer');
+ await expect(page.getByLabel('金额 转换方式')).toHaveValue('integer');
 });
