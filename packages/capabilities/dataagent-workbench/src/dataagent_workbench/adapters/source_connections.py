@@ -5,14 +5,60 @@ The connection manifest contains logical credential names only (``env:``,
 ``env:`` the child inherits the environment and resolves the value itself; for
 ``file:`` and ``keychain:`` the child resolves the named value as well (see
 ``dataagent_runtime.policy.secrets``). No credential value enters stdin.
+
+A manifest is looked up in this order: an explicit
+``DATAAGENT_SOURCE_CONNECTIONS`` passed through by the host, the workspace root
+``source-connections.json``, then ``.dataagent/source-connections.json``. The
+workspace root wins when both workspace locations exist, with a warning on
+stderr; this keeps the packaged defaults from overriding the user's file.
+
+The installed MCP descriptor carries the legacy default
+(``.dataagent/source-connections.json``) together with
+``DATAAGENT_SOURCE_CONNECTIONS_DEFAULT=1``. That marks the value as the
+packaged default, not an explicit host setting, so it cannot shadow the
+workspace root file.
 """
 import json
 import os
 from pathlib import Path
 import re
+import sys
 from urllib.parse import parse_qsl, urlsplit
 
-from dataagent_runtime.policy.secrets import InvalidSecretRef, validate_ref
+from dataagent_runtime.policy.secrets import (
+    InvalidSecretRef,
+    SecretError,
+    SecretUnavailable,
+    resolve,
+    validate_ref,
+)
+
+MANIFEST_ENV = 'DATAAGENT_SOURCE_CONNECTIONS'
+MANIFEST_DEFAULT_ENV = 'DATAAGENT_SOURCE_CONNECTIONS_DEFAULT'
+WORKSPACE_MANIFEST = 'source-connections.json'
+DATAAGENT_MANIFEST = '.dataagent/source-connections.json'
+_ACTIVE_WORKSPACE = None
+
+
+def bind_workspace(workspace):
+    """Bind connection lookups to the workspace a boundary process serves.
+
+    ``SourceConnections()`` is called from layers that do not receive the
+    ``Workbench`` (HTTP routes, service tools and the data-layer client). The
+    CLI binds the resolved workspace once at startup so those paths cannot
+    fall back to the process cwd.
+    """
+
+    global _ACTIVE_WORKSPACE
+    _ACTIVE_WORKSPACE = (None if workspace is None
+                         else Path(workspace).expanduser().resolve())
+
+
+def bound_workspace():
+    """The workspace bound by the current boundary process, if any."""
+
+    return _ACTIVE_WORKSPACE
+
 
 _SECRET_OPTIONS = {'token', 'password', 'secret', 'api_key', 'apikey', 'authorization'}
 _SECRET_KEYS = _SECRET_OPTIONS | {
@@ -157,17 +203,201 @@ def _validate_credential_shape(kind, refs, options):
             raise ValueError('PostgreSQL credentials accept only user and password')
 
 
+def workspace_root(workspace=None):
+    """The workspace a manifest lookup belongs to."""
+
+    if workspace is not None:
+        return Path(workspace).expanduser().resolve()
+    if _ACTIVE_WORKSPACE is not None:
+        return _ACTIVE_WORKSPACE
+    configured = os.environ.get('DATAAGENT_WORKSPACE')
+    return Path(configured).expanduser().resolve() if configured else Path.cwd()
+
+
+def locate_manifest(workspace=None):
+    """Return ``(path, origin, warning)`` for the connection manifest.
+
+    Resolution order: an explicit ``DATAAGENT_SOURCE_CONNECTIONS`` (the host
+    passes the user's setting through), the workspace root file, then the
+    packaged default under ``.dataagent``. A descriptor-provided default
+    (``DATAAGENT_SOURCE_CONNECTIONS_DEFAULT=1`` or the legacy relative path)
+    is not an explicit setting. When both workspace locations exist the
+    workspace root file is used and a warning is emitted.
+    """
+
+    explicit = os.environ.get(MANIFEST_ENV)
+    is_default_path = bool(explicit) and Path(explicit).expanduser() == Path(DATAAGENT_MANIFEST)
+    # A descriptor marks its fallback as a default; ``0`` opts out. A custom
+    # path is always explicit, even if it inherits the marker.
+    packaged_default = is_default_path and os.environ.get(MANIFEST_DEFAULT_ENV, '1') != '0'
+    if explicit and not packaged_default:
+        return Path(explicit).expanduser(), 'explicit', None
+    root = workspace_root(workspace)
+    preferred = root / WORKSPACE_MANIFEST
+    fallback = root / DATAAGENT_MANIFEST
+    if preferred.is_file():
+        warning = None
+        if fallback.is_file():
+            warning = (f'connection manifests {preferred} and {fallback} both exist; '
+                       f'using the workspace root manifest {preferred}')
+        return preferred, 'workspace', warning
+    return fallback, 'dataagent', None
+
+
+def _repair_command(ref, status):
+    """A copy-paste repair hint; it never contains the credential value."""
+
+    kind, _, rest = ref.partition(':')
+    if kind == 'env':
+        return f'export {rest}=<value> in the shell that starts the workbench, then restart it'
+    if kind == 'file':
+        if status == 'permission':
+            return f'chmod 700 .dataagent/secrets && chmod 600 .dataagent/secrets/{rest}.key'
+        return ("mkdir -p .dataagent/secrets && chmod 700 .dataagent/secrets && "
+                f"printf '%s' '<value>' > .dataagent/secrets/{rest}.key && "
+                f"chmod 600 .dataagent/secrets/{rest}.key")
+    if kind == 'keychain':
+        service, _, account = rest.partition('/')
+        return f"security add-generic-password -s {service} -a {account} -w '<value>'"
+    return 'use env:<VAR>, keychain:<service>/<account> or file:<name>'
+
+
+def credential_status(ref, data_root):
+    """Classify one logical reference without returning its value.
+
+    Returns ``(status, repair)`` where status is ``ok``, ``missing``,
+    ``permission`` or ``invalid``. The resolved value is read only to prove it
+    exists and is never stored, logged or included in the result.
+    """
+
+    try:
+        validate_ref(ref)
+    except InvalidSecretRef:
+        return 'invalid', _repair_command(ref, 'invalid')
+    try:
+        resolve(ref, data_root)
+    except SecretUnavailable as exc:
+        message = str(exc)
+        action = getattr(exc, 'action', None) or ''
+        permission = action.startswith('chmod') or 'other users' in message
+        status = 'permission' if permission else 'missing'
+        return status, action if action.startswith('chmod') else _repair_command(ref, status)
+    except PermissionError:
+        return 'permission', _repair_command(ref, 'permission')
+    except (SecretError, OSError):
+        return 'missing', _repair_command(ref, 'missing')
+    return 'ok', None
+
+
+def _entry_credential_refs(entry):
+    """Logical references in one entry, plus a shape error when malformed."""
+
+    refs = {}
+    configured = entry.get('credential_refs', {})
+    if not isinstance(configured, dict):
+        return refs, 'credential_refs must be an object'
+    for name, ref in configured.items():
+        refs[str(name)] = ref
+    legacy = entry.get('credential_env', {})
+    if not isinstance(legacy, dict):
+        return refs, 'credential_env must be an object'
+    for name, variable in legacy.items():
+        if not isinstance(variable, str) or not variable:
+            refs[str(name)] = variable
+        else:
+            refs.setdefault(str(name), f'env:{variable}')
+    return refs, None
+
+
+def doctor_report(workspace=None, data_root=None):
+    """Return ``(lines, failed)`` for ``dataagent doctor``.
+
+    Every configured connection is listed with its name, kind and manifest
+    path; each credential reference is reported as resolvable, missing,
+    permission-denied or invalid. Values are never read into the output.
+    """
+
+    root = workspace_root(workspace)
+    data_root = Path(data_root).expanduser() if data_root else root / '.dataagent'
+    path, origin, warning = locate_manifest(root)
+    lines = []
+    if warning:
+        lines.append('connection: warning: ' + warning)
+    labels = {'explicit': MANIFEST_ENV, 'workspace': 'workspace root',
+              'dataagent': '.dataagent'}
+    if not path.is_file():
+        if origin == 'explicit':
+            lines.append(f'connections: MISSING manifest {path} (from {MANIFEST_ENV})')
+            return lines, True
+        candidates = root / WORKSPACE_MANIFEST
+        lines.append(f'connections: none (looked for {candidates} and {root / DATAAGENT_MANIFEST})')
+        return lines, False
+    lines.append(f'connections: {path} ({labels.get(origin, origin)})')
+    try:
+        entries = json.loads(path.read_text())
+    except (OSError, ValueError) as exc:
+        lines.append(f'connections: manifest cannot be read ({type(exc).__name__})')
+        return lines, True
+    if not isinstance(entries, dict):
+        lines.append('connections: manifest must be an object')
+        return lines, True
+    if not entries:
+        lines.append('connections: none configured')
+        return lines, False
+    failed = False
+    for name, entry in entries.items():
+        if not isinstance(entry, dict):
+            lines.append(f'connection {name}: invalid entry (must be an object)')
+            failed = True
+            continue
+        kind = entry.get('kind')
+        if not isinstance(kind, str) or not kind:
+            lines.append(f'connection {name}: invalid entry (missing kind)')
+            failed = True
+            continue
+        lines.append(f'connection {name}: {kind} ({path})')
+        refs, shape_error = _entry_credential_refs(entry)
+        if shape_error:
+            lines.append(f'  credentials: invalid ({shape_error})')
+            failed = True
+        if not refs:
+            lines.append('  credentials: none')
+            continue
+        for label, ref in refs.items():
+            if not isinstance(ref, str):
+                lines.append(f'  credential {label}: invalid (not a logical name); '
+                             f'repair: {_repair_command("", "invalid")}')
+                failed = True
+                continue
+            status, repair = credential_status(ref, data_root)
+            # A malformed entry is never echoed: it may hold a plaintext secret.
+            shown = ref if status != 'invalid' else '<invalid>'
+            if status == 'ok':
+                lines.append(f'  credential {label} ({shown}): resolvable（可解析）')
+            else:
+                status_labels = {'missing': '缺失', 'permission': '权限不对', 'invalid': '无效'}
+                lines.append(f'  credential {label} ({shown}): {status}'
+                             f'（{status_labels.get(status, status)}）; repair: {repair}')
+                failed = True
+    return lines, failed
+
+
 class SourceConnections:
-    def __init__(self):
-        path = os.environ.get('DATAAGENT_SOURCE_CONNECTIONS')
-        if not path:
-            self.entries = {}
-            return
+    def __init__(self, workspace=None):
+        self.path, self.origin, self.warning = locate_manifest(workspace)
+        if self.warning:
+            print(f'dataagent-workbench: warning: {self.warning}', file=sys.stderr)
         try:
-            self.entries = json.loads(Path(path).read_text())
+            self.entries = json.loads(self.path.read_text())
         except FileNotFoundError:
             # A default manifest path may not exist yet; local sources still work.
             self.entries = {}
+        except ValueError:
+            raise ValueError(f'connection manifest {self.path} is not valid JSON') from None
+        except OSError as exc:
+            raise ValueError(
+                f'connection manifest {self.path} cannot be read ({type(exc).__name__})'
+            ) from None
         if not isinstance(self.entries, dict):
             raise ValueError('connection manifest must be an object')
         for name, entry in self.entries.items():

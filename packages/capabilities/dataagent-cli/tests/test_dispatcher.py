@@ -42,6 +42,19 @@ if [ "$1" = "-c" ]; then
             echo "ocr:      none (run: dataagent setup --ocr-root <verified ocr dir>)" >&2
             exit 1
             ;;
+        *DATAAGENT_CONNECTIONS_DOCTOR_PROBE*)
+            if [ -f "$DATAAGENT_FAKE_CONNECTIONS_BAD" ]; then
+                echo "connections: fake manifest (fake)"
+                echo "  credential token (env:FAKE_TOKEN): missing; repair: export FAKE_TOKEN=<value>"
+                exit 1
+            fi
+            echo "connections: none (fake)"
+            exit 0
+            ;;
+        *DATAAGENT_WORKBENCH_SERVICE_DOCTOR_PROBE*)
+            echo "service:  none for this workspace"
+            exit 0
+            ;;
     esac
     exit 0
 fi
@@ -75,6 +88,8 @@ class DispatcherTests(unittest.TestCase):
             "DATAAGENT_FAKE_POLICY": str(self.out / "policy"),
             "DATAAGENT_FAKE_OCR": str(self.out / "ocr"),
             "DATAAGENT_FAKE_OCR_REMOTE": str(self.out / "ocr-remote"),
+            "DATAAGENT_FAKE_CONNECTIONS_BAD": str(self.out / "connections-bad"),
+            "DATAAGENT_FAKE_PGREP_ARGS": str(self.out / "pgrep-args"),
             "DATAAGENT_HOST_SUBJECT_REF": "user:alice",
             "DATAAGENT_HOST_PURPOSE": "monthly_report",
             "MINT_MODEL_API_KEY": "secret-token",
@@ -179,6 +194,19 @@ class DispatcherTests(unittest.TestCase):
         result = self._run("data", "list")
         self.assertEqual(result.returncode, 3)
         self.assertIn("no installed dataagent packages", result.stderr)
+        self.assertIn("请在 Mint 项目目录执行", result.stderr)
+        self.assertIn("dataagent/preset-intake", result.stderr)
+        self.assertNotIn("preset-s0", result.stderr)
+
+    def test_workbench_list_and_stop_dispatch(self):
+        """FDE-16/FDE-17: both workbench subcommands reach the layer CLI."""
+        _make_layer(self.project, "workbench", "0.1.0")
+        for command in ("list", "stop"):
+            result = self._run("workbench", command)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            args = (self.out / "args").read_text().splitlines()
+            self.assertEqual(args[1], "dataagent_workbench.interfaces.cli")
+            self.assertEqual(args[2], command)
 
     def test_missing_venv_exits_3(self):
         layer = _make_layer(self.project, "data-layer", "0.1.0")
@@ -324,6 +352,42 @@ class DispatcherTests(unittest.TestCase):
         result = self._run("doctor")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertNotIn("ocr:", result.stdout + result.stderr)
+
+    def test_doctor_connection_check_failure_exits_3(self):
+        """FDE-1: an unresolvable credential makes doctor fail with a repair hint."""
+        _make_layer(self.project, "workbench", "0.1.0")
+        result = self._run("doctor")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("connections: none (fake)", result.stdout)
+        self.assertIn("service:  none for this workspace", result.stdout)
+
+        (self.out / "connections-bad").write_text("", encoding="utf-8")
+        failed = self._run("doctor")
+        self.assertEqual(failed.returncode, 3, failed.stdout + failed.stderr)
+        self.assertIn("credential token (env:FAKE_TOKEN): missing", failed.stderr)
+        self.assertIn("repair: export FAKE_TOKEN=<value>", failed.stderr)
+
+    def test_doctor_reports_other_services_without_command_lines(self):
+        """FDE-16: report fixed service fields, never a process command line."""
+        _make_layer(self.project, "workbench", "0.1.0")
+        bin_dir = self.out / "bin"
+        bin_dir.mkdir(exist_ok=True)
+        pgrep = bin_dir / "pgrep"
+        pgrep.write_text(
+            "#!/bin/sh\n"
+            'printf "%s\\n" "$@" > "$DATAAGENT_FAKE_PGREP_ARGS"\n'
+            "echo 424242\n",
+            encoding="utf-8",
+        )
+        pgrep.chmod(0o755)
+        self.env["PATH"] = f"{bin_dir}:{self.env['PATH']}"
+
+        result = self._run("doctor")
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("pid=424242 state=running", result.stdout)
+        calls = (self.out / "pgrep-args").read_text(encoding="utf-8").split()
+        self.assertNotIn("-l", calls)
 
     def test_setup_ocr_root_installs_verified_directory(self):
         _make_layer(self.project, "data-layer", "0.1.0")
