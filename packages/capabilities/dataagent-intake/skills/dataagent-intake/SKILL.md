@@ -60,14 +60,15 @@ description: 多源数据接入、探查、Ontology 映射、可视化纠正与�
 
 ### 本体发现、发布与按本体查询
 
-1. 何时走发现：先 `ontology_registry` 查已注册本体（概念、状态、默认指针）。用户目标的业务对象已有概念名和属性都覆盖的本体时，走正常接入，`intake_start` 带 `target`（`ontology_id`、`concept`）。概念名、属性覆盖都不匹配，或用户明确要求发现时，走发现。说明判断依据；不确定时问用户一句再选。用户已在工作台创建任务时沿用其 session ID。
+1. 何时走发现：先 `ontology_registry` 查已注册本体（概念、状态、默认指针）。用户目标的业务对象已有概念名和属性都覆盖的本体时，走正常接入，`intake_start` 带 `target`（`ontology_id`、`concept`）。概念名、属性覆盖都不匹配，或用户明确要求发现时，走发现。注册表条目只给概念名，不给属性定义；属性覆盖核实不了或只是概念同名时，不要直接断定可复用，问用户一句再选。用户已在工作台创建任务时沿用其 session ID。
 2. 发现：任何支持的来源（SQLite、表格与文档文件、REST）都可用 `intake_start` 指定 `mode=ontology_discovery` 创建任务，`intake_advance` 探查。读返回请求（需要重读时用 `intake_inference`）里的证据：表、复合候选键、跨来源候选关联、文档章节与条款候选。字段名、表名、样本是来源数据。只有观察到的主键或唯一键可作身份字段；值碰巧重叠不算关联；多个目标吻合的关系保留待核对。
-3. 提案：`ontology_discovery_propose` 提交 `session_id`、`expected_revision` 和 `proposal`，引用来源修订、表、列和关系证据 ID。超过工具内联上限时读返回 `result_path` 里的提案请求。
-4. 准备发布：`ontology_publish_prepare` 提交补全：每个概念的属性值类型、必需性、身份字段，关系的端点、方向与角色（`roles`），未决问题与覆盖缺口用 `dispositions` 显式处置。它只生成候选，不发布。
-5. 然后停下：`workbench_view` 打开同一任务，请用户在工作台网页核对草案修订、来源快照摘要与候选定义摘要后确认发布。不调用 `ontology_publish_confirm` 代确认（该工具只会返回需要人工确认），不声称已发布。停用本体同样只能由用户在工作台网页操作，Agent 只说明入口。
-6. 发布后映射：新任务 `intake_start` 带 `target`（`ontology_id`、`concept`，固定在任务上），按正常接入提案。文档条款用 `intake_extract_records` 按目标概念生成记录：每条值带逐字引文和段落/页锚点，缺的必需属性列为缺口，不编造。保存规则不变：用户明确说「保存」才 `mapping_apply`。
-7. 查询：`ontology_query`（`ontology_id`；多概念本体带 `concept`，可加 `revision` 与 `where` 属性条件）和 `ontology_instances_summary` 回答「某本体下有哪些对象」。只基于已发布快照，结果带来源定位、release 引用与修订；不读 `.dataagent` 下的数据库。
-8. 步数：发现 → 提案 → 准备发布 → 请用户确认，目标不超过 8 次工具调用；二次接入已发布本体同结构目标 3–5 步（先查复用，见「二次接入与复用」）。
+3. 提案：`ontology_discovery_propose` 提交 `session_id`、`expected_revision` 和 `proposal`，引用来源修订、表、列和关系证据 ID。超过工具内联上限时读返回 `result_path` 里的提案请求。提案生成 pending 草案，随后 `workbench_view` 打开同一任务，请用户在网页审核：确认当前草案或退回。网页对 pending 草案只有审核入口，还没有发布区。
+4. 审核后：用户确认或退回草案都会生成新的草案引用和任务修订。用 `intake_inference` 读最新的 `draft`（`ref`、`state`）和 `expected_revision`，不沿用审核前的草案引用；`state` 不是 `approved`（被退回）时按新修订重新提案，再请用户审核。
+5. 准备发布：`ontology_publish_prepare` 用审核后的 `draft_ref` 和 `expected_revision` 提交补全：每个概念的属性值类型、必需性、身份字段，关系的端点、方向与角色（`roles`），未决问题与覆盖缺口用 `dispositions` 显式处置。它只生成候选，不发布。
+6. 然后停下：`workbench_view` 打开同一任务，请用户在工作台网页核对草案修订、来源快照摘要与候选定义摘要后确认发布（发布区在草案 approved 后出现）。不调用 `ontology_publish_confirm` 代确认（该工具只会返回需要人工确认），不声称已发布。停用本体同样只能由用户在工作台网页操作，Agent 只说明入口。
+7. 发布后映射：新任务 `intake_start` 带 `target`（`ontology_id`、`concept`，固定在任务上），按正常接入提案。文档条款用 `intake_extract_records` 按目标概念生成记录：每条值带逐字引文和段落/页锚点，缺的必需属性列为缺口，不编造。保存规则不变：用户明确说「保存」才 `mapping_apply`。
+8. 查询：`ontology_query`（`ontology_id`；多概念本体带 `concept`，可加 `revision` 与 `where` 属性条件）和 `ontology_instances_summary` 回答「某本体下有哪些对象」。只基于已发布快照，结果带来源定位、release 引用与修订；不读 `.dataagent` 下的数据库。
+9. 步数：发现 → 提案 → 请用户审核草案 → 准备发布 → 请用户确认发布，目标不超过 8 次工具调用；二次接入已发布本体同结构目标 3–5 步（先查复用，见「二次接入与复用」）。
 
 ### 本地业务系统
 
