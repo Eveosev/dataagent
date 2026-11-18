@@ -195,21 +195,10 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
  // 未处置只阻断后端门禁要求 Agent 表态的项；补全时放弃的概念/属性只需用户确认。
  const undisposed=allItems.filter(item=>item.needsDisposition!==false&&!dispositionOf(item));
  // Agent 处置与被放弃项的逐项同意：每一项都要用户勾选核对，全部同意前确认发布禁用。
- // 修订差异里的删除项同样逐项记录同意状态；迁移确认始终单独保留，多个删除项
- // 时一次迁移确认不能代勾任何一项（只有候选整体仅放弃这一项时才与迁移确认同步）。
+ // 修订差异里的删除项同样逐项记录同意状态；「旧数据不迁移」迁移确认始终
+ // 独立，不论单项还是多项删除都不代勾任何被放弃项。
  const agreements=allItems.filter(item=>item.needsDisposition===false||!!dispositionOf(item));
  const dispositionsAgreed=agreements.every(item=>agreed[`${item.kind}:${item.ref}`]===true);
- const externalItems=allItems.filter(item=>item.externalAck===true);
- const singleDropped=allItems.filter(item=>item.dropped===true).length===1;
- const acknowledgeMigration=(value:boolean)=>{
-  setMigrationAck(value);
-  // 只有候选整体仅放弃这一项时才与迁移确认同步；同时放弃关系等其它项时，
-  // 迁移确认不代勾，避免一次操作放行多项。
-  if(externalItems.length===1&&singleDropped){
-   const item=externalItems[0];
-   setAgreed(previous=>({...previous,[`${item.kind}:${item.ref}`]:value}));
-  }
- };
  const copyPrompt=(text:string,done:()=>void)=>navigator.clipboard.writeText(text).then(done).catch(onError);
  // 复制给用户转交 Agent 的指令只用业务话术，不出现内部工具名（FDE2-12）。
  const completionPrompt=`继续当前工作区的本体发现任务 ${session.id}。草案 ${draft.ref} ${draft.state==='pending'?'仍待审核':'已通过审核'}；请补全每个概念的属性值类型、必需性与身份字段，对关系给出端点与角色，对未决项与覆盖缺口逐项给出排除或接受的处置并说明影响，生成发布候选供我在工作台确认。`;
@@ -279,7 +268,7 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
    <p>候选已过期：任务修订已更新，后端会拒绝该候选。请让 Agent 重新生成发布候选后再确认。</p>
   </div>}
   {current?<><RevisionPublishNotice candidate={current} acknowledged={migrationAck}
-    onAcknowledge={acknowledgeMigration} disabled={expired}/>
+    onAcknowledge={setMigrationAck} disabled={expired}/>
    <h3>候选定义摘要 · {current.title||current.ontology_id}</h3>
    <DiscoveryConcepts testid={name=>`publish-concept-${name}`} concepts={Object.entries(current.definition.concepts).map(([name,concept])=>{
     const entity=draft.entities.find(item=>item.name===name);
@@ -329,7 +318,7 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
        onChange={event=>setAgreed(previous=>({...previous,[key]:event.target.checked}))}/>
       <span>{item.label} · <span className="warn">待你核对同意</span></span>
      </label>
-     <p className="help">补全候选未带入该草案项。影响：{droppedImpacts[item.kind]||'该草案项不会进入本体。'}该删除项已在上方修订差异中列出；{externalItems.length===1?'唯一被放弃项与「旧数据不迁移」同步，迁移确认仍需单独勾选。':'多个删除项必须逐项勾选，「旧数据不迁移」不能代替逐项同意。'}</p>
+      <p className="help">补全候选未带入该草案项。影响：{droppedImpacts[item.kind]||'该草案项不会进入本体。'}该删除项已在上方修订差异中列出，仍须单独勾选同意；「旧数据不迁移」迁移确认不能代替逐项同意。</p>
     </>:item.needsDisposition===false?<>
      <label className="publish-disposition">
       <input type="checkbox" checked={agreed[key]===true} disabled={!current||expired}
