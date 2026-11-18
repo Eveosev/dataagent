@@ -117,9 +117,11 @@ def test_multi_concept_endpoint_requires_a_concept_and_retired_still_reads(tmp_p
 
     # The HTTP registry keeps D1's compatibility default (all entries) and
     # exposes the D4 active-only view explicitly.
-    default_ids = {item['id'] for item in
-                   api.get('/api/ontologies').json()['ontologies']}
-    assert 'sales-model' in default_ids
+    default_entries = {item['id']: item for item in
+                       api.get('/api/ontologies').json()['ontologies']}
+    assert 'sales-model' in default_entries
+    assert default_entries['sales-model']['state'] == 'retired'
+    assert default_entries['sales-model']['deactivated'] is True
     active_ids = {item['id'] for item in api.get(
         '/api/ontologies',
         params={'include_deactivated': False}).json()['ontologies']}

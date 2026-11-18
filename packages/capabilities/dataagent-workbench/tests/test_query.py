@@ -15,7 +15,7 @@ from pydantic import ValidationError
 from dataagent_contracts.intake import SourceSelection
 from dataagent_contracts.ontology import MappingSpec, ReviewDecision
 from dataagent_ontology.identity import digest
-from dataagent_runtime.ports.workbench_store import ChangeSet
+from dataagent_runtime.ports.workbench_store import ChangeSet, Write
 from dataagent_workbench.bootstrap import Workbench
 from dataagent_workbench.service_tools import invoke
 from dataagent_workbench.tool_schema import MODELS, TOOLS
@@ -174,6 +174,66 @@ def test_partial_release_stays_frozen_after_a_later_republish(tmp_path):
     assert page['total'] == len(old_ids) + len(by_release[new_ref])
 
 
+def test_old_release_keeps_session_and_task_after_same_task_republishes(tmp_path):
+    wb, session = saved_rows(tmp_path, [
+        {'number': 'INV-1', 'amount_minor': '10000', 'currency': 'CNY'},
+    ])
+    current = wb.sessions.get(session.id, wb.ctx)
+    old_ref = current.selected_versions['release']
+    preview_id, preview_revision = current.selected_versions['preview'].rsplit('@', 1)
+    old_page = query(wb, ontology_id='procurement')
+    old_item, = old_page['items']
+    assert old_item['release_ref'] == old_ref
+
+    # A second release from the same task points at a newer preview revision.
+    # The session's next revision selects it, so the first release disappears
+    # from the current session row and has to be recovered from history.
+    body = dict(wb.store.get('preview', preview_id, preview_revision,
+                             scope=wb.scope)['body'])
+    body['instances'] = [dict(item) for item in body.get('instances') or []]
+    body['instances'][0]['values'] = {
+        **body['instances'][0]['values'], 'currency': 'USD'}
+    body.pop('release_ref', None)
+    body.pop('partial_release_ref', None)
+    body['review_state'] = 'approved'
+    body['approved_preview_ref'] = preview_id + '@3'
+    body['revision'] = '3'
+    content = {key: body.get(key)
+               for key in ('ontology_revision', 'mapping', 'source_revisions')}
+    content['instances'] = body['instances']
+    content['issues'] = body.get('issues') or []
+    if body.get('extensions'):
+        content['extensions'] = body['extensions']
+    body['digest'] = digest(content)
+    wb.store.commit(ChangeSet(writes=[Write(
+        'preview', preview_id, wb.scope, body, preview_revision)]))
+    release, writes = wb.ontology.release_writes(
+        body, preview_id, '3', preview_id + '@3')
+    wb.store.commit(ChangeSet(writes=writes))
+    new_ref = release.id + '@' + release.revision
+    assert new_ref != old_ref
+
+    current = wb.sessions.get(session.id, wb.ctx)
+    updated = current.model_dump(mode='json')
+    updated['selected_versions'] = {
+        **updated['selected_versions'], 'preview': preview_id + '@4',
+        'release': new_ref}
+    updated['revision'] = str(int(current.revision) + 1)
+    updated['phase'] = 'saved'
+    wb.store.commit(ChangeSet(writes=[Write(
+        'session', session.id, wb.scope, updated, current.revision)]))
+
+    page = query(wb, ontology_id='procurement')
+    by_release = {}
+    for item in page['items']:
+        by_release.setdefault(item['release_ref'], []).append(item)
+    assert {item['values']['currency'] for item in by_release[old_ref]} == {'CNY'}
+    assert {item['values']['currency'] for item in by_release[new_ref]} == {'USD'}
+    for item in by_release[old_ref] + by_release[new_ref]:
+        assert item['session_id'] == session.id
+        assert item['task'] == '接入采购资料'
+
+
 def test_revision_is_pinned_and_default_follows_the_registry(tmp_path):
     wb, first = saved_rows(tmp_path, [
         {'number': 'INV-1', 'amount_minor': '10000', 'currency': 'CNY'},
@@ -318,9 +378,14 @@ def test_retired_ontology_stays_queryable_and_is_hidden_from_the_default_summary
     explicit = wb.queries.summary({'ontology_id': 'sales-model'}, wb.ctx)
     assert explicit['ontologies'][0]['deactivated'] is True
     assert explicit['ontologies'][0]['published_instances'] == 1
-    assert explicit['ontologies'][0]['last_published_at']
-    assert explicit['ontologies'][0]['last_published_at_source'] in {
-        'release', 'ontology_registry'}
+    assert explicit['ontologies'][0]['last_published_at'] is None
+    assert explicit['ontologies'][0]['last_published_at_source'] is None
+    assert explicit['ontologies'][0]['last_published_at_note'] == '未知'
+    assert explicit['ontologies'][0]['last_published_at_unknown'] is True
+    concept = next(item for item in explicit['ontologies'][0]['concepts']
+                   if item['concept'] == 'SalesOrder')
+    assert concept['last_published_at'] is None
+    assert concept['last_published_at_note'] == '未知'
     included = wb.queries.summary({'include_deactivated': True}, wb.ctx)
     assert 'sales-model' in {item['ontology_id'] for item in included['ontologies']}
 
@@ -400,8 +465,30 @@ def test_tool_and_summary_expose_published_instances_only(tmp_path):
     procurement, = summary.data['ontologies']
     assert procurement['ontology_id'] == 'procurement'
     assert procurement['published_instances'] == 2
+    assert procurement['last_published_at'] is None
+    assert procurement['last_published_at_note'] == '未知'
     concept, = procurement['concepts']
     assert concept['published_instances'] == 2
+    assert concept['last_published_at'] is None
+    assert concept['last_published_at_note'] == '未知'
+
+
+def test_summary_uses_publish_audit_time_without_ontology_fallback(tmp_path):
+    wb, session = saved_rows(tmp_path, [
+        {'number': 'INV-1', 'amount_minor': '10000', 'currency': 'CNY'},
+    ])
+    release_ref = wb.sessions.get(session.id, wb.ctx).selected_versions['release']
+    recorded_at = '2026-11-18T10:00:00+00:00'
+    wb.store.commit(ChangeSet(writes=[Write(
+        'review', 'release-audit', wb.scope,
+        {'release_ref': release_ref, 'recorded_at': recorded_at})]))
+    summary = wb.queries.summary({}, wb.ctx)
+    procurement, = summary['ontologies']
+    assert procurement['last_published_at'] == recorded_at
+    concept, = procurement['concepts']
+    assert concept['last_published_at'] == recorded_at
+    assert procurement['last_published_at_note'] is None
+    assert procurement['last_published_at_unknown'] is False
 
 
 def test_disallowed_property_values_and_anchors_are_not_disclosed(tmp_path):

@@ -119,8 +119,8 @@ def create_app(wb):
 
     @app.get('/api/ontologies')
     def ontologies(include_deactivated:bool=True):
-        # D1's registry endpoint keeps retired entries by default; D4 callers
-        # can request the active-only view with include_deactivated=false.
+        # 网页本体库是管理视图（D5b 展示/停用）：按裁决默认列出全部并带 deactivated/state；只有 Agent 工具与服务层默认不列停用本体，保持 D1 测试行为。
+
         return wb.queries.ontologies(wb.ctx,
             include_deactivated=include_deactivated)
 

@@ -211,14 +211,14 @@ class QueryService:
                 current.setdefault(name, 0)
                 current[name] = count
             release_time = entry_stats.get('last_published_at')
-            registry_time = item.get('published_at') or None
+            item['deactivated'] = item.get('state') != 'active'
             item['instance_counts'] = counts
             item['published_instance_count'] = sum(counts.values())
             item['current_revision_instance_counts'] = current
-            item['last_published_at'] = release_time or registry_time
-            item['last_published_at_source'] = (
-                'release' if release_time else
-                'ontology_registry' if registry_time else None)
+            item['last_published_at'] = release_time
+            item['last_published_at_source'] = 'release' if release_time else None
+            item['last_published_at_note'] = '未知' if not release_time else None
+            item['last_published_at_unknown'] = not bool(release_time)
             item['latest_release_ref'] = entry_stats.get('latest_release_ref')
         return data
 
@@ -244,10 +244,8 @@ class QueryService:
             revision = entry.get('ontology_revision')
             revision_stats = (entry_stats.get('revisions') or {}).get(revision, {})
             release_time = entry_stats.get('last_published_at')
-            registry_time = entry.get('published_at') or None
-            published_at = release_time or registry_time
-            published_source = ('release' if release_time else
-                                'ontology_registry' if registry_time else None)
+            published_at = release_time
+            published_source = 'release' if release_time else None
             concepts = []
             names = list(entry.get('concepts') or [])
             for name in (entry_stats.get('concepts') or {}):
@@ -259,7 +257,9 @@ class QueryService:
                     'concept': name,
                     'published_instances': (entry_stats.get('concepts') or {}).get(name, 0),
                     'current_revision_instances': (revision_stats.get('concepts') or {}).get(name, 0),
-                    'last_published_at': concept_time or registry_time,
+                    'last_published_at': concept_time,
+                    'last_published_at_note': '未知' if not concept_time else None,
+                    'last_published_at_unknown': not bool(concept_time),
                 })
             items.append({
                 'ontology_id': ontology_id,
@@ -275,6 +275,8 @@ class QueryService:
                 'current_revision_instances': revision_stats.get('count', 0),
                 'last_published_at': published_at,
                 'last_published_at_source': published_source,
+                'last_published_at_note': '未知' if not published_at else None,
+                'last_published_at_unknown': not bool(published_at),
                 'latest_release_ref': entry_stats.get('latest_release_ref'),
                 'revisions': {
                     rev: {
@@ -543,25 +545,48 @@ class QueryService:
             content['extensions'] = body['extensions']
         return digest(content) == release.get('digest')
 
+    def _session_history(self, row):
+        """Every stored revision of one session, oldest first.
+
+        A task can publish again after its first release.  ``current`` then
+        names only the newest release; the earlier release is still tied to
+        the task by the historical session revision that selected it.
+        """
+        try:
+            last = int(row['revision'])
+        except (TypeError, ValueError):
+            return [(row['revision'], row['body'])]
+        revisions = []
+        for number in range(1, last + 1):
+            historical = self.store.get('session', row['id'], str(number),
+                                        scope=self.scope)
+            if historical is not None:
+                revisions.append((historical['revision'], historical['body']))
+        return revisions or [(row['revision'], row['body'])]
+
     def _session_index(self):
         index = {}
         for row in self._all('session'):
-            body = row['body']
-            release_ref = (body.get('selected_versions') or {}).get('release')
-            if not release_ref:
-                continue
-            task = ''
-            goal_ref = str(body.get('goal_ref') or '')
-            if '@' in goal_ref:
-                goal_id, goal_revision = goal_ref.rsplit('@', 1)
-                goal = self.store.get('goal', goal_id, goal_revision,
-                                      scope=self.scope)
-                if goal is not None:
-                    task = (goal['body'] or {}).get('goal') or ''
-            index.setdefault(release_ref, []).append({
-                'session_id': row['id'], 'task': task,
-                'phase': body.get('phase'),
-            })
+            tasks = {}
+            for revision, body in self._session_history(row):
+                release_ref = (body.get('selected_versions') or {}).get('release')
+                if not release_ref:
+                    continue
+                goal_ref = str(body.get('goal_ref') or '')
+                if goal_ref not in tasks:
+                    task = ''
+                    if '@' in goal_ref:
+                        goal_id, goal_revision = goal_ref.rsplit('@', 1)
+                        goal = self.store.get('goal', goal_id, goal_revision,
+                                              scope=self.scope)
+                        if goal is not None:
+                            task = (goal['body'] or {}).get('goal') or ''
+                    tasks[goal_ref] = task
+                index.setdefault(release_ref, []).append({
+                    'session_id': row['id'], 'task': tasks[goal_ref],
+                    'phase': body.get('phase'),
+                    'session_revision': revision,
+                })
         return index
 
     def _hidden_properties(self, preview_body: dict) -> set[str]:
@@ -629,10 +654,35 @@ class QueryService:
                 locations.append(location)
         return locations
 
+    def _audit_times(self):
+        """Map release refs to timestamps recorded by publication audits."""
+        times = {}
+        for row in self._all('review'):
+            body = row['body']
+            recorded_at = body.get('recorded_at')
+            if not recorded_at:
+                continue
+            refs = []
+            audit = body.get('partial_save')
+            if isinstance(audit, dict) and audit.get('release_ref'):
+                refs.append(audit['release_ref'])
+            decision = body.get('decision')
+            sources = [body]
+            if isinstance(decision, dict):
+                sources.append(decision)
+            for source in sources:
+                for key in ('release_ref', 'result_ref'):
+                    if source.get(key):
+                        refs.append(source[key])
+            for ref in refs:
+                times.setdefault(ref, recorded_at)
+        return times
+
     def _stats(self):
         """Aggregate published instances by ontology, revision and concept."""
         definitions = {}
         stats = {}
+        audit_times = self._audit_times()
         for row in self._all('release'):
             ref = '%s@%s' % (row['id'], row['revision'])
             snapshot = self._snapshot(row['body'])
@@ -662,7 +712,7 @@ class QueryService:
             revision_entry = entry['revisions'].setdefault(revision, {
                 'count': 0, 'concepts': {}, 'last_published_at': None,
             })
-            published_at = snapshot.get('published_at')
+            published_at = snapshot.get('published_at') or audit_times.get(ref)
             for instance in snapshot['instances']:
                 concept = by_entity.get(instance.get('entity_type'),
                                         instance.get('entity_type') or '')
