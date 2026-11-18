@@ -75,6 +75,18 @@ def definition_diff(previous: OntologyRevision, current: OntologyRevision) -> di
                                      'before': old_identity,
                                      'after': new_identity})
 
+    # A delivered concept arrives with all of its properties and a removed
+    # concept leaves with them; list those properties instead of only naming
+    # the concept, so the human sees what is actually added or deleted.
+    for name in added_concepts:
+        for prop in sorted(after[name].properties):
+            added_properties.append({'concept': name, 'property': prop,
+                                     'value_type': after[name].properties[prop].value_type})
+    for name in removed_concepts:
+        for prop in sorted(before[name].properties):
+            removed_properties.append({'concept': name, 'property': prop,
+                                       'value_type': before[name].properties[prop].value_type})
+
     old_relations = {name: _relation_shape(relation)
                      for name, relation in previous.relations.items()}
     new_relations = {name: _relation_shape(relation)

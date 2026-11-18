@@ -20,14 +20,18 @@ from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
+from pydantic import ValidationError
 
 from dataagent_contracts.core import CapabilityStatus
+from dataagent_contracts.intake import SourceSelection, WorkSpec
 from dataagent_contracts.ontology import MappingSpec, OntologyRevision
 from dataagent_ontology.revisions import definition_diff
 from dataagent_workbench.adapters.layer_client import LayerClient
 from dataagent_workbench.bootstrap import Workbench
 from dataagent_workbench.interfaces.http_api import create_app
 from dataagent_workbench.service_tools import invoke
+from dataagent_workbench.tool_schema import Start
+from test_intake_repairs import StubProbeClient, csv_profile, save_single
 
 
 CAPABILITIES = Path(__file__).resolve().parents[2]
@@ -311,6 +315,140 @@ def test_revision_publish_keeps_old_tasks_and_defaults_new_tasks_to_rev2(tmp_pat
     assert [dict(instance.values) for instance in new_preview.instances] == [
         {'book': 'SALE', 'doc_no': '1001'}, {'book': 'SALE', 'doc_no': '1002'}]
     assert new_preview.issues == []
+
+
+def test_rev1_released_instances_stay_queryable_after_rev2(tmp_path):
+    """Publishing revision 2 must not rewrite what revision 1 already released."""
+    wb, session_id, request = workbench(tmp_path)
+    publish_initial(wb, session_id, request)
+    (tmp_path / 'orders.csv').write_text(
+        'book,doc_no\nSALE,1001\nSALE,1002\n')
+    wb.layer_client = StubProbeClient({'orders': csv_profile('orders', [
+        {'book': 'SALE', 'doc_no': '1001'},
+        {'book': 'SALE', 'doc_no': '1002'},
+    ])})
+    goal = WorkSpec(id='map', goal='接入销售数据',
+                    acceptance_criteria=['来源可核对'],
+                    authorization_ref=wb.authorization)
+    started = wb.sessions.start(
+        [SourceSelection(source_id='orders', kind='file',
+                         locator_ref='orders.csv')], goal, wb.ctx,
+        target={'ontology_id': 'sales-model', 'concept': 'SalesOrder'})
+    mapping_session = wb.intake.advance(started.session_id, wb.ctx)
+    mapping_source, = wb.intake.inference_request(
+        mapping_session.id, wb.ctx)['sources']
+    save_single(wb, mapping_session, MappingSpec(
+        id='orders', revision='1', ontology_revision='sales-model@1',
+        concept='SalesOrder',
+        source_fingerprint=mapping_source['structure_fingerprint'],
+        bindings={'book': {'source_field': 'book'},
+                  'doc_no': {'source_field': 'doc_no',
+                             'transform': 'integer'}}))
+
+    before = invoke(wb, 'ontology_query', {
+        'ontology_id': 'sales-model', 'revision': '1',
+        'concept': 'SalesOrder'}).data
+    assert before['total'] == 2
+    assert sorted(item['values']['doc_no'] for item in before['items']) == [1001, 1002]
+    assert {item['revision'] for item in before['items']} == {'1'}
+
+    # Publish revision 2 through the real discovery/revision path.
+    wb.layer_client = LayerClient(DATA)
+    revision_session = invoke(wb, 'intake_start', {
+        'goal': '发布销售单据修订',
+        'mode': 'ontology_discovery',
+        'sources': [{'source_id': 'db', 'kind': 'sqlite',
+                     'locator_ref': 'sales.db'}],
+        'revise_ontology_id': 'sales-model',
+    }).data['session_id']
+    revision_request = invoke(wb, 'intake_advance',
+                              {'session_id': revision_session}).data
+    current = full_draft(wb, revision_session, revision_request)
+    candidate = invoke(wb, 'ontology_publish_prepare', completion(
+        wb, revision_session, current, doc_no_type='string')).data
+    published = publish(wb, revision_session, candidate)
+    assert published.status_code == 200, published.json()
+    assert published.json()['ontology_revision'] == '2'
+
+    after = invoke(wb, 'ontology_query', {
+        'ontology_id': 'sales-model', 'revision': '1',
+        'concept': 'SalesOrder'}).data
+    assert after == before
+    current_page = invoke(wb, 'ontology_query', {
+        'ontology_id': 'sales-model', 'concept': 'SalesOrder'}).data
+    assert current_page['ontology_revision'] == 'sales-model@2'
+    assert current_page['total'] == 0  # rev1 data is not silently migrated
+
+
+
+def test_revision_field_does_not_change_existing_target_validation():
+    source = {'source_id': 'f', 'kind': 'file', 'locator_ref': 'orders.csv'}
+    plain = Start.model_validate({
+        'goal': '接入销售数据', 'sources': [source],
+        'target': {'ontology_id': 'procurement',
+                   'concept': 'PurchaseDocument'}})
+    assert plain.target.ontology_id == 'procurement'
+    assert plain.target.concept == 'PurchaseDocument'
+    assert plain.revise_ontology_id is None
+    assert Start.model_validate(
+        {'goal': '接入销售数据', 'sources': [source]}).target is None
+
+    with pytest.raises(ValidationError):
+        Start.model_validate({'goal': '接入销售数据', 'sources': [source],
+                              'target': {'concept': 'PurchaseDocument'}})
+    with pytest.raises(ValidationError, match='either'):
+        Start.model_validate({'goal': '接入销售数据', 'sources': [source],
+                              'mode': 'ontology_discovery',
+                              'target': {'ontology_id': 'sales-model'},
+                              'revise_ontology_id': 'sales-model'})
+    with pytest.raises(ValidationError, match='ontology_discovery'):
+        Start.model_validate({'goal': '接入销售数据', 'sources': [source],
+                              'revise_ontology_id': 'sales-model'})
+
+
+def test_definition_diff_lists_properties_of_added_and_removed_concepts():
+    before = OntologyRevision(id='m', revision='1', concepts={
+        'A': {'entity_type': 'A', 'identity_fields': ['code'],
+              'properties': {'code': {'value_type': 'string'}}},
+        'Old': {'entity_type': 'Old', 'identity_fields': ['id'],
+                'properties': {'id': {'value_type': 'string'},
+                               'label': {'value_type': 'string'}}},
+    })
+    after = OntologyRevision(id='m', revision='2', concepts={
+        'A': {'entity_type': 'A', 'identity_fields': ['code'],
+              'properties': {'code': {'value_type': 'string'}}},
+        'New': {'entity_type': 'New', 'identity_fields': ['id'],
+                'properties': {'id': {'value_type': 'string'},
+                               'title': {'value_type': 'string'}}},
+    })
+    diff = definition_diff(before, after)
+    assert diff['added_concepts'] == ['New']
+    assert diff['removed_concepts'] == ['Old']
+    assert diff['added_properties'] == [
+        {'concept': 'New', 'property': 'id', 'value_type': 'string'},
+        {'concept': 'New', 'property': 'title', 'value_type': 'string'}]
+    assert diff['removed_properties'] == [
+        {'concept': 'Old', 'property': 'id', 'value_type': 'string'},
+        {'concept': 'Old', 'property': 'label', 'value_type': 'string'}]
+    assert 'New.id 新增属性（string）' in diff['summary']
+    assert 'Old.label 删除属性（string）' in diff['summary']
+
+
+def test_builtin_upgrade_appends_the_new_revision_to_history(tmp_path):
+    wb = Workbench(tmp_path)
+    row = wb.store.current('ontology_registry', 'procurement', scope=wb.scope)
+    before = row['body']
+    assert [item['revision'] for item in before['revisions']] == ['1']
+
+    wb.ontology.register(wb.definition.model_copy(update={'revision': '2'}),
+                         wb.ctx)
+    row = wb.store.current('ontology_registry', 'procurement', scope=wb.scope)
+    after = row['body']
+    assert after['ontology_revision'] == '2'
+    assert [item['revision'] for item in after['revisions']] == ['1', '2']
+    assert after['revisions'][1]['previous_revision'] == '1'
+    assert after['revisions'][1]['published_at']
+    assert after['revisions'][1]['diff']['summary'] == []
 
 
 def test_definition_diff_treats_identity_change_as_destructive():

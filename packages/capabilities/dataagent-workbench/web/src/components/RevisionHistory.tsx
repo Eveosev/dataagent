@@ -35,10 +35,14 @@ export function localDate(value?:string|null):string{
 }
 
 export function revisionRecords(entry:RevisionEntry):RevisionRecord[]{
- if(entry.revisions&&entry.revisions.length)return entry.revisions;
- if(!entry.ontology_revision)return [];
- return [{revision:entry.ontology_revision,published_at:entry.published_at,
-  published_by:entry.published_by}];
+ const records=[...(entry.revisions||[])];
+ // 老工作区可能只记录了升级前的修订；内置本体被宿主升级后，当前修订仍要
+ // 出现在历史里，否则页面会显示“修订历史 · 1 个修订”却在当前列看到修订 2。
+ if(entry.ontology_revision&&!records.some(record=>record.revision===entry.ontology_revision))
+  records.push({revision:entry.ontology_revision,published_at:entry.published_at,
+   published_by:entry.published_by,
+   previous_revision:records.length?records[records.length-1].revision:undefined});
+ return records;
 }
 
 export function RevisionHistory({entry}:{entry:RevisionEntry}){
