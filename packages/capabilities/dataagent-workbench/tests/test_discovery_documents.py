@@ -342,29 +342,21 @@ def test_document_text_stays_hidden_under_an_explicit_policy_without_paragraph_t
         assert all(not table['columns'] for table in tables.values())
 
 
-def test_default_local_owner_disclosure_returns_samples_and_document_text(tmp_path):
-    """No model-context policy means local-owner mode: observed text is shown."""
+def test_document_text_stays_hidden_without_a_disclosure_policy(tmp_path):
     document_workspace(tmp_path)
     wb = workbench(tmp_path)
     data = request(wb, start(wb, document_sources()))
 
     document, = data['catalog']['documents']
     title, = document['sections']
-    assert title['title'] == '差旅报销标准'
-    assert [clause['text'] for clause in document['clauses']] == [
-        '第一条 本标准适用于全体员工出差费用报销。',
-        '第二条 城市等级分为一线、二线两档。',
-        '第三条 本标准自发布之日起执行。']
+    assert title['title'] is None
+    assert all(clause['text'] is None for clause in document['clauses'])
     standard = {table['name']: table for table in data['catalog']['tables']}['table:1']
-    assert standard['columns']['限额']['samples'] == ['400', '200', '350']
+    assert standard['columns']['限额']['samples'] == []
     assert standard['columns']['限额']['distinct_values'] == 6
 
 
-@pytest.mark.parametrize('allowed', [
-    None,  # no policy: the local owner sees the sampled prose
-    {'policy': ['text']},  # an explicit paragraph-text permission
-])
-def test_disclosed_document_text_is_truncated_like_a_table_sample(tmp_path, allowed):
+def test_disclosed_document_text_is_truncated_like_a_table_sample(tmp_path):
     clause = '第一条 ' + '本' * 200
     document = (
         '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
@@ -373,7 +365,7 @@ def test_disclosed_document_text_is_truncated_like_a_table_sample(tmp_path, allo
         + _paragraph(clause)
         + '<w:sectPr/></w:body></w:document>')
     (tmp_path / 'policy.docx').write_bytes(_docx_zip(document))
-    wb = workbench(tmp_path, allowed=allowed)
+    wb = workbench(tmp_path, allowed={'policy': ['text']})
     data = request(wb, start(wb, [
         {'source_id': 'policy', 'kind': 'file', 'locator_ref': 'policy.docx'},
     ], goal='从制度文件发现对象'))
@@ -470,11 +462,10 @@ def test_pdf_sections_nest_across_pages_and_skip_non_headings():
     subsection, = chapter['sections']
     assert subsection['level'] == 2 and subsection['page'] == 2
     assert subsection['line_range'] == [5, 6]
-    # No policy means local-owner disclosure: titles and clause text are shown.
-    assert title['title'] == '差旅报销标准'
-    assert subsection['title'] == '第一节 适用范围'
+    # No title without a disclosure: structure and anchors only.
+    assert title['title'] is None and subsection['title'] is None
     assert [clause['number'] for clause in document['clauses']] == ['1.']
-    assert document['clauses'][0]['text'] == '1. 覆盖全部流程。'
+    assert document['clauses'][0]['text'] is None
 
 
 def test_pdf_ordinary_short_prose_is_not_a_section():
