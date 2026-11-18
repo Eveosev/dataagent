@@ -1,4 +1,5 @@
 """Versioned previews and review decisions share one local transaction boundary."""
+from datetime import datetime,timezone
 from uuid import uuid4
 from dataagent_contracts.ontology import MappingPreview,ReviewReceipt,DatasetRelease,OntologyRevision
 from dataagent_runtime.ports.workbench_store import ChangeSet,Write,VersionConflict
@@ -31,19 +32,28 @@ class OntologyService:
         if row is None:raise KeyError('ontology not registered')
         return OntologyRevision.model_validate(row['body'])
 
-    def prepare_preview(self,mapping,observations,ctx,*,source_mappings=None):
+    def prepare_preview(self,mapping,observations,ctx,*,source_mappings=None,dispositions=None):
         self.check(ctx)
         ontology=self.definition(mapping.ontology_revision,ctx)
-        result=materialize(ontology,mapping,observations,scope=self.scope,source_mappings=source_mappings)
+        result=materialize(ontology,mapping,observations,scope=self.scope,source_mappings=source_mappings,
+                           dispositions=dispositions)
         if not result.instances:result.issues.append({'code':'ontology.no_records'})
         source_revisions={p.source_id:p.source_revision for p in observations}
+        extensions={}
+        if source_mappings is not None:
+            extensions['intake.source_mappings'] = {
+                key: value.model_dump(mode='json') for key, value in source_mappings.items()
+            }
+        if dispositions:
+            # The preview revision pins the audited dispositions it was built
+            # with, so a later save or report can reconstruct why a gap or
+            # record no longer blocks.
+            extensions['intake.dispositions'] = [dict(item) for item in dispositions]
         content={'ontology_revision':mapping.ontology_revision,'mapping':mapping.model_dump(mode='json'),
             'source_revisions':source_revisions,'instances':[i.model_dump(mode='json') for i in result.instances],
             'issues':result.issues}
-        if source_mappings is not None:
-            content['extensions'] = {'intake.source_mappings': {
-                key: value.model_dump(mode='json') for key, value in source_mappings.items()
-            }}
+        if extensions:
+            content['extensions'] = extensions
         preview=MappingPreview(id=uuid4().hex,revision='1',digest=digest(content),
             **{k:v for k,v in content.items() if k!='instances'},instances=result.instances)
         body={**preview.model_dump(mode='json'),'assertions':[a.model_dump(mode='json') for a in result.assertions],
@@ -77,7 +87,8 @@ class OntologyService:
         elif decision.target_scope=='instance':
             changes=decision.changes
             if not {'entity_id','property','value','reason'}<=changes.keys() or not changes['reason']:
-                raise ValueError('instance correction needs entity/property/value/reason')
+                raise ValueError('instance correction needs entity_id, property, value and reason '
+                                 '(use entity_id, not entity)')
             ontology=self.definition(body['ontology_revision'],ctx)
             prop=changes['property']
             if prop not in ontology.properties:raise ValueError('unknown target property')
@@ -87,6 +98,7 @@ class OntologyService:
             if value is None and ontology.properties[prop].required:raise ValueError('required property cannot be null')
             from pydantic_core import to_jsonable_python
             targets[0]['values'][prop]=to_jsonable_python(value)
+            targets[0]['unresolved']=[item for item in targets[0].get('unresolved',[]) if item!=prop]
             body.setdefault('corrections',[]).append({'decision_ref':did+'@1',**changes})
             body['review_state']='needs_revalidation';revalidate=['preview']
         elif decision.changes:
@@ -102,6 +114,60 @@ class OntologyService:
             Write('review',did,self.scope,{'decision':decision.model_dump(mode='json'),'subject_ref':ctx.subject_ref})]
         return ReviewReceipt(decision_ref=did+'@1',revision=next_revision,revalidate=revalidate),writes
 
+    def prepare_partial_save(self,decision,expected_revision,ctx,*,plan,reason=''):
+        """Release the objects without blocking issues and keep the rest pending.
+
+        The stored preview keeps every object for the report, marks itself
+        ``partially_published`` (so a later full publish cannot release the
+        suspended objects), and records who/when/why in a new revision and an
+        audit ``review`` record.  The release itself carries only the saved
+        objects, assertions and facts.
+        """
+
+        row=self._current_preview(decision.preview_ref,expected_revision,ctx)
+        if decision.preview_ref!=row['id']+'@'+row['revision']:
+            raise VersionConflict('decision does not target current preview')
+        body=row['body']
+        saved_ids={item['entity_id'] for item in plan.get('saved',[])}
+        if not saved_ids:
+            raise ValueError('no objects can be saved')
+        release_body={key:body[key] for key in ('ontology_revision','mapping','source_revisions')}
+        release_body['instances']=[item for item in body['instances'] if item['id'] in saved_ids]
+        release_body['issues']=[]
+        release_body['assertions']=[
+            item for item in body['assertions']
+            if any(role.get('role')=='subject' and role.get('value') in saved_ids
+                   for role in item.get('role_bindings',[]))]
+        release_body['facts']=[
+            item for item in body['facts']
+            if any(role.get('value_type')=='reference' and role.get('value') in saved_ids
+                   for role in item.get('role_bindings',[]))]
+        content={key:release_body[key]
+                 for key in ('ontology_revision','mapping','source_revisions','instances','issues')}
+        if body.get('extensions'):
+            content['extensions']=body['extensions']
+        release_body['digest']=digest(content)
+        did=uuid4().hex
+        recorded_at=datetime.now(timezone.utc).isoformat()
+        audit={**plan,'release_ref':None,'reason':reason or '部分保存：保存无阻断的对象，冲突或缺必填的对象挂起',
+               'recorded_at':recorded_at,'subject_ref':ctx.subject_ref,'decision_ref':did+'@1'}
+        release_id='release:'+digest([row['id'],release_body['digest'],'partial'])
+        audit['release_ref']=release_id+'@1'
+        stored=dict(body)
+        stored['review_state']='partially_published'
+        stored['partial_save']=[*(body.get('partial_save') or []),audit]
+        stored['suspended']=plan.get('suspended',[])
+        stored['unidentified_records']=plan.get('unidentified_records',[])
+        stored['revision']=str(int(row['revision'])+1)
+        release,writes=self._release_writes(release_body,row['id'],row['revision'],
+            decision.preview_ref,stored_body=stored,partial=True)
+        writes.append(Write('review',did,self.scope,{
+            'decision':decision.model_dump(mode='json'),'subject_ref':ctx.subject_ref,
+            'recorded_at':recorded_at,'partial_save':audit}))
+        receipt=ReviewReceipt(decision_ref=did+'@1',revision=stored['revision'],
+            revalidate=['partial_save'],extensions={'intake.partial_save':audit})
+        return receipt,writes
+
     def review(self,decision,expected_revision,ctx):
         receipt,writes=self.prepare_review(decision,expected_revision,ctx)
         self.store.commit(ChangeSet(writes=writes))
@@ -116,10 +182,12 @@ class OntologyService:
         self.store.commit(ChangeSet(writes=writes))
         return release
 
-    def release_writes(self,body,preview_id,expected_revision,candidate_ref):
-        if body.get('review_state')!='approved' or body.get('approved_preview_ref')!=str(candidate_ref):
+    def _release_writes(self,body,preview_id,expected_revision,candidate_ref,*,stored_body=None,partial=False):
+        if not partial and (body.get('review_state')!='approved'
+                            or body.get('approved_preview_ref')!=str(candidate_ref)):
             raise ValueError('unapproved release')
-        rid='release:'+digest([preview_id,body['digest']])
+        parts=[preview_id,body['digest']]+(['partial'] if partial else [])
+        rid='release:'+digest(parts)
         release=DatasetRelease(id=rid,revision='1',preview_ref=str(candidate_ref),digest=body['digest'])
         writes=[Write('release',rid,self.scope,release.model_dump(mode='json'))]
         # Assertions are immutable provenance; repeated identical facts union assertion refs.
@@ -131,7 +199,13 @@ class OntologyService:
             if prior:
                 f={**f,'assertion_refs':sorted(set(f['assertion_refs']+prior['body']['assertion_refs']))}
             writes.append(Write('fact',f['id'],self.scope,f,prior['revision'] if prior else None))
-        body['review_state']='published';body['release_ref']=rid+'@1'
-        body['revision']=str(int(expected_revision)+1)
-        writes.append(Write('preview',preview_id,self.scope,body,expected_revision))
+        stored=dict(stored_body if stored_body is not None else body)
+        stored['review_state']='partially_published' if partial else 'published'
+        stored['release_ref']=rid+'@1'
+        if partial:stored['partial_release_ref']=rid+'@1'
+        stored['revision']=str(int(expected_revision)+1)
+        writes.append(Write('preview',preview_id,self.scope,stored,expected_revision))
         return release,writes
+
+    def release_writes(self,body,preview_id,expected_revision,candidate_ref):
+        return self._release_writes(body,preview_id,expected_revision,candidate_ref)

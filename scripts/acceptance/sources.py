@@ -370,6 +370,90 @@ def _compare_cross_source(preview_body, profiles, diffs, gold):
     }
 
 
+def _verify_partial_save(project, args, env, before, preview, preview_body, gold, diffs):
+    """FDE-3: allow_partial saves clean objects, suspends conflicts, lists keyless."""
+
+    partial = call_workbench(project, 'mapping_apply', {
+        **args, 'expected_revision': before['revision'],
+        'decision': {'preview_ref': preview['preview_ref'], 'target_scope': 'mapping'},
+        'allow_partial': True,
+        'reason': '先保存无冲突对象；冲突与缺必填的对象挂起，缺键记录单列',
+    }, env=env)
+    expected = gold['expected']
+    saved = {item['values'].get('number') for item in partial.get('saved', [])}
+    suspended = {item['values'].get('number') for item in partial.get('suspended', [])}
+    if partial.get('partial') is not True:
+        diffs.add('（全部）', 'partial_save.partial', True, partial.get('partial'))
+    if saved != set(expected['conflict_free_object_numbers']):
+        diffs.add('（全部）', 'partial_save.saved',
+                  sorted(expected['conflict_free_object_numbers']), sorted(saved))
+    if suspended != set(expected['blocked_object_numbers']):
+        diffs.add('（全部）', 'partial_save.suspended',
+                  sorted(expected['blocked_object_numbers']), sorted(suspended))
+    if saved & suspended:
+        diffs.add('（全部）', 'partial_save.overlap', '无交集', sorted(saved & suspended))
+    for item in partial.get('suspended', []):
+        codes = {reason.get('code') for reason in item.get('reasons', [])}
+        if not codes & {'ontology.conflicting_values', 'ontology.required_value_missing'}:
+            diffs.add(item.get('object'), 'partial_save.suspended_reason',
+                      '冲突或缺必填', sorted(codes))
+
+    unidentified = partial.get('unidentified_records', [])
+    if len(unidentified) != expected['keyless_candidate_count']:
+        diffs.add('（全部）', 'partial_save.unidentified_count',
+                  expected['keyless_candidate_count'], len(unidentified))
+    for record in gold['keyless_records']:
+        source = record['source']
+        candidates = [item for item in unidentified
+                      if {entry['source_id'] for entry in item.get('sources', [])} == {source}]
+        matched = []
+        for item in candidates:
+            locations = ' '.join(location for entry in item.get('sources', [])
+                                 for location in entry.get('locations', []))
+            if source == 'pdf' and f'第 {record["page"]} 页' not in locations:
+                continue
+            if source == 'sqlite' and f'id={record["id"]}' not in locations:
+                continue
+            if source == 'rest' and record['pointer'] not in locations:
+                continue
+            if not all(_same_value(field, record['values'].get(field), item['values'].get(field))
+                       for field in ('amount', 'currency', 'issuer')):
+                continue
+            if 'number' not in (item.get('unresolved') or []):
+                continue
+            matched.append(item)
+        label = f'{source} 缺键记录（部分保存）'
+        if len(matched) != 1:
+            diffs.add(label, '单列记录', 1, len(matched))
+
+    status = call_workbench(project, 'intake_status', args, env=env)
+    if status['phase'] != 'saved':
+        diffs.add('（全部）', 'partial_save.phase', 'saved', status['phase'])
+    release_ref = status['selected_versions'].get('release')
+    if not release_ref or not partial.get('release_ref'):
+        diffs.add('（全部）', 'partial_save.release', '存在', release_ref)
+    elif release_ref != partial['release_ref']:
+        diffs.add('（全部）', 'partial_save.release_ref', release_ref, partial['release_ref'])
+    else:
+        release = _stored_record(project, 'release', release_ref)
+        if not release.get('digest'):
+            diffs.add('（全部）', 'partial_save.release_digest', '非空', release.get('digest'))
+
+    preview_state = _stored_record(project, 'preview', status['selected_versions']['preview'])
+    audit = (preview_state.get('partial_save') or [None])[-1]
+    if not audit or not audit.get('subject_ref') or not audit.get('recorded_at') or not audit.get('reason'):
+        diffs.add('（全部）', 'partial_save.audit', '谁/何时/原因', audit)
+    return {
+        'saved_object_numbers': sorted(saved),
+        'suspended_object_numbers': sorted(suspended),
+        'suspended': partial.get('suspended', []),
+        'unidentified_records': unidentified,
+        'release_ref': release_ref,
+        'phase': status['phase'],
+        'audit': audit,
+    }
+
+
 def verify_cross_source(project, url, token_ref, diffs, cross_reads, cross_unauthorized):
     """T25: PDF + SQLite + paginated REST mapped together, compared to gold."""
 
@@ -552,6 +636,8 @@ def verify_cross_source(project, url, token_ref, diffs, cross_reads, cross_unaut
         'phase_after': after['phase'],
         'release_after': after['selected_versions'].get('release'),
     }
+    summary['partial_save'] = _verify_partial_save(
+        project, args, env, after, preview, preview_body, gold, diffs)
     summary['sources'] = {source_id: {'records': len(profiles[source_id]['records']),
                                       'coverage': profiles[source_id]['coverage'],
                                       'source_revision': profiles[source_id]['source_revision']}
