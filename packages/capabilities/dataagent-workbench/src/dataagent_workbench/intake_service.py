@@ -2,7 +2,9 @@
 import json
 import os
 import time
+from datetime import datetime, timezone
 from pathlib import Path
+from uuid import uuid4
 from pydantic_core import to_jsonable_python
 from dataagent_contracts.core.refs import SourceAnchor
 from dataagent_contracts.intake import CoverageGap, SourceProfile
@@ -30,6 +32,17 @@ _MIN_PROBE_SECONDS = 0.01
 _PREVIEW_BLOCK_DETAIL = 'preview contains unresolved issues'
 _REPLAY_FAILED = 'intake.mapping_replay_failed'
 _PENDING_CORRECTIONS = 'intake.pending_corrections'
+_DISPOSITIONS = 'intake.dispositions'
+_INHERITABLE_CORRECTIONS = 'intake.inheritable_corrections'
+_PARTIAL_SAVE = 'intake.partial_save'
+_BLOCKING_ENTITY_ISSUES = {
+    'ontology.conflicting_values', 'ontology.required_value_missing',
+    'ontology.conversion_failed', 'ontology.evidence_missing',
+    'ontology.correction_conflict', 'ontology.relation_unresolved',
+}
+_GLOBAL_BLOCKING_ISSUES = {
+    'ontology.required_binding_missing', 'ontology.no_records',
+}
 _RESOLVABLE_ISSUES = {
     'ontology.conflicting_values', 'ontology.required_value_missing',
     'ontology.conversion_failed',
@@ -139,6 +152,341 @@ class IntakeService:
             if row is None:raise ValueError('selected source observation missing')
             out.append(SourceProfile.model_validate(row['body']))
         return out
+
+    def _source_descriptors(self, session):
+        """Stable source identity shown next to original values and positions."""
+        return {source.source_id: {
+            'source_id': source.source_id, 'kind': source.kind,
+            'locator_ref': source.locator_ref,
+            'source_name': str(source.options.get('display_name') or source.locator_ref),
+        } for source in session.sources}
+
+    @staticmethod
+    def _selector_location(selector):
+        if not isinstance(selector, dict):
+            return ''
+        parts = []
+        if selector.get('page') is not None:
+            parts.append(f'第 {selector["page"]} 页')
+        keys = selector.get('keys')
+        if isinstance(keys, dict):
+            if keys.get('row') is not None:
+                parts.append(f'第 {keys["row"]} 行')
+            primary = keys.get('primary_key')
+            if isinstance(primary, dict):
+                parts.append('主键 ' + ', '.join(f'{key}={value}' for key, value in primary.items()))
+        if selector.get('pointer'):
+            parts.append(str(selector['pointer']))
+        if selector.get('range'):
+            parts.append(str(selector['range']))
+        if selector.get('char_start') is not None:
+            parts.append(f'字符 {selector.get("char_start")}–{selector.get("char_end")}')
+        return ' · '.join(parts)
+
+    def conflict_details(self, session, body):
+        """Per-source original values and positions for every conflict field.
+
+        The preview keeps one assertion per source record.  Conflict issues only
+        say that values differ, so the web page and the agent report need this
+        projection to show e.g. pdf=4800.00 (page 4) next to sqlite=4880 (row 4).
+        """
+        if not body:
+            return []
+        sources = self._source_descriptors(session)
+        labels = self._object_labels(session, body)
+        details = []
+        for issue in body.get('issues') or []:
+            if issue.get('code') != 'ontology.conflicting_values':
+                continue
+            entity_id, target = issue.get('entity_id'), issue.get('target')
+            if not entity_id or not target:
+                continue
+            grouped = {}
+            for assertion in body.get('assertions') or []:
+                if assertion.get('relation') != target:
+                    continue
+                roles = {role.get('role'): role.get('value')
+                         for role in assertion.get('role_bindings') or []}
+                if roles.get('subject') != entity_id:
+                    continue
+                for anchor in assertion.get('source_anchors') or []:
+                    source_id = anchor.get('source_ref')
+                    info = sources.get(source_id)
+                    if info is None:
+                        info = {'source_id': source_id, 'source_name': '用户纠正',
+                                'locator_ref': source_id, 'kind': 'correction'}
+                    entry = grouped.setdefault(source_id, {
+                        'source_id': source_id, 'source_name': info['source_name'],
+                        'locator_ref': info['locator_ref'], 'kind': info['kind'],
+                        'value': to_jsonable_python(roles.get('value')), 'values': [],
+                        'locations': []})
+                    value = to_jsonable_python(roles.get('value'))
+                    if value not in entry['values']:
+                        entry['values'].append(value)
+                    location = self._selector_location(anchor.get('selector') or {})
+                    if location and location not in entry['locations']:
+                        entry['locations'].append(location)
+            details.append({'entity_id': entity_id, 'object': labels.get(entity_id),
+                            'field': target,
+                            'reason': _ISSUE_REASONS.get('ontology.conflicting_values'),
+                            'values': list(grouped.values())})
+        return details
+
+    def _disposition_row(self, session):
+        ref = session.selected_versions.get('dispositions')
+        if not ref:
+            return None, None
+        try:
+            disposition_id, revision = ref.rsplit('@', 1)
+        except ValueError:
+            return None, None
+        row = self.wb.store.get('disposition', disposition_id, revision, scope=self.wb.scope)
+        return (row, revision) if row is not None else (None, None)
+
+    def disposition_entries(self, session):
+        row, _ = self._disposition_row(session)
+        return list(row['body'].get('entries') or []) if row is not None else []
+
+    def disposition_options(self, session, body=None):
+        """Audited actions that can clear a blocking source issue.
+
+        The save rejection and the preview expose the same options so the web
+        page or the agent can offer a concrete next step instead of only saying
+        that the preview still has issues.
+        """
+        options = []
+        done = {(entry.get('source_id'), entry.get('action'),
+                 entry.get('partition'), entry.get('record'))
+                for entry in self.disposition_entries(session)}
+        names = {key: value['source_name'] for key, value in
+                 self._source_descriptors(session).items()}
+        for profile in self._profiles(session):
+            for gap in profile.gaps:
+                if gap.code == 'key_missing':
+                    continue
+                key = (profile.source_id, 'partition_not_applicable', gap.partition, None)
+                if key in done:
+                    continue
+                options.append({'action': 'partition_not_applicable',
+                                'source_id': profile.source_id,
+                                'source_name': names.get(profile.source_id, profile.source_id),
+                                'partition': gap.partition, 'gap': gap.code,
+                                'reason_hint': '确认该分区为空或不适用'})
+        if body:
+            for issue in body.get('issues') or []:
+                if issue.get('code') not in {'ontology.identity_unresolved',
+                                             'ontology.required_value_missing',
+                                             'ontology.conversion_failed'}:
+                    continue
+                source_id, row = issue.get('source_id'), issue.get('row')
+                if source_id is None or row is None:
+                    continue
+                key = (source_id, 'exclude_record', None, row)
+                if key in done:
+                    continue
+                options.append({'action': 'exclude_record', 'source_id': source_id,
+                                'source_name': names.get(source_id, source_id),
+                                'record': row, 'reason_hint': '排除表头行或明显无关的记录'})
+        unique = []
+        for option in options:
+            if option not in unique:
+                unique.append(option)
+        return unique
+
+    def dispose(self, session_id, disposition, expected_revision, ctx):
+        """Record an audited source disposition and invalidate the preview.
+
+        ``partition_not_applicable`` acknowledges an unread/blank partition and
+        ``exclude_record`` removes one source row.  The disposition record is a
+        new revision with who/when/why; the next proposal rebuilds a preview
+        with the disposition applied.
+        """
+        if not str(getattr(disposition, 'reason', '') or '').strip():
+            raise ValueError('处置原因不能为空')
+        wb = self.wb
+        session = wb.sessions.get(session_id, ctx)
+        if session.revision != expected_revision:
+            raise VersionConflict('session changed; reload before disposing')
+        source = next((item for item in session.sources
+                       if item.source_id == disposition.source_id), None)
+        if source is None:
+            raise ValueError('source is not part of this task')
+        profile = next((item for item in self._profiles(session)
+                        if item.source_id == disposition.source_id), None)
+        if profile is None:
+            raise ValueError('source has no observation in this task')
+        action = disposition.action
+        entry = {'action': action, 'source_id': disposition.source_id,
+                 'reason': disposition.reason}
+        if action == 'partition_not_applicable':
+            partition = disposition.partition
+            if partition is None:
+                raise ValueError('partition_not_applicable needs a partition')
+            observed = {gap.partition for gap in profile.gaps}
+            observed.update(profile.completed_partitions)
+            if partition not in observed:
+                raise ValueError('partition is not part of this source observation')
+            entry['partition'] = partition
+        elif action == 'exclude_record':
+            record = disposition.record
+            if not isinstance(record, int) or isinstance(record, bool):
+                raise ValueError('exclude_record needs a record index')
+            if not 0 <= record < len(profile.records):
+                raise ValueError('record index is outside the source observation')
+            entry['record'] = record
+            entry['record_values'] = dict(profile.records[record])
+        else:
+            raise ValueError('unknown disposition action')
+        prior, prior_revision = self._disposition_row(session)
+        entries = list(prior['body'].get('entries') or []) if prior is not None else []
+        duplicate = [item for item in entries
+                     if item.get('action') == entry['action']
+                     and item.get('source_id') == entry['source_id']
+                     and item.get('partition') == entry.get('partition')
+                     and item.get('record') == entry.get('record')]
+        if duplicate:
+            raise ValueError('this disposition is already recorded')
+        decision_id = uuid4().hex
+        recorded_at = datetime.now(timezone.utc).isoformat()
+        entry.update({'decision_ref': decision_id + '@1',
+                      'subject_ref': ctx.subject_ref, 'recorded_at': recorded_at})
+        entries.append(entry)
+        body = {'session_id': session.id, 'entries': entries}
+        revision = str(int(prior_revision) + 1) if prior_revision else '1'
+        versions = dict(session.selected_versions)
+        if 'preview' in versions:
+            versions['corrections_from'] = versions['preview']
+        versions.pop('preview', None)
+        versions['dispositions'] = f'{session.id}@{revision}'
+        updated = wb.sessions.update(session.id, expected_revision, {
+            'phase': 'needs_input', 'selected_versions': versions,
+            'issues': [], 'next_actions': ['propose_mapping'],
+        }, ctx, extra_writes=[
+            Write('disposition', session.id, wb.scope, body, prior_revision),
+            Write('review', decision_id, wb.scope, {
+                'decision': {'preview_ref': session.selected_versions.get('preview'),
+                             'target_scope': 'mapping', 'decision': 'save',
+                             'changes': {'disposition': entry}},
+                'subject_ref': ctx.subject_ref, 'recorded_at': recorded_at}),
+        ])
+        return {'session_id': session.id, 'session_revision': updated.revision,
+                'disposition_ref': versions['dispositions'], 'entry': entry,
+                'entries': entries,
+                'disposition_options': self.disposition_options(updated)}
+
+    def _dispositions_for_preview(self, session, body=None):
+        entries = self.disposition_entries(session)
+        if not entries and body:
+            entries = list((body.get('extensions') or {}).get(_DISPOSITIONS) or [])
+        return entries
+
+    def partial_plan(self, session, body):
+        """Split a preview into saved, suspended and unidentified records.
+
+        Only objects with no object-level blocking issue are saved.  Conflicted
+        or required-value-missing objects are suspended with their reasons;
+        identity-unresolved candidates are reported separately and never block
+        the other objects.
+        """
+        definition = self.wb.definition
+        labels = self._object_labels(session, body)
+        sources = self._source_descriptors(session)
+        instances = {instance['id']: instance for instance in body.get('instances') or []}
+        keyed, unidentified = {}, []
+        for entity_id, instance in instances.items():
+            values = instance.get('values') or {}
+            keys = [values.get(field) for field in definition.identity_fields]
+            if entity_id.startswith('candidate:') or any(value in (None, '') for value in keys):
+                anchors = [anchor for field_anchors in (instance.get('source_anchors') or {}).values()
+                           for anchor in field_anchors]
+                source_ids = sorted({anchor.get('source_ref') for anchor in anchors
+                                     if anchor.get('source_ref') is not None})
+                shape = [{'source_id': source_id,
+                          'source_name': sources.get(source_id, {}).get('source_name', source_id),
+                          'locations': []} for source_id in source_ids]
+                by_source = {item['source_id']: item for item in shape}
+                for anchor in anchors:
+                    source_id = anchor.get('source_ref')
+                    if source_id not in by_source:
+                        continue
+                    location = self._selector_location(anchor.get('selector') or {})
+                    if location and location not in by_source[source_id]['locations']:
+                        by_source[source_id]['locations'].append(location)
+                unidentified.append({
+                    'entity_id': entity_id, 'object': labels.get(entity_id),
+                    'sources': shape, 'values': to_jsonable_python(values),
+                    'reason': _ISSUE_REASONS.get('ontology.identity_unresolved'),
+                    'unresolved': list(instance.get('unresolved') or []),
+                })
+            else:
+                keyed[entity_id] = instance
+        issues_by_entity = {entity_id: [] for entity_id in keyed}
+        global_issues = []
+        incomplete_sources = {}
+        entity_sources = {}
+        for entity_id, instance in keyed.items():
+            entity_sources[entity_id] = {anchor.get('source_ref')
+                for field_anchors in (instance.get('source_anchors') or {}).values()
+                for anchor in field_anchors if anchor.get('source_ref')}
+        for issue in body.get('issues') or []:
+            code = issue.get('code')
+            if code == 'ontology.identity_unresolved':
+                continue
+            entity_id = issue.get('entity_id')
+            if entity_id in issues_by_entity:
+                issues_by_entity[entity_id].append(issue)
+            elif code == 'ontology.incomplete_source':
+                incomplete_sources.setdefault(issue.get('source_id'), []).append(issue)
+            elif code in _GLOBAL_BLOCKING_ISSUES:
+                global_issues.append(issue)
+            elif entity_id is not None:
+                # A keyless candidate keeps its object-level issues in the
+                # unidentified record, not in the saved/suspended split.
+                continue
+            elif issue.get('row') is not None and issue.get('source_id') is not None:
+                global_issues.append(issue)
+            else:
+                global_issues.append(issue)
+        for source_id, issues in incomplete_sources.items():
+            affected = [entity_id for entity_id, source_ids in entity_sources.items()
+                        if source_id in source_ids]
+            for entity_id in affected:
+                issues_by_entity[entity_id].extend(issues)
+            if not affected:
+                # No object carries an anchor from that source; the source-level
+                # issue must still block a partial release.
+                global_issues.extend(issues)
+        for entity_id, instance in keyed.items():
+            targeted = {issue.get('target') for issue in issues_by_entity[entity_id]}
+            for prop in instance.get('unresolved') or []:
+                if prop not in targeted:
+                    issues_by_entity[entity_id].append({
+                        'code': 'ontology.required_value_missing', 'target': prop,
+                        'entity_id': entity_id,
+                    })
+        saved, suspended = [], []
+        for entity_id, instance in keyed.items():
+            reasons = []
+            seen = set()
+            for issue in issues_by_entity[entity_id]:
+                key = (issue.get('code'), issue.get('target'))
+                if key in seen:
+                    continue
+                seen.add(key)
+                reasons.append({'code': issue.get('code'), 'field': issue.get('target'),
+                                'reason': issue.get('detail') or _ISSUE_REASONS.get(
+                                    issue.get('code'), issue.get('code'))})
+            item = {'entity_id': entity_id, 'object': labels.get(entity_id),
+                    'values': to_jsonable_python(instance.get('values') or {})}
+            if reasons:
+                suspended.append({**item, 'reasons': reasons})
+            else:
+                saved.append(item)
+        return {'saved': saved, 'suspended': suspended,
+                'unidentified_records': unidentified,
+                'blocking': [{'code': issue.get('code'), 'target': issue.get('target'),
+                              'source_id': issue.get('source_id')}
+                             for issue in global_issues]}
 
     def _store_profile(self,session,versions,source,profile,ctx):
         wb=self.wb
@@ -535,6 +883,8 @@ class IntakeService:
         # The agent needs the failure code and the continuation point on the
         # same request that tells it to retry, not only in an internal log.
         request['issues']=list(s.issues)
+        request['dispositions']=self.disposition_entries(s)
+        request['disposition_options']=self.disposition_options(s)
         failure=self._replay_failure(s)
         if failure is not None:
             # A mapping was not reused because the new original moved some of
@@ -636,10 +986,16 @@ class IntakeService:
         labels = self._object_labels(session, body)
         names = {source.source_id: str(source.options.get('display_name') or source.locator_ref)
                  for source in session.sources}
+        conflicts = {(item['entity_id'], item['field']): item
+                     for item in self.conflict_details(session, body)}
+        actions = self.disposition_options(session, body)
         summary = []
         for issue in body.get('issues') or []:
             code = str(issue.get('code') or '')
             label = issue.get('object') or labels.get(issue.get('entity_id'))
+            if (issue.get('row') is not None
+                    and str(issue.get('entity_id') or '').startswith('candidate:')):
+                label = f'第 {int(issue["row"]) + 1} 行'
             if label is None and issue.get('source_id') is not None:
                 source_id = issue['source_id']
                 label = '来源 ' + names.get(source_id, source_id)
@@ -651,6 +1007,20 @@ class IntakeService:
             for key in ('entity_id', 'row', 'source_id'):
                 if key in issue:
                     item[key] = issue[key]
+            conflict = conflicts.get((issue.get('entity_id'), issue.get('target')))
+            if conflict is not None:
+                item['values'] = conflict['values']
+            if code == 'ontology.incomplete_source':
+                item['actions'] = [option for option in actions
+                                   if option['action'] == 'partition_not_applicable'
+                                   and option['source_id'] == issue.get('source_id')]
+            elif code in {'ontology.identity_unresolved',
+                          'ontology.required_value_missing',
+                          'ontology.conversion_failed'}:
+                item['actions'] = [option for option in actions
+                                   if option['action'] == 'exclude_record'
+                                   and option.get('source_id') == issue.get('source_id')
+                                   and option.get('record') == issue.get('row')]
             summary.append(item)
         return summary
 
@@ -712,11 +1082,17 @@ class IntakeService:
                                *(source.get('corrections') or [])):
                 key = correction.get('decision_ref') or digest(correction)
                 collected[key] = correction
+        applied, conflicts, unresolved = self._apply_corrections(
+            session, body, list(collected.values()), prior_labels)
+        return prior_ref, applied, conflicts, unresolved
+
+    def _apply_corrections(self, session, body, corrections, prior_labels):
+        """Apply retained/inherited corrections and rebuild the affected preview evidence."""
         ontology = self.wb.definition
         mapping = body.get('mapping') or {}
         instances = {instance['id']: instance for instance in body.get('instances', [])}
         applied, conflicts, unresolved = [], [], []
-        for correction in collected.values():
+        for correction in corrections:
             label_hint = correction.get('object_label')
             correction = {key: value for key, value in correction.items()
                           if key != 'object_label'}
@@ -727,25 +1103,25 @@ class IntakeService:
             label = (prior_labels.get(entity_id) or label_hint
                      or entity_id or '未知对象')
             if target is None:
-                conflicts.append((label, prop, '纠正对象在新预览中不存在'))
+                conflicts.append((label, prop, '纠正对象在新预览中不存在', entity_id))
                 unresolved.append({**correction, 'object_label': label})
                 continue
             if definition is None:
-                conflicts.append((label, prop, '目标属性不在当前本体中'))
+                conflicts.append((label, prop, '目标属性不在当前本体中', entity_id))
                 unresolved.append({**correction, 'object_label': label})
                 continue
             if prop in ontology.identity_fields:
-                conflicts.append((label, prop, '身份字段纠正会改变对象标识，需要在网页重新核对'))
+                conflicts.append((label, prop, '身份字段纠正会改变对象标识，需要在网页重新核对', entity_id))
                 unresolved.append({**correction, 'object_label': label})
                 continue
             try:
                 value = _typed(correction.get('value'), definition.value_type)
             except (ValueError, ArithmeticError):
-                conflicts.append((label, prop, '纠正值无法按目标类型解析'))
+                conflicts.append((label, prop, '纠正值无法按目标类型解析', entity_id))
                 unresolved.append({**correction, 'object_label': label})
                 continue
             if value is None:
-                conflicts.append((label, prop, '纠正值不能为空'))
+                conflicts.append((label, prop, '纠正值不能为空', entity_id))
                 unresolved.append({**correction, 'object_label': label})
                 continue
             target.setdefault('values', {})[prop] = to_jsonable_python(value)
@@ -755,8 +1131,10 @@ class IntakeService:
                 source_revision='1', selector={'kind': 'json_pointer',
                                                'pointer': '/decision/changes/value'},
             )
-            target.setdefault('source_anchors', {}).setdefault(prop, []).append(
-                evidence.model_dump(mode='json'))
+            anchors = target.setdefault('source_anchors', {}).setdefault(prop, [])
+            evidence_body = evidence.model_dump(mode='json')
+            if evidence_body not in anchors:
+                anchors.append(evidence_body)
             applied.append((correction, target, prop, value, evidence))
         if applied:
             touched = {(correction.get('entity_id'), correction.get('property'))
@@ -800,7 +1178,9 @@ class IntakeService:
                         extractor_version='user_correction',
                         extensions={'review.decision': decision_ref},
                     )
-                    body.setdefault('assertions', []).append(assertion.model_dump(mode='json'))
+                    if not any(item.get('id') == assertion_id
+                               for item in body.setdefault('assertions', [])):
+                        body['assertions'].append(assertion.model_dump(mode='json'))
                     selected = [fact for fact in selected if fact['id'] != fact_id]
                     selected.append({'id': fact_id, 'relation': relation,
                                      'role_bindings': [role.model_dump(mode='json')
@@ -820,11 +1200,12 @@ class IntakeService:
             body['issues'] = [issue for issue in body.get('issues', [])
                               if not (issue.get('code') in _RESOLVABLE_ISSUES
                                       and replaced(issue))]
-        for label, prop, reason in conflicts:
-            body.setdefault('issues', []).append({
-                'code': 'ontology.correction_conflict',
-                'target': prop or 'unknown', 'object': label, 'detail': reason,
-            })
+        for label, prop, reason, entity_id in conflicts:
+            issue = {'code': 'ontology.correction_conflict',
+                     'target': prop or 'unknown', 'object': label, 'detail': reason}
+            if entity_id is not None:
+                issue['entity_id'] = entity_id
+            body.setdefault('issues', []).append(issue)
         extensions = dict(body.get('extensions') or {})
         if unresolved:
             extensions[_PENDING_CORRECTIONS] = unresolved
@@ -840,7 +1221,190 @@ class IntakeService:
             if body.get('extensions'):
                 content['extensions'] = body['extensions']
             body['digest'] = digest(content)
-        return prior_ref, applied, conflicts, unresolved
+        return applied, conflicts, unresolved
+
+    def _inheritable_corrections(self, session, body):
+        """Corrections from older tasks over the exact same source revisions.
+
+        A correction is inheritable only when its origin preview was built from
+        the same ``source_id -> source_revision`` mapping and the original
+        object evidence still resolves in the current preview.  Superseded or
+        adoption-only entries are not offered.
+        """
+        if not body:
+            return []
+        current_ref = session.selected_versions.get('preview')
+        current_sources = body.get('source_revisions') or {}
+        current_instances = {instance['id']: instance
+                             for instance in body.get('instances') or []}
+        current_keys = {(correction.get('entity_id'), correction.get('property'))
+                        for correction in (*((body.get('extensions') or {}).get(_PENDING_CORRECTIONS) or []),
+                                           *(body.get('corrections') or []))}
+        ontology = self.wb.definition
+
+        def anchor_keys(instance, source_ids, prop=None):
+            anchors = instance.get('source_anchors') or {}
+            groups = [anchors.get(prop) or []] if prop is not None else list(anchors.values())
+            keys = set()
+            for group in groups:
+                for anchor in group:
+                    if not isinstance(anchor, dict) or anchor.get('source_ref') not in source_ids:
+                        continue
+                    keys.add((anchor.get('source_ref'), anchor.get('source_revision'),
+                              json.dumps(anchor.get('selector'), sort_keys=True, default=str)))
+            return keys
+
+        found = {}
+        cursor = 0
+        while True:
+            rows = self.wb.store.query('preview', self.wb.scope, cursor=cursor, limit=500)
+            for row in rows:
+                old_ref = f"{row['id']}@{row['revision']}"
+                if old_ref == current_ref:
+                    continue
+                old = row['body']
+                old_sources = old.get('source_revisions') or {}
+                # Source identity matters as much as the revision value: two
+                # different sources can share a revision digest, and dropping
+                # one of them must invalidate an inherited correction.
+                if not old_sources or old_sources != current_sources:
+                    continue
+                if old.get('ontology_revision') != body.get('ontology_revision'):
+                    continue
+                old_instances = {instance['id']: instance
+                                 for instance in old.get('instances') or []}
+                latest = {}
+                for correction in (*((old.get('extensions') or {}).get(_PENDING_CORRECTIONS) or []),
+                                   *(old.get('corrections') or [])):
+                    if correction.get('entity_id') is not None and correction.get('property') is not None:
+                        latest[(correction['entity_id'], correction['property'])] = correction
+                for (entity_id, prop), correction in latest.items():
+                    if (entity_id, prop) in current_keys:
+                        continue
+                    if entity_id not in current_instances:
+                        continue
+                    if prop not in ontology.properties or prop in ontology.identity_fields:
+                        continue
+                    if str(correction.get('reason') or '').startswith('撤销纠正'):
+                        continue
+                    try:
+                        value = _typed(correction.get('value'),
+                                       ontology.properties[prop].value_type)
+                    except (ValueError, ArithmeticError):
+                        continue
+                    if value is None:
+                        continue
+                    instance = old_instances.get(entity_id)
+                    current_instance = current_instances.get(entity_id)
+                    if instance is None or current_instance is None:
+                        continue
+                    old_evidence = anchor_keys(instance, set(old_sources), prop)
+                    current_evidence = anchor_keys(current_instance, set(current_sources), prop)
+                    if old_evidence:
+                        if not old_evidence <= current_evidence:
+                            continue
+                    else:
+                        # Missing-value corrections are anchored by the
+                        # object's identity evidence rather than the property.
+                        old_evidence = anchor_keys(instance, set(old_sources))
+                        current_evidence = anchor_keys(current_instance, set(current_sources))
+                        if not old_evidence or not old_evidence <= current_evidence:
+                            continue
+                    values = instance.get('values') or {}
+                    label = ' · '.join(str(values[field]) for field in ontology.identity_fields
+                                       if values.get(field) not in (None, ''))
+                    found[(entity_id, prop)] = {
+                        'decision_ref': correction.get('decision_ref'),
+                        'preview_ref': old_ref,
+                        'entity_id': entity_id,
+                        'object': label or entity_id,
+                        'property': prop,
+                        'value': to_jsonable_python(value),
+                        'reason': correction.get('reason'),
+                        'source_revisions': old_sources,
+                    }
+            if len(rows) < 500:
+                break
+            cursor += 500
+        return sorted(found.values(), key=lambda item: (str(item['object']), item['property']))
+
+    def inheritance_hint(self, session, body):
+        corrections = self._inheritable_corrections(session, body)
+        if not corrections:
+            return None
+        return {'count': len(corrections),
+                'message': f'旧任务有 {len(corrections)} 处纠正，可继承',
+                'operations': ['intake_inherit'],
+                'corrections': corrections}
+
+    def inherit_corrections(self, session_id, expected_revision, decision_refs, ctx):
+        wb = self.wb
+        session = wb.sessions.get(session_id, ctx)
+        if session.revision != expected_revision:
+            raise VersionConflict('session changed; reload before inheriting corrections')
+        ref = session.selected_versions.get('preview')
+        if not ref:
+            raise ValueError('generate a preview before inheriting corrections')
+        preview_id, revision = ref.rsplit('@', 1)
+        row = wb.store.get('preview', preview_id, revision, scope=wb.scope)
+        if row is None:
+            raise ValueError('selected preview is missing')
+        body = row['body']
+        candidates = self._inheritable_corrections(session, body)
+        if decision_refs:
+            by_ref = {item['decision_ref']: item for item in candidates}
+            missing = [ref for ref in decision_refs if ref not in by_ref]
+            if missing:
+                raise ValueError('correction is not inheritable: ' + ', '.join(missing))
+            selected = [by_ref[ref] for ref in decision_refs]
+        else:
+            selected = candidates
+        if not selected:
+            return {'session_id': session.id, 'session_revision': session.revision,
+                    'preview_ref': ref, 'inherited_count': 0, 'inherited': [],
+                    'inheritance': None}
+        corpus = {}
+        for correction in (*((body.get('extensions') or {}).get(_PENDING_CORRECTIONS) or []),
+                           *(body.get('corrections') or [])):
+            key = (correction.get('entity_id'), correction.get('property'))
+            if correction.get('decision_ref'):
+                corpus[key] = correction
+        prior_labels = {item['entity_id']: item['object'] for item in candidates}
+        for item in selected:
+            correction = {key: value for key, value in item.items()
+                          if key in {'decision_ref', 'entity_id', 'property', 'value', 'reason'}}
+            correction['inherited_from'] = {'preview_ref': item['preview_ref'],
+                                            'source_revisions': item['source_revisions']}
+            corpus[(correction['entity_id'], correction['property'])] = correction
+        applied, conflicts, _ = self._apply_corrections(session, body,
+                                                        list(corpus.values()), prior_labels)
+        if not applied:
+            detail = '; '.join(reason for _, _, reason, _ in conflicts)
+            raise ValueError('inherited corrections cannot be applied: ' + detail)
+        body['inheritance'] = self.inheritance_hint(session, body)
+        if body['inheritance'] is None:
+            body.pop('inheritance', None)
+        body['revision'] = str(int(revision) + 1)
+        decision_id = uuid4().hex
+        recorded_at = datetime.now(timezone.utc).isoformat()
+        review_decision = {'preview_ref': ref, 'target_scope': 'instance', 'decision': 'save',
+                           'changes': {'inherited': [item['decision_ref'] for item in selected]}}
+        wb.sessions.update(session.id, expected_revision, {
+            'phase': 'preview', 'selected_versions': {
+                **session.selected_versions, 'preview': preview_id + '@' + body['revision']},
+            'issues': body.get('issues') or [], 'next_actions': ['review_mapping'],
+        }, ctx, extra_writes=[
+            Write('preview', preview_id, wb.scope, body, revision),
+            Write('review', decision_id, wb.scope, {
+                'decision': review_decision, 'subject_ref': ctx.subject_ref,
+                'recorded_at': recorded_at}),
+        ])
+        return {'session_id': session.id,
+                'session_revision': wb.sessions.get(session.id, ctx).revision,
+                'preview_ref': preview_id + '@' + body['revision'],
+                'inherited_count': len(applied),
+                'inherited': [correction for correction, _, _, _, _ in applied],
+                'inheritance': body.get('inheritance')}
 
     def submit_proposal(self,session_id,proposal,expected_revision,ctx,*,reused=False):
         wb=self.wb;s=wb.sessions.get(session_id,ctx)
@@ -854,9 +1418,13 @@ class IntakeService:
         prior=wb.store.current('mapping',mid,scope=wb.scope)
         revision=str(int(prior['revision'])+1) if prior else '1'
         proposal=proposal.model_copy(update={'id':mid,'revision':revision,'scope':wb.scope})
-        preview,body=wb.ontology.prepare_preview(proposal,observations,ctx)
+        preview,body=wb.ontology.prepare_preview(proposal,observations,ctx,
+            dispositions=self.disposition_entries(s))
         body['mapping_reused']=reused
         prior_ref,_,conflicts,pending=self._carry_corrections(s,body)
+        hint=self.inheritance_hint(s,body)
+        if hint:body['inheritance']=hint
+        else:body.pop('inheritance',None)
         preview=self._refresh_preview(body)
         versions={**s.selected_versions,'preview':preview.id+'@1','mapping':mid+'@'+revision}
         if prior_ref and pending:versions['corrections_from']=prior_ref
@@ -896,9 +1464,14 @@ class IntakeService:
             writes.append(Write('mapping', mapping_id, wb.scope, mapping.model_dump(mode='json'),
                                 current['revision'] if current else None))
         primary = next(iter(mappings.values()))
-        preview, body = wb.ontology.prepare_preview(primary, observations, ctx, source_mappings=mappings)
+        preview, body = wb.ontology.prepare_preview(
+            primary, observations, ctx, source_mappings=mappings,
+            dispositions=self.disposition_entries(session))
         body['mapping_reused'] = reused
         prior_ref,_,conflicts,pending=self._carry_corrections(session,body)
+        hint=self.inheritance_hint(session,body)
+        if hint:body['inheritance']=hint
+        else:body.pop('inheritance',None)
         preview=self._refresh_preview(body)
         versions.update(preview=preview.id+'@1', mapping=f'{primary.id}@{primary.revision}')
         if prior_ref and pending:versions['corrections_from']=prior_ref
@@ -909,7 +1482,7 @@ class IntakeService:
         }, ctx, extra_writes=[*writes, Write('preview', preview.id, wb.scope, body)])
         return preview
 
-    def apply(self,session_id,decision,expected_revision,ctx):
+    def apply(self,session_id,decision,expected_revision,ctx,*,allow_partial=False,reason=''):
         wb=self.wb;s=wb.sessions.get(session_id,ctx)
         if s.revision!=expected_revision or s.selected_versions.get('preview')!=decision.preview_ref:
             raise VersionConflict('decision does not target the active task preview')
@@ -928,9 +1501,26 @@ class IntakeService:
             if 'bindings' in draft['body'] and normalize(draft['body']['bindings'])!=normalize(current['mapping']['bindings']):
                 raise VersionConflict('draft changed; generate a new preview before saving')
         # A whole-batch save names the affected objects instead of only saying
-        # that the preview still has issues.
+        # that the preview still has issues.  With allow_partial the unblocked
+        # objects are released, while conflicted/required-missing objects and
+        # identity-unresolved records are returned as pending lists.
         if (decision.decision=='save' and not decision.changes and active
                 and active['body'].get('issues')):
+            plan=self.partial_plan(s,active['body'])
+            if allow_partial and plan['saved'] and not plan['blocking']:
+                receipt,writes=wb.ontology.prepare_partial_save(
+                    decision,rev,ctx,plan=plan,reason=reason)
+                audit=(receipt.extensions or {}).get('intake.partial_save') or {}
+                versions={**s.selected_versions,'preview':id+'@'+receipt.revision,
+                          'release':audit.get('release_ref')}
+                job=wb.store.current('job',s.job_ref,scope=wb.scope)
+                writes.append(Write('job',s.job_ref,wb.scope,{**job['body'],
+                    'state':'completed','checkpoint':'partial_save',
+                    'result_ref':audit.get('release_ref')},job['revision']))
+                wb.sessions.update(s.id,s.revision,{'phase':'saved',
+                    'selected_versions':versions,'next_actions':receipt.revalidate},
+                    ctx,extra_writes=writes)
+                return receipt
             raise PreviewBlocked(self.issue_summary(s,active['body']))
         receipt,writes=wb.ontology.prepare_review(decision,rev,ctx)
         preview_write=next(w for w in writes if w.kind=='preview')
@@ -989,10 +1579,16 @@ class IntakeService:
             # The stored preview keeps the machine codes; the view adds the
             # affected object labels and reasons, and never truncates the list.
             body=dict(body)
+            body['conflicts']=self.conflict_details(s,body)
             body['issues']=self.issue_summary(s,body)
             body['issue_count']=len(body['issues'])
             body['object_labels']=self._object_labels(s,body)
             body['object_count']=len(body.get('instances',[]))
+            body['dispositions']=self.disposition_entries(s)
+            body['disposition_options']=self.disposition_options(s,body)
+            hint=body.get('inheritance') or self.inheritance_hint(s,body)
+            if hint:body['inheritance']=hint
+            else:body.pop('inheritance',None)
         draft=self.wb.store.current('ui_draft',s.id,scope=wb.scope)
         profiles = self._profiles(s)
         failure = self._replay_failure(s)
@@ -1001,6 +1597,10 @@ class IntakeService:
             'ontology':wb.definition.model_dump(mode='json'),'preview':body,
             'draft':draft['body'] if draft else {},
             'issue_count':body['issue_count'] if body else len(s.issues),
+            'dispositions':self.disposition_entries(s),
+            'disposition_options':self.disposition_options(s,body),
+            'conflicts':body.get('conflicts',[]) if body else [],
+            'inheritance':body.get('inheritance') if body else None,
             'mapping_reused':bool(body and body.get('mapping_reused')) and failure is None,
             'mapping_reuse_reason':failure.get('detail') if failure else None}
 

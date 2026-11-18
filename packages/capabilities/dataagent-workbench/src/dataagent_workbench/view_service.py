@@ -61,15 +61,18 @@ class ViewService:
             return {}
         try:
             primary = MappingSpec.model_validate(mapping)
-            source_mappings = (body.get('extensions') or {}).get('intake.source_mappings')
+            extensions = body.get('extensions') or {}
+            source_mappings = extensions.get('intake.source_mappings')
+            dispositions = extensions.get('intake.dispositions')
             if source_mappings:
                 result = materialize(
                     self.wb.definition, primary, profiles, scope=self.wb.scope,
                     source_mappings={key: MappingSpec.model_validate(value)
-                                     for key, value in source_mappings.items()})
+                                     for key, value in source_mappings.items()},
+                    dispositions=dispositions)
             else:
                 result = materialize(self.wb.definition, primary, profiles,
-                                     scope=self.wb.scope)
+                                     scope=self.wb.scope, dispositions=dispositions)
         except (KeyError, TypeError, ValueError):
             # A projection must never break the page; without a comparable
             # value the page simply keeps showing the retained correction.
@@ -190,15 +193,24 @@ class ViewService:
                  for source in s.sources}
         sources = [profile.model_dump(mode='json') | {'display_name': names.get(profile.source_id, profile.source_id)}
                    for profile in profiles]
+        conflicts = wb.intake.conflict_details(s, body) if body else []
+        conflicts_by_object = {}
+        for item in conflicts:
+            conflicts_by_object.setdefault(item['entity_id'], []).append(item)
         objects = []
         for instance in (body or {}).get('instances', []):
             evidence = {prop: [{'source_id': anchor['source_ref'], 'selector': anchor['selector']}
                                for anchor in anchors] for prop, anchors in (instance.get('source_anchors') or {}).items()}
             objects.append({'id': instance['id'], 'entity_type': instance.get('entity_type'),
                             'values': instance.get('values', {}), 'evidence': evidence,
-                            'unresolved': instance.get('unresolved', []), 'extensions': instance.get('extensions')})
+                            'unresolved': instance.get('unresolved', []),
+                            'conflicts': conflicts_by_object.get(instance['id'], []),
+                            'extensions': instance.get('extensions')})
         draft = wb.store.current('ui_draft', s.id, scope=wb.scope)
         mapping = body.get('mapping') if body else None
+        inheritance = body.get('inheritance') if body else None
+        if body and inheritance is None:
+            inheritance = wb.intake.inheritance_hint(s, body)
         return {'session': s.model_dump(mode='json'), 'ontology': wb.definition.model_dump(mode='json'),
                 'ontology_revision': f'{wb.definition.id}@{wb.definition.revision}',
                 'ontology_draft': body.get('ontology_draft') if body else None,
@@ -206,6 +218,13 @@ class ViewService:
                 'corrections': (body or {}).get('corrections', []),
                 'correction_views': self._correction_views(s, body),
                 'issues': (body or {}).get('issues') if body else list(s.issues),
+                'conflicts': conflicts,
+                'dispositions': wb.intake.disposition_entries(s),
+                'disposition_options': wb.intake.disposition_options(s, body),
+                'suspended': (body or {}).get('suspended', []),
+                'unidentified_records': (body or {}).get('unidentified_records', []),
+                'partial_save': (body or {}).get('partial_save', []),
+                'inheritance': inheritance,
                 'review_state': body.get('review_state') if body else None,
                 'preview_ref': s.selected_versions.get('preview'),
                 'mapping_revision': f"{mapping['id']}@{mapping['revision']}" if mapping else None,

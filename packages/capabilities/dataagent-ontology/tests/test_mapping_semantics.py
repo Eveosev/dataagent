@@ -1,7 +1,7 @@
 from decimal import Decimal
 import pytest
 from dataagent_contracts.ontology import OntologyRevision, MappingSpec
-from dataagent_contracts.intake import SourceProfile
+from dataagent_contracts.intake import CoverageGap, SourceProfile
 from dataagent_ontology.mapping import materialize
 from dataagent_ontology.facts import relation_key
 
@@ -38,6 +38,18 @@ def test_missing_required_binding_is_reported():
     result=materialize(ontology(),m,[profile([{'number':'A','company':'C','minor':'100'}])],scope='T')
     assert any(i['code']=='ontology.required_binding_missing' and i['target']=='amount' for i in result.issues)
     assert result.instances[0].extensions['source.unmapped']['minor']=='100'
+
+
+def test_string_partition_disposition_counts_as_acknowledged_coverage():
+    p=profile([]).model_copy(update={
+        'total_partitions':2,'completed_partitions':['table_a'],
+        'gaps':[CoverageGap(partition='table_b',code='read_failed')]})
+    assert any(i['code']=='ontology.incomplete_source'
+               for i in materialize(ontology(),mapping(),[p],scope='T').issues)
+    dispositions=[{'source_id':'source','action':'partition_not_applicable',
+                   'partition':'table_b','reason':'空表'}]
+    result=materialize(ontology(),mapping(),[p],scope='T',dispositions=dispositions)
+    assert not any(i['code']=='ontology.incomplete_source' for i in result.issues)
 
 
 def test_same_name_does_not_merge_tenants_and_composite_keys_keep_all_parts():

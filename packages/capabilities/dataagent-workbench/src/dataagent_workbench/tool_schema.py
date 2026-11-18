@@ -1,14 +1,14 @@
 """Aggregate service inputs; host context never appears in tool arguments."""
-from typing import Literal
-from pydantic import BaseModel,ConfigDict,Field
+from typing import Annotated, Any, Literal, Union
+from pydantic import BaseModel,ConfigDict,Field,field_validator,model_validator
 from dataagent_contracts.intake import SourceSelection
-from dataagent_contracts.ontology import MappingSpec,ReviewDecision
+from dataagent_contracts.ontology import MappingSpec
 from .document_fields import DocumentField
 from .ontology_discovery import Mode, OntologyProposal
 
 
 class Input(BaseModel):
-    model_config=ConfigDict(extra='forbid')
+    model_config = ConfigDict(extra='forbid')
 
 
 class Start(Input):
@@ -31,9 +31,108 @@ class ProposeSources(Session):
     expected_revision: str
 
 
+class InstanceCorrection(Input):
+    """Exact ``changes`` shape for target_scope=instance (FDE-4).
+
+    The identifier key is ``entity_id``; a legacy ``entity`` key is rejected by
+    the service and the error names the right key.
+    """
+
+    entity_id: str = Field(description='对象实例 ID，字段名必须是 entity_id（不是 entity）')
+    property: str = Field(description='需要纠正的本体属性名')
+    value: Any = Field(description='纠正后的值；按属性 value_type 校验')
+    reason: str = Field(min_length=1, description='纠正原因，写入审计')
+
+
+class MappingChanges(Input):
+    """Explicit mapping decision payload for target_scope=mapping.
+
+    Extra keys are accepted because a mapping proposal may grow before it is
+    reviewed; the component still validates the mapping it receives.
+    """
+
+    model_config = ConfigDict(extra='allow')
+
+    bindings: dict[str, Any] | None = Field(default=None, description='按目标属性提交 FieldBinding')
+    relation_bindings: dict[str, dict[str, Any]] | None = Field(default=None, description='按关系角色提交 FieldBinding')
+    unmapped: dict[str, Literal['extension', 'unresolved', 'exclude']] | None = Field(default=None)
+
+
+class OntologyChanges(Input):
+    """Explicit ontology draft payload for target_scope=ontology."""
+
+    property: str = Field(description='待新增或修改的属性名')
+    value_type: Literal['string', 'decimal', 'integer', 'boolean', 'date', 'datetime', 'reference']
+    reason: str = ''
+
+
+class InstanceDecision(Input):
+    preview_ref: str
+    target_scope: Literal['instance']
+    changes: InstanceCorrection | None = None
+    decision: Literal['save', 'reject'] = 'save'
+
+    @model_validator(mode='after')
+    def require_changes(self):
+        if self.decision == 'save' and self.changes is None:
+            raise ValueError('instance decisions need changes with entity_id/property/value/reason')
+        return self
+
+
+class MappingDecision(Input):
+    preview_ref: str
+    target_scope: Literal['mapping']
+    changes: MappingChanges | None = None
+    decision: Literal['save', 'reject'] = 'save'
+
+
+class OntologyDecision(Input):
+    preview_ref: str
+    target_scope: Literal['ontology']
+    changes: OntologyChanges | None = None
+    decision: Literal['save', 'reject'] = 'save'
+
+    @model_validator(mode='after')
+    def require_changes(self):
+        if self.decision == 'save' and self.changes is None:
+            raise ValueError('ontology decisions need changes with property/value_type/reason')
+        return self
+
+
+Decision = Annotated[Union[InstanceDecision, MappingDecision, OntologyDecision],
+                     Field(discriminator='target_scope')]
+
+
 class Apply(Session):
-    decision:ReviewDecision
+    decision:Decision
     expected_revision:str
+    allow_partial: bool = Field(default=False,
+        description='保存时是否只放行无阻断的对象；冲突或缺必填的对象挂起，缺键记录单列')
+    reason: str = Field(default='', description='部分保存的审计原因')
+
+
+class Dispose(Session):
+    expected_revision: str
+    action: Literal['partition_not_applicable', 'exclude_record']
+    source_id: str
+    partition: int | str | None = Field(default=None,
+        description='partition_not_applicable 必填：来源分区（如 PDF 页码）')
+    record: int | None = Field(default=None, ge=0,
+        description='exclude_record 必填：来源记录下标（0 起，如表头行）')
+    reason: str = Field(min_length=1, description='处置原因，写入审计')
+
+    @field_validator('reason')
+    @classmethod
+    def _reason_not_blank(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError('处置原因不能为空')
+        return value
+
+
+class Inherit(Session):
+    expected_revision: str
+    decision_refs: list[str] = Field(default_factory=list,
+        description='要继承的旧纠正 decision_ref；留空继承预览提示中的全部')
 
 
 class Extract(Session):
@@ -64,7 +163,8 @@ class WorkflowView(Input):
 
 
 MODELS={'intake_start':Start,**{name:Session for name in ['intake_status','intake_advance','intake_inference','mapping_preview','workbench_view']},
-    'intake_propose':Propose,'intake_propose_sources':ProposeSources,'mapping_apply':Apply,'intake_extract':Extract,
+    'intake_propose':Propose,'intake_propose_sources':ProposeSources,'mapping_apply':Apply,
+    'intake_dispose':Dispose,'intake_inherit':Inherit,'intake_extract':Extract,
     'ontology_discovery_propose':DiscoveryPropose,'source_connections':SourceConnections,
     'workflow_call':WorkflowCall,'workflow_view':WorkflowView}
 DESCRIPTIONS={'intake_start':'建立接入任务。陌生 SQLite 库用 mode=ontology_discovery 发现本体',
@@ -73,8 +173,10 @@ DESCRIPTIONS={'intake_start':'建立接入任务。陌生 SQLite 库用 mode=ont
     'intake_extract':'将已观察 PDF 的原文片段提取为有精确锚点的新字段',
     'intake_propose':'提交结构化映射；组件验证和试算，不直接发布',
     'intake_propose_sources':'按来源 ID 提交所有映射，一起验证并试算同一组本体对象',
-    'mapping_preview':'读取当前预览修订、数量与问题摘要',
-    'mapping_apply':'对当前预览保存明确范围的决定，拒绝过期修订',
+    'mapping_preview':'读取当前预览修订、数量、问题摘要、冲突原值与可继承纠正',
+    'mapping_apply':'对当前预览保存明确范围的决定；allow_partial=true 时放行无阻断对象并挂起其余对象，拒绝过期修订',
+    'intake_dispose':'记录可审计的来源处置：标记分区不适用或排除某条记录，随后重新提交映射生成预览',
+    'intake_inherit':'继承同一来源修订上旧任务仍有效的纠正，写入当前预览',
     'intake_status':'查询当前任务修订与阶段','workbench_view':'打开同一任务的本地工作台',
     'ontology_discovery_propose':'提交 SQLite 本体草案，验证来源键、字段和关系证据后供用户审核',
     'source_connections':'列出宿主已配置的来源连接名和类型（只读，不含凭据）',

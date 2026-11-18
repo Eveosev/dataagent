@@ -79,22 +79,82 @@ def _validate_mapping(ontology, mapping, scope):
     if set(mapping.relation_bindings)-ontology.relations.keys():raise ValueError('unknown ontology relation')
 
 
-def materialize(ontology,mapping,observations,*,scope,source_mappings=None):
+def _disposition_index(dispositions):
+    """Index audited source dispositions by source id.
+
+    Only the two source-shaping actions change materialization:
+    ``partition_not_applicable`` acknowledges a partition reported as an
+    incomplete-read gap, and ``exclude_record`` removes one source record
+    before mapping.  The audit entry keeps who/when/why; mapping only needs
+    the action keys.
+    """
+
+    index={}
+    for item in dispositions or []:
+        if not isinstance(item,dict):continue
+        source_id=item.get('source_id')
+        if not source_id:continue
+        entry=index.setdefault(source_id,{'excluded_rows':set(),'partitions':set()})
+        if item.get('action')=='exclude_record':
+            record=item.get('record')
+            if isinstance(record,int) and not isinstance(record,bool):entry['excluded_rows'].add(record)
+        elif item.get('action')=='partition_not_applicable':
+            entry['partitions'].add(item.get('partition'))
+    return index
+
+
+def _coverage_gaps(source, partitions):
+    """Gaps that still make a source incomplete after audited dispositions.
+
+    A ``key_missing`` gap records an identity-unresolved record, not an unread
+    partition: it is surfaced as a candidate and must not make the whole source
+    look truncated.  A partition marked not applicable (for example a blank PDF
+    page) is likewise acknowledged.
+    """
+
+    return [gap for gap in source.gaps
+            if gap.code!='key_missing' and gap.partition not in partitions]
+
+
+def _incomplete_source(source, partitions):
+    gaps=_coverage_gaps(source,partitions)
+    if gaps:return True
+    if source.sampled:return True
+    total=source.total_partitions
+    if total is None:return source.coverage!='full'
+    completed=set(source.completed_partitions)
+    # Database partitions are table names, not integers.  Any audited
+    # not-applicable partition counts as acknowledged coverage, whatever its
+    # stable partition key type is.
+    completed.update(partition for partition in partitions if partition is not None)
+    return len(completed)<total
+
+
+def materialize(ontology,mapping,observations,*,scope,source_mappings=None,dispositions=None):
     _validate_mapping(ontology, mapping, scope)
     required={k for k,v in ontology.properties.items() if v.required}
+    disposed=_disposition_index(dispositions)
     issues=[]
     instances,assertions,facts={},[],{}
     for source in observations:
         if source_mappings is not None:
             mapping = source_mappings[source.source_id]
             _validate_mapping(ontology, mapping, scope)
+        source_disposition=disposed.get(source.source_id,{})
+        excluded_rows=source_disposition.get('excluded_rows',set())
+        not_applicable=source_disposition.get('partitions',set())
         issues.extend({'code':'ontology.required_binding_missing','target':k,'source_id':source.source_id}
                       for k in sorted(required-mapping.bindings.keys()))
         if mapping.source_fingerprint!=source.metadata.get('structure_fingerprint'):
             raise ValueError('source structure mismatch')
-        if source.coverage!='full':issues.append({'code':'ontology.incomplete_source','source_id':source.source_id,'coverage':source.coverage})
+        if _incomplete_source(source,not_applicable):
+            gaps=_coverage_gaps(source,not_applicable)
+            issues.append({'code':'ontology.incomplete_source','source_id':source.source_id,
+                           'coverage':source.coverage,
+                           'partitions':[gap.partition for gap in gaps]})
         for rownum,row in enumerate(source.records):
-            values,field_anchors={},{}
+            if rownum in excluded_rows:continue
+            values,field_anchors,row_issues={},{},[]
             for target,binding in mapping.bindings.items():
                 try:
                     value=_typed(convert(binding,row),ontology.properties[target].value_type)
@@ -102,16 +162,23 @@ def materialize(ontology,mapping,observations,*,scope,source_mappings=None):
                     fields=binding.options.get('fields',[binding.source_field])
                     field_anchors[target]=[a for f in fields for a in source.anchors.get(f'{rownum}.{f}',[])]
                     if value is not None and not field_anchors[target]:
-                        issues.append({'code':'ontology.evidence_missing','target':target,'row':rownum})
+                        row_issues.append({'code':'ontology.evidence_missing','target':target,'row':rownum})
                 except (ValueError,ArithmeticError,KeyError) as exc:
-                    issues.append({'code':'ontology.conversion_failed','target':target,'row':rownum,'detail':str(exc)})
+                    row_issues.append({'code':'ontology.conversion_failed','target':target,'row':rownum,'detail':str(exc)})
             missing=sorted(required-values.keys())
-            for target in missing:issues.append({'code':'ontology.required_value_missing','target':target,'row':rownum})
+            row_issues.extend({'code':'ontology.required_value_missing','target':target,'row':rownum}
+                              for target in missing)
             keys=[(k,values.get(k)) for k in ontology.identity_fields]
             unresolved_keys=any(v is None or v=='' for _,v in keys)
             eid=('candidate:'+digest([scope,source.source_id,source.source_revision,rownum]) if unresolved_keys
                 else entity_key(scope,ontology.entity_type,mapping.identity_strategy,keys))
-            if unresolved_keys:issues.append({'code':'ontology.identity_unresolved','row':rownum})
+            for issue in row_issues:
+                issue['entity_id']=eid
+                issue['source_id']=source.source_id
+            issues.extend(row_issues)
+            if unresolved_keys:
+                issues.append({'code':'ontology.identity_unresolved','entity_id':eid,
+                               'source_id':source.source_id,'row':rownum})
             extras={k:row.get(k) for k,disposition in mapping.unmapped.items() if disposition=='extension' and k in row}
             instance=instances.get(eid)
             if instance is None:
@@ -123,7 +190,8 @@ def materialize(ontology,mapping,observations,*,scope,source_mappings=None):
                     if k in instance.values and instance.values[k]!=v:
                         instance.values[k]=None
                         if k not in instance.unresolved:instance.unresolved.append(k)
-                        issues.append({'code':'ontology.conflicting_values','entity_id':eid,'target':k})
+                        issues.append({'code':'ontology.conflicting_values','entity_id':eid,
+                                       'target':k,'source_id':source.source_id,'row':rownum})
                     elif k not in instance.values:instance.values[k]=v
                     instance.source_anchors.setdefault(k,[]).extend(field_anchors.get(k,[]))
             if extras and source_mappings is not None:
@@ -162,5 +230,6 @@ def materialize(ontology,mapping,observations,*,scope,source_mappings=None):
                         roles.append(RoleBinding(role=role,value=value,value_type=kind))
                         evidence.extend(source.anchors.get(f'{rownum}.{binding.source_field}',[]))
                     assertion(relation,roles,evidence)
-                except ValueError as exc:issues.append({'code':'ontology.relation_unresolved','target':relation,'row':rownum,'detail':str(exc)})
+                except ValueError as exc:issues.append({'code':'ontology.relation_unresolved','target':relation,
+                    'row':rownum,'entity_id':eid,'source_id':source.source_id,'detail':str(exc)})
     return Materialized(list(instances.values()),assertions,list(facts.values()),issues)

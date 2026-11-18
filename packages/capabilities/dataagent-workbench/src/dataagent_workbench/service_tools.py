@@ -4,6 +4,7 @@ from uuid import uuid4
 from dataagent_contracts.core import CapabilityResult, CapabilityStatus, Continuation, VersionedRef
 from dataagent_contracts.intake import WorkSpec, SourceSelection
 from dataagent_contracts.core import Issue
+from dataagent_contracts.ontology import ReviewDecision
 from .tool_schema import MODELS
 
 
@@ -22,6 +23,16 @@ def invoke(wb, name, args):
     result = _invoke(wb, name, args)
     data = _public_output(result.data)
     return result if data == result.data else result.model_copy(update={'data': data})
+
+
+def _review_decision(value):
+    """Convert the explicit per-target_scope tool decision into the contract model."""
+    if isinstance(value, ReviewDecision):
+        return value
+    changes = (value.changes.model_dump(mode='json', exclude_unset=True)
+               if getattr(value, 'changes', None) is not None else {})
+    return ReviewDecision(preview_ref=value.preview_ref, target_scope=value.target_scope,
+                          changes=changes, decision=value.decision)
 
 
 def _invoke(wb, name, args):
@@ -84,15 +95,38 @@ def _invoke(wb, name, args):
             'instance_count':len(preview.instances),
             'issue_count':body.get('issue_count',len(preview.issues)),
             'issues':body.get('issues',[]),
-            'object_labels':body.get('object_labels',{})})
+            'object_labels':body.get('object_labels',{}),
+            'conflicts':body.get('conflicts',[]),
+            'disposition_options':body.get('disposition_options',[]),
+            'inheritance':body.get('inheritance')})
     if name=='mapping_preview':
         view=wb.intake.view(args['session_id'],wb.ctx);preview=view['preview']
         return CapabilityResult.ok(None if preview is None else {'preview_ref':preview['id']+'@'+preview['revision'],
             'review_state':preview['review_state'],'instance_count':len(preview['instances']),
             'issue_count':preview.get('issue_count',len(preview['issues'])),
-            'issues':preview['issues'],'object_labels':preview.get('object_labels',{})})
+            'issues':preview['issues'],'object_labels':preview.get('object_labels',{}),
+            'conflicts':preview.get('conflicts',[]),
+            'inheritance':preview.get('inheritance'),
+            'dispositions':preview.get('dispositions',[]),
+            'disposition_options':preview.get('disposition_options',[]),
+            'suspended':preview.get('suspended',[]),
+            'unidentified_records':preview.get('unidentified_records',[])})
     if name=='mapping_apply':
-        return CapabilityResult.ok(wb.intake.apply(args['session_id'],typed.decision,args['expected_revision'],wb.ctx).model_dump(mode='json'))
+        receipt=wb.intake.apply(args['session_id'],_review_decision(typed.decision),
+            args['expected_revision'],wb.ctx,allow_partial=typed.allow_partial,reason=typed.reason)
+        data=receipt.model_dump(mode='json')
+        partial=(data.get('extensions') or {}).pop('intake.partial_save',None)
+        if partial:
+            for key in ('saved','suspended','unidentified_records','release_ref',
+                        'reason','recorded_at','subject_ref'):
+                if key in partial:data[key]=partial[key]
+            data['partial']=True
+        return CapabilityResult.ok(data)
+    if name=='intake_dispose':
+        return CapabilityResult.ok(wb.intake.dispose(args['session_id'],typed,args['expected_revision'],wb.ctx))
+    if name=='intake_inherit':
+        return CapabilityResult.ok(wb.intake.inherit_corrections(
+            args['session_id'],args['expected_revision'],typed.decision_refs,wb.ctx))
     if name == 'source_connections':
         from .adapters.source_connections import SourceConnections
         return CapabilityResult.ok({'connections':SourceConnections().list()})
