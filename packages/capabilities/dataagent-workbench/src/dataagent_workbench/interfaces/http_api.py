@@ -13,7 +13,9 @@ from fastapi.responses import JSONResponse,FileResponse
 from fastapi.staticfiles import StaticFiles
 from dataagent_contracts.intake import SourceSelection, WorkSpec
 from dataagent_contracts.ontology import MappingSpec,ReviewDecision
-from dataagent_runtime.ports.workbench_store import VersionConflict
+from dataagent_ontology.corrections import revalidate_corrections
+from dataagent_runtime.ports.workbench_store import VersionConflict,Write
+from pydantic_core import to_jsonable_python
 from ..ontology_discovery import DiscoveryReview
 from ..view_service import ViewService
 
@@ -155,7 +157,11 @@ def create_app(wb):
         return SourceSelection(source_id=sid,kind='file',locator_ref=str(path.relative_to(wb.workspace)),options={'display_name':name})
 
     @app.get('/api/sessions/{sid}/view')
-    def view(sid:str):return wb.intake.view(sid,wb.ctx)
+    def view(sid:str):
+        data=wb.intake.view(sid,wb.ctx)
+        # Read-only comparison of retained corrections with the current mapping.
+        data['correction_views']=views.correction_views(sid,wb.ctx)
+        return data
 
     @app.get('/api/sessions/{sid}/objects')
     def objects(sid:str):return views.object_page(sid,wb.ctx)
@@ -193,6 +199,78 @@ def create_app(wb):
     async def revalidate(sid:str,request:Request):
         data=await request.json()
         return wb.intake.revalidate(sid,data['expected_revision'],wb.ctx)
+
+    @app.post('/api/sessions/{sid}/corrections/adopt')
+    async def adopt_correction(sid:str,request:Request):
+        """Resolve a correction conflict by keeping the current mapping value.
+
+        The adoption is a new explicit decision, but only the latest decision
+        per object property may remain effective.  Facts for the replaced
+        corrections are rebuilt so a later save cannot publish both values.
+        """
+        data=await request.json()
+        entity_id=data.get('entity_id');prop=data.get('property')
+        if not isinstance(entity_id,str) or not entity_id or not isinstance(prop,str) or not prop:
+            raise ValueError('adoption needs an object and property')
+        s=wb.sessions.get(sid,wb.ctx)
+        if s.revision!=str(data.get('expected_revision')):
+            raise VersionConflict('session changed; reload before adopting')
+        if s.phase=='saved':raise ValueError('session is already saved')
+        preview_ref=s.selected_versions.get('preview')
+        if not preview_ref:raise ValueError('generate a preview before adopting')
+        preview_id,preview_revision=preview_ref.rsplit('@',1)
+        row=wb.store.get('preview',preview_id,preview_revision,scope=wb.scope)
+        if row is None:raise KeyError('preview not found')
+        body=row['body']
+        corrections=list(body.get('corrections') or [])
+        targeted=[c for c in corrections if c.get('entity_id')==entity_id and c.get('property')==prop]
+        if not targeted:raise ValueError('no retained correction for this property')
+        if prop in wb.definition.identity_fields:
+            raise ValueError('identity corrections require an explicit mapping change')
+        value=views.mapping_value(sid,entity_id,prop,wb.ctx)
+        if value is None:raise ValueError('the current mapping has no value for this property')
+        json_value=to_jsonable_python(value)
+        latest={}
+        for correction in corrections:
+            latest[(correction.get('entity_id'),correction.get('property'))]=correction
+        decision_id=uuid4().hex
+        adopted={'decision_ref':decision_id+'@1','entity_id':entity_id,'property':prop,
+                 'value':json_value,'reason':'撤销纠正，采用映射值'}
+        latest[(entity_id,prop)]=adopted
+        replaced={(c.get('entity_id'),c.get('property')) for c in corrections}
+        # Drop every selected fact for the properties whose decisions are being
+        # replaced, then let revalidation rebuild exactly one fact per latest
+        # decision.  Old 1250 facts would otherwise survive next to 126000.
+        body['facts']=[f for f in body.get('facts',[]) if not (
+            f.get('relation') in wb.definition.properties and any(
+                (r.get('value'),f.get('relation')) in replaced
+                for r in f.get('role_bindings',[]) if r.get('role')=='subject'))]
+        old_ids={str(c.get('decision_ref') or '').rsplit('@',1)[0] for c in corrections}
+        for instance in body.get('instances',[]):
+            for name,anchors in (instance.get('source_anchors') or {}).items():
+                instance['source_anchors'][name]=[
+                    a for a in anchors
+                    if str(a.get('source_ref') or '').rsplit('@',1)[0] not in old_ids]
+        target=next((i for i in body.get('instances',[]) if i.get('id')==entity_id),None)
+        if target is None:raise ValueError('correction target is no longer in the preview')
+        target.setdefault('values',{})[prop]=json_value
+        target['unresolved']=[p for p in target.get('unresolved',[]) if p!=prop]
+        body['corrections']=list(latest.values())
+        body=revalidate_corrections(body,wb.definition,wb.scope)
+        next_revision=str(int(preview_revision)+1)
+        body['revision']=next_revision
+        body['last_decision_ref']=decision_id+'@1'
+        decision=ReviewDecision(preview_ref=f'{preview_id}@{preview_revision}',target_scope='instance',
+            changes={'entity_id':entity_id,'property':prop,'value':json_value,
+                     'reason':'撤销纠正，采用映射值'},decision='save')
+        versions={**s.selected_versions,'preview':preview_id+'@'+next_revision}
+        versions.pop('corrections_from',None)
+        wb.sessions.update(s.id,s.revision,{'phase':'preview','selected_versions':versions,
+            'issues':body.get('issues',[]),'next_actions':['review_mapping']},wb.ctx,extra_writes=[
+            Write('preview',preview_id,wb.scope,body,preview_revision),
+            Write('review',decision_id,wb.scope,{'decision':decision.model_dump(mode='json'),
+                'subject_ref':wb.ctx.subject_ref})])
+        return {'adopted':True,'preview_ref':preview_id+'@'+next_revision,'mapping_value':json_value}
 
     @app.get('/api/sessions/{sid}/sources/{source_id}/raw')
     def original(sid:str,source_id:str):

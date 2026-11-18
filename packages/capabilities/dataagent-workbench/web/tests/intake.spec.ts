@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 import path from 'node:path';
-import {readFileSync} from 'node:fs';
+import {readFileSync,writeFileSync} from 'node:fs';
 
 function sessionId(page:{url():string},key:string){
  return new URL(page.url()).hash.match(new RegExp(key+'=([0-9a-f]+)'))![1];
@@ -40,6 +40,10 @@ test('对象页完成当前值纠正、映射修订与本体草案',async({page}
  await page.getByRole('button',{name:'去映射页修订'}).click();
  await page.getByLabel('amount 转换方式').selectOption('integer');
  await page.getByRole('button',{name:'生成映射预览'}).click();
+ // 映射修订改变来源值后，纠正值仍生效，但必须把映射新算得的值和采用操作摆出来。
+ await expect(page.getByTestId('preview-amount')).toHaveText('1250');
+ await expect(page.getByTestId('mapping-correction-hint')).toContainText('映射已变化，纠正值仍生效；映射新算得的值为 126000');
+ await page.getByRole('button',{name:'采用新映射值'}).click();
  await expect(page.getByTestId('preview-amount')).toHaveText('126000');
  await page.getByRole('button',{name:'打开对象页'}).click();
  await expect(page.getByTestId('object-amount')).toHaveText('126000');
@@ -53,6 +57,43 @@ test('对象页完成当前值纠正、映射修订与本体草案',async({page}
  await page.getByRole('button',{name:'提交本体草案'}).click();
  await expect(page.getByText('本体草案待审核')).toBeVisible();
  await expect(page.getByText('正式本体仍为 procurement@1，草案未生效')).toBeVisible();
+ await expect(page.getByTestId('object-amount')).toHaveText('126000');
+});
+
+test('采用新映射值后保存只发布最新金额',async({page,request})=>{
+ test.setTimeout(40000);
+ // 独立的字段指纹，避免保存的映射被其他用例复用而改变它们的默认转换。
+ const csv=test.info().outputPath('adopt-save.csv');
+ writeFileSync(csv,'number,amount_minor,currency,batch_ref\nINV-901,126000,CNY,B-901\n');
+ await page.goto('/');
+ await page.getByLabel('接入目标').fill('采用新映射值并保存');
+ await page.getByLabel('选择材料').setInputFiles(csv);
+ await page.getByRole('button',{name:'开始接入'}).click();
+ await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ await page.getByLabel('amount 来源字段').selectOption('amount_minor');
+ await page.getByLabel('amount 转换方式').selectOption('minor_to_major');
+ await page.getByRole('button',{name:'生成映射预览'}).click();
+ await expect(page.getByTestId('preview-amount')).toHaveText('1260');
+ await page.getByRole('button',{name:'打开对象页'}).click();
+ await page.getByLabel('纠正的属性').selectOption('amount');
+ await page.getByLabel('纠正后的值').fill('1250');
+ await page.getByLabel('修改原因').fill('用户核对金额');
+ await page.getByRole('button',{name:'保存当前值并校验'}).click();
+ await expect(page.getByTestId('object-amount')).toHaveText('1250');
+ await page.getByRole('radio',{name:'修改这类来源的映射'}).check();
+ await page.getByRole('button',{name:'去映射页修订'}).click();
+ await page.getByLabel('amount 转换方式').selectOption('integer');
+ await page.getByRole('button',{name:'生成映射预览'}).click();
+ await expect(page.getByTestId('preview-amount')).toHaveText('1250');
+ await page.getByRole('button',{name:'采用新映射值'}).click();
+ await expect(page.getByTestId('preview-amount')).toHaveText('126000');
+ const sid=sessionId(page,'session');
+ await page.getByRole('button',{name:'保存接入',exact:true}).click();
+ await expect(page.getByText('接入已保存')).toBeVisible();
+ const saved=await (await request.get(`/api/sessions/${sid}/objects`)).json();
+ expect(saved.objects[0].values.amount).toBe('126000');
+ expect(saved.corrections.filter((c:{property:string})=>c.property==='amount')).toHaveLength(1);
+ await page.getByRole('button',{name:'打开对象页'}).click();
  await expect(page.getByTestId('object-amount')).toHaveText('126000');
 });
 

@@ -7,14 +7,16 @@ import type {Discovery} from './pages/DiscoveryPage';
 export type {SourceProfile,IntakeSession,OntologyRevision,MappingSpec,FieldBinding};
 export type Preview=MappingPreview & {review_state:string; mapping_reused?:boolean; corrections?:unknown[]};
 export type Draft={bindings?:Record<string,FieldBinding>;source_bindings?:Record<string,Record<string,FieldBinding>>;selected_field?:string;source_id?:string;record_index?:number};
-export type View={session:IntakeSession;profiles:SourceProfile[];ontology:OntologyRevision;preview:Preview|null;draft:Draft;mapping_reused:boolean;discovery:Discovery|null};
+export type View={session:IntakeSession;profiles:SourceProfile[];ontology:OntologyRevision;preview:Preview|null;draft:Draft;mapping_reused:boolean;discovery:Discovery|null;correction_views?:CorrectionView[]};
 export type Selector={kind:string;page?:number;char_start?:number;char_end?:number;bbox?:number[];pointer?:string;range?:string;sheet?:string;keys?:Record<string,unknown>;field?:string;extensions?:Record<string,unknown>|null};
 export type Evidence={source_id:string;selector:Selector};
 export type WorkObject={id:string;entity_type:string;values:Record<string,unknown>;evidence:Record<string,Evidence[]>;unresolved:string[];extensions?:Record<string,unknown>|null};
 export type Correction={decision_ref:string;entity_id:string;property:string;value:unknown;reason:string};
+export type CorrectionView={decision_ref:string;entity_id:string;property:string;value:unknown;
+ mapping_value:unknown;mapping_revision:string;mapping_changed:boolean};
 export type Issue={code?:string;target?:string;row?:number;entity_id?:string;detail?:string;source_id?:string};
 export type ObjectView={session:IntakeSession;ontology:OntologyRevision;ontology_revision:string;ontology_draft:Record<string,unknown>|null;
- sources:(SourceProfile&{display_name:string})[];objects:WorkObject[];corrections:Correction[];issues:Issue[];
+ sources:(SourceProfile&{display_name:string})[];objects:WorkObject[];corrections:Correction[];correction_views:CorrectionView[];issues:Issue[];
  review_state:string|null;preview_ref?:string;mapping_revision:string|null;draft:Draft};
 export class ApiError extends Error {constructor(public status:number,message:string){super(message);}}
 // 后端原始报错按原文透出会给用户看不懂的英文；已知文案在这里换成中文说法。

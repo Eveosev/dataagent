@@ -1,6 +1,6 @@
 import {useEffect,useRef,useState} from 'react';
 import {api,ApiError,display,locate,findAnchorRow,isDecisionEvidence,decisionSourceName} from '../client';
-import type {ObjectView,SourceProfile} from '../client';
+import type {CorrectionView,ObjectView,SourceProfile} from '../client';
 import {SourceViewer} from '../components/SourceViewer';
 
 const ranges=[['instance','纠正当前对象的值'],['mapping','修改这类来源的映射'],['ontology','提出本体草案']] as const;
@@ -96,6 +96,20 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
    }else{editing.current=false;await load().catch(()=>{});}
   }finally{running.current=false;setBusy(false);}
  }
+ async function adopt(correction:CorrectionView){
+  if(running.current)return;
+  running.current=true;setBusy(true);try{
+   await api(base_url+'/corrections/adopt','POST',{expected_revision:revision.current,
+    entity_id:correction.entity_id,property:correction.property});
+   // 采用映射值是一次新的用户决定：清掉本地草稿，以最新修订重新校验。
+   editing.current=false;editObject.current='';setValue('');setReason('');setConflict(false);
+   sessionStorage.removeItem(localKey);
+   await load();
+  }catch(error){
+   onError(error);
+   if(error instanceof ApiError&&error.status===409)setConflict(true);
+  }finally{running.current=false;setBusy(false);}
+ }
  const idx=Math.min(index,Math.max(0,(view?.objects.length||0)-1));
  idxRef.current=idx;
  if(!view)return <main className="loading">正在恢复任务…</main>;
@@ -113,6 +127,8 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
  const sourceRow=direct?direct.row:(sourceAnchor?-1:0);
  const sourceField=direct?direct.field:field;
  const corrections=view.corrections.filter(c=>object&&c.entity_id===object.id);
+ // 同一属性多次纠正时只展示最后一次决定；历史仍保存在预览，用作审计轨迹。
+ const latestCorrections=corrections.filter((correction,i)=>!corrections.slice(i+1).some(c=>c.property===correction.property));
  // 来源名：SQLite 上传的显示名在 extensions 里，options 里没有时后端会回退到内部上传路径。
  const sourceName=(sourceId:string)=>{
   const selection=view.session.sources.find(s=>s.source_id===sourceId);
@@ -133,13 +149,18 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
   {object?<><div className="mapping-table-scroll"><table className="mapping-table"><thead><tr><th>Ontology 属性</th><th>当前值</th><th>来源定位</th><th>状态</th></tr></thead><tbody>{properties.map(prop=>{
    const anchors=object.evidence[prop]||[];const corrected=corrections.some(c=>c.property===prop);
    const issue=view.issues.some(i=>i.target===prop);
+   const mappingChanged=view.correction_views.some(c=>c.entity_id===object.id&&c.property===prop);
    return <tr key={prop} className={field===prop?'active-mapping':''} onClick={()=>setField(prop)}>
     <td><button className="field-button" onClick={()=>setField(prop)}>{prop}</button>{view.ontology.properties[prop].required&&<span className="required">必需</span>}</td>
     <td data-testid={`object-${prop}`} className="mapped-value">{display(object.values[prop])}</td>
     <td className="object-evidence">{anchors.length?anchors.map((anchor,i)=><div key={i}>{isDecisionEvidence(anchor)?decisionSourceName(anchor.source_id):`${sourceName(anchor.source_id)} · ${locate(anchor.selector)}`}</div>):<span className="muted">无来源定位</span>}</td>
-    <td><small className={object.unresolved.includes(prop)||issue?'warn':'ok'}>{corrected?'已纠正':object.unresolved.includes(prop)?'未解决':issue?'需核对':'已核对'}</small></td>
+    <td><small className={object.unresolved.includes(prop)||issue||mappingChanged?'warn':'ok'}>{corrected?(mappingChanged?'已纠正 · 映射已变化':'已纠正'):object.unresolved.includes(prop)?'未解决':issue?'需核对':'已核对'}</small></td>
    </tr>;})}</tbody></table></div>
-  {corrections.length>0&&<div className="notice"><strong>纠正记录</strong><ul>{corrections.map((correction,i)=><li key={i}>{correction.property} → {display(correction.value)} · {correction.reason}</li>)}</ul></div>}
+  {corrections.length>0&&<div className="notice"><strong>纠正记录</strong><ul>{latestCorrections.map((correction,i)=><li key={i}>{correction.property} → {display(correction.value)} · {correction.reason}</li>)}</ul>
+   {view.correction_views.filter(c=>c.entity_id===object.id).map(c=><div key={c.property} className="correction-conflict" data-testid={`object-correction-${c.property}`}>
+    <p><strong>{c.property}</strong>：映射已变化，纠正值仍生效；映射新算得的值为 {display(c.mapping_value)}。</p>
+    <button className="secondary" disabled={busy||done} onClick={()=>adopt(c)}>采用新映射值</button></div>)}
+  </div>}
   {view.issues.length>0&&<div className="notice amber"><strong>{view.issues.length} 项待核对</strong><ul>{view.issues.slice(0,5).map((issue,i)=><li key={i}>{display(issue.target)} · {display(issue.code)}</li>)}</ul></div>}
   {object.extensions&&<details className="extension-box"><summary>查看扩展字段</summary><pre>{JSON.stringify(object.extensions,null,2)}</pre></details>}</>
   :<div className="empty">选择左侧对象查看值与来源定位。</div>}
