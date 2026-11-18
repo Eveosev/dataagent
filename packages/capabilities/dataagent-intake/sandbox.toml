@@ -1,0 +1,35 @@
+# Project-level sandbox tightening for a DataAgent workspace.
+#
+# Mint's preset merge only accepts [packages], [ui] and [policy] from a
+# package's preset.toml (mint add is implemented that way; [core.sandbox] and
+# [rules] are ignored there). `mint init` has no sandbox flag either. This
+# fragment therefore cannot be installed automatically by preset-intake:
+# append it to the project mint.toml after `mint init` / `mint add`:
+#
+#   cat .mint/packages/dataagent/preset-intake@*/sandbox.toml >> mint.toml
+#
+# The project layer can only tighten the user's sandbox policy. It cannot add
+# readable_roots/writable_roots beyond what the user already authorized, and a
+# project full-access request is ignored. workspace-write is used here because
+# `mint init` has no sandbox flag; if the user's policy is read-only, Mint keeps
+# read-only and the project still cannot write .dataagent.
+#
+# workspace-write grants write access to the whole workspace, not only
+# .dataagent: Mint has no per-path writable-root filter. deny_paths below keeps
+# the built-in file tools out of .dataagent/secrets, but a shell running with
+# workspace-write can still read that workspace-internal directory. New
+# secrets therefore live in $HOME/.dataagent/secrets, outside the workspace.
+[core.sandbox]
+policy = "workspace-write"
+
+[rules]
+# deny_paths only grows across layers. Directory patterns (trailing /) match
+# at any depth, so this also covers the legacy workspace copy.
+deny_paths = [
+  ".dataagent/secrets/",
+  ".mint/config.toml",
+  "*/.mint/config.toml",
+  ".mint/credentials.toml",
+  "*/.mint/credentials.toml",
+  "credentials.toml",
+]
