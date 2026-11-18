@@ -20,7 +20,10 @@ export function IntakePage({onStart,onError}:{onStart:(id:string)=>void;onError:
  }).catch(onError);},[]);
  useEffect(()=>{api<Connection[]>('/api/connections').then(setConnections).catch(onError);},[]);
  const selectedEntry=activeOntologies.find(entry=>entry.id===targetOntology);
- const canDiscover=files.length===1&&/\.(db|sqlite3?)$/i.test(files[0].name)&&selected.length===0;
+ // 本体发现不再只认单个 SQLite：任何文件类来源（Word、PDF、Excel、CSV、
+ // JSON、SQLite，可多个文件）都能勾选「本体发现」发起（FDE2-08）；与
+ // 后端 _check_discovery_source 的口径一致，混入不支持的类型时不给该选项。
+ const canDiscover=files.length>0&&files.every(file=>/\.(docx|pdf|xlsx|xlsm|csv|tsv|json|jsonl|sqlite|sqlite3|db)$/i.test(file.name))&&selected.length===0;
  const mode=discover&&canDiscover?'ontology_discovery':'mapping';
  async function start(){
   setBusy(true);
@@ -51,7 +54,7 @@ export function IntakePage({onStart,onError}:{onStart:(id:string)=>void;onError:
   </div>)}</fieldset>}
   {canDiscover&&<fieldset className="intake-mode"><legend>接入方式</legend>
    <label><input type="radio" name="intake-mode" checked={!discover} onChange={()=>setDiscover(false)}/>映射到已有本体</label>
-   <label><input type="radio" name="intake-mode" checked={discover} onChange={()=>setDiscover(true)}/>从数据库发现本体</label>
+   <label><input type="radio" name="intake-mode" checked={discover} onChange={()=>setDiscover(true)}/>从数据库发现本体（Word、PDF、Excel、CSV 等文件材料也可以）</label>
   </fieldset>}
   {mode==='mapping'&&<fieldset className="intake-mode"><legend>目标本体</legend>
    <label className="label" htmlFor="target-ontology">映射到的本体</label>
