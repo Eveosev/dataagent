@@ -1,5 +1,5 @@
 import {useEffect,useRef,useState} from 'react';
-import {api,display,transformNames} from '../client';
+import {api,ApiError,display,transformNames,propertyLabel,entityTypeLabel,sourceProblem,issueReasons} from '../client';
 import type {View,Draft,FieldBinding,IntakeSession,MappingSpec,SourceProfile,CorrectionView} from '../client';
 import {SourceViewer} from '../components/SourceViewer';
 import {DiscoveryPage} from './DiscoveryPage';
@@ -18,6 +18,8 @@ function defaultBindings(view:View,sourceId:string){
 export function MappingPage({sessionId,onNew,onError,onOpenObjects}:{sessionId:string;onNew:()=>void;onError:(e:unknown)=>void;onOpenObjects?:()=>void}){
  const [view,setView]=useState<View|null>(null),[bindings,setBindings]=useState<Record<string,FieldBinding>>({});
  const [field,setField]=useState(''),[sourceId,setSourceId]=useState(''),[record,setRecord]=useState(0),[dirty,setDirty]=useState(false),[busy,setBusy]=useState(false),[onlyProblems,setOnlyProblems]=useState(false),[draftState,setDraftState]=useState('');
+ // FDE-12：字段详情里的纠正同样给绿色成功提示；被其他问题挡住时点名，不走红色错误条。
+ const [correctionNotice,setCorrectionNotice]=useState<{kind:'green'|'amber';text:string}|null>(null);
  const revision=useRef(''),initialized=useRef(false),dirtyRef=useRef(false),queue=useRef(Promise.resolve()),draftError=useRef<unknown>(null),bindingsRef=useRef<Record<string,FieldBinding>>({});
  const sourceBindings=useRef<Record<string,Record<string,FieldBinding>>>({}),selectedSource=useRef('');
  const base=`/api/sessions/${sessionId}`;const localKey=`dataagent-draft:${sessionId}`;
@@ -122,7 +124,15 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects}:{sessionId:s
   try{
    const instance=view?.preview?.instances?.[record];if(!instance)throw new Error('请选择对象');
    await review('instance',{entity_id:instance.id,property:field,value,reason});
-   await api(base+'/revalidate','POST',{expected_revision:revision.current});await load();
+   try{
+    await api(base+'/revalidate','POST',{expected_revision:revision.current});await load();
+    setCorrectionNotice({kind:'green',text:`纠正已保存：${propertyLabel(field)} → ${value}，已重新校验。`});
+   }catch(error){
+    if(error instanceof ApiError&&error.status===409)throw error;
+    // 重新校验被其他对象挡住：点名到待核对清单，不用红色错误条（FDE-12）。
+    await load().catch(()=>{});
+    setCorrectionNotice({kind:'amber',text:`纠正已保存：${propertyLabel(field)} → ${value}。整批保存仍被其他问题挡住，见下方待核对清单。`});
+   }
   }catch(error){onError(error);}
  }
  async function adopt(correction:CorrectionView){
@@ -136,6 +146,9 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects}:{sessionId:s
  if(view.discovery)return <DiscoveryPage view={view} reload={load} onNew={onNew} onError={onError}/>;
  const phase=view.session.phase,done=phase==='saved',working=phase==='queued'||phase==='probing';
  const canRetry=view.session.next_actions?.includes('retry_probe');
+ // FDE-10：任一来源探查失败时进度标红，副标题不再宣称「识别与探查已完成」。
+ const failed=(view.profiles||[]).some(p=>!!sourceProblem(p))
+  ||(view.session.issues||[]).some(i=>String((i as Record<string,unknown>).code)==='intake.probe_failed');
  const instance=view.preview?.instances?.[record];const binding=bindings[field];
  const proof=instance?.source_anchors?.[field]?.filter(a=>a.source_ref===profile?.source_id)||[];
  const direct=Object.entries(profile?.anchors||{}).find(([key,anchors])=>
@@ -144,26 +157,37 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects}:{sessionId:s
  const anchor=direct?.[1][0]||proof[0]||(!instance?profile?.anchors?.[`${sourceRow}.${binding?.source_field}`]?.[0]:undefined);
  const fields=Object.keys(view.ontology.properties).filter(k=>!onlyProblems||!bindings[k]||view.preview?.issues.some(i=>(i as Record<string,unknown>).target===k));
  const problemCount=(view.preview?.issues||view.session.issues||[]).length;
- return <main className="workspace"><div className="task-header"><div><div className="eyebrow">采购资料 / 接入任务</div><h1>{done?'接入已保存':'核对来源与 Ontology 映射'}</h1><p className="muted">{working?'正在识别材料并探查结构，已完成结果会持续保留。':canRetry?'部分来源待重试，已取得的证据可以查看。':'识别与探查已完成'}{view.mapping_reused?' · 已复用经过验证的映射':''}</p></div><div className="save-buttons">
+ // 预览问题已带对象标签与中文理由（issue_summary）；会话问题是探查失败，
+ // 点出材料名而不是内部来源哈希。
+ const issueItems=(view.preview?.issues||view.session.issues||[]) as {code?:string;target?:string;object?:string;reason?:string;source_id?:string}[];
+ const issueText=(issue:{code?:string;target?:string;object?:string;reason?:string;source_id?:string})=>{
+  if(issue.code==='intake.probe_failed'){
+   const name=view.session.sources.find(s=>s.source_id===issue.source_id);
+   return `${String((name as {options?:{display_name?:string}}|undefined)?.options?.display_name||'材料')} · 材料读取失败，请更换文件后重新接入`;
+  }
+  return `${issue.object||'全部对象'}${issue.target?` · ${propertyLabel(issue.target)}`:''} · ${issue.reason||issueReasons[issue.code||'']||display(issue.code)}`;
+ };
+ return <main className="workspace"><div className="task-header"><div><div className="eyebrow">采购资料 / 接入任务</div><h1>{done?'接入已保存':'核对来源与 Ontology 映射'}</h1><p className={failed?'muted problem-text':'muted'}>{working?'正在识别材料并探查结构，已完成结果会持续保留。':failed?'材料读取失败，请查看左侧来源的问题说明并更换材料。':canRetry?'部分来源待重试，已取得的证据可以查看。':'识别与探查已完成'}{view.mapping_reused?' · 已复用经过验证的映射':''}</p></div><div className="save-buttons">
   {canRetry&&<button className="primary" disabled={busy||working} onClick={async()=>{
    setBusy(true);try{await api(base+'/advance','POST',{});await load(true);}catch(error){onError(error);}finally{setBusy(false);}
   }}>继续探查</button>}
   <button className="secondary" onClick={onNew}>新建接入</button></div></div>
- <nav className="steps" aria-label="接入进度">{['已接收','识别与探查','映射与校验','查看对象','保存接入'].map((step,i)=><div key={step} className={done||i<(working?1:view.preview?4:2)?'step done':'step'}><span>{done||i<(working?1:2)?'✓':i+1}</span>{step}</div>)}</nav>
+ <nav className="steps" aria-label="接入进度">{['已接收','识别与探查','映射与校验','查看对象','保存接入'].map((step,i)=><div key={step} className={i===1&&failed?'step failed':done||i<(working?1:view.preview?4:2)?'step done':'step'}><span>{i===1&&failed?'✗':done||i<(working?1:2)?'✓':i+1}</span>{step}</div>)}</nav>
  <div className="work-grid"><section className="source-panel"><div className="panel-heading"><strong>来源</strong><span className="badge">{view.session.sources.length} 份材料</span></div>
   <div className="source-tabs">{view.session.sources.map(s=><button key={s.source_id} className={(profile?.source_id===s.source_id?'active ':'')+'source-tab'} onClick={()=>selectSource(s.source_id)}><span>▤</span><span>{String(s.options?.display_name||s.locator_ref.split('/').pop())}</span></button>)}</div>
   <SourceViewer sessionId={sessionId} profile={profile} anchor={anchor as never} recordIndex={sourceRow} sourceField={binding?.source_field}/>
- </section><section className="mapping-panel"><div className="panel-heading"><strong>目标映射</strong><span className="badge">{view.ontology.entity_type}</span></div>
+ </section><section className="mapping-panel"><div className="panel-heading"><strong>目标映射</strong><span className="badge">{entityTypeLabel(view.ontology.entity_type)}</span></div>
  <div className="mapping-toolbar"><span><strong>{Object.keys(bindings).length}</strong> / {Object.keys(view.ontology.properties).length} 字段已绑定</span><label><input type="checkbox" checked={onlyProblems} onChange={e=>setOnlyProblems(e.target.checked)}/>只看待处理</label></div>
- <div className="mapping-table-scroll"><table className="mapping-table"><thead><tr><th>Ontology 属性</th><th>来源字段</th><th>转换方式</th><th>预览值</th></tr></thead><tbody>{fields.map(name=>{
+ <div className="mapping-table-scroll"><table className="mapping-table"><thead><tr><th>本体属性</th><th>来源字段</th><th>转换方式</th><th>预览值</th></tr></thead><tbody>{fields.map(name=>{
   const b=bindings[name];const issue=view.preview?.issues.some(i=>(i as Record<string,unknown>).target===name);
   const correction=view.correction_views?.find(item=>item.entity_id===instance?.id&&item.property===name);return <tr key={name} className={field===name?'active-mapping':''} onClick={()=>setField(name)}>
-  <td><button className="field-button" onClick={()=>setField(name)}>{name}</button>{view.ontology.properties[name].required&&<span className="required">必需</span>}<small className={issue||!b?'warn':'ok'}>{issue?'需核对':b?'已绑定':'未映射'}</small></td>
-  <td><select disabled={done} aria-label={`${name} 来源字段`} value={b?.source_field||''} onChange={e=>change(name,{...(b||{}),source_field:e.target.value,transform:b?.transform||'identity'})}><option value="">选择来源字段</option>{profile?.fields?.map(f=><option key={f} value={f}>{f}</option>)}</select></td>
-  <td><select disabled={done} aria-label={`${name} 转换方式`} value={b?.transform||'identity'} onChange={e=>change(name,{...(b||{source_field:''}),transform:e.target.value as FieldBinding['transform']})}>{Object.entries(transformNames).map(([id,label])=><option value={id} key={id}>{label}</option>)}</select></td>
+  <td><button className="field-button" title={name} onClick={()=>setField(name)}>{propertyLabel(name)}</button>{view.ontology.properties[name].required&&<span className="required">必需</span>}<small className={issue||!b?'warn':'ok'}>{issue?'需核对':b?'已绑定':'未映射'}</small></td>
+  <td><select disabled={done} aria-label={`${propertyLabel(name)} 来源字段`} value={b?.source_field||''} onChange={e=>change(name,{...(b||{}),source_field:e.target.value,transform:b?.transform||'identity'})}><option value="">选择来源字段</option>{profile?.fields?.map(f=><option key={f} value={f}>{f}</option>)}</select></td>
+  <td><select disabled={done} aria-label={`${propertyLabel(name)} 转换方式`} value={b?.transform||'identity'} onChange={e=>change(name,{...(b||{source_field:''}),transform:e.target.value as FieldBinding['transform']})}>{Object.entries(transformNames).map(([id,label])=><option value={id} key={id}>{label}</option>)}</select></td>
   <td className="mapped-value">{dirty?'待更新':display(instance?.values?.[name])}{correction&&!dirty&&<small className="warn">纠正值生效 · 映射值 {display(correction.mapping_value)}</small>}</td></tr>;})}</tbody></table></div>
  <div className="mapping-actions"><span className="muted">{draftState||'原值与转换后的值均可核对'}</span><button className="primary" disabled={busy||working||done||!profile} onClick={preview}>{busy?'正在校验…':'生成映射预览'}</button></div>
- {problemCount>0&&<div className="notice amber"><strong>{problemCount} 项待核对</strong><ul>{(view.preview?.issues||view.session.issues||[]).slice(0,5).map((issue,i)=><li key={i}>{display((issue as Record<string,unknown>).target)} · {display((issue as Record<string,unknown>).code)}</li>)}</ul></div>}
+ {correctionNotice&&<div className={correctionNotice.kind==='green'?'notice green':'notice amber'} data-testid="mapping-correction-notice" role="status">{correctionNotice.text}</div>}
+ {problemCount>0&&<div className="notice amber"><strong>{problemCount} 项待核对</strong><ul data-testid="mapping-issues">{issueItems.slice(0,8).map((issue,i)=><li key={i}>{issueText(issue)}</li>)}</ul>{issueItems.length>8&&<p className="help">共 {issueItems.length} 项，打开对象页查看全部。</p>}</div>}
  <div className="object-section"><div className="panel-heading"><strong>对象预览</strong><span className="badge">{view.preview?.instances?.length||0} 个对象</span>{onOpenObjects&&view.preview&&<button className="secondary" onClick={onOpenObjects}>打开对象页</button>}</div>{view.preview?<><div className="sample-controls"><button className="icon-button" disabled={record===0} onClick={()=>setRecord(record-1)}>←</button><span>对象 {record+1} / {view.preview.instances?.length||0}</span><button className="icon-button" disabled={record>=(view.preview.instances?.length||0)-1} onClick={()=>setRecord(record+1)}>→</button></div><dl className="object-values">{Object.keys(view.ontology.properties).map(k=><div key={k}><dt>{k}</dt><dd>{display(instance?.values?.[k])}</dd></div>)}</dl></>:<div className="empty">生成映射预览后，在这里查看真实对象。</div>}</div>
  {instance?.extensions&&<details className="extension-box"><summary>查看扩展字段</summary><pre>{JSON.stringify(instance.extensions,null,2)}</pre></details>}
  </section><MappingDetail readOnly={done} view={view} field={field} binding={binding} raw={profile?.records?.[sourceRow]?.[binding?.source_field||'']} dirty={dirty} recordIndex={record} onCorrect={correct} onAdopt={adopt} onSchema={async(name,reason)=>{try{await review('ontology',{property:name,value_type:'string',reason});}catch(error){onError(error);}}}/></div>

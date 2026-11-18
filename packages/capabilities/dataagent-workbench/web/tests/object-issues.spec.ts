@@ -32,7 +32,8 @@ async function openObjectPageWith13Issues(page:import('@playwright/test').Page){
  await page.getByLabel('接入目标').fill('接入发票并核对 13 条待核对问题');
  await page.getByLabel('选择材料').setInputFiles({name:'invoice.csv',mimeType:'text/csv',buffer:csv});
  await page.getByRole('button',{name:'开始接入'}).click();
- await page.getByText('识别与探查已完成').waitFor();
+ // 其中一份只有表头：按坏输入标红，另一份探查完成后仍可生成预览。
+ await expect(page.getByRole('button',{name:'生成映射预览'})).toBeEnabled();
  await page.getByRole('button',{name:'生成映射预览'}).click();
  await page.getByRole('button',{name:'打开对象页'}).click();
  await expect(page.getByRole('heading',{name:'核对业务对象'})).toBeVisible();
@@ -78,13 +79,14 @@ test('每条问题能点到对应对象',async({page})=>{
 
 test('预览没有对象时待核对问题仍在对象页显示',async({page})=>{
  test.setTimeout(40000);
- // 只有表头的 CSV：预览无实例，后端产生 no_records（阻断）且仍可打开对象页。
+ // 只有表头的 CSV：零数据行按坏输入标红提示，预览无实例，后端产生
+ // no_records（阻断）且仍可打开对象页。
  await page.goto('/');
  await page.getByLabel('接入目标').fill('接入空发票并核对零对象问题');
  await page.getByLabel('选择材料').setInputFiles({name:'invoice.csv',mimeType:'text/csv',
   buffer:Buffer.from('number,amount_minor,currency,issuer\n')});
  await page.getByRole('button',{name:'开始接入'}).click();
- await page.getByText('识别与探查已完成').waitFor();
+ await expect(page.getByTestId('source-problem')).toContainText('只有表头，没有数据行');
  await page.getByRole('button',{name:'生成映射预览'}).click();
  await page.getByRole('button',{name:'打开对象页'}).click();
  await expect(page.getByRole('heading',{name:'核对业务对象'})).toBeVisible();
@@ -112,7 +114,8 @@ test('跨来源同序号的行号问题不链接到错误对象',async({page})=>
   {name:'invoices-a.csv',mimeType:'text/csv',buffer:Buffer.from('number,amount_minor,currency,issuer\nINV-001,126000,CNY,华信办公\nINV-002,90000,CNY,北明科技\n')},
   {name:'invoices-b.csv',mimeType:'text/csv',buffer:Buffer.from('number,amount_minor,currency,issuer\nINV-101,75000,CNY,青山贸易\nINV-102,66000,CNY,华信办公\n')}]);
  await page.getByRole('button',{name:'开始接入'}).click();
- await page.getByText('识别与探查已完成').waitFor();
+ // 其中一份只有表头：按坏输入标红，另一份探查完成后仍可生成预览。
+ await expect(page.getByRole('button',{name:'生成映射预览'})).toBeEnabled();
  await page.getByRole('button',{name:'生成映射预览'}).click();
  await page.getByRole('button',{name:'打开对象页'}).click();
  await expect(page.getByRole('heading',{name:'核对业务对象'})).toBeVisible();
@@ -141,7 +144,8 @@ test('问题来源该行无锚点时不出现对象入口',async({page})=>{
   {name:'invoices-empty.csv',mimeType:'text/csv',buffer:Buffer.from('number,amount_minor,currency,issuer\n')},
   {name:'invoices-b.csv',mimeType:'text/csv',buffer:Buffer.from('number,amount_minor,currency,issuer\nINV-101,75000,CNY,青山贸易\nINV-102,66000,CNY,华信办公\n')}]);
  await page.getByRole('button',{name:'开始接入'}).click();
- await page.getByText('识别与探查已完成').waitFor();
+ // 其中一份只有表头：按坏输入标红，另一份探查完成后仍可生成预览。
+ await expect(page.getByRole('button',{name:'生成映射预览'})).toBeEnabled();
  await page.getByRole('button',{name:'生成映射预览'}).click();
  await page.getByRole('button',{name:'打开对象页'}).click();
  await expect(page.getByRole('heading',{name:'核对业务对象'})).toBeVisible();

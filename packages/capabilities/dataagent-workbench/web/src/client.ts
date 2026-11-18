@@ -8,15 +8,22 @@ export type {SourceProfile,IntakeSession,OntologyRevision,MappingSpec,FieldBindi
 export type Preview=MappingPreview & {review_state:string; mapping_reused?:boolean; corrections?:unknown[]};
 export type Draft={bindings?:Record<string,FieldBinding>;source_bindings?:Record<string,Record<string,FieldBinding>>;selected_field?:string;source_id?:string;record_index?:number};
 export type View={session:IntakeSession;profiles:SourceProfile[];ontology:OntologyRevision;preview:Preview|null;draft:Draft;mapping_reused:boolean;discovery:Discovery|null;correction_views?:CorrectionView[]};
-export type Selector={kind:string;page?:number;char_start?:number;char_end?:number;bbox?:number[];pointer?:string;range?:string;sheet?:string;keys?:Record<string,unknown>;field?:string;extensions?:Record<string,unknown>|null};
+export type Selector={kind:string;page?:number;char_start?:number;char_end?:number;bbox?:number[];pointer?:string;range?:string;sheet?:string;keys?:Record<string,unknown>;field?:string;unit_ref?:string;extensions?:Record<string,unknown>|null};
 export type Evidence={source_id:string;selector:Selector};
-export type WorkObject={id:string;entity_type:string;values:Record<string,unknown>;evidence:Record<string,Evidence[]>;unresolved:string[];extensions?:Record<string,unknown>|null};
+export type WorkObject={id:string;entity_type:string;values:Record<string,unknown>;evidence:Record<string,Evidence[]>;unresolved:string[];extensions?:Record<string,unknown>|null;conflicts?:ConflictDetail[]};
 export type Correction={decision_ref:string;entity_id:string;property:string;value:unknown;reason:string};
 export type CorrectionView={decision_ref:string;entity_id:string;property:string;value:unknown;
  mapping_value:unknown;mapping_revision:string;mapping_changed:boolean};
 export type Issue={code?:string;target?:string;row?:number;entity_id?:string;detail?:string;source_id?:string;object?:string};
+// 冲突字段各来源原值（后端 conflict_details）：并排显示 + 一键采用的数据来源。
+export type ConflictValue={source_id:string;source_name:string;locator_ref:string;kind:string;value:unknown;values:unknown[];locations:string[]};
+export type ConflictDetail={entity_id:string;object?:string;field:string;reason?:string;values:ConflictValue[]};
+// 来源处置（后端 disposition_options / dispositions）：被拦问题的出路。
+export type DispositionOption={action:'partition_not_applicable'|'exclude_record';source_id:string;source_name:string;partition?:number|string;record?:number;gap?:string;reason_hint?:string};
+export type DispositionEntry={action:string;source_id:string;reason:string;partition?:number|string;record?:number;record_values?:Record<string,unknown>;decision_ref?:string;recorded_at?:string};
 export type ObjectView={session:IntakeSession;ontology:OntologyRevision;ontology_revision:string;ontology_draft:Record<string,unknown>|null;
  sources:(SourceProfile&{display_name:string})[];objects:WorkObject[];corrections:Correction[];correction_views:CorrectionView[];issues:Issue[];
+ conflicts:ConflictDetail[];dispositions:DispositionEntry[];disposition_options:DispositionOption[];
  review_state:string|null;preview_ref?:string;mapping_revision:string|null;draft:Draft};
 // 问题分级对应后端约定：整批保存被任何未解决问题拦下（dataagent-ontology
 // service.py 的 prepare_review），其中这三个 code 能被对象页的实例纠正清除
@@ -59,7 +66,7 @@ export function issueObject(issue:Issue,view:Pick<ObjectView,'objects'|'sources'
  }
  return undefined;
 }
-export class ApiError extends Error {constructor(public status:number,message:string){super(message);}}
+export class ApiError extends Error {constructor(public status:number,message:string,public raw:string=message){super(message);}}
 // 后端原始报错按原文透出会给用户看不懂的英文；已知文案在这里换成中文说法。
 const errorTexts:Record<string,string>={
  'required property remains unresolved':'必填属性仍未解决，请先在对象页核对后再保存',
@@ -72,8 +79,35 @@ const errorTexts:Record<string,string>={
  'unsupported file type':'暂不支持该文件类型',
  'file exceeds 32 MiB limit':'文件超过 32 MiB 限制',
  'Failed to fetch':'网络连接失败，请稍后重试',
+ 'Not Found':'当前服务不支持该操作，请更新工作台服务后再试',
 };
 export function translateError(message:string):string{return errorTexts[message.trim()]||message;}
+// 探查缺口（FDE-10）：分区级缺口用中文直说，不显示内部代码。
+export const gapNames:Record<string,string>={
+ ocr_engine_missing:'需要 OCR 引擎',ocr_empty:'该页没有可读文本（可能是空白页）',
+ key_missing:'缺少单据号',time_budget_exceeded:'读取时间用尽，可继续探查',
+ malformed_row:'行列数不齐',invalid_input:'文件内容无法读取',probe_failed:'材料读取失败',
+};
+export type SourceProblem={title:string;detail?:string;next:string};
+// 坏输入直说（FDE-10）：探查失败或零数据行时给出中文原因与下一步；
+// 原始报错只作为 detail 保留，由页面收进折叠的「技术详情」，不直接展示。
+export function sourceProblem(profile:{kind?:string;records?:Record<string,unknown>[];metadata?:Record<string,unknown>}|undefined):SourceProblem|undefined{
+ if(!profile)return undefined;
+ const error=profile.metadata?.['probe_error'] as {code?:string;detail?:string}|undefined;
+ if(error){
+  const text=String(error.detail||'');
+  if(/no rows/i.test(text))return {title:'文件是空的，没有可读取的内容',detail:text,next:'请更换文件后新建接入'};
+  if(/not a zip file/i.test(text))return {title:profile.kind==='docx'?'不是有效的 Word 文件':'不是有效的 Excel 文件',detail:text,next:'请更换文件后新建接入'};
+  return {title:'材料读取失败',detail:text,next:'请更换文件后新建接入'};
+ }
+ if((profile.records||[]).length===0&&profile.metadata?.['total_rows']===0)
+  return {title:'只有表头，没有数据行',next:'请补全数据行或更换文件后新建接入'};
+ return undefined;
+}
+// 技术详情（折叠展示）：原始报错里的绝对路径只保留文件名，避免泄露本机目录。
+export function technicalDetail(text:unknown):string{
+ return String(text||'').replace(/[^\s:：,，;；)）]*\/[^\s:：,，;；)）]+/g,part=>part.split('/').pop()||part).trim();
+}
 export async function api<T>(path:string,method='GET',body?:unknown):Promise<T>{
  let response:Response;
  try{
@@ -83,12 +117,19 @@ export async function api<T>(path:string,method='GET',body?:unknown):Promise<T>{
   throw new ApiError(0,translateError(error instanceof Error?error.message:'Failed to fetch'));
  }
  const data=await response.json();
- if(!response.ok)throw new ApiError(response.status,translateError(String(data.detail||data.error||'请求未完成')));
+ if(!response.ok)throw new ApiError(response.status,translateError(String(data.detail||data.error||'请求未完成')),String(data.detail||data.error||'请求未完成'));
  return data as T;
 }
 export const display=(value:unknown)=>value===null||value===undefined?'—':typeof value==='object'?JSON.stringify(value):String(value);
 export const transformNames:Record<string,string>={identity:'保留原值',decimal:'十进制数',minor_to_major:'分 → 元（÷100）',integer:'整数',date:'日期',datetime:'带时区时间',enum:'枚举映射',combine:'组合字段',choose:'条件选择'};
-export function locate(selector:Selector|undefined):string{
+// 中英对照标签（FDE-11）：本体属性、实体类型与审核状态都有中文说法；
+// 没有对应中文时保留原名，不猜不译。
+export const propertyNames:Record<string,string>={number:'单据编号',amount:'金额',currency:'币种',issuer:'开票方'};
+export const propertyLabel=(name:string)=>propertyNames[name]||name;
+export const entityTypeNames:Record<string,string>={PurchaseDocument:'采购单据'};
+export const entityTypeLabel=(name:string)=>entityTypeNames[name]||name;
+export const reviewStateNames:Record<string,string>={unreviewed:'未核对',needs_revalidation:'需重新校验',approved:'已通过',rejected:'已退回'};
+export function locate(selector:Selector|undefined,field?:string):string{
  if(!selector)return '—';
  if(selector.kind==='pdf_text_span'||selector.kind==='pdf_bbox')return `第 ${selector.page} 页`;
  if(selector.kind==='json_pointer'){
@@ -98,7 +139,16 @@ export function locate(selector:Selector|undefined):string{
  }
  if(selector.kind==='excel_cell')return `${selector.sheet} · ${selector.range}`;
  if(selector.kind==='record_key')return locateRecordKey(selector);
- if(selector.kind==='text_span')return `字符 ${selector.char_start}–${selector.char_end}`;
+ if(selector.kind==='text_span'){
+  // Word 表格单元格与段落：unit_ref 已指到表/行/列（或第几段），
+  // 比字符偏移可读；列名优先用调用方给出的字段名。
+  const unit=selector.unit_ref||'';
+  const table=unit.match(/^table:(\d+)\/row:(\d+)(?:\/col:(\d+))?$/);
+  if(table)return `表 ${table[1]} 第 ${table[2]} 行`+(field?` · ${field}`:table[3]?` · 第 ${table[3]} 列`:'');
+  const paragraph=unit.match(/^paragraph:(\d+)$/);
+  if(paragraph)return `第 ${paragraph[1]} 段`;
+  return `字符 ${selector.char_start}–${selector.char_end}`;
+ }
  return selector.kind;
 }
 // 数据库定位：表 / 主键（或无主键时的快照行），主键是“列 = 值”而不是内部对象。
