@@ -5,6 +5,10 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
+// 三个用例都会发布/停用本体并移动默认指针，串行执行避免并行用例互相争用
+// 默认本体；它们仍与其它测试文件并行。
+test.describe.configure({mode:'serial'});
+
 // V6：已发布本体发布新修订。初始本体走 MCP + HTTP 人工确认；修订任务以
 // revise_ontology_id 发起，补全把已发布属性的值类型改掉（非破坏性），
 // 然后走真实网页的发布按钮确认，最后到本体库核对修订历史与差异摘要。
@@ -74,12 +78,18 @@ function fullProposal(request:{expected_revision:string;source_revision:string;
    {name:'orderedBy',evidence_id:inferred.id}]}};
 }
 
-// docNoType 在修订任务里从 integer 改成 string，非破坏性，网页可直接确认。
+// docNoType 在修订任务里从 integer 改成 string；nameRequired 把 Customer.name
+// 从可选改成必需。两者都不是破坏性变更，网页只勾主确认即可发布。
 function fullCompletion(sid:string,draftRef:string,expectedRevision:string,
  catalog:{relationships:{id:string;origin:string}[]}|null,ontologyId:string,
- docNoType='integer'){
+ docNoType='integer',nameRequired=false,includeCustomerName=true){
  const declared=catalog!.relationships.find(link=>link.origin==='declared')!;
  const inferred=catalog!.relationships.find(link=>link.origin==='sample_supported')!;
+ const customerProperties:Record<string,{column:string;value_type:string;required?:boolean}>={
+  party_no:{column:'party_no',value_type:'string',required:true},
+ };
+ if(includeCustomerName)
+  customerProperties.name={column:'nm',value_type:'string',required:nameRequired};
  return {
   session_id:sid,expected_revision:expectedRevision,draft_ref:draftRef,
   ontology_id:ontologyId,title:'销售单据修订模型',
@@ -94,10 +104,7 @@ function fullCompletion(sid:string,draftRef:string,expectedRevision:string,
     seq:{column:'seq',value_type:'integer',required:true},
     amountInCents:{column:'cents',value_type:'decimal',required:true},
    },identity_fields:['book','doc_no','seq']},
-   {entity:'Customer',properties:{
-    party_no:{column:'party_no',value_type:'string',required:true},
-    name:{column:'nm',value_type:'string'},
-   },identity_fields:['party_no']},
+   {entity:'Customer',properties:customerProperties,identity_fields:['party_no']},
   ],
   relations:[
    {evidence_id:declared.id,name:'belongsToOrder',subject_concept:'SalesOrderLine',
@@ -125,58 +132,84 @@ function startDiscovery(ontologyId:string,revise?:string){
  return {sid:started.session_id as string,request};
 }
 
-test('已发布本体从网页确认修订 2 并在本体库显示修订历史',async({page})=>{
+
+function sessionId(page:Page){
+ return new URL(page.url()).hash.match(/session=([0-9a-f]+)/)![1];
+}
+
+async function publishInitial(page:Page,ontologyId:string){
+ const initial=startDiscovery(ontologyId);
+ callTool('ontology_discovery_propose',{
+  session_id:initial.sid,...fullProposal(initial.request)});
+ const first=callTool('intake_inference',{session_id:initial.sid});
+ const candidate=callTool('ontology_publish_prepare',
+  fullCompletion(initial.sid,first.draft.ref,first.expected_revision,first.catalog,
+   ontologyId,'integer'));
+ const published=await page.request.post(
+  `/api/sessions/${initial.sid}/publish/confirm`,{data:{
+   candidate_ref:candidate.candidate_ref,draft_ref:candidate.draft_ref,
+   source_snapshot:candidate.source_snapshot,
+   definition_digest:candidate.definition_digest,
+   expected_revision:candidate.session_revision,confirmed:true,
+   reason:'e2e 初始本体确认',
+  }});
+ expect(published.ok(),await published.text()).toBeTruthy();
+}
+
+async function prepareRevision(ontologyId:string,
+ options:{docNoType?:string;nameRequired?:boolean;includeCustomerName?:boolean}={}){
+ const task=startDiscovery(ontologyId,ontologyId);
+ callTool('ontology_discovery_propose',{
+  session_id:task.sid,...fullProposal(task.request)});
+ const inferred=callTool('intake_inference',{session_id:task.sid});
+ const candidate=callTool('ontology_publish_prepare',
+  fullCompletion(task.sid,inferred.draft.ref,inferred.expected_revision,
+   inferred.catalog,ontologyId,options.docNoType||'integer',
+   options.nameRequired||false,options.includeCustomerName!==false));
+ return {sid:task.sid,candidate};
+}
+
+async function retire(page:Page,ontologyId:string){
+ const retired=await page.request.post(`/api/ontologies/${ontologyId}/retire`,{
+  headers:{'x-dataagent-token':process.env.DATAAGENT_TEST_TOKEN||''},
+  data:{reason:'e2e 用例结束后停用，归还默认指针',confirmed:true}});
+ expect(retired.ok(),await retired.text()).toBeTruthy();
+}
+
+test('非破坏性修订显示类型与必需性差异，网页一次确认发布修订 2',async({page})=>{
  test.skip(!python,'run scripts/verify_browser.py to share the test workspace with MCP');
  test.setTimeout(300000);
  workspace=await resolveWorkspace(page);
  ensureDataLayer();
  const ontologyId=`sales-revision-${Date.now()}`;
+ await publishInitial(page,ontologyId);
 
- // 初始本体：MCP 提案与补全，HTTP 人工确认发布修订 1。
- const initial=startDiscovery(ontologyId);
- callTool('ontology_discovery_propose',{
-  session_id:initial.sid,...fullProposal(initial.request)});
- const first=callTool('intake_inference',{session_id:initial.sid});
- const firstCandidate=callTool('ontology_publish_prepare',
-  fullCompletion(initial.sid,first.draft.ref,first.expected_revision,first.catalog,
-   ontologyId,'integer'));
- const firstPublished=await page.request.post(
-  `/api/sessions/${initial.sid}/publish/confirm`,{data:{
-   candidate_ref:firstCandidate.candidate_ref,draft_ref:firstCandidate.draft_ref,
-   source_snapshot:firstCandidate.source_snapshot,
-   definition_digest:firstCandidate.definition_digest,
-   expected_revision:firstCandidate.session_revision,confirmed:true,
-   reason:'e2e 初始本体确认',
-  }});
- expect(firstPublished.ok()).toBeTruthy();
-
- // 修订任务：revise_ontology_id 指向刚发布的本体；把 doc_no 从 integer
- // 改成 string，差异应出现在候选与本体库历史中。
- const revision=startDiscovery(ontologyId,ontologyId);
- callTool('ontology_discovery_propose',{
-  session_id:revision.sid,...fullProposal(revision.request)});
- const second=callTool('intake_inference',{session_id:revision.sid});
- const revisionCandidate=callTool('ontology_publish_prepare',
-  fullCompletion(revision.sid,second.draft.ref,second.expected_revision,
-   second.catalog,ontologyId,'string'));
- expect(revisionCandidate.previous_revision).toBe('1');
- expect(revisionCandidate.ontology_revision).toBe('2');
- expect(revisionCandidate.revision_diff.summary)
+ // 修订任务：doc_no integer→string，Customer.name 可选→必需；两项都出现在
+ // 发布区差异里，且不改身份、不删属性，所以只需主确认。
+ const revision=await prepareRevision(ontologyId,
+  {docNoType:'string',nameRequired:true});
+ expect(revision.candidate.previous_revision).toBe('1');
+ expect(revision.candidate.ontology_revision).toBe('2');
+ expect(revision.candidate.destructive).toBe(false);
+ expect(revision.candidate.revision_diff.summary)
   .toContain('SalesOrder.doc_no 值类型 integer → string');
+ expect(revision.candidate.revision_diff.summary)
+  .toContain('Customer.name 必需性 可选 → 必需');
 
  await page.goto('/#session='+revision.sid);
- await expect(page.getByTestId('publish-card')).toBeVisible({timeout:30000});
+ await expect(page.getByTestId('revision-publish-notice')).toBeVisible({timeout:30000});
+ await expect(page.getByTestId('revision-diff'))
+  .toContainText('SalesOrder.doc_no 值类型 integer → string');
+ await expect(page.getByTestId('revision-diff'))
+  .toContainText('Customer.name 必需性 可选 → 必需');
+ await expect(page.getByTestId('revision-destructive')).toHaveCount(0);
  await page.getByLabel('我已核对候选定义与来源摘要，确认发布').check();
+ await expect(page.getByRole('button',{name:'确认发布'})).toBeEnabled();
  await page.getByRole('button',{name:'确认发布'}).click();
- await expect(page.getByTestId('publish-done')).toContainText('修订 2',{timeout:20000});
+ await expect(page.getByTestId('publish-done'))
+  .toContainText('修订 1 → 2',{timeout:20000});
 
- // 立即归还默认指针，缩短与并行用例争用默认本体的窗口；修订历史保留。
- const retired=await page.request.post(`/api/ontologies/${ontologyId}/retire`,{
-  headers:{'x-dataagent-token':process.env.DATAAGENT_TEST_TOKEN||''},
-  data:{reason:'e2e 用例结束后停用，归还默认指针',confirmed:true}});
- expect(retired.ok(),await retired.text()).toBeTruthy();
-
- // 本体库显示修订历史：修订号、本地发布时间与差异摘要（停用后仍可查看）。
+ await retire(page,ontologyId);
  await page.getByRole('button',{name:'本体库',exact:true}).click();
  const entry=page.getByTestId(`ontology-${ontologyId}`);
  await expect(entry).toContainText('销售单据修订模型');
@@ -187,4 +220,70 @@ test('已发布本体从网页确认修订 2 并在本体库显示修订历史',
  await expect(page.getByTestId(`revision-${ontologyId}-2`)).toContainText('修订 2');
  await expect(page.getByTestId(`revision-${ontologyId}-2`))
   .toContainText('SalesOrder.doc_no 值类型 integer → string');
+ await expect(page.getByTestId(`revision-${ontologyId}-2`))
+  .toContainText('Customer.name 必需性 可选 → 必需');
+});
+
+test('破坏性修订删除属性必须额外勾选旧数据不迁移',async({page})=>{
+ test.skip(!python,'run scripts/verify_browser.py to share the test workspace with MCP');
+ test.setTimeout(300000);
+ workspace=await resolveWorkspace(page);
+ ensureDataLayer();
+ const ontologyId=`sales-destructive-${Date.now()}`;
+ await publishInitial(page,ontologyId);
+
+ const revision=await prepareRevision(ontologyId,
+  {includeCustomerName:false});
+ expect(revision.candidate.destructive).toBe(true);
+ expect(revision.candidate.requires_no_migration_ack).toBe(true);
+ expect(revision.candidate.revision_diff.removed_properties)
+  .toContainEqual({concept:'Customer',property:'name',value_type:'string'});
+
+ await page.goto('/#session='+revision.sid);
+ await expect(page.getByTestId('revision-publish-notice')).toBeVisible({timeout:30000});
+ await expect(page.getByTestId('revision-destructive')).toBeVisible();
+ await expect(page.getByTestId('revision-no-migration')).not.toBeChecked();
+ await page.getByLabel('我已核对候选定义与来源摘要，确认发布').check();
+ await expect(page.getByRole('button',{name:'确认发布'})).toBeDisabled();
+ await page.getByTestId('revision-no-migration').check();
+ await expect(page.getByRole('button',{name:'确认发布'})).toBeEnabled();
+ await page.getByRole('button',{name:'确认发布'}).click();
+ await expect(page.getByTestId('publish-done'))
+  .toContainText('修订 1 → 2',{timeout:20000});
+
+ await retire(page,ontologyId);
+});
+
+test('来源变更后新建发现任务保留修订目标',async({page})=>{
+ test.skip(!python,'run scripts/verify_browser.py to share the test workspace with MCP');
+ test.setTimeout(300000);
+ workspace=await resolveWorkspace(page);
+ ensureDataLayer();
+ const ontologyId=`sales-rediscover-${Date.now()}`;
+ await publishInitial(page,ontologyId);
+
+ const revision=await prepareRevision(ontologyId,{docNoType:'string'});
+ // 观察后来源内容变化：确认必须被后端拒绝，网页给出用相同来源新建发现的出路。
+ execFileSync('sqlite3',[path.join(workspace!,'revision-'+ontologyId+'.db')],{
+  input:"INSERT INTO party VALUES ('P-9','Extra');\n"});
+
+ await page.goto('/#session='+revision.sid);
+ await expect(page.getByTestId('publish-card')).toBeVisible({timeout:30000});
+ await page.getByLabel('我已核对候选定义与来源摘要，确认发布').check();
+ await page.getByRole('button',{name:'确认发布'}).click();
+ await expect(page.getByTestId('publish-failure'))
+  .toContainText('新建发现任务',{timeout:20000});
+ await page.getByRole('button',{name:'用相同来源新建发现任务'}).click();
+ await expect(page).not.toHaveURL(new RegExp(revision.sid),{timeout:20000});
+
+ const rediscoverySid=sessionId(page);
+ expect(rediscoverySid).not.toBe(revision.sid);
+ const created=await page.request.get(`/api/sessions/${rediscoverySid}`);
+ expect(created.ok(),await created.text()).toBeTruthy();
+ const session=(await created.json()) as {extensions?:Record<string,unknown>};
+ const target=session.extensions?.['dataagent.revision_target'] as
+  {ontology_id?:string;base_revision?:string}|undefined;
+ expect(target).toMatchObject({ontology_id:ontologyId,base_revision:'1'});
+
+ await retire(page,ontologyId);
 });

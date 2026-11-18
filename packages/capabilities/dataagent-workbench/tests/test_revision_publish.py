@@ -331,6 +331,27 @@ def test_definition_diff_treats_identity_change_as_destructive():
     assert any('身份字段' in line for line in diff['summary'])
 
 
+def test_definition_diff_reports_requiredness_change():
+    before = OntologyRevision(id='m', revision='1', concepts={
+        'A': {'entity_type': 'A', 'identity_fields': ['code'],
+              'properties': {'code': {'value_type': 'string'},
+                             'note': {'value_type': 'string',
+                                      'required': False}}},
+    })
+    after = OntologyRevision(id='m', revision='2', concepts={
+        'A': {'entity_type': 'A', 'identity_fields': ['code'],
+              'properties': {'code': {'value_type': 'string'},
+                             'note': {'value_type': 'string',
+                                      'required': True}}},
+    })
+    diff = definition_diff(before, after)
+    assert diff['destructive'] is False
+    assert diff['required_changes'] == [
+        {'concept': 'A', 'property': 'note',
+         'before': False, 'after': True}]
+    assert 'A.note 必需性 可选 → 必需' in diff['summary']
+
+
 # ----------------------------------------------------------------- negatives
 def test_builtin_ontology_cannot_be_a_revision_target(tmp_path):
     with pytest.raises(ValueError, match='builtin ontology cannot be revised'):

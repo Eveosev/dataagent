@@ -8,6 +8,7 @@ export type RevisionDiff={
  added_properties?:{concept:string;property:string;value_type:string}[];
  removed_properties?:{concept:string;property:string;value_type:string}[];
  retyped_properties?:{concept:string;property:string;before:string;after:string}[];
+ required_changes?:{concept:string;property:string;before:boolean;after:boolean}[];
  identity_changes?:{concept:string;before:string[];after:string[]}[];
  added_relations?:string[];removed_relations?:string[];changed_relations?:{relation:string}[];
 };

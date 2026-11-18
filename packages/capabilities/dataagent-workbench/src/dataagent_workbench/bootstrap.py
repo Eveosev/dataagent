@@ -5,49 +5,9 @@ import secrets
 import json
 from pathlib import Path
 from uuid import uuid4
-from pydantic import Field, model_validator
 from dataagent_contracts.core import CallContext
 from dataagent_runtime.adapters.workbench_sqlite import SqliteWorkbenchStore
 from .session_service import SessionService
-from .tool_schema import MODELS, TOOLS, Start, StartTarget
-
-
-def _install_revision_start():
-    """Extend ``intake_start`` with the discovery-only revision target.
-
-    ``tool_schema`` is the shared input surface owned by the intake tool; a
-    published-ontology revision is a workbench capability.  Adding the optional
-    field here keeps the shared module untouched while still advertising it in
-    the MCP ``tools/list`` response and validating it on every transport.
-    """
-    base = MODELS.get('intake_start')
-    if base is None or 'revise_ontology_id' in base.model_fields:
-        return
-
-    class RevisionStart(base):
-        revise_ontology_id: str | None = Field(default=None, min_length=2,
-            max_length=64, pattern=r'^[a-z][a-z0-9-]*[a-z0-9]$',
-            description='修订目标：mode=ontology_discovery 时可选，必须是已注册、'
-                        '未停用、发现发布的本体；补全的 ontology_id 必须与它一致')
-
-        @model_validator(mode='after')
-        def _route_revision_target(self):
-            if self.revise_ontology_id is None:
-                return self
-            if self.mode != 'ontology_discovery':
-                raise ValueError('revise_ontology_id requires ontology_discovery mode')
-            if self.target is not None:
-                raise ValueError('name either revise_ontology_id or target, not both')
-            self.target = StartTarget(ontology_id=self.revise_ontology_id)
-            return self
-
-    MODELS['intake_start'] = RevisionStart
-    for tool in TOOLS:
-        if tool.get('name') == 'intake_start':
-            tool['inputSchema'] = RevisionStart.model_json_schema()
-
-
-_install_revision_start()
 
 
 class Workbench:

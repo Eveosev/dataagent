@@ -3,11 +3,11 @@
 A published ontology may publish a new revision from a new discovery draft.
 The human who confirms that revision sees exactly what changes against the
 revision that is current now: concepts and properties added or deleted, a
-property whose value type changed, an identity definition that moved, and
-relations added, deleted or re-pointed.  Deleting a property or changing the
-identity fields is destructive: the old revision's published objects stay on
-the old revision and are not migrated, so the confirmation needs an explicit
-second acknowledgement.
+property whose value type or requiredness changed, an identity definition that
+moved, and relations added, deleted or re-pointed.  Deleting a property or
+changing the identity fields is destructive: the old revision's published
+objects stay on the old revision and are not migrated, so the confirmation
+needs an explicit second acknowledgement.
 
 The result is plain JSON so it can be stored in a candidate, a registry
 history entry and a publication audit without a second schema.
@@ -40,6 +40,7 @@ def definition_diff(previous: OntologyRevision, current: OntologyRevision) -> di
     added_properties = []
     removed_properties = []
     retyped_properties = []
+    required_changes = []
     identity_changes = []
 
     for name in sorted(set(before) & set(after)):
@@ -61,6 +62,12 @@ def definition_diff(previous: OntologyRevision, current: OntologyRevision) -> di
             if old_type != new_type:
                 retyped_properties.append({'concept': name, 'property': prop,
                                            'before': old_type, 'after': new_type})
+            old_required = bool(old_props[prop].required)
+            new_required = bool(new_props[prop].required)
+            if old_required != new_required:
+                required_changes.append({'concept': name, 'property': prop,
+                                         'before': old_required,
+                                         'after': new_required})
         old_identity = list(old.identity_fields)
         new_identity = list(new.identity_fields)
         if old_identity != new_identity:
@@ -103,6 +110,11 @@ def definition_diff(previous: OntologyRevision, current: OntologyRevision) -> di
                    % (item['concept'], item['property'],
                       item['before'], item['after'])
                    for item in retyped_properties)
+    summary.extend('%s.%s 必需性 %s → %s'
+                   % (item['concept'], item['property'],
+                      '必需' if item['before'] else '可选',
+                      '必需' if item['after'] else '可选')
+                   for item in required_changes)
     summary.extend('%s 身份字段 %s → %s'
                    % (item['concept'], ' + '.join(item['before']) or '（无）',
                       ' + '.join(item['after']) or '（无）')
@@ -123,6 +135,7 @@ def definition_diff(previous: OntologyRevision, current: OntologyRevision) -> di
         'added_properties': added_properties,
         'removed_properties': removed_properties,
         'retyped_properties': retyped_properties,
+        'required_changes': required_changes,
         'identity_changes': identity_changes,
         'added_relations': added_relations,
         'removed_relations': removed_relations,
