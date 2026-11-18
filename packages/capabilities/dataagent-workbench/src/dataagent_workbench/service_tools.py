@@ -36,7 +36,8 @@ def _invoke(wb, name, args):
             continuation=Continuation(job_ref=handle.job_ref))
     if name == 'intake_status':
         data=wb.sessions.get(args['session_id'],wb.ctx).model_dump(mode='json')
-        data['issues']=[{k:i[k] for k in ['code','source_id','target'] if k in i} for i in data['issues']]
+        data['issues']=[{k:i[k] for k in ['code','source_id','target','detail'] if k in i} for i in data['issues']]
+        data['issue_count']=len(data['issues'])
         return CapabilityResult.ok(data)
     if name in {'intake_advance','intake_inference'}:
         session=(wb.intake.advance(args['session_id'],wb.ctx) if name=='intake_advance'
@@ -76,17 +77,25 @@ def _invoke(wb, name, args):
             preview=wb.intake.submit_source_proposals(typed.session_id,typed.proposals,typed.expected_revision,wb.ctx)
         else:
             preview=wb.intake.submit_proposal(typed.session_id,typed.proposal,typed.expected_revision,wb.ctx)
+        view=wb.intake.view(args['session_id'],wb.ctx);body=view['preview'] or {}
         return CapabilityResult.ok({'preview_ref':preview.id+'@'+preview.revision,
             'session_revision':wb.sessions.get(args['session_id'],wb.ctx).revision,
             'next_tool':'mapping_apply' if not preview.issues else 'intake_propose',
-            'instance_count':len(preview.instances),'issues':[{k:i[k] for k in ['code','target'] if k in i} for i in preview.issues]})
+            'instance_count':len(preview.instances),
+            'issue_count':body.get('issue_count',len(preview.issues)),
+            'issues':body.get('issues',[]),
+            'object_labels':body.get('object_labels',{})})
     if name=='mapping_preview':
         view=wb.intake.view(args['session_id'],wb.ctx);preview=view['preview']
         return CapabilityResult.ok(None if preview is None else {'preview_ref':preview['id']+'@'+preview['revision'],
             'review_state':preview['review_state'],'instance_count':len(preview['instances']),
-            'issues':[{k:i[k] for k in ['code','target'] if k in i} for i in preview['issues']]})
+            'issue_count':preview.get('issue_count',len(preview['issues'])),
+            'issues':preview['issues'],'object_labels':preview.get('object_labels',{})})
     if name=='mapping_apply':
         return CapabilityResult.ok(wb.intake.apply(args['session_id'],typed.decision,args['expected_revision'],wb.ctx).model_dump(mode='json'))
+    if name == 'source_connections':
+        from .adapters.source_connections import SourceConnections
+        return CapabilityResult.ok({'connections':SourceConnections().list()})
     if name == 'workflow_call':
         from .adapters.operations_client import call_operations
         return call_operations(wb, typed.operation, typed.arguments)

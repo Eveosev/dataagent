@@ -19,7 +19,10 @@ def handle(wb, request):
             result = result_summary(wb,invoke(wb,params['name'],params.get('arguments',{})))
             return {'content':[{'type':'text','text':json.dumps(result,ensure_ascii=False)}],'isError':False}
         except (ValueError,KeyError,PermissionError) as exc:
-            return {'content':[{'type':'text','text':json.dumps({'error':getattr(exc,'code','invalid_input'),'detail':str(exc)})}],'isError':True}
+            payload={'error':getattr(exc,'code','invalid_input'),'detail':str(exc)}
+            issues=getattr(exc,'issues',None)
+            if issues:payload['issues']=issues
+            return {'content':[{'type':'text','text':json.dumps(payload,ensure_ascii=False)}],'isError':True}
     raise ValueError('unsupported method')
 
 
