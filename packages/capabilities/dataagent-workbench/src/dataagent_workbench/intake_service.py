@@ -53,12 +53,17 @@ _RESOLVABLE_ISSUES = {
 # Row-level problems that one mapping defect can repeat across many rows.
 # They are counted once per (code, property, source) and carry the affected
 # row count separately; the web groups them with the same key (FDE2-06).
-# A missing required value is deliberately not here: each object needs its own
-# value/correction even when the column is the same, so its rows stay separate.
+# A missing required value also collapses to one root cause per column: the
+# per-row list stays on the preview for locating and correcting each object,
+# only the root-cause count stops reading "131 项根因" (FDE2-06 余项).
 _ROW_LEVEL_ISSUE_CODES = frozenset({
     'ontology.conversion_failed', 'ontology.identity_unresolved',
-    'ontology.evidence_missing', 'record_attribution_unverified',
+    'ontology.required_value_missing', 'ontology.evidence_missing',
+    'record_attribution_unverified',
 })
+# FDE3-04: a proposed or observed source that clearly cannot carry the task's
+# target concept (no identity column, most required properties unbindable).
+_SOURCE_CONCEPT_MISMATCH = 'ontology.source_concept_mismatch'
 _ISSUE_REASONS = {
     'ontology.conflicting_values': '各来源的字段值不一致',
     'ontology.required_value_missing': '缺少必填值',
@@ -68,6 +73,7 @@ _ISSUE_REASONS = {
     'ontology.evidence_missing': '值没有来源定位',
     'ontology.incomplete_source': '来源未完整读取',
     'ontology.source_unmapped': '该来源未用于当前映射',
+    'ontology.source_concept_mismatch': '该来源与目标概念不符',
     'ontology.relation_unresolved': '关联字段不完整',
     'ontology.correction_conflict': '网页纠正无法沿用',
     'ontology.no_records': '没有可映射的记录',
@@ -286,6 +292,18 @@ class IntakeService:
         return {key.split(':', 1)[1] for key in session.selected_versions
                 if key.startswith('mapping:')}
 
+    def _active_preview_body(self, session):
+        """The stored body of the preview the session currently points at."""
+        ref = session.selected_versions.get('preview')
+        if not ref:
+            return None
+        try:
+            preview_id, revision = ref.rsplit('@', 1)
+        except ValueError:
+            return None
+        row = self.wb.store.get('preview', preview_id, revision, scope=self.wb.scope)
+        return row['body'] if row is not None else None
+
     def _preview_source_ids(self, session):
         """Sources the active preview actually maps, or None without a preview.
 
@@ -295,15 +313,8 @@ class IntakeService:
         operator is looking at, not the historical scope, or the source-level
         issue would name a source that ``dispose`` then refuses.
         """
-        ref = session.selected_versions.get('preview')
-        if not ref:
-            return None
-        try:
-            preview_id, revision = ref.rsplit('@', 1)
-        except ValueError:
-            return None
-        row = self.wb.store.get('preview', preview_id, revision, scope=self.wb.scope)
-        return set((row['body'].get('source_revisions') or {})) if row is not None else None
+        body = self._active_preview_body(session)
+        return set((body.get('source_revisions') or {})) if body is not None else None
 
     def _selected_mappings(self, session):
         """The mapping specs the task pinned for each mapped source.
@@ -331,19 +342,64 @@ class IntakeService:
         return {entry.get('source_id') for entry in self.disposition_entries(session)
                 if entry.get('action') == 'ignore_source'}
 
-    def _unmapped_source_issues(self, session, used):
-        """One source-level issue per observed source outside the mapping.
+    @staticmethod
+    def _source_matches_concept(concept, profile, bindings=None):
+        """False when a source clearly cannot carry the task's target concept.
 
-        A source left out of the proposal (two concepts in one task, only one
-        material mapped) must not turn every one of its rows into an object
-        and a row-level problem; the operator decides per source whether the
-        task keeps it at all.
+        FDE3-04: a limit-table document proposed into an expense-line task used
+        to turn every one of its rows into an unidentified object plus a
+        missing-value problem.  A source is held out of the preview instead
+        when the concept's identity column is not bound to an observed field
+        and no more than half of the required properties bind — with
+        ``bindings`` from a proposal, or by the same-name defaults the web
+        would use when the source has no proposal at all.
+        """
+        fields = set(profile.fields or [])
+        if not fields:
+            # Nothing was observed (a header-only file yields no fields): the
+            # source is empty and its own problems (no records, unread) speak
+            # for it; there is nothing to judge a concept mismatch against.
+            return True
+        if bindings is None:
+            bound = {name for name in concept.properties if name in fields}
+        else:
+            bound = {name for name, binding in bindings.items()
+                     if binding and binding.source_field in fields}
+        if any(name in bound for name in concept.identity_fields):
+            return True
+        required = [name for name, definition in concept.properties.items()
+                     if definition.required]
+        if not required:
+            return True
+        return 2 * sum(1 for name in required if name in bound) > len(required)
+
+    def _source_scope_issues(self, session, used, proposals=None):
+        """One source-level issue per observed source outside the preview.
+
+        A source left out of the proposal keeps ``source_unmapped``; one that
+        clearly cannot carry the target concept (identity column missing,
+        most required properties unbindable) is named as a mismatch instead,
+        so the page offers "this task does not use the source" and never an
+        "include in mapping" escape (FDE3-04).
         """
         ignored = self._ignored_source_ids(session)
-        return [{'code': 'ontology.source_unmapped', 'source_id': profile.source_id}
-                for profile in self._profiles(session)
-                if profile.source_id not in used
-                and profile.source_id not in ignored]
+        _, _, concept = self._target(session)
+        issues = []
+        for profile in self._profiles(session):
+            if profile.source_id in used or profile.source_id in ignored:
+                continue
+            proposal = (proposals or {}).get(profile.source_id)
+            if not self._source_matches_concept(
+                    concept, profile,
+                    proposal.bindings if proposal is not None else None):
+                issues.append({'code': _SOURCE_CONCEPT_MISMATCH,
+                               'source_id': profile.source_id,
+                               'detail': '该来源没有任务目标概念的身份字段，'
+                                         '必需属性也大多无法绑定'})
+            else:
+                issues.append({'code': 'ontology.source_unmapped',
+                               'source_id': profile.source_id})
+        return issues
 
     @staticmethod
     def _deduped_issues(issues):
@@ -485,7 +541,8 @@ class IntakeService:
                         for profile in self._profiles(session)}
             ignored = self._ignored_source_ids(session)
             for issue in body.get('issues') or []:
-                if issue.get('code') == 'ontology.source_unmapped':
+                if issue.get('code') in {'ontology.source_unmapped',
+                                         _SOURCE_CONCEPT_MISMATCH}:
                     # The source-level escape hatch: record an audited decision
                     # that this task does not use the source at all.  The wire
                     # action stays ``partition_not_applicable`` with no
@@ -571,12 +628,21 @@ class IntakeService:
                  'reason': disposition.reason}
         if source_level:
             # Ignore a source only when the preview under review does not map
-            # it; an older mapping entry alone does not keep it in use.
+            # it; an older mapping entry alone does not keep it in use.  A
+            # source the active preview itself flags as not matching the
+            # concept stays ignorable: the wrong mapping must not pin it into
+            # the task (FDE3-04).
             active = self._preview_source_ids(session)
             used = active if active is not None else self._mapped_source_ids(session)
             if disposition.source_id in used:
-                raise ValueError('source is used by the current mapping; '
-                                  'dispose a partition or a record instead')
+                body = self._active_preview_body(session)
+                flagged = body is not None and any(
+                    issue.get('code') == _SOURCE_CONCEPT_MISMATCH
+                    and issue.get('source_id') == disposition.source_id
+                    for issue in body.get('issues') or [])
+                if not flagged:
+                    raise ValueError('source is used by the current mapping; '
+                                     'dispose a partition or a record instead')
         elif action == 'partition_not_applicable':
             partition = disposition.partition
             observed = {gap.partition for gap in profile.gaps}
@@ -1353,7 +1419,7 @@ class IntakeService:
                 item['actions'] = [option for option in actions
                                    if option['action'] == 'partition_not_applicable'
                                    and option['source_id'] == issue.get('source_id')]
-            elif code == 'ontology.source_unmapped':
+            elif code in {'ontology.source_unmapped', _SOURCE_CONCEPT_MISMATCH}:
                 item['actions'] = [option for option in actions
                                    if option.get('scope') == 'source'
                                    and option['source_id'] == issue.get('source_id')]
@@ -1889,14 +1955,22 @@ class IntakeService:
         prior=wb.store.current('mapping',mid,scope=wb.scope)
         revision=str(int(prior['revision'])+1) if prior else '1'
         proposal=proposal.model_copy(update={'id':mid,'revision':revision,'scope':wb.scope})
+        # FDE3-04: a source that clearly cannot carry the task's concept (no
+        # identity column, most required properties unbindable) is held out of
+        # the preview instead of flooding it with unidentified objects and
+        # per-row missing values; it keeps one source-level issue and the
+        # audited "this task does not use the source" way out.
+        covering={observation.source_id:proposal for observation in observations}
+        observations=[observation for observation in observations
+            if self._source_matches_concept(concept,observation,proposal.bindings)]
         preview,body=wb.ontology.prepare_preview(proposal,observations,ctx,
             dispositions=self.disposition_entries(s))
         # Keep the per-row, same-row deduplicated list on the preview so every
         # row stays locatable; the session stores the same problems collapsed
         # to root causes so intake_status counts a column defect once (FDE2-06).
         body['issues']=self._deduped_issues([*(body.get('issues') or []),
-            *self._unmapped_source_issues(
-                s,{observation.source_id for observation in observations}),
+            *self._source_scope_issues(
+                s,{observation.source_id for observation in observations},covering),
             *self._clause_attribution_issues(s,body)])
         body['mapping_reused']=reused
         prior_ref,_,conflicts,pending=self._carry_corrections(s,body)
@@ -1945,6 +2019,16 @@ class IntakeService:
             raise ValueError('source is disposed as not used')
         observations = [profile for profile in all_profiles if profile.source_id in proposals]
         ontology, concept_name, concept = self._target(session)
+        # FDE3-04: proposals covering a source that clearly cannot carry the
+        # task's concept are held out of the preview (one source-level issue
+        # instead of every row becoming an unidentified object).  Their mapping
+        # rows are still written for audit, but they pin no ``mapping:`` scope
+        # so the web rebuild cannot quietly map the material again.
+        mismatched = {profile.source_id for profile in observations
+                      if not self._source_matches_concept(
+                          concept, profile, proposals[profile.source_id].bindings)}
+        materialized = [profile for profile in observations
+                        if profile.source_id not in mismatched]
         if {proposal.ontology_revision for proposal in proposals.values()} != {f'{ontology.id}@{ontology.revision}'}:
             raise ValueError('target ontology outside task')
         for proposal in proposals.values():
@@ -1972,18 +2056,22 @@ class IntakeService:
             revision = str(int(current['revision']) + 1) if current else '1'
             mapping = proposals[key].model_copy(update={'id': mapping_id, 'revision': revision, 'scope': wb.scope})
             mappings[key] = mapping
-            versions['mapping:'+key] = f'{mapping_id}@{revision}'
+            if key not in mismatched:
+                versions['mapping:'+key] = f'{mapping_id}@{revision}'
             writes.append(Write('mapping', mapping_id, wb.scope, mapping.model_dump(mode='json'),
                                 current['revision'] if current else None))
         primary = next(iter(mappings.values()))
         preview, body = wb.ontology.prepare_preview(
-            primary, observations, ctx, source_mappings=mappings,
+            primary, materialized, ctx,
+            source_mappings={key: value for key, value in mappings.items()
+                              if key not in mismatched},
             dispositions=self.disposition_entries(session))
         # Same outward list as the session/status path: one issue per row and
         # root cause, so every count reports the same number (FDE2-06).
         body['issues'] = self._deduped_issues([
             *(body.get('issues') or []),
-            *self._unmapped_source_issues(session, set(proposals)),
+            *self._source_scope_issues(session, {profile.source_id for profile
+                                                  in materialized}, proposals),
             *self._clause_attribution_issues(session, body)])
         body['mapping_reused'] = reused
         prior_ref,_,conflicts,pending=self._carry_corrections(session,body)
@@ -1994,7 +2082,8 @@ class IntakeService:
         versions.update(preview=preview.id+'@1', mapping=f'{primary.id}@{primary.revision}')
         if prior_ref and pending:versions['corrections_from']=prior_ref
         else:versions.pop('corrections_from',None)
-        draft_write,draft_ref=self._prune_stale_source_draft(session,set(proposals))
+        draft_write,draft_ref=self._prune_stale_source_draft(
+            session,{profile.source_id for profile in materialized})
         if draft_ref:versions['draft']=draft_ref
         if draft_write:writes.append(draft_write)
         wb.sessions.update(session_id, expected_revision, {

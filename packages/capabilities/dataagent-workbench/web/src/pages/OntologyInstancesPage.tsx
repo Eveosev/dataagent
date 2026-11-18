@@ -1,6 +1,6 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
 import type {CSSProperties} from 'react';
-import {api,display,isDecisionSelector,registryTitle,translateError} from '../client';
+import {api,compareDisplayText,display,isDecisionSelector,registryTitle,translateError} from '../client';
 import type {Correction,RegistryEntry,View} from '../client';
 import {
  anchorLocation,browseConceptLabel,browsePropertyLabel,comparisonOps,comparableValueTypes,conceptMap,
@@ -259,7 +259,9 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,initial
    const na=Number(left),nb=Number(right);
    if(Number.isFinite(na)&&Number.isFinite(nb))return na-nb;
   }
-  return a.localeCompare(b,'zh-Hans-CN');
+  // FDE2-13 余项：中文序数（一类/二类/三类、第一/第二）按序数值排序，
+  // 不再按拼音（拼音序会把 二、三、一 排成「二、三、一」开头的顺序）。
+  return compareDisplayText(a,b);
  }
  function compareItems(a:PublishedInstance,b:PublishedInstance):number{
   let result=0;

@@ -269,10 +269,11 @@ export function ObjectPage({sessionId,initialInstanceId,onBack,onError}:{session
  // 行数从页面实际渲染的逐行问题算，和根因数、分组条目共用同一份列表。
  const issueRowCount=new Set(problemIssues
   .filter(issue=>issue.row!==undefined).map(issue=>`${issue.source_id??''}|${issue.row}`)).size;
- // 来源级问题（未映射来源、来源不完整）排最前：行级问题再多也不能把
- // 「返回映射页纳入」等整源操作挤出折叠区。
+ // 来源级问题（未映射来源、来源与概念不符、来源不完整）排最前：行级问题再多
+ // 也不能把「返回映射页纳入」等整源操作挤出折叠区。
  const sourceLevelIssue=(issue:Issue)=>issue.code==='ontology.source_unmapped'
-  ||issue.code==='ontology.incomplete_source';
+  ||issue.code==='ontology.incomplete_source'
+  ||issue.code==='ontology.source_concept_mismatch';
  const sortedIssues=[...problemIssues].sort((a,b)=>Number(sourceLevelIssue(b))-Number(sourceLevelIssue(a))
   ||Number(issueBlocksSave(b))-Number(issueBlocksSave(a)));
  // 按根因分组（FDE2-06）：同一列同一类问题跨多行合并成一条「× N 行」，各行
@@ -333,7 +334,7 @@ export function ObjectPage({sessionId,initialInstanceId,onBack,onError}:{session
  const issueDisposals=(issue:Issue)=>(view.disposition_options||[]).filter(option=>{
   if(issue.code==='ontology.incomplete_source')
    return option.action==='partition_not_applicable'&&option.scope!=='source'&&option.source_id===issue.source_id;
-  if(issue.code==='ontology.source_unmapped')
+  if(issue.code==='ontology.source_unmapped'||issue.code==='ontology.source_concept_mismatch')
    return option.scope==='source'&&option.source_id===issue.source_id;
   if(['ontology.identity_unresolved','ontology.required_value_missing','ontology.conversion_failed'].includes(issue.code||''))
    return option.action==='exclude_record'&&option.source_id===issue.source_id&&option.record===issue.row;

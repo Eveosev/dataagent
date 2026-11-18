@@ -217,8 +217,8 @@ test('xlsx 日期列错绑为 decimal：按根因合并计数，处置按类型�
  await expect(page.getByText('识别与探查已完成')).toBeVisible();
  // 默认绑定把日期列绑到金额（decimal）：5 行全部转换失败。
  await page.getByRole('button',{name:'生成映射预览'}).click();
- await expect(page.getByText('1 项待核对')).toBeVisible();
- await expect(page.getByText('涉及 5 行')).toBeVisible();
+ // FDE2-06 余项：映射页标题按根因计数（「N 项根因 · 影响 M 行」）。
+ await expect(page.locator('.notice.amber strong').first()).toHaveText('1 项根因 · 影响 5 行');
  await page.getByRole('button',{name:'打开对象页'}).click();
  // FDE2-06：同一列 5 行转换失败是 1 条根因、影响 5 行（不是 5×2 项），
  // 阻断数按根因数计，整批保存仍被这一条根因拦下。
@@ -487,8 +487,7 @@ test('前面的行级问题超过 8 条时未映射来源的纳入按钮仍可�
  await page.reload();
  // 10 条逐行问题（9 条转换失败 + 1 条未映射来源），合并为 2 条根因、9 行。
  await expect(page.getByTestId('mapping-issues').locator('li')).toHaveCount(9);
- await expect(page.getByText('2 项待核对')).toBeVisible();
- await expect(page.getByText('涉及 9 行')).toBeVisible();
+ await expect(page.locator('.notice.amber strong').first()).toHaveText('2 项根因 · 影响 9 行');
  const include=page.getByTestId('include-mapping-option');
  await expect(include).toContainText(`把「other.csv」纳入映射`);
  await expect(page.getByTestId('mapping-issues').locator('li').first())

@@ -278,10 +278,11 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession
  const problemCount=view.preview?.issue_count??issueItems.length;
  const issueRowCount=view.preview?.issue_row_count
   ??new Set(issueItems.filter(issue=>issue.row!==undefined).map(issue=>`${issue.source_id??''}|${issue.row}`)).size;
- // 来源级问题（未映射来源、来源不完整）及操作永远排在最前，不参与只显示
- // 前 8 条的截断；否则前面的行级问题一多，「纳入映射」入口就不可达。
+ // 来源级问题（未映射来源、来源与概念不符、来源不完整）及操作永远排在最前，
+ // 不参与只显示前 8 条的截断；否则前面的行级问题一多，「纳入映射」入口就不可达。
  const sourceLevelIssue=(issue:Issue)=>issue.code==='ontology.source_unmapped'
-  ||issue.code==='ontology.incomplete_source';
+  ||issue.code==='ontology.incomplete_source'
+  ||issue.code==='ontology.source_concept_mismatch';
  const sourceIssues=issueItems.filter(sourceLevelIssue);
  const rowIssues=issueItems.filter(issue=>!sourceLevelIssue(issue));
  const visibleIssues=[...sourceIssues,...rowIssues.slice(0,8)];
@@ -316,7 +317,7 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession
   <td className="mapped-value">{dirty?'待更新':display(instance?.values?.[name])}{correction&&!dirty&&<small className="warn">纠正值生效 · 映射值 {display(correction.mapping_value)}</small>}</td></tr>;})}</tbody></table></div>
  <div className="mapping-actions"><span className="muted">{draftState||'原值与转换后的值均可核对'}</span><button className="primary" disabled={busy||working||done||!profile} onClick={preview}>{busy?'正在校验…':'生成映射预览'}</button></div>
  {correctionNotice&&<div className={correctionNotice.kind==='green'?'notice green':'notice amber'} data-testid="mapping-correction-notice" role="status">{correctionNotice.text}</div>}
- {problemCount>0&&<div className="notice amber"><strong>{problemCount} 项待核对{issueRowCount?` · 涉及 ${issueRowCount} 行`:''}</strong><ul data-testid="mapping-issues">{visibleIssues.map((issue,i)=><li key={i}>{issueText(issue)}
+ {problemCount>0&&<div className="notice amber"><strong>{problemCount} 项根因{issueRowCount?` · 影响 ${issueRowCount} 行`:''}</strong><ul data-testid="mapping-issues">{visibleIssues.map((issue,i)=><li key={i}>{issueText(issue)}
    {/* 未映射来源的第一条出路：显式纳入映射。点一次即记录来源范围选择，
        沿用当前绑定（未改过时就是默认同名绑定）重新提案，不要求先改绑定。 */}
    {issue.code==='ontology.source_unmapped'&&issue.source_id&&(()=>{
@@ -329,8 +330,8 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession
       <button className="secondary" disabled={busy||done||included} onClick={()=>includeSource(id)}>{included?'已纳入，待生成预览':'纳入映射'}</button>
      </div>
     </div>;})()}
-   {/* 未映射来源的整源处置：写审计、必填原因，处置后重新生成预览即可。 */}
-   {issue.code==='ontology.source_unmapped'&&(view.disposition_options||[]).filter(option=>option.scope==='source'&&option.source_id===issue.source_id).map(option=>{
+   {/* 未映射/与概念不符来源的整源处置：写审计、必填原因，处置后重新生成预览即可。 */}
+   {(issue.code==='ontology.source_unmapped'||issue.code==='ontology.source_concept_mismatch')&&(view.disposition_options||[]).filter(option=>option.scope==='source'&&option.source_id===issue.source_id).map(option=>{
     const key=`${option.action}:${option.source_id}`;
     return <div key={key} className="disposal" data-testid="disposal-option">
      <span className="muted">本任务不使用「{option.source_name}」 · {option.reason_hint}</span>
