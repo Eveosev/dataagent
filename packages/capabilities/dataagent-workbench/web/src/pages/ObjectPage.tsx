@@ -1,5 +1,5 @@
 import {useEffect,useRef,useState} from 'react';
-import {api,ApiError,display,locate} from '../client';
+import {api,ApiError,display,locate,findAnchorRow,isDecisionEvidence,decisionSourceName} from '../client';
 import type {ObjectView,SourceProfile} from '../client';
 import {SourceViewer} from '../components/SourceViewer';
 
@@ -104,13 +104,22 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
  const object=view.objects[idx];
  objectRef.current=object?.id||'';
  const proof=object&&field?object.evidence[field]||[]:[];
- const current=proof[0];
- const profile=(current?view.sources.find(s=>s.source_id===current.source_id):undefined)||view.sources[0];
- const direct=profile&&current?Object.entries(profile.anchors||{}).find(([key,anchors])=>
-  anchors.some(anchor=>anchor.source_ref===current.source_id&&JSON.stringify(anchor.selector)===JSON.stringify(current.selector))):undefined;
- const sourceRow=direct?Number(direct[0].split('.',1)[0]):0;
- const sourceField=direct?direct[0].split('.').slice(1).join('.'):field;
+ // 原始来源证据优先；只有纠正证据时也传给来源视图显示决定定位，但不定位任何来源行。
+ const sourceAnchor=proof.find(e=>!isDecisionEvidence(e))||proof[0];
+ const isCorrectionOnly=sourceAnchor?isDecisionEvidence(sourceAnchor):false;
+ const profile=(!isCorrectionOnly&&sourceAnchor?view.sources.find(s=>s.source_id===sourceAnchor.source_id):undefined)||view.sources[0];
+ // selector 带页序号时按页定位对应来源记录；页码明确但不匹配时不回退，无页码时退回旧逻辑。
+ const direct=profile&&sourceAnchor&&!isCorrectionOnly?findAnchorRow(profile,sourceAnchor):undefined;
+ const sourceRow=direct?direct.row:(sourceAnchor?-1:0);
+ const sourceField=direct?direct.field:field;
  const corrections=view.corrections.filter(c=>object&&c.entity_id===object.id);
+ // 来源名：SQLite 上传的显示名在 extensions 里，options 里没有时后端会回退到内部上传路径。
+ const sourceName=(sourceId:string)=>{
+  const selection=view.session.sources.find(s=>s.source_id===sourceId);
+  const uploadName=selection?.extensions?.['dataagent.display_name'];
+  if(typeof uploadName==='string'&&uploadName)return uploadName;
+  return display((view.sources.find(s=>s.source_id===sourceId)||{}).display_name);
+ };
  const submitButton=(label:string)=><button className="secondary" disabled={busy||!object}
   onClick={conflict?confirmConflict:submit}>{conflict?'已核对，重新提交':label}</button>;
  return <main className="workspace"><div className="task-header"><div><div className="eyebrow">采购资料 / 对象页</div><h1>核对业务对象</h1><p className="muted">每个值都带来源定位；三种修改范围分别生效。{done?'接入已保存，对象为只读。':''}</p></div><div className="save-buttons"><button className="secondary" onClick={onBack}>返回映射页</button></div></div>
@@ -119,7 +128,7 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
    <span>▤</span><span>{String(entry.values[view.ontology.identity_fields?.[0]||'number']??entry.id)}</span>
    {entry.unresolved.length>0&&<span className="badge">{entry.unresolved.length} 项未解决</span>}</button>)}</div>
   {view.objects.length===0&&<div className="empty">生成映射预览后，在这里查看对象。</div>}
-  <SourceViewer sessionId={sessionId} profile={profile as SourceProfile|undefined} anchor={current?{source_ref:current.source_id,selector:current.selector}:undefined} recordIndex={sourceRow} sourceField={sourceField}/>
+  <SourceViewer sessionId={sessionId} profile={profile as SourceProfile|undefined} anchor={sourceAnchor?{source_ref:sourceAnchor.source_id,selector:sourceAnchor.selector}:undefined} recordIndex={sourceRow} sourceField={sourceField}/>
  </section><section className="mapping-panel"><div className="panel-heading"><strong>对象详情</strong><span className="badge">{view.ontology.entity_type}</span></div>
   {object?<><div className="mapping-table-scroll"><table className="mapping-table"><thead><tr><th>Ontology 属性</th><th>当前值</th><th>来源定位</th><th>状态</th></tr></thead><tbody>{properties.map(prop=>{
    const anchors=object.evidence[prop]||[];const corrected=corrections.some(c=>c.property===prop);
@@ -127,7 +136,7 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
    return <tr key={prop} className={field===prop?'active-mapping':''} onClick={()=>setField(prop)}>
     <td><button className="field-button" onClick={()=>setField(prop)}>{prop}</button>{view.ontology.properties[prop].required&&<span className="required">必需</span>}</td>
     <td data-testid={`object-${prop}`} className="mapped-value">{display(object.values[prop])}</td>
-    <td className="object-evidence">{anchors.length?anchors.map((anchor,i)=><div key={i}>{display((view.sources.find(s=>s.source_id===anchor.source_id)||{}).display_name)} · {locate(anchor.selector)}</div>):<span className="muted">无来源定位</span>}</td>
+    <td className="object-evidence">{anchors.length?anchors.map((anchor,i)=><div key={i}>{isDecisionEvidence(anchor)?decisionSourceName(anchor.source_id):`${sourceName(anchor.source_id)} · ${locate(anchor.selector)}`}</div>):<span className="muted">无来源定位</span>}</td>
     <td><small className={object.unresolved.includes(prop)||issue?'warn':'ok'}>{corrected?'已纠正':object.unresolved.includes(prop)?'未解决':issue?'需核对':'已核对'}</small></td>
    </tr>;})}</tbody></table></div>
   {corrections.length>0&&<div className="notice"><strong>纠正记录</strong><ul>{corrections.map((correction,i)=><li key={i}>{correction.property} → {display(correction.value)} · {correction.reason}</li>)}</ul></div>}

@@ -1,5 +1,5 @@
 import {useEffect,useState} from 'react';
-import {api} from '../client';
+import {api,translateError} from '../client';
 type Source={source_id:string;kind:'file'|'sqlite'|'postgres'|'rest';locator_ref:string;options?:Record<string,string>};
 type Connection={id:string;kind:'postgres'|'rest';label:string};
 export function IntakePage({onStart,onError}:{onStart:(id:string)=>void;onError:(error:unknown)=>void}){
@@ -18,7 +18,7 @@ export function IntakePage({onStart,onError}:{onStart:(id:string)=>void;onError:
    }));
    for(const file of files){
     const response=await fetch('/api/files',{method:'POST',body:file,credentials:'same-origin',headers:{'x-file-name':encodeURIComponent(file.name)}});
-    if(!response.ok)throw new Error((await response.json()).detail||'材料上传未完成');
+    if(!response.ok){const detail=(await response.json()).detail;throw new Error(typeof detail==='string'?translateError(detail):'材料上传未完成');}
     sources.push(await response.json());
    }
    const result=await api<{session_id:string}>('/api/sessions','POST',{goal,sources,mode});onStart(result.session_id);
