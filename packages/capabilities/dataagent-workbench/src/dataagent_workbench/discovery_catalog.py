@@ -3,15 +3,15 @@
 Column evidence is normalized per source by ``discovery_evidence``.  This
 module adds the relationship rules the SQLite discovery flow already used:
 declared foreign keys for database sources, and observed-value candidates that
-require an equal field affinity and a unique target key.  Both single-column
-and composite candidates allow partial coverage: at least two distinct source
-combinations must match, and at least half the observed source rows; the
-candidate carries the coverage (matched and unmatched rows, rate, unmatched
-values) so the proposal can judge the optional relationship.  Several matching
-targets are marked ambiguous instead of being silently chosen.  A candidate
-that involves a document table also needs an affine field name: coincidental
-value overlap (a code that just happens to equal a limit, or numbering that
-overlaps) must not become a link.
+require an equal field affinity, a unique target key and an affine field name
+-- coincidental value overlap (a code that just happens to equal a limit, or
+numbering that overlaps) must not become a link.  Both single-column and
+composite candidates allow partial coverage: at least two distinct source
+combinations must match, and at least half of all source rows -- rows without a
+complete combination count as not matched.  The candidate carries the coverage
+(matched, unmatched and missing rows, rate, unmatched values) so the proposal
+can judge the optional relationship.  Several matching targets are marked
+ambiguous instead of being silently chosen.
 """
 import re
 from collections import defaultdict
@@ -19,7 +19,7 @@ from collections import defaultdict
 from dataagent_ontology.identity import digest
 
 from .discovery_evidence import (DOCUMENT_KINDS, _sample_value, affinity,  # noqa: F401
-                                  collect_tables, key_counts)
+                                  collect_tables, is_blank, key_counts, scalar)
 
 _NAME_NOISE = re.compile(r'[\s_/-]+')
 # Partial-coverage gates and the disclosure bound for unmatched values.
@@ -33,26 +33,48 @@ def _name_key(name):
     return _NAME_NOISE.sub('', str(name)).casefold()
 
 
-def _covers(source_keys, target_keys):
+def _row_totals(table, columns):
+    """Source rows split into complete combinations and rows without one.
+
+    ``key_counts`` drops rows whose combination is incomplete or carried by a
+    binary value; those rows are still source rows that did not match, so the
+    rate and the coverage count them instead of inflating both.
+    """
+    skip_blank = table['_skip_blank']
+    complete = missing = 0
+    for row, binary in table['_rows']:
+        if binary.intersection(columns):
+            missing += 1
+        elif skip_blank and any(is_blank(row.get(column)) for column in columns):
+            missing += 1
+        elif any(scalar(row.get(column)) is None for column in columns):
+            missing += 1
+        else:
+            complete += 1
+    return complete, missing
+
+
+def _covers(source_keys, target_keys, missing_rows):
     """Whether a partially covered source column set can still be a link.
 
     At least two distinct source combinations must exist as target keys, and
-    at least half the observed source rows must match; rows without a
-    complete combination never reach ``source_keys`` in the first place.
+    at least half of all source rows must match -- ``missing_rows`` are the
+    source rows without a complete combination, which never reach
+    ``source_keys`` but still did not match.
     """
     matched = source_keys.keys() & target_keys
     if len(matched) < _MIN_MATCHED_DISTINCT:
         return False
-    total_rows = sum(source_keys.values())
+    total_rows = sum(source_keys.values()) + missing_rows
     matched_rows = sum(source_keys[key] for key in matched)
     return total_rows > 0 and matched_rows >= _MIN_ROW_RATE * total_rows
 
 
-def _coverage(source_keys, target_keys):
+def _coverage(source_keys, target_keys, missing_rows):
     """The partial-coverage record a candidate carries for judgement."""
     matched = source_keys.keys() & target_keys
     matched_rows = sum(source_keys[key] for key in matched)
-    total_rows = sum(source_keys.values())
+    total_rows = sum(source_keys.values()) + missing_rows
     unmatched = [key for key in source_keys if key not in target_keys]
     return {
         'matched_rows': matched_rows,
@@ -60,6 +82,7 @@ def _coverage(source_keys, target_keys):
         'rate': matched_rows / total_rows if total_rows else 0.0,
         'unmatched_distinct': len(unmatched),
         'unmatched_rows': total_rows - matched_rows,
+        'missing_rows': missing_rows,
         # A key part is a (storage class, value) pair; disclose its value
         # truncated like a sample.
         'unmatched_values': [[_sample_value(part[1]) for part in key]
@@ -87,6 +110,14 @@ def build_catalog(profiles, allowed_fields=None):
                                     skip_blank=tables[table]['_skip_blank'])
         return cache[key]
 
+    totals_cache = {}
+
+    def totals(table, columns):
+        key = (table, tuple(columns))
+        if key not in totals_cache:
+            totals_cache[key] = _row_totals(tables[table], columns)
+        return totals_cache[key]
+
     def relationship(source, source_cols, target, target_cols, origin):
         source_keys, target_keys = counts(source, source_cols), counts(target, target_cols)
         matched = source_keys.keys() & target_keys.keys()
@@ -98,7 +129,7 @@ def build_catalog(profiles, allowed_fields=None):
             'matched_rows': sum(source_keys[key] for key in matched),
             'checked_rows': sum(source_keys.values()),
             'matched_distinct_keys': len(matched),
-            'coverage': _coverage(source_keys, target_keys),
+            'coverage': _coverage(source_keys, target_keys, totals(source, source_cols)[1]),
             'sampled': tables[source]['sampled'] or tables[target]['sampled'],
             'cardinality': 'one_to_one' if any(set(key) <= set(source_cols) for key in tables[source]['keys'])
                            else 'many_to_one',
@@ -117,7 +148,6 @@ def build_catalog(profiles, allowed_fields=None):
                                           link['target_columns'], 'declared'))
 
     # Candidate generation uses the observed key index. A shared ID alone is weak evidence.
-    document_tables = {name for name, table in tables.items() if table['kind'] in DOCUMENT_KINDS}
     key_index = defaultdict(list)
     for target, table in tables.items():
         for columns in table['keys']:
@@ -146,22 +176,21 @@ def build_catalog(profiles, allowed_fields=None):
             observed = counts(source, columns)
             if len(observed) < 2:
                 continue
-            # Every target key column that holds at least one observed value.
-            candidates = set()
-            for value in observed:
-                candidates.update(pair for pair in key_index.get((family, value), ())
-                                  if pair[0] != source)
+            # Every affine target key column that holds at least one observed
+            # value.  The field name is a hard condition for every pair: values
+            # alone do not tell a referenced customer from a coincidental code,
+            # in documents and plain tables alike.
+            name = _name_key(column)
+            candidates = {pair for value in observed
+                          for pair in key_index.get((family, value), ())
+                          if pair[0] != source and _name_key(pair[1]) == name}
+            missing_rows = totals(source, columns)[1]
             alternatives = []
             for target, target_col in sorted(candidates):
                 # Partial coverage: at least two matched distinct values and
-                # at least half the observed source rows; the candidate itself
+                # at least half of all source rows; the candidate itself
                 # carries the coverage for the proposal to judge.
-                if not _covers(observed, counts(target, [target_col]).keys()):
-                    continue
-                # A document pair must also share a field name: values alone
-                # do not tell a referenced limit from a coincidental code.
-                if ((source in document_tables or target in document_tables)
-                        and _name_key(column) != _name_key(target_col)):
+                if not _covers(observed, counts(target, [target_col]).keys(), missing_rows):
                     continue
                 alternatives.append(relationship(source, columns, target, [target_col],
                                                  'sample_supported'))
@@ -205,7 +234,9 @@ def build_catalog(profiles, allowed_fields=None):
                 if any(set(source_cols) < set(existing) for existing in source_table['keys']):
                     continue  # a proper identity prefix is not reference evidence
                 observed = counts(source, source_cols)
-                if len(observed) < 2 or not _covers(observed, target_keys):
+                if len(observed) < 2:
+                    continue
+                if not _covers(observed, target_keys, totals(source, source_cols)[1]):
                     continue
                 composite_slots[slot].append(
                     relationship(source, source_cols, target, list(key), 'sample_supported'))

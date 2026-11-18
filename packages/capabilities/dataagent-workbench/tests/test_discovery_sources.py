@@ -566,7 +566,7 @@ def test_partial_coverage_composite_link_appears_with_coverage(tmp_path):
     assert forward['ambiguous'] is False
     assert forward['coverage'] == {
         'matched_rows': 16, 'total_rows': total, 'rate': 16 / total,
-        'unmatched_distinct': 4, 'unmatched_rows': 4,
+        'unmatched_distinct': 4, 'unmatched_rows': 4, 'missing_rows': 0,
         'unmatched_values': [['一线', 'P9', '杂费'], ['一线', 'P10', '杂费'],
                              ['一线', 'P11', '杂费'], ['一线', 'P12', '杂费']],
     }
@@ -641,7 +641,82 @@ def test_single_column_link_allows_partial_coverage(tmp_path):
     assert link['matched_distinct_keys'] == 3
     assert link['coverage'] == {
         'matched_rows': 6, 'total_rows': 8, 'rate': 0.75,
-        'unmatched_distinct': 2, 'unmatched_rows': 2,
+        'unmatched_distinct': 2, 'unmatched_rows': 2, 'missing_rows': 0,
         'unmatched_values': [['C-6'], ['C-7']],
     }
+
+
+def test_plain_csv_value_overlap_without_name_affinity_is_not_a_link(tmp_path):
+    # The department codes coincide with the customer numbers on 3 of 4
+    # distinct values and 4 of 6 rows; without a field-name correspondence
+    # the overlap is coincidence, in plain tables as in documents.
+    write(tmp_path / 'departments.csv',
+          'department_code,department_name\n'
+          'A,East\n'
+          'B,West\n'
+          'A,North\n'
+          'B,South\n'
+          'C,Center\n'
+          'D,Field\n')
+    write(tmp_path / 'customers.csv',
+          'customer_no,name\n'
+          'A,Alpha\n'
+          'B,Beta\n'
+          'C,Gamma\n'
+          'E,Epsilon\n')
+    wb = workbench(tmp_path)
+    data = request(wb, start(wb, [
+        {'source_id': 'departments', 'kind': 'file', 'locator_ref': 'departments.csv'},
+        {'source_id': 'customers', 'kind': 'file', 'locator_ref': 'customers.csv'},
+    ], goal='核对普通 CSV 列名不亲和'))
+    assert data['catalog']['relationships'] == []
+
+
+def test_missing_combination_rows_count_against_the_rate(tmp_path):
+    # 8 of 10 order rows carry a matched code and 2 are empty: the rate is
+    # 8/10 by source rows, and the coverage records the missing rows.
+    write(tmp_path / 'orders.csv',
+          'order_no,customer_no\n'
+          + ''.join(f'SO-{number},C-{number}\n' for number in range(1, 9))
+          + 'SO-9,\n'
+          'SO-10,\n')
+    write(tmp_path / 'customers.csv',
+          'customer_no,name\n'
+          + ''.join(f'C-{number},Name{number}\n' for number in range(1, 9)))
+    wb = workbench(tmp_path)
+    data = request(wb, start(wb, [
+        {'source_id': 'orders', 'kind': 'file', 'locator_ref': 'orders.csv'},
+        {'source_id': 'customers', 'kind': 'file', 'locator_ref': 'customers.csv'},
+    ], goal='核对缺失组合行'))
+    link, = data['catalog']['relationships']
+    assert (link['source_table'], link['source_columns'],
+            link['target_table'], link['target_columns']) == (
+        'orders', ['customer_no'], 'customers', ['customer_no'])
+    assert link['matched_rows'] == 8 and link['checked_rows'] == 8
+    assert link['coverage'] == {
+        'matched_rows': 8, 'total_rows': 10, 'rate': 0.8,
+        'unmatched_distinct': 0, 'unmatched_rows': 2, 'missing_rows': 2,
+        'unmatched_values': [],
+    }
+
+
+def test_missing_combination_rows_do_not_inflate_a_weak_link(tmp_path):
+    # Only 2 of 10 order rows carry a code, both matched: 2 of the 2 counted
+    # rows would be a 100% rate; by source rows it is 2/10, below the
+    # threshold, so no candidate appears.
+    write(tmp_path / 'orders.csv',
+          'order_no,customer_no\n'
+          'SO-1,C-1\n'
+          'SO-2,C-2\n'
+          + ''.join(f'SO-{number},\n' for number in range(3, 11)))
+    write(tmp_path / 'customers.csv',
+          'customer_no,name\n'
+          'C-1,Alpha\n'
+          'C-2,Beta\n')
+    wb = workbench(tmp_path)
+    data = request(wb, start(wb, [
+        {'source_id': 'orders', 'kind': 'file', 'locator_ref': 'orders.csv'},
+        {'source_id': 'customers', 'kind': 'file', 'locator_ref': 'customers.csv'},
+    ], goal='核对缺失组合行的阈值'))
+    assert data['catalog']['relationships'] == []
 

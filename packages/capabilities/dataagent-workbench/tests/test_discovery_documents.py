@@ -261,7 +261,8 @@ def test_document_sources_build_sections_clauses_and_table_evidence(tmp_path):
     assert link['matched_distinct_keys'] == 4
     assert link['coverage'] == {
         'matched_rows': 4, 'total_rows': 4, 'rate': 1.0,
-        'unmatched_distinct': 0, 'unmatched_rows': 0, 'unmatched_values': []}
+        'unmatched_distinct': 0, 'unmatched_rows': 0, 'missing_rows': 0,
+        'unmatched_values': []}
     reverse, = [link for link in links if link['source_table'] == 'table:1']
     assert reverse['matched_rows'] == 4 and reverse['checked_rows'] == 6
     assert reverse['matched_distinct_keys'] == 4
