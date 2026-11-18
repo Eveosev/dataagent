@@ -1,17 +1,22 @@
 import {test,expect} from '@playwright/test';
+import {execFileSync} from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 
-// G2 处置入口 + FDE-11 可读性：被拦的问题旁给出可用的处置（标记分区不适用、
-// 排除记录、只保存无问题对象），原因必填；缺键对象显示来源描述而不是内部哈希。
+// G2 处置入口 + FDE-11 可读性 + FDE2-06 按问题类型给处置：真实数据行的缺键、
+// 转换失败不再给「排除表头行」（只有疑似表头或无关行才给排除）；类型转换失败
+// 给「去对象页纠正当前值」和「修改映射转换（重新提案）」；同根因合并计数。
 //
 // 处置提交走真实后端路由 POST /api/sessions/<id>/dispositions 与 /review 的
 // allow_partial（B1 已挂出）：请求与响应契约从真实网络交互里核对，不拦截；
 // 视图刷新（处置使预览失效、部分保存使接入落盘）用页面状态断言。
 const disposalUrl=/\/api\/sessions\/[^/]+\/dispositions$/;
 const reviewUrl=/\/api\/sessions\/[^/]+\/review$/;
-async function postResponse(page:import('@playwright/test').Page,url:RegExp){
- return page.waitForResponse(response=>response.request().method()==='POST'&&url.test(response.url()));
-}
+const python=process.env.DATAAGENT_TEST_PYTHON;
 const missingNumberCsv=Buffer.from('number,amount,currency,issuer\nINV-001,1260,CNY,华信办公\n,900,CNY,北明科技\n');
+// 第 2 行把表头原样重复了一遍：探查会把它当数据记录，处置时才算「疑似表头行」。
+const repeatedHeaderCsv=Buffer.from('number,amount,currency,issuer\nnumber,amount,currency,issuer\nINV-001,1260,CNY,华信办公\n');
 
 async function openObjectPage(page:import('@playwright/test').Page,files:Parameters<import('@playwright/test').Page['setInputFiles']>[1]){
  await page.goto('/');
@@ -20,42 +25,39 @@ async function openObjectPage(page:import('@playwright/test').Page,files:Paramet
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByText('识别与探查已完成')).toBeVisible();
  await page.getByRole('button',{name:'生成映射预览'}).click();
- // 预览问题用中文说明并点名对象，不再显示内部代码。
- await expect(page.getByTestId('mapping-issues')).toContainText('缺少单据号，无法确定对象');
- await expect(page.getByTestId('mapping-issues')).not.toContainText('ontology.');
  await page.getByRole('button',{name:'打开对象页'}).click();
  await expect(page.getByRole('heading',{name:'核对业务对象'})).toBeVisible();
 }
 
-test('缺键对象显示来源描述，处置需要填写原因',async({page})=>{
+test('缺键的真实数据行不给「排除表头行」处置',async({page})=>{
  test.setTimeout(40000);
  await openObjectPage(page,{name:'发票.csv',mimeType:'text/csv',buffer:missingNumberCsv});
  // FDE-11：缺键对象不显示 candidate:<哈希>，改用来源描述点名（第 3 行是文件里的原始行号）。
  await expect(page.locator('.source-tab').filter({hasText:'来源行 3'})).toContainText('发票.csv · 来源行 3（无单号）');
  await expect(page.getByText(/candidate:/)).toHaveCount(0);
- // FDE-11：徽标与列名是中文。
- await expect(page.locator('.mapping-panel .panel-heading .badge')).toContainText('采购单据');
- await expect(page.locator('.detail-panel .panel-heading .badge')).toContainText('未核对');
- await expect(page.locator('.mapping-table thead th').first()).toHaveText('本体属性');
- // 缺键记录的阻断问题旁给出排除记录的处置；行号与对象标签统一用「来源行 N」
- //（record 是 0 起的记录序号 1，锚点定位到文件里的原始行号 3）。
+ // FDE2-06：这是真实数据行（900 / CNY / 北明科技），不是表头——不给「排除」，
+ // 让用户去补单号或部分保存，而不是把真数据排掉。
  const issue=page.getByTestId('pending-issue').filter({hasText:'缺少单据号'});
  await expect(issue).toContainText('阻断');
+ await expect(issue.getByTestId('disposal-option')).toHaveCount(0);
+ await expect(issue).not.toContainText('排除表头行或明显无关的记录');
+ // 整批被拦的出路仍在：只保存无问题对象。
+ await expect(page.getByTestId('partial-save')).toBeVisible();
+});
+
+test('疑似表头行给排除处置并走真实后端',async({page})=>{
+ test.setTimeout(40000);
+ await openObjectPage(page,{name:'发票.csv',mimeType:'text/csv',buffer:repeatedHeaderCsv});
+ // 第 2 行的值就是各列列名：整行与表头相似，转换失败旁给出排除处置。
+ const issue=page.getByTestId('pending-issue').filter({hasText:'值无法按目标类型转换'});
+ await expect(issue).toContainText('可纠正');
  const disposal=issue.getByTestId('disposal-option');
- await expect(disposal).toContainText('排除「发票.csv」来源行 3');
+ await expect(disposal).toContainText('排除「发票.csv」来源行 2');
  // 原因空白时不可提交。
  const reason=disposal.getByLabel(/处置原因/);
  await expect(disposal.getByRole('button',{name:'提交处置'})).toBeDisabled();
- await reason.fill('表头行混入数据，排除该行');
+ await reason.fill('重复的表头行，不是单据');
  await expect(disposal.getByRole('button',{name:'提交处置'})).toBeEnabled();
-});
-
-test('排除记录处置走真实后端并刷新视图',async({page})=>{
- test.setTimeout(40000);
- await openObjectPage(page,{name:'发票.csv',mimeType:'text/csv',buffer:missingNumberCsv});
- const issue=page.getByTestId('pending-issue').filter({hasText:'缺少单据号'});
- const disposal=issue.getByTestId('disposal-option');
- await disposal.getByLabel(/处置原因/).fill('表头行混入数据，排除该行');
  const [response]=await Promise.all([
   postResponse(page,disposalUrl),
   disposal.getByRole('button',{name:'提交处置'}).click(),
@@ -65,11 +67,11 @@ test('排除记录处置走真实后端并刷新视图',async({page})=>{
  const body=await response.json();
  // 提交的是可审计的处置契约：动作、来源、记录与原因齐全，修订带校验。
  expect(request).toMatchObject({action:'exclude_record',source_id:expect.any(String),
-  record:1,reason:'表头行混入数据，排除该行'});
+  record:0,reason:'重复的表头行，不是单据'});
  expect(String(request.expected_revision)).toMatch(/^[0-9]+$/);
  // 真实后端记录了处置审计并使预览失效。
- expect(body.entry).toMatchObject({action:'exclude_record',record:1,
-  reason:'表头行混入数据，排除该行',source_id:expect.any(String)});
+ expect(body.entry).toMatchObject({action:'exclude_record',record:0,
+  reason:'重复的表头行，不是单据',source_id:expect.any(String)});
  expect(String(body.session_revision)).toMatch(/^[0-9]+$/);
  await expect(page.getByTestId('correction-success')).toContainText('处置已记录');
  // 视图刷新：预览失效后对象区回到空态，阻断问题不再挂着。
@@ -140,3 +142,186 @@ test('空白页来源可标记分区不适用',async({page})=>{
  // 视图刷新：预览失效后对象区回到空态。
  await expect(page.getByText('生成映射预览后，在这里查看对象。')).toBeVisible();
 });
+
+// 用系统临时目录里的 xlsx 复现 FDE2-02/FDE2-06：日期列被错绑为 decimal。
+// xlsx 用 Python 标准库 zipfile 手工打包（t="d" 日期单元格，openpyxl 读回
+// datetime → ISO 字符串），不依赖工作台环境里的第三方包。
+function buildDateColumnXlsx():string{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'dataagent-xlsx-'));
+ const file=path.join(dir,'报销明细.xlsx');
+ execFileSync(python!,['-c',`import sys,zipfile
+rows=[('number','amount','currency')]
+for i in range(5):rows.append((f'BX-2026-000{i+1}',f'2026-03-0{i+2}T00:00:00','CNY'))
+def cell(ref,kind,value):
+    if kind=='d':return f'<c r="{ref}" t="d"><v>{value}</v></c>'
+    return f'<c r="{ref}" t="inlineStr"><is><t>{value}</t></is></c>'
+sheet=['<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+       '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>']
+for r,row in enumerate(rows,1):
+    parts=[]
+    for col,value in zip('ABC',row):
+        kind='d' if col=='B' and r>1 else 's'
+        parts.append(cell(f'{col}{r}',kind,value))
+    sheet.append(f'<row r="{r}">'+''.join(parts)+'</row>')
+sheet.append('</sheetData></worksheet>')
+with zipfile.ZipFile(sys.argv[1],'w') as z:
+    z.writestr('[Content_Types].xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+     '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+     '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+     '<Default Extension="xml" ContentType="application/xml"/>'
+     '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+     '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+     '</Types>')
+    z.writestr('_rels/.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+     '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+     '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
+     '</Relationships>')
+    z.writestr('xl/workbook.xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+     '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
+     'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+     '<sheets><sheet name="明细" sheetId="1" r:id="rId1"/></sheets></workbook>')
+    z.writestr('xl/_rels/workbook.xml.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+     '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+     '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
+     '</Relationships>')
+    z.writestr('xl/worksheets/sheet1.xml',''.join(sheet))
+`,file]);
+ return file;
+}
+
+test('xlsx 日期列错绑为 decimal：按根因合并计数，处置按类型给',async({page})=>{
+ test.skip(!python,'run scripts/verify_browser.py to share the python interpreter');
+ test.setTimeout(40000);
+ await page.goto('/');
+ await page.getByLabel('接入目标').fill('接入报销明细并核对日期列的处置');
+ await page.getByLabel('选择材料').setInputFiles(buildDateColumnXlsx());
+ await page.getByRole('button',{name:'开始接入'}).click();
+ await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ // 默认绑定把日期列绑到金额（decimal）：5 行全部转换失败。
+ await page.getByRole('button',{name:'生成映射预览'}).click();
+ await expect(page.getByText('5 项待核对')).toBeVisible();
+ await page.getByRole('button',{name:'打开对象页'}).click();
+ // FDE2-06：计数与实际一致——5 行各 1 项（不是 5×2），阻断计入整批被拦的问题。
+ await expect(page.getByTestId('pending-issues')).toContainText('5 项待核对');
+ await expect(page.getByTestId('pending-issues')).toContainText('阻断 5 项');
+ // 同根因合并成一条「金额 × 5 行」，说明全中文，原始英文异常不出现。
+ const group=page.getByTestId('pending-issue').filter({hasText:'× 5 行'});
+ await expect(group).toHaveCount(1);
+ await expect(group).toContainText('「金额」 × 5 行 · 值无法按目标类型转换');
+ expect(await group.innerText()).not.toContain('ConversionSyntax');
+ expect(await page.getByTestId('pending-issues').innerText()).not.toContain('[<class');
+ // 类型转换失败给两条出路，不再提供「排除表头行或明显无关的记录」。
+ await expect(group.getByTestId('conversion-actions')).toContainText('去对象页纠正当前值');
+ await expect(group.getByTestId('conversion-actions')).toContainText('修改映射转换（重新提案）');
+ await expect(group.getByTestId('disposal-option')).toHaveCount(0);
+ await expect(page.getByTestId('pending-issues')).not.toContainText('排除表头行');
+ // 各行收进折叠详情：展开后 5 行都在，且每行仍可点回对象。
+ await group.getByText('查看各行').click();
+ await expect(group.locator('.group-rows li')).toHaveCount(5);
+ await expect(group.locator('.group-rows li').first()).toContainText('BX-2026-0001');
+ // 处置入口回到映射页修订转换（重新提案）。
+ await group.getByRole('button',{name:'修改映射转换（重新提案）'}).click();
+ await expect(page.getByRole('heading',{name:/核对来源与/})).toBeVisible();
+ await expect(page.getByLabel('金额 来源字段')).toHaveValue('amount');
+});
+
+// FDE2-05 回归：任务里有两份材料、当前概念只映射了其中一份。处置一行后
+// 重新生成预览，页面必须沿用提案固定的来源范围，不能把未映射材料也映射进
+// 来（真实现场：问题 40 → 126、对象 20 → 31）。
+const ledgerCsv=Buffer.from('number,amount_minor,currency\nnumber,amount_minor,currency\nINV-001,126000,CNY\nINV-002,90000,CNY\n');
+const otherCsv=Buffer.from('number,amount,currency,note\nX-001,500.00,CNY,另一概念\nX-002,600.00,CNY,另一概念\nX-003,700.00,CNY,另一概念\n');
+
+test('未映射来源在处置一行后重新生成预览时保持不映射',async({page})=>{
+ test.setTimeout(60000);
+ await page.goto('/');
+ await page.getByLabel('接入目标').fill('接入两份材料但只映射其中一份');
+ await page.getByLabel('选择材料').setInputFiles([
+  {name:'ledger.csv',mimeType:'text/csv',buffer:ledgerCsv},
+  {name:'other.csv',mimeType:'text/csv',buffer:otherCsv},
+ ]);
+ await page.getByRole('button',{name:'开始接入'}).click();
+ await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ const sid=new URLSearchParams(new URL(page.url()).hash.slice(1)).get('session')!;
+ expect(sid).toBeTruthy();
+ const view=await (await page.request.get(`/api/sessions/${sid}/view`)).json() as {
+  session:{revision:string};ontology:{id:string;revision:string};ontology_concept:string;
+  profiles:{source_id:string;fields:string[];metadata:{structure_fingerprint:string}}[];
+ };
+ const mapped=view.profiles.find(profile=>!profile.fields.includes('note'))!;
+ const other=view.profiles.find(profile=>profile.fields.includes('note'))!;
+ expect(mapped&&other).toBeTruthy();
+ // Agent 的单来源提案：只给 ledger 建映射，另一份材料留在任务里但未映射。
+ const proposal={id:'candidate',revision:'1',
+  ontology_revision:`${view.ontology.id}@${view.ontology.revision}`,concept:view.ontology_concept,
+  source_fingerprint:mapped.metadata.structure_fingerprint,
+  bindings:{number:{source_field:'number'},amount:{source_field:'amount_minor',transform:'minor_to_major'},
+   currency:{source_field:'currency'}}};
+ const posted=await page.request.post(`/api/sessions/${sid}/source-proposals`,{
+  data:{proposals:{[mapped.source_id]:proposal},expected_revision:view.session.revision}});
+ expect(posted.ok(),await posted.text()).toBeTruthy();
+ await page.reload();
+ await expect(page.getByRole('button',{name:'打开对象页'})).toBeVisible();
+ await page.getByRole('button',{name:'打开对象页'}).click();
+ // 初始预览：ledger 的 4 条记录成对象，other 只有一条来源级问题。
+ await expect(page.getByTestId('pending-issues')).toContainText('2 项待核对');
+ await expect(page.getByTestId('pending-issues')).toContainText('阻断 2 项');
+ await expect(page.getByTestId('pending-issue').filter({hasText:'该来源未用于当前映射'}))
+  .toContainText('other.csv');
+ // 疑似表头行的转换失败给「排除」，处置一行并写入审计。
+ const conversion=page.getByTestId('pending-issue').filter({hasText:'值无法按目标类型转换'});
+ await expect(conversion.getByTestId('disposal-option')).toContainText('排除');
+ await conversion.getByLabel(/处置原因/).fill('重复的表头行，不是单据');
+ await conversion.getByRole('button',{name:'提交处置'}).click();
+ await expect(page.getByTestId('correction-success')).toContainText('处置已记录');
+ await expect(page.getByText('生成映射预览后，在这里查看对象。')).toBeVisible();
+ // 重新生成预览：只映射提案覆盖的 ledger，other 仍是来源级问题，对象不膨胀。
+ await page.getByRole('button',{name:'返回映射页'}).click();
+ await expect(page.getByRole('heading',{name:/核对来源与/})).toBeVisible();
+ const [regenerated]=await Promise.all([
+  page.waitForResponse(response=>response.request().method()==='POST'&&/source-proposals$/.test(response.url())),
+  page.getByRole('button',{name:'生成映射预览'}).click(),
+ ]);
+ expect(regenerated.status()).toBe(200);
+ const body=await regenerated.json() as {instances:{values:{number?:string}}[];issues:{code?:string}[];source_revisions:Record<string,string>;mapping:{bindings:Record<string,{source_field:string;transform?:string}>}};
+ expect(body.instances).toHaveLength(2);
+ expect(Object.keys(body.source_revisions)).toEqual([mapped.source_id]);
+ expect(body.issues.map(issue=>issue.code)).toEqual(['ontology.source_unmapped']);
+ expect(body.instances.map(instance=>instance.values.number).sort()).toEqual(['INV-001','INV-002']);
+ // 处置使预览失效后，重新生成仍沿用 Agent 的转换（金额按分转主币），
+ // 不退回同名默认绑定——否则必填金额缺失，计数又会失真。
+ expect(body.mapping.bindings.amount).toMatchObject({source_field:'amount_minor',transform:'minor_to_major'});
+ await expect(page.getByLabel('金额 来源字段')).toHaveValue('amount_minor');
+ await expect(page.getByTestId('mapping-issues')).toContainText('该来源未用于当前映射');
+ // 来源级处置「本任务不使用该来源」：原因必填，写入审计。
+ const sourceDisposal=page.getByTestId('disposal-option').filter({hasText:'本任务不使用'});
+ await expect(sourceDisposal).toContainText('本任务不使用「other.csv」');
+ const submit=sourceDisposal.getByRole('button',{name:'提交处置'});
+ await expect(submit).toBeDisabled();
+ await sourceDisposal.getByLabel(/处置原因：本任务不使用/).fill('这份材料属于另一个概念，本任务不使用');
+ await expect(submit).toBeEnabled();
+ const [disposed]=await Promise.all([
+  page.waitForResponse(response=>response.request().method()==='POST'&&disposalUrl.test(response.url())),
+  submit.click(),
+ ]);
+ expect(disposed.status()).toBe(200);
+ const disposedBody=await disposed.json() as {entry:{action:string;source_id:string;reason:string}};
+ expect(disposedBody.entry).toMatchObject({action:'ignore_source',source_id:other.source_id,
+  reason:'这份材料属于另一个概念，本任务不使用'});
+ // 处置后重新生成：来源级问题消失，只剩 ledger 的 2 个对象，整批可以保存。
+ const [cleared]=await Promise.all([
+  page.waitForResponse(response=>response.request().method()==='POST'&&/source-proposals$/.test(response.url())),
+  page.getByRole('button',{name:'生成映射预览'}).click(),
+ ]);
+ expect(cleared.status()).toBe(200);
+ const clearedBody=await cleared.json() as {instances:unknown[];issues:unknown[]};
+ expect(clearedBody.issues).toEqual([]);
+ expect(clearedBody.instances).toHaveLength(2);
+ await expect(page.getByTestId('mapping-issues')).toHaveCount(0);
+ await expect(page.getByRole('button',{name:'保存接入'})).toBeEnabled();
+ await page.getByRole('button',{name:'保存接入'}).click();
+ await expect(page.getByRole('heading',{name:'接入已保存'})).toBeVisible();
+});
+
+async function postResponse(page:import('@playwright/test').Page,url:RegExp){
+ return page.waitForResponse(response=>response.request().method()==='POST'&&url.test(response.url()));
+}

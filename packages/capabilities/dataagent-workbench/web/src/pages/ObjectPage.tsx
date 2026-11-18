@@ -1,5 +1,5 @@
 import {useEffect,useRef,useState} from 'react';
-import {api,ApiError,display,locate,findAnchorRow,isDecisionEvidence,decisionSourceName,issueBlocksSave,issueObject,issueReasons,propertyLabel,entityTypeLabel,reviewStateNames,humanDetail,technicalDetail,conceptOf} from '../client';
+import {api,ApiError,display,locate,findAnchorRow,isDecisionEvidence,decisionSourceName,issueBlocksSave,issueObject,issueReasons,propertyLabel,entityTypeLabel,reviewStateNames,humanDetail,technicalDetail,conceptOf,dedupeIssues,rowLevelIssueCodes} from '../client';
 import type {CorrectionView,ObjectView,SourceProfile,Issue,WorkObject,ConflictValue,DispositionOption,Selector} from '../client';
 import {SourceViewer} from '../components/SourceViewer';
 
@@ -180,7 +180,9 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
   running.current=true;setBusy(true);try{
    await api(base_url+'/dispositions','POST',{expected_revision:revision.current,
     action:option.action,source_id:option.source_id,
-    ...(option.action==='partition_not_applicable'?{partition:option.partition}:{record:option.record}),
+    // 来源级处置（本任务不使用该来源）不带分区：后端据此写成 ignore_source。
+    ...(option.scope==='source'?{}:option.action==='partition_not_applicable'
+     ?{partition:option.partition}:{record:option.record}),
     reason:why});
    setDisposalReasons(previous=>({...previous,[disposalKey(option)]:''}));
    setNotice({kind:'green',text:'处置已记录。处置会重新生成预览，请返回映射页重新生成映射预览后核对。'});
@@ -227,8 +229,25 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
  const latestCorrections=corrections.filter((correction,i)=>!corrections.slice(i+1).some(c=>c.property===correction.property));
  // 待核对问题列出全部（不再截前 5 条）：阻断（对象页纠正解除不了，须修订映射或
  // 来源）排在可纠正前面，头部并列总数与阻断数；超过 10 条时折叠尾部。
- const sortedIssues=[...view.issues].sort((a,b)=>Number(issueBlocksSave(b))-Number(issueBlocksSave(a)));
- const blockingCount=sortedIssues.filter(issueBlocksSave).length;
+ // FDE2-06：同一行同一列的转换失败不再重复报「缺少必填值」，阻断数按整批
+ // 保存实际被拦的问题计——任何未解决问题都会拦下整批保存。
+ const problemIssues=dedupeIssues(view.issues);
+ const sortedIssues=[...problemIssues].sort((a,b)=>Number(issueBlocksSave(b))-Number(issueBlocksSave(a)));
+ const blockingCount=problemIssues.length;
+ // 按根因分组（FDE2-06）：同一列同一类问题跨多行合并成一条「× N 行」，各行
+ // 收进折叠详情；处置与对象入口逐行保留。
+ const groupKey=(issue:Issue)=>`${issue.code}|${issue.target??''}|${issue.source_id??''}`;
+ const issueEntries:(Issue|{group:Issue[]})[]=[];
+ {
+  const groupAt=new Map<string,number>();
+  for(const issue of sortedIssues){
+   if(!rowLevelIssueCodes.has(issue.code||'')){issueEntries.push(issue);continue;}
+   const key=groupKey(issue);
+   const at=groupAt.get(key);
+   if(at===undefined){groupAt.set(key,issueEntries.length);issueEntries.push({group:[issue]});}
+   else{(issueEntries[at] as {group:Issue[]}).group.push(issue);}
+  }
+ }
  // 来源名：SQLite 上传的显示名在 extensions 里，options 里没有时后端会回退到内部上传路径。
  const sourceName=(sourceId:string,data:ObjectView=view)=>{
   const selection=data.session.sources.find(s=>s.source_id===sourceId);
@@ -256,10 +275,14 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
   if(issue.source_id)return sourceName(issue.source_id);
   return issue.object?display(issue.object):'映射层';
  };
- // G2：与该问题对应的来源处置（标记分区不适用 / 排除记录）。
+ // G2：与该问题对应的来源处置（标记分区不适用 / 排除记录 / 本任务不使用该来源）。
+ // FDE2-06：排除记录只对疑似表头或无关行给出（后端已按行值判定），类型转换
+ // 失败的真实数据行走对象页纠正或修订映射，不再提供「排除」。
  const issueDisposals=(issue:Issue)=>(view.disposition_options||[]).filter(option=>{
   if(issue.code==='ontology.incomplete_source')
-   return option.action==='partition_not_applicable'&&option.source_id===issue.source_id;
+   return option.action==='partition_not_applicable'&&option.scope!=='source'&&option.source_id===issue.source_id;
+  if(issue.code==='ontology.source_unmapped')
+   return option.scope==='source'&&option.source_id===issue.source_id;
   if(['ontology.identity_unresolved','ontology.required_value_missing','ontology.conversion_failed'].includes(issue.code||''))
    return option.action==='exclude_record'&&option.source_id===issue.source_id&&option.record===issue.row;
   return false;
@@ -278,7 +301,9 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
   }
   return `第 ${record+1} 条记录`;
  };
- const disposalText=(option:DispositionOption)=>option.action==='partition_not_applicable'
+ const disposalText=(option:DispositionOption)=>option.scope==='source'
+  ?`本任务不使用「${option.source_name}」`
+  :option.action==='partition_not_applicable'
   ?`标记「${option.source_name}」分区 ${option.partition} 不适用`
   :`排除「${option.source_name}」${recordLabel(option.source_id,option.record)}`;
  const submitButton=(label:string)=><button className="secondary" disabled={busy||!object}
@@ -331,25 +356,55 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
   {notice&&<div className={notice.kind==='green'?'notice green':'notice amber'} data-testid={notice.kind==='green'?'correction-success':'correction-blocked'} role="status">{notice.text}
    {notice.detail&&<details className="tech-detail"><summary>详情</summary><pre>{technicalDetail(notice.detail)}</pre></details>}</div>}
   {/* 待核对问题不依赖选中对象：预览没有实例时（如 no_records）仍要全部列出。 */}
-  {view.issues.length>0&&<div className="notice amber" data-testid="pending-issues"><strong>{view.issues.length} 项待核对 · 阻断 {blockingCount} 项</strong>
-   <ul>{sortedIssues.slice(0,showAllIssues?sortedIssues.length:10).map((issue,i)=>{
-    const target=issueObject(issue,view);
-    // 问题补充说明统一中文化：已知原文进主文案，未知英文折叠为「详情」。
-    const human=humanDetail(issue.detail);
-    return <li key={i} data-testid="pending-issue"><small className={issueBlocksSave(issue)?'warn':'ok'}>{issueBlocksSave(issue)?'阻断':'可纠正'}</small>
-     {' · '}{target?<button className="field-button" onClick={()=>selectObject(view.objects.indexOf(target))}>{objectLabel(target)}</button>:<span className="muted">{issueLocation(issue)}</span>}
-     {issue.target?` · ${propertyLabel(issue.target)}`:''} · {issueReasons[issue.code||'']||display(issue.code)}{issue.detail&&human.summary?` · ${human.summary}`:''}
-     {issue.detail&&human.detail&&<details className="tech-detail"><summary>详情</summary><pre>{technicalDetail(human.detail)}</pre></details>}
-     {issueDisposals(issue).map(option=><div key={disposalKey(option)} className="disposal" data-testid="disposal-option">
-      <span className="muted">{disposalText(option)} · {option.reason_hint}</span>
+  {problemIssues.length>0&&<div className="notice amber" data-testid="pending-issues"><strong>{problemIssues.length} 项待核对 · 阻断 {blockingCount} 项</strong>
+   {/* FDE2-06：同一列同一类问题跨多行按根因合并成一条「× N 行」，各行收进
+       折叠详情；处置与对象入口逐行保留。类型转换失败给两条出路（纠正当前值、
+       修订映射转换），不再提供「排除表头行」。 */}
+   <ul>{issueEntries.slice(0,showAllIssues?issueEntries.length:10).map((entry,i)=>{
+    const conversionActions=(issue:Issue)=>issue.code!=='ontology.conversion_failed'?null:
+     <div className="disposal" data-testid="conversion-actions">
+      <span className="muted">类型转换失败：纠正当前值，或返回映射页修改转换后重新生成预览。</span>
       <div className="disposal-controls">
-       <input aria-label={`处置原因：${disposalText(option)}`} value={disposalReasons[disposalKey(option)]||''} onChange={e=>setDisposalReasons(previous=>({...previous,[disposalKey(option)]:e.target.value}))} placeholder="处置原因（必填，写入审计）"/>
-       <button className="secondary" disabled={busy||done||!(disposalReasons[disposalKey(option)]||'').trim()} onClick={()=>submitDisposal(option,disposalReasons[disposalKey(option)])}>提交处置</button>
+       {issueObject(issue,view)
+        ?<button className="secondary" disabled={busy||done} onClick={()=>{const target=issueObject(issue,view);if(target){selectObject(view.objects.indexOf(target));if(issue.target)setField(issue.target);}}}>去对象页纠正当前值</button>
+        :<span className="muted">该行无法定位对象，请修订映射转换。</span>}
+       <button className="secondary" disabled={busy||done} onClick={onBack}>修改映射转换（重新提案）</button>
       </div>
-     </div>)}
+     </div>;
+    // 组内各行不再重复组头的转换出路与处置块：只保留行定位与对象入口。
+    const issueEntry=(issue:Issue,inGroup=false)=>{
+     const target=issueObject(issue,view);
+     // 问题补充说明统一中文化：已知原文进主文案，未知英文折叠为「详情」。
+     const human=humanDetail(issue.detail);
+     return <><small className={issueBlocksSave(issue)?'warn':'ok'}>{issueBlocksSave(issue)?'阻断':'可纠正'}</small>
+      {' · '}{target?<button className="field-button" onClick={()=>selectObject(view.objects.indexOf(target))}>{objectLabel(target)}</button>:<span className="muted">{issueLocation(issue)}</span>}
+      {issue.target?` · ${propertyLabel(issue.target)}`:''} · {issueReasons[issue.code||'']||display(issue.code)}{issue.detail&&human.summary?` · ${human.summary}`:''}
+      {issue.detail&&human.detail&&<details className="tech-detail"><summary>详情</summary><pre>{technicalDetail(human.detail)}</pre></details>}
+      {issueDisposals(issue).map(option=><div key={disposalKey(option)} className="disposal" data-testid="disposal-option">
+       <span className="muted">{disposalText(option)} · {option.reason_hint}</span>
+       <div className="disposal-controls">
+        <input aria-label={`处置原因：${disposalText(option)}`} value={disposalReasons[disposalKey(option)]||''} onChange={e=>setDisposalReasons(previous=>({...previous,[disposalKey(option)]:e.target.value}))} placeholder="处置原因（必填，写入审计）"/>
+        <button className="secondary" disabled={busy||done||!(disposalReasons[disposalKey(option)]||'').trim()} onClick={()=>submitDisposal(option,disposalReasons[disposalKey(option)])}>提交处置</button>
+       </div>
+      </div>)}
+      {inGroup?null:conversionActions(issue)}
+     </>;};
+    if(!('group' in entry))return <li key={i} data-testid="pending-issue">{issueEntry(entry)}</li>;
+    const group=entry.group;
+    if(group.length===1)return <li key={i} data-testid="pending-issue">{issueEntry(group[0])}</li>;
+    const blocked=group.some(issueBlocksSave);
+    const human=humanDetail(group.find(issue=>issue.detail)?.detail);
+    return <li key={i} data-testid="pending-issue" className="issue-group">
+     <small className={blocked?'warn':'ok'}>{blocked?'阻断':'可纠正'}</small>
+     {' · '}{group[0].target?`「${propertyLabel(group[0].target as string)}」 × ${group.length} 行`:`${group.length} 行`} · {issueReasons[group[0].code||'']||display(group[0].code||'')}{human.summary?` · ${human.summary}`:''}
+     {human.detail&&<details className="tech-detail"><summary>详情</summary><pre>{technicalDetail(human.detail)}</pre></details>}
+     {conversionActions(group[0])}
+     <details className="group-rows"><summary>查看各行</summary><ul>
+      {group.map((issue,j)=><li key={j}>{issueEntry(issue,true)}</li>)}
+     </ul></details>
     </li>;})}</ul>
-   {sortedIssues.length>10&&<button className="secondary" onClick={()=>setShowAllIssues(!showAllIssues)}>{showAllIssues?'收起其余问题':`展开其余 ${sortedIssues.length-10} 条`}</button>}
-   {(view.dispositions||[]).length>0&&<p className="help">已记录处置：{(view.dispositions||[]).map(entry=>`${sourceName(entry.source_id)} · ${entry.action==='partition_not_applicable'?`分区 ${entry.partition} 标记不适用`:`排除${recordLabel(entry.source_id,entry.record)}`}（${entry.reason}）`).join('；')}</p>}
+   {issueEntries.length>10&&<button className="secondary" onClick={()=>setShowAllIssues(!showAllIssues)}>{showAllIssues?'收起其余问题':`展开其余 ${issueEntries.length-10} 条`}</button>}
+   {(view.dispositions||[]).length>0&&<p className="help">已记录处置：{(view.dispositions||[]).map(entry=>`${sourceName(entry.source_id)} · ${entry.action==='ignore_source'?'本任务不使用该来源':entry.action==='partition_not_applicable'?`分区 ${entry.partition} 标记不适用`:`排除${recordLabel(entry.source_id,entry.record)}`}（${entry.reason}）`).join('；')}</p>}
    {blockingCount>0&&!done&&<div className="disposal" data-testid="partial-save">
     <span className="muted">只保存无问题对象：无对象级阻断的对象先放行，其余对象挂起并逐条给出原因。</span>
     <div className="disposal-controls">
@@ -357,7 +412,7 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
      <button className="secondary" disabled={busy||!partialReason.trim()} onClick={savePartial}>只保存无问题对象</button>
     </div>
    </div>}
-   <p className="help">阻断项不能在对象页解除，需修订映射或来源；可纠正项保存纠正值后自动解除，解除前整批保存同样被拦。</p></div>}
+   <p className="help">任何未解决问题都会拦下整批保存（阻断 {blockingCount} 项）；标「阻断」的问题需修订映射或来源，标「可纠正」的在对象页保存纠正值后自动解除。</p></div>}
  </section><aside className="detail-panel"><div className="panel-heading"><span>修改范围</span><span className="badge">{reviewStateNames[view.review_state||'']||view.review_state||'未预览'}</span></div><h2>{object?'三种修改范围':'选择一个对象'}</h2>
   <label className="label">修改范围</label><div className="range-options">{ranges.map(([id,label])=><label key={id}><input type="radio" name="object-range" value={id} checked={range===id} onChange={()=>setRange(id)} disabled={done}/>{label}</label>)}</div>
   {done?<p className="help">接入已保存。修订映射请在新建接入中进行。</p>:range==='instance'?<div className="edit-current">

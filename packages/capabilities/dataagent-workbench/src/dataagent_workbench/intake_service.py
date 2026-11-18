@@ -58,6 +58,7 @@ _ISSUE_REASONS = {
     'ontology.conversion_failed': '值无法按目标类型转换',
     'ontology.evidence_missing': '值没有来源定位',
     'ontology.incomplete_source': '来源未完整读取',
+    'ontology.source_unmapped': '该来源未用于当前映射',
     'ontology.relation_unresolved': '关联字段不完整',
     'ontology.correction_conflict': '网页纠正无法沿用',
     'ontology.no_records': '没有可映射的记录',
@@ -267,6 +268,113 @@ class IntakeService:
         row, _ = self._disposition_row(session)
         return list(row['body'].get('entries') or []) if row is not None else []
 
+    def _mapped_source_ids(self, session):
+        """Sources a proposal has already pinned a mapping revision on.
+
+        The web regenerates a preview from this durable scope instead of
+        silently adding sources the agent never mapped (FDE2-05).
+        """
+        return {key.split(':', 1)[1] for key in session.selected_versions
+                if key.startswith('mapping:')}
+
+    def _preview_source_ids(self, session):
+        """Sources the active preview actually maps, or None without a preview.
+
+        A source may have an older ``mapping:<source>`` entry and still be left
+        out of the latest preview (an agent submitted a narrower proposal).
+        Whether it is "used by the current mapping" must follow the preview the
+        operator is looking at, not the historical scope, or the source-level
+        issue would name a source that ``dispose`` then refuses.
+        """
+        ref = session.selected_versions.get('preview')
+        if not ref:
+            return None
+        try:
+            preview_id, revision = ref.rsplit('@', 1)
+        except ValueError:
+            return None
+        row = self.wb.store.get('preview', preview_id, revision, scope=self.wb.scope)
+        return set((row['body'].get('source_revisions') or {})) if row is not None else None
+
+    def _selected_mappings(self, session):
+        """The mapping specs the task pinned for each mapped source.
+
+        The web keeps regenerating from this durable scope; exposing the specs
+        also keeps the agent's bindings and transforms after a disposition
+        invalidated the preview, instead of silently falling back to default
+        same-name bindings (FDE2-05 regeneration).
+        """
+        mappings = {}
+        for key, ref in session.selected_versions.items():
+            if not key.startswith('mapping:'):
+                continue
+            try:
+                mapping_id, revision = ref.rsplit('@', 1)
+            except ValueError:
+                continue
+            row = self.wb.store.get('mapping', mapping_id, revision, scope=self.wb.scope)
+            if row is not None:
+                mappings[key.split(':', 1)[1]] = row['body']
+        return mappings
+
+    def _ignored_source_ids(self, session):
+        """Sources an audited disposition removed from this task's scope."""
+        return {entry.get('source_id') for entry in self.disposition_entries(session)
+                if entry.get('action') == 'ignore_source'}
+
+    def _unmapped_source_issues(self, session, used):
+        """One source-level issue per observed source outside the mapping.
+
+        A source left out of the proposal (two concepts in one task, only one
+        material mapped) must not turn every one of its rows into an object
+        and a row-level problem; the operator decides per source whether the
+        task keeps it at all.
+        """
+        ignored = self._ignored_source_ids(session)
+        return [{'code': 'ontology.source_unmapped', 'source_id': profile.source_id}
+                for profile in self._profiles(session)
+                if profile.source_id not in used
+                and profile.source_id not in ignored]
+
+    @staticmethod
+    def _deduped_issues(issues):
+        """One problem per row and root cause.
+
+        A value that fails conversion also leaves the required property
+        missing on the same row and column; reporting both doubles the count
+        (20 rows read as 40 problems) without adding information.
+        """
+        failed = {(issue.get('source_id'), issue.get('row'), issue.get('target'))
+                  for issue in issues
+                  if issue.get('code') == 'ontology.conversion_failed'
+                  and issue.get('row') is not None}
+        return [issue for issue in issues
+                if not (issue.get('code') == 'ontology.required_value_missing'
+                        and (issue.get('source_id'), issue.get('row'),
+                             issue.get('target')) in failed)]
+
+    @staticmethod
+    def _suspected_irrelevant_row(profile, row):
+        """True when one source record reads like the header or like filler.
+
+        ``exclude_record`` is the audited way to drop a header row that the
+        probe kept as data.  A real row with a bad value must not be offered
+        that escape hatch (FDE2-06), so only records whose values are the
+        column names themselves, or entirely blank, qualify.
+        """
+        if not isinstance(row, int) or isinstance(row, bool) \
+                or not 0 <= row < len(profile.records):
+            return False
+        record = profile.records[row]
+        if not isinstance(record, dict):
+            return True
+        fields = {str(name).strip().casefold() for name in profile.fields or []}
+        values = [str(value).strip().casefold() for value in record.values()
+                  if value not in (None, '')]
+        if not values:
+            return True
+        return len(values) > 1 and all(value in fields for value in values)
+
     def disposition_options(self, session, body=None):
         """Audited actions that can clear a blocking source issue.
 
@@ -293,7 +401,25 @@ class IntakeService:
                                 'partition': gap.partition, 'gap': gap.code,
                                 'reason_hint': '确认该分区为空或不适用'})
         if body:
+            profiles = {profile.source_id: profile
+                        for profile in self._profiles(session)}
+            ignored = self._ignored_source_ids(session)
             for issue in body.get('issues') or []:
+                if issue.get('code') == 'ontology.source_unmapped':
+                    # The source-level escape hatch: record an audited decision
+                    # that this task does not use the source at all.  The wire
+                    # action stays ``partition_not_applicable`` with no
+                    # partition (the tool schema's literal), marked with
+                    # ``scope`` so the page shows one button per source.
+                    source_id = issue.get('source_id')
+                    if source_id in ignored:
+                        continue
+                    options.append({'action': 'partition_not_applicable',
+                                    'scope': 'source', 'partition': None,
+                                    'source_id': source_id,
+                                    'source_name': names.get(source_id, source_id),
+                                    'reason_hint': '本任务不使用该来源'})
+                    continue
                 if issue.get('code') not in {'ontology.identity_unresolved',
                                              'ontology.required_value_missing',
                                              'ontology.conversion_failed',
@@ -301,6 +427,20 @@ class IntakeService:
                     continue
                 source_id, row = issue.get('source_id'), issue.get('row')
                 if source_id is None or row is None:
+                    continue
+                profile = profiles.get(source_id)
+                if profile is None:
+                    continue
+                # FDE2-06: only a row that itself reads like the header (or is
+                # entirely blank) may be excluded; a real data row with a bad
+                # value must be corrected or re-mapped instead.  Clause record
+                # sets keep the per-record escape: a record whose quote
+                # attribution failed or whose clause never stated a required
+                # value is resolved by dropping that record, not by re-mapping.
+                record_set = str((profile.metadata or {}).get('selected_record_set')
+                                 or '')
+                if not record_set.startswith('clause_records:') \
+                        and not self._suspected_irrelevant_row(profile, row):
                     continue
                 key = (source_id, 'exclude_record', None, row)
                 if key in done:
@@ -318,9 +458,12 @@ class IntakeService:
         """Record an audited source disposition and invalidate the preview.
 
         ``partition_not_applicable`` acknowledges an unread/blank partition and
-        ``exclude_record`` removes one source row.  The disposition record is a
-        new revision with who/when/why; the next proposal rebuilds a preview
-        with the disposition applied.
+        ``exclude_record`` removes one source row.  A source that the task's
+        mapping does not use can be dropped as a whole (``ignore_source``);
+        over the wire that arrives as ``partition_not_applicable`` without a
+        partition, because the tool schema's literal has no third action.  The
+        disposition record is a new revision with who/when/why; the next
+        proposal rebuilds a preview with the disposition applied.
         """
         if not str(getattr(disposition, 'reason', '') or '').strip():
             raise ValueError('处置原因不能为空')
@@ -337,16 +480,25 @@ class IntakeService:
         if profile is None:
             raise ValueError('source has no observation in this task')
         action = disposition.action
-        entry = {'action': action, 'source_id': disposition.source_id,
+        source_level = action == 'ignore_source' or (
+            action == 'partition_not_applicable' and disposition.partition is None)
+        entry = {'action': 'ignore_source' if source_level else action,
+                 'source_id': disposition.source_id,
                  'reason': disposition.reason}
-        if action == 'partition_not_applicable':
+        if source_level:
+            # Ignore a source only when the preview under review does not map
+            # it; an older mapping entry alone does not keep it in use.
+            active = self._preview_source_ids(session)
+            used = active if active is not None else self._mapped_source_ids(session)
+            if disposition.source_id in used:
+                raise ValueError('source is used by the current mapping; '
+                                  'dispose a partition or a record instead')
+        elif action == 'partition_not_applicable':
             partition = disposition.partition
-            if partition is None:
-                raise ValueError('partition_not_applicable needs a partition')
             observed = {gap.partition for gap in profile.gaps}
             observed.update(profile.completed_partitions)
             if partition not in observed:
-                raise ValueError('partition is not part of this source observation')
+                raise ValueError('partition is not part of the source observation')
             entry['partition'] = partition
         elif action == 'exclude_record':
             record = disposition.record
@@ -449,7 +601,7 @@ class IntakeService:
             entity_sources[entity_id] = {anchor.get('source_ref')
                 for field_anchors in (instance.get('source_anchors') or {}).values()
                 for anchor in field_anchors if anchor.get('source_ref')}
-        for issue in body.get('issues') or []:
+        for issue in self._deduped_issues(body.get('issues') or []):
             code = issue.get('code')
             if code == 'ontology.identity_unresolved':
                 continue
@@ -751,6 +903,10 @@ class IntakeService:
         return proposals if len(used)==len(records) else None
 
     def _reuse_verified_mapping(self,session,profiles,ctx):
+        # A cached mapping covers every observed source.  Reusing it after an
+        # audited "this task does not use the source" decision would map the
+        # removed material again behind the operator's back (FDE2-05).
+        if self._ignored_source_ids(session):return False
         ontology,concept_name,_=self._target(session)
         for key in self._verified_mapping_keys(ontology,concept_name,profiles):
             cached=self.wb.store.current('verified_mapping',key,scope=self.wb.scope)
@@ -1074,7 +1230,9 @@ class IntakeService:
                      for item in self.conflict_details(session, body)}
         actions = self.disposition_options(session, body)
         summary = []
-        for issue in body.get('issues') or []:
+        # One entry per row and root cause: a failed conversion already
+        # explains the required value missing on the same row and column.
+        for issue in self._deduped_issues(body.get('issues') or []):
             code = str(issue.get('code') or '')
             label = issue.get('object') or labels.get(issue.get('entity_id'))
             if (issue.get('row') is not None
@@ -1103,6 +1261,10 @@ class IntakeService:
             if code == 'ontology.incomplete_source':
                 item['actions'] = [option for option in actions
                                    if option['action'] == 'partition_not_applicable'
+                                   and option['source_id'] == issue.get('source_id')]
+            elif code == 'ontology.source_unmapped':
+                item['actions'] = [option for option in actions
+                                   if option.get('scope') == 'source'
                                    and option['source_id'] == issue.get('source_id')]
             elif code in {'ontology.identity_unresolved',
                           'ontology.required_value_missing',
@@ -1580,14 +1742,21 @@ class IntakeService:
         proposal=proposal.model_copy(update={'id':mid,'revision':revision,'scope':wb.scope})
         preview,body=wb.ontology.prepare_preview(proposal,observations,ctx,
             dispositions=self.disposition_entries(s))
-        body['issues']=[*(body.get('issues') or []),*self._clause_attribution_issues(s,body)]
+        body['issues']=[*(body.get('issues') or []),*self._unmapped_source_issues(
+            s,{observation.source_id for observation in observations}),
+            *self._clause_attribution_issues(s,body)]
         body['mapping_reused']=reused
         prior_ref,_,conflicts,pending=self._carry_corrections(s,body)
         hint=self.inheritance_hint(s,body)
         if hint:body['inheritance']=hint
         else:body.pop('inheritance',None)
         preview=self._refresh_preview(body,concept)
-        versions={**s.selected_versions,'preview':preview.id+'@1','mapping':mid+'@'+revision}
+        # One revision entry per mapped source: the durable scope the web
+        # regenerates from, so an unmapped material stays unmapped instead of
+        # flooding the next preview with its rows (FDE2-05).
+        versions={**s.selected_versions,'preview':preview.id+'@1','mapping':mid+'@'+revision,
+            **{f'mapping:{observation.source_id}':mid+'@'+revision
+               for observation in observations}}
         if prior_ref and pending:versions['corrections_from']=prior_ref
         else:versions.pop('corrections_from',None)
         wb.sessions.update(s.id,s.revision,{'phase':'preview','selected_versions':versions,
@@ -1603,10 +1772,14 @@ class IntakeService:
             raise ValueError('use ontology_discovery_propose for this intake')
         if session.revision != expected_revision:
             raise VersionConflict('session changed; reload proposal inputs')
-        observations = self._profiles(session)
+        all_profiles = self._profiles(session)
         selected = {source.source_id for source in session.sources}
-        if set(proposals) != selected or {profile.source_id for profile in observations} != selected:
+        # A proposal may cover a subset of the task's sources: the others keep
+        # one source-level issue instead of having every row mapped (FDE2-05).
+        if (not proposals or not set(proposals) <= selected
+                or {profile.source_id for profile in all_profiles} != selected):
             raise ValueError('provide one mapping for each observed source')
+        observations = [profile for profile in all_profiles if profile.source_id in proposals]
         ontology, concept_name, concept = self._target(session)
         if {proposal.ontology_revision for proposal in proposals.values()} != {f'{ontology.id}@{ontology.revision}'}:
             raise ValueError('target ontology outside task')
@@ -1622,8 +1795,10 @@ class IntakeService:
         versions = dict(session.selected_versions)
         writes = []
         mappings = {}
-        for index, profile in enumerate(observations):
+        for index, profile in enumerate(all_profiles):
             key = profile.source_id
+            if key not in proposals:
+                continue
             mapping_id = f'{session.id}:source-mapping:{index}'
             current = wb.store.current('mapping', mapping_id, scope=wb.scope)
             revision = str(int(current['revision']) + 1) if current else '1'
@@ -1637,6 +1812,7 @@ class IntakeService:
             primary, observations, ctx, source_mappings=mappings,
             dispositions=self.disposition_entries(session))
         body['issues'] = [*(body.get('issues') or []),
+                         *self._unmapped_source_issues(session, set(proposals)),
                          *self._clause_attribution_issues(session, body)]
         body['mapping_reused'] = reused
         prior_ref,_,conflicts,pending=self._carry_corrections(session,body)
@@ -1700,7 +1876,10 @@ class IntakeService:
         phase='preview'
         if body['review_state']=='approved':
             selected={source.source_id for source in s.sources}
-            if selected!=set(body['source_revisions']):raise ValueError('remaining sources require separate mapping')
+            # A source an audited disposition removed from the task no longer
+            # needs its own mapping; every other source still does.
+            missing=selected-set(body['source_revisions'])-self._ignored_source_ids(s)
+            if missing:raise ValueError('remaining sources require separate mapping')
             release,release_writes=wb.ontology.release_writes(body,id,rev,decision.preview_ref)
             writes=[w for w in writes if w.kind!='preview']+release_writes
             versions['release']=release.id+'@'+release.revision
@@ -1726,11 +1905,15 @@ class IntakeService:
                                 selections[source_id].kind,item)
                          for source_id,item in source_mappings.items() if source_id in selections]
             else:
-                source=selections.get(next(iter(selected))) if len(selected)==1 else None
+                # A single mapping with more sources in the task names the one
+                # source it actually covered, so the cached record stays
+                # matchable after a source-level disposition removed the rest.
+                mapped=selected & set(body['source_revisions'])
+                source=selections.get(next(iter(mapped))) if len(mapped)==1 else None
                 records=[record(source.source_id if source else None,
                                 source.locator_ref if source else None,
                                 source.kind if source else None,mapping)]
-            if len(records)==len(selected):
+            if len(records)==len(selected-self._ignored_source_ids(s)):
                 fingerprints=sorted({record['mapping']['source_fingerprint'] for record in records})
                 ontology,concept_name,_=self._target(s)
                 key=digest([wb.scope,fingerprints,f'{ontology.id}@{ontology.revision}',concept_name])
@@ -1773,6 +1956,8 @@ class IntakeService:
             'discovery':wb.discovery.state(s, profiles),
             'ontology':ontology.model_dump(mode='json'),'ontology_concept':concept_name,'preview':body,
             'draft':draft['body'] if draft else {},
+            # Mapping specs per source for the web's regenerate step (FDE2-05).
+            'mappings':self._selected_mappings(s),
             'issue_count':body['issue_count'] if body else len(s.issues),
             'dispositions':self.disposition_entries(s),
             'disposition_options':self.disposition_options(s,body),
