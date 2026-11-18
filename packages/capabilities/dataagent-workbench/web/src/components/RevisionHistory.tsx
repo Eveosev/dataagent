@@ -1,6 +1,9 @@
 // 本体库的修订历史（V6）：每个本体显示修订号、发布时间（浏览器本地时区）与
 // 相对上一修订的差异摘要。注册表条目本身保留当前修订；历史来自 revisions。
 // 旧工作区的条目没有 revisions 时按当前修订合成一条，不隐藏已有本体。
+export type RelationShape={
+ subject_concept?:string;object_concept?:string;roles?:string[];
+};
 export type RevisionDiff={
  previous_revision?:string;revision?:string;destructive?:boolean;
  summary?:string[];
@@ -10,7 +13,8 @@ export type RevisionDiff={
  retyped_properties?:{concept:string;property:string;before:string;after:string}[];
  required_changes?:{concept:string;property:string;before:boolean;after:boolean}[];
  identity_changes?:{concept:string;before:string[];after:string[]}[];
- added_relations?:string[];removed_relations?:string[];changed_relations?:{relation:string}[];
+ added_relations?:string[];removed_relations?:string[];
+ changed_relations?:{relation:string;before?:RelationShape;after?:RelationShape}[];
 };
 export type RevisionRecord={
  revision:string;published_at?:string;published_by?:string;

@@ -993,6 +993,7 @@ class PublishService:
                                else next(iter(definition.concepts)))
             entry = registry_entry.model_copy(update={
                 'ontology_revision': definition.revision,
+                'title': body['title'],
                 'concepts': list(definition.concepts),
                 'default_concept': default_concept,
                 'source_snapshot': body['source_snapshot'],

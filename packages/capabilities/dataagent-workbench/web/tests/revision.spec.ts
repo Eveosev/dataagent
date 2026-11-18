@@ -82,7 +82,9 @@ function fullProposal(request:{expected_revision:string;source_revision:string;
 // 从可选改成必需。两者都不是破坏性变更，网页只勾主确认即可发布。
 function fullCompletion(sid:string,draftRef:string,expectedRevision:string,
  catalog:{relationships:{id:string;origin:string}[]}|null,ontologyId:string,
- docNoType='integer',nameRequired=false,includeCustomerName=true){
+ docNoType='integer',nameRequired=false,includeCustomerName=true,
+ title='销售单据修订模型',relationObject='SalesOrder',
+ relationRoles:string[]=['line','order']){
  const declared=catalog!.relationships.find(link=>link.origin==='declared')!;
  const inferred=catalog!.relationships.find(link=>link.origin==='sample_supported')!;
  const customerProperties:Record<string,{column:string;value_type:string;required?:boolean}>={
@@ -92,7 +94,7 @@ function fullCompletion(sid:string,draftRef:string,expectedRevision:string,
   customerProperties.name={column:'nm',value_type:'string',required:nameRequired};
  return {
   session_id:sid,expected_revision:expectedRevision,draft_ref:draftRef,
-  ontology_id:ontologyId,title:'销售单据修订模型',
+  ontology_id:ontologyId,title,
   concepts:[
    {entity:'SalesOrder',properties:{
     book:{column:'book',value_type:'string',required:true},
@@ -108,7 +110,7 @@ function fullCompletion(sid:string,draftRef:string,expectedRevision:string,
   ],
   relations:[
    {evidence_id:declared.id,name:'belongsToOrder',subject_concept:'SalesOrderLine',
-    object_concept:'SalesOrder',roles:['line','order']},
+    object_concept:relationObject,roles:relationRoles},
    {evidence_id:inferred.id,name:'orderedBy',subject_concept:'SalesOrder',
     object_concept:'Customer',roles:['order','customer']},
   ],
@@ -157,7 +159,8 @@ async function publishInitial(page:Page,ontologyId:string){
 }
 
 async function prepareRevision(ontologyId:string,
- options:{docNoType?:string;nameRequired?:boolean;includeCustomerName?:boolean}={}){
+ options:{docNoType?:string;nameRequired?:boolean;includeCustomerName?:boolean;
+  title?:string;relationObject?:string;relationRoles?:string[]}={}){
  const task=startDiscovery(ontologyId,ontologyId);
  callTool('ontology_discovery_propose',{
   session_id:task.sid,...fullProposal(task.request)});
@@ -165,7 +168,9 @@ async function prepareRevision(ontologyId:string,
  const candidate=callTool('ontology_publish_prepare',
   fullCompletion(task.sid,inferred.draft.ref,inferred.expected_revision,
    inferred.catalog,ontologyId,options.docNoType||'integer',
-   options.nameRequired||false,options.includeCustomerName!==false));
+   options.nameRequired||false,options.includeCustomerName!==false,
+   options.title||'销售单据修订模型',options.relationObject||'SalesOrder',
+   options.relationRoles||['line','order']));
  return {sid:task.sid,candidate};
 }
 
@@ -184,10 +189,11 @@ test('非破坏性修订显示类型与必需性差异，网页一次确认发�
  const ontologyId=`sales-revision-${Date.now()}`;
  await publishInitial(page,ontologyId);
 
- // 修订任务：doc_no integer→string，Customer.name 可选→必需；两项都出现在
- // 发布区差异里，且不改身份、不删属性，所以只需主确认。
+ // 修订任务：doc_no integer→string，Customer.name 可选→必需，同时把关系
+ // 角色改为 detail/header；都不删属性、不改身份，所以只需主确认。
  const revision=await prepareRevision(ontologyId,
-  {docNoType:'string',nameRequired:true});
+  {docNoType:'string',nameRequired:true,title:'销售单据修订模型·修订二',
+   relationRoles:['detail','header']});
  expect(revision.candidate.previous_revision).toBe('1');
  expect(revision.candidate.ontology_revision).toBe('2');
  expect(revision.candidate.destructive).toBe(false);
@@ -195,6 +201,14 @@ test('非破坏性修订显示类型与必需性差异，网页一次确认发�
   .toContain('SalesOrder.doc_no 值类型 integer → string');
  expect(revision.candidate.revision_diff.summary)
   .toContain('Customer.name 必需性 可选 → 必需');
+ expect(revision.candidate.title).toBe('销售单据修订模型·修订二');
+ expect(revision.candidate.revision_diff.changed_relations).toEqual([{
+  relation:'belongsToOrder',
+  before:{subject_concept:'SalesOrderLine',object_concept:'SalesOrder',
+   roles:['line','order']},
+  after:{subject_concept:'SalesOrderLine',object_concept:'SalesOrder',
+   roles:['detail','header']},
+ }]);
 
  await page.goto('/#session='+revision.sid);
  await expect(page.getByTestId('revision-publish-notice')).toBeVisible({timeout:30000});
@@ -202,17 +216,29 @@ test('非破坏性修订显示类型与必需性差异，网页一次确认发�
   .toContainText('SalesOrder.doc_no 值类型 integer → string');
  await expect(page.getByTestId('revision-diff'))
   .toContainText('Customer.name 必需性 可选 → 必需');
+ await expect(page.getByTestId('revision-relation-changes')).toBeVisible();
+ await expect(page.getByTestId('revision-relation-0-subject'))
+  .toContainText('SalesOrderLine → SalesOrderLine');
+ await expect(page.getByTestId('revision-relation-0-object'))
+  .toContainText('SalesOrder → SalesOrder');
+ await expect(page.getByTestId('revision-relation-0-roles'))
+  .toContainText('line + order → detail + header');
  await expect(page.getByTestId('revision-destructive')).toHaveCount(0);
  await page.getByLabel('我已核对候选定义与来源摘要，确认发布').check();
  await expect(page.getByRole('button',{name:'确认发布'})).toBeEnabled();
  await page.getByRole('button',{name:'确认发布'}).click();
  await expect(page.getByTestId('publish-done'))
   .toContainText('修订 1 → 2',{timeout:20000});
+ const registry=await page.request.get('/api/ontologies');
+ expect(registry.ok(),await registry.text()).toBeTruthy();
+ const published=(await registry.json()) as {ontologies:{id:string;title:string}[]};
+ expect(published.ontologies.find(item=>item.id===ontologyId)?.title)
+  .toBe('销售单据修订模型·修订二');
 
  await retire(page,ontologyId);
  await page.getByRole('button',{name:'本体库',exact:true}).click();
  const entry=page.getByTestId(`ontology-${ontologyId}`);
- await expect(entry).toContainText('销售单据修订模型');
+ await expect(entry).toContainText('销售单据修订模型·修订二');
  const history=page.getByTestId(`revision-history-${ontologyId}`);
  await history.locator('summary').click();
  await expect(page.getByTestId(`revision-${ontologyId}-1`)).toContainText('修订 1');

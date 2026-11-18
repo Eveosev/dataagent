@@ -36,6 +36,27 @@ export function RevisionPublishNotice({candidate,acknowledged,onAcknowledge,disa
   {summary.length
    ?<ul data-testid="revision-diff">{summary.map(line=><li key={line}>{line}</li>)}</ul>
    :<p className="muted">结构没有变化。</p>}
+  {(diff.changed_relations||[]).length>0&&<div data-testid="revision-relation-changes">
+   <h3>关系端点与角色变化</h3>
+   {(diff.changed_relations||[]).map((change,index)=>{
+    const before=change.before||{},after=change.after||{};
+    const rows:[string,string,string,string][]=[
+     ['subject','主体概念',before.subject_concept||'（无）',after.subject_concept||'（无）'],
+     ['object','对象概念',before.object_concept||'（无）',after.object_concept||'（无）'],
+     ['roles','角色',(before.roles||[]).join(' + ')||'（无）',
+      (after.roles||[]).join(' + ')||'（无）'],
+    ];
+    return <div className="revision-relation" key={`${change.relation}-${index}`}
+     data-testid={`revision-relation-${index}`}>
+     <strong>{change.relation}</strong>
+     <dl>{rows.map(([key,label,oldValue,newValue])=><div key={key}>
+      <dt>{label}</dt>
+      <dd data-testid={`revision-relation-${index}-${key}`}>
+       <code>{oldValue}</code> → <code>{newValue}</code></dd>
+     </div>)}</dl>
+    </div>;
+   })}
+  </div>}
   {destructive
    ?<div className="notice amber" data-testid="revision-destructive">
      <p><strong>破坏性变更</strong>：本次修订删除属性、删除概念或修改身份字段。

@@ -24,7 +24,8 @@ from pydantic import ValidationError
 
 from dataagent_contracts.core import CapabilityStatus
 from dataagent_contracts.intake import SourceSelection, WorkSpec
-from dataagent_contracts.ontology import MappingSpec, OntologyRevision
+from dataagent_contracts.ontology import (MappingSpec, OntologyRevision,
+                                          RelationDefinition)
 from dataagent_ontology.revisions import definition_diff
 from dataagent_workbench.adapters.layer_client import LayerClient
 from dataagent_workbench.bootstrap import Workbench
@@ -209,9 +210,11 @@ def test_revision_publish_keeps_old_tasks_and_defaults_new_tasks_to_rev2(tmp_pat
     revision_wb, revision_session, revision_request = workbench(
         tmp_path, revise_ontology_id='sales-model')
     current, candidate = revision_candidate(
-        revision_wb, revision_session, revision_request, doc_no_type='string')
+        revision_wb, revision_session, revision_request, doc_no_type='string',
+        title='销售单据模型·修订二')
 
     assert candidate['ontology_id'] == 'sales-model'
+    assert candidate['title'] == '销售单据模型·修订二'
     assert candidate['previous_revision'] == '1'
     assert candidate['ontology_revision'] == '2'
     assert candidate['destructive'] is False
@@ -258,6 +261,7 @@ def test_revision_publish_keeps_old_tasks_and_defaults_new_tasks_to_rev2(tmp_pat
 
     entry = registry_entry(wb)
     assert entry['ontology_revision'] == '2'
+    assert entry['title'] == candidate['title']
     assert [item['revision'] for item in entry['revisions']] == ['1', '2']
     assert entry['revisions'][1]['previous_revision'] == '1'
     assert entry['revisions'][1]['published_at']
@@ -432,6 +436,33 @@ def test_definition_diff_lists_properties_of_added_and_removed_concepts():
         {'concept': 'Old', 'property': 'label', 'value_type': 'string'}]
     assert 'New.id 新增属性（string）' in diff['summary']
     assert 'Old.label 删除属性（string）' in diff['summary']
+
+
+
+def test_definition_diff_reports_relation_endpoint_and_role_changes():
+    concepts = {
+        'A': {'entity_type': 'A', 'identity_fields': ['code'],
+              'properties': {'code': {'value_type': 'string'}}},
+        'B': {'entity_type': 'B', 'identity_fields': ['code'],
+              'properties': {'code': {'value_type': 'string'}}},
+        'C': {'entity_type': 'C', 'identity_fields': ['code'],
+              'properties': {'code': {'value_type': 'string'}}},
+    }
+    before = OntologyRevision(id='m', revision='1', concepts=concepts, relations={
+        'link': RelationDefinition(roles=['line', 'order'],
+            subject_concept='A', object_concept='B')})
+    after = OntologyRevision(id='m', revision='2', concepts=concepts, relations={
+        'link': RelationDefinition(roles=['line', 'customer'],
+            subject_concept='A', object_concept='C')})
+    diff = definition_diff(before, after)
+    assert diff['changed_relations'] == [{
+        'relation': 'link',
+        'before': {'roles': ['line', 'order'],
+                   'subject_concept': 'A', 'object_concept': 'B'},
+        'after': {'roles': ['line', 'customer'],
+                  'subject_concept': 'A', 'object_concept': 'C'},
+    }]
+    assert any('关系 link 端点或角色调整' in line for line in diff['summary'])
 
 
 def test_builtin_upgrade_appends_the_new_revision_to_history(tmp_path):
