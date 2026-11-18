@@ -107,3 +107,22 @@ def test_file_reference_is_scoped_to_workspace_not_data_root_env(workspace, ctx,
     })
     assert seen["credentials"]["token"] == "INSIDE-VALUE"
     assert seen["credentials"]["token"] != SENTINEL
+
+
+def test_probe_failure_payload_classifies_missing_dependency():
+    try:
+        try:
+            raise ModuleNotFoundError("No module named 'docx'")
+        except Exception as exc:
+            raise ValueError("invalid .docx file: ModuleNotFoundError") from exc
+    except ValueError as exc:
+        payload = cli._error_payload(exc)
+    assert payload["code"] == "dependency_missing"
+    assert payload["retryable"] is False
+    assert "docx" in payload["detail"]
+
+
+def test_probe_failure_payload_marks_timeouts_retryable():
+    payload = cli._error_payload(TimeoutError("segment budget expired"))
+    assert payload["code"] == "probe_timeout"
+    assert payload["retryable"] is True

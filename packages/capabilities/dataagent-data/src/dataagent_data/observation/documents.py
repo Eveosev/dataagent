@@ -12,6 +12,7 @@ import io
 import json
 from pathlib import Path
 import re
+import time
 import zipfile
 from dataagent_contracts.core.refs import SourceAnchor
 from dataagent_contracts.intake import CoverageGap
@@ -21,24 +22,67 @@ from ..adapters.parsers.pdf import parse_pdf
 
 _DOCX_MAX_EXPANDED_BYTES = 256 * 1024 * 1024
 _DOCX_MAX_ENTRIES = 10_000
+_BUDGET_GAP = 'time_budget_exceeded'
 
 
-def probe_document(path, source_id, revision, *, engine=None, max_pages=200):
+def _resume(previous, revision, kind):
+    if previous is None or previous.source_revision != revision or previous.kind != kind:
+        return None
+    state = previous.metadata.get('resume')
+    return state if isinstance(state, dict) else None
+
+
+def _carry(previous):
+    if previous is None:
+        return [], {}, [], [], []
+    error=(previous.metadata.get('probe_error')
+           if isinstance(previous.metadata,dict) else None)
+    failure=error.get('code') if isinstance(error,dict) else None
+    gaps=[gap for gap in previous.gaps
+          if gap.code not in {_BUDGET_GAP,failure}]
+    return (list(previous.records), dict(previous.anchors),
+            list(previous.completed_partitions), gaps, list(previous.issues))
+
+
+def _expired(deadline):
+    return deadline is not None and time.monotonic() >= deadline
+
+
+def probe_document(path, source_id, revision, *, engine=None, max_pages=200,
+                   previous=None, deadline=None, segment_pages=10, segment_blocks=200):
     """Dispatch a document snapshot to the Word or PDF probe."""
     if Path(path).suffix.lower() == ".docx":
-        return probe_docx(path, source_id, revision)
-    return _probe_pdf(path, source_id, revision, engine=engine, max_pages=max_pages)
+        return probe_docx(path, source_id, revision, previous=previous,
+                          deadline=deadline, segment_blocks=segment_blocks)
+    return _probe_pdf(path, source_id, revision, engine=engine, max_pages=max_pages,
+                      previous=previous, deadline=deadline, segment_pages=segment_pages)
 
 
-def _probe_pdf(path, source_id, revision, *, engine=None, max_pages=200):
+def _probe_pdf(path, source_id, revision, *, engine=None, max_pages=200,
+               previous=None, deadline=None, segment_pages=10):
     import pdfplumber
     with pdfplumber.open(path) as pdf:
         total = len(pdf.pages)
     selected = min(total,max_pages)
-    content, issues = parse_pdf(path,page_range=f'1-{selected}')
-    records, anchors, pages, completed, gaps, tables = [], {}, [], [], [], []
+    prior = _resume(previous, revision, 'pdf')
+    if prior:
+        records, anchors, completed, gaps, issues = _carry(previous)
+        pages = list(previous.metadata.get('pages', []))
+        tables = list(previous.metadata.get('tables', []))
+        next_page = int(prior.get('next_page', 1))
+    else:
+        records, anchors, pages, completed, gaps, tables, issues = [], {}, [], [], [], [], []
+        next_page = 1
+    next_page = max(1, min(next_page, selected + 1))
+    end = min(selected, next_page + max(1, segment_pages) - 1)
+    content, parse_issues = parse_pdf(path,page_range=f'{next_page}-{end}')
+    last_done = next_page - 1
     with pdfplumber.open(path) as pdf:
         for page in content.pages:
+            # Always complete at least one page of the segment; that bounds a
+            # single call without risking a no-progress resume loop.
+            if last_done >= next_page and _expired(deadline):
+                break
             text, method, blocks = page.text, 'text', []
             if not text.strip() and engine is not None:
                 try:
@@ -67,6 +111,7 @@ def _probe_pdf(path, source_id, revision, *, engine=None, max_pages=200):
             if not text.strip():
                 if not any(g.partition==page.page for g in gaps):
                     gaps.append(CoverageGap(partition=page.page,code='ocr_engine_missing' if engine is None else 'ocr_empty'))
+                last_done = page.page
                 continue
             completed.append(page.page)
             record, spans = {}, {}
@@ -108,9 +153,16 @@ def _probe_pdf(path, source_id, revision, *, engine=None, max_pages=200):
                         selector={'kind':'pdf_text_span','page':page.page,'char_start':start,'char_end':end})]
             if method=='ocr' and any(getattr(b,'confidence',0)<.6 for b in blocks):
                 issues.append({'code':'intake.low_ocr_confidence','page':page.page})
-    if selected < total:
+            last_done = page.page
+    next_cursor = last_done + 1
+    issues.extend(parse_issues)
+    metadata = {'pages':pages,'tables':tables,'total_pages':total}
+    if next_cursor <= selected:
+        gaps.append(CoverageGap(partition=next_cursor,code=_BUDGET_GAP))
+        metadata['resume'] = {'kind':'pdf','next_page':next_cursor}
+    elif selected < total:
         gaps.append(CoverageGap(partition=f'{selected+1}-{total}',code='page_budget_exceeded'))
-    return records,anchors,{'pages':pages,'tables':tables,'total_pages':total},completed,gaps,issues
+    return records,anchors,metadata,completed,gaps,issues
 
 
 def _check_docx_archive(path):
@@ -309,7 +361,7 @@ def _docx_fingerprint(paragraph_structure, table_structure):
     return hashlib.sha256(json.dumps(payload, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
 
 
-def probe_docx(path, source_id, revision):
+def probe_docx(path, source_id, revision, *, previous=None, deadline=None, segment_blocks=200):
     """Extract body paragraphs/headings and tables from a .docx snapshot."""
     _check_docx_archive(path)
     try:
@@ -320,14 +372,36 @@ def probe_docx(path, source_id, revision):
 
     blocks = list(_iter_body_blocks(document))
     total = len(blocks)
-    records, anchors, units = [], {}, {}
-    record_locations, paragraphs_meta, tables_meta = [], [], []
-    paragraph_structure, table_structure = [], []
-    completed, gaps, issues = [], [], []
-    paragraph_number = 0
-    table_number = 0
+    prior = _resume(previous, revision, 'docx')
+    if prior:
+        records, anchors, completed, gaps, issues = _carry(previous)
+        units = dict(previous.metadata.get('units', {}))
+        record_locations = list(previous.metadata.get('record_locations', []))
+        paragraphs_meta = list(previous.metadata.get('paragraphs', []))
+        tables_meta = list(previous.metadata.get('tables', []))
+        paragraph_structure = list(prior.get('paragraph_structure', []))
+        table_structure = list(prior.get('table_structure', []))
+        paragraph_number = int(previous.metadata.get('paragraph_count', 0))
+        table_number = int(previous.metadata.get('table_count', 0))
+        start_block = int(prior.get('next_block', 0))
+    else:
+        records, anchors, units = [], {}, {}
+        record_locations, paragraphs_meta, tables_meta = [], [], []
+        paragraph_structure, table_structure = [], []
+        completed, gaps, issues = [], [], []
+        paragraph_number = 0
+        table_number = 0
+        start_block = 0
+    start_block = max(0, min(start_block, total))
+    segment_blocks = max(1, int(segment_blocks))
+    processed = 0
 
-    for block_number, (kind, block) in enumerate(blocks, 1):
+    for block_number, (kind, block) in enumerate(blocks[start_block:], start_block + 1):
+        if processed >= segment_blocks:
+            break
+        if processed and _expired(deadline):
+            break
+        processed += 1
         try:
             if kind == 'paragraph':
                 paragraph_number += 1
@@ -424,6 +498,7 @@ def probe_docx(path, source_id, revision):
             issues.append({'code': 'intake.docx_block_failed', 'block': block_number,
                            'kind': kind, 'detail': type(exc).__name__})
 
+    next_block = start_block + processed
     metadata = {
         'format': 'docx',
         'paragraphs': paragraphs_meta,
@@ -435,4 +510,9 @@ def probe_docx(path, source_id, revision):
         'total_blocks': total,
         'structure_fingerprint': _docx_fingerprint(paragraph_structure, table_structure),
     }
+    if next_block < total:
+        gaps.append(CoverageGap(partition=next_block + 1, code=_BUDGET_GAP))
+        metadata['resume'] = {'kind': 'docx', 'next_block': next_block,
+                              'paragraph_structure': paragraph_structure,
+                              'table_structure': table_structure}
     return records, anchors, metadata, completed, gaps, issues

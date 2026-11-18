@@ -111,6 +111,26 @@ def rest_selection(origin,path='/items',**kwargs):
     return SourceSelection(source_id='api',kind='rest',locator_ref=origin+path,options=options,**kwargs)
 
 
+def test_rest_probe_segments_by_page_and_resumes(tmp_path,http_source):
+    from dataagent_data.observation.cli import probe
+    origin,routes,requests=http_source
+    routes['/items']=(200,{'items':[{'id':1}],'next':'/more'},{'X-Source-Version':'r1'})
+    routes['/more']=(200,{'items':[{'id':2}],'next':None},{'X-Source-Version':'r1'})
+    selection=rest_selection(origin)
+    first=probe(selection,None,tmp_path,{'allowed_origins':[origin],'segment_pages':1})
+    assert first.coverage=='partial'
+    assert first.completed_partitions==[1]
+    assert first.records==[{'/id':1}]
+    assert [(gap.partition,gap.code) for gap in first.gaps]==[(2,'time_budget_exceeded')]
+    assert first.metadata['resume']=={'kind':'rest','next_page':2}
+    assert [path for path,_ in requests]==['/items']
+    second=probe(selection,None,tmp_path,{'allowed_origins':[origin],
+        'previous':first.model_dump(mode='json')})
+    assert second.coverage=='full' and second.completed_partitions==[1,2]
+    assert second.records==[{'/id':1},{'/id':2}]
+    assert [path for path,_ in requests]==['/items','/more']
+
+
 def test_rest_follows_pages_preserves_nesting_and_response_anchors(tmp_path,http_source):
     from dataagent_data.observation.http import probe_rest
     origin,routes,requests=http_source
@@ -248,3 +268,29 @@ def test_postgres_refuses_inline_secrets_and_sql_before_connect(tmp_path):
     from dataagent_data.observation.database import probe_database
     for locator,options in [('postgresql://user:secret@localhost/test',{}),('postgresql://localhost/test',{'query':'DELETE FROM entries'})]:
         with pytest.raises(ValueError): probe_database(SourceSelection(source_id='pg',kind='postgres',locator_ref=locator,options=options),None,workspace=tmp_path)
+
+
+def test_rest_versionless_segment_resume_does_not_reread_first_page(tmp_path, http_source):
+    from dataagent_data.observation.cli import probe
+    origin, routes, requests = http_source
+    routes['/items'] = (200, {'items': [{'id': 1}], 'next': '/more'}, {})
+    routes['/more'] = (200, {'items': [{'id': 2}], 'next': None}, {})
+    selection = rest_selection(origin)
+    first = probe(selection, None, tmp_path, {'allowed_origins': [origin],
+                                              'segment_pages': 1})
+    assert first.coverage == 'partial'
+    assert first.completed_partitions == [1]
+    assert first.records == [{'/id': 1}]
+    assert first.metadata['resume'] == {'kind': 'rest', 'next_page': 2}
+    assert [path for path, _ in requests] == ['/items']
+    second = probe(selection, None, tmp_path, {'allowed_origins': [origin],
+                                               'segment_pages': 1,
+                                               'previous': first.model_dump(mode='json')})
+    assert [path for path, _ in requests] == ['/items', '/more']
+    assert second.records == [{'/id': 1}, {'/id': 2}]
+    assert second.completed_partitions == [1, 2]
+    assert second.total_partitions == 2
+    assert second.metadata.get('resume') is None
+    codes = {gap.code for gap in second.gaps}
+    assert 'source_snapshot_unverified' in codes
+    assert 'source_snapshot_unverified' in {issue['code'] for issue in second.issues}

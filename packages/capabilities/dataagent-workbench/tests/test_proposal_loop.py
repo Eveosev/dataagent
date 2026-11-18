@@ -1,11 +1,13 @@
 from pathlib import Path
+import time
 import pytest
+from dataagent_contracts.core.refs import SourceAnchor
 from dataagent_contracts.intake import CoverageGap,SourceProfile,SourceSelection,WorkSpec
 from dataagent_contracts.ontology import MappingSpec,ReviewDecision
 from dataagent_ontology.identity import digest
 from dataagent_runtime.ports.workbench_store import ChangeSet,VersionConflict,Write
 from dataagent_workbench.bootstrap import Workbench
-from dataagent_workbench.adapters.layer_client import LayerClient
+from dataagent_workbench.adapters.layer_client import DataLayerProbeError,LayerClient
 
 
 def setup(tmp_path,**kwargs):
@@ -127,7 +129,7 @@ def save_multi(wb,source_ids=('invoice','ledger')):
 
 class StubProbeClient:
     def __init__(self,profiles):self.profiles=profiles
-    def probe(self,selection,ctx,workspace,*,previous=None):return self.profiles[selection.source_id]
+    def probe(self,selection,ctx,workspace,*,previous=None,budget_seconds=None):return self.profiles[selection.source_id]
 
 
 def saved_profiles(wb,session_id):
@@ -411,3 +413,322 @@ def test_published_intake_rejects_further_writes_even_with_latest_revision(tmp_p
     assert current.revision == published.revision
     assert current.selected_versions['release'] == release_ref
     assert wb.intake.view(initial.id, wb.ctx)['preview']['review_state'] == 'published'
+
+
+def contract_profile(source_id, records, *, partial=False):
+    fields = list(records[0]) if records else ['number']
+    anchors = {}
+    for index, row in enumerate(records):
+        for field in fields:
+            anchors[f'{index}.{field}'] = [SourceAnchor(
+                source_ref=source_id, source_revision='sha256:fixture',
+                selector={'kind': 'record_key', 'keys': {'row': index + 2}, 'field': field})]
+    metadata = {'structure_fingerprint': digest([source_id, 'contract']), 'format': 'csv'}
+    if partial:
+        metadata['resume'] = {'kind': 'file', 'format': 'csv', 'next_row': len(records)}
+    return SourceProfile(source_id=source_id, source_revision='sha256:fixture', kind='csv',
+        records=records, fields=fields, anchors=anchors, metadata=metadata,
+        total_partitions=1, completed_partitions=[] if partial else [1],
+        gaps=[CoverageGap(partition=1, code='time_budget_exceeded')] if partial else [])
+
+
+def slice_profile(profile, count, *, next_row):
+    return profile.model_copy(update={
+        'records': profile.records[:count],
+        'anchors': {key: value for key, value in profile.anchors.items()
+                    if int(key.split('.')[0]) < count},
+        'completed_partitions': [],
+        'gaps': [CoverageGap(partition=1, code='time_budget_exceeded')],
+        'metadata': {**profile.metadata,
+                     'resume': {'kind': 'file', 'format': 'csv', 'next_row': next_row}}})
+
+
+class ScriptedProbeClient:
+    def __init__(self, scripts, delays=None):
+        self.scripts = {key: list(value) for key, value in scripts.items()}
+        self.delays = delays or {}
+        self.calls = []
+
+    def probe(self, selection, ctx, workspace, *, previous=None, budget_seconds=None):
+        self.calls.append({'source_id': selection.source_id,
+                           'previous': previous.model_dump(mode='json') if previous is not None else None,
+                           'budget_seconds': budget_seconds})
+        delay = self.delays.get(selection.source_id)
+        if delay:
+            time.sleep(delay)
+        queue = self.scripts[selection.source_id]
+        item = queue.pop(0) if len(queue) > 1 else queue[0]
+        if isinstance(item, Exception):
+            raise item
+        return item
+
+
+class FailingProbeClient:
+    def __init__(self, errors):
+        self.errors = list(errors)
+        self.calls = []
+
+    def probe(self, selection, ctx, workspace, *, previous=None, budget_seconds=None):
+        self.calls.append(selection.source_id)
+        error = self.errors[0]
+        if len(self.errors) > 1:
+            self.errors.pop(0)
+        raise error
+
+
+def start_one(wb, locator='invoice.csv', source_id='f', goal_id='g'):
+    goal = WorkSpec(id=goal_id, goal='接入采购单', acceptance_criteria=['来源可核对'],
+                    authorization_ref=wb.authorization)
+    return wb.sessions.start([SourceSelection(source_id=source_id, kind='file',
+                                              locator_ref=locator)], goal, wb.ctx)
+
+
+def test_advance_resumes_a_segmented_probe_across_calls(tmp_path):
+    full = contract_profile('f', [{'number': 'INV-1', 'amount_minor': '126000', 'currency': 'CNY'},
+                                  {'number': 'INV-2', 'amount_minor': '100', 'currency': 'CNY'}])
+    first_segment = slice_profile(full, 1, next_row=1)
+    client = ScriptedProbeClient({'f': [first_segment, full]})
+    wb = Workbench(tmp_path, layer_client=client)
+    (tmp_path / 'invoice.csv').write_text(
+        'number,amount_minor,currency\nINV-1,126000,CNY\nINV-2,100,CNY\n')
+    wb.intake.budget_seconds = 0.05
+    started = start_one(wb)
+    first = wb.intake.advance(started.session_id, wb.ctx)
+    assert first.phase == 'needs_input'
+    assert first.next_actions == ['retry_probe']
+    view = wb.intake.view(first.id, wb.ctx)
+    assert view['profiles'][0]['coverage'] == 'partial'
+    request = wb.intake.inference_request(first.id, wb.ctx)
+    assert request['sources'][0]['resume']['next_row'] == 1
+    assert request['sources'][0]['completed_partitions'] == []
+
+    second = wb.intake.advance(first.id, wb.ctx)
+    assert second.phase == 'needs_input'
+    assert second.next_actions == ['propose_mapping']
+    assert wb.intake.view(second.id, wb.ctx)['profiles'][0]['records'] == full.records
+    # The continuation received the checkpoint, so completed records were not
+    # rebuilt or duplicated.
+    assert client.calls[1]['previous']['metadata']['resume']['next_row'] == 1
+    assert len(client.calls) == 2
+
+
+def test_advance_consumes_multiple_segments_within_one_budget(tmp_path):
+    full = contract_profile('f', [{'number': 'INV-1', 'amount_minor': '126000', 'currency': 'CNY'},
+                                  {'number': 'INV-2', 'amount_minor': '100', 'currency': 'CNY'}])
+    first_segment = slice_profile(full, 0, next_row=0)
+    second_segment = slice_profile(full, 1, next_row=1)
+    client = ScriptedProbeClient({'f': [first_segment, second_segment, full]})
+    wb = Workbench(tmp_path, layer_client=client)
+    (tmp_path / 'invoice.csv').write_text(
+        'number,amount_minor,currency\nINV-1,126000,CNY\nINV-2,100,CNY\n')
+    wb.intake.budget_seconds = 5
+    started = start_one(wb)
+    session = wb.intake.advance(started.session_id, wb.ctx)
+    assert session.next_actions == ['propose_mapping']
+    assert len(client.calls) == 3
+    assert client.calls[1]['previous']['metadata']['resume']['next_row'] == 0
+    assert client.calls[2]['previous']['metadata']['resume']['next_row'] == 1
+    assert wb.intake.view(session.id, wb.ctx)['profiles'][0]['records'] == full.records
+
+
+def test_probe_failure_returns_error_code_and_stops_retrying(tmp_path):
+    client = FailingProbeClient([
+        DataLayerProbeError('dependency_missing', 'python-docx is not installed'),
+    ])
+    wb = Workbench(tmp_path, layer_client=client)
+    (tmp_path / 'invoice.csv').write_text('number,amount_minor,currency\nINV-1,126000,CNY\n')
+    wb.intake.budget_seconds = 5
+    started = start_one(wb)
+    first = wb.intake.advance(started.session_id, wb.ctx)
+    assert first.phase == 'needs_input'
+    assert first.next_actions == ['repair_source']
+    assert first.issues[0]['code'] == 'intake.probe_failed'
+    assert first.issues[0]['error_code'] == 'dependency_missing'
+    profile = wb.intake.view(first.id, wb.ctx)['profiles'][0]
+    assert profile['records'] == [] and profile['anchors'] == {}
+    assert [(gap['partition'], gap['code']) for gap in profile['gaps']] == [(1, 'dependency_missing')]
+    assert profile['metadata']['probe_error']['code'] == 'dependency_missing'
+    request = wb.intake.inference_request(first.id, wb.ctx)
+    assert request['issues'][0]['error_code'] == 'dependency_missing'
+
+    again = wb.intake.advance(first.id, wb.ctx)
+    assert again.next_actions == ['repair_source']
+    # A permanent failure has no resumable checkpoint and must not be retried
+    # by repeatedly calling advance.
+    assert len(client.calls) == 1
+
+
+def test_transient_probe_failure_retries_at_most_once(tmp_path):
+    client = FailingProbeClient([
+        DataLayerProbeError('probe_timeout', 'segment timed out', retryable=True),
+        DataLayerProbeError('probe_timeout', 'segment timed out again', retryable=True),
+    ])
+    wb = Workbench(tmp_path, layer_client=client)
+    (tmp_path / 'invoice.csv').write_text('number,amount_minor,currency\nINV-1,126000,CNY\n')
+    wb.intake.budget_seconds = 5
+    started = start_one(wb)
+    first = wb.intake.advance(started.session_id, wb.ctx)
+    assert first.next_actions == ['retry_probe']
+    assert first.issues[0]['attempts'] == 1
+    second = wb.intake.advance(first.id, wb.ctx)
+    assert second.next_actions == ['repair_source']
+    assert second.issues[0]['attempts'] == 2
+    third = wb.intake.advance(second.id, wb.ctx)
+    assert third.next_actions == ['repair_source']
+    assert len(client.calls) == 2
+
+
+def test_segmented_multi_source_reuse_waits_for_all_segments(tmp_path):
+    wb = multi_setup(tmp_path)
+    session_id = save_multi(wb)
+    full = {profile.source_id: profile for profile in saved_profiles(wb, session_id)}
+    partial = slice_profile(full['ledger'], 0, next_row=0)
+    client = ScriptedProbeClient(
+        {'invoice': [full['invoice']], 'ledger': [partial, full['ledger']]},
+        delays={'ledger': 0.1})
+    wb.layer_client = client
+    wb.intake.budget_seconds = 0.3
+    started = wb.sessions.start(multi_sources('invoice', 'ledger'),
+        WorkSpec(id='g2', goal='再接入', acceptance_criteria=['来源可核对'],
+                 authorization_ref=wb.authorization), wb.ctx)
+    current = started
+    current_id = started.session_id
+    saw_partial = False
+    for _ in range(6):
+        current = wb.intake.advance(current_id, wb.ctx)
+        current_id = current.id
+        if current.phase == 'preview':
+            break
+        assert current.next_actions == ['retry_probe']
+        view = wb.intake.view(current.id, wb.ctx)
+        ledger = [item for item in view['profiles'] if item['source_id'] == 'ledger']
+        if ledger and ledger[0]['coverage'] == 'partial':
+            saw_partial = True
+            assert not view['mapping_reused']
+            assert ledger[0]['metadata']['resume']['next_row'] == 0
+    assert current.phase == 'preview'
+    assert saw_partial
+    assert wb.intake.view(current.id, wb.ctx)['mapping_reused']
+
+
+def test_intake_budget_seconds_is_configurable_and_clamped(tmp_path, monkeypatch):
+    monkeypatch.setenv('DATAAGENT_INTAKE_BUDGET_SECONDS', '99')
+    wb = Workbench(tmp_path)
+    assert wb.intake.budget_seconds == 50
+    monkeypatch.setenv('DATAAGENT_INTAKE_BUDGET_SECONDS', '1.5')
+    second_dir = tmp_path / 'second'
+    second_dir.mkdir()
+    assert Workbench(second_dir).intake.budget_seconds == 1.5
+
+
+def test_transient_failure_keeps_the_partial_checkpoint(tmp_path):
+    full = contract_profile('f', [{'number': 'INV-1', 'amount_minor': '126000', 'currency': 'CNY'},
+                                  {'number': 'INV-2', 'amount_minor': '100', 'currency': 'CNY'}])
+    partial = slice_profile(full, 1, next_row=1)
+    client = ScriptedProbeClient({'f': [
+        partial,
+        DataLayerProbeError('probe_timeout', 'segment timed out', retryable=True),
+        full,
+    ]}, delays={'f': 0.1})
+    wb = Workbench(tmp_path, layer_client=client)
+    (tmp_path / 'invoice.csv').write_text(
+        'number,amount_minor,currency\nINV-1,126000,CNY\nINV-2,100,CNY\n')
+    wb.intake.budget_seconds = 0.12
+    started = start_one(wb)
+    first = wb.intake.advance(started.session_id, wb.ctx)
+    assert first.next_actions == ['retry_probe']
+    failed = wb.intake.advance(first.id, wb.ctx)
+    assert failed.next_actions == ['retry_probe']
+    view = wb.intake.view(failed.id, wb.ctx)
+    assert view['profiles'][0]['records'] == partial.records
+    assert view['profiles'][0]['metadata']['resume']['next_row'] == 1
+    assert {gap['code'] for gap in view['profiles'][0]['gaps']} == {
+        'time_budget_exceeded', 'probe_timeout'}
+    resumed = wb.intake.advance(failed.id, wb.ctx)
+    assert resumed.next_actions == ['propose_mapping']
+    assert client.calls[2]['previous']['metadata']['resume']['next_row'] == 1
+    assert wb.intake.view(resumed.id, wb.ctx)['profiles'][0]['records'] == full.records
+
+
+def test_permanent_failure_after_a_partial_segment_is_not_retried(tmp_path):
+    full = contract_profile('f', [{'number': 'INV-1', 'amount_minor': '126000', 'currency': 'CNY'},
+                                  {'number': 'INV-2', 'amount_minor': '100', 'currency': 'CNY'}])
+    partial = slice_profile(full, 1, next_row=1)
+    client = ScriptedProbeClient({'f': [
+        partial,
+        DataLayerProbeError('dependency_missing', 'python-docx is not installed',
+                            retryable=False),
+    ]}, delays={'f': 0.1})
+    wb = Workbench(tmp_path, layer_client=client)
+    (tmp_path / 'invoice.csv').write_text(
+        'number,amount_minor,currency\nINV-1,126000,CNY\nINV-2,100,CNY\n')
+    wb.intake.budget_seconds = 0.12
+    started = start_one(wb)
+    first = wb.intake.advance(started.session_id, wb.ctx)
+    assert first.next_actions == ['retry_probe']
+    failed = wb.intake.advance(first.id, wb.ctx)
+    assert failed.next_actions == ['repair_source']
+    view = wb.intake.view(failed.id, wb.ctx)
+    assert view['profiles'][0]['metadata']['resume']['next_row'] == 1
+    assert 'dependency_missing' in {gap['code'] for gap in view['profiles'][0]['gaps']}
+    request = wb.intake.inference_request(failed.id, wb.ctx)
+    assert request['issues'][0]['error_code'] == 'dependency_missing'
+    assert request['sources'][0]['resume']['next_row'] == 1
+    again = wb.intake.advance(failed.id, wb.ctx)
+    assert again.next_actions == ['repair_source']
+    assert len(client.calls) == 2
+
+
+def test_a_repeated_checkpoint_is_reported_as_stalled_not_retried(tmp_path):
+    full = contract_profile('f', [{'number': 'INV-1', 'amount_minor': '126000', 'currency': 'CNY'},
+                                  {'number': 'INV-2', 'amount_minor': '100', 'currency': 'CNY'}])
+    client = ScriptedProbeClient({'f': [slice_profile(full, 1, next_row=1)]})
+    wb = Workbench(tmp_path, layer_client=client)
+    (tmp_path / 'invoice.csv').write_text(
+        'number,amount_minor,currency\nINV-1,126000,CNY\nINV-2,100,CNY\n')
+    wb.intake.budget_seconds = 5
+    started = start_one(wb)
+    stalled = wb.intake.advance(started.session_id, wb.ctx)
+    assert stalled.next_actions == ['repair_source']
+    assert wb.sessions.get(stalled.id, wb.ctx).issues[0]['code'] == 'intake.probe_stalled'
+    assert len(client.calls) == 2
+    again = wb.intake.advance(stalled.id, wb.ctx)
+    assert again.next_actions == ['repair_source']
+    assert len(client.calls) == 2
+
+
+def test_advance_reserves_persistence_headroom_from_the_configured_budget(tmp_path):
+    full = contract_profile('f', [{'number': 'INV-1', 'amount_minor': '126000', 'currency': 'CNY'}])
+    client = ScriptedProbeClient({'f': [full]})
+    wb = Workbench(tmp_path, layer_client=client)
+    (tmp_path / 'invoice.csv').write_text('number,amount_minor,currency\nINV-1,126000,CNY\n')
+    wb.intake.budget_seconds = 50
+    started = start_one(wb)
+    session = wb.intake.advance(started.session_id, wb.ctx)
+    assert session.next_actions == ['propose_mapping']
+    allowance = client.calls[0]['budget_seconds']
+    assert allowance is not None and 40 < allowance <= 45.0
+
+
+def test_multi_source_stops_before_the_deadline_and_the_next_call_continues(tmp_path):
+    wb = multi_setup(tmp_path)
+    invoice = contract_profile('invoice', [{'number': 'INV-1', 'amount_minor': '126000',
+                                            'currency': 'CNY'}])
+    ledger = contract_profile('ledger', [{'number': 'INV-1', 'total': '1260', 'currency': 'CNY'}])
+    client = ScriptedProbeClient({'invoice': [invoice], 'ledger': [ledger]},
+                                 delays={'invoice': 0.1, 'ledger': 0.1})
+    wb.layer_client = client
+    wb.intake.budget_seconds = 0.25
+    started = wb.sessions.start(multi_sources('invoice', 'ledger'),
+        WorkSpec(id='g3', goal='接两个来源', acceptance_criteria=['来源可核对'],
+                 authorization_ref=wb.authorization), wb.ctx)
+    began = time.monotonic()
+    first = wb.intake.advance(started.session_id, wb.ctx)
+    first_wall = time.monotonic() - began
+    assert first.next_actions == ['retry_probe']
+    assert [call['source_id'] for call in client.calls] == ['invoice']
+    assert client.calls[0]['budget_seconds'] <= 0.23
+    assert first_wall < 2.0
+    second = wb.intake.advance(first.id, wb.ctx)
+    assert second.next_actions == ['propose_mapping']
+    assert [call['source_id'] for call in client.calls] == ['invoice', 'ledger']
