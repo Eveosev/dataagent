@@ -1,6 +1,6 @@
 """Files phase: eight sample classes compared with hand-written expectations,
-plus the retained fixture assertions (invoice.pdf, mixed.pdf, invoices.xlsx and
-the scanned-PDF intake loop).
+plus the retained fixture assertions (invoice.pdf, mixed.pdf, invoices.xlsx,
+the scanned-PDF intake loop and the runtime-generated policy docx).
 
 The p1-files expectations under fixtures/intake/p1-files/expected/ were written
 independently against the original files; this module only compares probe
@@ -14,10 +14,13 @@ compared by the accepted code categories.
 
 import json
 import os
+import re
 import shutil
 import sqlite3
 import subprocess
+import tempfile
 import time
+from pathlib import Path
 
 from .common import ROOT, call_workbench, remove_not_verified, run
 
@@ -27,6 +30,12 @@ P1_FILES = INTAKE/'p1-files'
 # The comparison order is the sample list of p1-files/README.md.
 SAMPLE_ORDER = ['invoices.csv', 'invoices.tsv', 'invoices-regions.xlsx', 'invoices.json',
                 'invoices.jsonl', 'invoice-lines.pdf', 'mixed-pages.pdf', 'scan.pdf']
+# Fixed expectations for the runtime-generated policy docx (never taken from
+# the probe output). T26 anchors are 1-based: paragraph:<n>,
+# table:<t>/row:<r>/col:<c>.
+DOCX_TITLE = '差旅费用报销规则'
+DOCX_BODY = '第一条 出差住宿标准按城市等级执行。'
+DOCX_TABLE = [['城市', '标准', '币种'], ['一线', '600', 'CNY'], ['其他', '400', 'CNY']]
 
 
 def installed_cli(project):
@@ -569,6 +578,92 @@ def verify_xlsx(project):
     return {'second_amount_cell': selector['range']}
 
 
+def _build_docx(project, directory):
+    """Generate the synthetic policy docx with the installed data layer's
+    python-docx (the dependency T26b added to the installation closure).
+
+    The binary is written under a temporary directory per run; the repository
+    never carries a docx fixture.
+    """
+    python, = (project/'.mint/packages/dataagent').glob('data-layer@*/.venv/bin/python')
+    path = Path(directory)/'policy.docx'
+    code = '''\
+import sys
+from docx import Document
+
+document = Document()
+document.add_heading(sys.argv[2], level=1)
+document.add_paragraph(sys.argv[3])
+rows = [sys.argv[4:7], sys.argv[7:10], sys.argv[10:13]]
+table = document.add_table(rows=len(rows), cols=len(rows[0]))
+table.style = 'Table Grid'
+for row_index, values in enumerate(rows):
+    for column_index, value in enumerate(values):
+        table.cell(row_index, column_index).text = value
+document.save(sys.argv[1])
+'''
+    arguments = [str(path), DOCX_TITLE, DOCX_BODY, *sum(DOCX_TABLE, [])]
+    result = subprocess.run([str(python), '-c', code, *arguments],
+                            cwd=project, capture_output=True, text=True)
+    if result.returncode:
+        raise RuntimeError(f'docx fixture generation failed: {result.stderr[-2000:]}')
+    return path
+
+
+def _record_location(profile, index):
+    return next((location for location in profile['metadata'].get('record_locations', [])
+                 if location.get('record') == index), None)
+
+
+def verify_docx(project):
+    """T26/T26b: a runtime-generated policy docx through the installed
+    artifact. Assertions use the fixed values above, not values derived from
+    the probe: coverage is full, the body paragraph is readable with a
+    paragraph anchor, and the 一线 row's 600 is anchored at table 1, row 2,
+    column 2 (1-based per T26)."""
+    with tempfile.TemporaryDirectory(prefix='dataagent-docx-') as directory:
+        fixture = _build_docx(project, directory)
+        _args, request, profile = _upload(project, 'policy.docx', 'policy', fixture)
+    assert profile['coverage'] == 'full', profile['coverage']
+    if isinstance(request, dict) and request.get('sources'):
+        assert request['sources'][0]['coverage'] == 'full', request['sources'][0]
+
+    # Title: a level-1 heading with exactly the requested text.
+    assert any(paragraph['text'] == DOCX_TITLE and paragraph['heading_level'] == 1
+               for paragraph in profile['metadata']['paragraphs']), \
+        profile['metadata']['paragraphs']
+
+    # Body paragraph: exact text plus a paragraph anchor (T26 paragraph:<n>).
+    index = next((i for i, record in enumerate(profile['records'])
+                  if record.get('text') == DOCX_BODY), None)
+    assert index is not None, profile['records']
+    selector = _anchor(profile, index, 'text')
+    assert selector is not None and selector['kind'] == 'text_span', selector
+    assert re.fullmatch(r'paragraph:\d+', selector['unit_ref'] or ''), selector
+    body_anchor = selector['unit_ref']
+    location = _record_location(profile, index)
+    assert location is not None and location['kind'] == 'paragraph', location
+    assert profile['metadata']['units'][body_anchor] == DOCX_BODY, selector
+
+    # Table row 一线: the value 600 and its 1-based cell anchor.
+    rows = [record.get('城市') for record in profile['records']]
+    assert rows.count('一线') == 1 and '其他' in rows, rows
+    index = rows.index('一线')
+    record = profile['records'][index]
+    assert record.get('标准') == '600' and record.get('币种') == 'CNY', record
+    selector = _anchor(profile, index, '标准')
+    assert selector is not None and selector['kind'] == 'text_span', selector
+    assert selector['unit_ref'] == 'table:1/row:2/col:2', selector
+    assert profile['metadata']['units'][selector['unit_ref']] == '600', selector
+    table = profile['metadata']['tables'][0]
+    assert [table['headers'], *table['rows'][1:]] == DOCX_TABLE, table
+
+    return {'coverage': profile['coverage'], 'body_anchor': body_anchor,
+            'table_anchor': 'table:1/row:2/col:2',
+            'records': len(profile['records']),
+            'anchors': len(profile['anchors'])}
+
+
 def _selected_profile(project, session_id, source_id):
     """Read the exact profile revision selected by the session."""
     with sqlite3.connect(project/'.dataagent/db/workbench.sqlite3') as db:
@@ -676,6 +771,7 @@ def apply(report, project, args, context):
     report['legacy_fixtures'] = {'invoice': verify_invoice(project),
                                 'mixed': verify_mixed(project),
                                 'xlsx': verify_xlsx(project)}
+    report['docx'] = verify_docx(project)
     diffs = Diffs()
     report['p1_files'] = {}
     for name in SAMPLE_ORDER:
