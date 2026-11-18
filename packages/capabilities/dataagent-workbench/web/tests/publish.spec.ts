@@ -42,12 +42,13 @@ function fullProposal(request:{expected_revision:string;source_revision:string;
 // 与 test_publish_gate.full_completion 相同的补全；关系证据按各任务自己的目录取。
 // requireName 为 true 时 Customer.name 必填，用来生成定义摘要不同的候选变体。
 function fullCompletion(sid:string,draftRef:string,expectedRevision:string,
- catalog:{relationships:{id:string;origin:string}[]}|null,requireName=false){
+ catalog:{relationships:{id:string;origin:string}[]}|null,requireName=false,
+ ontologyId='sales-model',title='销售单据模型'){
  const declared=catalog!.relationships.find(link=>link.origin==='declared')!;
  const inferred=catalog!.relationships.find(link=>link.origin==='sample_supported')!;
  return {
   session_id:sid,expected_revision:expectedRevision,draft_ref:draftRef,
-  ontology_id:'sales-model',title:'销售单据模型',
+  ontology_id:ontologyId,title,
   concepts:[
    {entity:'SalesOrder',properties:{
     book:{column:'book',value_type:'string',required:true},
@@ -267,4 +268,42 @@ test('SQLite 发现 → 草案 → 补全 → 网页确认发布 → 新接入�
  await expect(page.getByLabel('接入目标')).toBeVisible();
  await expect(page.getByRole('option',{name:/销售单据模型/})).toHaveCount(0);
  await expect(page.locator('#target-ontology')).toHaveValue('procurement',{timeout:20000});
+});
+
+test('pending 草案 + 候选 → 网页一次确认发布 → 草案 approved',async({page})=>{
+ test.skip(!workspace||!python,'run scripts/verify_browser.py to share the test workspace with MCP');
+ test.setTimeout(300000);
+ const database=path.join(workspace!,'publish-pending.db');
+ fs.rmSync(database,{force:true});
+ execFileSync('sqlite3',[database],{input:fs.readFileSync(SEED)});
+
+ await page.goto('/');
+ await page.getByLabel('接入目标').fill('pending 草案一次确认发布');
+ await page.getByLabel('选择材料').setInputFiles(database);
+ await page.getByRole('radio',{name:'从数据库发现本体'}).check();
+ await page.getByRole('button',{name:'开始接入'}).click();
+ await expect(page.getByRole('heading',{name:'本体发现'})).toBeVisible({timeout:20000});
+ await expect(page.getByRole('heading',{name:'来源证据'})).toBeVisible({timeout:20000});
+ const sid=sessionId(page);
+
+ const request=callTool('intake_inference',{session_id:sid});
+ callTool('ontology_discovery_propose',{session_id:sid,...fullProposal(request)});
+ await expect(page.getByRole('heading',{name:'本体草案',exact:true})).toBeVisible({timeout:20000});
+ await expect(page.getByText('待审核').first()).toBeVisible();
+ // 不点「确认当前草案」：草案保持 pending，补全候选后应在发布区直接出现。
+ await expect(page.getByRole('button',{name:'确认当前草案'})).toBeVisible();
+
+ const fresh=callTool('intake_inference',{session_id:sid});
+ callTool('ontology_publish_prepare',fullCompletion(sid,fresh.draft!.ref,
+  fresh.expected_revision,fresh.catalog,false,'pending-model','待审核一次确认模型'));
+ await expect(page.getByTestId('publish-card')).toBeVisible({timeout:20000});
+ await expect(page.getByText('候选定义摘要 · 待审核一次确认模型')).toBeVisible({timeout:20000});
+ await expect(page.getByRole('button',{name:'确认发布'})).toBeDisabled();
+ await page.getByLabel('我已核对候选定义与来源摘要，确认发布').check();
+ await page.getByRole('button',{name:'确认发布'}).click();
+ await expect(page.getByTestId('publish-done')).toContainText('pending-model',{timeout:20000});
+ await expect(page.getByText('已通过审核').first()).toBeVisible({timeout:20000});
+
+ const view=await page.request.get(`/api/sessions/${sid}/view`);
+ expect((await view.json()).discovery.draft.state).toBe('approved');
 });
