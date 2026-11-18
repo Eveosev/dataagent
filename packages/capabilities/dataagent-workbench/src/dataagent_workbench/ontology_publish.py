@@ -266,11 +266,12 @@ def build_candidate(wb, draft, catalog, completion):
             if observed.get('null_rows', 0):
                 raise ValueError('identity field %r has null values in the observed sample'
                                  % field)
+        identity_columns = frozenset(spec.properties[field].column for field in identity)
         observed_keys = [frozenset(key) for key in table.get('identity_keys') or []]
-        if frozenset(identity) not in observed_keys:
+        if identity_columns not in observed_keys:
             raise ValueError(
-                'identity fields %r are not unique in the observed sample; observed keys: %r'
-                % (identity, [sorted(key) for key in observed_keys]))
+                'identity columns %r are not unique in the observed sample; observed keys: %r'
+                % (sorted(identity_columns), [sorted(key) for key in observed_keys]))
         concepts[concept] = ConceptDefinition(entity_type=entity_type,
             properties=properties, identity_fields=identity)
         concept_tables[concept] = table['name']
@@ -279,6 +280,7 @@ def build_candidate(wb, draft, catalog, completion):
             'table': table['name'], 'grain': entity.get('grain') or '',
             'rows_observed': table.get('rows_observed'),
             'coverage': table.get('coverage'), 'identity_fields': identity,
+            'identity_columns': sorted(identity_columns),
             'properties': anchors,
         }
 

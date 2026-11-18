@@ -304,6 +304,36 @@ def test_identity_must_be_unique_in_the_observed_sample(tmp_path):
         prepare(wb, completion)
 
 
+def test_identity_uniqueness_uses_bound_columns_not_property_names(tmp_path):
+    """A property named seq may bind a non-unique cents column; reject it.
+
+    Comparing property names (book, doc_no, seq) with observed key columns
+    would accept this completion.  The extra row repeats cents=500, so the
+    bound columns (book, doc_no, cents) are not unique.
+    """
+    wb, session_id, request = workbench(tmp_path, extra_sql="""
+        INSERT INTO doc_line VALUES ('SALE', 1001, 3, 500);
+    """)
+    current = draft(wb, session_id, request, [
+        {'table': 'doc_line', 'name': 'SalesOrderLine', 'grain': '销售单的一条明细',
+         'identity': ['book', 'doc_no', 'seq']},
+    ])
+    completion = {
+        'session_id': session_id,
+        'expected_revision': wb.sessions.get(session_id, wb.ctx).revision,
+        'draft_ref': current['ref'], 'ontology_id': 'line-model',
+        'concepts': [{'entity': 'SalesOrderLine', 'properties': {
+            'book': {'column': 'book', 'value_type': 'string', 'required': True},
+            'doc_no': {'column': 'doc_no', 'value_type': 'integer', 'required': True},
+            'seq': {'column': 'cents', 'value_type': 'integer', 'required': True},
+        }, 'identity_fields': ['book', 'doc_no', 'seq']}],
+        'dispositions': [],
+    }
+    with pytest.raises(ValueError, match='identity columns') as caught:
+        prepare(wb, completion)
+    assert 'cents' in str(caught.value)
+
+
 def test_fabricated_entities_properties_and_relations_are_rejected(tmp_path):
     wb, session_id, request = workbench(tmp_path)
     current = full_draft(wb, session_id, request)
