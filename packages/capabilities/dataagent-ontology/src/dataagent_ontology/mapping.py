@@ -43,7 +43,20 @@ def convert(binding,record):
                 return int(number)
             return number
     if binding.transform=='date':
-        return (datetime.strptime(str(value),options['format']).date() if 'format' in options else date.fromisoformat(str(value))).isoformat()
+        if 'format' in options:
+            return datetime.strptime(str(value),options['format']).date().isoformat()
+        text=str(value).strip()
+        try:
+            return date.fromisoformat(text).isoformat()
+        except ValueError:
+            # The Excel reader hands midnight date cells over as
+            # ``YYYY-MM-DDTHH:MM:SS``.  A date binding without an explicit
+            # format must still accept that ISO form; otherwise the column the
+            # evidence inferred as ``date`` cannot be mapped at all.
+            try:
+                return datetime.fromisoformat(text).date().isoformat()
+            except ValueError:
+                raise ValueError('date value is not ISO 8601') from None
     if binding.transform=='datetime':
         parsed=datetime.strptime(str(value),options['format']) if 'format' in options else datetime.fromisoformat(str(value))
         if parsed.tzinfo is None:

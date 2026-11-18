@@ -41,11 +41,19 @@ _SAMPLE_LIMIT = 160
 
 
 def affinity(declared_type):
-    """The SQLite type affinity rule, shared by declared and observed types."""
+    """The value family shared by declared and observed types.
+
+    It follows the SQLite affinity rule for numbers and text, with one
+    deliberate difference: calendar types are text here because their values
+    are compared as ISO strings, and a date property must be satisfiable by a
+    column declared ``DATE``/``TIMESTAMP`` as well as by one observed as text.
+    """
     name = (declared_type or '').upper()
     if 'INT' in name:
         return 'integer'
     if any(token in name for token in ('CHAR', 'CLOB', 'TEXT')):
+        return 'text'
+    if any(token in name for token in ('DATE', 'TIME')):
         return 'text'
     if not name or 'BLOB' in name:
         return 'blob'
@@ -106,7 +114,11 @@ def _observed_type(values):
                 return 'decimal', 'numeric', 'observed_text'
             if all(_DATE_TEXT.match(value) or _DATETIME_TEXT.match(value) for value in texts):
                 midnight = all(value[10:] in ('', _MIDNIGHT) for value in texts)
-                return ('date' if midnight else 'datetime'), 'numeric', 'observed_text'
+                # The values are text, so their storage affinity is text even
+                # though the inferred type is a calendar type.  Reporting a
+                # numeric affinity here made consumers map the column as a
+                # decimal, which cannot parse 'YYYY-MM-DDTHH:MM:SS'.
+                return ('date' if midnight else 'datetime'), 'text', 'observed_text'
         return 'text', 'text', 'observed'
     if names <= {'bytes', 'bytearray', 'memoryview'}:
         return 'blob', 'blob', 'observed'

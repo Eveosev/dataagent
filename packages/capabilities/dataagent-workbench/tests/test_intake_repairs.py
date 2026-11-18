@@ -315,6 +315,29 @@ def test_preview_summary_names_conflicting_objects(tmp_path):
     assert issue['reason'] == '各来源的字段值不一致'
 
 
+def test_conversion_issue_summary_keeps_the_chinese_reason(tmp_path):
+    wb = Workbench(tmp_path)
+    wb.layer_client = StubProbeClient({'f': csv_profile('f', [
+        {'number': 'INV-1', 'amount_minor': 'not-a-number', 'currency': 'CNY'}])})
+    session = wb.intake.advance(start(wb, [SourceSelection(
+        source_id='f', kind='file', locator_ref='invoices.csv')]).session_id, wb.ctx)
+    request = wb.intake.inference_request(session.id, wb.ctx)
+    mapping = MappingSpec(id='candidate', revision='1', ontology_revision='procurement@1',
+                          source_fingerprint=request['sources'][0]['structure_fingerprint'],
+                          bindings={'number': {'source_field': 'number'},
+                                    'amount': {'source_field': 'amount_minor',
+                                               'transform': 'minor_to_major'},
+                                    'currency': {'source_field': 'currency'}})
+    wb.intake.submit_proposal(session.id, mapping, session.revision, wb.ctx)
+    summary = invoke(wb, 'mapping_preview', {'session_id': session.id}).data
+    issue = next(item for item in summary['issues']
+                 if item['code'] == 'ontology.conversion_failed')
+    # The summary must stay readable; the internal decimal error travels in
+    # ``detail`` instead of replacing the Chinese reason.
+    assert issue['reason'] == '值无法按目标类型转换'
+    assert issue['detail'] and issue['detail'] != issue['reason']
+
+
 def test_save_rejection_lists_objects_through_mcp(tmp_path):
     wb, session_id, preview = conflict_setup(tmp_path)
     session = wb.sessions.get(session_id, wb.ctx)

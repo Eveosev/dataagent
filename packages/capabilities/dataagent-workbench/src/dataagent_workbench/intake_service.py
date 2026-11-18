@@ -1085,9 +1085,15 @@ class IntakeService:
                 label = '来源 ' + names.get(source_id, source_id)
             if label is None and issue.get('row') is not None:
                 label = f'第 {int(issue["row"]) + 1} 行'
+            # The human-readable reason wins for known issue codes; the raw
+            # detail is often a Python exception class and must not replace
+            # the Chinese explanation shown to the operator.
+            reason = _ISSUE_REASONS.get(code) or issue.get('detail') or code
             item = {'code': code, 'target': issue.get('target'),
                     'object': label or '全部对象',
-                    'reason': issue.get('detail') or _ISSUE_REASONS.get(code, code)}
+                    'reason': reason}
+            if issue.get('detail') and str(issue['detail']) != reason:
+                item['detail'] = str(issue['detail'])
             for key in ('entity_id', 'row', 'source_id'):
                 if key in issue:
                     item[key] = issue[key]
