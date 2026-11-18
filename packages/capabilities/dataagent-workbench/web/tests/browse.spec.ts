@@ -141,7 +141,7 @@ test('发布本体后按本体浏览已发布实例',async({page})=>{
  await page.goto('/');
  await page.getByLabel('接入目标').fill('发现销售单据本体用于浏览');
  await page.getByLabel('选择材料').setInputFiles(database);
- await page.getByRole('radio',{name:'从数据库发现本体'}).check();
+ await page.getByRole('radio',{name:'从材料发现本体'}).check();
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByRole('heading',{name:'本体发现'})).toBeVisible({timeout:20000});
  await expect(page.getByRole('heading',{name:'来源证据'})).toBeVisible({timeout:20000});

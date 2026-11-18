@@ -219,6 +219,15 @@ test('非破坏性修订显示类型与必需性差异，网页一次确认发�
   .toContainText('发布后新修订 2 下暂无对象');
  await expect(page.getByTestId('revision-reintake-empty'))
   .toContainText('旧修订数据仍可按修订号查询');
+ // 确认按钮上方也写明「新修订下暂无对象」，不笼统说既有实例不受影响。
+ await expect(page.getByTestId('publish-revision-impact'))
+  .toContainText('既有任务固定在原修订');
+ await expect(page.getByTestId('publish-revision-impact'))
+  .toContainText('发布后新修订 2 下暂无对象');
+ await expect(page.getByTestId('publish-revision-impact'))
+  .toContainText('旧修订数据仍可按修订号查询');
+ await expect(page.getByTestId('publish-revision-impact'))
+  .not.toContainText('既有任务与已发布实例不受影响');
  // FDE3-09：草案按观察列把 amountInCents 显示为整数，候选改为数字；两处类型
  // 不一致时以候选为准并在草案卡片标注。
  await expect(page.getByText('（草案声明 整数，以发布候选为准）')).toBeVisible();
@@ -341,6 +350,11 @@ test('修订 1 有实例时确认区点名需重新接入的概念并必勾',asy
  await expect(reintake).toContainText('发布后新修订 2 下暂无对象');
  await expect(reintake).toContainText('需要重新接入：SalesOrder（2 个对象）');
  await expect(reintake).toContainText('旧修订数据仍可按修订号查询');
+ // 确认按钮上方同样点名需重接的概念与旧修订查询方式。
+ const impact=page.getByTestId('publish-revision-impact');
+ await expect(impact).toContainText('需要重新接入：SalesOrder（2 个对象）');
+ await expect(impact).toContainText('旧修订数据仍可按修订号查询');
+ await expect(impact).not.toContainText('既有任务与已发布实例不受影响');
  // 「新修订下暂无对象」是必勾核对项：总确认勾了也不能直接发布。
  await expect(page.getByTestId('revision-reintake-ack')).not.toBeChecked();
  await page.getByLabel('我已核对候选定义与来源摘要，确认发布').check();

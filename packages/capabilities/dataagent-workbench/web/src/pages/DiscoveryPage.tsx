@@ -168,6 +168,8 @@ function PublishBlock({session,discovery,candidate,reloadCandidate,reload,onErro
  // 候选必须锚定当前草案；草案更新后的旧候选不可确认。
  const current=candidate&&candidate.draft_ref===draft.ref?candidate:null;
  const revision=isRevisionCandidate(current)?current as RevisionCandidate:null;
+ const reintake=revision?.reintake_concepts||[];
+ const reintakeCounts=revision?.current_revision_instance_counts||{};
  const revisionId=(session.extensions?.['dataagent.revision_target'] as {ontology_id?:string}|undefined)?.ontology_id;
  // 过期候选（D1 会拒绝）：任务修订已越过候选记录的修订时，确认被禁用并提示
  // 重新准备，避免反复提交同一失效候选。
@@ -341,9 +343,13 @@ function PublishBlock({session,discovery,candidate,reloadCandidate,reload,onErro
    <p className="help">把这条指令发给 Agent：它会重新给出每项处置并生成新候选，新候选出现后再在这里核对；当前候选不会被它覆盖。</p>
    <div className="discovery-prompt"><code>{returnPrompt}</code><button className="secondary" onClick={()=>copyPrompt(returnPrompt,()=>setCopiedReturn(true))}>{copiedReturn?'已复制':'复制指令'}</button></div>
   </details>}
-  {/* FDE3-01：修订发布后新修订下没有对象，不能笼统写「已发布实例不受影响」。 */}
-  <p className="help">{revision
-   ?<>发布后将成为新任务的默认目标本体；既有任务固定在原修订，旧修订实例仍可按修订号查询，不会自动出现在新修订下。</>
+  {/* FDE3-01：修订发布后新修订下没有对象，不能笼统写「已发布实例不受影响」。
+      确认按钮上方再点名需要重新接入的概念，用户不必回翻上方提示才能看到。 */}
+  <p className="help" data-testid="publish-revision-impact">{revision
+   ?<>发布后将成为新任务的默认目标本体；既有任务固定在原修订。
+     {reintake.length>0
+      ?<>发布后新修订 {revision.ontology_revision} 下暂无对象，需要重新接入：{reintake.map(name=>`${name}（${reintakeCounts[name]??0} 个对象）`).join('、')}；旧修订数据仍可按修订号查询。</>
+      :<>发布后新修订 {revision.ontology_revision} 下暂无对象；旧修订数据仍可按修订号查询。</>}</>
    :<>发布后将成为新任务的默认目标本体；既有任务与已发布实例不受影响。</>}</p>
   {draft.state==='pending'&&current&&<p className="help" data-testid="publish-pending-note">当前草案待审核：点「确认发布」会一并审核该草案并发布为正式本体，不需要先单独确认草案。</p>}
   <div className="discovery-review">
