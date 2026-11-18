@@ -182,10 +182,20 @@ class QueryService:
         self.wb.ontology.check(ctx)
 
     # ---------------------------------------------------------------- registry
-    def ontologies(self, ctx):
-        """Ontology registry plus published-instance counts (workbench view)."""
+    def ontologies(self, ctx, *, include_deactivated: bool = False):
+        """Ontology registry plus published-instance counts (workbench view).
+
+        The service default is D4's active-only view.  The HTTP registry passes
+        ``include_deactivated=true`` explicitly to preserve D1's contract of
+        listing retired entries with their state.
+        """
         self.check(ctx)
         data = self.wb.ontology.registry(ctx)
+        if not include_deactivated:
+            data['ontologies'] = [
+                item for item in data.get('ontologies') or []
+                if item.get('state') == 'active']
+        data['include_deactivated'] = include_deactivated
         stats = self._stats()
         for item in data.get('ontologies') or []:
             entry_stats = stats.get(item.get('id'), {})
@@ -475,13 +485,24 @@ class QueryService:
             return None
         body = row['body']
         instances = list(body.get('instances') or [])
-        latest = self.store.current('preview', preview_id, scope=self.scope)
-        latest_body = latest['body'] if latest is not None else {}
+        # The release writes its marker on the immediate next revision of the
+        # same preview.  Read that exact revision, never ``current``: a later
+        # correction/re-publish may append more revisions and move the marker
+        # away, but this release's saved manifest stays frozen here.
+        marker_revision = None
+        try:
+            marker_revision = str(int(preview_revision) + 1)
+        except (TypeError, ValueError):
+            pass
+        marker = (self.store.get('preview', preview_id, marker_revision,
+                                 scope=self.scope)
+                  if marker_revision is not None else None)
+        marker_body = marker['body'] if marker is not None else {}
         release_ref = '%s@%s' % (release.get('id'), release.get('revision'))
         partial = False
-        published_at = _release_time(release, body, latest_body, release_ref)
-        if latest_body.get('release_ref') == release_ref:
-            audits = latest_body.get('partial_save') or []
+        published_at = _release_time(release, body, marker_body, release_ref)
+        if marker_body.get('release_ref') == release_ref:
+            audits = marker_body.get('partial_save') or []
             if audits:
                 saved = audits[-1].get('saved') or []
                 saved_ids = {item.get('entity_id') for item in saved
@@ -665,7 +686,7 @@ class QueryService:
         return stats
 
 
-def _release_time(release: dict, frozen_body: dict, latest_body: dict,
+def _release_time(release: dict, frozen_body: dict, marker_body: dict,
                   release_ref: str):
     """Best available publish time.
 
@@ -675,17 +696,17 @@ def _release_time(release: dict, frozen_body: dict, latest_body: dict,
     inventing a time.
     """
     for source in (release.get('extensions'), frozen_body.get('extensions'),
-                   latest_body.get('extensions')):
+                   marker_body.get('extensions')):
         if isinstance(source, dict) and source.get('dataagent.published_at'):
             return source['dataagent.published_at']
     for key in ('published_at', 'created_at'):
         if release.get(key):
             return release[key]
     for key in ('published_at', 'created_at'):
-        if latest_body.get(key):
-            return latest_body[key]
-    if latest_body.get('release_ref') == release_ref:
-        audits = latest_body.get('partial_save') or []
+        if marker_body.get(key):
+            return marker_body[key]
+    if marker_body.get('release_ref') == release_ref:
+        audits = marker_body.get('partial_save') or []
         if audits and audits[-1].get('recorded_at'):
             return audits[-1]['recorded_at']
     return None

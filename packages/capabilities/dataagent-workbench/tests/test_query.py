@@ -14,6 +14,8 @@ from pydantic import ValidationError
 
 from dataagent_contracts.intake import SourceSelection
 from dataagent_contracts.ontology import MappingSpec, ReviewDecision
+from dataagent_ontology.identity import digest
+from dataagent_runtime.ports.workbench_store import ChangeSet
 from dataagent_workbench.bootstrap import Workbench
 from dataagent_workbench.service_tools import invoke
 from dataagent_workbench.tool_schema import MODELS, TOOLS
@@ -124,6 +126,52 @@ def test_partial_save_returns_only_the_saved_objects(tmp_path):
     assert concept['concept'] == 'PurchaseDocument'
     assert concept['published_instances'] == 2
     assert concept['last_published_at']
+
+
+def test_partial_release_stays_frozen_after_a_later_republish(tmp_path):
+    wb, session_id, preview = conflict_and_keyless_setup(tmp_path)
+    first = wb.intake.apply(
+        session_id,
+        ReviewDecision(preview_ref=preview.id + '@' + preview.revision,
+                       target_scope='mapping'),
+        wb.sessions.get(session_id, wb.ctx).revision, wb.ctx,
+        allow_partial=True, reason='只保存可确认的发票')
+    old_ref = first.extensions['intake.partial_save']['release_ref']
+    old_page = query(wb, ontology_id='procurement')
+    old_ids = {item['instance_id'] for item in old_page['items']}
+    assert len(old_ids) == 2
+
+    # The publisher can append another released revision to the same preview
+    # (for example after a revalidation).  The old release's marker is then no
+    # longer ``current``; its fixed manifest must still be found.
+    saved = wb.store.get('preview', preview.id, '2', scope=wb.scope)
+    assert saved['body']['release_ref'] == old_ref
+    republished = dict(saved['body'])
+    republished['issues'] = []
+    republished['review_state'] = 'approved'
+    republished['approved_preview_ref'] = preview.id + '@2'
+    republished.pop('partial_save', None)
+    republished.pop('suspended', None)
+    content = {key: saved['body'].get(key)
+               for key in ('ontology_revision', 'mapping', 'source_revisions')}
+    content['instances'] = saved['body']['instances']
+    content['issues'] = saved['body'].get('issues') or []
+    if saved['body'].get('extensions'):
+        content['extensions'] = saved['body']['extensions']
+    republished['digest'] = digest(content)
+    release, writes = wb.ontology.release_writes(
+        republished, preview.id, '2', preview.id + '@2')
+    wb.store.commit(ChangeSet(writes=writes))
+    new_ref = release.id + '@' + release.revision
+    assert new_ref != old_ref
+
+    page = query(wb, ontology_id='procurement')
+    by_release = {}
+    for item in page['items']:
+        by_release.setdefault(item['release_ref'], set()).add(item['instance_id'])
+    assert by_release[old_ref] == old_ids
+    assert by_release[new_ref]
+    assert page['total'] == len(old_ids) + len(by_release[new_ref])
 
 
 def test_revision_is_pinned_and_default_follows_the_registry(tmp_path):
@@ -259,6 +307,11 @@ def test_retired_ontology_stays_queryable_and_is_hidden_from_the_default_summary
     assert page['ontology_state'] == 'retired'
     assert page['total'] == 1
     assert page['items'][0]['deactivated'] is True
+
+    service_default = wb.queries.ontologies(wb.ctx)
+    assert 'sales-model' not in {item['id'] for item in service_default['ontologies']}
+    service_all = wb.queries.ontologies(wb.ctx, include_deactivated=True)
+    assert 'sales-model' in {item['id'] for item in service_all['ontologies']}
 
     default_summary = wb.queries.summary({}, wb.ctx)
     assert 'sales-model' not in {item['ontology_id'] for item in default_summary['ontologies']}

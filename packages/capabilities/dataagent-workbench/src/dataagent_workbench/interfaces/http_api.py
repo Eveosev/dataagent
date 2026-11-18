@@ -118,7 +118,11 @@ def create_app(wb):
     def identity():return {'scope':wb.scope,'mode':'local-owner'}
 
     @app.get('/api/ontologies')
-    def ontologies():return wb.queries.ontologies(wb.ctx)
+    def ontologies(include_deactivated:bool=True):
+        # D1's registry endpoint keeps retired entries by default; D4 callers
+        # can request the active-only view with include_deactivated=false.
+        return wb.queries.ontologies(wb.ctx,
+            include_deactivated=include_deactivated)
 
     @app.post('/api/ontologies/{ontology_id}/retire')
     async def retire_ontology(ontology_id:str,request:Request):
