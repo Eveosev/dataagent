@@ -10,6 +10,14 @@
 .instance-control{min-width:150px}
 .instance-control .label{margin:10px 0 6px}
 .instance-control.page-size{min-width:105px;max-width:120px}
+.history-control .secondary{white-space:nowrap}
+.instance-history{margin-top:12px;padding:12px 13px;border:1px solid #eadfc8;border-radius:8px;background:#fbf7ed}
+.instance-history-title{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline;margin-bottom:8px}
+.instance-history-title span{font-size:11px}
+.history-options{display:flex;flex-wrap:wrap;gap:7px}
+.history-option{padding:5px 9px;border:1px solid #dfd3b8;border-radius:5px;background:#fff;color:#6b5a36;font-size:11px}
+.history-option:hover{border-color:#b6924f;color:#8a6a2f}
+.history-option.active{border-color:#b6924f;background:#f2e6cc;color:#6b4e1f;font-weight:600}
 .revision-other-row{display:flex;gap:7px;align-items:center}
 .revision-other-row input{min-width:120px}
 .revision-other-row .secondary{white-space:nowrap}
@@ -33,10 +41,13 @@
 .ontology-instance-empty{max-width:620px;margin:28px auto;line-height:1.8}
 .ontology-instance-empty strong{display:block;color:#405247;font-size:15px;margin-bottom:6px}
 .ontology-instance-empty .primary,.ontology-instance-empty .secondary{margin-top:10px}
-.ontology-counts{display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+.ontology-counts{display:flex;flex-direction:column;gap:5px;align-items:flex-start}
+.ontology-count-item{display:flex;flex-direction:column;align-items:flex-start;gap:1px}
 .ontology-count-link{font-size:11px;color:var(--green);text-align:left;line-height:1.5;white-space:nowrap}
 .ontology-count-link:hover{text-decoration:underline;text-underline-offset:2px}
 .ontology-count-link strong{font-variant-numeric:tabular-nums}
+.ontology-history-link{font-size:10px;color:#8a6a2f;text-align:left;line-height:1.4;white-space:nowrap}
+.ontology-history-link:hover{text-decoration:underline;text-underline-offset:2px}
 .ontology-count-total{color:var(--muted);font-size:10px;display:block;margin-top:3px}
 @media(max-width:760px){
  .instance-controls{padding:13px}

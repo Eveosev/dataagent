@@ -8,15 +8,16 @@ import {OntologiesPage} from './pages/OntologiesPage';
 import {OntologyInstancesPage} from './pages/OntologyInstancesPage';
 import {WorkflowPage} from './pages/WorkflowPage';
 import './style.css';
-type InstancesRoute={id:string;concept:string;revision:string};
+type InstancesRoute={id:string;concept:string;revision:string;history:boolean};
 function instancesHash(route:InstancesRoute){
  const params=new URLSearchParams({instances:route.id});
  if(route.concept)params.set('concept',route.concept);
  if(route.revision)params.set('revision',route.revision);
+ if(route.history)params.set('history','1');
  return '#'+params.toString();
 }
 function App(){
- const hash=new URLSearchParams(location.hash.slice(1));const [session,setSession]=useState(hash.get('session')||''),[workflow,setWorkflow]=useState(hash.get('workflow')||''),[object,setObject]=useState(hash.get('object')||''),[ontologies,setOntologies]=useState(hash.get('ontologies')==='1'),[instances,setInstances]=useState<InstancesRoute|null>(hash.get('instances')?{id:hash.get('instances')!,concept:hash.get('concept')||'',revision:hash.get('revision')||''}:null),[authenticated,setAuthenticated]=useState<boolean|null>(null),[error,setError]=useState('');
+ const hash=new URLSearchParams(location.hash.slice(1));const [session,setSession]=useState(hash.get('session')||''),[workflow,setWorkflow]=useState(hash.get('workflow')||''),[object,setObject]=useState(hash.get('object')||''),[ontologies,setOntologies]=useState(hash.get('ontologies')==='1'),[instances,setInstances]=useState<InstancesRoute|null>(hash.get('instances')?{id:hash.get('instances')!,concept:hash.get('concept')||'',revision:hash.get('revision')||'',history:hash.get('history')==='1'}:null),[authenticated,setAuthenticated]=useState<boolean|null>(null),[error,setError]=useState('');
  // FDE-15：点击「打开本地工作台」后在当前页给出结果，而不是毫无反馈。
  const [openState,setOpenState]=useState<{ok:boolean;text:string;url?:string}|null>(null);
  function failure(e:unknown){
@@ -36,8 +37,8 @@ function App(){
   setInstances(null);
   history.replaceState(null,'',object?'#object='+object:workflow?'#workflow='+workflow:session?'#session='+session:'#');
  }
- function openInstances(id:string,concept?:string){
-  const route={id,concept:concept||'',revision:''};
+ function openInstances(id:string,concept?:string,showHistory=false){
+  const route={id,concept:concept||'',revision:'',history:showHistory};
   setInstances(route);setOntologies(false);setError('');
   history.replaceState(null,'',instancesHash(route));
  }
@@ -65,7 +66,7 @@ function App(){
  {error&&<div className="error-banner" role="alert"><span>{error}</span><button aria-label="关闭提示" onClick={()=>setError('')}>×</button></div>}
  {authenticated===null?<main className="loading">正在连接工作区…</main>:!authenticated?<main className="intake-home"><h1>打开本地工作台</h1><p className="muted">通过本机浏览器入口查看你的材料与接入任务。</p><button className="primary" onClick={openLocal}>打开本地工作台</button>
   {openState&&<p className={openState.ok?'local-open-result ok':'local-open-result warn'} data-testid="local-open-result" role="status">{openState.text}{openState.url&&<>　若浏览器没有自动打开，请在同一台机器上访问 <code>{openState.url}</code></>}</p>}
- </main>:ontologies?<OntologiesPage onNew={startNew} onBack={object||workflow||session?closeOntologies:undefined} onError={failure} onOpenInstances={openInstances}/>:instances?<OntologyInstancesPage key={instances.id+':'+instances.concept+':'+instances.revision} id={instances.id} initialConcept={instances.concept} initialRevision={instances.revision} onBack={closeInstances} onNew={startNew} onOpenTask={openTaskObjects}/>:workflow?<WorkflowPage id={workflow} onError={failure}/>:object?<ObjectPage key={object} sessionId={object} onBack={()=>{setSession(object);setObject('');history.replaceState(null,'','#session='+object);}} onError={failure}/>:session?<MappingPage key={session} sessionId={session} onNew={startNew} onOpenObjects={()=>{setObject(session);history.replaceState(null,'','#object='+session);}} onOpenSession={openSession} onOpenOntologies={openOntologies} onError={failure}/>:<IntakePage onStart={openSession} onError={failure}/>}
+ </main>:ontologies?<OntologiesPage onNew={startNew} onBack={object||workflow||session?closeOntologies:undefined} onError={failure} onOpenInstances={openInstances}/>:instances?<OntologyInstancesPage key={instances.id+':'+instances.concept+':'+instances.revision+':'+instances.history} id={instances.id} initialConcept={instances.concept} initialRevision={instances.revision} initialHistory={instances.history} onBack={closeInstances} onNew={startNew} onOpenTask={openTaskObjects}/>:workflow?<WorkflowPage id={workflow} onError={failure}/>:object?<ObjectPage key={object} sessionId={object} onBack={()=>{setSession(object);setObject('');history.replaceState(null,'','#session='+object);}} onError={failure}/>:session?<MappingPage key={session} sessionId={session} onNew={startNew} onOpenObjects={()=>{setObject(session);history.replaceState(null,'','#object='+session);}} onOpenSession={openSession} onOpenOntologies={openOntologies} onError={failure}/>:<IntakePage onStart={openSession} onError={failure}/>}
  </>;
 }
 createRoot(document.getElementById('root')!).render(<App/>);

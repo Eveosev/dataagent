@@ -5,16 +5,26 @@ import type {BrowseRegistry,BrowseRegistryEntry} from '../ontologyBrowse';
 // 本体库：工作区注册表（内置 / 发现发布 / 已停用）。停用只作用于新任务的默认
 // 选择（原因必填、二次确认），内置本体是工作区兜底，不提供停用。
 // D5c：每个本体与概念显示已发布实例数，点进去按概念浏览冻结快照里的对象。
-function currentRevisionNote(entry:BrowseRegistryEntry):string{
- const counts=entry.current_revision_instance_counts;
- if(!counts)return '';
- const current=Object.values(counts).reduce((sum,value)=>sum+value,0);
- return current===(entry.published_instance_count??0)?'':` · 当前修订 ${current} 个`;
+type RevisionCounts={current:number;history:number};
+function conceptRevisionCounts(entry:BrowseRegistryEntry,name:string):RevisionCounts{
+ const total=entry.instance_counts?.[name]??0;
+ const currentCounts=entry.current_revision_instance_counts;
+ const current=currentCounts?currentCounts[name]??0:total;
+ return {current,history:Math.max(0,total-current)};
+}
+function revisionSummary(entry:BrowseRegistryEntry):string{
+ const total=entry.published_instance_count??0;
+ const currentCounts=entry.current_revision_instance_counts;
+ const current=currentCounts
+  ?Object.values(currentCounts).reduce((sum,value)=>sum+value,0)
+  :total;
+ const history=Math.max(0,total-current);
+ return history>0?`当前修订 ${current} 个 · 历史累计 ${history} 个`:`共 ${total} 个已发布对象`;
 }
 
 export function OntologiesPage({onNew,onBack,onError,onOpenInstances}:{
  onNew:()=>void;onBack?:()=>void;onError:(error:unknown)=>void;
- onOpenInstances:(ontologyId:string,concept?:string)=>void;
+ onOpenInstances:(ontologyId:string,concept?:string,history?:boolean)=>void;
 }){
  const [registry,setRegistry]=useState<BrowseRegistry|null>(null),[busy,setBusy]=useState(false);
  const [retiring,setRetiring]=useState<BrowseRegistryEntry|null>(null),[reason,setReason]=useState(''),[confirmed,setConfirmed]=useState(false);
@@ -69,15 +79,21 @@ export function OntologiesPage({onNew,onBack,onError,onOpenInstances}:{
      <td data-testid={`ontology-counts-${entry.id}`}><div className="ontology-counts">
       {entry.concepts.length
        ?entry.concepts.map(name=>{
-        const count=entry.instance_counts?.[name]??0;
-        return <button key={name} className="ontology-count-link"
-         data-testid={`concept-count-${entry.id}-${name}`}
-         title={`按概念 ${name} 浏览已发布对象`}
-         onClick={()=>onOpenInstances(entry.id,name)}>
-         {entry.concepts.length>1?`${name} · `:''}<strong>{count}</strong> 个对象</button>;
+        const counts=conceptRevisionCounts(entry,name);
+        return <div key={name} className="ontology-count-item">
+         <button className="ontology-count-link"
+          data-testid={`concept-count-${entry.id}-${name}`}
+          title={`按概念 ${name} 浏览当前修订的已发布对象`}
+          onClick={()=>onOpenInstances(entry.id,name)}>
+          {entry.concepts.length>1?`${name} · `:''}<strong>{counts.current}</strong> 个对象</button>
+         {counts.history>0&&<button className="ontology-history-link"
+          data-testid={`concept-history-${entry.id}-${name}`}
+          title={`查看概念 ${name} 历史修订中的 ${counts.history} 个已发布对象`}
+          onClick={()=>onOpenInstances(entry.id,name,true)}>历史累计 {counts.history} 个</button>}
+        </div>;
        })
        :<span className="muted">—</span>}
-      <small className="ontology-count-total">共 {entry.published_instance_count??0} 个已发布对象{currentRevisionNote(entry)}</small>
+      <small className="ontology-count-total">{revisionSummary(entry)}</small>
      </div></td>
      <td><span className="badge">{ontologyStateNames[entry.state]||entry.state}</span>
       {entry.is_default&&entry.state==='active'&&<small className="ok">新任务默认</small>}
@@ -87,7 +103,7 @@ export function OntologiesPage({onNew,onBack,onError,onOpenInstances}:{
       :<span className="muted">{entry.origin==='builtin'?'内置兜底':'—'}</span>}</td>
     </tr>)}</tbody>
    </table></div>}
-   <p className="help">点「已发布实例」里的计数进入只读对象列表；停用是可审计的决定，保留全部已发布修订与实例。</p>
+   <p className="help">点当前修订计数进入只读对象列表，点历史累计查看历史修订；停用是可审计的决定，保留全部已发布修订与实例。</p>
   </section>
  </main>;
 }

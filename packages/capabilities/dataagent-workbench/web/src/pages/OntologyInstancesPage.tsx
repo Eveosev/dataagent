@@ -1,4 +1,4 @@
-import {useEffect,useMemo,useState} from 'react';
+import {useEffect,useMemo,useRef,useState} from 'react';
 import {api,display,registryTitle,translateError} from '../client';
 import type {RegistryEntry,View} from '../client';
 import {
@@ -36,8 +36,8 @@ function contextOf(view:View):SessionContext{
 // D5c：按本体浏览已发布对象。数据只来自 release 指向的冻结快照（D4 接口）；
 // 页面不显示实体/发布摘要等内部标识，也不读取本地文件。来源名、概念属性与
 // 所属任务从发布该对象的接入任务读取（只读）。
-export function OntologyInstancesPage({id,initialConcept,initialRevision,onBack,onNew,onOpenTask}:{
- id:string;initialConcept?:string;initialRevision?:string;
+export function OntologyInstancesPage({id,initialConcept,initialRevision,initialHistory,onBack,onNew,onOpenTask}:{
+ id:string;initialConcept?:string;initialRevision?:string;initialHistory?:boolean;
  onBack:()=>void;onNew:()=>void;onOpenTask:(sessionId:string)=>void;
 }){
  const [entry,setEntry]=useState<BrowseRegistryEntry|null>(null);
@@ -45,11 +45,19 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,onBack,
  const [concept,setConcept]=useState(initialConcept||'');
  const [revision,setRevision]=useState(initialRevision||'');
  const [revisionOther,setRevisionOther]=useState(false),[otherRevision,setOtherRevision]=useState('');
+ const [historyOpen,setHistoryOpen]=useState(!!initialHistory);
+ const [history,setHistory]=useState<{revision:string;total:number}[]>([]);
+ const [historyLoading,setHistoryLoading]=useState(!!initialHistory);
+ const [historyError,setHistoryError]=useState('');
+ const historyAutoPicked=useRef(false);
  const [pageSize,setPageSize]=useState(10);
  const [cursors,setCursors]=useState<(string|undefined)[]>([undefined]);
  const [filter,setFilter]=useState<Filter|null>(null);
  const [draftFilter,setDraftFilter]=useState<FilterDraft>({property:'',op:'eq',value:''});
  const [page,setPage]=useState<InstancePage|null>(null);
+ // 后端游标翻页的 total 是“游标后剩余数”，不是整个筛选结果的总数。
+ // 首查（无 cursor）记下总数，后续页继续用它显示“共 N 条”。
+ const [totalCount,setTotalCount]=useState<number|null>(null);
  const [contexts,setContexts]=useState<Record<string,SessionContext>>({});
  const [loading,setLoading]=useState(true),[failure,setFailure]=useState('');
  const [refreshToken,setRefreshToken]=useState(0);
@@ -90,7 +98,7 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,onBack,
   if(filter)params.set('where',JSON.stringify([{
    property:filter.property,op:filter.op,value:filter.value}]));
   api<InstancePage>(`/api/ontologies/${encodeURIComponent(id)}/instances?${params}`)
-   .then(data=>{if(!cancelled)setPage(data);})
+   .then(data=>{if(!cancelled){setPage(data);if(!cursor)setTotalCount(data.total);}})
    .catch(error=>{if(!cancelled){setPage(null);setFailure(errorText(error));}})
    .finally(()=>{if(!cancelled)setLoading(false);});
   return()=>{cancelled=true;};
@@ -100,6 +108,11 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,onBack,
  // 或对象短暂套到新概念上。
  const visiblePage=page&&page.concept===concept&&page.revision===revision?page:null;
  const items=visiblePage?.items||NO_ITEMS;
+ const total=totalCount??visiblePage?.total??0;
+ const conceptTotal=entry?.instance_counts?.[concept]??0;
+ const currentCounts=entry?.current_revision_instance_counts;
+ const conceptCurrent=currentCounts?currentCounts[concept]??0:conceptTotal;
+ const conceptHistory=Math.max(0,conceptTotal-conceptCurrent);
 
  // 来源名与概念属性来自发布对象的任务：任务保存后仍可只读打开。每个任务只读一次。
  useEffect(()=>{
@@ -120,6 +133,50 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,onBack,
   })();
   return()=>{cancelled=true;};
  },[items,contexts]);
+
+ // HTTP 没有历史修订列表；只在需要看历史时，按当前修订号向前探测有实例的
+ // 修订。找不到时仍可在“其他修订…”里手填，不把探测当成唯一入口。
+ useEffect(()=>{
+  if(!historyOpen||!entry||!concept||conceptHistory<=0){
+   setHistory([]);setHistoryLoading(false);setHistoryError('');
+   return;
+  }
+  const currentRevision=Number(entry.ontology_revision);
+  if(!Number.isInteger(currentRevision)||currentRevision<=1||currentRevision>51){
+   setHistory([]);setHistoryLoading(false);
+   setHistoryError(currentRevision>51
+    ?'修订号跨度过大，请在“其他修订…”中手动输入历史修订号。'
+    :'当前修订号无法自动探测，请在“其他修订…”中手动输入历史修订号。');
+   return;
+  }
+  let cancelled=false;
+  setHistoryLoading(true);setHistoryError('');
+  (async()=>{
+   const found:{revision:string;total:number}[]=[];
+   for(let value=1;value<currentRevision;value++){
+    if(cancelled)return;
+    try{
+     const params=new URLSearchParams({concept,revision:String(value),limit:'1'});
+     const data=await api<InstancePage>(`/api/ontologies/${encodeURIComponent(id)}/instances?${params}`);
+     if(data.total>0)found.push({revision:String(value),total:data.total});
+    }catch{
+     // 该修订号不存在或没有读取权限：跳过，继续探测其他修订。
+    }
+   }
+   if(cancelled)return;
+   found.sort((left,right)=>Number(right.revision)-Number(left.revision));
+   setHistory(found);setHistoryLoading(false);
+   if(initialHistory&&!historyAutoPicked.current){
+    historyAutoPicked.current=true;
+    if(found.length){
+     setRevision(found[0].revision);
+     setFilter(null);setDraftFilter({property:'',op:'eq',value:''});
+     setCursors([undefined]);setPage(null);
+    }
+   }
+  })();
+  return()=>{cancelled=true;};
+ },[historyOpen,entry,concept,conceptHistory,id,initialHistory]);
 
  const conceptDef=useMemo(()=>{
   const selected=visiblePage?.revision;
@@ -148,11 +205,12 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,onBack,
   if(entry?.ontology_revision)known.add(entry.ontology_revision);
   if(revision)known.add(revision);
   if(visiblePage?.revision)known.add(visiblePage.revision);
+  for(const item of history)known.add(item.revision);
   return [...known].sort((left,right)=>{
    const a=Number(left),b=Number(right);
    return Number.isFinite(a)&&Number.isFinite(b)?b-a:left.localeCompare(right);
   });
- },[entry,revision,visiblePage]);
+ },[entry,revision,visiblePage,history]);
 
  // 概念切换后不保留上一个概念的筛选条件。
  useEffect(()=>{
@@ -174,6 +232,10 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,onBack,
   setRevision(value);setFilter(null);setDraftFilter({property:'',op:'eq',value:''});
   setCursors([undefined]);setPage(null);
  }
+ function toggleHistory(){
+  if(historyOpen){setHistoryOpen(false);return;}
+  setHistoryLoading(true);setHistoryOpen(true);
+ }
  function switchOtherRevision(){
   const next=otherRevision.trim();
   if(!next)return;
@@ -193,6 +255,9 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,onBack,
  }
  function changePageSize(value:number){
   setPageSize(value);setCursors([undefined]);setPage(null);
+ }
+ function refresh(){
+  setCursors([undefined]);setPage(null);setRefreshToken(value=>value+1);
  }
  function nextPage(){
   const next=visiblePage?.next_cursor;
@@ -256,7 +321,7 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,onBack,
     <p className="muted">只读浏览已发布快照；来源定位、所属接入任务与发布修订随对象固定。</p></div>
    <div className="save-buttons">
     <button className="secondary" onClick={onBack}>返回本体库</button>
-    <button className="secondary" disabled={loading} onClick={()=>setRefreshToken(value=>value+1)}>刷新</button>
+    <button className="secondary" disabled={loading} onClick={refresh}>刷新</button>
    </div>
   </header>
   {registryError&&<div className="notice red" data-testid="instances-failure" role="alert">{registryError}</div>}
@@ -294,6 +359,11 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,onBack,
        <button className="secondary" disabled={!otherRevision.trim()} onClick={switchOtherRevision}>切换</button>
       </div>
      </div>}
+     {conceptHistory>0&&<div className="instance-control history-control">
+      <span className="label">历史修订</span>
+      <button className="secondary" data-testid="instance-history-toggle" onClick={toggleHistory}>
+       {historyOpen?'收起历史修订':`查看历史（${conceptHistory} 个）`}</button>
+     </div>}
      <div className="instance-control page-size">
       <label className="label" htmlFor="instance-page-size">每页条数</label>
       <select id="instance-page-size" value={pageSize}
@@ -302,6 +372,17 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,onBack,
       </select>
      </div>
     </div>
+    {historyOpen&&<div className="instance-history" data-testid="instance-history">
+     <div className="instance-history-title"><strong>历史修订中的实例</strong>
+      <span className="muted">当前修订 {entry.ontology_revision} 中该概念 {conceptCurrent} 个；历史累计 {conceptHistory} 个。</span></div>
+     {historyLoading?<div className="muted">正在查找有实例的历史修订…</div>:
+      history.length?<div className="history-options">
+       {history.map(item=><button key={item.revision}
+        className={item.revision===revision?'history-option active':'history-option'}
+        onClick={()=>chooseRevision(item.revision)}>修订 {item.revision} · {item.total} 条</button>)}
+      </div>:
+      <div className="muted">{historyError||'没有找到有实例的历史修订；可在上方“其他修订…”中手动输入。'}</div>}
+    </div>}
     {propertyNames.length>0&&<div className="instance-filter" data-testid="instance-filter">
      <div className="instance-control">
       <label className="label" htmlFor="filter-property">属性</label>
@@ -340,7 +421,7 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,onBack,
     visiblePage.items.length===0?emptyState():
     <section className="discovery-card instance-card">
      <div className="panel-heading"><strong>{browseConceptLabel(concept)} 的已发布对象</strong>
-      <span className="badge">{visiblePage.total} 条</span></div>
+      <span className="badge">{total} 条</span></div>
      <div className="mapping-table-scroll"><table className="mapping-table instance-table" data-testid="instance-table">
       <thead><tr>
        {propertyNames.map(name=><th key={name}>{browsePropertyLabel(name)}</th>)}
@@ -358,7 +439,7 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,onBack,
       </tr>)}</tbody>
      </table></div>
      <div className="instance-pagination">
-      <span className="muted">第 {cursors.length} 页 · 共 {visiblePage.total} 条</span>
+      <span className="muted">第 {cursors.length} 页 · 共 {total} 条</span>
       <div>
        <button className="secondary" disabled={cursors.length<=1} onClick={previousPage}>上一页</button>
        <button className="secondary" disabled={!visiblePage.has_more} onClick={nextPage}>下一页</button>

@@ -218,8 +218,16 @@ test('发布本体后按本体浏览已发布实例',async({page})=>{
  if(process.env.DATAAGENT_SCREENSHOT)await page.screenshot({
   path:path.join(path.dirname(process.env.DATAAGENT_SCREENSHOT),'browse-live.png'),fullPage:true});
 
- // 6. 分页。
+ // 6. 分页。后端游标的 total 是剩余数；页面必须继续显示首查总数 12。
+ const secondResponse=page.waitForResponse(response=>{
+  const url=new URL(response.url());
+  return url.pathname.endsWith('/instances')&&url.searchParams.get('cursor')!==null;
+ });
  await page.getByRole('button',{name:'下一页'}).click();
+ const secondPayload=await (await secondResponse).json() as {count:number;total:number};
+ expect(secondPayload.count).toBe(2);
+ // HEAD 的查询把游标后的剩余数放进 total（第二页实测为 2）；页面必须仍用首查的 12。
+ expect(secondPayload.total).toBe(2);
  await expect(page.getByText('第 2 页 · 共 12 条')).toBeVisible();
  await expect(page.getByTestId('instance-row')).toHaveCount(2);
  const secondPageDocNos=await page.getByTestId('instance-value-doc_no').allTextContents();
@@ -255,4 +263,61 @@ test('发布本体后按本体浏览已发布实例',async({page})=>{
  await page.getByTestId('instance-task').first().getByRole('button').click();
  await expect(page.getByRole('heading',{name:'核对业务对象'})).toBeVisible({timeout:20000});
  await expect(page.getByText('接入已保存，对象为只读')).toBeVisible();
+
+ // 9. M1 只允许发布一次；浏览器只模拟“注册表已切到尚无实例的修订 2”，
+ // 历史修订 1 的实例查询仍走真实后端。这样不写共享 SQLite，也不会在并行
+ // 用例探查时制造数据库锁；计数与历史入口的对应关系仍由真实页面验证。
+ const registryResponse=await page.request.get('/api/ontologies',{headers:auth});
+ expect(registryResponse.ok(),await registryResponse.text()).toBeTruthy();
+ const registry=await registryResponse.json() as {
+  ontologies:Array<Record<string,unknown>&{id:string;concepts:string[];instance_counts?:Record<string,number>;
+   current_revision_instance_counts?:Record<string,number>;registry_revision?:number}>;
+  [key:string]:unknown;
+ };
+ const revised=registry.ontologies.find(item=>item.id==='browse-sales');
+ expect(revised).toBeTruthy();
+ const revisedEntry={
+  ...revised,
+  ontology_revision:'2',
+  registry_revision:Number(revised!.registry_revision||1)+1,
+  state:'retired',
+  retired_at:new Date().toISOString(),
+  retired_by:'local-owner:test',
+  retire_reason:'浏览用例模拟历史修订，验证计数与入口',
+  current_revision_instance_counts:Object.fromEntries((revised!.concepts||[]).map(name=>[name,0])),
+ };
+ await page.route(/\/api\/ontologies$/,async route=>{
+  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
+   ...registry,ontologies:registry.ontologies.map(item=>item.id==='browse-sales'?revisedEntry:item)})});
+ });
+ await page.route(/\/api\/ontologies\/browse-sales\/instances\?/,async route=>{
+  const url=new URL(route.request().url());
+  if(url.searchParams.get('revision')!=='2'){await route.continue();return;}
+  const concept=url.searchParams.get('concept')||'SalesOrder';
+  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
+   ontology_id:'browse-sales',ontology_revision:'browse-sales@2',revision:'2',
+   concept,entity_type:concept,ontology_state:'retired',deactivated:true,items:[],
+   count:0,total:0,has_more:false,next_cursor:null})});
+ });
+ await page.getByRole('button',{name:'本体库'}).click();
+ const revisedRow=page.getByTestId('ontology-browse-sales');
+ await expect(revisedRow).toContainText('当前修订 0 个 · 历史累计 12 个',{timeout:20000});
+ const currentCount=page.getByTestId('concept-count-browse-sales-SalesOrder');
+ const historyCount=page.getByTestId('concept-history-browse-sales-SalesOrder');
+ await expect(currentCount).toContainText('0 个对象');
+ await expect(historyCount).toContainText('历史累计 12 个');
+ if(process.env.DATAAGENT_SCREENSHOT)await page.screenshot({
+  path:path.join(path.dirname(process.env.DATAAGENT_SCREENSHOT),'ontologies-history.png'),fullPage:true});
+
+ await currentCount.click();
+ await expect(page.getByTestId('instances-empty')).toContainText('发布后才会出现');
+ await expect(page.getByTestId('instance-table')).toHaveCount(0);
+ await page.getByRole('button',{name:'返回本体库'}).click();
+ await historyCount.click();
+ await expect(page.locator('#instance-revision')).toHaveValue('1',{timeout:20000});
+ await expect(page.getByTestId('instance-history')).toContainText('修订 1');
+ await expect(page.getByTestId('instance-row')).toHaveCount(10);
+ await expect(page.getByText('第 1 页 · 共 12 条')).toBeVisible();
+ if(process.env.DATAAGENT_SCREENSHOT)await page.screenshot({
+  path:path.join(path.dirname(process.env.DATAAGENT_SCREENSHOT),'browse-history.png'),fullPage:true});
 });
