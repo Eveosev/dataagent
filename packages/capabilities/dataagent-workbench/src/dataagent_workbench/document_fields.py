@@ -52,36 +52,122 @@ _IDENTITY_HINTS = {
     'number', 'id', 'code', 'document_number', 'document_no', 'invoice_number',
     'invoice_no', 'bill_number', 'bill_no',
 }
+_IDENTITY_DOMAIN_WORDS = {'invoice', 'document', 'doc', 'bill'}
+_IDENTITY_SUFFIX_WORDS = {'number', 'no', 'num'}
 
 
-def _identity_names(profile, identity_fields):
-    if identity_fields is not None:
-        return [name for name in identity_fields
-                if any(name in record for record in profile.records)]
+def _available_fields(profile):
     available = list(profile.fields)
     for record in profile.records:
         for name in record:
             if name not in available:
                 available.append(name)
+    return available
+
+
+def _identity_kind(name):
+    """Group raw field names that denote the same document identity.
+
+    ``number``, ``invoice_no``, ``invoice_number`` and ``document_no`` all
+    map to the same ``docno`` kind, so a mapping of ``invoice_no`` to the
+    ontology's ``number`` is compared against a row that still uses
+    ``number``.  Unrelated names (``currency_code``, ``seller_id``) keep their
+    own kind.
+    """
+    name = re.sub(r'(?<=[a-z0-9])(?=[A-Z])', '_', name)
+    tokens = [token for token in re.split(r'[^a-z0-9]+', name.lower()) if token]
+    if not tokens:
+        return name.lower()
+    rest = [token for token in tokens if token not in _IDENTITY_DOMAIN_WORDS]
+    if rest and all(token in _IDENTITY_SUFFIX_WORDS for token in rest):
+        return 'docno'
+    if rest in (['id'], ['identifier']):
+        return 'id'
+    if rest == ['code']:
+        return 'code'
+    return ''.join(tokens)
+
+
+def _identity_names(profile, identity_fields):
+    """Raw fields that may carry a configured identity, including aliases."""
+    available = _available_fields(profile)
+    if identity_fields is not None:
+        kinds = {_identity_kind(name) for name in identity_fields}
+        return [name for name in available
+                if name in identity_fields or _identity_kind(name) in kinds]
     names = []
     for name in available:
         low = name.lower()
-        if low in _IDENTITY_HINTS or low.endswith(('_number', '_no', '_id')):
+        if (low in _IDENTITY_HINTS or low.endswith(('_number', '_no', '_id'))
+                or _identity_kind(name) in {'docno', 'id'}):
             names.append(name)
     return names
 
 
-def _move_conflict(profile, target_row, source_row, identity_fields):
+def _identity_slots(profile, identity_fields, identity_aliases=None):
+    """One slot per ontology identity property, with all raw aliases."""
+    available = _available_fields(profile)
+    aliases = identity_aliases or {}
+    if identity_fields is None:
+        groups = {}
+        for name in _identity_names(profile, None):
+            groups.setdefault(_identity_kind(name), []).append(name)
+        return list(groups.values())
+    slots = []
+    for prop in identity_fields:
+        names = []
+        if prop in available:
+            names.append(prop)
+        raw_aliases = aliases.get(prop) or []
+        if isinstance(raw_aliases, str):
+            raw_aliases = [raw_aliases]
+        for raw in raw_aliases:
+            if raw in available and raw not in names:
+                names.append(raw)
+        kind = _identity_kind(prop)
+        for raw in available:
+            if raw not in names and _identity_kind(raw) == kind:
+                names.append(raw)
+        if not names:
+            names = [prop]
+        slots.append(names)
+    return slots
+
+
+def _row_identity(profile, row, identity_fields, identity_aliases=None):
+    record = profile.records[row]
+    identity = []
+    for names in _identity_slots(profile, identity_fields, identity_aliases):
+        values = sorted({str(record[name]) for name in names
+                         if name in record and record[name] not in (None, '')})
+        identity.append(tuple(values))
+    return tuple(identity)
+
+
+def _identity_values(identity):
+    return [value for slot in identity for value in slot]
+
+
+def _document_keys(profile, identity_fields, identity_aliases=None):
+    keys = set()
+    for row in range(len(profile.records)):
+        identity = _row_identity(profile, row, identity_fields, identity_aliases)
+        if any(identity):
+            keys.add(identity)
+    return keys
+
+
+def _move_conflict(profile, target_row, source_row, identity_fields, identity_aliases=None):
     """Refuse a move whose rows point at different business documents."""
     target = profile.records[target_row]
     source = profile.records[source_row]
-    for name in _identity_names(profile, identity_fields):
-        target_value, source_value = target.get(name), source.get(name)
-        if target_value not in (None, '') and source_value not in (None, ''):
-            if str(target_value) != str(source_value):
-                return f'{name} differs'
-        elif source_value not in (None, '') and target_value in (None, ''):
-            return f'source row is identified by {name} but target row is not'
+    target_identity = _row_identity(profile, target_row, identity_fields, identity_aliases)
+    source_identity = _row_identity(profile, source_row, identity_fields, identity_aliases)
+    if any(target_identity) and any(source_identity):
+        if target_identity != source_identity:
+            return 'document identity differs'
+    elif any(source_identity) and not any(target_identity):
+        return 'source row is identified but target row is not'
     # A shared field with a different value is also evidence that the rows
     # describe different documents, even when neither carries a known key.
     for name, value in source.items():
@@ -103,24 +189,14 @@ def _anchor_rows(profile, predicate):
     return rows
 
 
-def _row_identity(profile, row, identity_fields):
-    record = profile.records[row]
-    return tuple(str(record[name]) for name in _identity_names(profile, identity_fields)
-                 if record.get(name) not in (None, ''))
-
-
-def _document_keys(profile, identity_fields):
-    keys = set()
-    for row in range(len(profile.records)):
-        identity = _row_identity(profile, row, identity_fields)
-        if identity:
-            keys.add(identity)
-    return keys
-
-
-def _page_identity_values(profile, page_text, identity_fields):
+def _page_identity_values(profile, page_text, identity_fields, identity_aliases=None):
     values = set()
-    for name in _identity_names(profile, identity_fields):
+    names = _identity_names(profile, identity_fields)
+    for slot in _identity_slots(profile, identity_fields, identity_aliases):
+        for name in slot:
+            if name not in names:
+                names.append(name)
+    for name in names:
         pattern = re.compile(
             rf'(?i)(?<![A-Za-z0-9_]){re.escape(name)}\s*[:：]\s*([^\s,;，。；]+)')
         for match in pattern.finditer(page_text or ''):
@@ -130,41 +206,50 @@ def _page_identity_values(profile, page_text, identity_fields):
     return values
 
 
-def _require_page_identity(profile, target_row, page_text, identity_fields):
-    page_values = _page_identity_values(profile, page_text, identity_fields)
-    target_values = set(_row_identity(profile, target_row, identity_fields))
+def _require_page_identity(profile, target_row, page_text, identity_fields,
+                           identity_aliases=None):
+    page_values = _page_identity_values(profile, page_text, identity_fields,
+                                        identity_aliases)
+    target_values = set(_identity_values(
+        _row_identity(profile, target_row, identity_fields, identity_aliases)))
     if page_values and target_values and page_values - target_values:
         raise ValueError('fields of different documents cannot be associated: '
                          'selected page identifies another document')
 
 
-def _require_same_document(profile, target_row, source_row, identity_fields):
-    conflict = _move_conflict(profile, target_row, source_row, identity_fields)
+def _require_same_document(profile, target_row, source_row, identity_fields,
+                           identity_aliases=None):
+    conflict = _move_conflict(profile, target_row, source_row, identity_fields,
+                              identity_aliases)
     if conflict:
         raise ValueError('fields of different documents cannot be associated: ' + conflict)
-    if (not _row_identity(profile, source_row, identity_fields)
-            and len(_document_keys(profile, identity_fields)) > 1):
+    if (not any(_row_identity(profile, source_row, identity_fields, identity_aliases))
+            and len(_document_keys(profile, identity_fields, identity_aliases)) > 1):
         raise ValueError('fields of different documents cannot be associated: '
                          'source row has no document identity')
 
 
-def _check_span_owner(profile, target_row, page, start, end, identity_fields, page_text=None):
+def _check_span_owner(profile, target_row, page, start, end, identity_fields,
+                      page_text=None, identity_aliases=None):
     """Validate the document owning the selected span before adding a field.
 
     The source field name is deliberately irrelevant here: an optional field
-    can be spelled differently (``Issuer`` vs ``issuer``) and still come from
-    another document's row.  Anchors are the authority for span ownership.
+    can be spelled differently (``Issuer`` vs ``issuer``) and a source row may
+    carry its number as ``invoice_no`` rather than ``number``.  Anchors locate
+    the row; canonical identity aliases compare the documents.
     """
     owners = _anchor_rows(profile, lambda anchor: _same_span(anchor, page, start, end))
     if owners:
         unverified = False
         for row in owners:
             if row != target_row:
-                _require_same_document(profile, target_row, row, identity_fields)
-                if not _row_identity(profile, row, identity_fields):
+                _require_same_document(profile, target_row, row, identity_fields,
+                                       identity_aliases)
+                if not any(_row_identity(profile, row, identity_fields, identity_aliases)):
                     unverified = True
         if unverified:
-            _require_page_identity(profile, target_row, page_text, identity_fields)
+            _require_page_identity(profile, target_row, page_text, identity_fields,
+                                   identity_aliases)
         return
     # No exact anchor: a page carrying rows from different documents is
     # ambiguous, so only accept it when every row on the page belongs to the
@@ -174,10 +259,13 @@ def _check_span_owner(profile, target_row, page, start, end, identity_fields, pa
     others = page_rows - {target_row}
     if others:
         for row in others:
-            _require_same_document(profile, target_row, row, identity_fields)
-        _require_page_identity(profile, target_row, page_text, identity_fields)
+            _require_same_document(profile, target_row, row, identity_fields,
+                                   identity_aliases)
+        _require_page_identity(profile, target_row, page_text, identity_fields,
+                               identity_aliases)
         return
-    _require_page_identity(profile, target_row, page_text, identity_fields)
+    _require_page_identity(profile, target_row, page_text, identity_fields,
+                           identity_aliases)
     if len(profile.records) > 1:
         raise ValueError('fields of different documents cannot be associated: '
                          'selected span is not associated with a known document row')
@@ -202,7 +290,8 @@ def _drop_moved_rows(updated, moved):
     return renumber
 
 
-def extract_fields(profile, fields, allowed_fields, *, remember=False, identity_fields=None):
+def extract_fields(profile, fields, allowed_fields, *, remember=False, identity_fields=None,
+                   identity_aliases=None):
     if profile.kind != 'pdf':
         raise ValueError('exact text extraction requires a PDF observation')
     if allowed_fields is not None and (
@@ -230,7 +319,7 @@ def extract_fields(profile, fields, allowed_fields, *, remember=False, identity_
                   and any(_same_span(anchor, field.page, start, end)
                           for anchor in profile.anchors.get(f'{row}.{field.name}', []))]
         _check_span_owner(profile, field.row, field.page, start, end, identity_fields,
-                          pages[field.page])
+                          pages[field.page], identity_aliases)
         if field.name in original_fields and not moving:
             raise ValueError('choose an observed row and a new field name')
         resolved.append({'row': field.row, 'name': field.name, 'page': field.page,
@@ -281,7 +370,7 @@ def extract_fields(profile, fields, allowed_fields, *, remember=False, identity_
     return updated
 
 
-def replay_fields(profile, specs, *, identity_fields=None):
+def replay_fields(profile, specs, *, identity_fields=None, identity_aliases=None):
     """Re-apply recorded extractions to a fresh probe of the same structure."""
     fields = []
     for spec in specs or []:
@@ -295,7 +384,8 @@ def replay_fields(profile, specs, *, identity_fields=None):
         return profile
     try:
         return extract_fields(profile, fields, None, remember=True,
-                              identity_fields=identity_fields)
+                              identity_fields=identity_fields,
+                              identity_aliases=identity_aliases)
     except (ValueError, PermissionError):
         # A changed page or quote must not turn automatic reuse into a crash;
         # the preview will still report the missing values explicitly.
