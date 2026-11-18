@@ -143,11 +143,12 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
   if(typeof uploadName==='string'&&uploadName)return uploadName;
   return display((view.sources.find(s=>s.source_id===sourceId)||{}).display_name);
  };
- // 问题没有可点的对象时仍要可区分、可处理：来源级问题点出具体来源，行号类问题
- // 点出记录序号（row 是来源内 0 起的序号），纠正冲突沿用后端给的对象标签。
+ // 问题没有可点的对象时仍要可区分、可处理：行号定位不了的（只有行号、来源不明、
+ // 该行在问题来源里没有锚点）一律显示行号与来源待定；无行号的来源级问题点出具体
+ // 来源；纠正冲突沿用后端给的对象标签。
  const issueLocation=(issue:Issue)=>{
+  if(issue.row!==undefined)return `第 ${issue.row+1} 行 · 来源待定`;
   if(issue.source_id)return sourceName(issue.source_id);
-  if(issue.row!==undefined)return `第 ${issue.row+1} 条记录 · 来源待定`;
   return issue.object?display(issue.object):'映射层';
  };
  const submitButton=(label:string)=><button className="secondary" disabled={busy||!object}

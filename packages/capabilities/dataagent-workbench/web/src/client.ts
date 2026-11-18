@@ -36,31 +36,28 @@ export const issueReasons:Record<string,string>={
  'ontology.no_records':'没有可映射的记录',
 };
 export const issueBlocksSave=(issue:Issue)=>!correctableIssueCodes.has(issue.code||'');
-// 问题点回对象：带 entity_id 的直接命中；只带行号的问题（row 是来源内 0 起的记录
-// 序号，且可能不带 source_id）用对象证据锚点经来源 profile 解析回同一序号。行号
-// 在各来源内独立计数，跨来源的同序号可能归并到不同对象——只有全部命中都指向同一
-// 对象时才返回它，有歧义时返回 undefined，不给确定性的错误链接。
+// 问题点回对象（不误链优先）：只有能唯一确定对象时才给入口——带 entity_id 的直接
+// 命中，或行号与来源都明确且该行在问题来源里有锚点。只有行号、来源不明、或该行在
+// 问题来源里没有锚点时不给入口，绝不链接到另一来源同序号的对象（问题归属标识待后端
+// D0 卡补充后再放宽）。
 export function issueObject(issue:Issue,view:Pick<ObjectView,'objects'|'sources'>):WorkObject|undefined{
  if(issue.entity_id){
   const target=view.objects.find(o=>o.id===issue.entity_id);
   if(target)return target;
  }
- if(issue.row===undefined)return undefined;
- let matched:WorkObject|undefined;
+ if(issue.row===undefined||!issue.source_id)return undefined;
+ const profile=view.sources.find(s=>s.source_id===issue.source_id);
+ if(!profile)return undefined;
  for(const object of view.objects){
   for(const anchors of Object.values(object.evidence||{})){
    for(const anchor of anchors){
-    if(issue.source_id&&anchor.source_id!==issue.source_id)continue;
-    const profile=view.sources.find(s=>s.source_id===anchor.source_id);
-    const hit=profile?findAnchorRow(profile,anchor):undefined;
-    if(hit&&hit.row===issue.row){
-     if(matched&&matched.id!==object.id)return undefined;
-     matched=object;
-    }
+    if(anchor.source_id!==issue.source_id)continue;
+    const hit=findAnchorRow(profile,anchor);
+    if(hit&&hit.row===issue.row)return object;
    }
   }
  }
- return matched;
+ return undefined;
 }
 export class ApiError extends Error {constructor(public status:number,message:string){super(message);}}
 // 后端原始报错按原文透出会给用户看不懂的英文；已知文案在这里换成中文说法。
