@@ -489,3 +489,61 @@ def test_pending_correction_conflicts_survive_repeated_proposals(tmp_path):
         preview_ref=preview.id + '@' + preview.revision, target_scope='mapping'),
         session.revision, wb.ctx)
     assert wb.sessions.get(session_id, wb.ctx).phase == 'saved'
+
+
+def test_cross_page_alias_rejects_fields_from_another_document():
+    pages = [{'page': 1, 'text': 'number: INV-A'},
+             {'page': 2, 'text': 'number: INV-B\nIssuer: Seller-B'}]
+    profile = pdf_profile('alias-docs', [
+        {'number': 'INV-A'},
+        {'number': 'INV-B', 'Issuer': 'Seller-B'},
+    ], pages, {(0, 'number'): (1, 'INV-A'), (1, 'number'): (2, 'INV-B'),
+               (1, 'Issuer'): (2, 'Seller-B')}, digest(['alias', 'two-documents']))
+    with pytest.raises(ValueError, match='different documents'):
+        extract_fields(profile, [DocumentField(
+            row=0, name='issuer', page=2, quote='Seller-B')], None,
+            identity_fields=('number',))
+
+
+def test_cross_page_alias_allows_the_same_document():
+    pages = [{'page': 1, 'text': 'number: INV-A'},
+             {'page': 2, 'text': 'number: INV-A\nIssuer: Seller-A'}]
+    profile = pdf_profile('alias-same-doc', [
+        {'number': 'INV-A'},
+        {'number': 'INV-A', 'Issuer': 'Seller-A'},
+    ], pages, {(0, 'number'): (1, 'INV-A'), (1, 'number'): (2, 'INV-A'),
+               (1, 'Issuer'): (2, 'Seller-A')}, digest(['alias', 'same-document']))
+    updated = extract_fields(profile, [DocumentField(
+        row=0, name='issuer', page=2, quote='Seller-A')], None,
+        identity_fields=('number',))
+    assert updated.records[0]['issuer'] == 'Seller-A'
+    assert updated.anchors['0.issuer'][0].selector.page == 2
+
+
+def test_cross_page_without_an_exact_anchor_checks_the_page_owner():
+    pages = [{'page': 1, 'text': 'number: INV-A'},
+             {'page': 2, 'text': 'number: INV-B\nIssuer: Seller-B'}]
+    profile = pdf_profile('alias-no-anchor', [
+        {'number': 'INV-A'},
+        {'number': 'INV-B', 'Issuer': 'Seller-B'},
+    ], pages, {(0, 'number'): (1, 'INV-A'), (1, 'number'): (2, 'INV-B'),
+               (1, 'Issuer'): (2, 'Seller-B')}, digest(['alias', 'no-anchor']))
+    profile.anchors.pop('1.Issuer')
+    with pytest.raises(ValueError, match='different documents'):
+        extract_fields(profile, [DocumentField(
+            row=0, name='issuer', page=2, quote='Seller-B')], None,
+            identity_fields=('number',))
+
+
+def test_cross_page_alias_rejects_an_orphan_row_from_another_document():
+    pages = [{'page': 1, 'text': 'number: INV-A'},
+             {'page': 2, 'text': 'number: INV-B\nIssuer: Seller-B'}]
+    profile = pdf_profile('alias-orphan', [
+        {'number': 'INV-A'},
+        {'Issuer': 'Seller-B'},
+    ], pages, {(0, 'number'): (1, 'INV-A'), (1, 'Issuer'): (2, 'Seller-B')},
+        digest(['alias', 'orphan-source']))
+    with pytest.raises(ValueError, match='different documents'):
+        extract_fields(profile, [DocumentField(
+            row=0, name='issuer', page=2, quote='Seller-B')], None,
+            identity_fields=('number',))
