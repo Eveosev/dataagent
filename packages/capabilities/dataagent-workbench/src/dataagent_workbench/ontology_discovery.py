@@ -197,6 +197,7 @@ class DiscoveryService:
             'sources': catalog['sources'],
             'catalog': catalog,
             'draft': draft,
+            'publish_candidate': self._candidate_summary(session),
         }
         if len(profiles) == 1:
             state.update(source_id=profiles[0].source_id, source_kind=profiles[0].kind,
@@ -205,6 +206,26 @@ class DiscoveryService:
         else:
             state['source_ids'] = [profile.source_id for profile in profiles]
         return state
+
+    def _candidate_summary(self, session):
+        """The latest publication candidate of this task, without its full body."""
+        row = self.wb.store.current('ontology_candidate', session.id, scope=self.wb.scope)
+        if row is None:
+            return None
+        body = row['body']
+        return {
+            'ref': body.get('ref'),
+            'candidate_revision': row['revision'],
+            'state': body.get('state'),
+            'ontology_id': body.get('ontology_id'),
+            'ontology_revision': body.get('ontology_revision'),
+            'title': body.get('title'),
+            'definition_digest': body.get('definition_digest'),
+            'source_snapshot': body.get('source_snapshot'),
+            'draft_ref': body.get('draft_ref'),
+            'default_concept': body.get('default_concept'),
+            'publication_ref': body.get('publication_ref'),
+        }
 
     def request(self, session, profiles):
         state = self.state(session, profiles)
@@ -262,8 +283,12 @@ class DiscoveryService:
         if proposal.source_revision != state['source_revision']:
             raise VersionConflict('source observation changed; request new evidence')
         body = validate_proposal(proposal, state['catalog'])
+        gaps = [{**gap, 'ref': 'gap:%d' % index}
+                for index, gap in enumerate(state['catalog'].get('gaps') or [], 1)]
         body.update(source_revision=state['source_revision'],
                     profile_refs=list(state['profile_refs']),
+                    coverage=state['catalog'].get('coverage') or state['coverage'],
+                    gaps=gaps,
                     structure_fingerprint=state['structure_fingerprint'], state='pending')
         if state.get('profile_ref'):
             body['profile_ref'] = state['profile_ref']

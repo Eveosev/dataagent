@@ -1,0 +1,122 @@
+{
+  "$comment": "generated from dataagent_contracts.ontology:OntologyRegistryEntry; do not edit",
+  "$id": "dataagent-contracts/0.1/ontology/OntologyRegistryEntry",
+  "additionalProperties": false,
+  "description": "One workspace ontology: builtin or published from discovery.\n\n``state`` retires a definition for new tasks without deleting its\nregistered revisions or released instances.  ``default_concept`` is the\nconcept pinned by tasks that do not name one.",
+  "properties": {
+    "concepts": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Concepts",
+      "type": "array"
+    },
+    "default_concept": {
+      "default": "",
+      "title": "Default Concept",
+      "type": "string"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "ontology_revision": {
+      "title": "Ontology Revision",
+      "type": "string"
+    },
+    "origin": {
+      "enum": [
+        "builtin",
+        "discovery"
+      ],
+      "title": "Origin",
+      "type": "string"
+    },
+    "published_at": {
+      "default": "",
+      "title": "Published At",
+      "type": "string"
+    },
+    "published_by": {
+      "default": "",
+      "title": "Published By",
+      "type": "string"
+    },
+    "retire_reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Retire Reason"
+    },
+    "retired_at": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Retired At"
+    },
+    "retired_by": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Retired By"
+    },
+    "source_snapshot": {
+      "default": "",
+      "title": "Source Snapshot",
+      "type": "string"
+    },
+    "state": {
+      "default": "active",
+      "enum": [
+        "active",
+        "retired"
+      ],
+      "title": "State",
+      "type": "string"
+    },
+    "title": {
+      "default": "",
+      "title": "Title",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "ontology_revision",
+    "origin"
+  ],
+  "title": "OntologyRegistryEntry",
+  "type": "object"
+}

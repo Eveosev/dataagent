@@ -18,6 +18,7 @@ from dataagent_ontology.corrections import revalidate_corrections
 from dataagent_runtime.ports.workbench_store import VersionConflict,Write
 from pydantic_core import to_jsonable_python
 from ..ontology_discovery import DiscoveryReview
+from ..ontology_publish import PublishConfirmation, RetireRequest
 from ..tool_schema import Dispose,StartTarget
 from ..view_service import ViewService
 
@@ -115,6 +116,18 @@ def create_app(wb):
     @app.get('/api/identity')
     def identity():return {'scope':wb.scope,'mode':'local-owner'}
 
+    @app.get('/api/ontologies')
+    def ontologies():return wb.ontology.registry(wb.ctx)
+
+    @app.post('/api/ontologies/{ontology_id}/retire')
+    async def retire_ontology(ontology_id:str,request:Request):
+        """Retire a definition for new tasks; the host context is the actor."""
+        data=_object_body(await request.json())
+        body=RetireRequest.model_validate(data)
+        if not body.confirmed:raise ValueError('retiring an ontology requires explicit confirmation')
+        return wb.ontology.retire(ontology_id,body.reason,wb.ctx,
+            expected_revision=body.expected_revision)
+
     @app.get('/api/connections')
     def connections():
         from ..adapters.source_connections import SourceConnections
@@ -204,6 +217,20 @@ def create_app(wb):
     async def review_discovery(sid: str, request: Request):
         decision = DiscoveryReview.model_validate(await request.json())
         return wb.discovery.review(sid, decision, wb.ctx)
+
+    @app.get('/api/sessions/{sid}/publish/candidate')
+    def publish_candidate(sid: str):
+        """Show the exact draft, source digest and definition a human confirms."""
+        return wb.publisher.candidate(sid, wb.ctx)
+
+    @app.post('/api/sessions/{sid}/publish/confirm')
+    async def confirm_publish(sid: str, request: Request):
+        """The human publication gate; the acting subject comes from the host."""
+        data = _object_body(await request.json())
+        confirmation = PublishConfirmation.model_validate(data)
+        if not confirmation.confirmed:
+            raise ValueError('ontology publication requires explicit human confirmation')
+        return wb.publisher.confirm(sid, confirmation, wb.ctx)
 
     @app.put('/api/sessions/{sid}/draft')
     async def draft(sid:str,request:Request):

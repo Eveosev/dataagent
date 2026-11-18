@@ -80,6 +80,30 @@ def _invoke(wb, name, args):
         return CapabilityResult.ok(wb.discovery.propose(
             typed.session_id, typed.proposal, typed.expected_revision, wb.ctx,
         ))
+    if name == 'ontology_registry':
+        return CapabilityResult.ok(wb.ontology.registry(wb.ctx))
+    if name == 'ontology_publish_prepare':
+        candidate = wb.publisher.prepare(typed, wb.ctx)
+        return CapabilityResult(status=CapabilityStatus.needs_input, data=candidate, issues=[Issue(
+            code='ontology.human_confirmation_required',
+            message='本体候选已生成；发布必须由人在工作台网页确认，Agent 工具不能代为确认',
+            severity='warning', retryable=False,
+            suggested_action='打开工作台核对草案修订、来源快照摘要与候选定义摘要后确认发布',
+        )])
+    if name == 'ontology_publish_confirm':
+        # The confirmation fact itself must arrive through the local web
+        # channel with the host subject.  A tool call can only report that.
+        return CapabilityResult(status=CapabilityStatus.needs_input, data={
+            'candidate_ref': typed.candidate_ref,
+            'session_id': typed.session_id,
+            'human_confirmation_required': True,
+            'confirm_route': '/api/sessions/%s/publish/confirm' % typed.session_id,
+        }, issues=[Issue(
+            code='ontology.human_confirmation_required',
+            message='本体发布必须由人在工作台网页确认；MCP 工具不得代为确认',
+            severity='warning', retryable=False,
+            suggested_action='在工作台网页核对草案修订、来源快照摘要与候选定义摘要后确认',
+        )])
     if name == 'intake_extract':
         return CapabilityResult.ok(wb.intake.extract_document_fields(
             typed.session_id, typed.source_id, typed.fields, typed.expected_revision, wb.ctx,
