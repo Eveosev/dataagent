@@ -1,10 +1,16 @@
 """Versioned previews and review decisions share one local transaction boundary."""
 from datetime import datetime,timezone
 from uuid import uuid4
-from dataagent_contracts.ontology import MappingPreview,ReviewReceipt,DatasetRelease,OntologyRevision
+from dataagent_contracts.ontology import MappingPreview,ReviewReceipt,DatasetRelease,OntologyRevision,OntologyPublication
 from dataagent_runtime.ports.workbench_store import ChangeSet,Write,VersionConflict
 from .identity import digest
 from .mapping import materialize,_typed
+from .registry import (REGISTRY_KIND,POINTER_KIND,POINTER_ID,build_entry,entries as registry_entries,
+    entry_row,parse_entry,pointer_row,DefaultTarget)
+
+
+def _now():
+    return datetime.now(timezone.utc).isoformat()
 
 
 class OntologyService:
@@ -17,13 +23,131 @@ class OntologyService:
             raise PermissionError('trusted workspace context required')
 
     def register(self,ontology,ctx):
+        """Register a definition and keep its workspace registry entry current.
+
+        Builtins are registered by the host at start.  A missing registry entry
+        is created for workspaces that predate the registry; an active entry
+        follows a host-swapped revision.  A retired entry is never revived.
+        """
         self.check(ctx)
         current=self.store.current('ontology',ontology.id,scope=self.scope)
         body=ontology.model_dump(mode='json')
-        if current and current['body']==body:return
-        revision=str(int(current['revision'])+1) if current else '1'
-        if ontology.revision!=revision:raise VersionConflict('ontology revision must advance exactly once')
-        self.store.commit(ChangeSet(writes=[Write('ontology',ontology.id,self.scope,body,current['revision'] if current else None)]))
+        writes=[]
+        if not (current and current['body']==body):
+            revision=str(int(current['revision'])+1) if current else '1'
+            if ontology.revision!=revision:raise VersionConflict('ontology revision must advance exactly once')
+            writes.append(Write('ontology',ontology.id,self.scope,body,current['revision'] if current else None))
+        row=entry_row(self.store,self.scope,ontology.id)
+        if row is None:
+            writes.append(Write(REGISTRY_KIND,ontology.id,self.scope,
+                build_entry(ontology).model_dump(mode='json')))
+        else:
+            entry=parse_entry(row)
+            if entry.state=='active' and entry.ontology_revision!=ontology.revision:
+                updated=entry.model_copy(update={'ontology_revision':ontology.revision,
+                    'concepts':list(ontology.concepts),
+                    'default_concept':next(iter(ontology.concepts))})
+                writes.append(Write(REGISTRY_KIND,ontology.id,self.scope,
+                    updated.model_dump(mode='json'),row['revision']))
+        if writes:self.store.commit(ChangeSet(writes=writes))
+
+    def ensure_pointer(self,definition,ctx):
+        """Create the workspace pointer once; never override an existing one.
+
+        A workspace published before the pointer existed defaults to its newest
+        active discovery ontology; otherwise the builtin stays the default.
+        """
+        self.check(ctx)
+        if pointer_row(self.store,self.scope) is not None:return None
+        published=[(entry,row) for entry,row in registry_entries(self.store,self.scope)
+                   if entry.state=='active' and entry.origin=='discovery']
+        if published:
+            entry,_=max(published,key=lambda item:(item[0].published_at,item[0].id))
+        else:
+            entry=build_entry(definition)
+        body={'ontology_id':entry.id,'concept':entry.default_concept,
+              'updated_at':_now(),'updated_by':ctx.subject_ref}
+        self.store.commit(ChangeSet(writes=[Write(POINTER_KIND,POINTER_ID,self.scope,body)]))
+        return body
+
+    def default_definition(self,ctx):
+        """The definition a new task pins when it names no target."""
+        self.check(ctx)
+        row=pointer_row(self.store,self.scope)
+        if row is None:return None
+        ontology_id=(row['body'] or {}).get('ontology_id')
+        if not ontology_id:return None
+        entry=parse_entry(entry_row(self.store,self.scope,ontology_id))
+        if entry is None or entry.state!='active':return None
+        current=self.store.current('ontology',ontology_id,scope=self.scope)
+        if current is None:return None
+        definition=OntologyRevision.model_validate(current['body'])
+        concept=(row['body'] or {}).get('concept') or entry.default_concept
+        if concept not in definition.concepts:
+            concept=next(iter(definition.concepts))
+        return DefaultTarget(definition,concept)
+
+    def registry(self,ctx):
+        """List workspace ontologies with their origin, state and pointer role.
+
+        After a retirement the pointer is empty; new tasks then fall back to
+        the builtin, so the listing reports that builtin as the effective
+        default instead of claiming there is none.
+        """
+        self.check(ctx)
+        row=pointer_row(self.store,self.scope)
+        pointer=row['body'] if row is not None else None
+        current_id=(pointer or {}).get('ontology_id')
+        listed=registry_entries(self.store,self.scope)
+        active={entry.id for entry,_ in listed if entry.state=='active'}
+        default=(current_id if current_id in active else
+                 next((entry.id for entry,_ in listed
+                       if entry.state=='active' and entry.origin=='builtin'),None))
+        items=[]
+        for entry,registry_row in listed:
+            items.append({**entry.model_dump(mode='json'),
+                'registry_revision':registry_row['revision'],
+                'is_default':entry.state=='active' and entry.id==default})
+        items.sort(key=lambda item:(item['state']!='active',item['origin']!='builtin',
+                                    item['id']))
+        return {'ontologies':items,'default_ontology':default,'pointer':pointer}
+
+    def retire(self,ontology_id,reason,ctx,*,expected_revision=None):
+        """Retire one active ontology for new tasks; keep its revisions intact."""
+        self.check(ctx)
+        if not str(reason or '').strip():raise ValueError('retiring an ontology needs a reason')
+        row=entry_row(self.store,self.scope,ontology_id)
+        entry=parse_entry(row)
+        if entry is None:raise KeyError('ontology not registered')
+        if entry.origin=='builtin':
+            raise ValueError('the builtin ontology is the workspace fallback and cannot be retired')
+        if entry.state!='active':raise ValueError('ontology is already retired')
+        if expected_revision is not None and str(expected_revision)!=row['revision']:
+            raise VersionConflict('registry changed; reload before retiring')
+        now=_now()
+        retired=entry.model_copy(update={'state':'retired','retired_at':now,
+            'retired_by':ctx.subject_ref,'retire_reason':reason})
+        writes=[Write(REGISTRY_KIND,ontology_id,self.scope,
+            retired.model_dump(mode='json'),row['revision'])]
+        pointer=pointer_row(self.store,self.scope)
+        if pointer is not None and (pointer['body'] or {}).get('ontology_id')==ontology_id:
+            writes.append(Write(POINTER_KIND,POINTER_ID,self.scope,{
+                'ontology_id':None,'concept':'','updated_at':now,
+                'updated_by':ctx.subject_ref},pointer['revision']))
+        publication=OntologyPublication(action='retire',ontology_id=ontology_id,
+            ontology_revision=entry.ontology_revision,
+            source_snapshot=entry.source_snapshot,subject_ref=ctx.subject_ref,
+            recorded_at=now,reason=reason)
+        audit_id=uuid4().hex
+        writes.append(Write('ontology_publication',audit_id,self.scope,
+            publication.model_dump(mode='json')))
+        writes.append(Write('review',uuid4().hex,self.scope,{
+            'decision':'retire','target_scope':'ontology','ontology_id':ontology_id,
+            'subject_ref':ctx.subject_ref,'recorded_at':now,'reason':reason}))
+        self.store.commit(ChangeSet(writes=writes))
+        return {'ontology_id':ontology_id,'state':'retired','retired_at':now,
+                'retired_by':ctx.subject_ref,'reason':reason,
+                'publication_ref':audit_id}
 
     def definition(self,ref,ctx,concept=None):
         self.check(ctx)

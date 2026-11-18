@@ -233,3 +233,38 @@ class DatasetRelease(ExtModel):
     revision: str
     preview_ref: str
     digest: str
+
+
+class OntologyRegistryEntry(ExtModel):
+    """One workspace ontology: builtin or published from discovery.
+
+    ``state`` retires a definition for new tasks without deleting its
+    registered revisions or released instances.  ``default_concept`` is the
+    concept pinned by tasks that do not name one.
+    """
+    id: str
+    ontology_revision: str
+    origin: Literal['builtin', 'discovery']
+    state: Literal['active', 'retired'] = 'active'
+    title: str = ''
+    concepts: list[str] = Field(default_factory=list)
+    default_concept: str = ''
+    source_snapshot: str = ''
+    published_at: str = ''
+    published_by: str = ''
+    retired_at: str | None = None
+    retired_by: str | None = None
+    retire_reason: str | None = None
+
+
+class OntologyPublication(ExtModel):
+    """Audit record for one publish or retire decision."""
+    action: Literal['publish', 'retire']
+    ontology_id: str
+    ontology_revision: str
+    definition_digest: str = ''
+    source_snapshot: str = ''
+    draft_ref: str = ''
+    subject_ref: str
+    recorded_at: str
+    reason: str = ''

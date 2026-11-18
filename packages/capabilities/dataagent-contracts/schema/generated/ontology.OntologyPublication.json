@@ -1,0 +1,75 @@
+{
+  "$comment": "generated from dataagent_contracts.ontology:OntologyPublication; do not edit",
+  "$id": "dataagent-contracts/0.1/ontology/OntologyPublication",
+  "additionalProperties": false,
+  "description": "Audit record for one publish or retire decision.",
+  "properties": {
+    "action": {
+      "enum": [
+        "publish",
+        "retire"
+      ],
+      "title": "Action",
+      "type": "string"
+    },
+    "definition_digest": {
+      "default": "",
+      "title": "Definition Digest",
+      "type": "string"
+    },
+    "draft_ref": {
+      "default": "",
+      "title": "Draft Ref",
+      "type": "string"
+    },
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "ontology_id": {
+      "title": "Ontology Id",
+      "type": "string"
+    },
+    "ontology_revision": {
+      "title": "Ontology Revision",
+      "type": "string"
+    },
+    "reason": {
+      "default": "",
+      "title": "Reason",
+      "type": "string"
+    },
+    "recorded_at": {
+      "title": "Recorded At",
+      "type": "string"
+    },
+    "source_snapshot": {
+      "default": "",
+      "title": "Source Snapshot",
+      "type": "string"
+    },
+    "subject_ref": {
+      "title": "Subject Ref",
+      "type": "string"
+    }
+  },
+  "required": [
+    "action",
+    "ontology_id",
+    "ontology_revision",
+    "subject_ref",
+    "recorded_at"
+  ],
+  "title": "OntologyPublication",
+  "type": "object"
+}

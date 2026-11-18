@@ -31,17 +31,24 @@ class Workbench:
         from dataagent_ontology.service import OntologyService
         from dataagent_ontology.registry import load_definition
         self.ontology=OntologyService(self.store,scope=self.scope,subject=self.subject,authorization=self.authorization)
-        # The builtin procurement ontology stays registered as the default
-        # mapping target for tasks that do not name one.
+        # The builtin procurement ontology is registered as one workspace
+        # ontology.  The pointer chooses the definition new tasks default to;
+        # publishing a discovery ontology moves it, retiring clears it.
         self.definition=load_definition(Path(__file__).parent/'ontologies/procurement.json')
         self.ontology.register(self.definition,self.ctx)
+        self.ontology.ensure_pointer(self.definition,self.ctx)
         # Read lazily: a host may swap the builtin and register its new revision.
         self.sessions = SessionService(self.store,self.scope,self.subject,self.authorization,
-            default_target=lambda:self.definition)
+            default_target=self._default_target)
         from .intake_service import IntakeService
         self.intake=IntakeService(self)
         from .ontology_discovery import DiscoveryService
         self.discovery = DiscoveryService(self)
+        from .ontology_publish import PublishService
+        self.publisher = PublishService(self)
+
+    def _default_target(self):
+        return self.ontology.default_definition(self.ctx)
 
     @property
     def ctx(self):

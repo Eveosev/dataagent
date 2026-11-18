@@ -5,6 +5,7 @@ from dataagent_contracts.intake import SourceSelection
 from dataagent_contracts.ontology import MappingSpec
 from .document_fields import DocumentField
 from .ontology_discovery import Mode, OntologyProposal
+from .ontology_publish import PublishConfirm, PublishPrepare
 
 
 class Input(BaseModel):
@@ -154,6 +155,10 @@ class DiscoveryPropose(Session):
     expected_revision: str
 
 
+class Registry(Input):
+    pass
+
+
 class SourceConnections(Input):
     pass
 
@@ -173,7 +178,9 @@ class WorkflowView(Input):
 MODELS={'intake_start':Start,**{name:Session for name in ['intake_status','intake_advance','intake_inference','mapping_preview','workbench_view']},
     'intake_propose':Propose,'intake_propose_sources':ProposeSources,'mapping_apply':Apply,
     'intake_dispose':Dispose,'intake_inherit':Inherit,'intake_extract':Extract,
-    'ontology_discovery_propose':DiscoveryPropose,'source_connections':SourceConnections,
+    'ontology_discovery_propose':DiscoveryPropose,'ontology_registry':Registry,
+    'ontology_publish_prepare':PublishPrepare,'ontology_publish_confirm':PublishConfirm,
+    'source_connections':SourceConnections,
     'workflow_call':WorkflowCall,'workflow_view':WorkflowView}
 DESCRIPTIONS={'intake_start':'建立接入任务。陌生 SQLite 库用 mode=ontology_discovery 发现本体',
     'intake_advance':'探查来源并返回映射或本体发现所需的来源证据',
@@ -187,6 +194,9 @@ DESCRIPTIONS={'intake_start':'建立接入任务。陌生 SQLite 库用 mode=ont
     'intake_inherit':'继承同一来源修订上旧任务仍有效的纠正，写入当前预览',
     'intake_status':'查询当前任务修订与阶段','workbench_view':'打开同一任务的本地工作台',
     'ontology_discovery_propose':'提交 SQLite 本体草案，验证来源键、字段和关系证据后供用户审核',
+    'ontology_registry':'列出工作区内本体注册表：内置、发现发布与已停用（只读）',
+    'ontology_publish_prepare':'把发现草稿补全为多概念本体候选（值类型、必需性、身份、关系端点与未决处置）；只生成候选，不发布',
+    'ontology_publish_confirm':'确认发布候选本体（仅工作台网页人工通道；Agent 调用只返回需要人工确认）',
     'source_connections':'列出宿主已配置的来源连接名和类型（只读，不含凭据）',
     'workflow_call':'探查宿主配置的业务环境，提交、推进或查看已验证的流程和动作回执',
     'workflow_view':'在本地浏览器查看已登记工作流的执行状态'}
