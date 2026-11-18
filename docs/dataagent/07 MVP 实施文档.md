@@ -483,6 +483,7 @@ flowchart LR
 | 领域词 | `python3 scripts/check_domain_words.py` | T16 之后每张卡 |
 | 工具注解 | `python3 scripts/check_tool_annotations.py --servers data,application,governance,workbench,operations` | T12b 之后改 MCP 工具的卡 |
 | 安装后验收 | `bash scripts/prepare_acceptance.sh && bash scripts/verify_local.sh --phase <阶段>` | 改动接入链路的卡；合入集成分支前 |
+| D7 本体发现端到端 | `bash scripts/verify_local.sh --phase ontology` | 本体发现接入链路改动后 |
 | 评测 | `$BENCH` 下 `harness/run.py` + `tools/check.py`（每次新 `$RID`） | T30 之后改动能力的卡跑对应任务的探索轮 |
 | 私有数据 | `python3 -I $BENCH/tools/check_private_leak.py --dataset "$LINGCAI_DATASET"` | T33 之后每次合入 |
 | 审核 | codex 只读审核，结论为通过 / 要改 / 阻塞 | 每个 crew 任务 |
