@@ -71,18 +71,29 @@ class OntologyService:
         return body
 
     def default_definition(self,ctx):
-        """The definition a new task pins when it names no target."""
+        """The exact revision a new task pins when it names no target.
+
+        After a retirement the pointer is empty (or names the retired entry);
+        new tasks then fall back to the active builtin.  Returning the concrete
+        registered revision lets ``SessionService`` write
+        ``ontology_id@revision`` into the task target instead of resolving the
+        fallback later, when the pointer may have moved again.
+        """
         self.check(ctx)
         row=pointer_row(self.store,self.scope)
-        if row is None:return None
-        ontology_id=(row['body'] or {}).get('ontology_id')
-        if not ontology_id:return None
-        entry=parse_entry(entry_row(self.store,self.scope,ontology_id))
-        if entry is None or entry.state!='active':return None
-        current=self.store.current('ontology',ontology_id,scope=self.scope)
+        pointer=(row['body'] or {}) if row is not None else {}
+        ontology_id=pointer.get('ontology_id')
+        entry=parse_entry(entry_row(self.store,self.scope,ontology_id)) if ontology_id else None
+        listed=registry_entries(self.store,self.scope)
+        if entry is None or entry.state!='active':
+            entry=next((entry for entry,_ in listed
+                        if entry.origin=='builtin' and entry.state=='active'),None)
+            pointer={}
+        if entry is None:return None
+        current=self.store.current('ontology',entry.id,scope=self.scope)
         if current is None:return None
         definition=OntologyRevision.model_validate(current['body'])
-        concept=(row['body'] or {}).get('concept') or entry.default_concept
+        concept=pointer.get('concept') or entry.default_concept
         if concept not in definition.concepts:
             concept=next(iter(definition.concepts))
         return DefaultTarget(definition,concept)

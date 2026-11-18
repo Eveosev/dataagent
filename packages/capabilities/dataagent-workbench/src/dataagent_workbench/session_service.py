@@ -3,6 +3,7 @@ from pathlib import Path
 from uuid import uuid4
 from dataagent_contracts.intake import IntakeSession, JobHandle, EventPage
 from dataagent_contracts.ontology import OntologyRevision
+from dataagent_ontology.registry import entry_row, parse_entry
 from dataagent_runtime.ports.workbench_store import Write, ChangeSet, VersionConflict
 from .ontology_discovery import DISCOVERY_MODE, MODE_EXTENSION
 
@@ -56,6 +57,11 @@ class SessionService:
         row = self.store.current('ontology', ontology_id, scope=self.scope)
         if row is None:
             raise ValueError(f'unknown ontology: {ontology_id}')
+        # A retired definition stays readable for old tasks but may not be
+        # chosen for a new one.
+        entry = parse_entry(entry_row(self.store, self.scope, ontology_id))
+        if entry is not None and entry.state != 'active':
+            raise ValueError(f'ontology is retired for new tasks: {ontology_id}')
         ontology = OntologyRevision.model_validate(row['body'])
         try:
             name, _ = ontology.resolve_concept(target.get('concept') or '')

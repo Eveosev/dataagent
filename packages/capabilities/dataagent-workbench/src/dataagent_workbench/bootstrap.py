@@ -41,10 +41,20 @@ class Workbench:
         self.sessions = SessionService(self.store,self.scope,self.subject,self.authorization,
             default_target=self._default_target)
         from .intake_service import IntakeService
-        self.intake=IntakeService(self)
+        from .ontology_publish import PublishService, record_source_versions
+        workbench = self
+
+        class _ObservedIntake(IntakeService):
+            """Record the source bytes each successful probe leaves behind."""
+
+            def advance(self, session_id, ctx):
+                session = super().advance(session_id, ctx)
+                record_source_versions(workbench, session)
+                return session
+
+        self.intake=_ObservedIntake(self)
         from .ontology_discovery import DiscoveryService
         self.discovery = DiscoveryService(self)
-        from .ontology_publish import PublishService
         self.publisher = PublishService(self)
 
     def _default_target(self):

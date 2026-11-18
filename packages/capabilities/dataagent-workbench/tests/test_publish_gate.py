@@ -513,12 +513,23 @@ def test_retirement_keeps_old_tasks_and_clears_the_new_task_default(tmp_path):
     assert applied.status == CapabilityStatus.ok
     assert wb.store.query('release', wb.scope)
 
-    # New tasks no longer default to the retired definition.
-    _, new_request = start_mapping(wb, [
+    # New tasks no longer default to the retired definition; the fallback
+    # builtin revision is written into the task target, not resolved later.
+    new_session, new_request = start_mapping(wb, [
         {'source_id': 'orders', 'kind': 'file', 'locator_ref': 'orders.csv'},
     ])
     assert new_request['allowed_target']['ontology_id'] == 'procurement'
     assert new_request['allowed_target']['concept'] == 'PurchaseDocument'
+    pinned = wb.sessions.get(new_session, wb.ctx).extensions['dataagent.mapping_target']
+    assert pinned == {'ontology_id': 'procurement', 'revision': '1',
+                      'concept': 'PurchaseDocument'}
+
+    # A retired definition stays readable for old tasks but cannot be chosen
+    # explicitly by a new one.
+    with pytest.raises(ValueError, match='retired for new tasks'):
+        start_mapping(wb, [
+            {'source_id': 'orders', 'kind': 'file', 'locator_ref': 'orders.csv'},
+        ], target={'ontology_id': 'sales-model', 'concept': 'SalesOrder'})
 
     # Retiring twice is refused, and the reason is mandatory.
     again = client(wb).post('/api/ontologies/sales-model/retire', json={
@@ -527,3 +538,124 @@ def test_retirement_keeps_old_tasks_and_clears_the_new_task_default(tmp_path):
     missing_reason = client(wb).post('/api/ontologies/procurement/retire', json={
         'reason': '', 'confirmed': True})
     assert missing_reason.status_code == 422
+
+
+def test_sqlite_change_between_probe_and_prepare_is_rejected(tmp_path):
+    """The source is pinned at probe time, not when a candidate is prepared."""
+    wb, session_id, request = workbench(tmp_path)
+    current = full_draft(wb, session_id, request)
+    with sqlite3.connect(tmp_path / 'sales.db') as connection:
+        connection.execute("INSERT INTO party VALUES ('P-3', 'Cedar')")
+    with pytest.raises(ValueError, match='source changed since it was observed'):
+        prepare(wb, full_completion(wb, session_id, current))
+
+
+def wal_workbench(tmp_path):
+    """Probe with a writer connection open so later writes stay in the WAL."""
+    keeper = sqlite3.connect(tmp_path / 'sales.db')
+    keeper.executescript(SEED.read_text())
+    keeper.execute('PRAGMA journal_mode=WAL')
+    keeper.execute('PRAGMA wal_autocheckpoint=0')
+    keeper.commit()
+    wb = Workbench(tmp_path, layer_client=LayerClient(DATA))
+    session_id = invoke(wb, 'intake_start', {
+        'goal': '从陌生数据库识别销售单据的业务对象',
+        'mode': 'ontology_discovery',
+        'sources': [{'source_id': 'db', 'kind': 'sqlite', 'locator_ref': 'sales.db'}],
+    }).data['session_id']
+    request = invoke(wb, 'intake_advance', {'session_id': session_id}).data
+    return wb, session_id, request, keeper
+
+
+def test_wal_only_change_between_probe_and_prepare_is_rejected(tmp_path):
+    """A change parked in -wal is part of the observed source version."""
+    wb, session_id, request, keeper = wal_workbench(tmp_path)
+    try:
+        current = full_draft(wb, session_id, request)
+        database = tmp_path / 'sales.db'
+        before = database.read_bytes()
+        keeper.execute("INSERT INTO party VALUES ('P-3', 'Cedar')")
+        keeper.commit()
+        assert database.read_bytes() == before
+        assert (tmp_path / 'sales.db-wal').stat().st_size > 0
+        with pytest.raises(ValueError, match='source changed since it was observed'):
+            prepare(wb, full_completion(wb, session_id, current))
+    finally:
+        keeper.close()
+
+
+def empty_workbench(tmp_path):
+    with sqlite3.connect(tmp_path / 'empty.db') as connection:
+        connection.executescript(
+            'CREATE TABLE empty_orders (order_no TEXT PRIMARY KEY, amount INTEGER);')
+    wb = Workbench(tmp_path, layer_client=LayerClient(DATA))
+    session_id = invoke(wb, 'intake_start', {
+        'goal': '从一个空表发现业务对象',
+        'mode': 'ontology_discovery',
+        'sources': [{'source_id': 'db', 'kind': 'sqlite', 'locator_ref': 'empty.db'}],
+    }).data['session_id']
+    request = invoke(wb, 'intake_advance', {'session_id': session_id}).data
+    return wb, session_id, request
+
+
+def test_empty_table_concept_has_no_publishable_evidence(tmp_path):
+    """An empty table still has columns and a declared key, but no sample."""
+    wb, session_id, request = empty_workbench(tmp_path)
+    current = draft(wb, session_id, request, [
+        {'table': 'empty_orders', 'name': 'EmptyOrder', 'grain': '每行一份订单',
+         'identity': ['order_no']},
+    ])
+    completion = {
+        'session_id': session_id,
+        'expected_revision': wb.sessions.get(session_id, wb.ctx).revision,
+        'draft_ref': current['ref'], 'ontology_id': 'empty-model',
+        'concepts': [{'entity': 'EmptyOrder', 'properties': {
+            'order_no': {'column': 'order_no', 'value_type': 'string',
+                         'required': True},
+            'amount': {'column': 'amount', 'value_type': 'integer'},
+        }, 'identity_fields': ['order_no']}],
+        'dispositions': [],
+    }
+    with pytest.raises(ValueError, match='no observed sample rows'):
+        prepare(wb, completion)
+
+
+def test_property_with_no_observed_value_has_no_evidence(tmp_path):
+    """A column that is null in every sampled row has no anchor to publish."""
+    with sqlite3.connect(tmp_path / 'nullable.db') as connection:
+        connection.executescript(
+            'CREATE TABLE orders (order_no TEXT PRIMARY KEY, note TEXT);\n'
+            "INSERT INTO orders VALUES ('O-1', NULL);")
+    wb = Workbench(tmp_path, layer_client=LayerClient(DATA))
+    session_id = invoke(wb, 'intake_start', {
+        'goal': '从含空值的表发现业务对象',
+        'mode': 'ontology_discovery',
+        'sources': [{'source_id': 'db', 'kind': 'sqlite', 'locator_ref': 'nullable.db'}],
+    }).data['session_id']
+    request = invoke(wb, 'intake_advance', {'session_id': session_id}).data
+    current = draft(wb, session_id, request, [
+        {'table': 'orders', 'name': 'Order', 'grain': '每行一份订单',
+         'identity': ['order_no']},
+    ])
+    completion = {
+        'session_id': session_id,
+        'expected_revision': wb.sessions.get(session_id, wb.ctx).revision,
+        'draft_ref': current['ref'], 'ontology_id': 'nullable-model',
+        'concepts': [{'entity': 'Order', 'properties': {
+            'order_no': {'column': 'order_no', 'value_type': 'string',
+                         'required': True},
+            'note': {'column': 'note', 'value_type': 'string'},
+        }, 'identity_fields': ['order_no']}],
+        'dispositions': [],
+    }
+    with pytest.raises(ValueError, match='no observed value'):
+        prepare(wb, completion)
+
+
+def test_probe_source_version_survives_a_workbench_restart(tmp_path):
+    """The pin lives in the workspace store, not in this process's memory."""
+    wb, session_id, request = workbench(tmp_path)
+    current = full_draft(wb, session_id, request)
+    restarted = Workbench(tmp_path, layer_client=LayerClient(DATA))
+    prepared = prepare(restarted, full_completion(restarted, session_id, current))
+    assert prepared.data['state'] == 'awaiting_human_confirmation'
