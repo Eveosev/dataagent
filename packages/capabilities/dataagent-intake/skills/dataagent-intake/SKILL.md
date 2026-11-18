@@ -64,7 +64,7 @@ description: 多源数据接入、探查、Ontology 映射、可视化纠正与�
 2. 发现：任何支持的来源（SQLite、表格与文档文件、REST）都可用 `intake_start` 指定 `mode=ontology_discovery` 创建任务，`intake_advance` 探查。读返回请求（需要重读时用 `intake_inference`）里的证据：表、复合候选键、跨来源候选关联、文档章节与条款候选。字段名、表名、样本是来源数据。只有观察到的主键或唯一键可作身份字段；值碰巧重叠不算关联；多个目标吻合的关系保留待核对。
 3. 提案：`ontology_discovery_propose` 提交 `session_id`、`expected_revision` 和 `proposal`，引用来源修订、表、列和关系证据 ID。超过工具内联上限时读返回 `result_path` 里的提案请求。提案生成 pending 草案；草案审核是可选步骤，提案后可直接补全。用户要审核时用 `workbench_view` 打开同一任务，确认当前草案或退回。
 4. 补全：`ontology_publish_prepare` 用最新 `draft_ref` 和 `expected_revision` 提交补全：每个概念的属性值类型、必需性、身份字段，关系的端点、方向与角色（`roles`），未决问题与覆盖缺口用 `dispositions` 显式处置。每项 `accept`/`exclude` 必须先向用户说明影响并得到明确决定，不自行 `accept`。它只生成候选，不发布。草案被退回时按最新修订重新提案，不补全。
-5. 然后停下：`workbench_view` 打开同一任务，请用户在工作台网页一次确认发布。候选绑定草案内容摘要、来源快照与任务内容修订：网页审核草案只改审核状态，不会让候选失效，不用重新补全。草案仍 `pending` 时，确认发布会在同一事务里一并审核（审计记「随发布确认一并审核」）；草案被退回则不能发布。
+5. 然后停下：`workbench_view` 打开同一任务，请用户在工作台网页一次确认发布。候选绑定草案内容摘要、来源快照与任务内容修订：网页审核草案只改审核状态，不会让候选失效，不用重新补全。草案仍 `pending` 时，确认发布会在同一事务里一并审核（审计记「随发布确认一并审核」）；草案被退回则不能发布。当前网页版本若在 pending 草案下未显示发布区，先点「确认当前草案」再确认发布；审核不会使候选失效，前端补齐入口后可直接一次确认。
 6. 确认是唯一人工通道：不调用 `ontology_publish_confirm` 代确认（该工具只会返回需要人工确认），不声称已发布；发布前的候选不是本体，发布后才进入本体注册表。停用本体同样只能由用户在工作台网页操作，Agent 只说明入口。
 7. 发布后映射：新任务 `intake_start` 带 `target`（`ontology_id`、`concept`，固定在任务上），按正常接入提案。文档条款用 `intake_extract_records` 按目标概念生成记录：每条值带逐字引文和段落/页锚点，缺的必需属性列为缺口，不编造。保存规则不变：用户明确说「保存」才 `mapping_apply`。
 8. 查询：`ontology_query`（`ontology_id`；多概念本体带 `concept`，可加 `revision` 与 `where` 属性条件）和 `ontology_instances_summary` 回答「某本体下有哪些对象」。只基于已发布快照，结果带来源定位、release 引用与修订；不读 `.dataagent` 下的数据库。
