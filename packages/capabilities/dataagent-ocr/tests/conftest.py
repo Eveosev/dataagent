@@ -97,7 +97,18 @@ def fake_openai():
 
 
 @pytest.fixture
-def data_root(tmp_path: Path, monkeypatch) -> Path:
+def home(tmp_path: Path, monkeypatch) -> Path:
+    """An isolated HOME so default file: secrets never touch the real one."""
+
+    path = tmp_path / "home"
+    path.mkdir()
+    monkeypatch.setenv("HOME", str(path))
+    monkeypatch.delenv("DATAAGENT_SECRETS_DIR", raising=False)
+    return path
+
+
+@pytest.fixture
+def data_root(tmp_path: Path, home: Path, monkeypatch) -> Path:
     root = tmp_path / ".dataagent"
     monkeypatch.setenv("DATAAGENT_DATA_ROOT", str(root))
     monkeypatch.delenv("DATAAGENT_ENFORCEMENT_MODE", raising=False)

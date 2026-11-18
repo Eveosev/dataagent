@@ -5,6 +5,8 @@ import stat
 
 import pytest
 
+from dataagent_runtime.policy import secrets as runtime_secrets
+
 from dataagent_ocr import quality, secrets
 from dataagent_ocr.errors import ConfigError, CredentialsError
 from dataagent_ocr.probe import score
@@ -61,11 +63,19 @@ def test_score_digits_must_match():
     assert score("合计 12.50 元", "合计 12.50 元") == (1.0, True)
 
 
-def test_secret_refs(data_root, monkeypatch):
+def test_secret_refs(data_root, home, monkeypatch):
     ref = secrets.store_file_secret(data_root, "ocr-x", "  sk-1  \n")
-    assert ref == "file:ocr-x" and secrets.resolve(ref, data_root) == "sk-1"
+    secrets_root = home / ".dataagent" / "secrets"
+    path = secrets_root / "ocr" / "ocr-x.key"
+    assert ref == "file:ocr-x"
+    assert secrets.secrets_dir(data_root) == secrets_root / "ocr"
+    assert secrets.resolve(ref, data_root) == "sk-1"
     assert secrets.resolve("file:ocr/ocr-x", data_root) == "sk-1"
-    path = data_root / "secrets" / "ocr" / "ocr-x.key"
+    assert path.read_text() == "sk-1"
+    assert stat.S_IMODE(path.stat().st_mode) == 0o600
+    assert stat.S_IMODE(secrets_root.stat().st_mode) == 0o700
+    assert (secrets_root / ".gitignore").read_text() == "*\n"
+    assert not (data_root / "secrets").exists()
     os.chmod(path, 0o644)
     with pytest.raises(CredentialsError, match="readable by other users"):
         secrets.resolve(ref, data_root)
@@ -75,4 +85,14 @@ def test_secret_refs(data_root, monkeypatch):
         secrets.validate_ref("plain:sk-123")
     with pytest.raises(CredentialsError):
         secrets.store_file_secret(data_root, "ocr-y", "   ")
-    assert stat.S_IMODE((data_root / "secrets" / "ocr").stat().st_mode) == 0o700
+    assert stat.S_IMODE((secrets_root / "ocr").stat().st_mode) == 0o700
+
+    # The workspace location stays readable only as a compatibility fallback,
+    # when the default external directory has no copy of the key.
+    runtime_secrets.store_file_secret(
+        data_root, "ocr/ocr-legacy", "legacy-value", scope="workspace"
+    )
+    legacy = data_root / "secrets" / "ocr" / "ocr-legacy.key"
+    assert legacy.read_text() == "legacy-value"
+    with pytest.warns(runtime_secrets.LegacySecretLocationWarning, match="legacy"):
+        assert secrets.resolve("file:ocr-legacy", data_root) == "legacy-value"
