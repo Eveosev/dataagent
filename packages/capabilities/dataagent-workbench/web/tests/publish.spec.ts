@@ -119,7 +119,19 @@ async function startDiscovery(page:import('@playwright/test').Page,goal:string,d
 // afterEach 上（用例失败也释放）。
 let pointerLocked=false;
 test.beforeEach(()=>{pointerLocked=false;});
-test.afterEach(()=>{if(pointerLocked){unlockDefaultPointer(workspace);pointerLocked=false;}});
+test.afterEach(async({request},testInfo)=>{
+ if(!pointerLocked)return;
+ // 失败清理：发布成功后、停用前失败会让本体带着默认指针残留，破坏本用例的
+ // 重试与并行用例；先在锁内尽力停用，再释放锁（已停用或未发布的忽略结果）。
+ if(testInfo.status!=='passed'){
+  for(const id of ['sales-model','pending-model','review-candidate-model']){
+   await request.post(`/api/ontologies/${id}/retire`,
+    {data:{reason:'用例失败后的清理停用，恢复默认指针',confirmed:true}}).catch(()=>{});
+  }
+ }
+ unlockDefaultPointer(workspace);
+ pointerLocked=false;
+});
 
 test('SQLite 发现 → 草案 → 补全 → 网页确认发布 → 新接入映射 → 停用',async({page})=>{
  test.skip(!workspace||!python,'run scripts/verify_browser.py to share the test workspace with MCP');

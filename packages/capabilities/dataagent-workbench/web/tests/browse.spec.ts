@@ -102,7 +102,17 @@ function completion(sid:string,draftRef:string,expectedRevision:string,catalog:C
 // 文件锁串行，锁的释放挂在 afterEach 上（用例失败也释放）。
 let pointerLocked=false;
 test.beforeEach(()=>{pointerLocked=false;});
-test.afterEach(()=>{if(pointerLocked){unlockDefaultPointer(workspace);pointerLocked=false;}});
+test.afterEach(async({request},testInfo)=>{
+ if(!pointerLocked)return;
+ // 失败清理：发布成功后、停用前失败会让本体带着默认指针残留，破坏本用例的
+ // 重试与并行用例；先在锁内尽力停用，再释放锁（已停用或未发布的忽略结果）。
+ if(testInfo.status!=='passed'){
+  await request.post('/api/ontologies/browse-sales/retire',
+   {data:{reason:'用例失败后的清理停用，恢复默认指针',confirmed:true}}).catch(()=>{});
+ }
+ unlockDefaultPointer(workspace);
+ pointerLocked=false;
+});
 
 test('发布本体后按本体浏览已发布实例',async({page})=>{
  test.skip(!python,'run scripts/verify_browser.py to share the test workspace with MCP');

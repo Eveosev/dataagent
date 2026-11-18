@@ -43,20 +43,33 @@ def start_service(workspace):
 
 
 def flaky_tests(report):
-    """Titles of tests that passed only after a retry (from the JSON report)."""
-    if not report.is_file():return []
+    """Titles of tests that passed only after a retry (from the JSON report).
+
+    A missing, unparsable or structurally invalid report is fatal: retries are
+    enabled, so a swallowed report would silently hide flaky tests. A valid
+    report with no flaky tests yields an empty list.
+    """
+    if not report.is_file():raise SystemExit(f'playwright JSON report missing: {report}')
     try:data=json.loads(report.read_text())
-    except ValueError:return []
+    except ValueError as error:raise SystemExit(f'playwright JSON report is not valid JSON: {error}')
+    if not isinstance(data,dict)or not isinstance(data.get('suites'),list) \
+        or not isinstance(data.get('stats'),dict):
+        raise SystemExit(f'playwright JSON report has unexpected structure: {report}')
     found=[]
     def walk(suites):
-        for suite in suites or []:
+        for suite in suites:
             for spec in suite.get('specs') or []:
                 for case in spec.get('tests') or []:
                     if case.get('status')=='flaky':
-                        location=spec.get('location') or {}
-                        found.append(f"{spec.get('file','?')}:{location.get('line',spec.get('line','?'))} › {spec.get('title','')}")
-            walk(suite.get('suites'))
-    walk(data.get('suites'))
+                        found.append(f"{spec.get('file','?')}:{spec.get('line','?')} › {spec.get('title','')}")
+            walk(suite.get('suites') or [])
+    try:walk(data['suites'])
+    except (AttributeError,TypeError) as error:
+        raise SystemExit(f'playwright JSON report has unexpected structure: {error}')
+    # The flaky count in stats must agree with the listed tests, otherwise the
+    # shape of the report is not what this parser understands.
+    if not isinstance(data['stats'].get('flaky'),int) or data['stats']['flaky']!=len(found):
+        raise SystemExit(f'playwright JSON report flaky count disagrees with listed tests: {report}')
     return found
 
 
@@ -77,10 +90,13 @@ def run_e2e(url,token,extra,grep=None):
     shot=evidence/'mapping-live.png'
     if shot.is_file():print('evidence:',shot)
     # Flaky tests do not fail the run (retries are enabled), but they must be listed.
+    # A missing or invalid report is fatal even when playwright exited 0.
     flaky=flaky_tests(report)
     if flaky:
         print(f'flaky（重试后通过，不计失败，共 {len(flaky)} 条）:')
         for item in flaky:print('  -',item)
+    else:
+        print('flaky 清单为空：没有用例靠重试通过')
     return code
 
 
