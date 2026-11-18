@@ -1,17 +1,25 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
+import type {CSSProperties} from 'react';
 import {api,display,isDecisionSelector,registryTitle,translateError} from '../client';
 import type {Correction,RegistryEntry,View} from '../client';
 import {
- anchorLocation,browseConceptLabel,browsePropertyLabel,conceptMap,filterOpNames,sourceDisplayName,
+ anchorLocation,browseConceptLabel,browsePropertyLabel,comparisonOps,comparableValueTypes,conceptMap,
+ filterOpNames,isComparisonOp,sourceDisplayName,
 } from '../ontologyBrowse';
+import type {FilterOp} from '../ontologyBrowse';
 import type {
  BrowseRegistry,BrowseRegistryEntry,ConceptProperties,InstancePage,PublishedInstance,
  SessionContext,
 } from '../ontologyBrowse';
 import '../ontology-instances.css';
 
-type Filter={property:string;op:'eq'|'contains';value:string};
+type Filter={property:string;op:FilterOp;value:string};
 type FilterDraft=Filter;
+// FDE2-13：实例默认按身份字段升序，可点列头切换属性与方向；
+// 后端 instances 接口没有排序参数，排序只作用于当前已加载页。
+const IDENTITY_SORT='';
+type SortState={property:string;direction:'asc'|'desc'};
+const DEFAULT_SORT:SortState={property:IDENTITY_SORT,direction:'asc'};
 
 const NO_ITEMS:PublishedInstance[]=[];
 const errorText=(error:unknown)=>error instanceof Error?translateError(error.message):String(error);
@@ -43,7 +51,7 @@ function contextOf(view:View):SessionContext{
 // 所属任务从发布该对象的接入任务读取（只读）。
 export function OntologyInstancesPage({id,initialConcept,initialRevision,initialHistory,onBack,onNew,onOpenTask}:{
  id:string;initialConcept?:string;initialRevision?:string;initialHistory?:boolean;
- onBack:()=>void;onNew:()=>void;onOpenTask:(sessionId:string)=>void;
+ onBack:()=>void;onNew:()=>void;onOpenTask:(sessionId:string,instanceId?:string)=>void;
 }){
  const [entry,setEntry]=useState<BrowseRegistryEntry|null>(null);
  const [registryError,setRegistryError]=useState('');
@@ -59,6 +67,7 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,initial
  const [cursors,setCursors]=useState<(string|undefined)[]>([undefined]);
  const [filter,setFilter]=useState<Filter|null>(null);
  const [draftFilter,setDraftFilter]=useState<FilterDraft>({property:'',op:'eq',value:''});
+ const [sort,setSort]=useState<SortState>(DEFAULT_SORT);
  const [page,setPage]=useState<InstancePage|null>(null);
  // 后端游标翻页的 total 是“游标后剩余数”，不是整个筛选结果的总数。
  // 首查（无 cursor）记下总数，后续页继续用它显示“共 N 条”。
@@ -113,6 +122,10 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,initial
  // 或对象短暂套到新概念上。
  const visiblePage=page&&page.concept===concept&&page.revision===revision?page:null;
  const items=visiblePage?.items||NO_ITEMS;
+ // 行的身份字段要等发布任务的视图（contexts）到齐才能确定；默认按身份字段
+ // 排序时先不渲染行，避免短暂出现未排序的一页（任务视图读不到时才退回
+ // 已发布值，维持既有降级路径）。
+ const contextsPending=items.some(item=>item.session_id&&!contexts[item.session_id]);
  const total=totalCount??visiblePage?.total??0;
  const conceptTotal=entry?.instance_counts?.[concept]??0;
  const currentCounts=entry?.current_revision_instance_counts;
@@ -217,6 +230,56 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,initial
   });
  },[entry,revision,visiblePage,history]);
 
+ // FDE2-13：身份字段列排在最前；排序键含数值比较（限额、单据号按数字排，
+ // 不按字符串），默认按身份字段升序。
+ const identityFields=useMemo(()=>
+  (conceptDef?.identity_fields||[]).filter(name=>propertyNames.includes(name)),
+  [conceptDef,propertyNames]);
+ const displayProperties=useMemo(()=>{
+  const rest=propertyNames.filter(name=>!identityFields.includes(name));
+  return [...identityFields,...rest];
+ },[propertyNames,identityFields]);
+ // 窄屏粘性列：前两个身份列 + 第一个数值列（数值列若已是身份列则不重复占位）。
+ const stickyProperties=useMemo(()=>{
+  const names=[...identityFields.slice(0,2)];
+  const firstNumeric=displayProperties.find(name=>{
+   const type=conceptDef?.properties?.[name]?.value_type;
+   return type==='decimal'||type==='integer';
+  });
+  if(firstNumeric&&!names.includes(firstNumeric))names.push(firstNumeric);
+  return names;
+ },[identityFields,displayProperties,conceptDef]);
+ const stickyStyle=(name:string)=>stickyProperties.includes(name)
+  ?({'--sticky-left':`${stickyProperties.indexOf(name)*90}px`} as CSSProperties)
+  :undefined;
+ function compareCells(left:unknown,right:unknown):number{
+  const a=left===null||left===undefined?'':String(left);
+  const b=right===null||right===undefined?'':String(right);
+  if(a!==''&&b!==''){
+   const na=Number(left),nb=Number(right);
+   if(Number.isFinite(na)&&Number.isFinite(nb))return na-nb;
+  }
+  return a.localeCompare(b,'zh-Hans-CN');
+ }
+ function compareItems(a:PublishedInstance,b:PublishedInstance):number{
+  let result=0;
+  if(sort.property===IDENTITY_SORT){
+   for(const field of identityFields){
+    result=compareCells(a.values?.[field],b.values?.[field]);
+    if(result)break;
+   }
+  }else result=compareCells(a.values?.[sort.property],b.values?.[sort.property]);
+  return sort.direction==='asc'?result:-result;
+ }
+ const sortedItems=useMemo(()=>[...items].sort(compareItems),[items,sort,identityFields]);
+ function toggleSort(name:string){
+  if(sort.property===name)setSort({property:name,direction:sort.direction==='asc'?'desc':'asc'});
+  else setSort({property:name,direction:'asc'});
+ }
+ // 比较筛选（FDE2-13）只对 decimal/integer/date 属性开放，与后端口径一致。
+ const isComparableProperty=(name:string)=>
+  comparableValueTypes.includes(conceptDef?.properties?.[name]?.value_type||'');
+
  // 概念切换后不保留上一个概念的筛选条件。
  useEffect(()=>{
   if(!propertyNames.length)return;
@@ -228,14 +291,14 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,initial
  function chooseConcept(name:string){
   if(name===concept)return;
   setConcept(name);setCursors([undefined]);setFilter(null);
-  setDraftFilter({property:'',op:'eq',value:''});setPage(null);
+  setDraftFilter({property:'',op:'eq',value:''});setPage(null);setSort(DEFAULT_SORT);
  }
  function chooseRevision(value:string){
   if(value==='__other__'){setRevisionOther(true);return;}
   setRevisionOther(false);
   if(value===revision)return;
   setRevision(value);setFilter(null);setDraftFilter({property:'',op:'eq',value:''});
-  setCursors([undefined]);setPage(null);
+  setCursors([undefined]);setPage(null);setSort(DEFAULT_SORT);
  }
  function toggleHistory(){
   if(historyOpen){setHistoryOpen(false);return;}
@@ -247,7 +310,7 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,initial
   setRevisionOther(false);setOtherRevision('');
   if(next===revision)return;
   setRevision(next);setFilter(null);setDraftFilter({property:'',op:'eq',value:''});
-  setCursors([undefined]);setPage(null);
+  setCursors([undefined]);setPage(null);setSort(DEFAULT_SORT);
  }
  function applyFilter(){
   if(!draftFilter.property||!draftFilter.value.trim())return;
@@ -324,7 +387,7 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,initial
    <button className="secondary" onClick={clearFilter}>清除筛选</button>
   </div>;
   return <div className="empty ontology-instance-empty" data-testid="instances-empty">
-   <strong>{entry&&entry.concepts.length>1?`概念 ${concept} 还没有已发布实例`:'这个本体还没有已发布实例'}</strong>
+   <strong>{entry&&entry.concepts.length>1?`概念 ${browseConceptLabel(concept)} 还没有已发布实例`:'这个本体还没有已发布实例'}</strong>
    <p>发布后才会出现；未发布的预览不会显示在这里。</p>
    <button className="primary" onClick={onNew}>新建接入</button>
   </div>;
@@ -353,9 +416,9 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,initial
      ?<div className="concept-tabs" role="group" aria-label="按概念切换">
       {entry.concepts.map(name=><button key={name} data-testid={`concept-tab-${name}`}
        className={name===concept?'concept-tab active':'concept-tab'}
-       aria-pressed={name===concept} onClick={()=>chooseConcept(name)}>{name}</button>)}
+       aria-pressed={name===concept} onClick={()=>chooseConcept(name)}>{browseConceptLabel(name)}</button>)}
      </div>
-     :entry.concepts[0]&&<span className="badge">概念 {entry.concepts[0]}</span>}
+     :entry.concepts[0]&&<span className="badge">概念 {browseConceptLabel(entry.concepts[0])}</span>}
     <div className="instance-control-row">
      <div className="instance-control">
       <label className="label" htmlFor="instance-revision">修订</label>
@@ -403,7 +466,12 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,initial
      <div className="instance-control">
       <label className="label" htmlFor="filter-property">属性</label>
       <select id="filter-property" value={draftFilter.property}
-       onChange={event=>setDraftFilter({...draftFilter,property:event.target.value})}>
+       onChange={event=>{
+        const property=event.target.value;
+        // 比较条件只对 decimal/integer/date 属性开放（FDE2-13）；切到其他属性时回到「等于」。
+        const op=isComparisonOp(draftFilter.op)&&!isComparableProperty(property)?'eq' as FilterOp:draftFilter.op;
+        setDraftFilter({...draftFilter,property,op});
+       }}>
        <option value="">选择属性</option>
        {propertyNames.map(name=><option key={name} value={name}>{browsePropertyLabel(name)}</option>)}
       </select>
@@ -411,8 +479,10 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,initial
      <div className="instance-control">
       <label className="label" htmlFor="filter-op">条件</label>
       <select id="filter-op" value={draftFilter.op}
-       onChange={event=>setDraftFilter({...draftFilter,op:event.target.value as 'eq'|'contains'})}>
+       onChange={event=>setDraftFilter({...draftFilter,op:event.target.value as FilterOp})}>
        <option value="eq">等于</option><option value="contains">包含</option>
+       {isComparableProperty(draftFilter.property)&&comparisonOps.map(op=>
+        <option key={op} value={op}>{filterOpNames[op]}</option>)}
       </select>
      </div>
      <div className="instance-control filter-value">
@@ -432,28 +502,44 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,initial
     </p>}
    </nav>
    {failure&&<div className="notice red" data-testid="instances-failure" role="alert">{failure}</div>}
-   {loading?<div className="empty" data-testid="instances-loading">正在读取已发布实例…</div>:
+   {loading||(sort.property===IDENTITY_SORT&&!conceptDef&&contextsPending)
+    ?<div className="empty" data-testid="instances-loading">正在读取已发布实例…</div>:
     !visiblePage?(!failure&&emptyState()):
     visiblePage.items.length===0?emptyState():
     <section className="discovery-card instance-card">
      <div className="panel-heading"><strong>{browseConceptLabel(concept)} 的已发布对象</strong>
-      <span className="badge">{total} 条</span></div>
+      <span className="badge">{total} 条</span>
+      {sort.property!==IDENTITY_SORT&&<button className="secondary" data-testid="instance-sort-reset"
+       onClick={()=>setSort(DEFAULT_SORT)}>按身份字段排序</button>}</div>
+     {/* FDE2-13：默认按身份字段升序，点列头切换排序属性与方向；后端 instances
+         接口没有排序参数，排序作用于当前页。窄屏下身份列与第一个数值列粘性固定。 */}
      <div className="mapping-table-scroll"><table className="mapping-table instance-table" data-testid="instance-table">
       <thead><tr>
-       {propertyNames.map(name=><th key={name}>{browsePropertyLabel(name)}</th>)}
+       {displayProperties.map(name=><th key={name}
+        className={stickyProperties.includes(name)?'sticky-col':undefined}
+        style={stickyStyle(name)}
+        aria-sort={sort.property===name?(sort.direction==='asc'?'ascending':'descending'):'none'}>
+        <button type="button" className="instance-sort-button" data-testid={`instance-sort-${name}`}
+         title={sort.property===name?(sort.direction==='asc'?'切换为降序':'切换为升序'):`按${browsePropertyLabel(name)}排序`}
+         onClick={()=>toggleSort(name)}>{browsePropertyLabel(name)}{sort.property===name?(sort.direction==='asc'?' ▲':' ▼'):''}</button>
+       </th>)}
        <th>来源定位</th><th>所属接入任务</th><th>发布修订</th>
       </tr></thead>
-      <tbody>{visiblePage.items.map((item,index)=><tr key={`${item.release_ref}:${index}`} data-testid="instance-row">
-       {propertyNames.map(name=><td key={name} data-testid={`instance-value-${name}`}>{display(item.values?.[name])}</td>)}
+      <tbody>{sortedItems.map((item,index)=><tr key={`${item.release_ref}:${index}`} data-testid="instance-row">
+       {displayProperties.map(name=><td key={name}
+        className={stickyProperties.includes(name)?'sticky-col':undefined}
+        style={stickyStyle(name)}
+        data-testid={`instance-value-${name}`}>{display(item.values?.[name])}</td>)}
        <td className="instance-source" data-testid="instance-source">{sourceLines(item)}</td>
        <td data-testid="instance-task">{item.session_id
         ?<button type="button" className="instance-task-link" title="打开该接入任务的对象页（只读）"
-          onClick={()=>onOpenTask(item.session_id)}>{taskName(item)}</button>
+          onClick={()=>onOpenTask(item.session_id,item.entity_id)}>{taskName(item)}</button>
         :<span className="muted">未知</span>}</td>
        <td data-testid="instance-revision"><span className="badge">修订 {item.revision}</span>
         {item.partial_release&&<small className="warn">部分发布</small>}</td>
       </tr>)}</tbody>
      </table></div>
+     <p className="help instance-sort-note">默认按身份字段升序，点列头可切换排序；排序作用于当前页。</p>
      <div className="instance-pagination">
       <span className="muted">第 {cursors.length} 页 · 共 {total} 条</span>
       <div>

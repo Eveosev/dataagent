@@ -10,6 +10,8 @@ export const gapLabels:Record<string,string>={
  declared_fk_target_outside_scope:'外键目标超出探查或披露范围',
  declared_fk_target_key_unverified:'外键目标键无法核对',
  candidate_budget_exceeded:'部分候选超出展示上限',
+ // FDE2-11：探查缺口的内部代码补中文说法，不再露出英文原文。
+ key_search_truncated:'键值候选搜索提前截断',
 };
 
 export type CatalogTable=NonNullable<Discovery['catalog']>['tables'][number];
