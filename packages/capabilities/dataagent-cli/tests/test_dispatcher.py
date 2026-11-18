@@ -255,6 +255,54 @@ class DispatcherTests(unittest.TestCase):
         self.assertEqual(result.returncode, 2)
         self.assertIn("dataagent <layer>", result.stderr)
 
+    def test_help_lists_workbench_serve_and_view(self):
+        """FDE2-15: `workbench serve/view` and the task-less `view` alias."""
+        result = self._run("--help")
+        self.assertEqual(result.returncode, 2)
+        for command in (
+            "dataagent workbench serve",
+            "dataagent workbench view",
+            "dataagent view [<session id>]",
+        ):
+            self.assertIn(command, result.stderr)
+
+    def test_view_dispatches_to_workbench_without_a_session(self):
+        """FDE2-15: `dataagent view` has no task id to require."""
+        _make_layer(self.project, "workbench", "0.1.0")
+        result = self._run("view")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        args = (self.out / "args").read_text().splitlines()
+        self.assertEqual(args[1], "dataagent_workbench.interfaces.cli")
+        self.assertEqual(args[2:], ["view"])
+
+    def test_doctor_reports_never_approval_with_project_sandbox(self):
+        """FDE2-03: never + the §1.5 fragment is a failing doctor check."""
+        _make_layer(self.project, "workbench", "0.1.0")
+        (self.project / "mint.toml").write_text(
+            '[core.sandbox]\npolicy = "workspace-write"\n', encoding="utf-8")
+        bin_dir = self.out / "bin"
+        bin_dir.mkdir(exist_ok=True)
+        mint = bin_dir / "mint"
+        mint.write_text(
+            "#!/bin/sh\n"
+            'if [ "$1 $2 $3" = "config get core.approval_policy" ]; then\n'
+            '  echo \'core.approval_policy = "never"  [from: user]\'\n'
+            "  exit 0\n"
+            "fi\n"
+            "exit 1\n",
+            encoding="utf-8",
+        )
+        mint.chmod(0o755)
+        self.env["PATH"] = f"{bin_dir}:{self.env['PATH']}"
+
+        result = self._run("doctor")
+
+        self.assertEqual(result.returncode, 3, result.stdout + result.stderr)
+        self.assertIn(
+            "approval: never + project sandbox workspace-write", result.stderr)
+        self.assertIn(
+            "mint config set core.approval_policy on-request", result.stderr)
+
 
 
     def test_doctor_all_layers_present_exits_0(self):

@@ -6,7 +6,7 @@ import socket
 from pathlib import Path
 from ..adapters.source_connections import bind_workspace, bound_workspace
 from ..bootstrap import Workbench
-from ..launcher import stop_service
+from ..launcher import home_url, stop_service
 from ..service_tools import invoke, result_summary
 
 
@@ -99,6 +99,11 @@ def _run(wb, args):
             if stopped.get('status')=='failed':
                 raise SystemExit(1)
             return
+        elif args.command=='view' and args.session_id is None:
+            # FDE2-15: a fresh workspace has no task to name. Start the
+            # service and print the home page URL; the page's own button
+            # mints the one-time (60 s) authentication link.
+            print(json.dumps(home_url(wb),ensure_ascii=False));return
         else:
             result=invoke(wb,'workbench_view' if args.command=='view' else 'intake_status',{'session_id':args.session_id})
         print(json.dumps(result_summary(wb,result),ensure_ascii=False))
@@ -113,8 +118,9 @@ def main():
     commands=p.add_subparsers(dest='command',required=True)
     serve=commands.add_parser('serve');serve.add_argument('--port',type=int,default=0)
     intake=commands.add_parser('intake');intake.add_argument('--goal',required=True);intake.add_argument('--source',action='append',required=True)
-    for name in ['status','view']:
-        commands.add_parser(name).add_argument('session_id')
+    commands.add_parser('status').add_argument('session_id')
+    # `view` without a task opens the workspace home page (FDE2-15).
+    commands.add_parser('view').add_argument('session_id',nargs='?',default=None)
     commands.add_parser('list')
     commands.add_parser('stop')
     commands.add_parser('health')

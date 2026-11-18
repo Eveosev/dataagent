@@ -19,6 +19,19 @@
 # the built-in file tools out of .dataagent/secrets, but a shell running with
 # workspace-write can still read that workspace-internal directory. New
 # secrets therefore live in $HOME/.dataagent/secrets, outside the workspace.
+#
+# FDE2-03: if the trusted user configuration says
+# `[core] approval_policy = "never"` and `[core.sandbox] policy = "full-access"`,
+# Mint auto-allows prompts only through the `full-access + never` shortcut
+# (agent-kernel@8439ec8 mint/crates/mint-core/src/approval.rs:414-418). This
+# fragment tightens the sandbox to workspace-write, so the shortcut no longer
+# applies; `never` forbids asking, and every tool that needs approval is
+# rejected with `tool/policy-denied ... never 禁止询问审批`. `mint run
+# --approve all` does not override a user-level `never`
+# (mint/bins/mint-core/src/lib.rs:389-395). Interactive use works after
+# `mint config set core.approval_policy on-request`; the TUI then asks once per
+# tool (known limitation G1.5 / IF-01). `dataagent doctor` reports this
+# combination and exits 3.
 [core.sandbox]
 policy = "workspace-write"
 
