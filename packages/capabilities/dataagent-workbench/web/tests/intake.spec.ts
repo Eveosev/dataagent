@@ -40,6 +40,10 @@ test('对象页完成当前值纠正、映射修订与本体草案',async({page}
  await page.getByRole('button',{name:'去映射页修订'}).click();
  await page.getByLabel('amount 转换方式').selectOption('integer');
  await page.getByRole('button',{name:'生成映射预览'}).click();
+ // 映射修订改变来源值后，纠正值仍生效，但必须把映射新算得的值和采用操作摆出来。
+ await expect(page.getByTestId('preview-amount')).toHaveText('1250');
+ await expect(page.getByTestId('mapping-correction-hint')).toContainText('映射已变化，纠正值仍生效；映射新算得的值为 126000');
+ await page.getByRole('button',{name:'采用新映射值'}).click();
  await expect(page.getByTestId('preview-amount')).toHaveText('126000');
  await page.getByRole('button',{name:'打开对象页'}).click();
  await expect(page.getByTestId('object-amount')).toHaveText('126000');

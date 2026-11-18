@@ -1,7 +1,8 @@
 from pathlib import Path
+from decimal import Decimal
 import pytest
 from fastapi.testclient import TestClient
-from dataagent_contracts.ontology import MappingSpec,ReviewDecision
+from dataagent_contracts.ontology import FieldBinding,MappingSpec,ReviewDecision
 from dataagent_runtime.ports.workbench_store import VersionConflict
 from dataagent_workbench.bootstrap import Workbench
 from dataagent_workbench.adapters.layer_client import LayerClient
@@ -123,3 +124,60 @@ def test_http_object_page_endpoint_and_stale_review(tmp_path):
             'entity_id':p.instances[0].id,'property':'amount','value':'1240','reason':'页面修改'},'decision':'save'}})
     assert rejected.status_code==409
     assert client.get(f'/api/sessions/{s.id}/objects',headers=h).status_code==200
+
+
+def corrected_amount(tmp_path):
+    """One preview with a retained amount correction, ready for a mapping revision."""
+    wb,s=setup(tmp_path);p=wb.intake.submit_proposal(s.id,proposal(s,wb),s.revision,wb.ctx)
+    s=wb.sessions.get(s.id,wb.ctx)
+    wb.intake.apply(s.id,ReviewDecision(preview_ref=p.id+'@1',target_scope='instance',changes={
+        'entity_id':p.instances[0].id,'property':'amount','value':'1250','reason':'用户核对'}),s.revision,wb.ctx)
+    s=wb.sessions.get(s.id,wb.ctx)
+    wb.intake.revalidate(s.id,s.revision,wb.ctx)
+    return wb,wb.sessions.get(s.id,wb.ctx),p.instances[0].id
+
+
+def test_mapping_revision_reports_retained_correction_and_adoption(tmp_path):
+    wb,s,entity=corrected_amount(tmp_path)
+    # A correction alone is not a conflict: the mapping has not changed.
+    assert page(wb,s.id)['correction_views']==[]
+    revised=proposal(s,wb).model_copy(update={'bindings':{**proposal(s,wb).bindings,
+        'amount':FieldBinding(source_field='amount_minor',transform='integer')}})
+    wb.intake.submit_proposal(s.id,revised,s.revision,wb.ctx)
+    body=page(wb,s.id)
+    # F2 retention stays: the corrected value is still the preview value.
+    assert body['objects'][0]['values']['amount']=='1250'
+    views=body['correction_views']
+    assert len(views)==1
+    assert views[0]['entity_id']==entity and views[0]['property']=='amount'
+    assert Decimal(str(views[0]['value']))==Decimal('1250')
+    assert Decimal(str(views[0]['mapping_value']))==Decimal('126000')
+    assert views[0]['mapping_changed'] is True
+    assert views[0]['mapping_revision'].endswith('@2')
+    # The read-only preview endpoint exposes the same comparison.
+    client=TestClient(create_app(wb));h={'x-dataagent-token':wb.token}
+    preview=client.get(f'/api/sessions/{s.id}/view',headers=h)
+    assert preview.status_code==200,preview.text
+    assert preview.json()['correction_views'][0]['property']=='amount'
+    # Adoption is an explicit new decision; the mapping value wins afterwards.
+    s=wb.sessions.get(s.id,wb.ctx)
+    wb.intake.apply(s.id,ReviewDecision(preview_ref=s.selected_versions['preview'],
+        target_scope='instance',changes={'entity_id':entity,'property':'amount','value':'126000',
+        'reason':'撤销纠正，采用映射值'}),s.revision,wb.ctx)
+    s=wb.sessions.get(s.id,wb.ctx)
+    wb.intake.revalidate(s.id,s.revision,wb.ctx)
+    adopted=page(wb,s.id)
+    assert adopted['objects'][0]['values']['amount']=='126000'
+    assert adopted['correction_views']==[]
+
+
+def test_mapping_revision_for_another_property_keeps_correction_unflagged(tmp_path):
+    wb,s,_=corrected_amount(tmp_path)
+    # The mapping revision changed, but amount's source value did not.
+    revised=proposal(s,wb).model_copy(update={'bindings':{**proposal(s,wb).bindings,
+        'issuer':FieldBinding(source_field='number',transform='identity')}})
+    wb.intake.submit_proposal(s.id,revised,s.revision,wb.ctx)
+    body=page(wb,s.id)
+    assert body['mapping_revision'].endswith('@2')
+    assert body['objects'][0]['values']['amount']=='1250'
+    assert body['correction_views']==[]

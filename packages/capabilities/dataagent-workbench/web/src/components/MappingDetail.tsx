@@ -4,9 +4,13 @@ import type {View,FieldBinding} from '../client';
 export function MappingDetail({view,field,binding,raw,dirty,recordIndex,onCorrect,onSchema,readOnly}:{readOnly:boolean;view:View;field:string;binding?:FieldBinding;raw:unknown;dirty:boolean;recordIndex:number;onCorrect:(value:string,reason:string)=>Promise<void>;onSchema:(name:string,reason:string)=>Promise<void>}){
  const [range,setRange]=useState('mapping');const [value,setValue]=useState('');const [reason,setReason]=useState('');const [name,setName]=useState('');const [busy,setBusy]=useState(false);
  const instance=view.preview?.instances?.[recordIndex];
+ const correction=view.correction_views?.find(item=>item.entity_id===instance?.id&&item.property===field);
  async function save(){setBusy(true);try{range==='instance'?await onCorrect(value,reason):await onSchema(name,reason);}finally{setBusy(false);}}
+ async function adopt(){setBusy(true);try{await onCorrect(String(correction?.mapping_value),'撤销纠正，采用映射值');}finally{setBusy(false);}}
  return <aside className="detail-panel"><div className="panel-heading"><span>字段详情</span><span className="badge">{view.ontology.entity_type}</span></div><h2>{field||'选择一个目标字段'}</h2>
  {field&&<><dl className="field-comparison"><div><dt>来源值</dt><dd>{display(raw)}</dd></div><div><dt>转换方式</dt><dd>{transformNames[binding?.transform||'identity']}</dd></div><div className="after-value"><dt>Ontology 值</dt><dd data-testid={`preview-${field}`}>{dirty?'待更新':display(instance?.values?.[field])}</dd></div></dl>
+ {correction&&!dirty&&<div className="notice amber correction-conflict" data-testid="mapping-correction-hint"><strong>{field}：映射已变化，纠正值仍生效；映射新算得的值为 {display(correction.mapping_value)}</strong>
+  {!readOnly&&<button className="secondary" disabled={busy} onClick={adopt}>采用新映射值</button>}</div>}
  {!readOnly&&<><label className="label">修改范围</label><div className="range-options">{[['mapping','修改这类来源的映射'],['instance','纠正当前对象的值'],['ontology','提出本体调整']].map(([id,label])=><label key={id}><input type="radio" name="range" value={id} checked={range===id} onChange={()=>setRange(id)}/>{label}</label>)}</div>
  {range==='mapping'?<p className="help">在映射表中选择来源字段和转换方式，生成新预览后核对。保存后的映射可用于符合条件的新材料。</p>:<div className="edit-current">
   <label className="label">{range==='instance'?'纠正后的值':'建议新增的属性名'}</label><input aria-label={range==='instance'?'纠正后的值':'建议新增的属性名'} value={range==='instance'?value:name} onChange={e=>range==='instance'?setValue(e.target.value):setName(e.target.value)}/>

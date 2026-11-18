@@ -155,7 +155,11 @@ def create_app(wb):
         return SourceSelection(source_id=sid,kind='file',locator_ref=str(path.relative_to(wb.workspace)),options={'display_name':name})
 
     @app.get('/api/sessions/{sid}/view')
-    def view(sid:str):return wb.intake.view(sid,wb.ctx)
+    def view(sid:str):
+        data=wb.intake.view(sid,wb.ctx)
+        # Read-only comparison of retained corrections with the current mapping.
+        data['correction_views']=views.correction_views(sid,wb.ctx)
+        return data
 
     @app.get('/api/sessions/{sid}/objects')
     def objects(sid:str):return views.object_page(sid,wb.ctx)
