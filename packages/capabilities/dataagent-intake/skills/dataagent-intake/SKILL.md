@@ -3,6 +3,12 @@ name: dataagent-intake
 description: 多源数据接入、探查、Ontology 映射、可视化纠正与复用。
 ---
 
+## 必须遵守
+
+1. 只有用户在当前回合明确说「保存」时才调用 mapping_apply。预览后停下来问，不替用户决定；一次接入只保存一次。
+2. 探查、预览、取证都走 dataagent-workbench 工具。不用 shell 读原始来源文件，不直接查 `.dataagent` 下的数据库，不读 `.dataagent/source-connections.json`，不直接请求 REST 来源。用户拖入的文件用工作区内的相对路径。
+3. 只问影响结果的歧义（如元/分）。其余按默认处理，并在预览里说明。
+
 用户提供材料和业务目标后，用 intake_start 创建任务。保留返回的 session_id 和实际 job_ref，通过 intake_status 查询进度。用 workbench_view 打开同一个任务。所有处理结果以组件返回的来源引用和精确修订为准。
 
 自动识别、探查后，只向用户询问会影响结果的关键歧义。显示缺页、缺字段和范围，不以空结果表示成功。映射提案使用允许的目标和结构化转换；组件试算和验证后才能保存。当前值纠正、来源映射修改与本体修改分别处理，不静默扩大目标或授权。
@@ -14,7 +20,7 @@ description: 多源数据接入、探查、Ontology 映射、可视化纠正与�
 1. intake_start → intake_advance。后者实际探查材料，返回 needs_input 和结构化 inference_request；不让用户选择原子编号。
 2. 从 intake_inference 读取当前 expected_revision、structure_fingerprint 与允许目标。单来源调用 intake_propose，多来源调用 intake_propose_sources 并按来源 ID 提交映射。所有单位转换须明确。PDF 字段缺失或 OCR 值粘连时，用 intake_extract 提交精确原文、页码和行号，随后用返回的新修订生成映射。next_actions 提示 retry_probe 时，通过 intake_advance 从组件保存的进度继续。
 3. intake_status 取最新 session revision，mapping_preview 查看组件问题摘要；有缺口先修提案。workbench_view 可打开来源、映射和对象详情。
-4. 用户要求保存且预览无阻塞问题时，mapping_apply 提交当前 preview_ref，target_scope=mapping、decision=save 和最新 expected_revision。保存后再次 intake_status 核对 saved 和 release 引用，结束当前任务。再次接入用新任务，复用已验证映射。
+4. 用户在当前回合明确说「保存」且预览无阻塞问题时，mapping_apply 提交当前 preview_ref，target_scope=mapping、decision=save 和最新 expected_revision。保存后再次 intake_status 核对 saved 和 release 引用，结束当前任务。再次接入用新任务，复用已验证映射。
 5. 二次相同结构输入调用 intake_advance 即可复用已验证映射；仍需查看新数据的实际预览和问题。
 
 ## 陌生 SQLite 数据库的本体发现
@@ -31,4 +37,4 @@ description: 多源数据接入、探查、Ontology 映射、可视化纠正与�
 
 ## 调用边界
 
-业务接入使用上述聚合工具和返回的结构化提案模板。不要读取 `.dataagent/runtime`、凭据、服务实现或包源码；不要用 shell 绕过工作台校验。需要修正时修改 proposal 并重新试算。`intake_propose` 返回最新 session_revision 与 preview_ref，可直接用于下一步核对和保存。
+业务接入使用上述聚合工具和返回的结构化提案模板。不要读取 `.dataagent/runtime`、凭据、服务实现或包源码。需要修正时修改 proposal 并重新试算。`intake_propose` 返回最新 session_revision 与 preview_ref，可直接用于下一步核对和保存。
