@@ -179,16 +179,23 @@ def test_new_source_proposal_rejects_unanchored_input(tmp_path, change, message)
         })
 
 
-def test_default_disclosure_returns_statistics_without_samples(tmp_path):
+def test_owner_mode_without_a_policy_discloses_truncated_samples(tmp_path):
     csv_sources(tmp_path)
+    write(tmp_path / 'customers.csv',
+          'customer_no,name\n'
+          'C-1,' + '长' * 200 + '\n'
+          'C-2,Acme\n')
     wb = workbench(tmp_path)
     data = request(wb, start(wb, [
         {'source_id': 'customers', 'kind': 'file', 'locator_ref': 'customers.csv'},
     ]))
     table, = data['catalog']['tables']
-    assert table['columns']['customer_no']['samples'] == []
-    assert table['columns']['customer_no']['distinct_values'] == 3
-    assert table['rows_observed'] == 3
+    # Caliber A: no model-context policy means local owner mode, so column
+    # samples are disclosed and truncated like every other disclosure.
+    assert table['columns']['customer_no']['samples'] == ['C-1', 'C-2']
+    assert table['columns']['name']['samples'] == ['长' * 160, 'Acme']
+    assert table['columns']['customer_no']['distinct_values'] == 2
+    assert table['rows_observed'] == 2
 
 
 def test_excel_two_table_regions_are_separate_evidence(tmp_path):
@@ -510,4 +517,131 @@ def test_rest_records_share_the_table_evidence_and_link_rules(tmp_path):
     # host-configured connection.
     wb = workbench(tmp_path)
     assert start(wb, [{'source_id': 'api', 'kind': 'rest', 'locator_ref': 'invoices'}])
+
+
+def _standard_and_detail(tmp_path, levels, matched, unmatched):
+    """A standard CSV with unique (城市等级, 职级, 费用类型) combos and a detail CSV.
+
+    ``matched`` detail rows cite standard combos; ``unmatched`` rows carry
+    combos without a standard.  Returns the standard's combo count.
+    """
+    combos = [(city, level, kind)
+              for city in ('一线', '二线')
+              for level in levels
+              for kind in ('住宿', '交通')]
+    (tmp_path / 'standard.csv').write_text(
+        '城市等级,职级,费用类型,限额\n'
+        + ''.join(f'{city},{level},{kind},{400 + index}\n'
+                  for index, (city, level, kind) in enumerate(combos)), encoding='utf-8')
+    rows = [f'BX-{index:03d},{city},{level},{kind}'
+            for index, (city, level, kind) in enumerate(combos[:matched])]
+    rows += [f'BX-{matched + index:03d},{city},P{9 + index},杂费'
+             for index, (city, _, _) in enumerate(combos[:unmatched])]
+    (tmp_path / 'detail.csv').write_text(
+        '报销单号,城市等级,职级,费用类型\n' + '\n'.join(rows) + '\n', encoding='utf-8')
+    return len(combos)
+
+
+def _detail_sources():
+    return [
+        {'source_id': 'standard', 'kind': 'file', 'locator_ref': 'standard.csv'},
+        {'source_id': 'detail', 'kind': 'file', 'locator_ref': 'detail.csv'},
+    ]
+
+
+def test_partial_coverage_composite_link_appears_with_coverage(tmp_path):
+    # 16 of 20 detail rows cite a standard combo: the composite candidate
+    # survives and records what did not match.
+    total = _standard_and_detail(tmp_path, ('P1', 'P2', 'P3', 'P4', 'P5'), 16, 4)
+    wb = workbench(tmp_path)
+    data = request(wb, start(wb, _detail_sources(), goal='从标准和明细发现对象'))
+
+    forward, = [link for link in data['catalog']['relationships']
+                if link['source_table'] == 'detail']
+    assert (forward['source_columns'], forward['target_table'],
+            forward['target_columns']) == (
+        ['城市等级', '职级', '费用类型'], 'standard', ['城市等级', '职级', '费用类型'])
+    assert forward['matched_rows'] == 16 and forward['checked_rows'] == total
+    assert forward['matched_distinct_keys'] == 16
+    assert forward['ambiguous'] is False
+    assert forward['coverage'] == {
+        'matched_rows': 16, 'total_rows': total, 'rate': 16 / total,
+        'unmatched_distinct': 4, 'unmatched_rows': 4,
+        'unmatched_values': [['一线', 'P9', '杂费'], ['一线', 'P10', '杂费'],
+                             ['一线', 'P11', '杂费'], ['一线', 'P12', '杂费']],
+    }
+    # The reverse direction (standard combos appearing in the detail) is also
+    # a partial-coverage candidate at the same rate.
+    reverse, = [link for link in data['catalog']['relationships']
+                if link['source_table'] == 'standard']
+    assert reverse['coverage']['rate'] == 16 / total
+
+    draft = invoke(wb, 'ontology_discovery_propose', {
+        'session_id': data['session_id'],
+        'expected_revision': data['expected_revision'],
+        'proposal': {
+            'source_revision': data['source_revision'],
+            'entities': [
+                {'table': 'standard', 'name': 'Standard', 'grain': '每档费用标准一行',
+                 'identity': ['城市等级', '职级', '费用类型']},
+                {'table': 'detail', 'name': 'Claim', 'grain': '每笔报销一行',
+                 'identity': ['报销单号']},
+            ],
+            'relationships': [{'evidence_id': forward['id'], 'name': 'followsStandard'}],
+        },
+    }).data
+    assert draft['state'] == 'pending' and draft['unresolved_tables'] == []
+
+
+def test_composite_link_still_requires_name_affine_columns(tmp_path):
+    # The detail values coincide with the standard combos, but no column name
+    # corresponds, so no relation is inferred.
+    combos = [(city, level, kind)
+              for city in ('一线', '二线')
+              for level in ('P1', 'P2', 'P3')
+              for kind in ('住宿', '交通')]
+    (tmp_path / 'standard.csv').write_text(
+        '甲,乙,丙\n' + ''.join(f'{a},{b},{c}\n' for a, b, c in combos), encoding='utf-8')
+    (tmp_path / 'detail.csv').write_text(
+        'x,y,z\n' + ''.join(f'{a},{b},{c}\n' for a, b, c in combos), encoding='utf-8')
+    wb = workbench(tmp_path)
+    data = request(wb, start(wb, _detail_sources(), goal='核对列名不亲和'))
+    assert data['catalog']['relationships'] == []
+
+
+def test_composite_link_below_row_rate_threshold_is_not_a_candidate(tmp_path):
+    # 16 of 40 detail rows cite a standard combo: the rate is 0.4, below the
+    # 0.5 threshold, so neither direction becomes a candidate.
+    _standard_and_detail(tmp_path, tuple(f'P{number}' for number in range(1, 11)), 16, 24)
+    wb = workbench(tmp_path)
+    data = request(wb, start(wb, _detail_sources(), goal='核对命中率阈值'))
+    assert data['catalog']['relationships'] == []
+
+
+def test_single_column_link_allows_partial_coverage(tmp_path):
+    # 6 of 8 order rows cite a customer the customer table carries; the
+    # repeats keep customer_no from being a key of the orders table itself.
+    codes = ['C-1', 'C-2', 'C-1', 'C-2', 'C-3', 'C-3', 'C-6', 'C-7']
+    write(tmp_path / 'orders.csv',
+          'order_no,customer_no\n'
+          + ''.join(f'SO-{number},{code}\n' for number, code in enumerate(codes, 1)))
+    write(tmp_path / 'customers.csv',
+          'customer_no,name\n'
+          + ''.join(f'C-{number},Name{number}\n' for number in range(1, 6)))
+    wb = workbench(tmp_path)
+    data = request(wb, start(wb, [
+        {'source_id': 'orders', 'kind': 'file', 'locator_ref': 'orders.csv'},
+        {'source_id': 'customers', 'kind': 'file', 'locator_ref': 'customers.csv'},
+    ], goal='核对单列部分覆盖'))
+    link, = data['catalog']['relationships']
+    assert (link['source_table'], link['source_columns'],
+            link['target_table'], link['target_columns']) == (
+        'orders', ['customer_no'], 'customers', ['customer_no'])
+    assert link['matched_rows'] == 6 and link['checked_rows'] == 8
+    assert link['matched_distinct_keys'] == 3
+    assert link['coverage'] == {
+        'matched_rows': 6, 'total_rows': 8, 'rate': 0.75,
+        'unmatched_distinct': 2, 'unmatched_rows': 2,
+        'unmatched_values': [['C-6'], ['C-7']],
+    }
 

@@ -1,4 +1,5 @@
 """Versioned ontology proposals for table-shaped sources with no predefined target."""
+import json
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -54,6 +55,20 @@ class DiscoveryReview(DiscoveryInput):
     decision: Literal['approve', 'reject']
 
 
+class ProposalRejected(ValueError):
+    """A rejection that tells the proposer what to do next.
+
+    The message pairs a Chinese explanation with the machine-readable ``hint``
+    (also serialized after 'hint: ' in the message, because the CLI and HTTP
+    surfaces carry a ValueError through str() alone).  The stable English
+    keyword in the message keeps existing callers searchable.
+    """
+
+    def __init__(self, keyword, message, hint):
+        super().__init__(f'{keyword}: {message}；hint: {json.dumps(hint, ensure_ascii=False)}')
+        self.hint = hint
+
+
 def is_discovery(session):
     return (session.extensions or {}).get(MODE_EXTENSION) == DISCOVERY_MODE
 
@@ -76,29 +91,65 @@ def _document_refs(catalog):
     return refs
 
 
+_MAX_HINT_REFS = 20
+
+
 def validate_proposal(proposal, catalog):
     tables = {table['name']: table for table in catalog['tables']}
     candidates = {candidate['id']: candidate for candidate in catalog['relationships']}
     refs = _document_refs(catalog)
     entities = {}
-    names = set()
+    names = {}
     for entity in proposal.entities:
         if entity.table not in tables:
-            raise ValueError(f'unknown table: {entity.table}')
-        if entity.table in entities or entity.name.casefold() in names:
-            raise ValueError('entity table and name must be unique')
+            raise ProposalRejected(
+                'unknown table',
+                f'未知的表 {entity.table}；目录中的可用表为 {sorted(tables)}',
+                {'table': entity.table, 'available_tables': sorted(tables)})
+        if entity.table in entities:
+            raise ProposalRejected(
+                'duplicate entity',
+                f'一张表对应一个概念：表 {entity.table} 已由实体 {entities[entity.table]["name"]} 使用，'
+                f'请把同一张表的属性合并进同一个实体',
+                {'table': entity.table, 'existing_entity': entities[entity.table]['name']})
+        if entity.name.casefold() in names:
+            raise ProposalRejected(
+                'duplicate entity name',
+                f'实体名必须唯一：{entity.name} 已由表 {names[entity.name.casefold()]} 的实体使用',
+                {'name': entity.name, 'used_by_table': names[entity.name.casefold()]})
         table = tables[entity.table]
         if entity.identity and entity.identity not in table['identity_keys']:
-            raise ValueError(f'identity must reference an observed key: {entity.table}')
+            raise ProposalRejected(
+                'observed key',
+                f'identity 必须引用观测到的键：表 {entity.table} 的可用 identity_keys 为 '
+                f'{table["identity_keys"]}；没有可靠标识时留空',
+                {'table': entity.table, 'identity_keys': table['identity_keys']})
         for column in entity.identity:
             if table['columns'][column].get('blank_rows', 0):
-                raise ValueError(f'identity must not use an empty key: {entity.table}')
+                raise ProposalRejected(
+                    'observed key',
+                    f'identity 不能使用有空值的列：表 {entity.table} 的列 {column} 存在空值，'
+                    f'可用 identity_keys 为 {table["identity_keys"]}',
+                    {'table': entity.table, 'column': column,
+                     'identity_keys': table['identity_keys']})
         for ref in entity.evidence_sections:
             if ref not in refs:
-                raise ValueError(f'unknown evidence section: {ref}')
+                available = sorted(refs)
+                listed = available[:_MAX_HINT_REFS]
+                suffix = f'（共 {len(available)} 个）' if len(available) > len(listed) else ''
+                raise ProposalRejected(
+                    'unknown evidence section',
+                    f'引用了不存在的章节或条款 {ref}；可用的 ref 为 {listed}{suffix}',
+                    {'table': entity.table, 'ref': ref, 'available_refs': listed})
         properties = [prop.column for prop in entity.properties]
-        if not set(properties) <= table['columns'].keys():
-            raise ValueError(f'unknown column in entity: {entity.table}')
+        unknown_columns = [column for column in properties if column not in table['columns']]
+        if unknown_columns:
+            raise ProposalRejected(
+                'unknown column',
+                f'实体引用了不存在的列 {unknown_columns}：表 {entity.table} 的可用列为 '
+                f'{sorted(table["columns"])}',
+                {'table': entity.table, 'unknown_columns': unknown_columns,
+                 'columns': sorted(table['columns'])})
         if len(properties) != len(set(properties)) or len(properties) != len({p.name.casefold() for p in entity.properties}):
             raise ValueError(f'property names and columns must be unique: {entity.table}')
         mapped = set(properties + entity.identity)
@@ -106,7 +157,7 @@ def validate_proposal(proposal, catalog):
             **entity.model_dump(mode='json'),
             'extension_columns': [column for column in table['columns'] if column not in mapped],
         }
-        names.add(entity.name.casefold())
+        names[entity.name.casefold()] = entity.table
 
     relationships = []
     seen = set()
@@ -270,6 +321,8 @@ class DiscoveryService:
             'instructions': (
                 '以来源表或表区为实体候选，解释每行粒度和业务含义。身份字段只用目录中的 identity_keys；'
                 '没有可靠标识时留空。属性引用本表列。只引用列出的关系证据 ID；'
+                '每条关系证据带 coverage（matched_rows、total_rows、rate、unmatched_values），'
+                '部分覆盖的候选是可选关系，按命中率判断是否引用。'
                 '需要引用章节或条款时用 documents 证据中的 section/clause ref 填 evidence_sections，'
                 '引用不存在的 ref 会被拒绝。'
                 '覆盖不足或同一来源字段存在多个候选时，保留未决或明确标出供用户核对。'

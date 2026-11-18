@@ -1,4 +1,5 @@
 """Discovery evidence for document sources: sections, clauses and tables."""
+import datetime
 import io
 import json
 import os
@@ -194,7 +195,11 @@ def test_document_sources_build_sections_clauses_and_table_evidence(tmp_path):
     assert standard['source_id'] == 'policy' and standard['kind'] == 'docx'
     assert standard['rows_observed'] == 6
     assert set(standard['columns']) == {'城市等级', '职级', '费用类型', '限额', '币种'}
-    assert standard['columns']['限额']['affinity'] == 'text'
+    # An all-integer text column is re-read as integer, without touching the
+    # original values.
+    assert standard['columns']['限额']['affinity'] == 'integer'
+    assert standard['columns']['限额']['type'] == 'integer'
+    assert standard['columns']['限额']['type_origin'] == 'observed_text'
     assert standard['columns']['限额']['samples'] == ['400', '200', '350']
     assert ['限额'] in standard['keys']
     assert ['城市等级', '职级', '费用类型'] in standard['identity_keys']
@@ -239,17 +244,31 @@ def test_document_sources_build_sections_clauses_and_table_evidence(tmp_path):
     ]
 
     # The detail links to the standard table through the three-column composite
-    # key; the department codes that coincidentally equal the limits do not.
+    # key.  Partial coverage also yields the reverse candidate: 4 of the 6
+    # standard rows appear in the detail.  The department codes that
+    # coincidentally equal the limits do not link.
     links = data['catalog']['relationships']
-    assert [(link['source_table'], link['source_columns'], link['target_table'],
-             link['target_columns']) for link in links] == [
-        ('明细', ['城市等级', '职级', '费用类型'], 'table:1',
-         ['城市等级', '职级', '费用类型'])]
-    link, = links
+    assert {(link['source_table'], tuple(link['source_columns']),
+             link['target_table'], tuple(link['target_columns'])) for link in links} == {
+        ('明细', ('城市等级', '职级', '费用类型'), 'table:1',
+         ('城市等级', '职级', '费用类型')),
+        ('table:1', ('城市等级', '职级', '费用类型'), '明细',
+         ('城市等级', '职级', '费用类型'))}
+    link, = [link for link in links if link['source_table'] == '明细']
     assert link['origin'] == 'sample_supported'
     assert link['ambiguous'] is False
     assert link['matched_rows'] == 4 and link['checked_rows'] == 4
     assert link['matched_distinct_keys'] == 4
+    assert link['coverage'] == {
+        'matched_rows': 4, 'total_rows': 4, 'rate': 1.0,
+        'unmatched_distinct': 0, 'unmatched_rows': 0, 'unmatched_values': []}
+    reverse, = [link for link in links if link['source_table'] == 'table:1']
+    assert reverse['matched_rows'] == 4 and reverse['checked_rows'] == 6
+    assert reverse['matched_distinct_keys'] == 4
+    assert reverse['coverage']['rate'] == 4 / 6
+    assert reverse['coverage']['unmatched_distinct'] == 2
+    assert reverse['coverage']['unmatched_rows'] == 2
+    assert reverse['coverage']['unmatched_values'] == [['二线', 'P2', '住宿'], ['二线', 'P2', '交通']]
     # The link replays to a contract cell anchor of its document endpoint.
     assert tables[link['target_table']]['anchor']['selector']['unit_ref'].startswith('table:1/')
 
@@ -275,7 +294,9 @@ def test_document_sources_build_sections_clauses_and_table_evidence(tmp_path):
     }).data
     assert draft['state'] == 'pending'
     assert draft['unresolved_tables'] == []
-    assert draft['unresolved_relationships'] == []
+    # The unselected reverse candidate stays an unresolved relationship.
+    assert [unresolved['source_table']
+            for unresolved in draft['unresolved_relationships']] == ['table:1']
     assert draft['entities'][0]['evidence_sections'] == ['section:policy:3', 'clause:policy:2']
 
 
@@ -294,7 +315,8 @@ def test_document_proposals_reject_unanchored_input(tmp_path, change, message):
     document_workspace(tmp_path)
     wb = workbench(tmp_path, allowed=document_allowed())
     data = request(wb, start(wb, document_sources()))
-    link, = data['catalog']['relationships']
+    link, = [link for link in data['catalog']['relationships']
+             if link['source_table'] == '明细']
     proposal = {
         'source_revision': data['source_revision'],
         'entities': [
@@ -342,17 +364,19 @@ def test_document_text_stays_hidden_under_an_explicit_policy_without_paragraph_t
         assert all(not table['columns'] for table in tables.values())
 
 
-def test_document_text_stays_hidden_without_a_disclosure_policy(tmp_path):
+def test_owner_mode_without_a_policy_discloses_samples_and_text(tmp_path):
     document_workspace(tmp_path)
     wb = workbench(tmp_path)
     data = request(wb, start(wb, document_sources()))
 
+    # Caliber A: no model-context policy means local owner mode, so the
+    # evidence carries samples, section titles and clause text.
     document, = data['catalog']['documents']
     title, = document['sections']
-    assert title['title'] is None
-    assert all(clause['text'] is None for clause in document['clauses'])
+    assert title['title'] == '差旅报销标准'
+    assert [clause['text'] for clause in document['clauses']][0].startswith('第一条')
     standard = {table['name']: table for table in data['catalog']['tables']}['table:1']
-    assert standard['columns']['限额']['samples'] == []
+    assert standard['columns']['限额']['samples'] == ['400', '200', '350']
     assert standard['columns']['限额']['distinct_values'] == 6
 
 
@@ -462,10 +486,10 @@ def test_pdf_sections_nest_across_pages_and_skip_non_headings():
     subsection, = chapter['sections']
     assert subsection['level'] == 2 and subsection['page'] == 2
     assert subsection['line_range'] == [5, 6]
-    # No title without a disclosure: structure and anchors only.
-    assert title['title'] is None and subsection['title'] is None
+    # Owner mode (no policy): the disclosed titles and clause text appear.
+    assert title['title'] == '差旅报销标准' and subsection['title'] == '第一节 适用范围'
     assert [clause['number'] for clause in document['clauses']] == ['1.']
-    assert document['clauses'][0]['text'] is None
+    assert document['clauses'][0]['text'] == '1. 覆盖全部流程。'
 
 
 def test_pdf_ordinary_short_prose_is_not_a_section():
@@ -613,3 +637,175 @@ def test_pdf_source_starts_discovery_intake_end_to_end(tmp_path):
     # The invoice is label:value lines with no heading, clause or table
     # structure, so no page is promoted to a section.
     assert documents[0]['sections'] == [] and documents[0]['clauses'] == []
+
+
+def test_owner_mode_document_text_is_truncated_like_a_table_sample(tmp_path):
+    clause = '第一条 ' + '本' * 200
+    document = (
+        '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+        '<w:body>'
+        + _paragraph('报销制度', 1)
+        + _paragraph(clause)
+        + '<w:sectPr/></w:body></w:document>')
+    (tmp_path / 'policy.docx').write_bytes(_docx_zip(document))
+    # No disclosure policy: local owner mode still truncates at 160.
+    wb = workbench(tmp_path)
+    data = request(wb, start(wb, [
+        {'source_id': 'policy', 'kind': 'file', 'locator_ref': 'policy.docx'},
+    ], goal='从制度文件发现对象'))
+    document, = data['catalog']['documents']
+    title, = document['sections']
+    assert title['title'] == '报销制度'
+    entry, = document['clauses']
+    assert entry['text'] == clause[:160]
+    assert len(entry['text']) == 160
+
+
+def test_docx_table_text_columns_infer_decimal_and_integer_types(tmp_path):
+    rows = [
+        ['单号', '金额', '数量'],
+        ['A-1', '500.00', '3'],
+        ['A-2', '1,260.50', '12'],
+        ['A-3', '0.50', '7'],
+    ]
+    table = ('<w:tbl><w:tblPr/><w:tblGrid>' + '<w:gridCol/>' * len(rows[0])
+             + '</w:tblGrid>' + ''.join(_table_row(row) for row in rows) + '</w:tbl>')
+    document = (
+        '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+        '<w:body>' + table + '<w:sectPr/></w:body></w:document>')
+    (tmp_path / 'amounts.docx').write_bytes(_docx_zip(document))
+    wb = workbench(tmp_path)
+    data = request(wb, start(wb, [
+        {'source_id': 'amounts', 'kind': 'file', 'locator_ref': 'amounts.docx'},
+    ], goal='从金额表发现对象'))
+    columns = data['catalog']['tables'][0]['columns']
+    # Decimal text ('500.00' / '1,260.50') and integer text are re-read as
+    # types; the original values stay untouched in the samples.
+    assert (columns['金额']['type'], columns['金额']['affinity'],
+            columns['金额']['type_origin']) == ('decimal', 'numeric', 'observed_text')
+    assert columns['金额']['samples'] == ['500.00', '1,260.50', '0.50']
+    assert (columns['数量']['type'], columns['数量']['affinity'],
+            columns['数量']['type_origin']) == ('integer', 'integer', 'observed_text')
+    assert columns['数量']['samples'] == ['3', '12', '7']
+    assert (columns['单号']['type'], columns['单号']['affinity'],
+            columns['单号']['type_origin']) == ('text', 'text', 'observed')
+
+
+def test_xlsx_date_cells_infer_date_and_datetime(tmp_path):
+    """A midnight xlsx date column is date; a column with a time part is datetime."""
+    serial = (datetime.date(2026, 11, 1) - datetime.date(1899, 12, 30)).days
+    rows = [
+        '<row r="1"><c r="A1" t="inlineStr"><is><t>日期</t></is></c>'
+        '<c r="B1" t="inlineStr"><is><t>时间</t></is></c></row>',
+        f'<row r="2"><c r="A2" s="1"><v>{serial}</v></c>'
+        f'<c r="B2" s="2"><v>{serial + 0.5}</v></c></row>',
+        f'<row r="3"><c r="A3" s="1"><v>{serial + 1}</v></c>'
+        f'<c r="B3" s="2"><v>{serial + 1.5}</v></c></row>',
+    ]
+    with zipfile.ZipFile(tmp_path / 'dates.xlsx', 'w', zipfile.ZIP_DEFLATED) as book:
+        book.writestr('[Content_Types].xml', (
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+            '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+            '<Default Extension="xml" ContentType="application/xml"/>'
+            '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+            '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+            '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
+            '</Types>'))
+        book.writestr('_rels/.rels', (
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
+            '</Relationships>'))
+        book.writestr('xl/workbook.xml', (
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"'
+            ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+            '<sheets><sheet name="明细" sheetId="1" r:id="rId1"/></sheets></workbook>'))
+        book.writestr('xl/_rels/workbook.xml.rels', (
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
+            '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
+            '</Relationships>'))
+        # Styles 1 and 2 are the built-in date and datetime number formats.
+        book.writestr('xl/styles.xml', (
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+            '<fonts count="1"><font><sz val="11"/><name val="Calibri"/></font></fonts>'
+            '<fills count="1"><fill><patternFill patternType="none"/></fill></fills>'
+            '<borders count="1"><border/></borders>'
+            '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
+            '<cellXfs count="3">'
+            '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'
+            '<xf numFmtId="14" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>'
+            '<xf numFmtId="22" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>'
+            '</cellXfs></styleSheet>'))
+        book.writestr('xl/worksheets/sheet1.xml', (
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+            f'<sheetData>{"".join(rows)}</sheetData></worksheet>'))
+    wb = workbench(tmp_path)
+    data = request(wb, start(wb, [
+        {'source_id': 'book', 'kind': 'file', 'locator_ref': 'dates.xlsx'},
+    ], goal='从日期表发现对象'))
+    columns = data['catalog']['tables'][0]['columns']
+    # The reader hands the cells over as ISO strings; every time part is
+    # midnight, so the column is date.
+    assert (columns['日期']['type'], columns['日期']['affinity'],
+            columns['日期']['type_origin']) == ('date', 'numeric', 'observed_text')
+    assert columns['日期']['samples'] == ['2026-11-01T00:00:00', '2026-11-02T00:00:00']
+    # A nonzero time part keeps the column datetime.
+    assert (columns['时间']['type'], columns['时间']['affinity'],
+            columns['时间']['type_origin']) == ('datetime', 'numeric', 'observed_text')
+    assert columns['时间']['samples'] == ['2026-11-01T12:00:00', '2026-11-02T12:00:00']
+
+
+def test_rejection_messages_carry_actionable_hints(tmp_path):
+    document_workspace(tmp_path)
+    wb = workbench(tmp_path, allowed=document_allowed())
+    data = request(wb, start(wb, document_sources()))
+    args = {'session_id': data['session_id'],
+            'expected_revision': data['expected_revision']}
+    identity_keys = [['限额'], ['城市等级', '职级', '费用类型']]
+
+    def propose(entities):
+        with pytest.raises(ValueError) as caught:
+            invoke(wb, 'ontology_discovery_propose', {
+                **args, 'proposal': {'source_revision': data['source_revision'],
+                                     'entities': entities}})
+        message = str(caught.value)
+        return message, json.loads(message.split('hint: ', 1)[1]), caught.value.hint
+
+    # An identity that is not an observed key lists the table's identity_keys.
+    message, hint, attribute = propose([{'table': 'table:1', 'name': 'Standard',
+                                        'grain': '每档一行', 'identity': ['限额', '币种']}])
+    assert 'identity_keys' in message and '一张表' not in message
+    assert hint == {'table': 'table:1', 'identity_keys': identity_keys}
+    assert attribute == hint
+
+    # One table proposed as two entities explains the one-concept rule.
+    message, hint, _ = propose([
+        {'table': 'table:1', 'name': 'Standard', 'grain': '每档一行',
+         'identity': ['城市等级', '职级', '费用类型']},
+        {'table': 'table:1', 'name': 'OtherStandard', 'grain': '每档一行'},
+    ])
+    assert '一张表对应一个概念' in message and 'Standard' in message
+    assert hint == {'table': 'table:1', 'existing_entity': 'Standard'}
+
+    # An unknown column lists the table's available columns.
+    message, hint, _ = propose([{'table': 'table:1', 'name': 'Standard', 'grain': '每档一行',
+                                 'identity': ['城市等级', '职级', '费用类型'],
+                                 'properties': [{'column': '不存在的列', 'name': 'x'}]}])
+    assert '不存在的列' in message and '可用列' in message
+    assert hint['columns'] == sorted(['城市等级', '职级', '费用类型', '限额', '币种'])
+    assert hint['unknown_columns'] == ['不存在的列']
+
+    # An unknown section ref lists the refs the evidence carries.
+    message, hint, _ = propose([{'table': 'table:1', 'name': 'Standard', 'grain': '每档一行',
+                                 'identity': ['城市等级', '职级', '费用类型'],
+                                 'evidence_sections': ['section:policy:9']}])
+    assert 'section:policy:9' in message and 'section:policy:1' in message
+    assert hint['available_refs'] == [
+        'clause:policy:1', 'clause:policy:2', 'clause:policy:3',
+        'section:policy:1', 'section:policy:2', 'section:policy:3', 'section:policy:4']
