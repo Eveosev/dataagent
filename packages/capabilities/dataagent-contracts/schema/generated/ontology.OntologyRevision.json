@@ -1,6 +1,52 @@
 {
   "$comment": "generated from dataagent_contracts.ontology:OntologyRevision; do not edit",
   "$defs": {
+    "ConceptDefinition": {
+      "additionalProperties": false,
+      "description": "One concept of a domain ontology: its entities, attributes and identity.",
+      "properties": {
+        "entity_type": {
+          "title": "Entity Type",
+          "type": "string"
+        },
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "identity_fields": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Identity Fields",
+          "type": "array"
+        },
+        "properties": {
+          "additionalProperties": {
+            "$ref": "#/$defs/PropertyDefinition"
+          },
+          "title": "Properties",
+          "type": "object"
+        }
+      },
+      "required": [
+        "entity_type",
+        "properties",
+        "identity_fields"
+      ],
+      "title": "ConceptDefinition",
+      "type": "object"
+    },
     "PropertyDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -47,12 +93,64 @@
       ],
       "title": "PropertyDefinition",
       "type": "object"
+    },
+    "RelationDefinition": {
+      "additionalProperties": false,
+      "description": "A directed relation between two concepts with ordered role names.",
+      "properties": {
+        "extensions": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+          "title": "Extensions"
+        },
+        "object_concept": {
+          "default": "",
+          "title": "Object Concept",
+          "type": "string"
+        },
+        "roles": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2,
+          "title": "Roles",
+          "type": "array"
+        },
+        "subject_concept": {
+          "default": "",
+          "title": "Subject Concept",
+          "type": "string"
+        }
+      },
+      "required": [
+        "roles"
+      ],
+      "title": "RelationDefinition",
+      "type": "object"
     }
   },
   "$id": "dataagent-contracts/0.1/ontology/OntologyRevision",
   "additionalProperties": false,
+  "description": "A versioned domain ontology: one or more concepts plus relations.\n\nA definition carries either ``concepts`` (concept name → definition) or\nthe legacy single-concept fields ``entity_type`` / ``properties`` /\n``identity_fields``; the legacy shape names its only concept after the\nentity type and serializes exactly as before, so stored revisions keep\ntheir bytes.  Relation values may stay bare ordered role lists (legacy);\na multi-concept definition must give every relation explicit endpoint\nconcepts and direction (subject → object).",
   "properties": {
+    "concepts": {
+      "additionalProperties": {
+        "$ref": "#/$defs/ConceptDefinition"
+      },
+      "title": "Concepts",
+      "type": "object"
+    },
     "entity_type": {
+      "default": "",
       "title": "Entity Type",
       "type": "string"
     },
@@ -78,7 +176,6 @@
       "items": {
         "type": "string"
       },
-      "minItems": 1,
       "title": "Identity Fields",
       "type": "array"
     },
@@ -91,10 +188,17 @@
     },
     "relations": {
       "additionalProperties": {
-        "items": {
-          "type": "string"
-        },
-        "type": "array"
+        "anyOf": [
+          {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          {
+            "$ref": "#/$defs/RelationDefinition"
+          }
+        ]
       },
       "title": "Relations",
       "type": "object"
@@ -106,10 +210,7 @@
   },
   "required": [
     "id",
-    "revision",
-    "entity_type",
-    "properties",
-    "identity_fields"
+    "revision"
   ],
   "title": "OntologyRevision",
   "type": "object"

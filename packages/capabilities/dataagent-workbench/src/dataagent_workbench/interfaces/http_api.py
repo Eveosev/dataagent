@@ -11,14 +11,14 @@ from urllib.parse import unquote, urlencode
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse,FileResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel,ConfigDict,StrictBool
+from pydantic import BaseModel,ConfigDict,StrictBool,ValidationError
 from dataagent_contracts.intake import SourceSelection, WorkSpec
 from dataagent_contracts.ontology import MappingSpec,ReviewDecision
 from dataagent_ontology.corrections import revalidate_corrections
 from dataagent_runtime.ports.workbench_store import VersionConflict,Write
 from pydantic_core import to_jsonable_python
 from ..ontology_discovery import DiscoveryReview
-from ..tool_schema import Dispose
+from ..tool_schema import Dispose,StartTarget
 from ..view_service import ViewService
 
 
@@ -144,9 +144,18 @@ def create_app(wb):
     @app.post('/api/sessions')
     async def start(request: Request):
         data = await request.json()
+        # The mapping target goes through the same tool input contract as
+        # intake_start, so a malformed target is a 422, not a server error.
+        target = data.get('target')
+        if target is not None:
+            try:
+                target = StartTarget.model_validate(target).model_dump(mode='json')
+            except ValidationError as exc:
+                raise ValueError(str(exc)) from exc
         goal = WorkSpec(id='goal',goal=data['goal'],acceptance_criteria=data.get('acceptance_criteria',['来源可核对']),
             authorization_ref=wb.authorization,domain_config_ref=data.get('domain_config_ref'))
-        return wb.sessions.start([SourceSelection.model_validate(s) for s in data['sources']],goal,wb.ctx,mode=data.get('mode','mapping'))
+        return wb.sessions.start([SourceSelection.model_validate(s) for s in data['sources']],goal,wb.ctx,
+            mode=data.get('mode','mapping'),target=target)
 
     @app.get('/api/sessions/{sid}')
     def status(sid: str):
@@ -269,7 +278,8 @@ def create_app(wb):
         corrections=list(body.get('corrections') or [])
         targeted=[c for c in corrections if c.get('entity_id')==entity_id and c.get('property')==prop]
         if not targeted:raise ValueError('no retained correction for this property')
-        if prop in wb.definition.identity_fields:
+        _, _, concept = wb.intake._target(s)
+        if prop in concept.identity_fields:
             raise ValueError('identity corrections require an explicit mapping change')
         value=views.mapping_value(sid,entity_id,prop,wb.ctx)
         if value is None:raise ValueError('the current mapping has no value for this property')
@@ -286,7 +296,7 @@ def create_app(wb):
         # replaced, then let revalidation rebuild exactly one fact per latest
         # decision.  Old 1250 facts would otherwise survive next to 126000.
         body['facts']=[f for f in body.get('facts',[]) if not (
-            f.get('relation') in wb.definition.properties and any(
+            f.get('relation') in concept.properties and any(
                 (r.get('value'),f.get('relation')) in replaced
                 for r in f.get('role_bindings',[]) if r.get('role')=='subject'))]
         old_ids={str(c.get('decision_ref') or '').rsplit('@',1)[0] for c in corrections}
@@ -300,7 +310,7 @@ def create_app(wb):
         target.setdefault('values',{})[prop]=json_value
         target['unresolved']=[p for p in target.get('unresolved',[]) if p!=prop]
         body['corrections']=list(latest.values())
-        body=revalidate_corrections(body,wb.definition,wb.scope)
+        body=revalidate_corrections(body,wb.intake._target(s)[0],wb.scope)
         next_revision=str(int(preview_revision)+1)
         body['revision']=next_revision
         body['last_decision_ref']=decision_id+'@1'

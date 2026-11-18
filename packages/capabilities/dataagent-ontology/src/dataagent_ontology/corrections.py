@@ -9,20 +9,21 @@ from .facts import relation_key
 def revalidate_corrections(body,ontology,scope):
     mapping=body['mapping'];corrections=body.get('corrections',[])
     if not corrections:raise ValueError('no instance correction to revalidate')
+    _,concept=ontology.resolve_concept(mapping.get('concept','') if isinstance(mapping,dict) else '')
     touched={(c['entity_id'],c['property']) for c in corrections}
     # Original extraction assertions stay in the archive; only selected facts are replaced.
-    selected=[f for f in body['facts'] if not (f['relation'] in ontology.properties and
+    selected=[f for f in body['facts'] if not (f['relation'] in concept.properties and
         any((r['value'],f['relation']) in touched for r in f['role_bindings'] if r['role']=='subject'))]
     for correction in corrections:
         target=next((i for i in body['instances'] if i['id']==correction['entity_id']),None)
         if target is None:raise ValueError('correction entity no longer exists')
-        prop=correction['property'];value=_typed(correction['value'],ontology.properties[prop].value_type)
+        prop=correction['property'];value=_typed(correction['value'],concept.properties[prop].value_type)
         if value is None:raise ValueError('null corrections require an explicit unresolved decision')
         evidence=SourceAnchor(source_ref=correction['decision_ref'].rsplit('@',1)[0],source_revision='1',
             selector={'kind':'json_pointer','pointer':'/decision/changes/value'})
         eid=target['id']
         roles=[RoleBinding(role='subject',value=eid,value_type='reference'),
-               RoleBinding(role='value',value=value,value_type=ontology.properties[prop].value_type)]
+               RoleBinding(role='value',value=value,value_type=concept.properties[prop].value_type)]
         relations=[(prop,roles)]
         binding=mapping['bindings'].get(prop)
         for fact in list(selected):
@@ -47,13 +48,13 @@ def revalidate_corrections(body,ontology,scope):
     resolvable={'ontology.conflicting_values','ontology.required_value_missing','ontology.conversion_failed'}
     body['issues']=[i for i in body['issues'] if not (i['code'] in resolvable and i.get('target') in corrected_props)]
     for instance in body['instances']:
-        for name,definition in ontology.properties.items():
+        for name,definition in concept.properties.items():
             value=instance['values'].get(name)
             if definition.required and value is None:raise ValueError('required property remains unresolved')
             if value is not None:_typed(value,definition.value_type)
-        keys=[(k,_typed(instance['values'].get(k),ontology.properties[k].value_type)) for k in ontology.identity_fields]
+        keys=[(k,_typed(instance['values'].get(k),concept.properties[k].value_type)) for k in concept.identity_fields]
         if any(v is None or v=='' for _,v in keys):raise ValueError('identity remains unresolved')
-        new_id=entity_key(scope,ontology.entity_type,mapping['identity_strategy'],keys)
+        new_id=entity_key(scope,concept.entity_type,mapping['identity_strategy'],keys)
         old_id=instance['id']
         if new_id!=old_id:
             # Rebase candidate references; original source assertions remain available separately.

@@ -1,0 +1,45 @@
+{
+  "$comment": "generated from dataagent_contracts.ontology:RelationDefinition; do not edit",
+  "$id": "dataagent-contracts/0.1/ontology/RelationDefinition",
+  "additionalProperties": false,
+  "description": "A directed relation between two concepts with ordered role names.",
+  "properties": {
+    "extensions": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Namespaced vendor extensions. Core logic never interprets this map; unknown top-level fields are still rejected.",
+      "title": "Extensions"
+    },
+    "object_concept": {
+      "default": "",
+      "title": "Object Concept",
+      "type": "string"
+    },
+    "roles": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 2,
+      "title": "Roles",
+      "type": "array"
+    },
+    "subject_concept": {
+      "default": "",
+      "title": "Subject Concept",
+      "type": "string"
+    }
+  },
+  "required": [
+    "roles"
+  ],
+  "title": "RelationDefinition",
+  "type": "object"
+}

@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import date,datetime
 from decimal import Decimal,localcontext
 from zoneinfo import ZoneInfo
-from dataagent_contracts.ontology import Assertion,EntityInstance,RelationFact,RoleBinding,FieldBinding
+from dataagent_contracts.ontology import Assertion,EntityInstance,RelationFact,RoleBinding,FieldBinding,RelationDefinition
 from .identity import canonical,digest,entity_key
 from .facts import relation_key
 
@@ -74,9 +74,15 @@ def _typed(value,kind):
 def _validate_mapping(ontology, mapping, scope):
     if mapping.ontology_revision!=f'{ontology.id}@{ontology.revision}':raise ValueError('ontology revision mismatch')
     if mapping.scope not in {'workspace',scope}:raise ValueError('mapping scope mismatch')
-    unknown=set(mapping.bindings)-ontology.properties.keys()
+    concept_name,concept=ontology.resolve_concept(mapping.concept)
+    unknown=set(mapping.bindings)-concept.properties.keys()
     if unknown:raise ValueError('unknown ontology properties: '+','.join(sorted(unknown)))
     if set(mapping.relation_bindings)-ontology.relations.keys():raise ValueError('unknown ontology relation')
+    for relation in mapping.relation_bindings:
+        definition=ontology.relations[relation]
+        if isinstance(definition,RelationDefinition) and definition.subject_concept!=concept_name:
+            raise ValueError('relation subject must be the mapped concept')
+    return concept_name,concept
 
 
 def _disposition_index(dispositions):
@@ -131,15 +137,15 @@ def _incomplete_source(source, partitions):
 
 
 def materialize(ontology,mapping,observations,*,scope,source_mappings=None,dispositions=None):
-    _validate_mapping(ontology, mapping, scope)
-    required={k for k,v in ontology.properties.items() if v.required}
+    concept_name,concept=_validate_mapping(ontology, mapping, scope)
     disposed=_disposition_index(dispositions)
     issues=[]
     instances,assertions,facts={},[],{}
     for source in observations:
         if source_mappings is not None:
             mapping = source_mappings[source.source_id]
-            _validate_mapping(ontology, mapping, scope)
+            concept_name,concept=_validate_mapping(ontology, mapping, scope)
+        required={k for k,v in concept.properties.items() if v.required}
         source_disposition=disposed.get(source.source_id,{})
         excluded_rows=source_disposition.get('excluded_rows',set())
         not_applicable=source_disposition.get('partitions',set())
@@ -157,7 +163,7 @@ def materialize(ontology,mapping,observations,*,scope,source_mappings=None,dispo
             values,field_anchors,row_issues={},{},[]
             for target,binding in mapping.bindings.items():
                 try:
-                    value=_typed(convert(binding,row),ontology.properties[target].value_type)
+                    value=_typed(convert(binding,row),concept.properties[target].value_type)
                     if value is not None:values[target]=value
                     fields=binding.options.get('fields',[binding.source_field])
                     field_anchors[target]=[a for f in fields for a in source.anchors.get(f'{rownum}.{f}',[])]
@@ -168,10 +174,10 @@ def materialize(ontology,mapping,observations,*,scope,source_mappings=None,dispo
             missing=sorted(required-values.keys())
             row_issues.extend({'code':'ontology.required_value_missing','target':target,'row':rownum}
                               for target in missing)
-            keys=[(k,values.get(k)) for k in ontology.identity_fields]
+            keys=[(k,values.get(k)) for k in concept.identity_fields]
             unresolved_keys=any(v is None or v=='' for _,v in keys)
             eid=('candidate:'+digest([scope,source.source_id,source.source_revision,rownum]) if unresolved_keys
-                else entity_key(scope,ontology.entity_type,mapping.identity_strategy,keys))
+                else entity_key(scope,concept.entity_type,mapping.identity_strategy,keys))
             for issue in row_issues:
                 issue['entity_id']=eid
                 issue['source_id']=source.source_id
@@ -182,7 +188,7 @@ def materialize(ontology,mapping,observations,*,scope,source_mappings=None,dispo
             extras={k:row.get(k) for k,disposition in mapping.unmapped.items() if disposition=='extension' and k in row}
             instance=instances.get(eid)
             if instance is None:
-                instance=EntityInstance(id=eid,scope=scope,entity_type=ontology.entity_type,values=values.copy(),source_anchors=field_anchors,
+                instance=EntityInstance(id=eid,scope=scope,entity_type=concept.entity_type,values=values.copy(),source_anchors=field_anchors,
                     unresolved=missing,extensions={'source.unmapped':extras} if extras and source_mappings is None else None)
                 instances[eid]=instance
             else:
@@ -216,9 +222,9 @@ def materialize(ontology,mapping,observations,*,scope,source_mappings=None,dispo
                 if aid not in facts[fid].assertion_refs:facts[fid].assertion_refs.append(aid)
             for target,value in values.items():
                 assertion(target,[RoleBinding(role='subject',value=eid,value_type='reference'),
-                    RoleBinding(role='value',value=value,value_type=ontology.properties[target].value_type)],field_anchors[target])
+                    RoleBinding(role='value',value=value,value_type=concept.properties[target].value_type)],field_anchors[target])
             for relation,bindings in mapping.relation_bindings.items():
-                order=ontology.relations[relation]
+                order=ontology.relation_roles(relation)
                 if set(bindings)!=set(order):raise ValueError('relation role mismatch')
                 roles,evidence=[],[]
                 try:

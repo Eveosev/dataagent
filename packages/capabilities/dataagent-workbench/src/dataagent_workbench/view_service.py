@@ -60,18 +60,19 @@ class ViewService:
         if not profiles:
             return {}
         try:
+            ontology, _, _ = self.wb.intake._target(session)
             primary = MappingSpec.model_validate(mapping)
             extensions = body.get('extensions') or {}
             source_mappings = extensions.get('intake.source_mappings')
             dispositions = extensions.get('intake.dispositions')
             if source_mappings:
                 result = materialize(
-                    self.wb.definition, primary, profiles, scope=self.wb.scope,
+                    ontology, primary, profiles, scope=self.wb.scope,
                     source_mappings={key: MappingSpec.model_validate(value)
                                      for key, value in source_mappings.items()},
                     dispositions=dispositions)
             else:
-                result = materialize(self.wb.definition, primary, profiles,
+                result = materialize(ontology, primary, profiles,
                                      scope=self.wb.scope, dispositions=dispositions)
         except (KeyError, TypeError, ValueError):
             # A projection must never break the page; without a comparable
@@ -140,9 +141,10 @@ class ViewService:
         if not instances:
             return []
         current = body.get('mapping') or {}
+        _, _, concept = self.wb.intake._target(session)
         views = []
         for (entity_id, prop), correction in latest.items():
-            definition = self.wb.definition.properties.get(prop)
+            definition = concept.properties.get(prop)
             instance = instances.get(entity_id)
             if definition is None or instance is None:
                 continue
@@ -177,7 +179,7 @@ class ViewService:
         """Value the current mapping computes for one object property."""
         s = self.wb.sessions.get(session_id, ctx)
         body = self._preview(s)
-        if prop not in self.wb.definition.properties:
+        if prop not in self.wb.intake._target(s)[2].properties:
             raise ValueError('unknown target property')
         instance = self._mapping_instances(s, body).get(entity_id)
         if instance is None:
@@ -211,8 +213,10 @@ class ViewService:
         inheritance = body.get('inheritance') if body else None
         if body and inheritance is None:
             inheritance = wb.intake.inheritance_hint(s, body)
-        return {'session': s.model_dump(mode='json'), 'ontology': wb.definition.model_dump(mode='json'),
-                'ontology_revision': f'{wb.definition.id}@{wb.definition.revision}',
+        ontology, concept_name, _ = wb.intake._target(s)
+        return {'session': s.model_dump(mode='json'), 'ontology': ontology.model_dump(mode='json'),
+                'ontology_revision': f'{ontology.id}@{ontology.revision}',
+                'ontology_concept': concept_name,
                 'ontology_draft': body.get('ontology_draft') if body else None,
                 'sources': sources, 'objects': objects,
                 'corrections': (body or {}).get('corrections', []),
