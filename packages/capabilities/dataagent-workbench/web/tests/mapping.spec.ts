@@ -11,6 +11,9 @@ test('文件探查、映射试算、刷新恢复和保存',async({page})=>{
  await page.getByLabel('金额 转换方式').selectOption('minor_to_major');
  await page.getByRole('button',{name:'生成映射预览'}).click();
  await expect(page.getByTestId('preview-amount')).toHaveText('1260');
+ // 对象预览属性名与字段详情用统一中文标签（W1 补审），不显示裸属性名或英文「Ontology 值」。
+ await expect(page.locator('.object-values dt')).toHaveText(['单据编号','金额','币种','开票方']);
+ await expect(page.getByText('本体值')).toBeVisible();
  await page.screenshot({path:process.env.DATAAGENT_SCREENSHOT || 'test-results/mapping-live.png',fullPage:true});
  await page.reload();
  await expect(page.getByTestId('preview-amount')).toHaveText('1260');

@@ -155,8 +155,10 @@ export function humanDetail(raw:unknown):HumanDetail{
    return {summary:rest?`${summary}：${rest}`:summary};
   }
  }
- // 中文原文按原文进主文案；未识别的英文原文只进折叠详情。
- if(/[\u4e00-\u9fff]/.test(text))return {summary:text};
+ // 中文原文按原文进主文案；未识别的英文或混合原文只进折叠详情。判定不数
+ // 字符多少：只要含拉丁字母就整段进详情——夹着 NaN 之类短英文片段的中文
+ // 原文同样不算「映射后的中文」，不能凭中文占多数直通主文案。
+ if(!/[A-Za-z]/.test(text)&&/[\u4e00-\u9fff]/.test(text))return {summary:text};
  return {summary:'',detail:text};
 }
 // 探查缺口（FDE-10）：分区级缺口用中文直说，不显示内部代码。
