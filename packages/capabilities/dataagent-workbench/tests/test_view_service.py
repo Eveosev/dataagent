@@ -53,7 +53,7 @@ def test_three_modification_scopes_from_object_page(tmp_path):
     assert drafted['ontology_revision']=='procurement@1'
     assert 'issuer_type' not in drafted['ontology']['properties']
     assert wb.store.current('ontology','procurement',scope=wb.scope)['revision']=='1'
-    # 映射修订：新 MappingSpec 修订重跑同类输入。
+    # 映射修订：新 MappingSpec 修订重跑同类输入；网页纠正随新预览保留。
     s=wb.sessions.get(s.id,wb.ctx)
     from dataagent_contracts.ontology import FieldBinding
     revised=proposal(s,wb).model_copy(update={'bindings':{**proposal(s,wb).bindings,
@@ -61,7 +61,8 @@ def test_three_modification_scopes_from_object_page(tmp_path):
     wb.intake.submit_proposal(s.id,revised,s.revision,wb.ctx)
     remapped=page(wb,s.id)
     assert remapped['mapping_revision'].endswith('@2')
-    assert remapped['objects'][0]['values']['amount']=='126000'
+    assert remapped['objects'][0]['values']['amount']=='1250'
+    assert [correction['property'] for correction in remapped['corrections']]==['amount']
 
 
 def test_concurrent_chat_and_page_changes_reject_stale_decision_and_keep_draft(tmp_path):

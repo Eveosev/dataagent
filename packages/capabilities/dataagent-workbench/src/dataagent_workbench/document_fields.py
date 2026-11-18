@@ -1,9 +1,15 @@
-"""Derive document fields from exact text spans in an observed source."""
+"""Derive document fields from exact text spans in an observed source.
+
+A PDF is one business document even when its facts sit on different pages: a
+field may be associated with a row observed on another page, and the anchor
+keeps the page it was read from.  The source structure fingerprint stays the
+fingerprint of the source itself, so a mapping saved after text extraction is
+still reusable for the next intake of the same structure.
+"""
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from dataagent_contracts.core.refs import SourceAnchor
-from dataagent_ontology.identity import digest
 
 
 class DocumentField(BaseModel):
@@ -16,7 +22,49 @@ class DocumentField(BaseModel):
     char_start: int | None = Field(default=None, ge=0)
 
 
-def extract_fields(profile, fields, allowed_fields):
+def _span(field, pages):
+    """Resolve the exact observed span, independent of the row's own page."""
+    if field.page not in pages:
+        raise ValueError('selected page was not observed in this document')
+    text = pages[field.page]
+    start = field.char_start
+    if start is None:
+        start = text.find(field.quote)
+        if start < 0 or text.find(field.quote, start + 1) >= 0:
+            raise ValueError('quote must occur exactly once or specify char_start')
+    end = start + len(field.quote)
+    if text[start:end] != field.quote:
+        raise ValueError('quote does not match observed text')
+    return start, end
+
+
+def _same_span(anchor, page, start, end):
+    selector = anchor.selector
+    return (getattr(selector, 'page', None) == page
+            and getattr(selector, 'char_start', None) == start
+            and getattr(selector, 'char_end', None) == end)
+
+
+def _drop_moved_rows(updated, moved):
+    """Remove rows whose only fields were moved to another row, then renumber."""
+    drop = {row for row in moved
+            if not any(value not in (None, '') for value in updated.records[row].values())}
+    if not drop:
+        return {}
+    keep = [index for index in range(len(updated.records)) if index not in drop]
+    renumber = {old: new for new, old in enumerate(keep)}
+    anchors = {}
+    for key, value in updated.anchors.items():
+        row, name = key.split('.', 1)
+        old = int(row)
+        if old in renumber:
+            anchors[f'{renumber[old]}.{name}'] = value
+    updated.records = [updated.records[index] for index in keep]
+    updated.anchors = anchors
+    return renumber
+
+
+def extract_fields(profile, fields, allowed_fields, *, remember=False):
     if profile.kind != 'pdf':
         raise ValueError('exact text extraction requires a PDF observation')
     if allowed_fields is not None and (
@@ -27,40 +75,87 @@ def extract_fields(profile, fields, allowed_fields):
     pages = {page['page']: page['text'] for page in profile.metadata.get('pages', [])}
     updated = profile.model_copy(deep=True)
     original_fields = set(profile.fields)
+    resolved = []
     for field in fields:
-        if field.row >= len(updated.records) or field.name in original_fields:
+        if field.row >= len(updated.records):
             raise ValueError('choose an observed row and a new field name')
-        row = updated.records[field.row]
-        if field.name in row:
+        if field.name in updated.records[field.row]:
             raise ValueError('duplicate derived field')
-        same_page = any(
-            getattr(anchor.selector, 'page', None) == field.page
-            for key, anchors in profile.anchors.items()
-            if key.startswith(f'{field.row}.')
-            for anchor in anchors
-        )
-        if not same_page or field.page not in pages:
-            raise ValueError('selected page does not belong to the observed row')
+        if any(item['row'] == field.row and item['name'] == field.name for item in resolved):
+            raise ValueError('duplicate derived field')
+        start, end = _span(field, pages)
+        # An existing field name may be associated with another row of the same
+        # document when that row holds exactly the observed span.  The field is
+        # moved, so a page of the same document no longer stays an orphan row.
+        moving = [row for row in range(len(profile.records)) if row != field.row
+                  and profile.records[row].get(field.name) == field.quote
+                  and any(_same_span(anchor, field.page, start, end)
+                          for anchor in profile.anchors.get(f'{row}.{field.name}', []))]
+        if field.name in original_fields and not moving:
+            raise ValueError('choose an observed row and a new field name')
+        resolved.append({'row': field.row, 'name': field.name, 'page': field.page,
+                         'quote': field.quote, 'start': start, 'end': end,
+                         'moving': moving})
 
-        text = pages[field.page]
-        start = field.char_start
-        if start is None:
-            start = text.find(field.quote)
-            if start < 0 or text.find(field.quote, start + 1) >= 0:
-                raise ValueError('quote must occur exactly once or specify char_start')
-        end = start + len(field.quote)
-        if text[start:end] != field.quote:
-            raise ValueError('quote does not match observed text')
-
-        row[field.name] = text[start:end]
-        if field.name not in updated.fields:
-            updated.fields.append(field.name)
-        updated.anchors[f'{field.row}.{field.name}'] = [SourceAnchor(
+    moved = set()
+    for item in resolved:
+        row = updated.records[item['row']]
+        row[item['name']] = item['quote']
+        if item['name'] not in updated.fields:
+            updated.fields.append(item['name'])
+        updated.anchors[f'{item["row"]}.{item["name"]}'] = [SourceAnchor(
             source_ref=profile.source_id, source_revision=profile.source_revision,
-            selector={'kind': 'pdf_text_span', 'page': field.page,
-                      'char_start': start, 'char_end': end},
+            selector={'kind': 'pdf_text_span', 'page': item['page'],
+                      'char_start': item['start'], 'char_end': item['end']},
         )]
-    updated.metadata['structure_fingerprint'] = digest([
-        profile.metadata['structure_fingerprint'], 'document-fields', sorted(updated.fields),
-    ])
+        moved.update(item['moving'])
+
+    # Remove only fields that existed before this batch; a row may be a move
+    # source for one field and the target for another in the same call.
+    for source_row in moved:
+        record = updated.records[source_row]
+        for name in list(record):
+            if name not in profile.records[source_row]:
+                continue
+            anchors = profile.anchors.get(f'{source_row}.{name}', [])
+            if any(_same_span(anchor, item['page'], item['start'], item['end'])
+                   for item in resolved for anchor in anchors):
+                record.pop(name, None)
+                updated.anchors.pop(f'{source_row}.{name}', None)
+
+    renumber = _drop_moved_rows(updated, moved)
+
+    if remember:
+        recorded = []
+        for spec in updated.metadata.get('derived_fields') or []:
+            row = spec.get('row')
+            if isinstance(row, int) and renumber and row not in renumber:
+                continue
+            recorded.append({**spec, 'row': renumber.get(row, row)
+                             if isinstance(row, int) else row})
+        for item in resolved:
+            recorded.append({'row': renumber.get(item['row'], item['row']),
+                             'name': item['name'], 'page': item['page'],
+                             'quote': item['quote'], 'char_start': item['start']})
+        updated.metadata['derived_fields'] = recorded
     return updated
+
+
+def replay_fields(profile, specs):
+    """Re-apply recorded extractions to a fresh probe of the same structure."""
+    fields = []
+    for spec in specs or []:
+        try:
+            fields.append(DocumentField(row=int(spec['row']), name=str(spec['name']),
+                                        page=int(spec['page']), quote=str(spec['quote']),
+                                        char_start=spec.get('char_start')))
+        except (KeyError, TypeError, ValueError):
+            return profile
+    if not fields:
+        return profile
+    try:
+        return extract_fields(profile, fields, None, remember=True)
+    except (ValueError, PermissionError):
+        # A changed page or quote must not turn automatic reuse into a crash;
+        # the preview will still report the missing values explicitly.
+        return profile
