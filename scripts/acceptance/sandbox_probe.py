@@ -367,10 +367,12 @@ def args_text(call: dict) -> str:
 
 
 def is_denied(call: dict) -> bool:
-    if call["status"] == "failed":
-        return True
-    result = call.get("result") or ""
-    return any(marker in result.lower() for marker in DENIED_MARKERS)
+    """True only for a policy/approval denial, not for an arbitrary tool failure."""
+
+    if call["status"] != "failed":
+        return False
+    result = (call.get("result") or "").lower()
+    return any(marker in result for marker in DENIED_MARKERS)
 
 
 def has_approval_prompt(call: dict, approvals: dict[str, str]) -> bool:
@@ -400,8 +402,14 @@ def check_protected(
     if sentinel in all_stream_text:
         raise ProbeError(f"{name}: sentinel content appeared in the NDJSON stream")
     denied = is_denied(call)
-    if not denied and call["status"] == "completed" and sentinel in (call.get("result") or ""):
-        raise ProbeError(f"{name}: read call returned the sentinel content")
+    if not denied:
+        if call["status"] == "completed" and sentinel not in (call.get("result") or ""):
+            pass  # The read path did not produce the protected content.
+        else:
+            raise ProbeError(
+                f"{name}: read call failed without a policy denial: "
+                f"{call['status']}: {(call.get('result') or '')[:300]}"
+            )
     return {
         "name": call["name"],
         "args": args_text(call),

@@ -103,32 +103,15 @@ def default_secrets_dir() -> Path:
 
 
 def secrets_dir(data_root: str | Path | None = None) -> Path:
-    """Return the default external directory, or the legacy workspace one.
+    """Return the default directory for new ``file:`` secrets.
 
-    ``secrets_dir()`` is the location for new ``file:`` secrets. Passing
-    ``data_root`` keeps the historical ``<data_root>/secrets`` meaning for
-    callers that manage an explicit workspace; that path is read for
-    compatibility and warns on resolution.
+    ``data_root`` is accepted for source compatibility only. New secrets are
+    always stored outside the workspace; the legacy ``<data_root>/secrets``
+    location is available explicitly through :func:`workspace_secrets_dir` and
+    is still read for compatibility (with a warning).
     """
 
-    if data_root is None:
-        return default_secrets_dir()
-    return workspace_secrets_dir(data_root)
-
-
-def _is_workspace_data_root(data_root: str | Path) -> bool:
-    """True when ``data_root`` is the .dataagent of an actual Mint project.
-
-    A bare ``.dataagent`` in a temporary directory is treated as an explicit
-    custom root, not as a workspace: that keeps the historical behaviour for
-    tests and for CLI users who pass an arbitrary data root.
-    """
-
-    root = Path(data_root)
-    if root.name != ".dataagent":
-        return False
-    parent = root.parent
-    return (parent / "mint.toml").is_file() or (parent / ".mint").is_dir()
+    return default_secrets_dir()
 
 
 def _ensure_private_dir(path: Path) -> Path:
@@ -200,13 +183,11 @@ def store_file_secret(
 ) -> str:
     """Write ``value`` and return its ``file:`` reference.
 
-    ``scope="default"`` writes to the external default directory. In the
-    historical call shape, a ``data_root`` under a real Mint workspace (its
-    parent contains ``mint.toml`` or ``.mint``) now defaults outside the
-    workspace; an arbitrary/custom data root keeps ``<data_root>/secrets`` for
-    compatibility. New code should omit ``data_root`` or use
-    ``store_default_secret``. ``scope="workspace"`` makes the legacy choice
-    explicit.
+    The default (``scope="auto"`` or ``scope="default"``) always writes to
+    ``$HOME/.dataagent/secrets``, even when a ``data_root`` is supplied. The
+    legacy ``<data_root>/secrets`` location is written only when the caller
+    explicitly passes ``scope="workspace"``. It remains readable for existing
+    installations, and resolution emits :class:`LegacySecretLocationWarning`.
     """
 
     if not isinstance(name, str) or not _FILE_NAME.fullmatch(name):
@@ -215,11 +196,7 @@ def store_file_secret(
     if not value:
         raise SecretUnavailable("secret value is empty")
     if scope == "auto":
-        scope = (
-            "default"
-            if data_root is None or _is_workspace_data_root(data_root)
-            else "workspace"
-        )
+        scope = "default"
     if scope == "default":
         _write_secret(default_secrets_dir(), name, value)
     elif scope == "workspace":

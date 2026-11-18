@@ -13,6 +13,12 @@
 # project full-access request is ignored. workspace-write is used here because
 # `mint init` has no sandbox flag; if the user's policy is read-only, Mint keeps
 # read-only and the project still cannot write .dataagent.
+#
+# workspace-write grants write access to the whole workspace, not only
+# .dataagent: Mint has no per-path writable-root filter. deny_paths below keeps
+# the built-in file tools out of .dataagent/secrets, but a shell running with
+# workspace-write can still read that workspace-internal directory. New
+# secrets therefore live in $HOME/.dataagent/secrets, outside the workspace.
 [core.sandbox]
 policy = "workspace-write"
 

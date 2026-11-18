@@ -43,7 +43,9 @@ def test_store_default_secret_is_the_external_location(home):
 
 
 def test_legacy_workspace_secret_still_resolves_with_warning(home, data_root):
-    ref = secrets.store_file_secret(data_root, "rest-token", "legacy-value")
+    ref = secrets.store_file_secret(
+        data_root, "rest-token", "legacy-value", scope="workspace"
+    )
     path = data_root / "secrets" / "rest-token.key"
     assert path.read_text() == "legacy-value"
     with pytest.warns(secrets.LegacySecretLocationWarning, match="legacy"):
@@ -52,7 +54,9 @@ def test_legacy_workspace_secret_still_resolves_with_warning(home, data_root):
 
 
 def test_external_default_wins_over_the_legacy_workspace_copy(home, data_root):
-    secrets.store_file_secret(data_root, "rest-token", "legacy-value")
+    secrets.store_file_secret(
+        data_root, "rest-token", "legacy-value", scope="workspace"
+    )
     secrets.store_default_secret("rest-token", "external-value")
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")
@@ -64,24 +68,23 @@ def test_external_default_wins_over_the_legacy_workspace_copy(home, data_root):
     ]
 
 
-def test_mint_workspace_data_root_defaults_outside(home, data_root):
-    data_root.parent.mkdir(parents=True, exist_ok=True)
-    (data_root.parent / "mint.toml").write_text("[package]\nname = 't'\n")
-    ref = secrets.store_file_secret(data_root, "token", "value")
-    assert (home / ".dataagent" / "secrets" / "token.key").is_file()
-    assert not (data_root / "secrets" / "token.key").exists()
-    assert secrets.resolve(ref, data_root) == "value"
-
-
-def test_custom_data_root_keeps_explicit_workspace_semantics(home, tmp_path):
-    """Existing callers that pass a non-.dataagent root keep their old path."""
-
-    root = tmp_path / "custom-data"
+@pytest.mark.parametrize("root_name", [".dataagent", "custom-data", "workspace"])
+def test_any_data_root_defaults_outside(home, tmp_path, root_name):
+    root = tmp_path / "workspace" / root_name
+    root.mkdir(parents=True)
     ref = secrets.store_file_secret(root, "token", "value")
-    assert (root / "secrets" / "token.key").is_file()
-    assert not (home / ".dataagent" / "secrets" / "token.key").exists()
-    with pytest.warns(secrets.LegacySecretLocationWarning):
-        assert secrets.resolve(ref, root) == "value"
+    assert (home / ".dataagent" / "secrets" / "token.key").is_file()
+    assert not (root / "secrets").exists()
+    assert secrets.resolve(ref, root) == "value"
+
+
+def test_secrets_dir_always_means_the_default_directory(home, data_root):
+    assert secrets.secrets_dir() == home / ".dataagent" / "secrets"
+    assert secrets.secrets_dir(data_root) == home / ".dataagent" / "secrets"
+    assert (
+        secrets.workspace_secrets_dir(data_root)
+        == data_root / "secrets"
+    )
 
 
 def test_workspace_scope_is_explicit_and_requires_a_root(home, data_root):
@@ -154,7 +157,7 @@ def test_legacy_secrets_directory_symlink_is_rejected(home, data_root):
     with pytest.raises(secrets.SecretUnavailable, match="symlink"):
         secrets.resolve("file:token", data_root)
     with pytest.raises(secrets.SecretUnavailable, match="symlink"):
-        secrets.store_file_secret(data_root, "other", "value")
+        secrets.store_file_secret(data_root, "other", "value", scope="workspace")
 
 
 def test_file_and_directory_permissions_are_enforced(home):
