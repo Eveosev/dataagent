@@ -393,6 +393,14 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
       {' · '}{target?<button className="field-button" title={issue.target?`定位到 ${propertyLabel(issue.target)}`:undefined} onClick={()=>correctIssue(issue)}>{objectLabel(target)}</button>:<span className="muted">{issueLocation(issue)}</span>}
       {issue.target?` · ${propertyLabel(issue.target)}`:''} · {issueReasons[issue.code||'']||'该项未通过核对'}{issue.detail&&human.summary?` · ${human.summary}`:''}
       {issue.detail&&human.detail&&<details className="tech-detail"><summary>详情</summary><pre>{technicalDetail(human.detail)}</pre></details>}
+      {/* 未映射来源的另一条出路：回映射页显式「纳入映射」，沿用默认绑定重新
+          提案；对象页只负责说明与入口，不在这里改来源范围。 */}
+      {issue.code==='ontology.source_unmapped'&&<div className="disposal" data-testid="include-mapping-hint">
+       <span className="muted">如需使用「{sourceName(issue.source_id||'')}」：返回映射页点「纳入映射」，沿用当前绑定重新生成预览即可。</span>
+       <div className="disposal-controls">
+        <button className="secondary" disabled={busy||done} onClick={onBack}>返回映射页纳入</button>
+       </div>
+      </div>}
       {issueDisposals(issue).map(option=><div key={disposalKey(option)} className="disposal" data-testid="disposal-option">
        <span className="muted">{disposalText(option)} · {option.reason_hint}</span>
        <div className="disposal-controls">

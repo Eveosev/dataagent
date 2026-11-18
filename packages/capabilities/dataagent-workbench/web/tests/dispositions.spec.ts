@@ -302,8 +302,12 @@ test('未映射来源在处置一行后重新生成预览时保持不映射',asy
  // 初始预览：ledger 的 4 条记录成对象，other 只有一条来源级问题。
  await expect(page.getByTestId('pending-issues')).toContainText('2 项待核对');
  await expect(page.getByTestId('pending-issues')).toContainText('阻断 2 项');
- await expect(page.getByTestId('pending-issue').filter({hasText:'该来源未用于当前映射'}))
-  .toContainText('other.csv');
+ const unmappedIssue=page.getByTestId('pending-issue').filter({hasText:'该来源未用于当前映射'});
+ await expect(unmappedIssue).toContainText('other.csv');
+ // 审核第 8 轮：对象页给出中文说明与回映射页的入口，不在这里改来源范围。
+ await expect(unmappedIssue.getByTestId('include-mapping-hint'))
+  .toContainText('返回映射页点「纳入映射」');
+ await expect(unmappedIssue.getByRole('button',{name:'返回映射页纳入'})).toBeVisible();
  // 疑似表头行的转换失败给「排除」，处置一行并写入审计。
  const conversion=page.getByTestId('pending-issue').filter({hasText:'值无法按目标类型转换'});
  await expect(conversion.getByTestId('disposal-option')).toContainText('排除');
@@ -329,6 +333,9 @@ test('未映射来源在处置一行后重新生成预览时保持不映射',asy
  expect(body.mapping.bindings.amount).toMatchObject({source_field:'amount_minor',transform:'minor_to_major'});
  await expect(page.getByLabel('金额 来源字段')).toHaveValue('amount_minor');
  await expect(page.getByTestId('mapping-issues')).toContainText('该来源未用于当前映射');
+ // 未映射来源同时给出「纳入映射」入口，不再只有整源处置这一条路。
+ await expect(page.getByTestId('include-mapping-option'))
+  .toContainText('把「other.csv」纳入映射');
  // 来源级处置「本任务不使用该来源」：原因必填，写入审计。
  const sourceDisposal=page.getByTestId('disposal-option').filter({hasText:'本任务不使用'});
  await expect(sourceDisposal).toContainText('本任务不使用「other.csv」');
@@ -362,6 +369,76 @@ test('未映射来源在处置一行后重新生成预览时保持不映射',asy
   preview:{instances:{values:{number?:string}}[]}|null};
  expect(saved.preview?.instances.map(instance=>instance.values.number).sort())
   .toEqual(['INV-001','INV-002']);
+});
+
+// 审核第 8 轮：未映射来源除了「本任务不使用」，还必须能显式「纳入映射」。
+// 即使来源 B 的绑定与同名默认值完全一致（用户没改过任何字段），点一次也要
+// 把它带回提案范围，而不是因为 bindingsEdited=false 被继续留在范围外。
+test('未映射来源可沿用默认绑定纳入映射并重新提案',async({page})=>{
+ test.setTimeout(60000);
+ // 干净的两份材料：只验证「纳入映射」本身，不掺入表头行处置。
+ const cleanLedger=Buffer.from('number,amount_minor,currency\nINV-001,126000,CNY\nINV-002,90000,CNY\n');
+ await page.goto('/');
+ await page.getByLabel('接入目标').fill('把未映射来源按默认绑定纳入映射');
+ await page.getByLabel('选择材料').setInputFiles([
+  {name:'ledger.csv',mimeType:'text/csv',buffer:cleanLedger},
+  {name:'other.csv',mimeType:'text/csv',buffer:otherCsv},
+ ]);
+ await page.getByRole('button',{name:'开始接入'}).click();
+ await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ const sid=new URLSearchParams(new URL(page.url()).hash.slice(1)).get('session')!;
+ expect(sid).toBeTruthy();
+ const view=await (await page.request.get(`/api/sessions/${sid}/view`)).json() as {
+  session:{revision:string};ontology:{id:string;revision:string};ontology_concept:string;
+  profiles:{source_id:string;fields:string[];metadata:{structure_fingerprint:string}}[];
+ };
+ const mapped=view.profiles.find(profile=>!profile.fields.includes('note'))!;
+ const other=view.profiles.find(profile=>profile.fields.includes('note'))!;
+ expect(mapped&&other).toBeTruthy();
+ const proposalFor=(source:typeof mapped)=>({id:'candidate',revision:'1',
+  ontology_revision:`${view.ontology.id}@${view.ontology.revision}`,concept:view.ontology_concept,
+  source_fingerprint:source.metadata.structure_fingerprint,
+  bindings:{number:{source_field:'number'},
+   amount:source.fields.includes('amount_minor')
+    ?{source_field:'amount_minor',transform:'minor_to_major'}
+    :{source_field:'amount'},
+   currency:{source_field:'currency'}}});
+ // Agent 先只映射 ledger；other 保持未映射并产生来源级问题。
+ const narrow=await page.request.post(`/api/sessions/${sid}/source-proposals`,{
+  data:{proposals:{[mapped.source_id]:proposalFor(mapped)},expected_revision:view.session.revision}});
+ expect(narrow.ok(),await narrow.text()).toBeTruthy();
+ await page.reload();
+ await expect(page.getByTestId('mapping-issues')).toContainText('该来源未用于当前映射');
+ const include=page.getByTestId('include-mapping-option');
+ await expect(include).toContainText('把「other.csv」纳入映射');
+ await expect(include).toContainText('默认同名绑定可直接使用');
+ await include.getByRole('button',{name:'纳入映射'}).click();
+ await expect(page.getByTestId('mapping-correction-notice'))
+  .toContainText('已将「other.csv」纳入映射范围');
+ await expect(include.getByRole('button',{name:'已纳入，待生成预览'})).toBeDisabled();
+ const [rebuilt]=await Promise.all([
+  page.waitForResponse(response=>response.request().method()==='POST'&&/source-proposals$/.test(response.url())),
+  page.getByRole('button',{name:'生成映射预览'}).click(),
+ ]);
+ expect(rebuilt.status()).toBe(200);
+ const body=await rebuilt.json() as {instances:unknown[];issues:unknown[];
+  source_revisions:Record<string,string>};
+ expect(Object.keys(body.source_revisions).sort()).toEqual([mapped.source_id,other.source_id].sort());
+ expect(body.instances).toHaveLength(5);
+ // 第二次提案确实带上了 other，并且沿用同名默认绑定（未编辑过任何字段）。
+ const posted=rebuilt.request().postDataJSON() as {
+  proposals:Record<string,{bindings:Record<string,{source_field:string;transform?:string}>}>};
+ const otherProposal=posted.proposals[other.source_id];
+ expect(Object.keys(otherProposal.bindings).sort()).toEqual(['amount','currency','number']);
+ expect(otherProposal.bindings.amount).toMatchObject({source_field:'amount'});
+ expect(otherProposal.bindings.number).toMatchObject({source_field:'number'});
+ expect(otherProposal.bindings.currency).toMatchObject({source_field:'currency'});
+ // 纳入后来源级问题消失，网页按最新范围重建（不再有未映射来源）。
+ await expect(page.getByTestId('mapping-issues')).toHaveCount(0);
+ const after=await (await page.request.get(`/api/sessions/${sid}/view`)).json() as {
+  session:{selected_versions:Record<string,string>};preview:{issues:unknown[]}|null};
+ expect(after.session.selected_versions[`mapping:${other.source_id}`]).toBeTruthy();
+ expect(after.preview?.issues).toEqual([]);
 });
 
 // FDE2-05 回归：先全量映射两份材料，再缩窄为只映射 ledger，最后在网页点

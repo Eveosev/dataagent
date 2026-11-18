@@ -53,11 +53,13 @@ function mappingScopeKey(view:View):string{
 }
 
 function sourceInScope(view:View,sourceId:string,sourceBindings:Record<string,Record<string,FieldBinding>>,
- editedSources:Set<string>):boolean{
+ editedSources:Set<string>,includedSources:Set<string>):boolean{
  if((view.dispositions||[]).some(entry=>entry.action==='ignore_source'&&entry.source_id===sourceId))return false;
  const scoped=scopedSourceIds(view);
  if(!scoped.size)return true; // 尚无任何提案固定范围：保持全部来源一起提案。
- return scoped.has(sourceId)
+ // 用户点过「纳入映射」就是显式选择：即使绑定仍是同名默认值也要提案，
+ // 否则默认绑定正确的来源永远无法回到映射范围（FDE2-05）。
+ return scoped.has(sourceId)||includedSources.has(sourceId)
   ||(editedSources.has(sourceId)&&bindingsEdited(view,sourceId,sourceBindings));
 }
 
@@ -69,6 +71,10 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession
  const [correctionNotice,setCorrectionNotice]=useState<{kind:'green'|'amber';text:string}|null>(null);
  // FDE2-05：未映射来源的整源处置（本任务不使用该来源），原因必填、写入审计。
  const [disposalReasons,setDisposalReasons]=useState<Record<string,string>>({});
+ // 用户显式勾选的来源范围（「纳入映射」）：与绑定是否被改过无关，沿用默认
+ // 绑定也能重新提案；提案范围变化后清空，由最新提案重新固定范围。
+ const [includedSources,setIncludedSources]=useState<Set<string>>(()=>new Set());
+ const includedSourcesRef=useRef<Set<string>>(new Set());
  const revision=useRef(''),initialized=useRef(false),dirtyRef=useRef(false),queue=useRef(Promise.resolve()),draftError=useRef<unknown>(null),bindingsRef=useRef<Record<string,FieldBinding>>({});
  const sourceBindings=useRef<Record<string,Record<string,FieldBinding>>>({}),selectedSource=useRef(''),viewRef=useRef<View|null>(null);
  const base=`/api/sessions/${sessionId}`;const localKey=`dataagent-draft:${sessionId}`;
@@ -79,6 +85,9 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession
   const nextScope=mappingScopeKey(data);
   if(nextScope!==scopeKey.current){
    scopeKey.current=nextScope;editedSources.current.clear();
+   // 新提案重新固定来源范围；旧的「纳入映射」点击不能把被缩窄掉的来源
+   // 又加回来（与 editedSources 同一处理）。
+   includedSourcesRef.current=new Set();setIncludedSources(new Set());
   }
   if(dirtyRef.current&&!reset)return;
   revision.current=data.session.revision;
@@ -131,12 +140,27 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession
   selectedSource.current=id;setSourceId(id);setRecord(0);
   if(multiple){const next=sourceBindings.current[id]||{};setBindings(next);bindingsRef.current=next;}
  }
+ // 未映射来源的中文名：优先用户选择的显示名，退回文件名，最后才是内部来源 ID。
+ function sourceLabel(id:string){
+  const selection=view?.session.sources.find(source=>source.source_id===id) as
+   {options?:{display_name?:string};locator_ref?:string}|undefined;
+  return String(selection?.options?.display_name
+   ||selection?.locator_ref?.split('/').pop()||id);
+ }
+ // 显式纳入一个未映射来源：沿用当前（未改过的默认）绑定，下一次「生成映射预览」
+ // 会把它一起提交；不再要求用户先改一个字段才能证明想用这份材料。
+ function includeSource(id:string){
+  const next=new Set(includedSourcesRef.current);next.add(id);
+  includedSourcesRef.current=next;setIncludedSources(next);
+  setCorrectionNotice({kind:'amber',
+   text:`已将「${sourceLabel(id)}」纳入映射范围，沿用当前绑定（默认同名绑定可直接使用）；请点击「生成映射预览」重新提案。`});
+ }
  function draft(next:Record<string,FieldBinding>,selected=field){
   setDraftState('正在保存草稿…');
   if(multiple)sourceBindings.current={...sourceBindings.current,[sourceId]:next};
   // 草稿只保存范围内来源的绑定：范围外的来源保持未映射，保存时的草稿比对
   // 也不会把它们当作待提交的映射（FDE2-05）。
-  const inScope=(id:string)=>!viewRef.current||!multiple||sourceInScope(viewRef.current,id,sourceBindings.current,editedSources.current);
+  const inScope=(id:string)=>!viewRef.current||!multiple||sourceInScope(viewRef.current,id,sourceBindings.current,editedSources.current,includedSourcesRef.current);
   const draftData={...(multiple?{source_bindings:Object.fromEntries(Object.entries(sourceBindings.current).filter(([id])=>inScope(id)))}:{bindings:next}),
    selected_field:selected,source_id:sourceId,record_index:record};
   const pending=JSON.stringify({revision:revision.current,draft:draftData});
@@ -167,7 +191,7 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession
     // 未映射来源保持来源级问题，而不是自动映射后逐行报错。
     const existing=savedMappings(loaded);
     const proposals=Object.fromEntries(loaded.profiles
-     .filter(source=>sourceInScope(loaded,source.source_id,sourceBindings.current,editedSources.current))
+     .filter(source=>sourceInScope(loaded,source.source_id,sourceBindings.current,editedSources.current,includedSourcesRef.current))
      .map(source=>[source.source_id,
       propose(source,sourceBindings.current[source.source_id]||defaultBindings(loaded,source.source_id),existing[source.source_id])]));
     if(!Object.keys(proposals).length)throw new Error('没有可映射的来源，请先绑定至少一个来源');
@@ -271,7 +295,19 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession
  <div className="mapping-actions"><span className="muted">{draftState||'原值与转换后的值均可核对'}</span><button className="primary" disabled={busy||working||done||!profile} onClick={preview}>{busy?'正在校验…':'生成映射预览'}</button></div>
  {correctionNotice&&<div className={correctionNotice.kind==='green'?'notice green':'notice amber'} data-testid="mapping-correction-notice" role="status">{correctionNotice.text}</div>}
  {problemCount>0&&<div className="notice amber"><strong>{problemCount} 项待核对</strong><ul data-testid="mapping-issues">{issueItems.slice(0,8).map((issue,i)=><li key={i}>{issueText(issue)}
-   {/* 未映射来源给整源处置：写审计、必填原因，处置后重新生成预览即可。 */}
+   {/* 未映射来源的第一条出路：显式纳入映射。点一次即记录来源范围选择，
+       沿用当前绑定（未改过时就是默认同名绑定）重新提案，不要求先改绑定。 */}
+   {issue.code==='ontology.source_unmapped'&&issue.source_id&&(()=>{
+    const id=issue.source_id as string,included=includedSources.has(id);
+    return <div className="disposal" data-testid="include-mapping-option">
+     <span className="muted">{included
+      ?`已纳入「${sourceLabel(id)}」：沿用当前绑定，请点击「生成映射预览」重新提案。`
+      :`把「${sourceLabel(id)}」纳入映射：沿用当前绑定（默认同名绑定可直接使用）重新提案。`}</span>
+     <div className="disposal-controls">
+      <button className="secondary" disabled={busy||done||included} onClick={()=>includeSource(id)}>{included?'已纳入，待生成预览':'纳入映射'}</button>
+     </div>
+    </div>;})()}
+   {/* 未映射来源的整源处置：写审计、必填原因，处置后重新生成预览即可。 */}
    {issue.code==='ontology.source_unmapped'&&(view.disposition_options||[]).filter(option=>option.scope==='source'&&option.source_id===issue.source_id).map(option=>{
     const key=`${option.action}:${option.source_id}`;
     return <div key={key} className="disposal" data-testid="disposal-option">
