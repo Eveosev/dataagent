@@ -413,6 +413,33 @@ def test_three_column_composite_key_is_observed_and_accepted(tmp_path):
     assert draft['state'] == 'pending' and draft['unresolved_tables'] == []
 
 
+def test_single_key_does_not_hide_an_independent_business_key(tmp_path):
+    write(tmp_path / 'invoices.csv',
+          'row_id,tenant,invoice_no\n'
+          '1,A,100\n'
+          '2,A,101\n'
+          '3,B,100\n'
+          '4,B,101\n')
+    wb = workbench(tmp_path)
+    data = request(wb, start(wb, [
+        {'source_id': 'invoices', 'kind': 'file', 'locator_ref': 'invoices.csv'},
+    ]))
+    table, = data['catalog']['tables']
+    assert table['keys'] == [['row_id'], ['tenant', 'invoice_no']]
+    assert table['identity_keys'] == [['row_id'], ['tenant', 'invoice_no']]
+    assert table['key_search']['truncated'] is False
+    draft = invoke(wb, 'ontology_discovery_propose', {
+        'session_id': data['session_id'],
+        'expected_revision': data['expected_revision'],
+        'proposal': {
+            'source_revision': data['source_revision'],
+            'entities': [{'table': 'invoices', 'name': 'Invoice', 'grain': '每张发票一行',
+                          'identity': ['tenant', 'invoice_no']}],
+        },
+    }).data
+    assert draft['state'] == 'pending' and draft['unresolved_tables'] == []
+
+
 def test_key_search_limit_is_disclosed(tmp_path):
     write(tmp_path / 'wide.csv',
           'a,b,c,d,e,f\n'

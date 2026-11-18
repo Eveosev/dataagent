@@ -148,9 +148,11 @@ def _column_evidence(field, declared, rows, allowed):
 def _inferred_keys(columns, rows):
     """Candidate keys under the observed rule: no blank value and all rows distinct.
 
-    Singles are exhaustive.  When none exists, minimal composites are searched
-    in increasing width; the search is bounded and reports whether a bound cut
-    the space, so callers can disclose the gap instead of implying no key.
+    Every single-column key is returned.  Independent minimal composites are
+    also searched: combinations containing an already found key are skipped, so
+    a unique surrogate does not hide a business key.  The search is bounded and
+    reports whether a bound cut the space, so callers can disclose the gap
+    instead of implying no key.
     """
     search = {'max_columns': _MAX_KEY_COLUMNS, 'max_width': _MAX_KEY_WIDTH,
               'max_combinations': _MAX_KEY_COMBINATIONS, 'truncated': False}
@@ -158,15 +160,18 @@ def _inferred_keys(columns, rows):
         return [], search
     singles = [field for field, column in columns.items()
                if column['blank_rows'] == 0 and column['distinct_values'] == len(rows)]
-    if singles:
-        return [[field] for field in singles], search
-    usable = [field for field in columns if columns[field]['blank_rows'] == 0]
+    keys = [[field] for field in singles]
+    if len(keys) >= _MAX_INFERRED_KEYS:
+        search['truncated'] = True
+        return keys, search
+    single_fields = set(singles)
+    usable = [field for field in columns
+              if columns[field]['blank_rows'] == 0 and field not in single_fields]
     if len(usable) > _MAX_KEY_COLUMNS:
         usable = usable[:_MAX_KEY_COLUMNS]
         search['truncated'] = True
     if len(usable) > _MAX_KEY_WIDTH:
         search['truncated'] = True
-    keys = []
     examined = 0
     for width in range(2, min(_MAX_KEY_WIDTH, len(usable)) + 1):
         stopped = False

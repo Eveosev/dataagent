@@ -201,9 +201,13 @@ def _composite_keys(project):
            'a,b,c\n0,0,0\n0,0,1\n0,1,0\n1,0,0\n')
     _write(project, 'wide.csv',
            'a,b,c,d,e,f\n1,1,1,1,1,1\n1,1,1,1,1,1\n')
-    session_id = _start(project, '从两个小表发现联合标识', [
+    _write(project, 'surrogate.csv',
+           'row_id,tenant,invoice_no\n'
+           '1,A,100\n2,A,101\n3,B,100\n4,B,101\n')
+    session_id = _start(project, '从三个小表发现联合标识', [
         {'source_id': 'matrix', 'kind': 'file', 'locator_ref': 'matrix.csv'},
         {'source_id': 'wide', 'kind': 'file', 'locator_ref': 'wide.csv'},
+        {'source_id': 'surrogate', 'kind': 'file', 'locator_ref': 'surrogate.csv'},
     ])
     args, request = _advance(project, session_id)
     tables = {table['name']: table for table in request['catalog']['tables']}
@@ -212,6 +216,7 @@ def _composite_keys(project):
     assert tables['matrix']['key_search']['truncated'] is False
     assert tables['wide']['keys'] == []
     assert tables['wide']['key_search']['truncated'] is True
+    assert tables['surrogate']['keys'] == [['row_id'], ['tenant', 'invoice_no']]
     gap, = [gap for gap in request['catalog']['gaps']
             if gap['code'] == 'key_search_truncated']
     assert gap['source_id'] == 'wide' and gap['table'] == 'wide'
@@ -223,6 +228,8 @@ def _composite_keys(project):
                 {'table': 'matrix', 'name': 'Matrix', 'grain': '每行一条观测',
                  'identity': ['a', 'b', 'c']},
                 {'table': 'wide', 'name': 'Wide', 'grain': '每行一条观测'},
+                {'table': 'surrogate', 'name': 'Surrogate', 'grain': '每张发票一行',
+                 'identity': ['tenant', 'invoice_no']},
             ],
         },
     })
@@ -231,6 +238,7 @@ def _composite_keys(project):
         'session_id': session_id,
         'matrix_keys': tables['matrix']['identity_keys'],
         'wide_truncated': tables['wide']['key_search']['truncated'],
+        'surrogate_keys': tables['surrogate']['identity_keys'],
         'gap': {'source_id': gap['source_id'], 'table': gap['table'],
                 'code': gap['code']},
         'draft_ref': draft['ref'],
