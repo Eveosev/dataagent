@@ -306,17 +306,20 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
    {(object.conflicts||[]).filter((conflict,i,all)=>all.findIndex(other=>other.field===conflict.field)===i).map(conflict=><div key={conflict.field} className="conflict-field" data-testid={`object-conflict-${conflict.field}`}>
     <span>{propertyLabel(conflict.field)} · {conflict.reason||issueReasons['ontology.conflicting_values']}</span>
     {/* 后端按 source_id 合并断言：同一来源的多个原值收在同一 values 里，这里逐个
-        展示并都可采用；定位是平铺列表，数量与原值一致时按序配对，否则整组并列。 */}
-    {conflict.values.flatMap(entry=>{
+        展示并都可采用。定位是来源级平铺列表，不带值与定位的对应关系（同一原值
+        可出现在多行、同一行只贡献一个原值），不能把行号声称成某个原值的定位，
+        按来源整组展示。 */}
+    {conflict.values.map(entry=>{
      const originals=entry.values.length?entry.values:[entry.value];
-     const paired=originals.length===entry.locations.length;
-     return originals.map((value,i)=>({entry,value,location:paired?entry.locations[i]:entry.locations.join('；')}));
-    }).map(item=><div key={`${item.entry.source_id}:${display(item.value)}`} className="conflict-source">
-     <span>{item.entry.source_name}：<strong>{display(item.value)}</strong>{item.location?`（${item.location}）`:''}</span>
-     <button className="secondary" disabled={busy||done} onClick={()=>adoptSourceValue(conflict.field,item.entry,item.value)}>采用此值</button>
-    </div>)}
+     return <div key={entry.source_id} className="conflict-origin">
+      {entry.locations.length>0&&<p className="help">{entry.source_name} · 来源定位：{entry.locations.join('；')}</p>}
+      {originals.map(value=><div key={`${entry.source_id}:${display(value)}`} className="conflict-source">
+       <span>{entry.source_name}：<strong>{display(value)}</strong></span>
+       <button className="secondary" disabled={busy||done} onClick={()=>adoptSourceValue(conflict.field,entry,value)}>采用此值</button>
+      </div>)}
+     </div>;})}
    </div>)}
-   <p className="help">各来源与同一来源的每个原值并排显示；点「采用此值」把该原值作为用户纠正保存并重新校验。</p>
+   <p className="help">各来源与同一来源的每个原值并排显示；定位按来源整组给出。点「采用此值」把该原值作为用户纠正保存并重新校验。</p>
   </div>}
   {corrections.length>0&&<div className="notice"><strong>纠正记录</strong><ul>{latestCorrections.map((correction,i)=><li key={i}>{propertyLabel(correction.property)} → {display(correction.value)} · {correction.reason}</li>)}</ul>
    {view.correction_views.filter(c=>c.entity_id===object.id).map(c=><div key={c.property} className="correction-conflict" data-testid={`object-correction-${c.property}`}>

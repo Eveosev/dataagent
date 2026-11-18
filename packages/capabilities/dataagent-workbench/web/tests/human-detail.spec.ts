@@ -8,9 +8,12 @@ test('humanDetail：中英混合与英文原文只进详情，中文原文进主
  const mixed="could not convert '华信' to decimal";
  expect(humanDetail(mixed)).toEqual({summary:'',detail:mixed});
  expect(humanDetail('invalid decimal')).toEqual({summary:'',detail:'invalid decimal'});
- // 中文原文（含带数字的定位）仍按原文进主文案。
+ // 主体是中文、只夹短英文片段（如 NaN）的原文同样进详情，不数中英字符多少。
+ expect(humanDetail('金额无效: NaN')).toEqual({summary:'',detail:'金额无效: NaN'});
+ // 中文原文（含带数字的定位）仍按原文进主文案；无中文也无拉丁字母的片段进详情。
  expect(humanDetail('各来源的字段值不一致')).toEqual({summary:'各来源的字段值不一致'});
  expect(humanDetail('第 2 行')).toEqual({summary:'第 2 行'});
+ expect(humanDetail('1250')).toEqual({summary:'',detail:'1250'});
  // 已知原文映射成中文说法；前缀匹配保留拼接的字段名。
  expect(humanDetail('nonfinite number')).toEqual({summary:'数值超出可表示范围'});
  expect(humanDetail('recorded fields no longer resolve in the source: amountInCents'))
