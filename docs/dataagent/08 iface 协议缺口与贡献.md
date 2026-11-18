@@ -46,6 +46,7 @@ status: 草稿 v0.1（2026-11-18；条目以飞书「iface 贡献清单」表为
 | IF-14 | Mint GUI 项目模式启动问题 | Mint 实现 | Mint GUI | P1 | 缺陷报告 | P1 | Mint GUI 负责人 |
 | IF-15 | 副作用台账与「结果未知只对账」 | DataAgent 可回馈实现 | session · effect | P6 | 参考实现 | P2 | 彭淳毅 |
 | IF-16 | 出网判决与审计记录的组件侧实现 | DataAgent 可回馈实现 | policy · egress / audit | P3 | 参考实现 | P2 | 李鹏越 |
+| IF-17 | 用户级 `approval_policy=never` + `full-access` 时，项目沙箱片段收紧到 `workspace-write` 后所有需审批工具被拒，`--approve all` 不覆盖 `never` | Mint 实现 | 审批策略 · `core.sandbox`（agent-kernel@8439ec8） | P1 | 缺陷报告 | P0 | Mint 负责人：`--approve all` 应把用户级 `never` 抬到 `on-request`，或提供项目级审批开关；复现：`mint config set core.approval_policy never` + `core.sandbox.policy full-access`，项目追加 preset-intake `sandbox.toml` 后 `mint run --approve all` 调 MCP 工具，全部 `tool/policy-denied … never`；临时做法见 mint-offline-quickstart §1.5/§2 |
 
 先谈的三件：IF-01（工具效果分级，卡 G1.5）、IF-04（凭据注入用途域，卡 G1.6 的 GUI 部分）、IF-13（打包桌面版看不到 MCP 工具，卡 G1.4）。IF-05、IF-06、IF-07、IF-08 合成一次「后台任务」沟通。
 

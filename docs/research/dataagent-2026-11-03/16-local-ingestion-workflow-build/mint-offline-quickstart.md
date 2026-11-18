@@ -1,7 +1,7 @@
 ---
 version: 3
 date: 2026-11-18
-dataagent_commit: 79d58fe
+dataagent_commit: feat/p1-intake
 kernel_commit: 8439ec884cab9844631a0f8a574810f8bcb522f2
 mint_cli: 0.1.31
 ---
@@ -10,7 +10,7 @@ mint_cli: 0.1.31
 
 Mint 路径从 TUI 或原生 GUI 发起任务，DataAgent 工作台用于查看来源、核对映射和审核。同一任务共享 Mint 项目目录。模型推理需要可用的本机端点；只想用浏览器手工探查和映射时，使用[本机工作台手册](local-offline-quickstart.md)。
 
-本文对应 DataAgent `feat/p1-intake` 的 `79d58fe`，Mint CLI 0.1.31，Core 0.1.47-std。
+本文对应 DataAgent `feat/p1-intake` 的最新提交（不固定 SHA），Mint CLI 0.1.31，Core 0.1.47-std。
 
 ## 1. 构建与安装
 
@@ -106,7 +106,7 @@ ocr:      engine rapidocr version=1.4.4 verification=ocrv-...
 
 ### 1.5 追加项目沙箱片段
 
-`mint add` 只合并预设的 `[packages]`、`[ui]` 和 `[policy]`，不会合并 `[core.sandbox]` 与 `[rules]`。项目级沙箱必须手动追加一次：
+`mint add` 只合并预设的 `[packages]`、`[ui]` 和 `[policy]`，不会合并 `[core.sandbox]` 与 `[rules]`。项目级沙箱必须手动追加一次；用户级审批是 `never` 时先读本节末尾的 FDE2-03 说明，片段会关掉 `full-access + never` 的自动放行：
 
 ```sh
 if ! grep -q '^\[core.sandbox\]' mint.toml; then
@@ -116,13 +116,26 @@ fi
 
 片段设置 `workspace-write` 和 `deny_paths`（`.dataagent/secrets/`、`.mint/config.toml`、`.mint/credentials.toml`、`credentials.toml`）。它只能收紧用户已有的策略，不能扩大授权；用户策略是只读时，项目仍不能写 `.dataagent`。`workspace-write` 给整个工作区写权限，不按路径过滤；新凭据默认放在项目外的 `$HOME/.dataagent/secrets`。
 
+**先检查审批策略再应用片段（FDE2-03）。** 如果用户级配置是 `[core] approval_policy = "never"` 加 `[core.sandbox] policy = "full-access"`，Mint 原先靠 `full-access + never` 自动放行所有需要审批的调用；片段把沙箱收紧到 `workspace-write` 后，这个捷径不再成立，而 `never` 又不允许发起审批，于是所有 DataAgent 工具都在调用前被拒（`tool/policy-denied … never 禁止询问审批`），MCP 服务器和 `.dataagent` 写入本身没有问题。`mint run --approve all` 也不会覆盖用户级 `never`。追加前后各跑一次：
+
+```sh
+mint config get core.approval_policy
+mint config get core.sandbox.policy
+# 交互使用：允许 TUI 逐个确认 DataAgent 工具（会影响所有 Mint 项目，用完可改回 never）
+mint config set core.approval_policy on-request
+```
+
+`dataagent doctor` 在项目已追加片段、用户级审批是 `never` 且项目策略不是 `full-access` 时会打印 `approval:` 行并以 3 退出。这是 Mint 的审批策略与项目沙箱组合问题，不是片段让 MCP 起不来；上游修复见 [08 iface 协议缺口与贡献](<../../../dataagent/08 iface 协议缺口与贡献.md>) 的 IF-17。
+
 ## 2. 审批
 
-默认审批下，Mint 会逐个询问 DataAgent 的工具调用，只读工具也会问。这是已知限制 G1.5 / IF-01，M1 不修：
+真实用户路径是交互式 TUI：默认审批下，Mint 会逐个询问 DataAgent 的工具调用，只读工具也会问。这是已知限制 G1.5 / IF-01，M1 不修。TUI 里按提示确认即可；工具被拒时先按 §1.5 检查用户级审批策略，不要把全局策略改成 `never`。
 
-- TUI 交互使用时逐个确认；无人值守时会超时拒绝 DataAgent 工具，任务停在第一次 `intake_start` 或 `intake_advance`。
+脚本化证据采集与真实使用分开：
+
+- `mint run --json -y --approve all` 只用于脚本化证据采集；它放行全部工具（包括 shell），不要作为真实用户的操作方式。
+- `--approve all` 不改变用户级 `approval_policy`；用户级是 `never` 时仍然全部拒绝（FDE2-03）。跑之前先 `mint config get core.approval_policy`，不是 `on-request` 时先 `mint config set core.approval_policy on-request`，跑完可改回。
 - `mint chat -y` 的 `-y` 只跳过能力确认和信任门，不跳过工具审批。
-- `mint run --json -y --approve all` 会放行全部工具（包括 shell），只用于脚本化证据采集，不要作为真实用户的操作方式。
 - 在 `mint.toml` 追加 §1.5 的沙箱片段后，受保护路径的读取会被拒绝；被拒时不要换 shell、换工具或换路径重试。
 
 ## 3. 从 TUI 或 GUI 操作
@@ -133,6 +146,14 @@ mint model status --offline
 mint chat --offline -y
 ```
 
+`mint model status --offline` 只说明没有 Mint 托管的部署回执（`No managed deployment receipt exists`），不代表模型不可用；模型能否使用，以 `mint chat` 第一句是否得到回答为准，端点与密钥在桌面设置或 `mint config edit` 配置。
+
+装好后先做三步自检，不要先上业务材料：
+
+1. `"$DATAAGENT" doctor`：`ocr:` 行有 `version=`，`policy:` 为 `local-owner workspace only`；出现 `approval:` 行按 §1.5 处理。
+2. `"$DATAAGENT" view`：没有任务也能用，打印工作台首页 URL（形如 `http://127.0.0.1:<port>/#`）；在浏览器打开，点「打开本地工作台」能进首页。
+3. 在 `mint chat --offline -y` 里发第一句：「先看一下这个工作区已注册的本体。」`ontology_registry` 返回本体列表而不是 `tool/policy-denied`，说明 DataAgent 工具通道可用；工作台首页用第 2 步的 `dataagent view` 打开。默认审批下这个只读工具也会询问一次，按提示确认。
+
 真人用自然业务话术即可触发 `dataagent-intake` 技能。先发这条：
 
 > 这是我们这个月的采购发票，帮我接进来。发票号、币种照原样，金额表里是分，帮我换成元。先给我看核对页，我确认了再保存。
@@ -140,18 +161,19 @@ mint chat --offline -y
 在工作台核对 `INV-001` 为 1260 CNY、`INV-002` 为 900 CNY。点击「保存接入」，或在聊天明确确认保存当前映射。成功后任务为 `saved`，有 `release` 引用。将返回的任务 ID 赋给 `SESSION_ID`，用下列命令查询或重新打开同一任务。
 
 ```sh
+"$DATAAGENT" view
 "$DATAAGENT" workbench list
 "$DATAAGENT" workbench status "$SESSION_ID"
 "$DATAAGENT" workbench view "$SESSION_ID"
 "$DATAAGENT" workbench stop
 ```
 
-`workbench list` 列出本工作区的任务、阶段和发布引用；`status` 读任务状态；`view` 启动（如未运行）并请服务端打开同一任务的页面；`stop` 停止本工作区服务。需要手动起服务或固定端口时用 `"$DATAAGENT" workbench serve --port 8765`。
+`workbench list` 列出本工作区的任务、阶段和发布引用；`status` 读任务状态；`view` 启动服务（如未运行），不带任务 ID 时打印工作台首页 URL、带任务 ID 时打开同一任务页面；`stop` 停止本工作区服务。`dataagent view` 是不带任务 ID 的同一入口。需要手动起服务或固定端口时用 `"$DATAAGENT" workbench serve --port 8765`。
 
 工作台未认证时首页是「打开本地工作台」。按钮会让服务端用默认浏览器打开带 `#nonce=` 的一次性链接，nonce 60 秒过期；该链接只在当前机器有效。按钮只发请求，不保证浏览器真的打开：
 
 - 没有默认浏览器、在远程机器或通过 SSH 使用时，统一 CLI 的 `dataagent` 分发器会清掉 `BROWSER`，不能靠 `BROWSER=... "$DATAAGENT" workbench serve` 打印链接。按[本机手册 §3](local-offline-quickstart.md#3-打开本地工作台)用安装目录里的 workbench 解释器直接启动同一个服务，把带 nonce 的链接打印出来；链接 60 秒内有效，过期后重新点一次。
-- `workbench view` 返回的 `url` 不带 nonce，不能当认证链接复制；当前也没有直接打印一次性链接的 CLI 命令（FDE-15 待补）。
+- `dataagent view` 打印的是首页 URL（不带 nonce）；在浏览器打开后点「打开本地工作台」取得 60 秒的一次性链接。`workbench view <任务 ID>` 返回的 `url` 同样不带 nonce，不能当认证链接复制。
 
 SQLite 发现任务可直接发起：
 
