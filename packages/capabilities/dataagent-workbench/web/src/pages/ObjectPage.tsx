@@ -1,6 +1,6 @@
 import {useEffect,useRef,useState} from 'react';
-import {api,ApiError,display,locate,findAnchorRow,isDecisionEvidence,decisionSourceName} from '../client';
-import type {CorrectionView,ObjectView,SourceProfile} from '../client';
+import {api,ApiError,display,locate,findAnchorRow,isDecisionEvidence,decisionSourceName,issueBlocksSave,issueObject,issueReasons} from '../client';
+import type {CorrectionView,ObjectView,SourceProfile,Issue,WorkObject} from '../client';
 import {SourceViewer} from '../components/SourceViewer';
 
 const ranges=[['instance','纠正当前对象的值'],['mapping','修改这类来源的映射'],['ontology','提出本体草案']] as const;
@@ -10,6 +10,7 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
  const [view,setView]=useState<ObjectView|null>(null),[index,setIndex]=useState(0),[field,setField]=useState('');
  const [range,setRange]=useState('instance'),[value,setValue]=useState(''),[reason,setReason]=useState('');
  const [name,setName]=useState(''),[type,setType]=useState('string'),[busy,setBusy]=useState(false),[conflict,setConflict]=useState(false);
+ const [showAllIssues,setShowAllIssues]=useState(false);
  const revision=useRef(''),base=useRef(''),editing=useRef(false),initialized=useRef(false),running=useRef(false);
  const objectRef=useRef(''),editObject=useRef(''),idxRef=useRef(0);
  const base_url=`/api/sessions/${sessionId}`;
@@ -129,12 +130,26 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
  const corrections=view.corrections.filter(c=>object&&c.entity_id===object.id);
  // 同一属性多次纠正时只展示最后一次决定；历史仍保存在预览，用作审计轨迹。
  const latestCorrections=corrections.filter((correction,i)=>!corrections.slice(i+1).some(c=>c.property===correction.property));
+ // 待核对问题列出全部（不再截前 5 条）：阻断（对象页纠正解除不了，须修订映射或
+ // 来源）排在可纠正前面，头部并列总数与阻断数；超过 10 条时折叠尾部。
+ const sortedIssues=[...view.issues].sort((a,b)=>Number(issueBlocksSave(b))-Number(issueBlocksSave(a)));
+ const blockingCount=sortedIssues.filter(issueBlocksSave).length;
+ const identityField=view.ontology.identity_fields?.[0]||'number';
+ const issueLabel=(object:WorkObject)=>String(object.values[identityField]??object.id);
  // 来源名：SQLite 上传的显示名在 extensions 里，options 里没有时后端会回退到内部上传路径。
  const sourceName=(sourceId:string)=>{
   const selection=view.session.sources.find(s=>s.source_id===sourceId);
   const uploadName=selection?.extensions?.['dataagent.display_name'];
   if(typeof uploadName==='string'&&uploadName)return uploadName;
   return display((view.sources.find(s=>s.source_id===sourceId)||{}).display_name);
+ };
+ // 问题没有可点的对象时仍要可区分、可处理：行号定位不了的（只有行号、来源不明、
+ // 该行在问题来源里没有锚点）一律显示行号与来源待定；无行号的来源级问题点出具体
+ // 来源；纠正冲突沿用后端给的对象标签。
+ const issueLocation=(issue:Issue)=>{
+  if(issue.row!==undefined)return `第 ${issue.row+1} 行 · 来源待定`;
+  if(issue.source_id)return sourceName(issue.source_id);
+  return issue.object?display(issue.object):'映射层';
  };
  const submitButton=(label:string)=><button className="secondary" disabled={busy||!object}
   onClick={conflict?confirmConflict:submit}>{conflict?'已核对，重新提交':label}</button>;
@@ -161,9 +176,17 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
     <p><strong>{c.property}</strong>：映射已变化，纠正值仍生效；映射新算得的值为 {display(c.mapping_value)}。</p>
     <button className="secondary" disabled={busy||done} onClick={()=>adopt(c)}>采用新映射值</button></div>)}
   </div>}
-  {view.issues.length>0&&<div className="notice amber"><strong>{view.issues.length} 项待核对</strong><ul>{view.issues.slice(0,5).map((issue,i)=><li key={i}>{display(issue.target)} · {display(issue.code)}</li>)}</ul></div>}
   {object.extensions&&<details className="extension-box"><summary>查看扩展字段</summary><pre>{JSON.stringify(object.extensions,null,2)}</pre></details>}</>
   :<div className="empty">选择左侧对象查看值与来源定位。</div>}
+  {/* 待核对问题不依赖选中对象：预览没有实例时（如 no_records）仍要全部列出。 */}
+  {view.issues.length>0&&<div className="notice amber" data-testid="pending-issues"><strong>{view.issues.length} 项待核对 · 阻断 {blockingCount} 项</strong>
+   <ul>{sortedIssues.slice(0,showAllIssues?sortedIssues.length:10).map((issue,i)=>{
+    const target=issueObject(issue,view);
+    return <li key={i} data-testid="pending-issue"><small className={issueBlocksSave(issue)?'warn':'ok'}>{issueBlocksSave(issue)?'阻断':'可纠正'}</small>
+     {' · '}{target?<button className="field-button" onClick={()=>selectObject(view.objects.indexOf(target))}>{issueLabel(target)}</button>:<span className="muted">{issueLocation(issue)}</span>}
+     {issue.target?` · ${display(issue.target)}`:''} · {issueReasons[issue.code||'']||display(issue.code)}{issue.detail?` · ${display(issue.detail)}`:''}</li>;})}</ul>
+   {sortedIssues.length>10&&<button className="secondary" onClick={()=>setShowAllIssues(!showAllIssues)}>{showAllIssues?'收起其余问题':`展开其余 ${sortedIssues.length-10} 条`}</button>}
+   <p className="help">阻断项不能在对象页解除，需修订映射或来源；可纠正项保存纠正值后自动解除，解除前整批保存同样被拦。</p></div>}
  </section><aside className="detail-panel"><div className="panel-heading"><span>修改范围</span><span className="badge">{view.review_state||'未预览'}</span></div><h2>{object?'三种修改范围':'选择一个对象'}</h2>
   <label className="label">修改范围</label><div className="range-options">{ranges.map(([id,label])=><label key={id}><input type="radio" name="object-range" value={id} checked={range===id} onChange={()=>setRange(id)} disabled={done}/>{label}</label>)}</div>
   {done?<p className="help">接入已保存。修订映射请在新建接入中进行。</p>:range==='instance'?<div className="edit-current">
