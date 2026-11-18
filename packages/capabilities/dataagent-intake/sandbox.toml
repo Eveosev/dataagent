@@ -16,9 +16,18 @@
 #
 # workspace-write grants write access to the whole workspace, not only
 # .dataagent: Mint has no per-path writable-root filter. deny_paths below keeps
-# the built-in file tools out of .dataagent/secrets, but a shell running with
-# workspace-write can still read that workspace-internal directory. New
-# secrets therefore live in $HOME/.dataagent/secrets, outside the workspace.
+# the built-in file tools out of .dataagent/secrets and, since FDE3-03, out of
+# the raw-material copies in .dataagent/content and the workbench databases in
+# .dataagent/db. .dataagent/results/ stays readable: tools return
+# a result_path that the agent still has to read once.
+#
+# Scope: deny_paths is enforced by the Agent's file tools (fs_read, fs_write,
+# fs_list, fs_grep) and, on macOS, is also compiled into the sandbox-exec
+# profile used for shell_exec while that profile is active. The MCP workbench
+# server is spawned by Mint as an ordinary child process outside that profile,
+# so its own reads and writes of .dataagent/content and .dataagent/db are
+# unaffected. New secrets therefore live in $HOME/.dataagent/secrets, outside
+# the workspace.
 #
 # FDE2-03: if the trusted user configuration says
 # `[core] approval_policy = "never"` and `[core.sandbox] policy = "full-access"`,
@@ -40,6 +49,8 @@ policy = "workspace-write"
 # at any depth, so this also covers the legacy workspace copy.
 deny_paths = [
   ".dataagent/secrets/",
+  ".dataagent/content/",
+  ".dataagent/db/",
   ".mint/config.toml",
   "*/.mint/config.toml",
   ".mint/credentials.toml",
