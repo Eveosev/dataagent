@@ -1,11 +1,12 @@
 import {test,expect} from '@playwright/test';
 import path from 'node:path';
+import {slowTimeout} from './support';
 
 // 每个接入都显式固定内置采购本体：publish.spec 并行运行时会短暂把注册表默认指针
 // 移到新发布的本体，这里不依赖默认值，避免并行用例互相干扰。
 
 test('SQLite 对象值的来源定位显示表与主键',async({page})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  await page.goto('/');
  await page.getByLabel('接入目标').fill('接入 SQLite 发票库并核对来源定位');
  await page.getByLabel('选择材料').setInputFiles(path.resolve('../../dataagent-scenarios/fixtures/intake/cross-source/samples/ledger.db'));
@@ -71,7 +72,7 @@ async function openPagedObjectPage(page:import('@playwright/test').Page,mode:'wi
 }
 
 test('REST 分页记录按页序号定位到正确来源行',async({page})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  await openPagedObjectPage(page,'with');
  // INV-003 在第 2 页 /items/0，与第 1 页的 INV-001 同 pointer，只能靠页序号区分。
  await page.getByRole('button',{name:'INV-003'}).click();
@@ -81,7 +82,7 @@ test('REST 分页记录按页序号定位到正确来源行',async({page})=>{
 });
 
 test('selector 无页序号时退回旧逻辑命中第一条来源记录',async({page})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  await openPagedObjectPage(page,'without');
  await page.getByRole('button',{name:'INV-003'}).click();
  await page.getByRole('button',{name:'金额',exact:true}).click();
@@ -91,7 +92,7 @@ test('selector 无页序号时退回旧逻辑命中第一条来源记录',async(
 });
 
 test('页码明确但不匹配时不回退到其他页的同名 pointer',async({page})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  await openPagedObjectPage(page,'mismatch');
  await page.getByRole('button',{name:'INV-003'}).click();
  await page.getByRole('button',{name:'金额',exact:true}).click();
@@ -101,7 +102,7 @@ test('页码明确但不匹配时不回退到其他页的同名 pointer',async({
 });
 
 test('新证据页号与旧锚点 extensions:null 混用时回退匹配',async({page})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  await openPagedObjectPage(page,'legacy');
  await page.getByRole('button',{name:'INV-003'}).click();
  await page.getByRole('button',{name:'金额',exact:true}).click();
@@ -111,7 +112,7 @@ test('新证据页号与旧锚点 extensions:null 混用时回退匹配',async({
 });
 
 test('纠正成功但其他必填属性挡住时用琥珀色说明点名（FDE-12）',async({page})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  await page.goto('/');
  await page.getByLabel('接入目标').fill('接入发票并核对纠正提示');
  await page.getByLabel('选择材料').setInputFiles({name:'invoice.csv',mimeType:'text/csv',
@@ -146,7 +147,7 @@ test('纠正成功但其他必填属性挡住时用琥珀色说明点名（FDE-1
 });
 
 test('映射页字段纠正成功给绿色提示（FDE-12）',async({page})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  await page.goto('/');
  await page.getByLabel('接入目标').fill('接入发票并在映射页核对纠正提示');
  await page.getByLabel('选择材料').setInputFiles({name:'invoice.csv',mimeType:'text/csv',
@@ -168,7 +169,7 @@ test('映射页字段纠正成功给绿色提示（FDE-12）',async({page})=>{
 });
 
 test('纠正后的值显示用户纠正来源而不是内部路径',async({page})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  await page.goto('/');
  await page.getByLabel('接入目标').fill('接入发票并核对纠正来源');
  await page.getByLabel('选择材料').setInputFiles({name:'invoice.csv',mimeType:'text/csv',
@@ -193,7 +194,7 @@ test('纠正后的值显示用户纠正来源而不是内部路径',async({page}
 });
 
 test('纠正无原始证据的属性时左侧显示决定定位且不高亮来源行',async({page})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  await page.goto('/');
  await page.getByLabel('接入目标').fill('接入发票并核对无证据属性的纠正');
  await page.getByLabel('选择材料').setInputFiles({name:'invoice.csv',mimeType:'text/csv',
@@ -218,7 +219,7 @@ test('纠正无原始证据的属性时左侧显示决定定位且不高亮来�
 });
 
 test('断网时错误提示为中文',async({page})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  await page.goto('/');
  await page.getByLabel('接入目标').fill('接入发票并核对断网提示');
  await page.getByLabel('选择材料').setInputFiles({name:'invoice.csv',mimeType:'text/csv',

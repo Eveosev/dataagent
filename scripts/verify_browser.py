@@ -4,7 +4,12 @@ The run has two stages against one workspace: the first starts the service and
 runs the browser suite (which also prepares a task with a saved draft and an
 unresolved item); the service is then restarted on the same workspace and a
 recovery spec verifies materials, drafts and unresolved items survive.
+
+Retries are enabled (playwright.config.ts): a test that passes after a retry is
+flaky, not failed, but it is always listed here so it cannot be silently
+swallowed.
 """
+import json
 import os
 from pathlib import Path
 import socket
@@ -37,18 +42,61 @@ def start_service(workspace):
     raise SystemExit('service did not become ready')
 
 
+def flaky_tests(report):
+    """Titles of tests that passed only after a retry (from the JSON report).
+
+    A missing, unparsable or structurally invalid report is fatal: retries are
+    enabled, so a swallowed report would silently hide flaky tests. A valid
+    report with no flaky tests yields an empty list.
+    """
+    if not report.is_file():raise SystemExit(f'playwright JSON report missing: {report}')
+    try:data=json.loads(report.read_text())
+    except ValueError as error:raise SystemExit(f'playwright JSON report is not valid JSON: {error}')
+    if not isinstance(data,dict)or not isinstance(data.get('suites'),list) \
+        or not isinstance(data.get('stats'),dict):
+        raise SystemExit(f'playwright JSON report has unexpected structure: {report}')
+    found=[]
+    def walk(suites):
+        for suite in suites:
+            for spec in suite.get('specs') or []:
+                for case in spec.get('tests') or []:
+                    if case.get('status')=='flaky':
+                        found.append(f"{spec.get('file','?')}:{spec.get('line','?')} › {spec.get('title','')}")
+            walk(suite.get('suites') or [])
+    try:walk(data['suites'])
+    except (AttributeError,TypeError) as error:
+        raise SystemExit(f'playwright JSON report has unexpected structure: {error}')
+    # The flaky count in stats must agree with the listed tests, otherwise the
+    # shape of the report is not what this parser understands.
+    if not isinstance(data['stats'].get('flaky'),int) or data['stats']['flaky']!=len(found):
+        raise SystemExit(f'playwright JSON report flaky count disagrees with listed tests: {report}')
+    return found
+
+
 def run_e2e(url,token,extra,grep=None):
     env={k:v for k,v in os.environ.items() if k in {'PATH','HOME','LANG','TMPDIR','PLAYWRIGHT_BROWSERS_PATH'}}
+    # Forward outer DATAAGENT_* overrides (workers, retries, timeout scaling);
+    # the values this script sets itself are applied afterwards and win.
+    env.update({k:v for k,v in os.environ.items() if k.startswith('DATAAGENT_')})
     # The screenshot evidence goes to a per-run temp directory, never into the
     # repository; the run only reports its path.
     evidence=Path(tempfile.mkdtemp(prefix='dataagent-ui-evidence-'))
+    report=evidence/'report.json'
     env.update(DATAAGENT_TEST_URL=url,DATAAGENT_TEST_TOKEN=token,
         DATAAGENT_SCREENSHOT=str(evidence/'mapping-live.png'),
-        DATAAGENT_TEST_PYTHON=sys.executable,**extra)
-    command=['npm','run','test:e2e']+(['--','--grep',grep] if grep else [])
+        DATAAGENT_TEST_PYTHON=sys.executable,PLAYWRIGHT_JSON_OUTPUT_NAME=str(report),**extra)
+    command=['npm','run','test:e2e','--']+(['--grep',grep] if grep else [])+['--reporter=line,json']
     code=subprocess.run(command,cwd=WEB,env=env).returncode
     shot=evidence/'mapping-live.png'
     if shot.is_file():print('evidence:',shot)
+    # Flaky tests do not fail the run (retries are enabled), but they must be listed.
+    # A missing or invalid report is fatal even when playwright exited 0.
+    flaky=flaky_tests(report)
+    if flaky:
+        print(f'flaky（重试后通过，不计失败，共 {len(flaky)} 条）:')
+        for item in flaky:print('  -',item)
+    else:
+        print('flaky 清单为空：没有用例靠重试通过')
     return code
 
 

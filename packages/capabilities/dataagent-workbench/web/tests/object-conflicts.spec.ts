@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {pinBuiltinOntology,slowTimeout} from './support';
 
 // 两份同构 CSV 对同一张单据给出不同金额：对象页冲突字段并排显示各来源原值，
 // 一键采用后左侧未解决计数即时更新（FDE-5）。
@@ -8,6 +9,7 @@ async function openConflictingObjectPage(page:import('@playwright/test').Page){
  await page.getByLabel('选择材料').setInputFiles([
   {name:'发票-a.csv',mimeType:'text/csv',buffer:Buffer.from('number,amount,currency,issuer\nINV-105,1250,CNY,华信办公\n')},
   {name:'发票-b.csv',mimeType:'text/csv',buffer:Buffer.from('number,amount,currency,issuer\nINV-105,2510,CNY,华信办公\n')}]);
+ await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByText('识别与探查已完成')).toBeVisible();
  await page.getByRole('button',{name:'生成映射预览'}).click();
@@ -16,7 +18,7 @@ async function openConflictingObjectPage(page:import('@playwright/test').Page){
 }
 
 test('冲突字段并排显示各来源原值并可一键采用',async({page})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  await openConflictingObjectPage(page);
  // 冲突字段当前值为空，但各来源原值并排可见，不需要逐个切换来源去猜。
  await expect(page.getByTestId('object-amount')).toHaveText('—');
@@ -37,7 +39,7 @@ test('冲突字段并排显示各来源原值并可一键采用',async({page})=>
 });
 
 test('同一来源的多个冲突原值逐个展示并都可采用',async({page})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  // 一份 CSV 两行单据号相同、金额不同：后端按 source_id 合并断言，两个原值收在
  // 同一来源条目的 values 里。对象页必须逐个展示两个原值（W1 补审）；定位按来源
  // 整组展示，不把行号声称成某个原值的定位（W2 补审）。
@@ -45,6 +47,7 @@ test('同一来源的多个冲突原值逐个展示并都可采用',async({page}
  await page.getByLabel('接入目标').fill('接入一份两行单据号相同金额不同的发票并核对原值');
  await page.getByLabel('选择材料').setInputFiles({name:'发票.csv',mimeType:'text/csv',
   buffer:Buffer.from('number,amount,currency,issuer\nINV-105,1250,CNY,华信办公\nINV-105,2510,CNY,华信办公\n')});
+ await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByText('识别与探查已完成')).toBeVisible();
  await page.getByRole('button',{name:'生成映射预览'}).click();
@@ -71,7 +74,7 @@ test('同一来源的多个冲突原值逐个展示并都可采用',async({page}
 });
 
 test('同一来源的重复原值不把全部行号标成每个原值的定位',async({page})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  // 三行单据号相同、金额 1250、2510、1250：后端对原值去重得 [1250, 2510]、对定位
  // 去重得 [第 2 行, 第 3 行, 第 4 行]，两者没有对应关系。页面不得声称这些行号
  // 分别对应每个原值，定位按来源整组展示（W2 补审）。
@@ -79,6 +82,7 @@ test('同一来源的重复原值不把全部行号标成每个原值的定位',
  await page.getByLabel('接入目标').fill('接入一份三行单据号相同金额重复的发票并核对原值');
  await page.getByLabel('选择材料').setInputFiles({name:'发票.csv',mimeType:'text/csv',
   buffer:Buffer.from('number,amount,currency,issuer\nINV-105,1250,CNY,华信办公\nINV-105,2510,CNY,华信办公\nINV-105,1250,CNY,华信办公\n')});
+ await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByText('识别与探查已完成')).toBeVisible();
  await page.getByRole('button',{name:'生成映射预览'}).click();
