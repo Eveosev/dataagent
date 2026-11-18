@@ -19,6 +19,7 @@ from dataagent_runtime.ports.workbench_store import VersionConflict,Write
 from pydantic_core import to_jsonable_python
 from ..ontology_discovery import DiscoveryReview
 from ..ontology_publish import PublishConfirmation, RetireRequest
+from ..query_service import OntologyQuery, parse_where
 from ..tool_schema import Dispose,StartTarget
 from ..view_service import ViewService
 
@@ -117,7 +118,11 @@ def create_app(wb):
     def identity():return {'scope':wb.scope,'mode':'local-owner'}
 
     @app.get('/api/ontologies')
-    def ontologies():return wb.ontology.registry(wb.ctx)
+    def ontologies(include_deactivated:bool=True):
+        # 网页本体库是管理视图（D5b 展示/停用）：按裁决默认列出全部并带 deactivated/state；只有 Agent 工具与服务层默认不列停用本体，保持 D1 测试行为。
+
+        return wb.queries.ontologies(wb.ctx,
+            include_deactivated=include_deactivated)
 
     @app.post('/api/ontologies/{ontology_id}/retire')
     async def retire_ontology(ontology_id:str,request:Request):
@@ -127,6 +132,16 @@ def create_app(wb):
         if not body.confirmed:raise ValueError('retiring an ontology requires explicit confirmation')
         return wb.ontology.retire(ontology_id,body.reason,wb.ctx,
             expected_revision=body.expected_revision)
+
+    @app.get('/api/ontologies/{ontology_id}/instances')
+    def ontology_instances(ontology_id:str,concept:str|None=None,
+            revision:str|None=None,cursor:str|None=None,limit:int=50,
+            where:str|None=None):
+        """Published instances for one ontology (same service as ontology_query)."""
+        request=OntologyQuery(ontology_id=ontology_id,concept=concept or None,
+            revision=revision or None,where=parse_where(where),limit=limit,
+            cursor=cursor or None)
+        return wb.queries.query(request,wb.ctx)
 
     @app.get('/api/connections')
     def connections():

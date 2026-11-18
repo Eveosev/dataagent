@@ -6,6 +6,7 @@ from dataagent_contracts.ontology import MappingSpec
 from .document_fields import DocumentField
 from .ontology_discovery import Mode, OntologyProposal
 from .ontology_publish import PublishConfirm, PublishPrepare
+from .query_service import OntologyInstancesSummary, OntologyQuery
 
 
 class Input(BaseModel):
@@ -156,7 +157,8 @@ class DiscoveryPropose(Session):
 
 
 class Registry(Input):
-    pass
+    include_deactivated: bool = Field(default=False,
+        description='是否包含已停用本体（默认不列）')
 
 
 class SourceConnections(Input):
@@ -180,8 +182,11 @@ MODELS={'intake_start':Start,**{name:Session for name in ['intake_status','intak
     'intake_dispose':Dispose,'intake_inherit':Inherit,'intake_extract':Extract,
     'ontology_discovery_propose':DiscoveryPropose,'ontology_registry':Registry,
     'ontology_publish_prepare':PublishPrepare,'ontology_publish_confirm':PublishConfirm,
+    'ontology_query':OntologyQuery,'ontology_instances_summary':OntologyInstancesSummary,
     'source_connections':SourceConnections,
     'workflow_call':WorkflowCall,'workflow_view':WorkflowView}
+# Read-only tools carry the MCP annotation so a host can show them as safe.
+READ_ONLY_TOOLS={'ontology_query','ontology_instances_summary'}
 DESCRIPTIONS={'intake_start':'建立接入任务。陌生 SQLite 库用 mode=ontology_discovery 发现本体',
     'intake_advance':'探查来源并返回映射或本体发现所需的来源证据',
     'intake_inference':'读取经披露范围过滤的提案请求，含当前来源与任务修订',
@@ -194,10 +199,15 @@ DESCRIPTIONS={'intake_start':'建立接入任务。陌生 SQLite 库用 mode=ont
     'intake_inherit':'继承同一来源修订上旧任务仍有效的纠正，写入当前预览',
     'intake_status':'查询当前任务修订与阶段','workbench_view':'打开同一任务的本地工作台',
     'ontology_discovery_propose':'提交 SQLite 本体草案，验证来源键、字段和关系证据后供用户审核',
-    'ontology_registry':'列出工作区内本体注册表：内置、发现发布与已停用（只读）',
+    'ontology_registry':'列出工作区内未停用本体注册表（只读）；include_deactivated=true 时包含已停用本体',
     'ontology_publish_prepare':'把发现草稿补全为多概念本体候选（值类型、必需性、身份、关系端点与未决处置）；只生成候选，不发布',
     'ontology_publish_confirm':'确认发布候选本体（仅工作台网页人工通道；Agent 调用只返回需要人工确认）',
+    'ontology_query':'按本体与概念查询已发布实例（只读）：属性 eq/in/contains 过滤、分页，带来源定位、release_ref 与接入任务',
+    'ontology_instances_summary':'汇总每个本体/概念的已发布实例数与最近发布时间（只读；默认不列停用本体）',
     'source_connections':'列出宿主已配置的来源连接名和类型（只读，不含凭据）',
     'workflow_call':'探查宿主配置的业务环境，提交、推进或查看已验证的流程和动作回执',
     'workflow_view':'在本地浏览器查看已登记工作流的执行状态'}
-TOOLS=[{'name':name,'description':DESCRIPTIONS[name],'inputSchema':model.model_json_schema()} for name,model in MODELS.items()]
+TOOLS=[{'name':name,'description':DESCRIPTIONS[name],
+        'inputSchema':model.model_json_schema(),
+        **({'annotations':{'readOnlyHint':True}} if name in READ_ONLY_TOOLS else {})}
+       for name,model in MODELS.items()]
