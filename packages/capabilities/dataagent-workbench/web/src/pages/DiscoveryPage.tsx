@@ -223,7 +223,12 @@ function PublishBlock({session,discovery,candidate,reloadCandidate,reload,onErro
    if(/stale|task changed|draft changed|definition changed|does not name the prepared/.test(raw)){
     rejectedRef.current=current?.ref||'';setStaleHint(true);
    }
-   setFailure({text:error instanceof Error?error.message:String(error),
+   // 旧修订在候选生成后新增了实例：候选里的「需重接」清单已过期，必须让
+   // Agent 重新生成候选并重新核对，不能沿用页面上的旧结论（FDE3-01）。
+   const instancesChanged=/published instances changed/.test(raw);
+   setFailure({text:instancesChanged
+     ?'旧修订的已发布实例在候选生成后发生变化：新修订下这些对象不会自动出现，需要让 Agent 重新生成发布候选并重新核对需重新接入的概念。'
+     :error instanceof Error?error.message:String(error),
     action:/discover again/.test(raw)?'rediscover':'refresh'});
   }finally{setBusy(false);}
  }
@@ -266,7 +271,7 @@ function PublishBlock({session,discovery,candidate,reloadCandidate,reload,onErro
    </>:<button className="secondary" disabled={busy} onClick={refreshCandidate}>刷新候选</button>}
   </div>}
   {expired&&current&&<div className="notice amber" data-testid="publish-stale">
-   <p>候选已过期：任务修订已更新，后端会拒绝该候选。请让 Agent 重新生成发布候选后再确认。</p>
+   <p>候选已过期：任务或旧修订的已发布实例已变化，后端会拒绝该候选。请让 Agent 重新生成发布候选后再确认。</p>
   </div>}
   {current?<><RevisionPublishNotice candidate={current} acknowledged={migrationAck}
     onAcknowledge={setMigrationAck} reintakeAcknowledged={reintakeAck}

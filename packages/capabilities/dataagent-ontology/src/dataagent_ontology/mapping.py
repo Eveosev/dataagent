@@ -80,27 +80,54 @@ def convert(binding,record):
     return value
 
 
-def _date_text(value):
-    """A string target keeps the source text, with one exception (FDE3-09).
+_SPREADSHEET_KINDS=frozenset({'xlsx','xlsm','xls'})
 
-    The sheet reader hands date cells over as midnight ISO strings
-    (``YYYY-MM-DDT00:00:00``); a property retyped from ``date`` to ``string``
-    must keep storing the date the way the ``date`` transform did, or the
-    same source would publish values that no longer compare equal to the
-    previous revision's.
+
+def _date_cell_text(value):
+    """The ``YYYY-MM-DD`` a spreadsheet date cell stands for, else ``None``.
+
+    The sheet reader serializes a date cell as midnight ISO
+    (``YYYY-MM-DDT00:00:00``); the date transform stores the same calendar
+    day.  Only that exact, valid form is a date cell.  Any other text is an
+    ordinary value and is never reinterpreted (FDE3-09 review).
     """
-    text=str(value)
-    if text[10:]=='T00:00:00':
-        try:
-            return date.fromisoformat(text[:10]).isoformat()
-        except ValueError:
-            pass
-    return text
+    text=str(value).strip()
+    if len(text)!=19 or text[10:]!='T00:00:00':
+        return None
+    try:
+        return date.fromisoformat(text[:10]).isoformat()
+    except ValueError:
+        return None
+
+
+def _date_columns(source):
+    """Source fields confirmed to be spreadsheet date columns.
+
+    A single date-looking string is not enough.  A property retyped from
+    ``date`` to ``string`` must keep the calendar day only when the value
+    provably comes from a date cell; ordinary text properties, identity
+    fields and human corrections keep their exact text.  The observation
+    itself is the only provenance available, so a column counts as a date
+    column only when it comes from a spreadsheet, carries at least two
+    values, and every value is the midnight ISO form the sheet reader emits
+    for a date cell.
+    """
+    if source.kind not in _SPREADSHEET_KINDS:
+        return frozenset()
+    seen={}
+    for row in source.records:
+        for field,value in row.items():
+            if value is None or (isinstance(value,str) and not value.strip()):
+                continue
+            count,all_dates=seen.get(field,(0,True))
+            seen[field]=(count+1,all_dates and _date_cell_text(value) is not None)
+    return frozenset(field for field,(count,all_dates) in seen.items()
+                     if count>=2 and all_dates)
 
 
 def _typed(value,kind):
     if value is None:return None
-    if kind=='string':return _date_text(value)
+    if kind=='string':return str(value)
     if kind=='reference':return str(value)
     if kind=='decimal':return convert(FieldBinding(source_field='x',transform='decimal'),{'x':value})
     if kind=='integer':return convert(FieldBinding(source_field='x',transform='integer'),{'x':value})
@@ -199,12 +226,20 @@ def materialize(ontology,mapping,observations,*,scope,source_mappings=None,dispo
             issues.append({'code':'ontology.incomplete_source','source_id':source.source_id,
                            'coverage':source.coverage,
                            'partitions':[gap.partition for gap in gaps]})
+        date_fields=_date_columns(source)
+        date_targets={target for target,binding in mapping.bindings.items()
+                      if binding.transform=='identity'
+                      and concept.properties[target].value_type=='string'
+                      and binding.source_field in date_fields}
         for rownum,row in enumerate(source.records):
             if rownum in excluded_rows:continue
             values,field_anchors,row_issues={},{},[]
             for target,binding in mapping.bindings.items():
                 try:
-                    value=_typed(convert(binding,row),concept.properties[target].value_type)
+                    raw=convert(binding,row)
+                    if target in date_targets and raw is not None:
+                        raw=_date_cell_text(raw) or raw
+                    value=_typed(raw,concept.properties[target].value_type)
                     if value is not None:values[target]=value
                     fields=binding.options.get('fields',[binding.source_field])
                     field_anchors[target]=[a for f in fields for a in source.anchors.get(f'{rownum}.{f}',[])]

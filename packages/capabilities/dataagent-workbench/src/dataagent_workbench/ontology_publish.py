@@ -709,6 +709,42 @@ class PublishService:
                     if counts.get(name, 0) > 0]
         return counts, reintake
 
+    def _verify_revision_outlook(self, body, definition):
+        """Recompute the candidate's released-instance outlook before publishing
+        (FDE3-01 review).
+
+        The confirmation page uses the outlook captured at prepare time to
+        decide whether the new revision needs a re-intake acknowledgement.
+        Another task can release objects into the current revision after that
+        point; confirming the stale outlook would publish a revision whose
+        objects the user was told are unaffected.  Any change in the counts or
+        in the concepts needing re-intake requires a fresh candidate and a
+        fresh human check.
+        """
+        previous_row = self.wb.store.get('ontology', body['ontology_id'],
+                                         body['previous_revision'],
+                                         scope=self.wb.scope)
+        if previous_row is None:
+            raise VersionConflict(
+                'ontology revision changed; prepare the candidate again')
+        previous = OntologyRevision.model_validate(previous_row['body'])
+        counts, reintake = self._revision_instance_outlook(
+            body['ontology_id'], previous, definition)
+        recorded_counts = {}
+        if isinstance(body.get('current_revision_instance_counts'), dict):
+            for name, count in body['current_revision_instance_counts'].items():
+                try:
+                    recorded_counts[str(name)] = int(count)
+                except (TypeError, ValueError):
+                    recorded_counts[str(name)] = -1
+        recorded_reintake = sorted(str(name) for name in
+                                   (body.get('reintake_concepts') or []))
+        if (recorded_counts != counts
+                or recorded_reintake != sorted(reintake)):
+            raise VersionConflict(
+                'candidate is stale; published instances changed; '
+                'prepare the candidate again')
+
     def prepare(self, completion, ctx):
         wb = self.wb
         session = wb.sessions.get(completion.session_id, ctx)
@@ -1005,6 +1041,9 @@ class PublishService:
                 raise ValueError('ontology not registered: %s' % definition.id)
             definition_expected = current_definition['revision']
             registry_expected = entry_current['revision']
+            # The candidate's re-intake outlook is a snapshot; release writes
+            # made after prepare must force a new candidate (FDE3-01 review).
+            self._verify_revision_outlook(body, definition)
         else:
             if current_definition is not None:
                 raise ValueError('ontology id is already registered: %s' % definition.id)

@@ -195,6 +195,34 @@ def registry_entry(wb, ontology_id='sales-model'):
                 if item['id'] == ontology_id)
 
 
+def save_sales_orders(wb, tmp_path, rows=None):
+    """Release SalesOrder objects into revision 1 through a pinned task."""
+    rows = rows or [{'book': 'SALE', 'doc_no': '1001'},
+                    {'book': 'SALE', 'doc_no': '1002'}]
+    (tmp_path / 'orders.csv').write_text(
+        'book,doc_no\n' + '\n'.join(
+            f"{row['book']},{row['doc_no']}" for row in rows) + '\n')
+    wb.layer_client = StubProbeClient({'orders': csv_profile('orders', rows)})
+    goal = WorkSpec(id='map', goal='接入销售数据',
+                    acceptance_criteria=['来源可核对'],
+                    authorization_ref=wb.authorization)
+    started = wb.sessions.start(
+        [SourceSelection(source_id='orders', kind='file',
+                         locator_ref='orders.csv')], goal, wb.ctx,
+        target={'ontology_id': 'sales-model', 'concept': 'SalesOrder'})
+    mapping_session = wb.intake.advance(started.session_id, wb.ctx)
+    mapping_source, = wb.intake.inference_request(
+        mapping_session.id, wb.ctx)['sources']
+    save_single(wb, mapping_session, MappingSpec(
+        id='orders', revision='1', ontology_revision='sales-model@1',
+        concept='SalesOrder',
+        source_fingerprint=mapping_source['structure_fingerprint'],
+        bindings={'book': {'source_field': 'book'},
+                  'doc_no': {'source_field': 'doc_no',
+                             'transform': 'integer'}}))
+    wb.layer_client = LayerClient(DATA)
+
+
 # ------------------------------------------------------------------ positive
 def test_revision_publish_keeps_old_tasks_and_defaults_new_tasks_to_rev2(tmp_path):
     wb, session_id, request = workbench(tmp_path)
@@ -401,31 +429,8 @@ def test_revision_candidate_names_current_revision_counts_and_reintake(tmp_path)
     assert first_candidate['reintake_concepts'] == []
 
     # Publish two SalesOrder objects on revision 1.
-    (tmp_path / 'orders.csv').write_text(
-        'book,doc_no\nSALE,1001\nSALE,1002\n')
-    wb.layer_client = StubProbeClient({'orders': csv_profile('orders', [
-        {'book': 'SALE', 'doc_no': '1001'},
-        {'book': 'SALE', 'doc_no': '1002'},
-    ])})
-    goal = WorkSpec(id='map', goal='接入销售数据',
-                    acceptance_criteria=['来源可核对'],
-                    authorization_ref=wb.authorization)
-    started = wb.sessions.start(
-        [SourceSelection(source_id='orders', kind='file',
-                         locator_ref='orders.csv')], goal, wb.ctx,
-        target={'ontology_id': 'sales-model', 'concept': 'SalesOrder'})
-    mapping_session = wb.intake.advance(started.session_id, wb.ctx)
-    mapping_source, = wb.intake.inference_request(
-        mapping_session.id, wb.ctx)['sources']
-    save_single(wb, mapping_session, MappingSpec(
-        id='orders', revision='1', ontology_revision='sales-model@1',
-        concept='SalesOrder',
-        source_fingerprint=mapping_source['structure_fingerprint'],
-        bindings={'book': {'source_field': 'book'},
-                  'doc_no': {'source_field': 'doc_no',
-                             'transform': 'integer'}}))
+    save_sales_orders(wb, tmp_path)
 
-    wb.layer_client = LayerClient(DATA)
     _, revision_session, revision_request = workbench(
         tmp_path, revise_ontology_id='sales-model')
     _, candidate = revision_candidate(
@@ -442,6 +447,46 @@ def test_revision_candidate_names_current_revision_counts_and_reintake(tmp_path)
         f'/api/sessions/{revision_session}/publish/candidate').json()
     assert view['current_revision_instance_counts']['SalesOrder'] == 2
     assert view['reintake_concepts'] == ['SalesOrder']
+
+
+def test_revision_confirm_rejects_a_candidate_after_old_revision_releases(tmp_path):
+    """FDE3-01 review: the re-intake outlook is rechecked at confirmation.
+
+    Preparing a revision while revision 1 is empty tells the user no concept
+    needs re-intake.  A release into revision 1 made after that point makes
+    the statement false; confirming the stale candidate would publish a
+    revision whose objects the user was told are unaffected, so the server
+    refuses and demands a fresh candidate.
+    """
+    wb, session_id, request = workbench(tmp_path)
+    publish_initial(wb, session_id, request)
+
+    revision_wb, revision_session, revision_request = workbench(
+        tmp_path, revise_ontology_id='sales-model')
+    current, candidate = revision_candidate(
+        revision_wb, revision_session, revision_request, doc_no_type='string')
+    assert candidate['current_revision_instance_counts'] == {
+        'SalesOrder': 0, 'SalesOrderLine': 0, 'Customer': 0}
+    assert candidate['reintake_concepts'] == []
+
+    # Another task releases objects into revision 1 after prepare.
+    save_sales_orders(revision_wb, tmp_path)
+    stale = publish(revision_wb, revision_session, candidate)
+    assert stale.status_code == 409, stale.json()
+    assert 'published instances changed' in stale.json()['detail']
+    assert revision_wb.store.current(
+        'ontology', 'sales-model',
+        scope=revision_wb.scope)['body']['revision'] == '1'
+
+    # A fresh candidate carries the new outlook; confirming it publishes.
+    refreshed = invoke(revision_wb, 'ontology_publish_prepare',
+                       completion(revision_wb, revision_session, current)).data
+    assert refreshed['candidate_ref'] != candidate['candidate_ref']
+    assert refreshed['current_revision_instance_counts']['SalesOrder'] == 2
+    assert refreshed['reintake_concepts'] == ['SalesOrder']
+    published = publish(revision_wb, revision_session, refreshed)
+    assert published.status_code == 200, published.json()
+    assert published.json()['ontology_revision'] == '2'
 
 
 def test_revision_field_does_not_change_existing_target_validation():

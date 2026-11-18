@@ -2,7 +2,7 @@ from decimal import Decimal
 import pytest
 from dataagent_contracts.ontology import OntologyRevision, MappingSpec
 from dataagent_contracts.intake import CoverageGap, SourceProfile
-from dataagent_ontology.mapping import materialize
+from dataagent_ontology.mapping import _typed, materialize
 from dataagent_ontology.facts import relation_key
 
 
@@ -94,7 +94,8 @@ def test_string_target_stores_a_midnight_date_the_way_the_date_transform_would()
 
     The identity binding on a string property used to store the sheet
     reader's ``2026-04-08T00:00:00`` verbatim, so the same source no longer
-    compared equal to revision 1's ``2026-04-08``.
+    compared equal to revision 1's ``2026-04-08``.  Only a confirmed sheet
+    date column is reformatted; see the preservation cases below.
     """
     onto=OntologyRevision(id='invoice',revision='2',entity_type='Invoice',
         properties={'number':{'value_type':'string','required':True},
@@ -103,10 +104,12 @@ def test_string_target_stores_a_midnight_date_the_way_the_date_transform_would()
     m=MappingSpec(id='m',revision='1',ontology_revision='invoice@2',source_fingerprint='schema',
         bindings={'number':{'source_field':'number'},
                   'day':{'source_field':'day'}})
-    p=profile([{'number':'A','day':'2026-04-08T00:00:00'}]).model_copy(
-        update={'fields':['number','day']})
+    p=profile([{'number':'A','day':'2026-04-08T00:00:00'},
+               {'number':'B','day':'2026-04-09T00:00:00'}]).model_copy(
+        update={'kind':'xlsx','fields':['number','day']})
     result=materialize(onto,m,[p],scope='T')
-    assert result.instances[0].values=={'number':'A','day':'2026-04-08'}
+    assert [instance.values['day'] for instance in result.instances]==[
+        '2026-04-08','2026-04-09']
     assert not result.issues
 
 
@@ -121,11 +124,65 @@ def test_string_target_keeps_a_non_midnight_time_and_a_malformed_date_text():
     p=profile([{'number':'A','note':'2026-04-08T09:30:00'},
                {'number':'B','note':'not-a-dateT00:00:00'},
                {'number':'C','note':'2026-04-08'}]).model_copy(
-        update={'fields':['number','note']})
+        update={'kind':'xlsx','fields':['number','note']})
     result=materialize(onto,m,[p],scope='T')
     assert [instance.values['note'] for instance in result.instances]==[
         '2026-04-08T09:30:00','not-a-dateT00:00:00','2026-04-08']
     assert not result.issues
+
+
+def test_string_target_keeps_a_date_looking_text_in_an_ordinary_column():
+    """FDE3-09 review: one date-looking string in a text column is not a cell."""
+    onto=OntologyRevision(id='invoice',revision='2',entity_type='Invoice',
+        properties={'number':{'value_type':'string','required':True},
+                    'note':{'value_type':'string'}},
+        identity_fields=['number'])
+    m=MappingSpec(id='m',revision='1',ontology_revision='invoice@2',source_fingerprint='schema',
+        bindings={'number':{'source_field':'number'},
+                  'note':{'source_field':'note'}})
+    p=profile([{'number':'A','note':'2026-04-08T00:00:00'},
+               {'number':'B','note':'STAFF-1'}]).model_copy(
+        update={'kind':'xlsx','fields':['number','note']})
+    result=materialize(onto,m,[p],scope='T')
+    assert [instance.values['note'] for instance in result.instances]==[
+        '2026-04-08T00:00:00','STAFF-1']
+    assert not result.issues
+
+
+def test_string_target_keeps_a_lone_date_looking_text():
+    """A single value cannot confirm a date column; keep it verbatim."""
+    onto=OntologyRevision(id='invoice',revision='2',entity_type='Invoice',
+        properties={'number':{'value_type':'string','required':True},
+                    'note':{'value_type':'string'}},
+        identity_fields=['number'])
+    m=MappingSpec(id='m',revision='1',ontology_revision='invoice@2',source_fingerprint='schema',
+        bindings={'number':{'source_field':'number'},
+                  'note':{'source_field':'note'}})
+    p=profile([{'number':'A','note':'2026-04-08T00:00:00'}]).model_copy(
+        update={'kind':'xlsx','fields':['number','note']})
+    result=materialize(onto,m,[p],scope='T')
+    assert result.instances[0].values['note']=='2026-04-08T00:00:00'
+
+
+def test_string_identity_field_keeps_a_date_looking_text():
+    """FDE3-09 review: an identity value is never shortened by guesswork."""
+    onto=OntologyRevision(id='invoice',revision='2',entity_type='Invoice',
+        properties={'number':{'value_type':'string','required':True}},
+        identity_fields=['number'])
+    m=MappingSpec(id='m',revision='1',ontology_revision='invoice@2',source_fingerprint='schema',
+        bindings={'number':{'source_field':'number'}})
+    p=profile([{'number':'2026-04-08T00:00:00'},
+               {'number':'STAFF-1'}]).model_copy(
+        update={'kind':'xlsx','fields':['number']})
+    result=materialize(onto,m,[p],scope='T')
+    assert sorted(instance.values['number'] for instance in result.instances)==[
+        '2026-04-08T00:00:00','STAFF-1']
+    assert not result.issues
+
+
+def test_string_correction_keeps_the_exact_text():
+    """Manual corrections are not source cells; ``_typed`` must not re-date them."""
+    assert _typed('2026-04-08T00:00:00','string')=='2026-04-08T00:00:00'
 
 
 def test_missing_required_binding_is_reported():
