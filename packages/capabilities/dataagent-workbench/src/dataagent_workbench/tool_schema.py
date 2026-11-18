@@ -3,6 +3,7 @@ from typing import Annotated, Any, Literal, Union
 from pydantic import BaseModel,ConfigDict,Field,field_validator,model_validator
 from dataagent_contracts.intake import SourceSelection
 from dataagent_contracts.ontology import MappingSpec
+from .clause_records import ClauseRecord
 from .document_fields import DocumentField
 from .ontology_discovery import Mode, OntologyProposal
 from .ontology_publish import PublishConfirm, PublishPrepare
@@ -150,6 +151,14 @@ class Extract(Session):
     fields: list[DocumentField] = Field(min_length=1, max_length=100)
 
 
+class ExtractRecords(Session):
+    """Clause records for the task's pinned target concept (D3)."""
+    source_id: str
+    expected_revision: str
+    records: list[ClauseRecord] = Field(min_length=1, max_length=200,
+        description='每条记录若干属性值；每个值带引文（quote）和段落/页面定位，服务端逐字校验')
+
+
 class DiscoveryPropose(Session):
     proposal: OntologyProposal
     expected_revision: str
@@ -181,7 +190,8 @@ MODELS={'intake_start':Start,**{name:Session for name in ['intake_status','intak
     'ontology_discovery_propose':DiscoveryPropose,'ontology_registry':Registry,
     'ontology_publish_prepare':PublishPrepare,'ontology_publish_confirm':PublishConfirm,
     'source_connections':SourceConnections,
-    'workflow_call':WorkflowCall,'workflow_view':WorkflowView}
+    'workflow_call':WorkflowCall,'workflow_view':WorkflowView,
+    'intake_extract_records':ExtractRecords}
 DESCRIPTIONS={'intake_start':'建立接入任务。陌生 SQLite 库用 mode=ontology_discovery 发现本体',
     'intake_advance':'探查来源并返回映射或本体发现所需的来源证据',
     'intake_inference':'读取经披露范围过滤的提案请求，含当前来源与任务修订',
@@ -199,5 +209,6 @@ DESCRIPTIONS={'intake_start':'建立接入任务。陌生 SQLite 库用 mode=ont
     'ontology_publish_confirm':'确认发布候选本体（仅工作台网页人工通道；Agent 调用只返回需要人工确认）',
     'source_connections':'列出宿主已配置的来源连接名和类型（只读，不含凭据）',
     'workflow_call':'探查宿主配置的业务环境，提交、推进或查看已验证的流程和动作回执',
-    'workflow_view':'在本地浏览器查看已登记工作流的执行状态'}
+    'workflow_view':'在本地浏览器查看已登记工作流的执行状态',
+    'intake_extract_records':'按任务固定目标概念从 docx/PDF 条款段落生成记录；每条记录的引文经服务端逐字校验并带段落锚点，缺的必需属性列为缺口'}
 TOOLS=[{'name':name,'description':DESCRIPTIONS[name],'inputSchema':model.model_json_schema()} for name,model in MODELS.items()]

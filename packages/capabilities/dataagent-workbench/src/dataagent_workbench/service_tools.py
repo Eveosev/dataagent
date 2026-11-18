@@ -165,6 +165,10 @@ def _invoke(wb, name, args):
         from .launcher import open_view
         wb.sessions.get(args['session_id'],wb.ctx)
         return CapabilityResult.ok(open_view(wb,args['session_id']))
+    if name == 'intake_extract_records':
+        return CapabilityResult.ok(wb.intake.extract_clause_records(
+            typed.session_id, typed.source_id, typed.records, typed.expected_revision, wb.ctx,
+        ))
     raise ValueError('unknown aggregate tool')
 
 
