@@ -4,6 +4,7 @@ import {execFileSync} from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import {lockDefaultPointer,slowTimeout,uniqueTag,unlockDefaultPointer} from './support';
 
 let workspace=process.env.DATAAGENT_TEST_WORKSPACE||'';
 const python=process.env.DATAAGENT_TEST_PYTHON;
@@ -16,7 +17,7 @@ async function resolveWorkspace(page:Page){
  if(workspace)return;
  const response=await page.request.post('/api/files',{
   headers:{'x-dataagent-token':process.env.DATAAGENT_TEST_TOKEN||'',
-   'x-file-name':'publish-workspace-probe.csv'},
+   'x-file-name':`publish-workspace-probe-${uniqueTag()}.csv`},
   data:'probe\n',
  });
  expect(response.ok(),await response.text()).toBeTruthy();
@@ -113,13 +114,23 @@ async function startDiscovery(page:import('@playwright/test').Page,goal:string,d
  return sessionId(page);
 }
 
+// 发布/停用本体移动注册表默认指针（共享状态），本文件的用例还要断言默认指针
+// 的取值：与 browse.spec 的发布用例之间按工作区加文件锁串行，锁的释放挂在
+// afterEach 上（用例失败也释放）。
+let pointerLocked=false;
+test.beforeEach(()=>{pointerLocked=false;});
+test.afterEach(()=>{if(pointerLocked){unlockDefaultPointer(workspace);pointerLocked=false;}});
+
 test('SQLite 发现 → 草案 → 补全 → 网页确认发布 → 新接入映射 → 停用',async({page})=>{
  test.skip(!workspace||!python,'run scripts/verify_browser.py to share the test workspace with MCP');
- test.setTimeout(300000);
- const database=path.join(workspace!,'publish-discovery.db');
- fs.rmSync(database,{force:true});
+ slowTimeout(300000);
+ await lockDefaultPointer(workspace);
+ pointerLocked=true;
+ // 共享工作区里的文件名带用例级唯一后缀：不删除也不覆盖其他并行用例的文件。
+ const tag=uniqueTag();
+ const database=path.join(workspace!,`publish-discovery-${tag}.db`);
  execFileSync('sqlite3',[database],{input:fs.readFileSync(SEED)});
- const orders=path.join(workspace!,'publish-orders.csv');
+ const orders=path.join(workspace!,`publish-orders-${tag}.csv`);
  fs.writeFileSync(orders,'book,doc_no\nSALE,1001\nSALE,1002\n');
 
  await page.goto('/');
@@ -351,9 +362,10 @@ test('SQLite 发现 → 草案 → 补全 → 网页确认发布 → 新接入�
 
 test('pending 草案 + 候选 → 网页一次确认发布 → 草案 approved',async({page})=>{
  test.skip(!workspace||!python,'run scripts/verify_browser.py to share the test workspace with MCP');
- test.setTimeout(300000);
- const database=path.join(workspace!,'publish-pending.db');
- fs.rmSync(database,{force:true});
+ slowTimeout(300000);
+ await lockDefaultPointer(workspace);
+ pointerLocked=true;
+ const database=path.join(workspace!,`publish-pending-${uniqueTag()}.db`);
  execFileSync('sqlite3',[database],{input:fs.readFileSync(SEED)});
 
  await page.goto('/');
@@ -396,13 +408,19 @@ test('pending 草案 + 候选 → 网页一次确认发布 → 草案 approved',
 
  const view=await page.request.get(`/api/sessions/${sid}/view`);
  expect((await view.json()).discovery.draft.state).toBe('approved');
+ // 不把测试发布的本体留成默认目标，避免影响并行用例与本用例的重试。
+ const retired=await page.request.post('/api/ontologies/pending-model/retire',{
+  headers:{'x-dataagent-token':process.env.DATAAGENT_TEST_TOKEN||''},
+  data:{reason:'用例结束停用',confirmed:true}});
+ expect(retired.ok(),await retired.text()).toBeTruthy();
 });
 
 test('prepare → 网页审核草案 → 发布区仍显示候选 → 确认发布成功',async({page})=>{
  test.skip(!workspace||!python,'run scripts/verify_browser.py to share the test workspace with MCP');
- test.setTimeout(300000);
- const database=path.join(workspace!,'publish-review-candidate.db');
- fs.rmSync(database,{force:true});
+ slowTimeout(300000);
+ await lockDefaultPointer(workspace);
+ pointerLocked=true;
+ const database=path.join(workspace!,`publish-review-candidate-${uniqueTag()}.db`);
  execFileSync('sqlite3',[database],{input:fs.readFileSync(SEED)});
 
  await page.goto('/');

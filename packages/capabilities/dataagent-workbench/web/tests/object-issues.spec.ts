@@ -1,5 +1,6 @@
 import {test,expect} from '@playwright/test';
 import path from 'node:path';
+import {pinBuiltinOntology,slowTimeout} from './support';
 
 // 跨源场景常有 13 条以上待核对问题；用路由改写把 13 条真实形状的问题注入对象页，
 // 覆盖 U3：不再只显示前 5 条，阻断在前、总数与阻断数并列、每条能点到对应对象。
@@ -31,6 +32,7 @@ async function openObjectPageWith13Issues(page:import('@playwright/test').Page){
  await page.goto('/');
  await page.getByLabel('接入目标').fill('接入发票并核对 13 条待核对问题');
  await page.getByLabel('选择材料').setInputFiles({name:'invoice.csv',mimeType:'text/csv',buffer:csv});
+ await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
  // 其中一份只有表头：按坏输入标红，另一份探查完成后仍可生成预览。
  await expect(page.getByRole('button',{name:'生成映射预览'})).toBeEnabled();
@@ -40,7 +42,7 @@ async function openObjectPageWith13Issues(page:import('@playwright/test').Page){
 }
 
 test('对象页列出全部待核对问题：总数、阻断数与折叠展开',async({page})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  await openObjectPageWith13Issues(page);
  // 头部并列总数与阻断数：13 条里 5 条阻断（对象页纠正解除不了）。
  await expect(page.getByTestId('pending-issues')).toContainText('13 项待核对');
@@ -60,7 +62,7 @@ test('对象页列出全部待核对问题：总数、阻断数与折叠展开',
 });
 
 test('每条问题能点到对应对象',async({page})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  await openObjectPageWith13Issues(page);
  // 对象级冲突问题（entity_id 唯一确定）点回冲突对象 INV-002（默认选中的是 INV-001）。
  await page.getByTestId('pending-issue').filter({hasText:'各来源的字段值不一致'}).nth(1).getByRole('button',{name:'INV-002'}).click();
@@ -78,13 +80,14 @@ test('每条问题能点到对应对象',async({page})=>{
 });
 
 test('预览没有对象时待核对问题仍在对象页显示',async({page})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  // 只有表头的 CSV：零数据行按坏输入标红提示，预览无实例，后端产生
  // no_records（阻断）且仍可打开对象页。
  await page.goto('/');
  await page.getByLabel('接入目标').fill('接入空发票并核对零对象问题');
  await page.getByLabel('选择材料').setInputFiles({name:'invoice.csv',mimeType:'text/csv',
   buffer:Buffer.from('number,amount_minor,currency,issuer\n')});
+ await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByTestId('source-problem')).toContainText('只有表头，没有数据行');
  await page.getByRole('button',{name:'生成映射预览'}).click();
@@ -99,7 +102,7 @@ test('预览没有对象时待核对问题仍在对象页显示',async({page})=>
 });
 
 test('跨来源同序号的行号问题不链接到错误对象',async({page})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  // 两个来源各有第 0 条记录但归并到不同对象：行号类问题不带 source_id，
  // 无法唯一确定归属对象，条目不渲染对象按钮，点出记录序号并标记来源待定。
  await page.route('**/api/sessions/*/objects',async route=>{
@@ -113,6 +116,7 @@ test('跨来源同序号的行号问题不链接到错误对象',async({page})=>
  await page.getByLabel('选择材料').setInputFiles([
   {name:'invoices-a.csv',mimeType:'text/csv',buffer:Buffer.from('number,amount_minor,currency,issuer\nINV-001,126000,CNY,华信办公\nINV-002,90000,CNY,北明科技\n')},
   {name:'invoices-b.csv',mimeType:'text/csv',buffer:Buffer.from('number,amount_minor,currency,issuer\nINV-101,75000,CNY,青山贸易\nINV-102,66000,CNY,华信办公\n')}]);
+ await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
  // 其中一份只有表头：按坏输入标红，另一份探查完成后仍可生成预览。
  await expect(page.getByRole('button',{name:'生成映射预览'})).toBeEnabled();
@@ -128,7 +132,7 @@ test('跨来源同序号的行号问题不链接到错误对象',async({page})=>
 });
 
 test('问题来源该行无锚点时不出现对象入口',async({page})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  // 一份只有表头（无记录、无锚点）与一份有记录：行号 0 在有记录的来源里对应
  // INV-101，但问题的来源该行没有锚点——不得把入口给另一来源同序号的对象。
  await page.route('**/api/sessions/*/objects',async route=>{
@@ -143,6 +147,7 @@ test('问题来源该行无锚点时不出现对象入口',async({page})=>{
  await page.getByLabel('选择材料').setInputFiles([
   {name:'invoices-empty.csv',mimeType:'text/csv',buffer:Buffer.from('number,amount_minor,currency,issuer\n')},
   {name:'invoices-b.csv',mimeType:'text/csv',buffer:Buffer.from('number,amount_minor,currency,issuer\nINV-101,75000,CNY,青山贸易\nINV-102,66000,CNY,华信办公\n')}]);
+ await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
  // 其中一份只有表头：按坏输入标红，另一份探查完成后仍可生成预览。
  await expect(page.getByRole('button',{name:'生成映射预览'})).toBeEnabled();

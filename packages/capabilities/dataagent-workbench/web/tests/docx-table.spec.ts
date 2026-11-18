@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {pinBuiltinOntology,slowTimeout} from './support';
 
 // 最小可解析的合成 Word 登记表：首尾各一段，中间一张 3×4 表（表头 + 2 行数据）。
 // 数据层探查默认选 table:1 记录集，单元格锚点 unit_ref = table:1/row:r/col:c。
@@ -29,11 +30,12 @@ test('上传框接受 Word 文件并在提示中列出 Word（FDE-7）',async({p
 });
 
 test('Word 表格单元格定位显示表与行列而不是字符偏移（G4）',async({page})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  await page.goto('/');
  await page.getByLabel('接入目标').fill('接入 Word 发票登记表并核对表格定位');
  await page.getByLabel('选择材料').setInputFiles({name:'发票登记表.docx',
   mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',buffer:docx});
+ await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByText('识别与探查已完成')).toBeVisible();
  await page.getByRole('button',{name:'生成映射预览'}).click();

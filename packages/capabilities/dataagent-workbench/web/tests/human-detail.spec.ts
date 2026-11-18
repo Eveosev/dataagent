@@ -1,5 +1,6 @@
 import {test,expect} from '@playwright/test';
 import {humanDetail} from '../src/client';
+import {pinBuiltinOntology,slowTimeout} from './support';
 
 // D5a 补审：humanDetail 对中英混合原文的判定。主文案只出现映射后的中文；
 // 未识别的英文或混合原文（含少量中文的英文报错）只进可展开的「详情」。
@@ -21,7 +22,7 @@ test('humanDetail：中英混合与英文原文只进详情，中文原文进主
 });
 
 test('对象页问题主文案不出现未识别英文，原文折叠进详情',async({page})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  // 用路由改写注入一条 detail 为中英混合原文的问题，覆盖页面接线：
  // 主文案只给中文理由，混合原文收进折叠的「详情」。
  await page.route('**/api/sessions/*/objects',async route=>{
@@ -35,6 +36,7 @@ test('对象页问题主文案不出现未识别英文，原文折叠进详情',
  await page.getByLabel('接入目标').fill('接入发票并核对混合原文的问题说明');
  await page.getByLabel('选择材料').setInputFiles({name:'invoice.csv',mimeType:'text/csv',
   buffer:Buffer.from('number,amount,currency,issuer\nINV-001,1250,CNY,华信办公\n')});
+ await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByText('识别与探查已完成')).toBeVisible();
  await page.getByRole('button',{name:'生成映射预览'}).click();

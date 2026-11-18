@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {pinBuiltinOntology,slowTimeout} from './support';
 
 // G2 处置入口 + FDE-11 可读性：被拦的问题旁给出可用的处置（标记分区不适用、
 // 排除记录、只保存无问题对象），原因必填；缺键对象显示来源描述而不是内部哈希。
@@ -17,6 +18,7 @@ async function openObjectPage(page:import('@playwright/test').Page,files:Paramet
  await page.goto('/');
  await page.getByLabel('接入目标').fill('接入缺键记录并核对处置入口');
  await page.getByLabel('选择材料').setInputFiles(files);
+ await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByText('识别与探查已完成')).toBeVisible();
  await page.getByRole('button',{name:'生成映射预览'}).click();
@@ -28,7 +30,7 @@ async function openObjectPage(page:import('@playwright/test').Page,files:Paramet
 }
 
 test('缺键对象显示来源描述，处置需要填写原因',async({page})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  await openObjectPage(page,{name:'发票.csv',mimeType:'text/csv',buffer:missingNumberCsv});
  // FDE-11：缺键对象不显示 candidate:<哈希>，改用来源描述点名（第 3 行是文件里的原始行号）。
  await expect(page.locator('.source-tab').filter({hasText:'来源行 3'})).toContainText('发票.csv · 来源行 3（无单号）');
@@ -51,7 +53,7 @@ test('缺键对象显示来源描述，处置需要填写原因',async({page})=>
 });
 
 test('排除记录处置走真实后端并刷新视图',async({page})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  await openObjectPage(page,{name:'发票.csv',mimeType:'text/csv',buffer:missingNumberCsv});
  const issue=page.getByTestId('pending-issue').filter({hasText:'缺少单据号'});
  const disposal=issue.getByTestId('disposal-option');
@@ -78,7 +80,7 @@ test('排除记录处置走真实后端并刷新视图',async({page})=>{
 });
 
 test('只保存无问题对象需要填写原因并走真实后端 allow_partial',async({page})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  await openObjectPage(page,{name:'发票.csv',mimeType:'text/csv',buffer:missingNumberCsv});
  const partial=page.getByTestId('partial-save');
  await expect(partial).toBeVisible();
@@ -109,12 +111,13 @@ test('只保存无问题对象需要填写原因并走真实后端 allow_partial
 });
 
 test('空白页来源可标记分区不适用',async({page})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  // mixed.pdf 第 2 页是空白页：来源未完整读取（阻断）旁给出标记分区不适用的处置。
  await page.goto('/');
  await page.getByLabel('接入目标').fill('接入混排发票并核对空白页处置');
  await page.getByLabel('选择材料').setInputFiles({name:'mixed.pdf',mimeType:'application/pdf',
   buffer:await import('node:fs').then(fs=>fs.readFileSync('../../dataagent-scenarios/fixtures/intake/mixed.pdf'))});
+ await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByText('识别与探查已完成')).toBeVisible();
  await page.getByRole('button',{name:'生成映射预览'}).click();

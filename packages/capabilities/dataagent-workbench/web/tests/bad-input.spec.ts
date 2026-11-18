@@ -1,8 +1,9 @@
 import {test,expect} from '@playwright/test';
+import {slowTimeout} from './support';
 
 // FDE-10：坏输入用中文直说、进度标红、给出下一步，不再显示「识别与探查已完成」。
 test('空文件用中文直说并标红进度',async({page})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  await page.goto('/');
  await page.getByLabel('接入目标').fill('接入空文件并核对坏输入提示');
  await page.getByLabel('选择材料').setInputFiles({name:'空文件.csv',mimeType:'text/csv',buffer:Buffer.alloc(0)});
@@ -19,7 +20,7 @@ test('空文件用中文直说并标红进度',async({page})=>{
 });
 
 test('伪装成 Excel 的文本文件直说不是有效的 Excel',async({page})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  await page.goto('/');
  await page.getByLabel('接入目标').fill('接入伪 Excel 并核对坏输入提示');
  await page.getByLabel('选择材料').setInputFiles({name:'报表.xlsx',
@@ -42,7 +43,7 @@ test('伪装成 Excel 的文本文件直说不是有效的 Excel',async({page})=
 });
 
 test('只有表头的文件直说没有数据行',async({page})=>{
- test.setTimeout(40000);
+ slowTimeout(40000);
  await page.goto('/');
  await page.getByLabel('接入目标').fill('接入只有表头的文件并核对坏输入提示');
  await page.getByLabel('选择材料').setInputFiles({name:'只有表头.csv',mimeType:'text/csv',
