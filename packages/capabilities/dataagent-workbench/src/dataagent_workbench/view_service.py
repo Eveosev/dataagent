@@ -170,6 +170,17 @@ class ViewService:
         s = self.wb.sessions.get(session_id, ctx)
         return self._correction_views(s, self._preview(s))
 
+    def mapping_value(self, session_id, entity_id, prop, ctx):
+        """Value the current mapping computes for one object property."""
+        s = self.wb.sessions.get(session_id, ctx)
+        body = self._preview(s)
+        if prop not in self.wb.definition.properties:
+            raise ValueError('unknown target property')
+        instance = self._mapping_instances(s, body).get(entity_id)
+        if instance is None:
+            raise ValueError('correction target is not in the current preview')
+        return instance.values.get(prop)
+
     def object_page(self, session_id, ctx):
         wb = self.wb
         s = wb.sessions.get(session_id, ctx)

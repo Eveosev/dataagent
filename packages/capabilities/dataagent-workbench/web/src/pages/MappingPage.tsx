@@ -1,6 +1,6 @@
 import {useEffect,useRef,useState} from 'react';
 import {api,display,transformNames} from '../client';
-import type {View,Draft,FieldBinding,IntakeSession,MappingSpec,SourceProfile} from '../client';
+import type {View,Draft,FieldBinding,IntakeSession,MappingSpec,SourceProfile,CorrectionView} from '../client';
 import {SourceViewer} from '../components/SourceViewer';
 import {DiscoveryPage} from './DiscoveryPage';
 import {MappingDetail} from '../components/MappingDetail';
@@ -125,6 +125,13 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects}:{sessionId:s
    await api(base+'/revalidate','POST',{expected_revision:revision.current});await load();
   }catch(error){onError(error);}
  }
+ async function adopt(correction:CorrectionView){
+  try{
+   await api(base+'/corrections/adopt','POST',{expected_revision:revision.current,
+    entity_id:correction.entity_id,property:correction.property});
+   await load();
+  }catch(error){onError(error);}
+ }
  if(!view)return <main className="loading">正在恢复任务…</main>;
  if(view.discovery)return <DiscoveryPage view={view} reload={load} onNew={onNew} onError={onError}/>;
  const phase=view.session.phase,done=phase==='saved',working=phase==='queued'||phase==='probing';
@@ -159,7 +166,7 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects}:{sessionId:s
  {problemCount>0&&<div className="notice amber"><strong>{problemCount} 项待核对</strong><ul>{(view.preview?.issues||view.session.issues||[]).slice(0,5).map((issue,i)=><li key={i}>{display((issue as Record<string,unknown>).target)} · {display((issue as Record<string,unknown>).code)}</li>)}</ul></div>}
  <div className="object-section"><div className="panel-heading"><strong>对象预览</strong><span className="badge">{view.preview?.instances?.length||0} 个对象</span>{onOpenObjects&&view.preview&&<button className="secondary" onClick={onOpenObjects}>打开对象页</button>}</div>{view.preview?<><div className="sample-controls"><button className="icon-button" disabled={record===0} onClick={()=>setRecord(record-1)}>←</button><span>对象 {record+1} / {view.preview.instances?.length||0}</span><button className="icon-button" disabled={record>=(view.preview.instances?.length||0)-1} onClick={()=>setRecord(record+1)}>→</button></div><dl className="object-values">{Object.keys(view.ontology.properties).map(k=><div key={k}><dt>{k}</dt><dd>{display(instance?.values?.[k])}</dd></div>)}</dl></>:<div className="empty">生成映射预览后，在这里查看真实对象。</div>}</div>
  {instance?.extensions&&<details className="extension-box"><summary>查看扩展字段</summary><pre>{JSON.stringify(instance.extensions,null,2)}</pre></details>}
- </section><MappingDetail readOnly={done} view={view} field={field} binding={binding} raw={profile?.records?.[sourceRow]?.[binding?.source_field||'']} dirty={dirty} recordIndex={record} onCorrect={correct} onSchema={async(name,reason)=>{try{await review('ontology',{property:name,value_type:'string',reason});}catch(error){onError(error);}}}/></div>
+ </section><MappingDetail readOnly={done} view={view} field={field} binding={binding} raw={profile?.records?.[sourceRow]?.[binding?.source_field||'']} dirty={dirty} recordIndex={record} onCorrect={correct} onAdopt={adopt} onSchema={async(name,reason)=>{try{await review('ontology',{property:name,value_type:'string',reason});}catch(error){onError(error);}}}/></div>
  <footer className="save-bar"><div><strong>{done?'已保存，可在后续接入中复用':dirty?'映射已修改，请生成新预览':problemCount?'补齐待核对项后保存':'核对后保存接入'}</strong><small>{view.preview?.review_state==='needs_revalidation'?'修改已留痕，需要重新校验。':'来源证据、映射修订和用户决定一起保存。'}</small></div><div className="save-buttons"><button className="secondary" onClick={()=>load(true).catch(onError)}>重新载入</button><button className="primary" disabled={busy||done||dirty||!view.preview||problemCount>0||view.preview.review_state!=='unreviewed'} onClick={save}>{done?'已保存':'保存接入'}</button></div></footer>
  </main>;
 }

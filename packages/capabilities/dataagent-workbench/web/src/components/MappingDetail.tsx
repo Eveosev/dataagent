@@ -1,12 +1,12 @@
 import {useState} from 'react';
 import {display,transformNames} from '../client';
-import type {View,FieldBinding} from '../client';
-export function MappingDetail({view,field,binding,raw,dirty,recordIndex,onCorrect,onSchema,readOnly}:{readOnly:boolean;view:View;field:string;binding?:FieldBinding;raw:unknown;dirty:boolean;recordIndex:number;onCorrect:(value:string,reason:string)=>Promise<void>;onSchema:(name:string,reason:string)=>Promise<void>}){
+import type {View,FieldBinding,CorrectionView} from '../client';
+export function MappingDetail({view,field,binding,raw,dirty,recordIndex,onCorrect,onAdopt,onSchema,readOnly}:{readOnly:boolean;view:View;field:string;binding?:FieldBinding;raw:unknown;dirty:boolean;recordIndex:number;onCorrect:(value:string,reason:string)=>Promise<void>;onAdopt:(correction:CorrectionView)=>Promise<void>;onSchema:(name:string,reason:string)=>Promise<void>}){
  const [range,setRange]=useState('mapping');const [value,setValue]=useState('');const [reason,setReason]=useState('');const [name,setName]=useState('');const [busy,setBusy]=useState(false);
  const instance=view.preview?.instances?.[recordIndex];
  const correction=view.correction_views?.find(item=>item.entity_id===instance?.id&&item.property===field);
  async function save(){setBusy(true);try{range==='instance'?await onCorrect(value,reason):await onSchema(name,reason);}finally{setBusy(false);}}
- async function adopt(){setBusy(true);try{await onCorrect(String(correction?.mapping_value),'撤销纠正，采用映射值');}finally{setBusy(false);}}
+ async function adopt(){if(!correction)return;setBusy(true);try{await onAdopt(correction);}finally{setBusy(false);}}
  return <aside className="detail-panel"><div className="panel-heading"><span>字段详情</span><span className="badge">{view.ontology.entity_type}</span></div><h2>{field||'选择一个目标字段'}</h2>
  {field&&<><dl className="field-comparison"><div><dt>来源值</dt><dd>{display(raw)}</dd></div><div><dt>转换方式</dt><dd>{transformNames[binding?.transform||'identity']}</dd></div><div className="after-value"><dt>Ontology 值</dt><dd data-testid={`preview-${field}`}>{dirty?'待更新':display(instance?.values?.[field])}</dd></div></dl>
  {correction&&!dirty&&<div className="notice amber correction-conflict" data-testid="mapping-correction-hint"><strong>{field}：映射已变化，纠正值仍生效；映射新算得的值为 {display(correction.mapping_value)}</strong>

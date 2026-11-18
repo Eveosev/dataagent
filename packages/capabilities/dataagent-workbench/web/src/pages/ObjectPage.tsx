@@ -99,17 +99,11 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
  async function adopt(correction:CorrectionView){
   if(running.current)return;
   running.current=true;setBusy(true);try{
-   const active=view;
-   if(!active||!active.preview_ref)throw new Error('请先生成映射预览');
-   await api(base_url+'/review','POST',{expected_revision:revision.current,decision:{preview_ref:active.preview_ref,
-    target_scope:'instance',changes:{entity_id:correction.entity_id,property:correction.property,
-     value:String(correction.mapping_value),reason:'撤销纠正，采用映射值'},decision:'save'}});
+   await api(base_url+'/corrections/adopt','POST',{expected_revision:revision.current,
+    entity_id:correction.entity_id,property:correction.property});
    // 采用映射值是一次新的用户决定：清掉本地草稿，以最新修订重新校验。
    editing.current=false;editObject.current='';setValue('');setReason('');setConflict(false);
    sessionStorage.removeItem(localKey);
-   await load();
-   try{await api(base_url+'/revalidate','POST',{expected_revision:revision.current});}
-   catch(error){onError(error);}
    await load();
   }catch(error){
    onError(error);
