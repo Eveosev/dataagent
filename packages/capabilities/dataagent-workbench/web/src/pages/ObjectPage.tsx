@@ -361,23 +361,36 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
        折叠详情；处置与对象入口逐行保留。类型转换失败给两条出路（纠正当前值、
        修订映射转换），不再提供「排除表头行」。 */}
    <ul>{issueEntries.slice(0,showAllIssues?issueEntries.length:10).map((entry,i)=>{
-    const conversionActions=(issue:Issue)=>issue.code!=='ontology.conversion_failed'?null:
-     <div className="disposal" data-testid="conversion-actions">
-      <span className="muted">类型转换失败：纠正当前值，或返回映射页修改转换后重新生成预览。</span>
+    const correctIssue=(issue:Issue)=>{
+     const target=issueObject(issue,view);
+     if(!target)return;
+     selectObject(view.objects.indexOf(target));
+     if(issue.target)setField(issue.target);
+    };
+    // full：未分组的单条问题给两条出路；group：组头只给改映射，逐行纠正
+    // 放到各行的 row 入口，避免组头按钮只作用于第一行；row：组内单行的
+    // 定位纠正入口，点击同时选中对象与出错属性。
+    const conversionActions=(issue:Issue,mode:'full'|'row'|'group'='full')=>{
+     if(issue.code!=='ontology.conversion_failed')return null;
+     const rowLevel=mode==='row';
+     return <div className="disposal" data-testid={rowLevel?'conversion-row-actions':'conversion-actions'}>
+      {!rowLevel&&<span className="muted">{mode==='group'
+       ?'类型转换失败：展开「查看各行」逐行定位纠正，或返回映射页修改转换后重新生成预览。'
+       :'类型转换失败：纠正当前值，或返回映射页修改转换后重新生成预览。'}</span>}
       <div className="disposal-controls">
-       {issueObject(issue,view)
-        ?<button className="secondary" disabled={busy||done} onClick={()=>{const target=issueObject(issue,view);if(target){selectObject(view.objects.indexOf(target));if(issue.target)setField(issue.target);}}}>去对象页纠正当前值</button>
-        :<span className="muted">该行无法定位对象，请修订映射转换。</span>}
-       <button className="secondary" disabled={busy||done} onClick={onBack}>修改映射转换（重新提案）</button>
+       {mode!=='group'&&(issueObject(issue,view)
+        ?<button className={rowLevel?'field-button':'secondary'} disabled={busy||done} onClick={()=>correctIssue(issue)}>{issue.target?`去对象页纠正「${propertyLabel(issue.target)}」`:'去对象页纠正当前值'}</button>
+        :<span className="muted">该行无法定位对象，请修订映射转换。</span>)}
+       {!rowLevel&&<button className="secondary" disabled={busy||done} onClick={onBack}>修改映射转换（重新提案）</button>}
       </div>
      </div>;
-    // 组内各行不再重复组头的转换出路与处置块：只保留行定位与对象入口。
+    };
     const issueEntry=(issue:Issue,inGroup=false)=>{
      const target=issueObject(issue,view);
      // 问题补充说明统一中文化：已知原文进主文案，未知英文折叠为「详情」。
      const human=humanDetail(issue.detail);
      return <><small className={issueBlocksSave(issue)?'warn':'ok'}>{issueBlocksSave(issue)?'阻断':'可纠正'}</small>
-      {' · '}{target?<button className="field-button" onClick={()=>selectObject(view.objects.indexOf(target))}>{objectLabel(target)}</button>:<span className="muted">{issueLocation(issue)}</span>}
+      {' · '}{target?<button className="field-button" title={issue.target?`定位到 ${propertyLabel(issue.target)}`:undefined} onClick={()=>correctIssue(issue)}>{objectLabel(target)}</button>:<span className="muted">{issueLocation(issue)}</span>}
       {issue.target?` · ${propertyLabel(issue.target)}`:''} · {issueReasons[issue.code||'']||display(issue.code)}{issue.detail&&human.summary?` · ${human.summary}`:''}
       {issue.detail&&human.detail&&<details className="tech-detail"><summary>详情</summary><pre>{technicalDetail(human.detail)}</pre></details>}
       {issueDisposals(issue).map(option=><div key={disposalKey(option)} className="disposal" data-testid="disposal-option">
@@ -387,7 +400,7 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
         <button className="secondary" disabled={busy||done||!(disposalReasons[disposalKey(option)]||'').trim()} onClick={()=>submitDisposal(option,disposalReasons[disposalKey(option)])}>提交处置</button>
        </div>
       </div>)}
-      {inGroup?null:conversionActions(issue)}
+      {conversionActions(issue,inGroup?'row':'full')}
      </>;};
     if(!('group' in entry))return <li key={i} data-testid="pending-issue">{issueEntry(entry)}</li>;
     const group=entry.group;
@@ -398,7 +411,7 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
      <small className={blocked?'warn':'ok'}>{blocked?'阻断':'可纠正'}</small>
      {' · '}{group[0].target?`「${propertyLabel(group[0].target as string)}」 × ${group.length} 行`:`${group.length} 行`} · {issueReasons[group[0].code||'']||display(group[0].code||'')}{human.summary?` · ${human.summary}`:''}
      {human.detail&&<details className="tech-detail"><summary>详情</summary><pre>{technicalDetail(human.detail)}</pre></details>}
-     {conversionActions(group[0])}
+     {conversionActions(group[0],'group')}
      <details className="group-rows"><summary>查看各行</summary><ul>
       {group.map((issue,j)=><li key={j}>{issueEntry(issue,true)}</li>)}
      </ul></details>

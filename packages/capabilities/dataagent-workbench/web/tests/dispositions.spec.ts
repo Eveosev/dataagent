@@ -211,14 +211,23 @@ test('xlsx 日期列错绑为 decimal：按根因合并计数，处置按类型�
  expect(await group.innerText()).not.toContain('ConversionSyntax');
  expect(await page.getByTestId('pending-issues').innerText()).not.toContain('[<class');
  // 类型转换失败给两条出路，不再提供「排除表头行或明显无关的记录」。
- await expect(group.getByTestId('conversion-actions')).toContainText('去对象页纠正当前值');
+ // 组头只负责改映射；纠正入口逐行给出，避免整组按钮只作用于第一行。
  await expect(group.getByTestId('conversion-actions')).toContainText('修改映射转换（重新提案）');
+ await expect(group.getByTestId('conversion-actions')).toContainText('展开「查看各行」逐行定位纠正');
+ await expect(group.getByTestId('conversion-actions')).not.toContainText('去对象页纠正');
  await expect(group.getByTestId('disposal-option')).toHaveCount(0);
  await expect(page.getByTestId('pending-issues')).not.toContainText('排除表头行');
- // 各行收进折叠详情：展开后 5 行都在，且每行仍可点回对象。
- await group.getByText('查看各行').click();
- await expect(group.locator('.group-rows li')).toHaveCount(5);
- await expect(group.locator('.group-rows li').first()).toContainText('BX-2026-0001');
+ // 各行收进折叠详情：展开后 5 行都在，每行都有自己的「纠正当前值」入口。
+ await group.getByText('查看各行',{exact:true}).click();
+ const rows=group.locator('.group-rows li');
+ await expect(rows).toHaveCount(5);
+ await expect(rows.first()).toContainText('BX-2026-0001');
+ for(const row of await rows.all())
+  await expect(row.getByTestId('conversion-row-actions')).toContainText('去对象页纠正「金额」');
+ // 点第二行的纠正入口：跳到对象页时选中该对象，并定位到出错字段「金额」。
+ await rows.nth(1).getByRole('button',{name:'去对象页纠正「金额」'}).click();
+ await expect(page.locator('.source-tab.active')).toContainText('BX-2026-0002');
+ await expect(page.getByLabel('纠正的属性')).toHaveValue('amount');
  // 处置入口回到映射页修订转换（重新提案）。
  await group.getByRole('button',{name:'修改映射转换（重新提案）'}).click();
  await expect(page.getByRole('heading',{name:/核对来源与/})).toBeVisible();
@@ -320,6 +329,72 @@ test('未映射来源在处置一行后重新生成预览时保持不映射',asy
  await expect(page.getByRole('button',{name:'保存接入'})).toBeEnabled();
  await page.getByRole('button',{name:'保存接入'}).click();
  await expect(page.getByRole('heading',{name:'接入已保存'})).toBeVisible();
+});
+
+// FDE2-05 回归：先全量映射两份材料，再缩窄为只映射 ledger，最后在网页点
+// 「生成映射预览」。网页必须按最新范围重建，不能因为历史 mapping:<来源>
+// 键把已移除的另一份材料重新映射进来（对象/问题数不膨胀）。
+test('全量映射后缩窄来源，网页重建不再加回已移除的来源',async({page})=>{
+ test.setTimeout(60000);
+ await page.goto('/');
+ await page.getByLabel('接入目标').fill('先全量映射再缩窄来源');
+ await page.getByLabel('选择材料').setInputFiles([
+  {name:'ledger.csv',mimeType:'text/csv',buffer:ledgerCsv},
+  {name:'other.csv',mimeType:'text/csv',buffer:otherCsv},
+ ]);
+ await page.getByRole('button',{name:'开始接入'}).click();
+ await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ const sid=new URLSearchParams(new URL(page.url()).hash.slice(1)).get('session')!;
+ const view=await (await page.request.get(`/api/sessions/${sid}/view`)).json() as {
+  session:{revision:string;selected_versions:Record<string,string>};ontology:{id:string;revision:string};
+  ontology_concept:string;
+  profiles:{source_id:string;fields:string[];metadata:{structure_fingerprint:string}}[];
+ };
+ const mapped=view.profiles.find(profile=>!profile.fields.includes('note'))!;
+ const other=view.profiles.find(profile=>profile.fields.includes('note'))!;
+ expect(mapped&&other).toBeTruthy();
+ const proposalFor=(source:typeof mapped)=>({id:'candidate',revision:'1',
+  ontology_revision:`${view.ontology.id}@${view.ontology.revision}`,concept:view.ontology_concept,
+  source_fingerprint:source.metadata.structure_fingerprint,
+  bindings:{number:{source_field:'number'},
+   amount:source.fields.includes('amount_minor')
+    ?{source_field:'amount_minor',transform:'minor_to_major'}
+    :{source_field:'amount'},
+   currency:{source_field:'currency'}}});
+ // 第一步：A、B 都提案（全量映射）。
+ const full=await page.request.post(`/api/sessions/${sid}/source-proposals`,{
+  data:{proposals:{[mapped.source_id]:proposalFor(mapped),[other.source_id]:proposalFor(other)},
+   expected_revision:view.session.revision}});
+ expect(full.ok(),await full.text()).toBeTruthy();
+ const fullView=await (await page.request.get(`/api/sessions/${sid}/view`)).json() as {
+  session:{revision:string;selected_versions:Record<string,string>}};
+ expect(fullView.session.selected_versions[`mapping:${other.source_id}`]).toBeTruthy();
+ // 第二步：Agent 缩窄为只映射 A；历史 mapping:B 必须被清掉。
+ const narrow=await page.request.post(`/api/sessions/${sid}/proposal`,{
+  data:{proposal:proposalFor(mapped),expected_revision:fullView.session.revision}});
+ expect(narrow.ok(),await narrow.text()).toBeTruthy();
+ const narrowView=await (await page.request.get(`/api/sessions/${sid}/view`)).json() as {
+  session:{revision:string;selected_versions:Record<string,string>}};
+ expect(narrowView.session.selected_versions[`mapping:${other.source_id}`]).toBeFalsy();
+ // 第三步：网页重建，只应提交 A；B 保持来源级问题，不再产生行级对象。
+ await page.reload();
+ await expect(page.getByRole('button',{name:'生成映射预览'})).toBeVisible();
+ const [rebuilt]=await Promise.all([
+  page.waitForResponse(response=>response.request().method()==='POST'&&/source-proposals$/.test(response.url())),
+  page.getByRole('button',{name:'生成映射预览'}).click(),
+ ]);
+ expect(rebuilt.status()).toBe(200);
+ const body=await rebuilt.json() as {instances:{values:{number?:string}}[];
+  issues:{code?:string;source_id?:string;row?:number}[];source_revisions:Record<string,string>};
+ expect(body.instances).toHaveLength(3);
+ expect(Object.keys(body.source_revisions)).toEqual([mapped.source_id]);
+ const otherIssues=body.issues.filter(issue=>issue.source_id===other.source_id);
+ expect(otherIssues).toHaveLength(1);
+ expect(otherIssues[0]).toMatchObject({code:'ontology.source_unmapped'});
+ expect(otherIssues[0].row).toBeUndefined();
+ const afterRebuild=await (await page.request.get(`/api/sessions/${sid}/view`)).json() as {
+  session:{selected_versions:Record<string,string>}};
+ expect(afterRebuild.session.selected_versions[`mapping:${other.source_id}`]).toBeFalsy();
 });
 
 async function postResponse(page:import('@playwright/test').Page,url:RegExp){

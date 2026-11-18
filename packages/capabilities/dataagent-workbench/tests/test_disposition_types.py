@@ -105,6 +105,14 @@ def test_source_proposal_subset_keeps_the_other_source_unmapped(tmp_path):
         wb.sessions.get(session.id, wb.ctx).revision, wb.ctx)
     assert both.issues == []
     assert len(both.instances) == 6
+    # Narrowing through the multi-source endpoint (the web's rebuild path)
+    # must drop the removed source's scope entry as well.
+    current = wb.sessions.get(session.id, wb.ctx)
+    narrowed = wb.intake.submit_source_proposals(
+        session.id, {'rows': proposal_for(wb, current, 'rows')},
+        current.revision, wb.ctx)
+    assert set(narrowed.source_revisions) == {'rows'}
+    assert 'mapping:extra' not in wb.sessions.get(session.id, wb.ctx).selected_versions
     with pytest.raises(ValueError, match='one mapping for each observed source'):
         wb.intake.submit_source_proposals(
             session.id, {'unknown': proposal_for(wb, session, 'rows')},
@@ -284,11 +292,12 @@ def test_row_disposition_regen_keeps_the_unmapped_source_out(tmp_path):
     assert 'mapping:unused' not in wb.sessions.get(session.id, wb.ctx).selected_versions
 
 
-def test_ignore_source_follows_the_active_preview_not_an_older_mapping(tmp_path):
-    """A later narrower proposal may leave an already mapped source unused.
+def test_ignore_source_after_a_narrower_proposal_is_allowed(tmp_path):
+    """A later narrower proposal leaves an already mapped source unused.
 
-    The source-level issue then names it, so the disposition must be allowed:
-    the check follows the preview under review, not the historical scope.
+    The source-level issue names it once, so the audited disposition must be
+    allowed; the narrower proposal also clears the stale mapping scope so the
+    web cannot pull the source back in on the next rebuild.
     """
     wb, session = unmapped_regeneration_setup(tmp_path)
     mapped = {source_id: proposal_for(wb, session, source_id)
@@ -296,17 +305,80 @@ def test_ignore_source_follows_the_active_preview_not_an_older_mapping(tmp_path)
     wb.intake.submit_source_proposals(session.id, mapped, session.revision, wb.ctx)
     assert 'mapping:unused' in wb.sessions.get(session.id, wb.ctx).selected_versions
     # A narrower proposal (single-source mapping revision) leaves the second
-    # material unmapped in the preview, although its old mapping entry remains.
+    # material unmapped in the preview and drops its old scope entry.
     narrowed = wb.sessions.get(session.id, wb.ctx)
     preview = wb.intake.submit_proposal(
         session.id, proposal_for(wb, narrowed, 'ledger'), narrowed.revision, wb.ctx)
     assert [issue['source_id'] for issue in preview.issues
             if issue['code'] == 'ontology.source_unmapped'] == ['unused']
     current = wb.sessions.get(session.id, wb.ctx)
+    assert 'mapping:unused' not in current.selected_versions
     wb.intake.dispose(session.id, _dispose('ignore_source', source_id='unused'),
                       current.revision, wb.ctx)
     assert wb.store.query('disposition', wb.scope)[0]['body']['entries'][0]['action'] == \
         'ignore_source'
+
+
+def test_narrowing_replaces_the_mapping_scope_for_web_rebuild(tmp_path):
+    """FDE2-05: full mapping -> narrower proposal -> web rebuild must not grow.
+
+    The web rebuilds from the ``mapping:<source>`` entries.  Replacing the
+    whole scope on every proposal keeps it equal to the agent's latest choice;
+    an old key would make the page map the removed material again.
+    """
+    wb, session = unmapped_regeneration_setup(tmp_path)
+    full = wb.intake.submit_source_proposals(session.id, {
+        'ledger': proposal_for(wb, session, 'ledger'),
+        'unused': proposal_for(wb, session, 'unused'),
+    }, session.revision, wb.ctx)
+    assert {'mapping:ledger', 'mapping:unused'} <= set(
+        wb.sessions.get(session.id, wb.ctx).selected_versions)
+    assert len(full.instances) == 8
+    # The agent narrows the mapping to the ledger only.
+    current = wb.sessions.get(session.id, wb.ctx)
+    narrow = wb.intake.submit_proposal(
+        session.id, proposal_for(wb, current, 'ledger'), current.revision, wb.ctx)
+    current = wb.sessions.get(session.id, wb.ctx)
+    assert 'mapping:ledger' in current.selected_versions
+    assert 'mapping:unused' not in current.selected_versions
+    assert set(wb.intake.view(session.id, wb.ctx)['mappings']) == {'ledger'}
+    assert len(narrow.instances) == 4
+    # This is exactly what the web sends after reading the current scope: only
+    # the ledger, with the same bindings.  Objects and row-level problems must
+    # not expand back to the unused material.
+    rebuilt = wb.intake.submit_source_proposals(
+        session.id, {'ledger': proposal_for(wb, current, 'ledger')},
+        current.revision, wb.ctx)
+    assert set(rebuilt.source_revisions) == {'ledger'}
+    assert len(rebuilt.instances) == 4
+    assert 'mapping:unused' not in wb.sessions.get(session.id, wb.ctx).selected_versions
+    assert [issue['source_id'] for issue in rebuilt.issues
+            if issue['code'] == 'ontology.source_unmapped'] == ['unused']
+    assert not any(issue.get('row') is not None and issue.get('source_id') == 'unused'
+                   for issue in rebuilt.issues)
+
+
+def test_partial_save_reason_is_chinese_and_raw_detail_is_separate(tmp_path):
+    wb, session = bad_rows_setup(tmp_path)
+    body = {
+        'instances': [{'id': 'obj-1', 'values': {
+            'number': 'INV-9', 'amount_minor': 'not-a-number', 'currency': 'CNY',
+        }, 'source_anchors': {}, 'unresolved': []}],
+        'issues': [
+            {'code': 'ontology.conversion_failed', 'target': 'amount',
+             'entity_id': 'obj-1', 'source_id': 'ledger', 'row': 1,
+             'detail': "Invalid isoformat string: 'not-a-date'"},
+            {'code': 'ontology.required_value_missing', 'target': 'currency',
+             'entity_id': 'obj-1', 'source_id': 'ledger', 'row': 1},
+        ],
+    }
+    plan = wb.intake.partial_plan(session, body)
+    reasons = {item['field']: item for item in plan['suspended'][0]['reasons']}
+    assert reasons['amount']['reason'] == '值无法按目标类型转换'
+    assert reasons['amount']['detail'] == "Invalid isoformat string: 'not-a-date'"
+    assert reasons['currency']['reason'] == '缺少必填值'
+    assert 'detail' not in reasons['currency']
+    assert all('Invalid' not in item['reason'] for item in reasons.values())
 
 
 def test_failed_conversion_is_counted_once_per_row_and_column(tmp_path):

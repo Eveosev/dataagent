@@ -646,9 +646,15 @@ class IntakeService:
                 if key in seen:
                     continue
                 seen.add(key)
-                reasons.append({'code': issue.get('code'), 'field': issue.get('target'),
-                                'reason': issue.get('detail') or _ISSUE_REASONS.get(
-                                    issue.get('code'), issue.get('code'))})
+                # User-facing reason stays Chinese; the raw parser/exception
+                # text goes to its own field so a page can tuck it into a
+                # collapsible detail instead of showing it inline.
+                entry = {'code': issue.get('code'), 'field': issue.get('target'),
+                         'reason': _ISSUE_REASONS.get(issue.get('code'))
+                         or '该项未通过核对'}
+                if issue.get('detail'):
+                    entry['detail'] = str(issue.get('detail'))
+                reasons.append(entry)
             item = {'entity_id': entity_id, 'object': labels.get(entity_id),
                     'values': to_jsonable_python(instance.get('values') or {})}
             if reasons:
@@ -1753,10 +1759,14 @@ class IntakeService:
         preview=self._refresh_preview(body,concept)
         # One revision entry per mapped source: the durable scope the web
         # regenerates from, so an unmapped material stays unmapped instead of
-        # flooding the next preview with its rows (FDE2-05).
-        versions={**s.selected_versions,'preview':preview.id+'@1','mapping':mid+'@'+revision,
-            **{f'mapping:{observation.source_id}':mid+'@'+revision
-               for observation in observations}}
+        # flooding the next preview with its rows (FDE2-05). Replace the whole
+        # scope (not just add): after a narrower proposal a stale key would
+        # make the web re-include the source the agent just removed.
+        versions={key:value for key,value in s.selected_versions.items()
+                  if not key.startswith('mapping:')}
+        versions.update({'preview':preview.id+'@1','mapping':mid+'@'+revision})
+        for observation in observations:
+            versions[f'mapping:{observation.source_id}']=mid+'@'+revision
         if prior_ref and pending:versions['corrections_from']=prior_ref
         else:versions.pop('corrections_from',None)
         wb.sessions.update(s.id,s.revision,{'phase':'preview','selected_versions':versions,
@@ -1792,7 +1802,11 @@ class IntakeService:
                 raise ValueError('target concept outside task')
         if len({proposal.identity_strategy for proposal in proposals.values()}) != 1:
             raise ValueError('all mappings must use the same identity strategy')
-        versions = dict(session.selected_versions)
+        # The submitted proposals are the task's current mapping scope. Drop
+        # keys from earlier, wider proposals so the web cannot rebuild a
+        # preview that silently maps a source the agent left out.
+        versions = {key:value for key,value in session.selected_versions.items()
+                    if not key.startswith('mapping:')}
         writes = []
         mappings = {}
         for index, profile in enumerate(all_profiles):
