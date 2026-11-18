@@ -1,6 +1,6 @@
 import {useEffect,useRef,useState} from 'react';
 import {api,ApiError,display,locate,findAnchorRow,isDecisionEvidence,decisionSourceName,issueBlocksSave,issueObject,issueReasons} from '../client';
-import type {CorrectionView,ObjectView,SourceProfile,WorkObject} from '../client';
+import type {CorrectionView,ObjectView,SourceProfile,Issue,WorkObject} from '../client';
 import {SourceViewer} from '../components/SourceViewer';
 
 const ranges=[['instance','纠正当前对象的值'],['mapping','修改这类来源的映射'],['ontology','提出本体草案']] as const;
@@ -143,6 +143,13 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
   if(typeof uploadName==='string'&&uploadName)return uploadName;
   return display((view.sources.find(s=>s.source_id===sourceId)||{}).display_name);
  };
+ // 问题没有可点的对象时仍要可区分、可处理：来源级问题点出具体来源，行号类问题
+ // 点出记录序号（row 是来源内 0 起的序号），纠正冲突沿用后端给的对象标签。
+ const issueLocation=(issue:Issue)=>{
+  if(issue.source_id)return sourceName(issue.source_id);
+  if(issue.row!==undefined)return `第 ${issue.row+1} 条记录 · 来源待定`;
+  return issue.object?display(issue.object):'映射层';
+ };
  const submitButton=(label:string)=><button className="secondary" disabled={busy||!object}
   onClick={conflict?confirmConflict:submit}>{conflict?'已核对，重新提交':label}</button>;
  return <main className="workspace"><div className="task-header"><div><div className="eyebrow">采购资料 / 对象页</div><h1>核对业务对象</h1><p className="muted">每个值都带来源定位；三种修改范围分别生效。{done?'接入已保存，对象为只读。':''}</p></div><div className="save-buttons"><button className="secondary" onClick={onBack}>返回映射页</button></div></div>
@@ -168,16 +175,17 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
     <p><strong>{c.property}</strong>：映射已变化，纠正值仍生效；映射新算得的值为 {display(c.mapping_value)}。</p>
     <button className="secondary" disabled={busy||done} onClick={()=>adopt(c)}>采用新映射值</button></div>)}
   </div>}
+  {object.extensions&&<details className="extension-box"><summary>查看扩展字段</summary><pre>{JSON.stringify(object.extensions,null,2)}</pre></details>}</>
+  :<div className="empty">选择左侧对象查看值与来源定位。</div>}
+  {/* 待核对问题不依赖选中对象：预览没有实例时（如 no_records）仍要全部列出。 */}
   {view.issues.length>0&&<div className="notice amber" data-testid="pending-issues"><strong>{view.issues.length} 项待核对 · 阻断 {blockingCount} 项</strong>
    <ul>{sortedIssues.slice(0,showAllIssues?sortedIssues.length:10).map((issue,i)=>{
     const target=issueObject(issue,view);
     return <li key={i} data-testid="pending-issue"><small className={issueBlocksSave(issue)?'warn':'ok'}>{issueBlocksSave(issue)?'阻断':'可纠正'}</small>
-     {' · '}{target?<button className="field-button" onClick={()=>selectObject(view.objects.indexOf(target))}>{issueLabel(target)}</button>:<span className="muted">映射层</span>}
+     {' · '}{target?<button className="field-button" onClick={()=>selectObject(view.objects.indexOf(target))}>{issueLabel(target)}</button>:<span className="muted">{issueLocation(issue)}</span>}
      {issue.target?` · ${display(issue.target)}`:''} · {issueReasons[issue.code||'']||display(issue.code)}{issue.detail?` · ${display(issue.detail)}`:''}</li>;})}</ul>
    {sortedIssues.length>10&&<button className="secondary" onClick={()=>setShowAllIssues(!showAllIssues)}>{showAllIssues?'收起其余问题':`展开其余 ${sortedIssues.length-10} 条`}</button>}
    <p className="help">阻断项不能在对象页解除，需修订映射或来源；可纠正项保存纠正值后自动解除，解除前整批保存同样被拦。</p></div>}
-  {object.extensions&&<details className="extension-box"><summary>查看扩展字段</summary><pre>{JSON.stringify(object.extensions,null,2)}</pre></details>}</>
-  :<div className="empty">选择左侧对象查看值与来源定位。</div>}
  </section><aside className="detail-panel"><div className="panel-heading"><span>修改范围</span><span className="badge">{view.review_state||'未预览'}</span></div><h2>{object?'三种修改范围':'选择一个对象'}</h2>
   <label className="label">修改范围</label><div className="range-options">{ranges.map(([id,label])=><label key={id}><input type="radio" name="object-range" value={id} checked={range===id} onChange={()=>setRange(id)} disabled={done}/>{label}</label>)}</div>
   {done?<p className="help">接入已保存。修订映射请在新建接入中进行。</p>:range==='instance'?<div className="edit-current">

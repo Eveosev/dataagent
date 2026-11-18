@@ -14,7 +14,7 @@ export type WorkObject={id:string;entity_type:string;values:Record<string,unknow
 export type Correction={decision_ref:string;entity_id:string;property:string;value:unknown;reason:string};
 export type CorrectionView={decision_ref:string;entity_id:string;property:string;value:unknown;
  mapping_value:unknown;mapping_revision:string;mapping_changed:boolean};
-export type Issue={code?:string;target?:string;row?:number;entity_id?:string;detail?:string;source_id?:string};
+export type Issue={code?:string;target?:string;row?:number;entity_id?:string;detail?:string;source_id?:string;object?:string};
 export type ObjectView={session:IntakeSession;ontology:OntologyRevision;ontology_revision:string;ontology_draft:Record<string,unknown>|null;
  sources:(SourceProfile&{display_name:string})[];objects:WorkObject[];corrections:Correction[];correction_views:CorrectionView[];issues:Issue[];
  review_state:string|null;preview_ref?:string;mapping_revision:string|null;draft:Draft};
@@ -37,25 +37,30 @@ export const issueReasons:Record<string,string>={
 };
 export const issueBlocksSave=(issue:Issue)=>!correctableIssueCodes.has(issue.code||'');
 // 问题点回对象：带 entity_id 的直接命中；只带行号的问题（row 是来源内 0 起的记录
-// 序号）用对象证据锚点经来源 profile 解析回同一序号——每条来源记录只归一个对象，
-// 命中的即对应对象。映射层问题（无对象可点）返回 undefined。
+// 序号，且可能不带 source_id）用对象证据锚点经来源 profile 解析回同一序号。行号
+// 在各来源内独立计数，跨来源的同序号可能归并到不同对象——只有全部命中都指向同一
+// 对象时才返回它，有歧义时返回 undefined，不给确定性的错误链接。
 export function issueObject(issue:Issue,view:Pick<ObjectView,'objects'|'sources'>):WorkObject|undefined{
  if(issue.entity_id){
   const target=view.objects.find(o=>o.id===issue.entity_id);
   if(target)return target;
  }
  if(issue.row===undefined)return undefined;
+ let matched:WorkObject|undefined;
  for(const object of view.objects){
   for(const anchors of Object.values(object.evidence||{})){
    for(const anchor of anchors){
     if(issue.source_id&&anchor.source_id!==issue.source_id)continue;
     const profile=view.sources.find(s=>s.source_id===anchor.source_id);
     const hit=profile?findAnchorRow(profile,anchor):undefined;
-    if(hit&&hit.row===issue.row)return object;
+    if(hit&&hit.row===issue.row){
+     if(matched&&matched.id!==object.id)return undefined;
+     matched=object;
+    }
    }
   }
  }
- return undefined;
+ return matched;
 }
 export class ApiError extends Error {constructor(public status:number,message:string){super(message);}}
 // 后端原始报错按原文透出会给用户看不懂的英文；已知文案在这里换成中文说法。

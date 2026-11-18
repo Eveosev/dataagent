@@ -67,6 +67,58 @@ test('每条问题能点到对应对象',async({page})=>{
  // 行号问题（缺单据号，第 1 条记录）点回 INV-001。
  await page.getByTestId('pending-issue').filter({hasText:'缺少单据号'}).first().getByRole('button',{name:'INV-001'}).click();
  await expect(page.locator('.source-tab.active')).toContainText('INV-001');
- // 映射层问题（无对应对象）不渲染成对象按钮。
- await expect(page.getByTestId('pending-issue').filter({hasText:'必填属性没有映射'})).toContainText('映射层');
+ // 来源级问题（无对象可点）显示具体来源名，条目可区分、可处理。
+ const sourceIssue=page.getByTestId('pending-issue').filter({hasText:'必填属性没有映射'});
+ await expect(sourceIssue).toContainText('invoice.csv');
+ await expect(sourceIssue).not.toContainText('映射层');
+ // 来源未完整读取同样点出具体来源。
+ await expect(page.getByTestId('pending-issue').filter({hasText:'来源未完整读取'})).toContainText('invoice.csv');
+});
+
+test('预览没有对象时待核对问题仍在对象页显示',async({page})=>{
+ test.setTimeout(40000);
+ // 只有表头的 CSV：预览无实例，后端产生 no_records（阻断）且仍可打开对象页。
+ await page.goto('/');
+ await page.getByLabel('接入目标').fill('接入空发票并核对零对象问题');
+ await page.getByLabel('选择材料').setInputFiles({name:'invoice.csv',mimeType:'text/csv',
+  buffer:Buffer.from('number,amount_minor,currency,issuer\n')});
+ await page.getByRole('button',{name:'开始接入'}).click();
+ await page.getByText('识别与探查已完成').waitFor();
+ await page.getByRole('button',{name:'生成映射预览'}).click();
+ await page.getByRole('button',{name:'打开对象页'}).click();
+ await expect(page.getByRole('heading',{name:'核对业务对象'})).toBeVisible();
+ // 零对象也显示全部待核对问题：no_records 与各必填绑定缺失（带来源名）都在页面上。
+ await expect(page.getByTestId('pending-issues')).toContainText('4 项待核对');
+ await expect(page.getByTestId('pending-issues')).toContainText('阻断 4 项');
+ await expect(page.getByTestId('pending-issue')).toHaveCount(4);
+ await expect(page.getByTestId('pending-issue').filter({hasText:'没有可映射的记录'})).toContainText('映射层');
+ await expect(page.getByTestId('pending-issue').filter({hasText:'必填属性没有映射'}).first()).toContainText('invoice.csv');
+});
+
+test('跨来源同序号的行号问题不链接到错误对象',async({page})=>{
+ test.setTimeout(40000);
+ // 两个来源各有第 0 条记录但归并到不同对象：行号类问题不带 source_id，
+ // 无法唯一确定归属对象，条目不渲染对象按钮，点出记录序号并标记来源待定。
+ await page.route('**/api/sessions/*/objects',async route=>{
+  const response=await route.fetch();
+  const body=await response.json();
+  body.issues=[{code:'ontology.identity_unresolved',row:0}];
+  await route.fulfill({response,json:body});
+ });
+ await page.goto('/');
+ await page.getByLabel('接入目标').fill('接入两份发票并核对跨来源行号');
+ await page.getByLabel('选择材料').setInputFiles([
+  {name:'invoices-a.csv',mimeType:'text/csv',buffer:Buffer.from('number,amount_minor,currency,issuer\nINV-001,126000,CNY,华信办公\nINV-002,90000,CNY,北明科技\n')},
+  {name:'invoices-b.csv',mimeType:'text/csv',buffer:Buffer.from('number,amount_minor,currency,issuer\nINV-101,75000,CNY,青山贸易\nINV-102,66000,CNY,华信办公\n')}]);
+ await page.getByRole('button',{name:'开始接入'}).click();
+ await page.getByText('识别与探查已完成').waitFor();
+ await page.getByRole('button',{name:'生成映射预览'}).click();
+ await page.getByRole('button',{name:'打开对象页'}).click();
+ await expect(page.getByRole('heading',{name:'核对业务对象'})).toBeVisible();
+ const issue=page.getByTestId('pending-issue').filter({hasText:'缺少单据号'});
+ await expect(issue).toHaveCount(1);
+ await expect(issue).toContainText('第 1 条记录 · 来源待定');
+ await expect(issue.getByRole('button')).toHaveCount(0);
+ // 两个来源各自的第 0 条记录都在对象列表里，问题没有误指向其中任何一个。
+ await expect(page.locator('.source-tab')).toHaveCount(4);
 });
