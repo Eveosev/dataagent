@@ -1000,6 +1000,55 @@ def test_rejected_draft_confirmation_is_refused(tmp_path):
     assert wb.store.current('ontology', 'sales-model', scope=wb.scope) is None
 
 
+def test_pending_candidate_is_available_to_the_page_without_a_review(tmp_path):
+    """The page can confirm a pending draft's candidate in one step.
+
+    This pins the data contract the workbench page reads (view draft, candidate
+    reference and task revision); the page render change that exposes the
+    publish card for pending drafts is tracked separately.
+    """
+    wb, session_id, request = workbench(tmp_path)
+    current = full_draft(wb, session_id, request)
+    candidate = prepare(wb, full_completion(wb, session_id, current)).data
+
+    view = client(wb).get(f'/api/sessions/{session_id}/view').json()
+    assert view['discovery']['draft']['state'] == 'pending'
+    assert view['discovery']['publish_candidate']['ref'] == candidate['candidate_ref']
+
+    shown = client(wb).get(
+        f'/api/sessions/{session_id}/publish/candidate').json()
+    page_current = (shown if shown['draft_ref'] == view['discovery']['draft']['ref']
+                    else None)
+    page_expired = shown['session_revision'] != view['session']['revision']
+    assert page_current is not None and not page_expired
+
+    published = publish(wb, session_id, {**shown, 'candidate_ref': shown['ref']})
+    assert published.status_code == 200, published.json()
+    assert selected_draft(wb, session_id)['state'] == 'approved'
+
+
+def test_candidate_view_stays_stale_after_task_content_changes(tmp_path):
+    """A task content change is stale in the view before confirmation runs."""
+    wb, session_id, request = workbench(tmp_path)
+    current = full_draft(wb, session_id, request)
+    candidate = prepare(wb, full_completion(wb, session_id, current)).data
+
+    session = wb.sessions.get(session_id, wb.ctx)
+    changed = dict(session.selected_versions)
+    changed['profile:db'] = 'db@999'
+    wb.sessions.update(session_id, session.revision,
+                       {'selected_versions': changed}, wb.ctx)
+
+    shown = client(wb).get(
+        f'/api/sessions/{session_id}/publish/candidate').json()
+    assert shown['session_revision'] == candidate['session_revision']
+    assert shown['draft_ref'] == candidate['draft_ref']
+
+    response = publish(wb, session_id, candidate)
+    assert response.status_code == 409
+    assert 'task content' in response.json()['detail']
+
+
 def test_reproposal_after_prepare_invalidates_the_candidate(tmp_path):
     """A new proposal revision is a content change even if the content repeats."""
     wb, session_id, request = workbench(tmp_path)

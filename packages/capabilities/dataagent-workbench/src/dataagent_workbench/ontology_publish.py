@@ -716,10 +716,14 @@ class PublishService:
         # Reviewing the draft moves the draft pointer and the task revision but
         # keeps the proposal content.  Present the candidate against that
         # reviewed draft so the web page neither calls it stale nor confirms a
-        # draft reference the task no longer points at.
+        # draft reference the task no longer points at.  The task content
+        # digest is checked too: a source/profile change is already a stale
+        # candidate even before the harder source checks run at confirmation.
         draft = self._selected_draft(session)
         if (body.get('state') == 'candidate' and draft is not None
-                and _candidate_matches_draft(body, draft)):
+                and _candidate_matches_draft(body, draft)
+                and body.get('session_content_digest')
+                == digest(_session_content(session))):
             view.update(draft_ref=draft['ref'], draft_state=draft.get('state'),
                         session_revision=session.revision)
         return view
