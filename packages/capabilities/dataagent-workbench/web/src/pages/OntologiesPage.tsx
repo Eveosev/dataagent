@@ -1,14 +1,25 @@
 import {useEffect,useState} from 'react';
 import {api,translateError,originNames,ontologyStateNames,registryTitle} from '../client';
-import type {Registry,RegistryEntry} from '../client';
+import type {BrowseRegistry,BrowseRegistryEntry} from '../ontologyBrowse';
 
 // 本体库：工作区注册表（内置 / 发现发布 / 已停用）。停用只作用于新任务的默认
 // 选择（原因必填、二次确认），内置本体是工作区兜底，不提供停用。
-export function OntologiesPage({onNew,onBack,onError}:{onNew:()=>void;onBack?:()=>void;onError:(error:unknown)=>void}){
- const [registry,setRegistry]=useState<Registry|null>(null),[busy,setBusy]=useState(false);
- const [retiring,setRetiring]=useState<RegistryEntry|null>(null),[reason,setReason]=useState(''),[confirmed,setConfirmed]=useState(false);
+// D5c：每个本体与概念显示已发布实例数，点进去按概念浏览冻结快照里的对象。
+function currentRevisionNote(entry:BrowseRegistryEntry):string{
+ const counts=entry.current_revision_instance_counts;
+ if(!counts)return '';
+ const current=Object.values(counts).reduce((sum,value)=>sum+value,0);
+ return current===(entry.published_instance_count??0)?'':` · 当前修订 ${current} 个`;
+}
+
+export function OntologiesPage({onNew,onBack,onError,onOpenInstances}:{
+ onNew:()=>void;onBack?:()=>void;onError:(error:unknown)=>void;
+ onOpenInstances:(ontologyId:string,concept?:string)=>void;
+}){
+ const [registry,setRegistry]=useState<BrowseRegistry|null>(null),[busy,setBusy]=useState(false);
+ const [retiring,setRetiring]=useState<BrowseRegistryEntry|null>(null),[reason,setReason]=useState(''),[confirmed,setConfirmed]=useState(false);
  const [failure,setFailure]=useState<string|null>(null);
- async function load(){setRegistry(await api<Registry>('/api/ontologies'));}
+ async function load(){setRegistry(await api<BrowseRegistry>('/api/ontologies'));}
  useEffect(()=>{load().catch(onError);},[]);
  async function retire(){
   const entry=retiring;
@@ -49,12 +60,25 @@ export function OntologiesPage({onNew,onBack,onError}:{onNew:()=>void;onBack?:()
   <section className="discovery-card">
    {entries.length===0?<p className="muted">正在读取注册表…</p>:
    <div className="mapping-table-scroll"><table className="mapping-table" data-testid="ontology-entries">
-    <thead><tr><th>名称</th><th>修订</th><th>来源</th><th>概念</th><th>状态</th><th>操作</th></tr></thead>
+    <thead><tr><th>名称</th><th>修订</th><th>来源</th><th>概念</th><th>已发布实例</th><th>状态</th><th>操作</th></tr></thead>
     <tbody>{entries.map(entry=><tr key={entry.id} data-testid={`ontology-${entry.id}`}>
      <td><strong>{registryTitle(entry)}</strong><small><code>{entry.id}</code>{entry.published_at?` · 发布于 ${entry.published_at.slice(0,10)}`:''}</small></td>
      <td>{entry.ontology_revision}</td>
      <td><span className="badge">{originNames[entry.origin]||entry.origin}</span></td>
      <td>{entry.concepts.length>1?`${entry.concepts.length} 个概念 · ${entry.concepts.join('、')}`:entry.concepts[0]||'—'}</td>
+     <td data-testid={`ontology-counts-${entry.id}`}><div className="ontology-counts">
+      {entry.concepts.length
+       ?entry.concepts.map(name=>{
+        const count=entry.instance_counts?.[name]??0;
+        return <button key={name} className="ontology-count-link"
+         data-testid={`concept-count-${entry.id}-${name}`}
+         title={`按概念 ${name} 浏览已发布对象`}
+         onClick={()=>onOpenInstances(entry.id,name)}>
+         {entry.concepts.length>1?`${name} · `:''}<strong>{count}</strong> 个对象</button>;
+       })
+       :<span className="muted">—</span>}
+      <small className="ontology-count-total">共 {entry.published_instance_count??0} 个已发布对象{currentRevisionNote(entry)}</small>
+     </div></td>
      <td><span className="badge">{ontologyStateNames[entry.state]||entry.state}</span>
       {entry.is_default&&entry.state==='active'&&<small className="ok">新任务默认</small>}
       {entry.state==='retired'&&<small className="warn">{entry.retire_reason||''}</small>}</td>
@@ -63,7 +87,7 @@ export function OntologiesPage({onNew,onBack,onError}:{onNew:()=>void;onBack?:()
       :<span className="muted">{entry.origin==='builtin'?'内置兜底':'—'}</span>}</td>
     </tr>)}</tbody>
    </table></div>}
-   <p className="help">发现发布的本体在服务端经人工确认通道发布；停用是可审计的决定，保留全部已发布修订与实例。</p>
+   <p className="help">点「已发布实例」里的计数进入只读对象列表；停用是可审计的决定，保留全部已发布修订与实例。</p>
   </section>
  </main>;
 }
