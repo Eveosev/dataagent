@@ -440,12 +440,21 @@ class IntakeService:
                 # or re-mapped, not excluded as an irrelevant row.
                 record_set = str((profile.metadata or {}).get('selected_record_set')
                                  or '')
+                clause = record_set.startswith('clause_records:')
+                # A clause row with a failed conversion is not an exclusion
+                # candidate at all: the same real preview also emits
+                # required_value_missing for that field/row, and offering the
+                # row escape on either issue would hide that correction is
+                # required.  Gate every issue on that row, not one issue code,
+                # while missing/attribution-only records keep their escape.
+                clause_conversion_rows = {
+                    item.get('row') for item in body.get('issues') or []
+                    if item.get('code') == 'ontology.conversion_failed'
+                    and item.get('source_id') == profile.source_id}
                 suspected = self._suspected_irrelevant_row(profile, row)
-                if record_set.startswith('clause_records:'):
-                    if issue.get('code') == 'ontology.conversion_failed' \
-                            and not suspected:
-                        continue
-                elif not suspected:
+                if clause and row in clause_conversion_rows:
+                    continue
+                if not clause and not suspected:
                     continue
                 key = (source_id, 'exclude_record', None, row)
                 if key in done:

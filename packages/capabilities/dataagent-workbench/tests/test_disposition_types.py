@@ -12,12 +12,14 @@ import pytest
 from fastapi.testclient import TestClient
 
 from dataagent_contracts.intake import SourceSelection
-from dataagent_contracts.ontology import MappingSpec, ReviewDecision
+from dataagent_contracts.ontology import FieldBinding, MappingSpec, ReviewDecision
 from dataagent_workbench.bootstrap import Workbench
 from dataagent_workbench.intake_service import PreviewBlocked
 from dataagent_workbench.interfaces.http_api import create_app
 from dataagent_workbench.view_service import ViewService
 from test_intake_repairs import StubProbeClient, csv_profile, start
+from test_clause_records import (clause_records, extract_records,
+                                 setup as clause_setup, standard_proposal)
 
 
 def bindings(source):
@@ -541,3 +543,32 @@ def test_clause_conversion_failure_has_no_exclude_record_option(tmp_path):
         'code': 'record_attribution_unverified', 'source_id': 'clause', 'row': 0}]})
     assert [option['record'] for option in attribution
             if option['action'] == 'exclude_record'] == [0]
+
+
+def test_clause_conversion_plus_missing_required_has_no_exclude_option(tmp_path):
+    wb, session = clause_setup(tmp_path)
+    records = clause_records()
+    # Same clause record: the required currency was never stated, and the
+    # limit is bound to a text field so its conversion fails.  The real
+    # preview emits both issues; neither may offer the row-level escape.
+    records[0]['values'] = [item for item in records[0]['values']
+                             if item['property'] != '币种']
+    extract_records(wb, session, records)
+    session = wb.sessions.get(session.id, wb.ctx)
+    mapping = standard_proposal(wb, session)
+    mapping.bindings['限额'] = FieldBinding(source_field='城市等级', transform='decimal')
+    preview = wb.intake.submit_proposal(
+        session.id, mapping, session.revision, wb.ctx)
+    codes = {issue['code'] for issue in preview.issues}
+    assert 'ontology.conversion_failed' in codes
+    assert 'ontology.required_value_missing' in codes
+    body = wb.intake.view(session.id, wb.ctx)['preview']
+    # The converted 限额 and the missing 币种 are the same real clause record;
+    # the view must not attach an exclude action to either issue.
+    assert not [action for issue in body['issues']
+                for action in issue.get('actions', [])
+                if action['action'] == 'exclude_record']
+    options = wb.intake.disposition_options(
+        wb.sessions.get(session.id, wb.ctx), body)
+    assert not [option for option in options
+                if option['action'] == 'exclude_record' and option['record'] == 0]
