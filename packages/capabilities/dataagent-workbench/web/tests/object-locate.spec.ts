@@ -25,13 +25,15 @@ async function openPagedObjectPage(page:import('@playwright/test').Page,mode:'wi
  // 把 CSV 来源改写成 REST 分页形态：同一 pointer 每页重复（/items/0、/items/1），页序号是
  // 区分记录的唯一信息。with/without 模拟 F1 前后的两种数据；mismatch 制造混合数据——
  // 锚点页码陈旧（全部停在第 1 页），证据页码正常推进，页码明确但不匹配。
+ // 页号按 F1 合入的形状放在 selector.extensions["dataagent.page"]（1 起的响应页号），
+ // without 模式的旧锚点没有 extensions。
  await page.route('**/api/sessions/*/objects',async route=>{
   const response=await route.fetch();
   const body=await response.json();
   const anchorPage=(row:number)=>mode==='without'?undefined:mode==='mismatch'?1:Math.floor(row/2)+1;
   const evidencePage=(row:number)=>mode==='without'?undefined:Math.floor(row/2)+1;
   const toRest=(row:number,field:string,page?:number)=>({kind:'json_pointer',pointer:`/items/${row%2}/${field}`,
-   ...(page!==undefined?{page}:{})});
+   ...(page!==undefined?{extensions:{'dataagent.page':page}}:{})});
   for(const source of body.sources||[]){
    if(!source.anchors)continue;
    for(const [key,anchors] of Object.entries(source.anchors)){

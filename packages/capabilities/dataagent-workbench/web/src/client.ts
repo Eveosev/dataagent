@@ -8,7 +8,7 @@ export type {SourceProfile,IntakeSession,OntologyRevision,MappingSpec,FieldBindi
 export type Preview=MappingPreview & {review_state:string; mapping_reused?:boolean; corrections?:unknown[]};
 export type Draft={bindings?:Record<string,FieldBinding>;source_bindings?:Record<string,Record<string,FieldBinding>>;selected_field?:string;source_id?:string;record_index?:number};
 export type View={session:IntakeSession;profiles:SourceProfile[];ontology:OntologyRevision;preview:Preview|null;draft:Draft;mapping_reused:boolean;discovery:Discovery|null};
-export type Selector={kind:string;page?:number;char_start?:number;char_end?:number;bbox?:number[];pointer?:string;range?:string;sheet?:string;keys?:Record<string,unknown>;field?:string};
+export type Selector={kind:string;page?:number;char_start?:number;char_end?:number;bbox?:number[];pointer?:string;range?:string;sheet?:string;keys?:Record<string,unknown>;field?:string;extensions?:Record<string,unknown>|null};
 export type Evidence={source_id:string;selector:Selector};
 export type WorkObject={id:string;entity_type:string;values:Record<string,unknown>;evidence:Record<string,Evidence[]>;unresolved:string[];extensions?:Record<string,unknown>|null};
 export type Correction={decision_ref:string;entity_id:string;property:string;value:unknown;reason:string};
@@ -50,7 +50,8 @@ export function locate(selector:Selector|undefined):string{
  if(selector.kind==='pdf_text_span'||selector.kind==='pdf_bbox')return `第 ${selector.page} 页`;
  if(selector.kind==='json_pointer'){
   const pointer=selector.pointer||'';
-  return typeof selector.page==='number'?`第 ${selector.page} 页 · ${pointer}`:pointer;
+  const page=pageNumber(selector);
+  return page!==undefined?`第 ${page} 页 · ${pointer}`:pointer;
  }
  if(selector.kind==='excel_cell')return `${selector.sheet} · ${selector.range}`;
  if(selector.kind==='record_key')return locateRecordKey(selector);
@@ -86,9 +87,27 @@ export function decisionSourceName(sourceId:string):string{
  return `用户纠正 · 决定 ${sourceId.slice(0,12)}…`;
 }
 type AnchorLike={source_ref:string;selector:unknown};
+// REST 分页的页号在 selector.extensions["dataagent.page"]（F1 起的形状，1 起的响应页号），
+// 旧锚点没有 extensions；同时兼容更早把页号放在 selector.page 的写法。
+export function pageNumber(selector:unknown):number|undefined{
+ if(!selector||typeof selector!=='object')return undefined;
+ const extensions=(selector as {extensions?:unknown}).extensions;
+ if(extensions&&typeof extensions==='object'){
+  const value=(extensions as Record<string,unknown>)['dataagent.page'];
+  if(typeof value==='number')return value;
+ }
+ const page=(selector as {page?:unknown}).page;
+ return typeof page==='number'?page:undefined;
+}
 const withoutPage=(selector:unknown)=>{
  if(!selector||typeof selector!=='object')return JSON.stringify(selector);
- const {page:_,...rest}=selector as Record<string,unknown>;
+ const rest={...(selector as Record<string,unknown>)};
+ delete rest.page;
+ if(rest.extensions&&typeof rest.extensions==='object'){
+  const extensions={...(rest.extensions as Record<string,unknown>)};
+  delete extensions['dataagent.page'];
+  if(Object.keys(extensions).length)rest.extensions=extensions;else delete rest.extensions;
+ }
  return JSON.stringify(rest);
 };
 // 来源行定位：selector 带页序号时按页取对应记录（REST 分页的 JSON Pointer 各页从 0 计，
@@ -96,7 +115,7 @@ const withoutPage=(selector:unknown)=>{
 // 不回退到其他页的同名 pointer，宁可不定位来源行。
 export function findAnchorRow(profile:{anchors?:Record<string,AnchorLike[]>}|undefined,evidence:Evidence):{row:number;field:string}|undefined{
  if(!profile)return undefined;
- const page=typeof evidence.selector?.page==='number'?evidence.selector.page:undefined;
+ const page=pageNumber(evidence.selector);
  const target=withoutPage(evidence.selector);
  let fallback:{row:number;field:string}|undefined;
  for(const [key,anchors] of Object.entries(profile.anchors||{})){
@@ -106,7 +125,7 @@ export function findAnchorRow(profile:{anchors?:Record<string,AnchorLike[]>}|und
   const field=key.slice(dot+1);
   for(const anchor of anchors){
    if(anchor.source_ref!==evidence.source_id||withoutPage(anchor.selector)!==target)continue;
-   const anchorPage=typeof (anchor.selector as {page?:unknown}|null)?.page==='number'?(anchor.selector as {page:number}).page:undefined;
+   const anchorPage=pageNumber(anchor.selector);
    if(anchorPage===page)return {row,field};
    if(anchorPage===undefined){if(!fallback)fallback={row,field};if(page===undefined)return fallback;}
   }
