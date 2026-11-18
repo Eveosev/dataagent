@@ -10,11 +10,25 @@ function savedMappings(view:View){
 }
 
 // 默认绑定按任务固定概念的属性名与来源字段同名匹配（多概念本体不再读全局旧字段）。
-function defaultBindings(view:View,sourceId:string){
+// 来源把同一业务字段拆成最小单位（amount_minor/amount_cents）时，默认按
+// minor_to_major 绑定；否则对象页会把它当成未映射字段，既没有金额值也没有
+// 来源定位。同名精确列优先，不会被最小单位列覆盖。
+function defaultBindings(view:View,sourceId:string):Record<string,FieldBinding>{
  const profile=view.profiles.find(p=>p.source_id===sourceId);
  const properties=conceptOf(view.ontology,view.ontology_concept).properties;
- return Object.fromEntries(Object.keys(properties).filter(k=>profile?.fields?.includes(k))
-  .map(k=>[k,{source_field:k,transform:'identity' as const}]));
+ const fields=profile?.fields||[];
+ const bindings:Record<string,FieldBinding>={};
+ for(const name of Object.keys(properties)){
+  if(fields.includes(name))bindings[name]={source_field:name,transform:'identity'};
+ }
+ for(const name of Object.keys(properties)){
+  if(bindings[name])continue;
+  for(const suffix of ['_minor','_cents']){
+   const field=`${name}${suffix}`;
+   if(fields.includes(field)){bindings[name]={source_field:field,transform:'minor_to_major'};break;}
+  }
+ }
+ return bindings;
 }
 
 // FDE2-05：已固定的映射来源范围（提案写进 selected_versions 的 mapping:<来源>）。

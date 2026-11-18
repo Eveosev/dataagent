@@ -326,3 +326,73 @@ test('目标=明细行：限额表 docx 与明细 xlsx 同任务时整源拦截'
  await page.getByRole('button',{name:'保存接入'}).click();
  await expect(page.getByText('接入已保存')).toBeVisible();
 });
+
+// codex 审核：实例页按展示文件名 + 行位置合并定位，两个同名文件的不同来源
+// 会被合成一条。合并键必须带 source_ref；这里用两份同名 CSV 生成同一对象，
+// 两个来源在同一行各有锚点，实例页必须显示两条定位而不是一条。
+test('同名文件的不同来源保留各自的实例定位',async({page})=>{
+ slowTimeout(60000);
+ const tag=uniqueTag();
+ const filename=`same-${tag}.csv`;
+ const number=`ZZZ-${tag}-1`;
+ const csv=`number,amount_minor,currency\n${number},126000,CNY\nZZZ-${tag}-2,90000,CNY\n`;
+ const auth={'x-dataagent-token':process.env.DATAAGENT_TEST_TOKEN||''};
+ const uploads=await Promise.all([1,2].map(async()=>{
+  const response=await page.request.post('/api/files',{
+   headers:{...auth,'x-file-name':filename},data:csv});
+  expect(response.ok(),await response.text()).toBeTruthy();
+  return response.json();
+ }));
+ const created=await page.request.post('/api/sessions',{data:{
+  goal:'两份同名材料核对同一单据',
+  sources:uploads,
+  target:{ontology_id:'procurement',concept:'PurchaseDocument'},
+ }});
+ expect(created.ok(),await created.text()).toBeTruthy();
+ const {session_id}=await created.json() as {session_id:string};
+ const advanced=await page.request.post(`/api/sessions/${session_id}/advance`,{data:{}});
+ expect(advanced.ok(),await advanced.text()).toBeTruthy();
+ const view=await (await page.request.get(`/api/sessions/${session_id}/view`)).json() as {
+  session:{revision:string};
+  profiles:{source_id:string;metadata:{structure_fingerprint:string}}[];
+ };
+ const profiles=Object.fromEntries(view.profiles.map(profile=>[profile.source_id,profile]));
+ const proposals=Object.fromEntries(uploads.map((source:{source_id:string})=>[source.source_id,{
+  id:'candidate',revision:'1',ontology_revision:'procurement@1',concept:'PurchaseDocument',
+  source_fingerprint:profiles[source.source_id].metadata.structure_fingerprint,
+  bindings:{
+   number:{source_field:'number'},
+   amount:{source_field:'amount_minor',transform:'minor_to_major'},
+   currency:{source_field:'currency'},
+  },
+ }]));
+ const proposed=await page.request.post(`/api/sessions/${session_id}/source-proposals`,{
+  data:{proposals,expected_revision:view.session.revision}});
+ expect(proposed.ok(),await proposed.text()).toBeTruthy();
+ const preview=await proposed.json() as {id:string;revision:string;issues:unknown[]};
+ expect(preview.issues).toEqual([]);
+ const current=await (await page.request.get(`/api/sessions/${session_id}/view`)).json() as {
+  session:{revision:string};
+ };
+ const saved=await page.request.post(`/api/sessions/${session_id}/review`,{data:{
+  expected_revision:current.session.revision,
+  decision:{preview_ref:`${preview.id}@${preview.revision}`,target_scope:'mapping',decision:'save'},
+ }});
+ expect(saved.ok(),await saved.text()).toBeTruthy();
+ await page.goto('/#instances=procurement&concept=PurchaseDocument');
+ await page.reload();
+ await expect(page.getByTestId('instance-table')).toBeVisible();
+ await page.locator('#filter-property').selectOption('number');
+ await page.locator('#filter-value').fill(number);
+ await page.getByRole('button',{name:'筛选',exact:true}).click();
+ const row=page.getByTestId('instance-row').filter({hasText:number});
+ await expect(row).toHaveCount(1);
+ const lines=row.locator('.instance-anchor');
+ await expect(lines).toHaveCount(2);
+ const texts=await lines.allTextContents();
+ expect(new Set(texts).size).toBe(2);
+ await expect(lines.first()).toContainText(filename);
+ await expect(lines.first()).toContainText('来源行 2');
+ await expect(lines.last()).toContainText(filename);
+ await expect(lines.last()).toContainText('来源行 2');
+});

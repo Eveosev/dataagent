@@ -64,6 +64,49 @@ _ROW_LEVEL_ISSUE_CODES = frozenset({
 # FDE3-04: a proposed or observed source that clearly cannot carry the task's
 # target concept (no identity column, most required properties unbindable).
 _SOURCE_CONCEPT_MISMATCH = 'ontology.source_concept_mismatch'
+# Source-column names that commonly carry the same concept slot.  This is a
+# deliberately small, conservative vocabulary used only to avoid excluding a
+# source whose column is an alias rather than the exact property name.  Exact
+# (normalised) names always win; these never override an observed exact match.
+_FIELD_ALIASES = {
+    'amount': (
+        'amount', 'amountminor', 'amountcents', 'amountincents', 'total',
+        'totalamount', 'grossamount', 'netamount', 'taxamount',
+        '金额', '报销金额', '含税金额', '价税合计', '总额', '费用金额'),
+    'currency': ('currency', 'ccy', 'currencycode', '币种', '币别', '货币'),
+    'party': (
+        'issuer', 'supplier', 'customer', 'party', 'partyno', 'payee',
+        '供应商', '客户', '开票方', '销售方', '收款方'),
+    'date': ('date', 'invoicedate', 'expensedate', 'occurredat',
+             '日期', '时间', '开票日期', '发生日期'),
+    'quantity': ('quantity', 'qty', '数量'),
+    'identity': (
+        'number', 'no', 'id', 'code', 'docno', 'documentno', 'orderno',
+        'invoiceno', 'billno', 'bookno', 'serialno', 'seq', 'sequence',
+        '单号', '单据号', '单据编号', '报销单号', '发票号', '编号', '凭证号',
+        '序号', '行号'),
+}
+
+
+def _field_key(name):
+    """A comparison key that ignores casing and separators, but keeps CJK."""
+    return ''.join(char for char in str(name).lower() if char.isalnum())
+
+
+def _field_kind(name):
+    """The concept slot a source column plausibly carries, if recognisable."""
+    key = _field_key(name)
+    for kind, aliases in _FIELD_ALIASES.items():
+        for alias in aliases:
+            alias_key = _field_key(alias)
+            if key == alias_key or (not alias_key.isascii() and alias_key in key):
+                return kind
+    # Common identity suffixes not covered by the fixed vocabulary: the
+    # target concept's own property may be ``standard_no``/``line_no`` while
+    # the source calls the column ``number`` or ``单据编号``.
+    if key.endswith(('no', 'number', 'code', '编号', '号')):
+        return 'identity'
+    return ''
 _ISSUE_REASONS = {
     'ontology.conflicting_values': '各来源的字段值不一致',
     'ontology.required_value_missing': '缺少必填值',
@@ -343,18 +386,70 @@ class IntakeService:
                 if entry.get('action') == 'ignore_source'}
 
     @staticmethod
+    def _available_properties(concept, fields, bindings=None):
+        """Properties the observed columns can plausibly serve.
+
+        Exact (normalised) names win first; a small alias vocabulary then fills
+        the remaining identity/required slots one column at a time.  A proposal
+        binding can add evidence for a non-identity property whose column name
+        is outside the vocabulary; an omission never removes a column that was
+        observed.  Identity columns are judged from the source's own names (or
+        the alias vocabulary): a proposal must not be able to invent an
+        identity column a source does not have.
+        """
+        remaining = set(fields)
+        available = set()
+        by_key = {}
+        for field in remaining:
+            by_key.setdefault(_field_key(field), field)
+        # The fit check only needs identity and required slots; optional
+        # properties must not consume a column a required slot could use.
+        required = [name for name, definition in concept.properties.items()
+                    if definition.required]
+        needed = [*concept.identity_fields,
+                  *(name for name in required if name not in concept.identity_fields)]
+        for name in needed:
+            field = by_key.pop(_field_key(name), None)
+            if field is not None:
+                available.add(name)
+                remaining.discard(field)
+        # Identity first, then required: when one alias column could fill two
+        # slots, the object-naming slot gets it.
+        for name in needed:
+            if name in available:
+                continue
+            kind = _field_kind(name)
+            if not kind:
+                continue
+            match = next((field for field in remaining
+                          if _field_kind(field) == kind), None)
+            if match is not None:
+                available.add(name)
+                remaining.discard(match)
+        # A proposal that names a source column is evidence for a required
+        # property whose name is outside the alias vocabulary.  The reverse is
+        # deliberately not true: an omitted binding never hides a column the
+        # structure check found, and identity columns are not supplemented
+        # from bindings.
+        for name, binding in (bindings or {}).items():
+            if name in concept.properties and name not in concept.identity_fields \
+                    and binding and binding.source_field in fields:
+                available.add(name)
+        return available
+
+    @staticmethod
     def _source_matches_concept(concept, profile, bindings=None):
-        """False when a source clearly cannot carry the task's target concept.
+        """False only when the source structure cannot carry the concept.
 
         FDE3-04: a limit-table document proposed into an expense-line task used
         to turn every one of its rows into an unidentified object plus a
-        missing-value problem.  A source is held out of the preview when any
-        declared identity field cannot bind to an observed field (the row
-        would lack part of its identity), or when no more than half of the
-        required properties bind.  Both checks apply when the concept has
-        identity fields; a concept without them uses the coverage check alone.
-        ``bindings`` comes from a proposal, or falls back to the same-name
-        defaults the web would use when the source has no proposal at all.
+        missing-value problem.  The check looks at the observed columns (with
+        explicitly bound non-identity columns as extra evidence): a column
+        that exists but was omitted from the proposal stays in the preview and
+        is reported as an unbound required property, while a source that has
+        no identity column (or cannot supply more than half of the required
+        properties) is held out.  Alias names such as 单据编号/金额/币种 count
+        as the matching slot; exact names always win.
         """
         fields = set(profile.fields or [])
         if not fields:
@@ -362,25 +457,21 @@ class IntakeService:
             # source is empty and its own problems (no records, unread) speak
             # for it; there is nothing to judge a concept mismatch against.
             return True
-        if bindings is None:
-            bound = {name for name in concept.properties if name in fields}
-        else:
-            bound = {name for name, binding in bindings.items()
-                     if binding and binding.source_field in fields}
+        available = IntakeService._available_properties(concept, fields, bindings)
         identity = list(concept.identity_fields)
-        # Every identity field is needed to name an object.  Binding only one
-        # of several (or skipping it while other required columns bind) still
-        # leaves the row unidentified, so a partial identity is a mismatch.
-        if identity and not set(identity) <= bound:
+        # Every identity field is needed to name an object.  A source that
+        # supplies only part of a composite identity cannot name the object;
+        # an omission of an observed column is a mapping gap, not a mismatch.
+        if identity and not set(identity) <= available:
             return False
         required = [name for name, definition in concept.properties.items()
                      if definition.required]
         if not required:
             return True
-        # A source that binds only a minority of required properties cannot
-        # carry the concept; one missing required column is still a real,
-        # incomplete mapping with a per-column problem to correct.
-        return 2 * sum(1 for name in required if name in bound) > len(required)
+        # A source without the majority of required columns cannot carry the
+        # concept; one missing required column is still a real, incomplete
+        # mapping with a per-column problem to correct.
+        return 2 * sum(1 for name in required if name in available) > len(required)
 
     def _source_scope_issues(self, session, used, proposals=None):
         """One source-level issue per observed source outside the preview.

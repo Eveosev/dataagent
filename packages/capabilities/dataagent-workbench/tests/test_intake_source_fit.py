@@ -247,6 +247,99 @@ def test_identity_column_missing_is_a_mismatch_even_when_others_bind(tmp_path):
     assert [option['reason_hint'] for option in item['actions']] == ['本任务不使用该来源']
 
 
+def test_proposal_omitting_an_existing_identity_binding_keeps_objects(tmp_path):
+    """A proposal gap is not a source defect: keep rows and ask to bind.
+
+    Codex review: the source really has ``number/amount/currency`` but the
+    proposal binds only amount and currency.  The old fit check looked at the
+    proposal's bindings, held the whole source out as a concept mismatch and
+    refused whole-source disposal.  The identity column exists, so the preview
+    must keep the objects and report the unbound identity as a mapping issue.
+    """
+    wb = Workbench(tmp_path)
+    wb.layer_client = StubProbeClient({
+        's': csv_profile('s', [
+            {'number': 'N-1', 'amount': '100', 'currency': 'CNY'},
+            {'number': 'N-2', 'amount': '200', 'currency': 'CNY'}])})
+    session = wb.intake.advance(start(wb, [SourceSelection(
+        source_id='s', kind='file', locator_ref='s.csv')]).session_id, wb.ctx)
+    source = wb.intake.inference_request(session.id, wb.ctx)['sources'][0]
+    proposal = MappingSpec(id='candidate', revision='1', ontology_revision='procurement@1',
+                           source_fingerprint=source['structure_fingerprint'],
+                           bindings={
+                               'amount': {'source_field': 'amount'},
+                               'currency': {'source_field': 'currency'}})
+    preview = wb.intake.submit_proposal(session.id, proposal, session.revision, wb.ctx)
+    assert len(preview.instances) == 2
+    codes = {issue['code'] for issue in preview.issues}
+    assert 'ontology.source_concept_mismatch' not in codes
+    assert (next(issue for issue in preview.issues
+                 if issue['code'] == 'ontology.required_binding_missing')['target']
+            == 'number')
+    assert any(issue['code'] == 'ontology.identity_unresolved'
+               for issue in preview.issues)
+    summary = wb.intake.view(session.id, wb.ctx)
+    assert not any(issue['code'] == 'ontology.source_concept_mismatch'
+                   for issue in summary['preview']['issues'])
+    assert not [option for option in summary['preview']['disposition_options']
+                if option['source_id'] == 's' and option['scope'] == 'source']
+
+
+def test_proposal_omitting_existing_required_bindings_keeps_objects(tmp_path):
+    """Required coverage is a property of the columns, not of the proposal.
+
+    Codex review: the source has amount and currency, but the proposal binds
+    only the identity.  The old coverage check counted proposal bindings,
+    dropped the source as a mismatch and lost the objects; the columns exist,
+    so the preview keeps the rows and reports the two unbound properties.
+    """
+    wb = Workbench(tmp_path)
+    wb.layer_client = StubProbeClient({
+        's': csv_profile('s', [
+            {'number': 'N-1', 'amount': '100', 'currency': 'CNY'},
+            {'number': 'N-2', 'amount': '200', 'currency': 'CNY'}])})
+    session = wb.intake.advance(start(wb, [SourceSelection(
+        source_id='s', kind='file', locator_ref='s.csv')]).session_id, wb.ctx)
+    source = wb.intake.inference_request(session.id, wb.ctx)['sources'][0]
+    proposal = MappingSpec(id='candidate', revision='1', ontology_revision='procurement@1',
+                           source_fingerprint=source['structure_fingerprint'],
+                           bindings={'number': {'source_field': 'number'}})
+    preview = wb.intake.submit_proposal(session.id, proposal, session.revision, wb.ctx)
+    assert len(preview.instances) == 2
+    assert 'ontology.source_concept_mismatch' not in {issue['code'] for issue in preview.issues}
+    assert {issue['target'] for issue in preview.issues
+            if issue['code'] == 'ontology.required_binding_missing'} == {'amount', 'currency'}
+    summary = wb.intake.view(session.id, wb.ctx)
+    assert not [option for option in summary['preview']['disposition_options']
+                if option['source_id'] == 's' and option['scope'] == 'source']
+
+
+def test_unproposed_alias_columns_are_not_a_concept_mismatch(tmp_path):
+    """Alias headers keep the include-in-mapping path for an unproposed source.
+
+    Codex review: 单据编号/金额/币种 are semantically the concept's
+    identity/amount/currency columns.  Falling back to exact same-name matching
+    marked such a source as a mismatch and hid "纳入映射"; only a source that
+    clearly lacks the required information should be flagged.
+    """
+    wb = Workbench(tmp_path)
+    wb.layer_client = StubProbeClient({
+        'ledger': csv_profile('ledger', [
+            {'number': 'INV-1', 'amount_minor': '126000', 'currency': 'CNY'}]),
+        'alias': csv_profile('alias', [
+            {'单据编号': 'INV-9', '金额': '1260', '币种': 'CNY'}]),
+    })
+    session = wb.intake.advance(start(wb, [SourceSelection(
+        source_id='ledger', kind='file', locator_ref='ledger.csv'),
+        SourceSelection(source_id='alias', kind='file', locator_ref='alias.csv')]).session_id,
+        wb.ctx)
+    preview = wb.intake.submit_source_proposals(
+        session.id, proposals_for(wb, session, ('ledger',)), session.revision, wb.ctx)
+    assert [(issue['code'], issue['source_id']) for issue in preview.issues] == \
+        [('ontology.source_unmapped', 'alias')]
+    assert set(preview.source_revisions) == {'ledger'}
+
+
 def test_identity_bound_but_required_coverage_missing_is_a_mismatch(tmp_path):
     """Binding the identity does not excuse most required columns missing.
 
