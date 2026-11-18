@@ -153,11 +153,31 @@ def _column_name_is_portable(name: str) -> bool:
     return 0 < len(name) <= 128 and _COLUMN.fullmatch(_quoted(name)) is not None
 
 
-def _check_native_mapping(ontology: OntologyRevision, mapping: MappingSpec) -> None:
+def _export_concept(ontology: OntologyRevision, mapping: MappingSpec):
+    """Resolve the one concept OSSIE exports before validating or reading it.
+
+    New definitions carry ``concepts`` and leave the legacy top-level
+    ``entity_type`` / ``properties`` empty.  The mapping names the concept it
+    describes; the export must use that resolved definition throughout.
+    """
+    if len(ontology.concepts) != 1:
+        raise OssieValidationError(
+            f"/ontology: OSSIE exchange supports a single concept for now; "
+            f"{ontology.id}@{ontology.revision} defines {len(ontology.concepts)}")
+    try:
+        return ontology.resolve_concept(mapping.concept)
+    except KeyError:
+        raise OssieValidationError(
+            "/mapping/concept is not a concept of the DataAgent ontology"
+        ) from None
+
+
+def _check_native_mapping(ontology: OntologyRevision, mapping: MappingSpec,
+                          concept) -> None:
     if mapping.ontology_revision != f"{ontology.id}@{ontology.revision}":
         raise OssieValidationError("/mapping/ontology_revision does not match the DataAgent ontology")
     for name in mapping.bindings:
-        if name not in ontology.properties:
+        if name not in concept.properties:
             raise OssieValidationError(f"{pointer('mapping', 'bindings', name)} is not an ontology property")
     for name, bindings in mapping.relation_bindings.items():
         if name not in ontology.relations or set(bindings) != set(ontology.relation_roles(name)):
@@ -172,12 +192,12 @@ def _role_concepts(facts: Iterable[RelationFact], assertions: Iterable[Assertion
     return result
 
 
-def _definition_document(ontology, mapping, facts, assertions, loss):
-    entity = ontology.entity_type
+def _definition_document(ontology, concept_definition, mapping, facts, assertions, loss):
+    entity = concept_definition.entity_type
     if entity in _BUILT_INS:
         raise OssieValidationError("/ontology/entity_type collides with a built-in Ossie concept")
     properties = {}
-    for name, prop in ontology.properties.items():
+    for name, prop in concept_definition.properties.items():
         if prop.required:
             loss("required_property", pointer("ontology", "properties", name, "required"),
                  "DataAgent required-field validation travels in the sidecar")
@@ -232,13 +252,13 @@ def _definition_document(ontology, mapping, facts, assertions, loss):
             "verbalizes": [f"{{{entity}}} {name} " + " ".join(f"{{{role}}}" for role in roles[1:])],
         }
     component = {
-        "concept": entity, "type": "EntityType", "identify_by": list(ontology.identity_fields),
+        "concept": entity, "type": "EntityType", "identify_by": list(concept_definition.identity_fields),
         "relationships": [*properties.values(), *relations.values()],
     }
     return {"version": OSSIE_VERSION, "name": ontology.id, "ontology": [component]}, properties, relations
 
 
-def _export_bindings(ontology, mapping, property_defs, relation_defs, loss):
+def _export_bindings(ontology, concept_definition, mapping, property_defs, relation_defs, loss):
     columns = {}
 
     def direct(binding, path):
@@ -289,13 +309,13 @@ def _export_bindings(ontology, mapping, property_defs, relation_defs, loss):
             tail = {"object_mapping": obj, "children": [tail]}
         relation_nodes.append(tail)
 
-    if any(name not in property_expressions for name in ontology.identity_fields):
+    if any(name not in property_expressions for name in concept_definition.identity_fields):
         loss("unsupported_identity_mapping", "/mapping/bindings",
              "The Ossie mapping requires a direct binding for every identity property")
         return list(columns.values()), []
 
     identity_mapping = {"referent_mappings": [
-        {"relationship": name, "expression": property_expressions[name]} for name in ontology.identity_fields
+        {"relationship": name, "expression": property_expressions[name]} for name in concept_definition.identity_fields
     ]}
     children = [
         {"object_mapping": {"concept": property_defs[name]["roles"][0]["concept"], "expression": expression},
@@ -303,7 +323,7 @@ def _export_bindings(ontology, mapping, property_defs, relation_defs, loss):
         for name, expression in property_expressions.items()
     ]
     concept_mapping = {
-        "concept": ontology.entity_type,
+        "concept": concept_definition.entity_type,
         "object_mappings": [identity_mapping],
         "link_mappings": [{"object_mapping": identity_mapping, "children": children + relation_nodes}],
     }
@@ -320,19 +340,18 @@ def export_ossie(
     source: str | None = None,
 ) -> OssieExchange:
     """Project the supported subset and retain the original DataAgent JSON contracts."""
-    if len(ontology.concepts) != 1:
-        raise OssieValidationError(
-            f"/ontology: OSSIE exchange supports a single concept for now; "
-            f"{ontology.id}@{ontology.revision} defines {len(ontology.concepts)}")
-    _check_native_mapping(ontology, mapping)
+    _, concept = _export_concept(ontology, mapping)
+    _check_native_mapping(ontology, mapping, concept)
     instances, assertions, facts = list(instances), list(assertions), list(facts)
     losses: list[OssieLoss] = []
 
     def loss(code, path, detail):
         losses.append(OssieLoss(code, path, detail, preserved_in_sidecar=True))
 
-    definition, properties, relations = _definition_document(ontology, mapping, facts, assertions, loss)
-    columns, concept_mappings = _export_bindings(ontology, mapping, properties, relations, loss)
+    definition, properties, relations = _definition_document(
+        ontology, concept, mapping, facts, assertions, loss)
+    columns, concept_mappings = _export_bindings(
+        ontology, concept, mapping, properties, relations, loss)
     if source is None:
         losses.append(OssieLoss("logical_source_unbound", "/semantic_model/datasets/0/source",
                                 "The logical source_rows dataset needs a consumer-provided physical source"))
@@ -683,11 +702,12 @@ def import_ossie(
             raise OssieValidationError(f"/sidecar: {exc}") from exc
         if native.document_digests != _document_digests(ontology, semantic_model, mapping):
             raise OssieValidationError("/sidecar/document_digests: digest differs from the supplied Ossie documents")
-        if entity_type is not None and entity_type != native.ontology.entity_type:
+        _, concept = _export_concept(native.ontology, native.mapping)
+        if entity_type is not None and entity_type != concept.entity_type:
             raise OssieValidationError("/sidecar/ontology/entity_type differs from the requested entity")
         if source_fingerprint is not None and source_fingerprint != native.mapping.source_fingerprint:
             raise OssieValidationError("/sidecar/mapping/source_fingerprint differs from the observed source")
-        _check_native_mapping(native.ontology, native.mapping)
+        _check_native_mapping(native.ontology, native.mapping, concept)
         return OssieImport(
             native.ontology, native.mapping, native.losses,
             instances=[record.restore() for record in native.instances],

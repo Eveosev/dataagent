@@ -41,10 +41,26 @@ class Workbench:
         self.sessions = SessionService(self.store,self.scope,self.subject,self.authorization,
             default_target=self._default_target)
         from .intake_service import IntakeService
-        self.intake=IntakeService(self)
+        from .ontology_publish import PublishService, record_source_versions
+        workbench = self
+
+        class _ObservedIntake(IntakeService):
+            """Pin each source's bytes right after its profile is written.
+
+            Intake probes sources one after another inside one advance.  Waiting
+            for the whole advance would let a later source rewrite an earlier
+            one before its baseline is pinned.
+            """
+
+            def _store_profile(self, session, versions, source, profile, ctx):
+                session = super()._store_profile(
+                    session, versions, source, profile, ctx)
+                record_source_versions(workbench, session, source.source_id)
+                return session
+
+        self.intake=_ObservedIntake(self)
         from .ontology_discovery import DiscoveryService
         self.discovery = DiscoveryService(self)
-        from .ontology_publish import PublishService
         self.publisher = PublishService(self)
         # Read-only published-instance queries (D4); no state of their own.
         from .query_service import QueryService

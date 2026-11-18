@@ -32,6 +32,12 @@ from .ontology_discovery import is_discovery
 
 CANDIDATE_KIND = 'ontology_candidate'
 PUBLICATION_KIND = 'ontology_publication'
+# The exact source files as first observed by a probe.  Publication compares
+# against this record, never against a baseline captured at prepare time.
+SOURCE_VERSION_KIND = 'source_version'
+
+_SQLITE_SUFFIXES = (('', 'main'), ('-wal', 'wal'), ('-shm', 'shm'),
+                    ('-journal', 'journal'))
 
 PropertyType = Literal['string', 'decimal', 'integer', 'boolean', 'date', 'datetime']
 
@@ -130,6 +136,69 @@ def _digest_file(path):
     return 'sha256:' + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _source_state(workspace, source):
+    """The exact bytes a published definition and mapping may rely on.
+
+    A SQLite database is one logical file plus its journal, WAL and shared
+    memory sidecars: uncheckpointed WAL frames are part of the observed state.
+    File sources are digested directly.  The result is JSON-stable so it can
+    be stored with the probe and compared byte-for-byte at prepare/confirm.
+    """
+    path = _inside((Path(workspace) / source.locator_ref).resolve(), Path(workspace))
+    if not path.is_file():
+        raise ValueError('source file is no longer readable; discover again')
+    if source.kind == 'sqlite':
+        files = {}
+        for suffix, label in _SQLITE_SUFFIXES:
+            sidecar = path if not suffix else path.with_name(path.name + suffix)
+            files[label] = _digest_file(sidecar) if sidecar.is_file() else None
+        return {'source_id': source.source_id, 'kind': source.kind,
+                'locator_ref': source.locator_ref, 'files': files}
+    return {'source_id': source.source_id, 'kind': source.kind,
+            'locator_ref': source.locator_ref, 'digest': _digest_file(path)}
+
+
+def record_source_versions(wb, session, source_id=None):
+    """Pin a source's version when its profile is written.
+
+    Called from ``_store_profile`` as each source finishes probing, before the
+    next source runs.  ``source_id`` limits the write to that source; the same
+    profile ref is never re-pinned, even when its capture was unreadable, so
+    recovering a file without re-probing cannot unblock publication.
+    """
+    if session is None or not is_discovery(session):
+        return
+    previous = wb.store.current(SOURCE_VERSION_KIND, session.id, scope=wb.scope)
+    previous_body = previous['body'] if previous is not None else {}
+    recorded = dict((previous_body or {}).get('sources') or {})
+    changed = False
+    for source in session.sources:
+        if source_id is not None and source.source_id != source_id:
+            continue
+        if source.kind not in {'file', 'sqlite'}:
+            continue
+        ref = session.selected_versions.get('profile:' + source.source_id)
+        if not ref:
+            continue
+        entry = recorded.get(source.source_id)
+        if isinstance(entry, dict) and entry.get('profile_ref') == ref:
+            continue
+        try:
+            state = _source_state(wb.workspace, source)
+        except (OSError, PermissionError, ValueError) as exc:
+            state = {'source_id': source.source_id, 'kind': source.kind,
+                     'locator_ref': source.locator_ref,
+                     'unreadable': str(exc)[:200]}
+        recorded[source.source_id] = {'profile_ref': ref, 'state': state}
+        changed = True
+    if not changed:
+        return
+    body = {'session_id': session.id, 'sources': recorded, 'observed_at': _now()}
+    wb.store.commit(ChangeSet(writes=[Write(
+        SOURCE_VERSION_KIND, session.id, wb.scope, body,
+        previous['revision'] if previous is not None else None)]))
+
+
 def _inside(path, workspace):
     try:
         path.relative_to(workspace)
@@ -200,6 +269,14 @@ def build_candidate(wb, draft, catalog, completion):
         table = tables.get(entity.get('table'))
         if table is None:
             raise ValueError('draft entity has no observed table: %s' % spec.entity)
+        # A table with no rows has columns and declared keys but no identity
+        # sample; publishing it would promise a concept nobody has observed.
+        rows_observed = table.get('rows_observed')
+        if not isinstance(rows_observed, int) or rows_observed < 1:
+            raise ValueError(
+                'concept %r has no observed sample rows in the confirmed snapshot '
+                '(table %r); discover again or exclude the table explicitly'
+                % (spec.entity, table.get('name')))
 
         concept = (spec.concept or entity.get('name') or '').strip()
         if not concept:
@@ -223,6 +300,15 @@ def build_candidate(wb, draft, catalog, completion):
                 raise ValueError(
                     'property %r references an unobserved column %r (no evidence)'
                     % (name, column))
+            # Every attribute needs at least one non-null value in the exact
+            # sample the human confirms; a column that is entirely empty has
+            # no anchor to compare against.
+            if (observed.get('distinct_values', 0) < 1
+                    or observed.get('null_rows', 0) >= rows_observed):
+                raise ValueError(
+                    'property %r has no observed value in the confirmed snapshot '
+                    '(table %r, column %r); discover again or exclude it explicitly'
+                    % (name, table.get('name'), column))
             if allowed is not None and column not in allowed:
                 raise ValueError(
                     'property %r uses a column outside the disclosed scope: %s'
@@ -431,23 +517,51 @@ class PublishService:
         return files
 
     def _live_sources(self, session, profiles):
-        workspace = self.wb.workspace.resolve()
         by_id = {profile.source_id: profile for profile in profiles}
         files = []
         for source in session.sources:
             if source.kind not in {'file', 'sqlite'}:
                 continue
-            path = _inside((workspace / source.locator_ref).resolve(), workspace)
-            if not path.is_file():
-                raise ValueError('source file is no longer readable; discover again')
-            actual = _digest_file(path)
+            try:
+                state = _source_state(self.wb.workspace, source)
+            except OSError:
+                raise ValueError('source file is no longer readable; discover again') from None
             profile = by_id.get(source.source_id)
             if (source.kind == 'file' and profile is not None
-                    and actual != profile.source_revision):
+                    and state['digest'] != profile.source_revision):
                 raise ValueError('source changed since it was observed; discover again')
-            files.append({'source_id': source.source_id,
-                          'locator_ref': source.locator_ref, 'digest': actual})
+            files.append(state)
         return files
+
+    def _verify_probe_sources(self, session):
+        """Compare live sources with the per-source versions pinned at probe time.
+
+        The recorded profile ref must still be the one selected on the session:
+        a source that was re-probed has new evidence, so a candidate built from
+        the old profile refs is stale even if the file happens to be unchanged.
+        """
+        sources = [source for source in session.sources
+                   if source.kind in {'file', 'sqlite'}]
+        if not sources:
+            return
+        row = self.wb.store.current(SOURCE_VERSION_KIND, session.id, scope=self.wb.scope)
+        if row is None:
+            raise ValueError('source observation version was not recorded; discover again')
+        recorded = (row['body'] or {}).get('sources') or {}
+        for source in sources:
+            entry = recorded.get(source.source_id)
+            expected = entry.get('state') if isinstance(entry, dict) else None
+            if not isinstance(expected, dict) or expected.get('unreadable'):
+                raise ValueError('source observation version is missing; discover again')
+            ref = session.selected_versions.get('profile:' + source.source_id)
+            if entry.get('profile_ref') != ref:
+                raise ValueError('source observation changed; discover again')
+            try:
+                actual = _source_state(self.wb.workspace, source)
+            except OSError:
+                raise ValueError('source file is no longer readable; discover again') from None
+            if actual != expected:
+                raise ValueError('source changed since it was observed; discover again')
 
     def _verify_sources(self, session, profiles, body):
         if body.get('profile_refs'):
@@ -486,6 +600,7 @@ class PublishService:
         if entry_row(wb.store, wb.scope, completion.ontology_id) is not None:
             raise ValueError('ontology id is already registered: %s' % completion.ontology_id)
 
+        self._verify_probe_sources(session)
         source_files = self._live_sources(session, profiles)
         snapshot_files = self._snapshot_files(profiles)
         candidate = build_candidate(wb, draft, catalog, completion)
@@ -604,6 +719,7 @@ class PublishService:
             raise ValueError('source observation changed; discover again')
         if source_snapshot_digest(catalog, profile_refs) != body['source_snapshot']:
             raise ValueError('source snapshot changed; discover again')
+        self._verify_probe_sources(session)
         self._verify_sources(session, profiles, body)
 
         completion = PublishPrepare.model_validate(body['completion'])

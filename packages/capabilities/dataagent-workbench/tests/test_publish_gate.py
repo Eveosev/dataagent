@@ -8,6 +8,7 @@ pin every check the gate must enforce.
 """
 from __future__ import annotations
 
+import hashlib
 import sqlite3
 from pathlib import Path
 
@@ -513,12 +514,23 @@ def test_retirement_keeps_old_tasks_and_clears_the_new_task_default(tmp_path):
     assert applied.status == CapabilityStatus.ok
     assert wb.store.query('release', wb.scope)
 
-    # New tasks no longer default to the retired definition.
-    _, new_request = start_mapping(wb, [
+    # New tasks no longer default to the retired definition; the fallback
+    # builtin revision is written into the task target, not resolved later.
+    new_session, new_request = start_mapping(wb, [
         {'source_id': 'orders', 'kind': 'file', 'locator_ref': 'orders.csv'},
     ])
     assert new_request['allowed_target']['ontology_id'] == 'procurement'
     assert new_request['allowed_target']['concept'] == 'PurchaseDocument'
+    pinned = wb.sessions.get(new_session, wb.ctx).extensions['dataagent.mapping_target']
+    assert pinned == {'ontology_id': 'procurement', 'revision': '1',
+                      'concept': 'PurchaseDocument'}
+
+    # A retired definition stays readable for old tasks but cannot be chosen
+    # explicitly by a new one.
+    with pytest.raises(ValueError, match='retired for new tasks'):
+        start_mapping(wb, [
+            {'source_id': 'orders', 'kind': 'file', 'locator_ref': 'orders.csv'},
+        ], target={'ontology_id': 'sales-model', 'concept': 'SalesOrder'})
 
     # Retiring twice is refused, and the reason is mandatory.
     again = client(wb).post('/api/ontologies/sales-model/retire', json={
@@ -527,3 +539,333 @@ def test_retirement_keeps_old_tasks_and_clears_the_new_task_default(tmp_path):
     missing_reason = client(wb).post('/api/ontologies/procurement/retire', json={
         'reason': '', 'confirmed': True})
     assert missing_reason.status_code == 422
+
+
+def test_sqlite_change_between_probe_and_prepare_is_rejected(tmp_path):
+    """The source is pinned at probe time, not when a candidate is prepared."""
+    wb, session_id, request = workbench(tmp_path)
+    current = full_draft(wb, session_id, request)
+    with sqlite3.connect(tmp_path / 'sales.db') as connection:
+        connection.execute("INSERT INTO party VALUES ('P-3', 'Cedar')")
+    with pytest.raises(ValueError, match='source changed since it was observed'):
+        prepare(wb, full_completion(wb, session_id, current))
+
+
+def wal_workbench(tmp_path):
+    """Probe with a writer connection open so later writes stay in the WAL."""
+    keeper = sqlite3.connect(tmp_path / 'sales.db')
+    keeper.executescript(SEED.read_text())
+    keeper.execute('PRAGMA journal_mode=WAL')
+    keeper.execute('PRAGMA wal_autocheckpoint=0')
+    keeper.commit()
+    wb = Workbench(tmp_path, layer_client=LayerClient(DATA))
+    session_id = invoke(wb, 'intake_start', {
+        'goal': '从陌生数据库识别销售单据的业务对象',
+        'mode': 'ontology_discovery',
+        'sources': [{'source_id': 'db', 'kind': 'sqlite', 'locator_ref': 'sales.db'}],
+    }).data['session_id']
+    request = invoke(wb, 'intake_advance', {'session_id': session_id}).data
+    return wb, session_id, request, keeper
+
+
+def test_wal_only_change_between_probe_and_prepare_is_rejected(tmp_path):
+    """A change parked in -wal is part of the observed source version."""
+    wb, session_id, request, keeper = wal_workbench(tmp_path)
+    try:
+        current = full_draft(wb, session_id, request)
+        database = tmp_path / 'sales.db'
+        before = database.read_bytes()
+        keeper.execute("INSERT INTO party VALUES ('P-3', 'Cedar')")
+        keeper.commit()
+        assert database.read_bytes() == before
+        assert (tmp_path / 'sales.db-wal').stat().st_size > 0
+        with pytest.raises(ValueError, match='source changed since it was observed'):
+            prepare(wb, full_completion(wb, session_id, current))
+    finally:
+        keeper.close()
+
+
+def empty_workbench(tmp_path):
+    with sqlite3.connect(tmp_path / 'empty.db') as connection:
+        connection.executescript(
+            'CREATE TABLE empty_orders (order_no TEXT PRIMARY KEY, amount INTEGER);')
+    wb = Workbench(tmp_path, layer_client=LayerClient(DATA))
+    session_id = invoke(wb, 'intake_start', {
+        'goal': '从一个空表发现业务对象',
+        'mode': 'ontology_discovery',
+        'sources': [{'source_id': 'db', 'kind': 'sqlite', 'locator_ref': 'empty.db'}],
+    }).data['session_id']
+    request = invoke(wb, 'intake_advance', {'session_id': session_id}).data
+    return wb, session_id, request
+
+
+def test_empty_table_concept_has_no_publishable_evidence(tmp_path):
+    """An empty table still has columns and a declared key, but no sample."""
+    wb, session_id, request = empty_workbench(tmp_path)
+    current = draft(wb, session_id, request, [
+        {'table': 'empty_orders', 'name': 'EmptyOrder', 'grain': '每行一份订单',
+         'identity': ['order_no']},
+    ])
+    completion = {
+        'session_id': session_id,
+        'expected_revision': wb.sessions.get(session_id, wb.ctx).revision,
+        'draft_ref': current['ref'], 'ontology_id': 'empty-model',
+        'concepts': [{'entity': 'EmptyOrder', 'properties': {
+            'order_no': {'column': 'order_no', 'value_type': 'string',
+                         'required': True},
+            'amount': {'column': 'amount', 'value_type': 'integer'},
+        }, 'identity_fields': ['order_no']}],
+        'dispositions': [],
+    }
+    with pytest.raises(ValueError, match='no observed sample rows'):
+        prepare(wb, completion)
+
+
+def test_property_with_no_observed_value_has_no_evidence(tmp_path):
+    """A column that is null in every sampled row has no anchor to publish."""
+    with sqlite3.connect(tmp_path / 'nullable.db') as connection:
+        connection.executescript(
+            'CREATE TABLE orders (order_no TEXT PRIMARY KEY, note TEXT);\n'
+            "INSERT INTO orders VALUES ('O-1', NULL);")
+    wb = Workbench(tmp_path, layer_client=LayerClient(DATA))
+    session_id = invoke(wb, 'intake_start', {
+        'goal': '从含空值的表发现业务对象',
+        'mode': 'ontology_discovery',
+        'sources': [{'source_id': 'db', 'kind': 'sqlite', 'locator_ref': 'nullable.db'}],
+    }).data['session_id']
+    request = invoke(wb, 'intake_advance', {'session_id': session_id}).data
+    current = draft(wb, session_id, request, [
+        {'table': 'orders', 'name': 'Order', 'grain': '每行一份订单',
+         'identity': ['order_no']},
+    ])
+    completion = {
+        'session_id': session_id,
+        'expected_revision': wb.sessions.get(session_id, wb.ctx).revision,
+        'draft_ref': current['ref'], 'ontology_id': 'nullable-model',
+        'concepts': [{'entity': 'Order', 'properties': {
+            'order_no': {'column': 'order_no', 'value_type': 'string',
+                         'required': True},
+            'note': {'column': 'note', 'value_type': 'string'},
+        }, 'identity_fields': ['order_no']}],
+        'dispositions': [],
+    }
+    with pytest.raises(ValueError, match='no observed value'):
+        prepare(wb, completion)
+
+
+def test_probe_source_version_survives_a_workbench_restart(tmp_path):
+    """The pin lives in the workspace store, not in this process's memory."""
+    wb, session_id, request = workbench(tmp_path)
+    current = full_draft(wb, session_id, request)
+    restarted = Workbench(tmp_path, layer_client=LayerClient(DATA))
+    prepared = prepare(restarted, full_completion(restarted, session_id, current))
+    assert prepared.data['state'] == 'awaiting_human_confirmation'
+
+
+class FlakySecondaryClient:
+    """Fail the secondary source once, then delegate to the real data layer."""
+
+    def __init__(self, client):
+        self.client = client
+        self.failed = False
+
+    def probe(self, selection, *args, **kwargs):
+        if selection.source_id == 'secondary' and not self.failed:
+            self.failed = True
+            raise ValueError('transient probe failure')
+        return self.client.probe(selection, *args, **kwargs)
+
+    def __getattr__(self, name):
+        return getattr(self.client, name)
+
+
+class UnreadablePrimaryClient:
+    """Make the primary file unreadable right after its probe returns."""
+
+    def __init__(self, client, path):
+        self.client = client
+        self.path = Path(path)
+        self.hidden = None
+        self.secondary_failed = False
+
+    def probe(self, selection, *args, **kwargs):
+        if selection.source_id == 'secondary' and not self.secondary_failed:
+            self.secondary_failed = True
+            raise ValueError('transient probe failure')
+        profile = self.client.probe(selection, *args, **kwargs)
+        if selection.source_id == 'primary' and self.hidden is None:
+            self.hidden = self.path.with_suffix('.hidden')
+            self.path.rename(self.hidden)
+        return profile
+
+    def __getattr__(self, name):
+        return getattr(self.client, name)
+
+
+class WALMutatingSecondaryClient:
+    """Edit the primary WAL on the secondary's first probe, then fail.
+
+    This is the same-advance window: the primary probe has returned but the
+    advance has not, so the secondary can still rewrite the primary.
+    """
+
+    def __init__(self, client, keeper):
+        self.client = client
+        self.keeper = keeper
+        self.failed = False
+
+    def probe(self, selection, *args, **kwargs):
+        if selection.source_id == 'secondary' and not self.failed:
+            self.failed = True
+            self.keeper.execute("INSERT INTO party VALUES ('P-3', 'Cedar')")
+            self.keeper.commit()
+            raise ValueError('secondary failed after editing primary')
+        return self.client.probe(selection, *args, **kwargs)
+
+    def __getattr__(self, name):
+        return getattr(self.client, name)
+
+
+def two_source_wal_workbench(tmp_path, wrap_client=None):
+    """Primary is observed; secondary must be retried once."""
+    keeper = sqlite3.connect(tmp_path / 'sales.db')
+    keeper.executescript(SEED.read_text())
+    keeper.execute('PRAGMA journal_mode=WAL')
+    keeper.execute('PRAGMA wal_autocheckpoint=0')
+    keeper.commit()
+    with sqlite3.connect(tmp_path / 'retry.db') as connection:
+        connection.executescript(
+            'CREATE TABLE retry_marker (code TEXT PRIMARY KEY, label TEXT);\n'
+            "INSERT INTO retry_marker VALUES ('X-1', 'retry');")
+    client = LayerClient(DATA)
+    if wrap_client is None:
+        client = FlakySecondaryClient(client)
+    else:
+        client = wrap_client(client, keeper)
+    wb = Workbench(tmp_path, layer_client=client)
+    session_id = invoke(wb, 'intake_start', {
+        'goal': '两个来源中一个需要重试',
+        'mode': 'ontology_discovery',
+        'sources': [
+            {'source_id': 'primary', 'kind': 'sqlite', 'locator_ref': 'sales.db'},
+            {'source_id': 'secondary', 'kind': 'sqlite', 'locator_ref': 'retry.db'},
+        ],
+    }).data['session_id']
+    first = invoke(wb, 'intake_advance', {'session_id': session_id}).data
+    return wb, session_id, first, keeper
+
+
+def test_retrying_secondary_does_not_refresh_the_primary_source_version(tmp_path):
+    """Per-source pins: retrying B must not bless a WAL-only edit of A."""
+    wb, session_id, first, keeper = two_source_wal_workbench(tmp_path)
+    try:
+        assert first['next_actions'] == ['retry_probe']
+        session = wb.sessions.get(session_id, wb.ctx)
+        primary_ref = session.selected_versions['profile:primary']
+        secondary_ref = session.selected_versions['profile:secondary']
+        record = wb.store.current('source_version', session_id, scope=wb.scope)
+        primary_record = record['body']['sources']['primary']
+
+        database = tmp_path / 'sales.db'
+        before = database.read_bytes()
+        keeper.execute("INSERT INTO party VALUES ('P-3', 'Cedar')")
+        keeper.commit()
+        assert database.read_bytes() == before
+        assert (tmp_path / 'sales.db-wal').stat().st_size > 0
+
+        request = invoke(wb, 'intake_advance', {'session_id': session_id}).data
+        session = wb.sessions.get(session_id, wb.ctx)
+        # Only the retried source gets a new observation; A keeps its old pin.
+        assert session.selected_versions['profile:primary'] == primary_ref
+        assert session.selected_versions['profile:secondary'] != secondary_ref
+        record = wb.store.current('source_version', session_id, scope=wb.scope)
+        assert record['body']['sources']['primary'] == primary_record
+
+        completion = two_source_completion(wb, session_id, request)
+        with pytest.raises(ValueError, match='source changed since it was observed'):
+            prepare(wb, completion)
+    finally:
+        keeper.close()
+
+
+def two_source_completion(wb, session_id, request):
+    declared, = [link for link in request['catalog']['relationships']
+                 if link['origin'] == 'declared']
+    inferred, = [link for link in request['catalog']['relationships']
+                 if link['origin'] == 'sample_supported']
+    current = draft(wb, session_id, request, [
+        {'table': 'doc_hdr', 'name': 'SalesOrder', 'grain': '每个账簿内的一份销售单',
+         'identity': ['book', 'doc_no']},
+        {'table': 'doc_line', 'name': 'SalesOrderLine', 'grain': '销售单的一条明细',
+         'identity': ['book', 'doc_no', 'seq'],
+         'properties': [{'column': 'cents', 'name': 'amountInCents'}]},
+        {'table': 'party', 'name': 'Customer', 'grain': '每个客户一行',
+         'identity': ['party_no'],
+         'properties': [{'column': 'nm', 'name': 'name'}]},
+        {'table': 'retry_marker', 'name': 'RetryMarker', 'grain': '每行一条重试标记',
+         'identity': ['code']},
+    ], [
+        {'evidence_id': declared['id'], 'name': 'belongsToOrder'},
+        {'evidence_id': inferred['id'], 'name': 'orderedBy'},
+    ])
+    completion = full_completion(wb, session_id, current)
+    completion['concepts'].append({
+        'entity': 'RetryMarker', 'properties': {
+            'code': {'column': 'code', 'value_type': 'string', 'required': True},
+            'label': {'column': 'label', 'value_type': 'string'},
+        }, 'identity_fields': ['code'],
+    })
+    return completion
+
+
+def test_wal_edit_during_secondary_probe_does_not_refresh_primary_version(tmp_path):
+    """The primary pin must be captured before the next source probes."""
+    wb, session_id, first, keeper = two_source_wal_workbench(
+        tmp_path, wrap_client=WALMutatingSecondaryClient)
+    try:
+        assert first['next_actions'] == ['retry_probe']
+        session = wb.sessions.get(session_id, wb.ctx)
+        primary_ref = session.selected_versions['profile:primary']
+        record = wb.store.current('source_version', session_id, scope=wb.scope)
+        primary_record = record['body']['sources']['primary']
+        # The capture is the WAL as it was when primary's probe returned; the
+        # secondary edited it afterwards while the advance was still running.
+        current_wal = 'sha256:' + hashlib.sha256(
+            (tmp_path / 'sales.db-wal').read_bytes()).hexdigest()
+        assert primary_record['state']['files']['wal'] != current_wal
+
+        request = invoke(wb, 'intake_advance', {'session_id': session_id}).data
+        session = wb.sessions.get(session_id, wb.ctx)
+        assert session.selected_versions['profile:primary'] == primary_ref
+        record = wb.store.current('source_version', session_id, scope=wb.scope)
+        assert record['body']['sources']['primary'] == primary_record
+        with pytest.raises(ValueError, match='source changed since it was observed'):
+            prepare(wb, two_source_completion(wb, session_id, request))
+    finally:
+        keeper.close()
+
+
+def test_unreadable_primary_stays_blocked_after_unrelated_retry(tmp_path):
+    """An unreadable pin must not be re-fixed just because another source retries."""
+    holder = {}
+
+    def wrap(client, keeper):
+        holder['client'] = UnreadablePrimaryClient(client, tmp_path / 'sales.db')
+        return holder['client']
+
+    wb, session_id, first, keeper = two_source_wal_workbench(
+        tmp_path, wrap_client=wrap)
+    try:
+        assert first['next_actions'] == ['retry_probe']
+        record = wb.store.current('source_version', session_id, scope=wb.scope)
+        assert record['body']['sources']['primary']['state'].get('unreadable')
+
+        # The source becomes readable again, but it has not been re-probed.
+        holder['client'].hidden.rename(holder['client'].path)
+        request = invoke(wb, 'intake_advance', {'session_id': session_id}).data
+        record = wb.store.current('source_version', session_id, scope=wb.scope)
+        assert record['body']['sources']['primary']['state'].get('unreadable')
+        with pytest.raises(ValueError, match='source observation version is missing'):
+            prepare(wb, two_source_completion(wb, session_id, request))
+    finally:
+        keeper.close()

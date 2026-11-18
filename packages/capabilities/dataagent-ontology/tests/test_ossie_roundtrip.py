@@ -169,6 +169,69 @@ def test_sidecar_rejects_an_edit_to_the_bound_documents(definition, mapping):
         import_ossie(exchange.ontology, exchange.semantic_model, exchange.mapping, sidecar=exchange.sidecar)
 
 
+def test_concepts_shaped_single_concept_exports_the_resolved_definition():
+    """A new-style definition keeps its concept in ``concepts``, not at the top."""
+    from dataagent_contracts.ontology import ConceptDefinition
+    from dataagent_ontology.adapters.ossie import (
+        OssieValidationError, export_ossie, import_ossie,
+    )
+
+    definition = OntologyRevision(
+        id="purchasing", revision="9",
+        concepts={"PurchaseOrder": ConceptDefinition(
+            entity_type="PurchaseOrder",
+            properties={
+                "company": {"value_type": "string", "required": True},
+                "number": {"value_type": "string", "required": True},
+                "total": {"value_type": "decimal", "description": "Billed total"},
+            },
+            identity_fields=["company", "number"],
+        )},
+        relations={"payment": ["PurchaseOrder", "currency", "business_date"]},
+    )
+    mapping = MappingSpec(
+        id="vendor-file", revision="3", ontology_revision="purchasing@9",
+        concept="PurchaseOrder", source_fingerprint="file-schema",
+        bindings={
+            "company": {"source_field": "business.unit"},
+            "number": {"source_field": "order_no"},
+            "total": {"source_field": "minor", "transform": "minor_to_major"},
+        },
+        relation_bindings={"payment": {
+            "PurchaseOrder": {"source_field": "$entity"},
+            "currency": {"source_field": "ccy"},
+            "business_date": {"source_field": "booked_on"},
+        }},
+    )
+
+    exchange = export_ossie(definition, mapping)
+    component = exchange.ontology["ontology"][0]
+    assert component["concept"] == "PurchaseOrder"
+    assert component["identify_by"] == ["company", "number"]
+    assert {item["name"] for item in component["relationships"]} == {
+        "company", "number", "total", "payment"}
+    concept = exchange.mapping["concept_mappings"][0]
+    assert concept["concept"] == "PurchaseOrder"
+    assert concept["object_mappings"][0]["referent_mappings"] == [
+        {"relationship": "company", "expression": 'source_rows."business.unit"'},
+        {"relationship": "number", "expression": 'source_rows."order_no"'},
+    ]
+
+    received = import_ossie(
+        exchange.ontology, exchange.semantic_model, exchange.mapping,
+        sidecar=json.loads(json.dumps(exchange.sidecar)),
+        entity_type="PurchaseOrder",
+    )
+    assert received.ontology == definition
+    assert received.mapping == mapping
+
+    with pytest.raises(OssieValidationError, match="not an ontology property"):
+        export_ossie(definition, mapping.model_copy(update={
+            "bindings": {**mapping.bindings,
+                         "secret": {"source_field": "hidden"}},
+        }))
+
+
 def test_standalone_mapping_uses_column_aliases_and_skips_sql_special_values():
     from dataagent_ontology.adapters.ossie import import_ossie
 
