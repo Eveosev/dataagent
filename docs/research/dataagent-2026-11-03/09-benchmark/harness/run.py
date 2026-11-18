@@ -28,13 +28,59 @@ BENCH = HERE.parent
 SPLITS = ("development", "regression", "unseen_acceptance")
 # new_round.py 只写 run.json / scorecard.json；artifacts 是 run.py 自己建的空目录。
 SKELETON_ENTRIES = {"run.json", "scorecard.json", "artifacts"}
+RUN_SKELETON_KEYS = {"run_id", "round_id", "status", "samples", "finished_at", "cost", "artifacts"}
+CARD_SKELETON_KEYS = {"run_id", "task_id", "split_scores", "deltas", "verdict", "gate", "notes"}
+
+
+def _is_pending_run(run: dict, run_dir: pathlib.Path) -> bool:
+    """run.json 是否仍是 new_round.py 写的待跑占位（无样本、无完成时间/成本/产物）。"""
+    if not isinstance(run, dict) or not RUN_SKELETON_KEYS <= set(run):
+        return False
+    samples = run["samples"]
+    if not isinstance(samples, dict):
+        return False
+    if samples.get("total") != 0 or samples.get("scored") != 0 or samples.get("missing") != []:
+        return False
+    return (
+        run["status"] == "pending"
+        and run["run_id"] == run_dir.name
+        and run["round_id"] == run_dir.name
+        and run["finished_at"] is None
+        and run["cost"] is None
+        and run["artifacts"] == []
+    )
+
+
+def _is_pending_card(card: dict, run: dict) -> bool:
+    """scorecard.json 是否仍是 new_round.py 写的空记分卡（无评分、无裁定、无 Δ）。"""
+    if not isinstance(card, dict) or not CARD_SKELETON_KEYS <= set(card):
+        return False
+    gate = card["gate"]
+    if not isinstance(gate, dict) or gate.get("decision") != "pending" or gate.get("blockers") != []:
+        return False
+    splits = card["split_scores"]
+    if not isinstance(splits, dict) or set(splits) != set(SPLITS):
+        return False
+    for slot in splits.values():
+        if not isinstance(slot, dict) or set(slot) != {"count", "metrics"}:
+            return False
+        if slot["count"] != 0 or slot["metrics"] != {}:
+            return False
+    return (
+        card["verdict"] == "pending"
+        and card["deltas"] == {}
+        and card["notes"] is None
+        and card["run_id"] == run["run_id"]
+        and card["task_id"] == run["task_id"]
+    )
 
 
 def is_pending_skeleton(run_dir: pathlib.Path) -> bool:
     """run 目录是否只有 new_round.py 生成的待跑骨架（尚无任何预测产物）。
 
-    条件：目录里只有骨架文件、run.json.status=pending、artifacts 为空。
-    predictions.jsonl / cases.jsonl 或任何额外文件都算真实产物，不允许复用。
+    条件：目录里只有骨架文件、artifacts 为空、run.json 与 scorecard.json 都还是
+    new_round.py 写的待跑占位（samples 全零、finished_at/cost 为 null、artifacts 空、
+    verdict/gate 为 pending、split_scores 为空）。任何真实结果或额外文件都不允许复用。
     """
     if not run_dir.is_dir():
         return False
@@ -43,12 +89,13 @@ def is_pending_skeleton(run_dir: pathlib.Path) -> bool:
         return False
     try:
         run = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
+        card = json.loads((run_dir / "scorecard.json").read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return False
-    if run.get("status") != "pending":
-        return False
     artifacts = run_dir / "artifacts"
-    return not (artifacts.exists() and any(artifacts.rglob("*")))
+    if artifacts.exists() and any(artifacts.rglob("*")):
+        return False
+    return _is_pending_run(run, run_dir) and _is_pending_card(card, run)
 
 
 def load_task(task_id: str) -> tuple[dict, pathlib.Path]:

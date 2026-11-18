@@ -33,26 +33,37 @@ def load_module(path: pathlib.Path, name: str):
 
 
 RUN = load_module(REAL_HARNESS / "run.py", "bench_run_under_test")
+SPLITS = ("development", "regression", "unseen_acceptance")
 
 
 def write_skeleton(run_dir: pathlib.Path, status: str = "pending") -> None:
-    """按 new_round.py 的形状写一份最小骨架。"""
+    """按 new_round.py 的形状写一份最小骨架（run.json + 空 scorecard）。"""
     run = {
         "run_id": ROUND,
         "round_id": ROUND,
         "task_id": "B01",
         "status": status,
         "env": {"adapter": "oracle", "model": None},
-        "dataset_ref": {"revision": "v0.2", "splits": ["development", "regression", "unseen_acceptance"]},
+        "dataset_ref": {"revision": "v0.2", "splits": list(SPLITS)},
         "samples": {"total": 0, "scored": 0, "missing": []},
         "started_at": "2026-11-18T00:00:00+08:00",
         "finished_at": None,
         "cost": None,
         "artifacts": [],
     }
+    card = {
+        "run_id": ROUND,
+        "task_id": "B01",
+        "baseline_run": "x000-selftest",
+        "split_scores": {split: {"count": 0, "metrics": {}} for split in SPLITS},
+        "deltas": {},
+        "verdict": "pending",
+        "gate": {"tier": "block", "decision": "pending", "blockers": []},
+        "notes": None,
+    }
     run_dir.mkdir(parents=True, exist_ok=True)
     (run_dir / "run.json").write_text(json.dumps(run, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    (run_dir / "scorecard.json").write_text("{}\n", encoding="utf-8")
+    (run_dir / "scorecard.json").write_text(json.dumps(card, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     (run_dir / "artifacts").mkdir(exist_ok=True)
 
 
@@ -66,6 +77,12 @@ class TestPendingSkeleton(unittest.TestCase):
 
     def tearDown(self) -> None:
         self._tmp.cleanup()
+
+    def _load(self, name: str) -> dict:
+        return json.loads((self.run_dir / name).read_text(encoding="utf-8"))
+
+    def _dump(self, name: str, obj: dict) -> None:
+        (self.run_dir / name).write_text(json.dumps(obj, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
     def test_new_round_skeleton_is_recognized(self):
         self.assertTrue(RUN.is_pending_skeleton(self.run_dir))
@@ -90,9 +107,57 @@ class TestPendingSkeleton(unittest.TestCase):
         (self.run_dir / "run.json").write_text("{not json\n", encoding="utf-8")
         self.assertFalse(RUN.is_pending_skeleton(self.run_dir))
 
+    def test_real_run_samples_are_not_skeleton(self):
+        for field, value in {
+            "samples": {"total": 1, "scored": 1, "missing": []},
+            "finished_at": "2026-11-18T01:00:00+08:00",
+            "cost": {"usd": 0.1, "tokens": 10},
+            "artifacts": ["artifacts/B01-x-001.json"],
+        }.items():
+            with self.subTest(field=field):
+                write_skeleton(self.run_dir)
+                run = self._load("run.json")
+                run[field] = value
+                self._dump("run.json", run)
+                self.assertFalse(RUN.is_pending_skeleton(self.run_dir))
+
+    def test_scorecard_with_real_scores_is_not_skeleton(self):
+        card = self._load("scorecard.json")
+        card["split_scores"]["development"] = {
+            "count": 1,
+            "metrics": {"downstream_qa_accuracy": {"value": 1.0, "numerator": 1.0, "denominator": 1}},
+        }
+        self._dump("scorecard.json", card)
+        self.assertFalse(RUN.is_pending_skeleton(self.run_dir))
+
+    def test_decided_scorecard_is_not_skeleton(self):
+        card = self._load("scorecard.json")
+        card["verdict"] = "pass"
+        card["gate"]["decision"] = "pass"
+        self._dump("scorecard.json", card)
+        self.assertFalse(RUN.is_pending_skeleton(self.run_dir))
+
+    def test_scorecard_with_deltas_is_not_skeleton(self):
+        card = self._load("scorecard.json")
+        card["deltas"] = {"development": {"downstream_qa_accuracy": 0.1}}
+        self._dump("scorecard.json", card)
+        self.assertFalse(RUN.is_pending_skeleton(self.run_dir))
+
+    def test_missing_scorecard_is_not_skeleton(self):
+        (self.run_dir / "scorecard.json").unlink()
+        self.assertFalse(RUN.is_pending_skeleton(self.run_dir))
+
+    def test_empty_scorecard_is_not_skeleton(self):
+        (self.run_dir / "scorecard.json").write_text("{}\n", encoding="utf-8")
+        self.assertFalse(RUN.is_pending_skeleton(self.run_dir))
+
+    def test_corrupt_scorecard_is_not_skeleton(self):
+        (self.run_dir / "scorecard.json").write_text("{not json\n", encoding="utf-8")
+        self.assertFalse(RUN.is_pending_skeleton(self.run_dir))
+
 
 class TestNewRoundSkeletonRun(unittest.TestCase):
-    """端到端：new_round 骨架被 run.py 接受；跑完后再跑必须拒绝。"""
+    """端到端：new_round 骨架被 run.py 接受；跑完或已有真实记分卡时必须拒绝。"""
 
     def setUp(self) -> None:
         self._tmp = tempfile.TemporaryDirectory(prefix="run-e2e-")
@@ -136,7 +201,7 @@ class TestNewRoundSkeletonRun(unittest.TestCase):
         shutil.copy2(src / "task.json", dst / "task.json")
         shutil.copy2(src / "dataset" / "manifest.json", dst / "dataset" / "manifest.json")
         shutil.copy2(src / "history" / "baseline.json", dst / "history" / "baseline.json")
-        for split in ("development", "regression", "unseen_acceptance"):
+        for split in SPLITS:
             (dst / "dataset" / "cases" / split).mkdir()
             (dst / "dataset" / "expected").mkdir(exist_ok=True)
         case = "B01-mimo-0001"
@@ -185,6 +250,23 @@ class TestNewRoundSkeletonRun(unittest.TestCase):
         card = json.loads((run_dir / "scorecard.json").read_text(encoding="utf-8"))
         self.assertEqual(card["run_id"], ROUND)
         self.assertEqual(card["split_scores"]["development"]["count"], 1)
+
+    def test_skeleton_with_real_scorecard_is_rejected(self):
+        """已有真实评分/裁定的 scorecard 不能被当成骨架覆盖。"""
+        run_dir = self.bench / TASK_DIR / "history" / "runs" / ROUND
+        card_path = run_dir / "scorecard.json"
+        card = json.loads(card_path.read_text(encoding="utf-8"))
+        card["split_scores"]["development"] = {
+            "count": 1,
+            "metrics": {"downstream_qa_accuracy": {"value": 1.0, "numerator": 1.0, "denominator": 1}},
+        }
+        card["verdict"] = "pass"
+        before = json.dumps(card, ensure_ascii=False, indent=2) + "\n"
+        card_path.write_text(before, encoding="utf-8")
+        proc = self._run()
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn("run 目录已存在且非空", proc.stderr)
+        self.assertEqual(card_path.read_text(encoding="utf-8"), before)
 
     def test_previously_run_dir_is_still_rejected(self):
         first = self._run()
