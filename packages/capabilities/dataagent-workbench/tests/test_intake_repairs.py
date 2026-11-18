@@ -603,3 +603,31 @@ def test_cross_page_continuation_allows_the_same_unlabeled_document_number():
         row=0, name='currency', page=2, quote='CNY')], None,
         identity_fields=('number',))
     assert updated.records == [{'number': 'INV-A', 'currency': 'CNY'}]
+
+
+def test_cross_page_continuation_rejects_a_contextual_different_prefix():
+    pages = [{'page': 1, 'text': 'number: INV-A'},
+             {'page': 2, 'text': 'Invoice BILL-B\ncurrency: CNY'}]
+    profile = pdf_profile('context-prefix', [
+        {'number': 'INV-A'},
+        {'currency': 'CNY'},
+    ], pages, {(0, 'number'): (1, 'INV-A'), (1, 'currency'): (2, 'CNY')},
+        digest(['context', 'different-prefix']))
+    with pytest.raises(ValueError, match='different documents'):
+        extract_fields(profile, [DocumentField(
+            row=0, name='currency', page=2, quote='CNY')], None,
+            identity_fields=('number',))
+
+
+def test_cross_page_continuation_does_not_treat_a_date_as_document_number():
+    pages = [{'page': 1, 'text': 'number: 2026-001'},
+             {'page': 2, 'text': 'Date: 2026-11-18\ncurrency: CNY'}]
+    profile = pdf_profile('date-continuation', [
+        {'number': '2026-001'},
+        {'currency': 'CNY'},
+    ], pages, {(0, 'number'): (1, '2026-001'), (1, 'currency'): (2, 'CNY')},
+        digest(['date', 'continuation']))
+    updated = extract_fields(profile, [DocumentField(
+        row=0, name='currency', page=2, quote='CNY')], None,
+        identity_fields=('number',))
+    assert updated.records == [{'number': '2026-001', 'currency': 'CNY'}]

@@ -206,6 +206,31 @@ def _page_identity_values(profile, page_text, identity_fields, identity_aliases=
     return values
 
 
+_DATE_VALUE = re.compile(
+    r'^(?:\d{4}[-/.]\d{1,2}(?:[-/.]\d{1,2})?|\d{1,2}[-/.]\d{1,2}[-/.]\d{4})$')
+# "Invoice BILL-B", "Invoice No. INV-B", "InvoiceINV-B" and similar lead-ins.
+_DOCUMENT_CONTEXT = re.compile(
+    r'(?i)\b(?:invoice|bill|document|doc)'
+    r'(?:\s*(?:no\.?|number|reference|ref|#))?\s*[:：]?\s*'
+    r'([A-Za-z0-9][A-Za-z0-9_/-]*)')
+
+
+def _looks_like_date(value):
+    return bool(_DATE_VALUE.match(str(value)))
+
+
+def _identity_context_values(page_text, target_values):
+    values = set()
+    for match in _DOCUMENT_CONTEXT.finditer(page_text or ''):
+        value = match.group(1).strip().rstrip('.,;，。；:：')
+        if not re.search(r'[0-9_-]', value):
+            continue
+        if _looks_like_date(value) and value not in target_values:
+            continue
+        values.add(value)
+    return values
+
+
 def _identity_shape_values(value, page_text):
     """Find unlabeled values shaped like an invoice/document number.
 
@@ -234,7 +259,12 @@ def _require_page_identity(profile, target_row, page_text, identity_fields,
         return
     evidence = set(page_values)
     for value in target_values:
-        evidence.update(_identity_shape_values(value, page_text))
+        for found in _identity_shape_values(value, page_text):
+            # A date on a continuation page is not another document number.
+            if _looks_like_date(found) and found not in target_values:
+                continue
+            evidence.add(found)
+    evidence.update(_identity_context_values(page_text, target_values))
     if evidence - target_values:
         raise ValueError('fields of different documents cannot be associated: '
                          'selected page identifies another document')
