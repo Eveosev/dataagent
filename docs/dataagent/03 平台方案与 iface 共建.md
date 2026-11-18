@@ -2,7 +2,7 @@
 doc_id: platform
 title: 03 平台方案与 iface 共建
 answers: 现有实现怎么按 iface 族重组（平台层）；我们怎么参与完善 iface（PR 清单与规矩）；分几步做、每步怎么验收
-status: 草稿 v0.3（设计；并入 11-16 已拍「我们承担完善 iface 职责」与 11-17 已拍「P1 不提 agent-kernel PR」；未实施）
+status: 草稿 v0.4（设计；并入 11-16 已拍「我们承担完善 iface 职责」与 11-17 已拍「P1 不提 agent-kernel PR」；11-18 按 agent-kernel@ae6c3d5 改写 §8.3 的 PR-7、PR-8，补后台结果推回会话的设计摘要；未实施）
 feishu_node: Ld3jwNrhDiHOiNkr90xcBl2NnHg
 feishu_obj: CzIudMsyuo9ygjxRjDWct1ZWnBd
 ---
@@ -193,7 +193,7 @@ flowchart LR
 
 ### 8.3 PR 清单
 
-类型：契约 = 改 `kernel/iface/src`；实现 = 契约已有，改 Mint 让 MCP 包用得上。行号基于 agent-kernel `33075118`。
+类型：契约 = 改 `kernel/iface/src`；实现 = 契约已有，改 Mint 让 MCP 包用得上。行号基于 agent-kernel `33075118`；PR-7、PR-8 于 11-18 按 agent-kernel@ae6c3d5 改写（依据盘点材料 `iface-对齐盘点-2026-11-17.md` §2、§7）。
 
 > 2026-11-17 已拍（Q5）：P1 先不提 PR。下表「期」是用到该机制的期，提交时机另定；PR-1 至 PR-4 的任务 T40–T43 暂缓，P1 期间按 [06 PRD](<06 PRD.md>) §7.1 的绕行验收。
 
@@ -202,13 +202,34 @@ flowchart LR
 | PR-1 工具效果注解与按效果审批 | 契约 + 实现 | `ToolSpec` 只加不改地增加效果等级（只读 / 推进 / 副作用）与幂等标记；Mint 读 MCP 工具的 `readOnlyHint`、`destructiveHint`、`idempotentHint`，审批按效果判 | `kernel/iface/src/tool.rs:35-39`；`MC/mcp/client.rs:738-757`；`MC/approval.rs:148-174` | 李奕杉（tool）、李鹏越（policy） | 默认审批下一次文件接入人工确认不超过 3 次（V1.5） | P1 用到；暂缓提交 | T40（暂缓） |
 | PR-2 MCP 调用下发调用元数据 | 实现 | `tools/call` 的 `_meta` 增加 `session_id`、`call_id`、`turn`（契约已要求「工具调用时必须可读到」） | `MC/mcp/client.rs:397-408`；`kernel/iface/src/types/mod.rs:5-11` | 李奕杉 | DataAgent 任务记录里的会话编号与 Mint 会话一致；R1 走宿主路径 | P1 用到；暂缓提交 | T41（暂缓） |
 | PR-3 bundle 包凭据声明与注入 | 契约 + 实现 | 允许 bundle 声明 `capabilities.secrets` 逻辑名；用户在 TUI / GUI 设置值；宿主只在拉起声明它的 MCP 进程时注入；`LeakDetector` 按已注册值打码 | `MM/validate.rs:868-870`；`MC/mcp_loader.rs:404-438`；`kernel/iface/src/policy/secret.rs` | 李鹏越 | V1.6 在打包桌面版 GUI 下也通过 | P1 用到；暂缓提交 | T42（暂缓） |
-| PR-4 打包桌面版 bundle 工具可见 | 实现（先核实） | Kernel 回合能调到 cpmrt 装载的 bundle MCP 工具，或桌面布局把 bundle 工具注册进 Kernel | `mint/tools/scripts/mint-runtime-launch.sh:458-509`；`MC/engine.rs:686-693` | Mint GUI 负责人（待确认） | GUI 会话工具列表出现 `dataagent-workbench__*`；V1.4 的 GUI 部分 | P1 用到；暂缓提交（T02 先核实） | T02；T43（暂缓） |
+| PR-4 打包桌面版 bundle 工具可见 | 实现（先核实） | Kernel 回合能调到 cpmrt 装载的 bundle MCP 工具，或桌面布局把 bundle 工具注册进 Kernel | `mint/tools/scripts/mint-runtime-launch.sh:458-509`；`MC/engine.rs:686-693` | Mint GUI 负责人（待确认） | GUI 会话工具列表出现 `dataagent-workbench__*`；V1.4 的 GUI 部分 | P1 用到；暂缓提交（T02 于 11-18 核实：打包版看不到 bundle 工具，见 `gui-channel-check.md`；M1 登记外部阻断，转为向 Mint 提需求 IF-13） | T02；T43（暂缓） |
 | PR-5 工具执行中向人要输入 | 实现 | MCP `input_required` 接到 `HumanChannel`，答复回到工具 | `MC/mcp/client.rs:416-419`；`kernel/iface/src/policy/human.rs:154` | 李鹏越 | 本体审核与令才澄清不必绕到网页 | P2 | — |
 | PR-6 组件事件追加 | 契约 | `store.ext_append / ext_read / ext_checkpoint`（方案 06 附录 A） | `kernel/iface/src/store.rs` | 郑达奇、魏耀全 | 接入与发布事件进会话日志，带 `call_id` | P3 | — |
-| PR-7 后台长任务与进展回推 | 契约 + 实现 | 提交、状态、取消、取结果；定时与变更触发；结果经 `InboxContract` 回推；对齐官方「后台长任务」排期 | iface-tool、iface-session | 李奕杉、彭淳毅 | P5 持续接入 | P5 | — |
-| PR-8 调用主体与租户、包间定位 | 契约 + 实现 | `CallMeta` 增加主体与租户；运行期按依赖名定位已装包；本地依赖可发布 | `kernel/iface/src/types/mod.rs`；`mint/bins/mint/src/install/` | 李鹏越 | P6 多人使用与分发 | P6 | — |
+| PR-7 后台长任务（基于 Scheduler）与进展回推 | 契约 + 实现 | 不另立任务契约。iface 已有 `scheduler_protocol`（Kernel 内建调度器的 7 个契约：状态机、`Wait`、取消、状态读写、幂等键、截止时间），缺的是：① 会话外寿命（会话关闭后执行继续）与定时、来源变更触发，复用 `State`、`Wait`、`ControlOutcome`；② Kernel 恢复 Scheduler 的生产接线（现按 `dead_code` 留档，只有测试在用）；③ 进程外组件能注册成调度服务（加 `mcp` 或 `command` 实现、环境变量白名单、Mint 清单 `provides.scheduler_bindings`）；④ 结果回推，见下文「后台结果推回会话」 | `kernel/iface/src/scheduler_protocol/model.rs:31`、`:287`；`kernel/docs/scheduler.md:34`；`kernel/host/src/transport/scheduler.rs:4-8`、`:50-51`；`kernel/core/src/scheduler/adapters/native.rs:60`；`kernel/iface/src/session/inbox.rs:51-60` | pengyue.li（Scheduler）；彭淳毅（inbox）；Mint 负责人（清单、MCP 通知） | 关闭会话后持续接入继续；后台探查完成后会话收到通知 | P3（②③④）/ P5（①） | —（08 IF-05 至 IF-08） |
+| PR-8 会话身份投影给组件、包间定位 | 契约 + 实现 | 不改 `CallMeta`（没有 `#[non_exhaustive]`，加字段是破坏性变更）。`SessionIdentity` 已有 `principal`、`tenant_id`：定义它的只读投影，随 `_meta` 与 `CallMeta` 一起下发给组件，宿主填、组件只读；运行期按依赖名定位已装包；本地依赖可发布 | `kernel/iface/src/session/identity.rs:37`、`:41`；`kernel/iface/src/types/mod.rs:7-11`；`mint/bins/mint/src/install/` | 彭淳毅（身份投影，评审 pengyue.li）；李鹏越（包间定位） | 组件拿到宿主给的主体，关闭主体自报（S0 评审 X1–X3）；P6 多人使用与分发 | P3（身份）/ P6（定位） | —（08 IF-03、IF-12） |
 
 缺口与 PR 的对应：PR-1 = 01 的 B1；PR-2 = A1；PR-3 = B2；PR-5 = A2；PR-6 = B4；PR-7 = B3 + A5；PR-8 = B7 + B8。A3、A4、A6、A7、B5、B6 暂不提，排期见 [06 PRD](<06 PRD.md>) §7。
+
+**缺口与贡献的跟踪**：本表是「P1 要什么」视角的 8 个 PR。iface 缺口与贡献的完整清单（IF-01 至 IF-16，覆盖 P1 到 P6，含 Kernel、Mint 实现问题和 DataAgent 可回馈的参考实现）见 [08 iface 协议缺口与贡献](<08 iface 协议缺口与贡献.md>)；条目、状态与沟通记录以飞书表「iface 贡献清单」为源（链接见文档集首页），在那里跟踪。对应关系：PR-1 = IF-01，PR-2 = IF-02，PR-3 = IF-04，PR-4 = IF-13，PR-5 = IF-09，PR-6 = IF-10，PR-7 = IF-05 至 IF-08，PR-8 = IF-03、IF-12。
+
+#### 后台结果推回会话（设计摘要）
+
+问题：后台探查、OCR、等人审批完成后，要通知会话并让模型继续。组件只响应工具调用，没有推送通道：`InboxKind::SystemNote`（内核或工具写入的系统注记，`kernel/iface/src/session/inbox.rs:51-60`）存在，但契约写明 MCP 入口不在范围；宿主的 `session.deliver`（`kernel/host/src/transport/session_deliver.rs:4-23`）要 Kernel 连接与会话授权，MCP 组件拿不到（agent-kernel@ae6c3d5）。
+
+形状：发件箱 + 游标 + 可插拔投递。
+
+1. **发件箱（outbox）**：组件把要推的事件和状态变更写在同一事务里，每条带会话、任务、幂等键；DataAgent 的 SQLite 已有发件箱，沿用。
+2. **游标（cursor）**：每个会话记一个「已送达到哪」；投递方取游标之后的事件，确认后前移；重复投递靠幂等键去重。
+3. **可插拔投递**（按宿主能力选，可并用）：
+
+| 投递方式 | 怎么到达 | 需要谁 | 局限 |
+|---|---|---|---|
+| 捎带（piggyback） | 下一次任意工具调用的结果里附上未送达事件 | 只要 DataAgent | 要等模型再调工具，不能主动唤起 |
+| MCP 通知 | 组件发 MCP 服务端通知（`notifications/message` 或 `notifications/resources/updated`），宿主转成 `SystemNote`，可配置「只记下」或「唤起回合」 | Mint 支持转换（08 IF-08） | 现在 cpmrt 不处理 MCP 通知 |
+| `session.deliver` | 持有会话授权的投递方调用，进入收件箱并触发一次模型回合 | 宿主给组件按会话限权的投递凭证 | 组件现在拿不到 Kernel 连接 |
+| 桌面通知 | 本机系统通知，只提醒人 | 只要 DataAgent | 不进会话，模型不知道 |
+
+排期：发件箱、游标、捎带、桌面通知是 DataAgent 侧的事，放 P2；MCP 通知到 `SystemNote` 的转换要 Mint 做，记为 08 IF-08，与 IF-05 至 IF-07 合成一次「后台任务」沟通。
 
 ### 8.4 Python 组件 SDK（积木）
 

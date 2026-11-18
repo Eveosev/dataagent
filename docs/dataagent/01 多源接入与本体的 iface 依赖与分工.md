@@ -2,7 +2,7 @@
 doc_id: iface-gaps
 title: 01 多源接入与本体的 iface 依赖与分工
 answers: 在 Mint 上完成多源接入和 ontology 接入，要哪些 iface 支持、还缺哪些功能、哪些归业务侧、哪些要核心包加机制
-status: 草稿 v0.3（读码梳理，未运行；缺口转为 PR 设计见 03 §8，P1 不提；11-17 决策已拍）
+status: 草稿 v0.4（读码梳理，未运行；缺口转为 PR 设计见 03 §8，P1 不提；11-17 决策已拍；11-18 按 agent-kernel@ae6c3d5 更新 §6 的 B3、B7、B8，完整缺口与贡献清单见 08）
 feishu_node: XMMywweq2i7ioGkxSqicDclTnyd
 feishu_obj: JICXdFjtJoKefgxICGqcyfnxnNW
 ---
@@ -19,7 +19,7 @@ feishu_obj: JICXdFjtJoKefgxICGqcyfnxnNW
 2. **DataAgent 直接依赖宿主的只有三处**：iface-tool（Agent 发现并调用 13 个聚合工具）、iface-policy（调用前审批，但 Mint 按工具名猜类别）、iface-model + iface-loop（组件不调模型，由宿主 Agent 产出映射和本体提案）。身份、凭据、文件和网络围栏、长任务、资产存储、视图全部自建或绕行。
 3. **要核心包动的共 15 项：**
    - A 类 · 契约已有，Mint 没开放给 MCP 包（7 项）：调用元数据、工具中途向人要输入、文件与进程围栏、逐请求出网判定、后台进展回推、审计、知识登记。
-   - B 类 · 契约缺失，要加机制（8 项）：工具效果注解、包级凭据与连接配置、后台长任务、组件事件追加、组件侧模型调用、GUI 内嵌视图、调用主体与租户、包间定位与本地依赖发布。
+   - B 类 · 契约缺失，要加机制（8 项）：工具效果注解、包级凭据与连接配置、后台长任务、组件事件追加、组件侧模型调用、GUI 内嵌视图、调用主体与租户、包间定位与本地依赖发布。（11-18：agent-kernel@ae6c3d5 上后台长任务已有 `scheduler_protocol`、主体与租户已在会话身份里，缺口改为「会话外寿命与触发」「投影给组件」，见 §6 的 B3、B7。）
 4. **卡交付的是两项**：B1 工具效果注解（没有它，默认审批策略下每次调用都弹窗，M1 只能在 `full-access` 下验收）；B2 包级凭据（没有它，M2 的数据库和 API 凭据只能写进项目级 `.mcp.json` 或依赖终端环境，打包桌面版 GUI 下拿不到）。另外 Mint 工具调用默认 60 秒超时，比数据层子进程的 120 秒短，大文件、扫描 PDF 的单次探查可能被宿主截断（推断）。
 5. **业务侧还缺的功能不依赖核心包，可以现在做**：本体只能有一个实体类型；本体草案转不成正式修订；发布后的对象没有查询入口；增量接入全部未实现；已验证映射只在单来源时复用；单次探查没有按时间预算分段续跑。
 6. **这些缺口由我们推动补齐**：2026-11-16 已拍，iface 是 AgentCPM / AgentOS 的底层协议，我们承担完善职责。A、B 两类缺口按「契约类 / 实现类」整理成向 agent-kernel 提的 PR 设计，清单与提交规矩见 [03 平台方案与 iface 共建](<03 平台方案与 iface 共建.md>) §8。2026-11-17 已拍：P1 先不提 PR，缺口在平台层绕行，提交时机另定。
@@ -111,16 +111,20 @@ flowchart LR
 
 ## 6 核心包 B 类：契约缺失，要加机制
 
+> 11-18 更新：B3、B7、B8 按 agent-kernel@ae6c3d5 改写（依据盘点材料 `iface-对齐盘点-2026-11-17.md` §2、§7）；其余行仍基于 01bef1c12，所引 `IF/` 行号在 ae6c3d5 上仍成立，Mint 侧行号未复核。完整的缺口与贡献清单（IF-01 至 IF-16，含 Kernel、Mint 实现问题）见 [08 iface 协议缺口与贡献](<08 iface 协议缺口与贡献.md>)。
+
 | # | 机制 | 放在哪 | 现状与证据 | 最小形状建议 | 对应阶段 |
 |---|---|---|---|---|---|
 | B1 | 工具效果注解 | iface-tool + iface-policy | `ToolSpec` 只有名字、描述、参数（`IF/tool.rs:35-39`）；Mint 按名字关键词猜类别、不读 MCP 工具注解（`MC/mcp/client.rs:738-757`），猜不出一律询问（`MC/approval.rs:148-174`），审批记忆绑定完整参数（`:177`）；DataAgent 13 个工具名（`tool_schema.py:62-65`）全部猜不出 | `ToolSpec` 只加不改地增加效果等级（只读 / 推进 / 副作用，Mint 插件协议已有同义枚举 `CallEffect`，`MP/host.rs:361`）和幂等标记；或 Mint 认 MCP 的 `readOnlyHint`、`destructiveHint`；审批按效果判 | M1 默认配置可用 |
 | B2 | 包级凭据与连接配置 | iface-policy（M20 密钥代用）+ iface-extension | bundle 不得声明 `env`、`secrets`（`MM/validate.rs:868`、`:870`）；Mint Core 只加载项目级配置和 bundle 包的 `.mcp.json`（`MC/mcp_loader.rs:194-260`、`:611`），bundle 子进程环境清到基础变量，只有 `.mcp.json` 里写的字面值能进去（`MC/mcp/client.rs:227-241`；`${NAME}` 展开被拦，`MC/mcp_loader.rs:404-418`）；打包桌面版 GUI 拉内核时清空环境并把 PATH 固定为系统目录（`GUI/bridge/lifecycle.rs:47-55`，非打包分支 `:94-96` 继承环境）；`SecretBroker` 只在 kernel core 实现，真正能用的只有出网 Bearer，状态加密只做了登记、调用即报错（`IF/policy/secret.rs:137-148`、`kernel/core/src/guard/secret.rs:142-155`），Mint 源码里没有引用。推断：工作台包内 `.mcp.json` 没写 `env`，经 Mint 拉起时 `DATAAGENT_SOURCE_CONNECTIONS` 和凭据变量到不了工作台进程；方案 16 `offline-input-cases.md:113` 的「同一终端导出」只对直接启动工作台有效（`scripts/verify_local.py:141` 就是直接设环境变量） | bundle 声明 `capabilities.secrets = ["<逻辑名>"]`；用户在 TUI / GUI 设置值；宿主只在拉起声明它的 MCP 进程时注入，不进 shell、不进 Agent 上下文；`LeakDetector` 按已注册值给日志和工具结果打码。非密的连接清单路径现在就能写成包内 `.mcp.json` 的字面值，不必等本项（F7）。形态见 Q1 | M2 前 |
-| B3 | 后台长任务 | iface-tool（分工表已列「后台任务查状态、取结果、取消」）；官方计划 W6「后台长任务」 | 无契约；MCP 子进程随内核退出（`MC/mcp/client.rs:245` `kill_on_drop`）；Mint 的 MCP 请求和回合工具调用默认 60 秒超时（`MC/mcp/transport.rs:24`、`MC/config.rs:57`），包内 `.mcp.json` 的 `timeout_s: 120` 只用作发现超时（`MC/mcp_loader.rs:449`）。DataAgent 的任务状态以记录持久（`intake_service.py:74`、`:208`），但没有执行者；`intake_advance` 在一次工具调用里同步探查，数据层子进程超时是 120 秒（`layer_client.py:23`），推断：大来源经 Mint 调用时会先被宿主 60 秒截断 | 提交、状态、取消、取结果；定时与来源变更两种触发；任务寿命独立于回合；结果经 A5 回推 | 持续接入 |
+| B3 | 后台长任务 | iface `scheduler_protocol`（Kernel 内建调度器的契约，agent-kernel 11-17 新增）+ iface-session；官方计划 W6「后台长任务」 | 契约已有雏形：`scheduler_protocol` 有 7 个契约，带执行状态机（含 `NeedsHuman`、`Unknown`）、等人介入 `Wait`、取消、带期望修订的状态读写、幂等键、截止时间（`IF/scheduler_protocol/model.rs:31`、`:139`、`:234`、`:287`；`record.rs:75`；`contract.rs:50`）。缺的是：① 寿命绑定会话，会话关闭即取消执行树（`kernel/docs/scheduler.md:34`）；② 没有定时、来源变更两种触发；③ 生产装配断线，`--components-config` → `startup/scheduler::install` 一链按 `dead_code` 留档、只有测试在用（`kernel/host/src/transport/scheduler.rs:4-8`、`kernel/host/src/startup/scheduler.rs:12-13`）；组件实现只有 `native`，子进程 `env_clear()`，Mint 清单不能声明调度服务，MCP / Python 组件注册不上。Mint 侧（01bef1c12）：MCP 子进程随内核退出（`MC/mcp/client.rs:245` `kill_on_drop`）；MCP 请求和回合工具调用默认 60 秒超时（`MC/mcp/transport.rs:24`、`MC/config.rs:57`），包内 `.mcp.json` 的 `timeout_s: 120` 只用作发现超时（`MC/mcp_loader.rs:449`）。DataAgent 的任务状态以记录持久（`intake_service.py:74`、`:208`），但没有执行者；P1 靠 `intake_advance` 分段续跑（07 的 T13）绕过 60 秒 | 不另立契约：在 `scheduler_protocol` 上补会话外寿命与定时、变更触发，复用 `State`、`Wait`、`ControlOutcome`；Kernel 恢复生产接线，并支持进程外组件注册（`mcp` 或 `command` 实现）；结果经 A5 回推。DataAgent 侧任务状态先按 Scheduler 的状态机命名。见 [08](<08 iface 协议缺口与贡献.md>) IF-05 至 IF-08 | 持续接入 |
 | B4 | 组件事件追加 | iface-store | `StoreContract` 只管会话事件，组件拿不到（`IF/store.rs:119`）；DataAgent 资产、事件、outbox 都在自己的 SQLite | 按方案 06 附录 A：`store.ext_append / ext_read / ext_checkpoint`，命名空间 `ext.<组件>.<事件>`，带 call_id，大内容只记引用和摘要；资产库不上收，见 Q2 | 持续接入、审计 |
 | B5 | 组件侧模型调用 | iface-model + iface-extension | bundle 不得声明 `model`（`MM/validate.rs:869`）；MCP sampling 已弃用（`MC/mcp/transport.rs:290`）。交互场景靠推断请求够用；后台任务里没有 Agent 可问 | bundle 可声明模型用途；宿主代调并走预算、出网、审计；或后台任务「挂起等 Agent」，与 B3 一起定 | 持续接入 |
 | B6 | GUI 内嵌应用视图 | Mint GUI；声明部分在 iface-extension | `ui` 能力只给 plugin、overlay（`MM/validate.rs:871`），插件宿主调用只有日志、私有 KV、通知、出网四种（`MP/host.rs:370-384`）；DataAgent 拉起脱离会话的本机服务并开外部浏览器（`launcher.py:27-28`、`interfaces/http_api.py:77`） | 包声明视图入口；GUI 打开时带上会话和身份 | 方案 16 允许首批用浏览器，可后置 |
-| B7 | 调用主体与租户随调用下发 | iface-tool + iface-policy | `CallMeta` 没有主体和租户字段；身份判决只到连接级（`IF/policy/identity.rs:223`）；DataAgent 主体写死为 `local-owner:<uid>`（`bootstrap.py:24-25`）；S0 评审 X1–X3 指出主体与用途由调用方自报 | `CallMeta` 只加不改地增加主体、租户，由宿主填，组件只读 | 多用户、共享工作区前 |
-| B8 | 包间定位与本地依赖发布 | iface-extension | `[requires] interfaces` 与 `interface_versions` 已有，`mint add` 安装期检查提供方与版本区间（`mint/bins/mint/src/install/interfaces.rs:93-136`），DataAgent 没用；`requires.api` 对照的是 Mint 扩展点 API 0.1.0（`MP/lib.rs:45`），不是 iface 0.1.9；只写 path 的依赖不能发布（`mint/crates/mint-pack/src/payload.rs:94-97`）；DataAgent preset 全用 path 依赖（`DA/dataagent-intake/mint.toml:12-16`），工作台按 `.mint/packages/dataagent/data-layer@*` 目录猜数据层位置（`layer_client.py:56-59`） | DataAgent 侧补 `requires.interfaces`；Mint 侧：运行期按依赖名解析已装包目录并注入 MCP 进程，本地 path 依赖有可发布的替代 | MintHub 分发前 |
+| B7 | 调用主体与租户随调用下发 | iface-session（身份）+ iface-types | 契约字段已有，停在会话层：`SessionIdentity` 带 `principal`、`tenant_id`（`IF/session/identity.rs:37`、`:41`），Scheduler 的 `CallContext` 也带主体（`IF/scheduler_protocol/model.rs:356-366`）；但组件拿不到。`CallMeta` 没有主体和租户字段，且没有 `#[non_exhaustive]`，直接加字段是破坏性变更（`IF/types/mod.rs:7-11`）；身份判决只到连接级（`IF/policy/identity.rs:223`）。DataAgent 主体写死为 `local-owner:<uid>`（`bootstrap.py:24-25`）；S0 评审 X1–X3 指出主体与用途由调用方自报 | 不改 `CallMeta`：宿主把会话身份的只读投影（主体、租户）随 `_meta` 下发给组件，组件只读；见 [08](<08 iface 协议缺口与贡献.md>) IF-03 | 多用户、共享工作区前 |
+| B8 | 包间定位与本地依赖发布 | iface-extension | `[requires] interfaces` 与 `interface_versions` 已有，`mint add` 安装期检查提供方与版本区间（`mint/bins/mint/src/install/interfaces.rs:93-136`），DataAgent 没用；`requires.api` 对照的是 Mint 扩展点 API 0.1.0（`MP/lib.rs:45`），不是 iface 契约轴版本（agent-kernel@ae6c3d5 为 0.1.11，`IF/lib.rs:28-30`）；只写 path 的依赖不能发布（`mint/crates/mint-pack/src/payload.rs:94-97`）；DataAgent preset 全用 path 依赖（`DA/dataagent-intake/mint.toml:12-16`），工作台按 `.mint/packages/dataagent/data-layer@*` 目录猜数据层位置（`layer_client.py:56-59`） | DataAgent 侧补 `requires.interfaces`；Mint 侧：运行期按依赖名解析已装包目录并注入 MCP 进程，本地 path 依赖有可发布的替代；见 [08](<08 iface 协议缺口与贡献.md>) IF-12 | MintHub 分发前 |
+
+补充（ae6c3d5）：iface 另有 `BlobStoreContract`（`IF/blob.rs:155`，会话内内容寻址，授权进键）。DataAgent 的来源快照按工作区共享，语义不同，不算缺口；只照它的引用形状（`digest + len`、先写内容再写引用）自建。
 
 ## 7 业务侧
 
