@@ -48,10 +48,22 @@ def _offset(quote, occurrence=1):
     return start
 
 
+def _span_end(quote, occurrence=1):
+    return _offset(quote, occurrence) + len(quote)
+
+
+def _record_span(rank, rank_occurrence, currency_occurrence):
+    """The clause fragment one standard is attributed to, e.g. 经理级住宿 800 元/晚."""
+    return {'paragraph': CLAUSE_PARAGRAPH,
+            'char_start': _offset(rank, rank_occurrence),
+            'char_end': _span_end('元/晚', currency_occurrence)}
+
+
 def clause_records():
     """Four standards read from one clause; repeated quotes cite char_start."""
     return [
-        {'values': [
+        {'record_span': _record_span('经理级', 1, 1),
+         'values': [
             {'property': '城市等级', 'value': '一类', 'quote': '一类城市',
              'paragraph': CLAUSE_PARAGRAPH},
             {'property': '职级', 'value': '经理级', 'quote': '经理级',
@@ -63,7 +75,8 @@ def clause_records():
             {'property': '币种', 'value': 'CNY', 'quote': '元/晚',
              'paragraph': CLAUSE_PARAGRAPH, 'char_start': _offset('元/晚', 1)},
         ]},
-        {'values': [
+        {'record_span': _record_span('员工级', 1, 2),
+         'values': [
             {'property': '城市等级', 'value': '一类', 'quote': '一类城市',
              'paragraph': CLAUSE_PARAGRAPH},
             {'property': '职级', 'value': '员工级', 'quote': '员工级',
@@ -75,7 +88,8 @@ def clause_records():
             {'property': '币种', 'value': 'CNY', 'quote': '元/晚',
              'paragraph': CLAUSE_PARAGRAPH, 'char_start': _offset('元/晚', 2)},
         ]},
-        {'values': [
+        {'record_span': _record_span('经理级', 2, 3),
+         'values': [
             {'property': '城市等级', 'value': '二类', 'quote': '二类城市',
              'paragraph': CLAUSE_PARAGRAPH},
             {'property': '职级', 'value': '经理级', 'quote': '经理级',
@@ -87,7 +101,8 @@ def clause_records():
             {'property': '币种', 'value': 'CNY', 'quote': '元/晚',
              'paragraph': CLAUSE_PARAGRAPH, 'char_start': _offset('元/晚', 3)},
         ]},
-        {'values': [
+        {'record_span': _record_span('员工级', 2, 4),
+         'values': [
             {'property': '城市等级', 'value': '二类', 'quote': '二类城市',
              'paragraph': CLAUSE_PARAGRAPH},
             {'property': '职级', 'value': '员工级', 'quote': '员工级',
@@ -216,6 +231,8 @@ def test_one_clause_yields_multiple_records_with_replayable_anchors(tmp_path):
     summary = result['clause_records']
     assert summary['record_set'] == 'clause_records:费用标准'
     assert summary['count'] == 4 and summary['gaps'] == []
+    # 正常归属：每条记录的非共享引文都在自己的 record_span 内。
+    assert summary['attribution_issues'] == []
     shared = {(tuple(item['properties']), tuple(item['records']), item['value'])
               for item in summary['shared_spans']}
     # The clause names each city class once for two standards (one per rank):
@@ -306,6 +323,9 @@ def test_one_clause_yields_multiple_records_with_replayable_anchors(tmp_path):
     # A quote that is not in the paragraph at all and has no char_start.
     (lambda r: r[0]['values'][3].update(quote='999', char_start=None),
      '引文在第 6 段中不唯一或不存在'),
+    # A record_span outside the observed paragraph.
+    (lambda r: r[0]['record_span'].update(char_start=50, char_end=10000),
+     '记录区间超出第 6 段原文范围'),
 ])
 def test_invalid_clause_submissions_are_rejected(tmp_path, change, message):
     wb, session = setup(tmp_path)
@@ -377,6 +397,74 @@ def test_clause_records_allowed_without_a_disclosure_policy(tmp_path):
     session = start_policy_session(wb)
     result = extract_records(wb, session, clause_records()).data
     assert result['clause_records']['count'] == 4
+
+
+def test_tightened_disclosure_refuses_clause_record_replay(tmp_path):
+    # 提交与重放同一口径：显式策略不含段落文本字段时都拒绝。这里先在放行
+    # 披露的工作区保存，再于同一工作区收紧策略，重放被拒绝并给出中文原因。
+    wb, session = setup(tmp_path)
+    save_clause_mapping(wb, session)
+    tight = workbench(tmp_path, {'policy': PROPERTY_NAMES})
+    second = start_policy_session(tight)
+    assert second.phase == 'needs_input'
+    assert second.next_actions == ['intake_extract_records']
+    issue = next(item for item in second.issues
+                 if item['code'] == 'intake.mapping_replay_failed')
+    assert '段落文本不在披露范围内' in issue['detail'] or \
+        any('段落文本不在披露范围内' in field.get('reason', '')
+            for field in issue['fields'])
+    view = tight.intake.view(second.id, tight.ctx)
+    assert view['mapping_reused'] is False
+    assert view['preview'] is None
+
+
+def test_swapped_limit_quotes_flag_attribution_and_dispose(tmp_path):
+    # 第三条里把 800 与 500 的引文和值互换：这两条记录的限额引文落在对方
+    # 的记录区间里，归属无法核实，但整批不被拒绝、其余记录不受影响。
+    wb, session = setup(tmp_path)
+    records = clause_records()
+    records[0]['values'][3] = {'property': '限额', 'value': '500', 'quote': '500',
+                               'paragraph': CLAUSE_PARAGRAPH}
+    records[1]['values'][3] = {'property': '限额', 'value': '800', 'quote': '800',
+                               'paragraph': CLAUSE_PARAGRAPH}
+    result = extract_records(wb, session, records).data
+    flagged = {item['record'] for item in result['clause_records']['attribution_issues']}
+    assert flagged == {0, 1}
+    assert all('引文落在记录区间之外' in item['reason']
+               for item in result['clause_records']['attribution_issues'])
+    # The records are still installed; only their attribution is unverified.
+    view = wb.intake.view(session.id, wb.ctx)
+    assert len(view['profiles'][0]['records']) == 4
+
+    session = wb.sessions.get(session.id, wb.ctx)
+    preview = wb.intake.submit_proposal(session.id, standard_proposal(wb, session),
+                                        session.revision, wb.ctx)
+    issues = [issue for issue in preview.issues
+              if issue.get('code') == 'record_attribution_unverified']
+    assert {issue['row'] for issue in issues} == {0, 1}
+    assert all(issue.get('entity_id') for issue in issues)
+    assert len(preview.instances) == 4
+
+    # The flagged records can be disposed; the unflagged ones then save.
+    body = wb.intake.view(session.id, wb.ctx)['preview']
+    options = wb.intake.disposition_options(wb.sessions.get(session.id, wb.ctx), body)
+    assert {option['record'] for option in options
+            if option['action'] == 'exclude_record'} == {0, 1}
+    for row in (0, 1):
+        session = wb.sessions.get(session.id, wb.ctx)
+        invoke(wb, 'intake_dispose', {
+            'session_id': session.id, 'expected_revision': session.revision,
+            'action': 'exclude_record', 'source_id': 'policy', 'record': row,
+            'reason': '限额引文归属未核实，先排除'})
+    session = wb.sessions.get(session.id, wb.ctx)
+    preview = wb.intake.submit_proposal(session.id, standard_proposal(wb, session),
+                                        session.revision, wb.ctx)
+    assert len(preview.instances) == 2 and not preview.issues
+    session = wb.sessions.get(session.id, wb.ctx)
+    wb.intake.apply(session.id, ReviewDecision(
+        preview_ref=preview.id + '@' + preview.revision, target_scope='mapping'),
+        session.revision, wb.ctx)
+    assert wb.sessions.get(session.id, wb.ctx).phase == 'saved'
 
 
 def test_changed_source_breaks_clause_record_replay(tmp_path):
@@ -476,13 +564,17 @@ def test_text_pdf_clause_records_minimal_positive(tmp_path):
     result = invoke(wb, 'intake_extract_records', {
         'session_id': session.id, 'source_id': 'manual',
         'expected_revision': session.revision,
-        'records': [{'values': [
+        'records': [{'record_span': {'page': 1,
+                                     'char_start': PDF_TEXT.index('第三条'),
+                                     'char_end': len(PDF_TEXT)},
+                     'values': [
             {'property': '城市', 'value': '一类城市', 'quote': '一类城市', 'page': 1},
             {'property': '限额', 'value': '400', 'quote': '400', 'page': 1},
         ]}]}).data
     assert result['clause_records'] == {
         'record_set': 'clause_records:住宿标准', 'count': 1,
-        'fields': ['城市', '限额'], 'gaps': [], 'shared_spans': []}
+        'fields': ['城市', '限额'], 'gaps': [], 'shared_spans': [],
+        'attribution_issues': []}
 
     view = wb.intake.view(session.id, wb.ctx)
     profile = view['profiles'][0]
@@ -543,15 +635,24 @@ def test_real_text_pdf_clause_records_end_to_end(tmp_path):
         'sources': [{'source_id': 'policy', 'kind': 'file',
                      'locator_ref': 'policy.pdf'}]})
     session = wb.intake.advance(task.data['session_id'], wb.ctx)
+    # The agent reads the observed page text and attributes one record to the
+    # clause line it sits in.
+    page_text = (wb.intake.view(session.id, wb.ctx)['profiles'][0]
+                 ['metadata']['pages'][0]['text'])
     result = invoke(wb, 'intake_extract_records', {
         'session_id': session.id, 'source_id': 'policy',
         'expected_revision': session.revision,
-        'records': [{'values': [
+        'records': [{'record_span': {'page': 1,
+                                     'char_start': page_text.index('Article 3'),
+                                     'char_end': page_text.index('per night.')
+                                     + len('per night.')},
+                     'values': [
             {'property': '城市', 'value': 'First-class', 'quote': 'First-class',
              'page': 1},
             {'property': '限额', 'value': '400', 'quote': '400', 'page': 1},
         ]}]}).data
     assert result['clause_records']['count'] == 1
+    assert result['clause_records']['attribution_issues'] == []
 
     view = wb.intake.view(session.id, wb.ctx)
     profile = view['profiles'][0]

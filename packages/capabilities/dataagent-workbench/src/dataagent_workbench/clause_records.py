@@ -16,7 +16,7 @@ mapping preview and materialization treat them like any other source rows.
 
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from pydantic_core import to_jsonable_python
 
 from dataagent_contracts.core.refs import SourceAnchor
@@ -42,9 +42,31 @@ class ClauseValue(BaseModel):
                                    description='引文在该段落/页文本中的起始字符；省略时要求引文唯一')
 
 
+class RecordSpan(BaseModel):
+    """The character range one record is attributed to, within one unit."""
+
+    model_config = ConfigDict(extra='forbid')
+
+    paragraph: int | None = Field(default=None, ge=1, description='docx 段落序号')
+    page: int | None = Field(default=None, ge=1, description='PDF 页码')
+    char_start: int = Field(ge=0, description='区间起始字符（含）')
+    char_end: int = Field(ge=1, description='区间结束字符（不含）')
+
+    @model_validator(mode='after')
+    def check_span(self):
+        if self.char_end <= self.char_start:
+            raise ValueError('record_span 的字符区间不能为空')
+        if self.paragraph is None and self.page is None:
+            raise ValueError('record_span 需要 docx 段落序号或 PDF 页码')
+        if self.paragraph is not None and self.page is not None:
+            raise ValueError('record_span 只能声明段落序号或页码之一')
+        return self
+
+
 class ClauseRecord(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
+    record_span: RecordSpan = Field(description='该记录归属的字符区间（同一段落/页内）')
     values: list[ClauseValue] = Field(min_length=1, max_length=64)
 
 
@@ -124,6 +146,36 @@ class _TextUnits:
                         'char_start': start, 'char_end': end}
         return kind_key, selector, start, end, label
 
+    def locate_span(self, span):
+        """Resolve one record_span to (unit key, start, end) in observed text."""
+        if self.kind == 'docx':
+            paragraph = span.get('paragraph')
+            if paragraph is None:
+                raise ValueError('docx 记录区间需要段落序号')
+            unit = self.units.get(paragraph)
+            if unit is None:
+                raise ValueError(f'第 {paragraph} 段未在本任务观测到')
+            unit_ref, text = unit
+            key = ('docx', unit_ref)
+            label = f'第 {paragraph} 段'
+        else:
+            page = span.get('page')
+            if page is None:
+                raise ValueError('PDF 记录区间需要页码')
+            unit = self.units.get(page)
+            if unit is None:
+                raise ValueError(f'第 {page} 页未在本任务观测到')
+            _, text = unit
+            key = ('pdf', page)
+            label = f'第 {page} 页'
+        try:
+            start, end = int(span['char_start']), int(span['char_end'])
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ValueError('record_span 需要字符起止') from exc
+        if not 0 <= start < end <= len(text):
+            raise ValueError(f'记录区间超出{label}原文范围')
+        return key, start, end
+
 
 def _docx_units(profile):
     """{paragraph number: (unit_ref, text)} for every observed paragraph."""
@@ -148,10 +200,9 @@ def _pdf_units(profile):
 def _require_disclosure(profile, allowed_fields, kind):
     """The paragraph text field itself must be allowed, as in D2b discovery.
 
-    Disclosure follows the mapping path's rule (``intake_extract`` /
-    ``extract_fields``): no model-context.json (``allowed_fields=None``) means
-    the local-owner mode grants the text; an explicit policy must include the
-    paragraph text field, otherwise PermissionError.
+    口径（payne 2026-11-18 口径 A，映射路径与发现路径一致）：工作区没有
+    model-context.json（``allowed_fields=None``）表示本机所有者模式，放行；
+    有显式策略时必须包含段落文本字段，否则 PermissionError。
     """
     text_fields = (_paragraph_text_fields(profile) if kind == 'docx' else ['text'])
     if allowed_fields is not None and not any(field in allowed_fields for field in text_fields):
@@ -164,13 +215,17 @@ def _resolve(texts, raw_records, concept):
     A span is identified by its source position (unit plus character range)
     only: the same span cited by different records or different properties
     must carry the same value, and spans cited by more than one record are
-    marked as shared evidence.
+    marked as shared evidence.  Each record also declares the record_span it
+    is attributed to; quote attribution against that span is checked
+    separately and reported as per-record issues instead of a rejection.
     """
     resolved = []
     shared = {}
-    for raw_values in raw_records:
+    for raw_record in raw_records:
+        record_span = raw_record.get('record_span') or {}
+        record_key, record_start, record_end = texts.locate_span(record_span)
         values, evidence, paragraphs, pages = {}, {}, set(), set()
-        for raw in raw_values:
+        for raw in raw_record.get('values') or []:
             prop = str(raw.get('property') or '')
             if not prop:
                 raise ValueError('条款值缺少属性名')
@@ -226,8 +281,66 @@ def _resolve(texts, raw_records, concept):
         if blank:
             raise ValueError('身份字段的值不能为空: ' + ', '.join(blank))
         resolved.append({'values': values, 'evidence': evidence,
-                         'paragraphs': paragraphs, 'pages': pages})
+                         'paragraphs': paragraphs, 'pages': pages,
+                         'span': (record_key, record_start, record_end),
+                         'record_span': record_span})
     return resolved, shared
+
+
+def _within(quote, record_span):
+    return (quote[0] == record_span[0]
+            and record_span[1] <= quote[1] and quote[2] <= record_span[2])
+
+
+def _attribution_issues(resolved, shared):
+    """Per-record quote attribution against each record's declared span.
+
+    Non-shared quotes must fall inside the record's own record_span; a shared
+    quote may sit outside it, but only in the same unit, before the span and
+    without a nearer same-property shared quote in between.  Overlapping
+    record_spans in one unit leave both records unverified.  Violations are
+    returned as per-record issues -- the batch itself is not rejected, so the
+    other records still reach the preview and can be saved.
+    """
+    flagged = {}
+
+    def flag(index, prop, reason):
+        item = flagged.setdefault(index, {'target': prop, 'reasons': []})
+        detail = f'{prop}：{reason}' if prop else reason
+        if detail not in item['reasons']:
+            item['reasons'].append(detail)
+
+    for index, record in enumerate(resolved):
+        record_span = record['span']
+        for other in range(index):
+            other_span = resolved[other]['span']
+            if (other_span[0] == record_span[0]
+                    and other_span[1] < record_span[2] and record_span[1] < other_span[2]):
+                flag(index, None, '记录区间与其他记录的区间重叠')
+                flag(other, None, '记录区间与其他记录的区间重叠')
+        for prop, item in record['evidence'].items():
+            selector = item['selector']
+            unit = (('docx', selector['unit_ref']) if 'unit_ref' in selector
+                    else ('pdf', selector['page']))
+            cited = (*unit, selector['char_start'], selector['char_end'])
+            entry = shared.get(cited)
+            if entry is not None and len(entry['records']) > 1:
+                if _within((unit, selector['char_start'], selector['char_end']), record_span):
+                    continue
+                if unit != record_span[0] or selector['char_end'] > record_span[1]:
+                    flag(index, prop, '共享引文须与记录区间同段且在其之前')
+                    continue
+                candidates = [key for key, other in shared.items()
+                              if len(other['records']) > 1 and prop in other['properties']
+                              and (key[0], key[1]) == unit and key[3] <= record_span[1]]
+                if candidates and max(candidates, key=lambda key: key[2]) != cited:
+                    flag(index, prop, '共享引文不是就近的同类值')
+            elif not _within((unit, selector['char_start'], selector['char_end']),
+                             record_span):
+                flag(index, prop, '引文落在记录区间之外')
+    return [{'record': index, 'target': item['target'],
+             'reason': '；'.join(item['reasons'])}
+            for index, item in sorted(flagged.items())]
 
 
 def _build(profile, raw_records, concept, *, concept_name, ontology_revision,
@@ -237,6 +350,7 @@ def _build(profile, raw_records, concept, *, concept_name, ontology_revision,
         raise ValueError('该来源观测不包含段落或页面文本')
     _require_disclosure(profile, allowed_fields, texts.kind)
     resolved, shared = _resolve(texts, raw_records, concept)
+    attribution = _attribution_issues(resolved, shared)
     set_name = clause_record_set_name(concept_name)
     rows, anchors, locations, fields = [], {}, [], []
     for record in resolved:
@@ -275,6 +389,7 @@ def _build(profile, raw_records, concept, *, concept_name, ontology_revision,
                     for key, values in anchors.items()},
         'record_locations': locations,
         'gaps': gaps, 'shared_spans': shared_spans,
+        'attribution_issues': attribution,
     }
     updated = profile.model_copy(deep=True)
     updated.records = rows
@@ -292,12 +407,14 @@ def _build(profile, raw_records, concept, *, concept_name, ontology_revision,
                         for field in fields},
         'clause_records': {'concept': concept_name, 'ontology_revision': ontology_revision,
                            'record_set': set_name,
-                           'records': [{'values': [record['evidence'][prop]
-                                                  for prop in record['values']]}
+                           'records': [{'record_span': record['record_span'],
+                                        'values': [record['evidence'][prop]
+                                                   for prop in record['values']]}
                                        for record in resolved]},
     })
     return updated, {'record_set': set_name, 'count': entry['count'], 'fields': fields,
-                     'gaps': gaps, 'shared_spans': shared_spans}
+                     'gaps': gaps, 'shared_spans': shared_spans,
+                     'attribution_issues': attribution}
 
 
 def extract_clause_records(profile, records, concept, *, concept_name,
@@ -308,7 +425,9 @@ def extract_clause_records(profile, records, concept, *, concept_name,
     ``clause_records:<concept>`` record set as its selected view, with one
     anchor per value pointing at the exact paragraph or page span.
     """
-    raw = [[value.model_dump() for value in record.values] for record in records]
+    raw = [{'record_span': record.record_span.model_dump(),
+            'values': [value.model_dump() for value in record.values]}
+           for record in records]
     return _build(profile, raw, concept, concept_name=concept_name,
                   ontology_revision=ontology_revision, allowed_fields=allowed_fields)
 
@@ -332,6 +451,9 @@ def replay_clause_records(profile, specs, concept, *, concept_name,
     raw_records = []
     for spec in specs.get('records') or []:
         values = []
+        record_span = spec.get('record_span') if isinstance(spec, dict) else None
+        if not isinstance(record_span, dict):
+            failures.append({'name': '?', 'reason': '记录的条款提取格式损坏'})
         for item in (spec.get('values') if isinstance(spec, dict) else None) or []:
             if not isinstance(item, dict) or not item.get('property') or not item.get('quote'):
                 failures.append({'name': str(item.get('property') if isinstance(item, dict)
@@ -350,7 +472,7 @@ def replay_clause_records(profile, specs, concept, *, concept_name,
             values.append({key: item.get(key)
                            for key in ('property', 'value', 'quote', 'paragraph',
                                        'page', 'char_start')})
-        raw_records.append(values)
+        raw_records.append({'record_span': record_span or {}, 'values': values})
     if failures:
         raise ClauseReplayError(profile.source_id, failures)
     try:

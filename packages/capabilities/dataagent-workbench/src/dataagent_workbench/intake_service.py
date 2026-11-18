@@ -61,6 +61,7 @@ _ISSUE_REASONS = {
     'ontology.relation_unresolved': '关联字段不完整',
     'ontology.correction_conflict': '网页纠正无法沿用',
     'ontology.no_records': '没有可映射的记录',
+    'record_attribution_unverified': '该记录的引文归属未核实',
 }
 
 
@@ -295,7 +296,8 @@ class IntakeService:
             for issue in body.get('issues') or []:
                 if issue.get('code') not in {'ontology.identity_unresolved',
                                              'ontology.required_value_missing',
-                                             'ontology.conversion_failed'}:
+                                             'ontology.conversion_failed',
+                                             'record_attribution_unverified'}:
                     continue
                 source_id, row = issue.get('source_id'), issue.get('row')
                 if source_id is None or row is None:
@@ -1488,6 +1490,59 @@ class IntakeService:
                 'inherited': [correction for correction, _, _, _, _ in applied],
                 'inheritance': body.get('inheritance')}
 
+    def _clause_attribution_issues(self,session,body):
+        """Preview issues for clause records whose quote attribution failed.
+
+        Extraction already verified every quote against the observed text;
+        attribution (which record a quote belongs to) is softer: a record whose
+        non-shared quotes fall outside its declared record_span, whose span
+        overlaps another record's, or whose shared quote is not the nearest
+        same-property value is listed here instead of blocking the batch.  A
+        record excluded by an audited disposition is no longer listed.
+        """
+        issues=[]
+        excluded={}
+        for entry in self.disposition_entries(session):
+            if entry.get('action')=='exclude_record':
+                excluded.setdefault(entry.get('source_id'),set()).add(entry.get('record'))
+        instances=body.get('instances') or []
+        for profile in self._profiles(session):
+            name=profile.metadata.get('selected_record_set') or ''
+            if not str(name).startswith('clause_records:'):continue
+            entry=(profile.metadata.get('record_sets') or {}).get(name) or {}
+            for item in entry.get('attribution_issues') or []:
+                row=item.get('record')
+                if not isinstance(row,int) or row in excluded.get(profile.source_id,()):
+                    continue
+                issue={'code':'record_attribution_unverified',
+                       'target':item.get('target'),'row':row,
+                       'source_id':profile.source_id,
+                       'detail':item.get('reason') or _ISSUE_REASONS['record_attribution_unverified']}
+                entity=self._row_instance(instances,entry,row)
+                if entity is not None:issue['entity_id']=entity
+                issues.append(issue)
+        return issues
+
+    @staticmethod
+    def _row_instance(instances,entry,row):
+        """The preview instance carrying one clause record's anchors."""
+        selectors=set()
+        for key,anchors in (entry.get('anchors') or {}).items():
+            if key.split('.',1)[0]!=str(row):continue
+            for anchor in anchors or []:
+                selector=anchor.get('selector') or {}
+                selectors.add((anchor.get('source_ref'),
+                    json.dumps(selector,sort_keys=True,default=str)))
+        if not selectors:return None
+        for instance in instances:
+            for anchors in (instance.get('source_anchors') or {}).values():
+                for anchor in anchors or []:
+                    selector=anchor.get('selector') or {}
+                    if (anchor.get('source_ref'),
+                        json.dumps(selector,sort_keys=True,default=str)) in selectors:
+                        return instance.get('id')
+        return None
+
     def submit_proposal(self,session_id,proposal,expected_revision,ctx,*,reused=False):
         wb=self.wb;s=wb.sessions.get(session_id,ctx)
         if is_discovery(s):
@@ -1507,6 +1562,7 @@ class IntakeService:
         proposal=proposal.model_copy(update={'id':mid,'revision':revision,'scope':wb.scope})
         preview,body=wb.ontology.prepare_preview(proposal,observations,ctx,
             dispositions=self.disposition_entries(s))
+        body['issues']=[*(body.get('issues') or []),*self._clause_attribution_issues(s,body)]
         body['mapping_reused']=reused
         prior_ref,_,conflicts,pending=self._carry_corrections(s,body)
         hint=self.inheritance_hint(s,body)
@@ -1562,6 +1618,8 @@ class IntakeService:
         preview, body = wb.ontology.prepare_preview(
             primary, observations, ctx, source_mappings=mappings,
             dispositions=self.disposition_entries(session))
+        body['issues'] = [*(body.get('issues') or []),
+                         *self._clause_attribution_issues(session, body)]
         body['mapping_reused'] = reused
         prior_ref,_,conflicts,pending=self._carry_corrections(session,body)
         hint=self.inheritance_hint(session,body)
