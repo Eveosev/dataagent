@@ -5,8 +5,8 @@ import {test,expect} from '@playwright/test';
 //
 // 说明：处置提交依赖 POST /api/sessions/<id>/dispositions 与 /review 的
 // allow_partial 参数；这两个 HTTP 接口尚未在后端 http_api.py 挂出（MCP 工具
-// intake_dispose / mapping_apply 已有）。提交断言先用路由改写覆盖请求契约，
-// 接口补上后即可直连。
+// intake_dispose / mapping_apply 已有），已另派后端卡 B1。下面各 page.route
+// 拦截用于覆盖提交请求契约，待后端路由 B1 合入后去掉。
 const missingNumberCsv=Buffer.from('number,amount,currency,issuer\nINV-001,1260,CNY,华信办公\n,900,CNY,北明科技\n');
 
 async function openObjectPage(page:import('@playwright/test').Page,files:Parameters<import('@playwright/test').Page['setInputFiles']>[1]){
@@ -33,11 +33,12 @@ test('缺键对象显示来源描述，处置需要填写原因',async({page})=>
  await expect(page.locator('.mapping-panel .panel-heading .badge')).toContainText('采购单据');
  await expect(page.locator('.detail-panel .panel-heading .badge')).toContainText('未核对');
  await expect(page.locator('.mapping-table thead th').first()).toHaveText('本体属性');
- // 缺键记录的阻断问题旁给出排除记录的处置。
+ // 缺键记录的阻断问题旁给出排除记录的处置；行号与对象标签统一用「来源行 N」
+ //（record 是 0 起的记录序号 1，锚点定位到文件里的原始行号 3）。
  const issue=page.getByTestId('pending-issue').filter({hasText:'缺少单据号'});
  await expect(issue).toContainText('阻断');
  const disposal=issue.getByTestId('disposal-option');
- await expect(disposal).toContainText('排除「发票.csv」第 2 行');
+ await expect(disposal).toContainText('排除「发票.csv」来源行 3');
  // 原因空白时不可提交。
  const reason=disposal.getByLabel(/处置原因/);
  await expect(disposal.getByRole('button',{name:'提交处置'})).toBeDisabled();
@@ -49,6 +50,7 @@ test('排除记录处置提交审计契约',async({page})=>{
  test.setTimeout(40000);
  await openObjectPage(page,{name:'发票.csv',mimeType:'text/csv',buffer:missingNumberCsv});
  let payload:Record<string,unknown>|undefined;let revision='';
+ // 待后端路由 B1 合入后去掉。
  await page.route('**/api/sessions/*/dispositions',async route=>{
   payload=route.request().postDataJSON();
   revision=String(payload.expected_revision);
@@ -77,6 +79,7 @@ test('只保存无问题对象需要填写原因并提交 allow_partial',async({
  await reason.fill('先保存有单号的对象，缺键记录单独处理');
  await expect(partial.getByRole('button',{name:'只保存无问题对象'})).toBeEnabled();
  let payload:Record<string,unknown>|undefined;
+ // 待后端路由 B1 合入后去掉。
  await page.route('**/api/sessions/*/review',async route=>{
   payload=route.request().postDataJSON();
   await route.fulfill({json:{id:'mock',revision:'2',revalidate:[]}});
@@ -104,6 +107,7 @@ test('空白页来源可标记分区不适用',async({page})=>{
  await expect(disposal).toContainText('标记「mixed.pdf」分区 2 不适用');
  await expect(disposal.getByRole('button',{name:'提交处置'})).toBeDisabled();
  let payload:Record<string,unknown>|undefined;
+ // 待后端路由 B1 合入后去掉。
  await page.route('**/api/sessions/*/dispositions',async route=>{
   payload=route.request().postDataJSON();
   await route.fulfill({json:{session_id:'mock',session_revision:'2',

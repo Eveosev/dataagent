@@ -1,6 +1,6 @@
 import {useEffect,useRef,useState} from 'react';
 import {api,ApiError,display,locate,findAnchorRow,isDecisionEvidence,decisionSourceName,issueBlocksSave,issueObject,issueReasons,propertyLabel,entityTypeLabel,reviewStateNames} from '../client';
-import type {CorrectionView,ObjectView,SourceProfile,Issue,WorkObject,ConflictValue,DispositionOption} from '../client';
+import type {CorrectionView,ObjectView,SourceProfile,Issue,WorkObject,ConflictValue,DispositionOption,Selector} from '../client';
 import {SourceViewer} from '../components/SourceViewer';
 
 const ranges=[['instance','纠正当前对象的值'],['mapping','修改这类来源的映射'],['ontology','提出本体草案']] as const;
@@ -257,9 +257,23 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
    return option.action==='exclude_record'&&option.source_id===issue.source_id&&option.record===issue.row;
   return false;
  });
+ // 处置记录的定位：与缺单号对象的标签用同一种编号——按该来源记录的锚点算出
+ // 「来源行 N」（CSV 记录锚点的 keys.row 是含表头的原始行号），而不是另起一套
+ // 「第 N 条记录」；找不到锚点时才退回记录序号。
+ const recordLabel=(sourceId:string,record:number|undefined):string=>{
+  if(record===undefined)return '该记录';
+  const anchorsProfile=view.sources.find(s=>s.source_id===sourceId);
+  for(const [key,anchors] of Object.entries(anchorsProfile?.anchors||{})){
+   const dot=key.indexOf('.');
+   if(dot<0||Number(key.slice(0,dot))!==record)continue;
+   const anchor=anchors[0];
+   if(anchor)return locate(anchor.selector as Selector);
+  }
+  return `第 ${record+1} 条记录`;
+ };
  const disposalText=(option:DispositionOption)=>option.action==='partition_not_applicable'
   ?`标记「${option.source_name}」分区 ${option.partition} 不适用`
-  :`排除「${option.source_name}」第 ${(option.record??0)+1} 行`;
+  :`排除「${option.source_name}」${recordLabel(option.source_id,option.record)}`;
  const submitButton=(label:string)=><button className="secondary" disabled={busy||!object}
   onClick={conflict?confirmConflict:submit}>{conflict?'已核对，重新提交':label}</button>;
  return <main className="workspace"><div className="task-header"><div><div className="eyebrow">采购资料 / 对象页</div><h1>核对业务对象</h1><p className="muted">每个值都带来源定位；三种修改范围分别生效。{done?'接入已保存，对象为只读。':''}</p></div><div className="save-buttons"><button className="secondary" onClick={onBack}>返回映射页</button></div></div>
@@ -315,7 +329,7 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
      </div>)}
     </li>;})}</ul>
    {sortedIssues.length>10&&<button className="secondary" onClick={()=>setShowAllIssues(!showAllIssues)}>{showAllIssues?'收起其余问题':`展开其余 ${sortedIssues.length-10} 条`}</button>}
-   {(view.dispositions||[]).length>0&&<p className="help">已记录处置：{(view.dispositions||[]).map(entry=>`${sourceName(entry.source_id)} · ${entry.action==='partition_not_applicable'?`分区 ${entry.partition} 标记不适用`:`排除第 ${(entry.record??0)+1} 行`}（${entry.reason}）`).join('；')}</p>}
+   {(view.dispositions||[]).length>0&&<p className="help">已记录处置：{(view.dispositions||[]).map(entry=>`${sourceName(entry.source_id)} · ${entry.action==='partition_not_applicable'?`分区 ${entry.partition} 标记不适用`:`排除${recordLabel(entry.source_id,entry.record)}`}（${entry.reason}）`).join('；')}</p>}
    {blockingCount>0&&!done&&<div className="disposal" data-testid="partial-save">
     <span className="muted">只保存无问题对象：无对象级阻断的对象先放行，其余对象挂起并逐条给出原因。</span>
     <div className="disposal-controls">

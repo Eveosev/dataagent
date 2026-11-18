@@ -29,6 +29,16 @@ test('伪装成 Excel 的文本文件直说不是有效的 Excel',async({page})=
  await expect(page.getByTestId('source-problem')).toContainText('不是有效的 Excel 文件');
  await expect(page.locator('.step.failed')).toContainText('识别与探查');
  await expect(page.getByText('识别与探查已完成')).toHaveCount(0);
+ // 原始报错收进默认折叠的「技术详情」：不直接展示，展开后也不含本机绝对路径。
+ const tech=page.getByTestId('tech-detail');
+ await expect(tech).toHaveCount(1);
+ await expect(tech).not.toHaveAttribute('open');
+ await expect(tech.locator('pre')).toBeHidden();
+ await tech.locator('summary').click();
+ await expect(tech.locator('pre')).toBeVisible();
+ await expect(tech.locator('pre')).not.toContainText(/\/Users\/|\/tmp\/|\/var\//);
+ // 展开前后，说明区本体都不出现英文原文。
+ await expect(page.getByTestId('source-problem')).toContainText('下一步：请更换文件后新建接入');
 });
 
 test('只有表头的文件直说没有数据行',async({page})=>{

@@ -89,19 +89,24 @@ export const gapNames:Record<string,string>={
  malformed_row:'行列数不齐',invalid_input:'文件内容无法读取',probe_failed:'材料读取失败',
 };
 export type SourceProblem={title:string;detail?:string;next:string};
-// 坏输入直说（FDE-10）：探查失败或零数据行时给出中文原因与下一步。
+// 坏输入直说（FDE-10）：探查失败或零数据行时给出中文原因与下一步；
+// 原始报错只作为 detail 保留，由页面收进折叠的「技术详情」，不直接展示。
 export function sourceProblem(profile:{kind?:string;records?:Record<string,unknown>[];metadata?:Record<string,unknown>}|undefined):SourceProblem|undefined{
  if(!profile)return undefined;
  const error=profile.metadata?.['probe_error'] as {code?:string;detail?:string}|undefined;
  if(error){
   const text=String(error.detail||'');
-  if(/no rows/i.test(text))return {title:'文件是空的，没有可读取的内容',detail:text.slice(-120),next:'请更换文件后新建接入'};
-  if(/not a zip file/i.test(text))return {title:profile.kind==='docx'?'不是有效的 Word 文件':'不是有效的 Excel 文件',detail:text.slice(-120),next:'请更换文件后新建接入'};
-  return {title:'材料读取失败',detail:text.slice(-200),next:'请更换文件后新建接入'};
+  if(/no rows/i.test(text))return {title:'文件是空的，没有可读取的内容',detail:text,next:'请更换文件后新建接入'};
+  if(/not a zip file/i.test(text))return {title:profile.kind==='docx'?'不是有效的 Word 文件':'不是有效的 Excel 文件',detail:text,next:'请更换文件后新建接入'};
+  return {title:'材料读取失败',detail:text,next:'请更换文件后新建接入'};
  }
  if((profile.records||[]).length===0&&profile.metadata?.['total_rows']===0)
   return {title:'只有表头，没有数据行',next:'请补全数据行或更换文件后新建接入'};
  return undefined;
+}
+// 技术详情（折叠展示）：原始报错里的绝对路径只保留文件名，避免泄露本机目录。
+export function technicalDetail(text:unknown):string{
+ return String(text||'').replace(/[^\s:：,，;；)）]*\/[^\s:：,，;；)）]+/g,part=>part.split('/').pop()||part).trim();
 }
 export async function api<T>(path:string,method='GET',body?:unknown):Promise<T>{
  let response:Response;
