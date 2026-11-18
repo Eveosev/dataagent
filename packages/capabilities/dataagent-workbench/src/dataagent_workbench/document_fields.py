@@ -206,13 +206,36 @@ def _page_identity_values(profile, page_text, identity_fields, identity_aliases=
     return values
 
 
+def _identity_shape_values(value, page_text):
+    """Find unlabeled values shaped like an invoice/document number.
+
+    ``Invoice INV-B`` has no ``number:`` label, but ``INV-B`` shares the
+    ``INV-`` prefix of the target ``INV-A`` and is therefore evidence of a
+    different document.  Values without a separator (bare integers) are not
+    shape-matched to avoid treating amounts or dates as identities.
+    """
+    match = re.match(r'^([A-Za-z0-9]+[-_/])([A-Za-z0-9][A-Za-z0-9_-]*)$', str(value))
+    if not match:
+        return set()
+    prefix = match.group(1)
+    pattern = re.compile(
+        rf'(?<![A-Za-z0-9_-]){re.escape(prefix)}[A-Za-z0-9][A-Za-z0-9_-]*'
+        rf'(?![A-Za-z0-9_-])')
+    return {item.group(0) for item in pattern.finditer(page_text or '')}
+
+
 def _require_page_identity(profile, target_row, page_text, identity_fields,
                            identity_aliases=None):
     page_values = _page_identity_values(profile, page_text, identity_fields,
                                         identity_aliases)
     target_values = set(_identity_values(
         _row_identity(profile, target_row, identity_fields, identity_aliases)))
-    if page_values and target_values and page_values - target_values:
+    if not target_values:
+        return
+    evidence = set(page_values)
+    for value in target_values:
+        evidence.update(_identity_shape_values(value, page_text))
+    if evidence - target_values:
         raise ValueError('fields of different documents cannot be associated: '
                          'selected page identifies another document')
 

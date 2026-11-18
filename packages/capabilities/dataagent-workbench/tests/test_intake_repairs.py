@@ -575,3 +575,31 @@ def test_cross_page_number_alias_allows_the_same_document():
         row=0, name='issuer', page=2, quote='Seller-A')], None,
         identity_fields=('number',))
     assert updated.records[0]['issuer'] == 'Seller-A'
+
+
+def test_cross_page_continuation_rejects_an_unlabeled_other_document_number():
+    pages = [{'page': 1, 'text': 'number: INV-A'},
+             {'page': 2, 'text': 'Invoice INV-B\ncurrency: CNY'}]
+    profile = pdf_profile('unlabeled-other-doc', [
+        {'number': 'INV-A'},
+        {'currency': 'CNY'},
+    ], pages, {(0, 'number'): (1, 'INV-A'), (1, 'currency'): (2, 'CNY')},
+        digest(['unlabeled', 'other-document']))
+    with pytest.raises(ValueError, match='different documents'):
+        extract_fields(profile, [DocumentField(
+            row=0, name='currency', page=2, quote='CNY')], None,
+            identity_fields=('number',))
+
+
+def test_cross_page_continuation_allows_the_same_unlabeled_document_number():
+    pages = [{'page': 1, 'text': 'number: INV-A'},
+             {'page': 2, 'text': 'Invoice INV-A\ncurrency: CNY'}]
+    profile = pdf_profile('unlabeled-same-doc', [
+        {'number': 'INV-A'},
+        {'currency': 'CNY'},
+    ], pages, {(0, 'number'): (1, 'INV-A'), (1, 'currency'): (2, 'CNY')},
+        digest(['unlabeled', 'same-document']))
+    updated = extract_fields(profile, [DocumentField(
+        row=0, name='currency', page=2, quote='CNY')], None,
+        identity_fields=('number',))
+    assert updated.records == [{'number': 'INV-A', 'currency': 'CNY'}]
