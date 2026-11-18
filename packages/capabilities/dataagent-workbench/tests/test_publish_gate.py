@@ -8,6 +8,7 @@ pin every check the gate must enforce.
 """
 from __future__ import annotations
 
+import hashlib
 import sqlite3
 from pathlib import Path
 
@@ -678,7 +679,54 @@ class FlakySecondaryClient:
         return getattr(self.client, name)
 
 
-def two_source_wal_workbench(tmp_path):
+class UnreadablePrimaryClient:
+    """Make the primary file unreadable right after its probe returns."""
+
+    def __init__(self, client, path):
+        self.client = client
+        self.path = Path(path)
+        self.hidden = None
+        self.secondary_failed = False
+
+    def probe(self, selection, *args, **kwargs):
+        if selection.source_id == 'secondary' and not self.secondary_failed:
+            self.secondary_failed = True
+            raise ValueError('transient probe failure')
+        profile = self.client.probe(selection, *args, **kwargs)
+        if selection.source_id == 'primary' and self.hidden is None:
+            self.hidden = self.path.with_suffix('.hidden')
+            self.path.rename(self.hidden)
+        return profile
+
+    def __getattr__(self, name):
+        return getattr(self.client, name)
+
+
+class WALMutatingSecondaryClient:
+    """Edit the primary WAL on the secondary's first probe, then fail.
+
+    This is the same-advance window: the primary probe has returned but the
+    advance has not, so the secondary can still rewrite the primary.
+    """
+
+    def __init__(self, client, keeper):
+        self.client = client
+        self.keeper = keeper
+        self.failed = False
+
+    def probe(self, selection, *args, **kwargs):
+        if selection.source_id == 'secondary' and not self.failed:
+            self.failed = True
+            self.keeper.execute("INSERT INTO party VALUES ('P-3', 'Cedar')")
+            self.keeper.commit()
+            raise ValueError('secondary failed after editing primary')
+        return self.client.probe(selection, *args, **kwargs)
+
+    def __getattr__(self, name):
+        return getattr(self.client, name)
+
+
+def two_source_wal_workbench(tmp_path, wrap_client=None):
     """Primary is observed; secondary must be retried once."""
     keeper = sqlite3.connect(tmp_path / 'sales.db')
     keeper.executescript(SEED.read_text())
@@ -689,7 +737,12 @@ def two_source_wal_workbench(tmp_path):
         connection.executescript(
             'CREATE TABLE retry_marker (code TEXT PRIMARY KEY, label TEXT);\n'
             "INSERT INTO retry_marker VALUES ('X-1', 'retry');")
-    wb = Workbench(tmp_path, layer_client=FlakySecondaryClient(LayerClient(DATA)))
+    client = LayerClient(DATA)
+    if wrap_client is None:
+        client = FlakySecondaryClient(client)
+    else:
+        client = wrap_client(client, keeper)
+    wb = Workbench(tmp_path, layer_client=client)
     session_id = invoke(wb, 'intake_start', {
         'goal': '两个来源中一个需要重试',
         'mode': 'ontology_discovery',
@@ -728,33 +781,91 @@ def test_retrying_secondary_does_not_refresh_the_primary_source_version(tmp_path
         record = wb.store.current('source_version', session_id, scope=wb.scope)
         assert record['body']['sources']['primary'] == primary_record
 
-        declared, = [link for link in request['catalog']['relationships']
-                     if link['origin'] == 'declared']
-        inferred, = [link for link in request['catalog']['relationships']
-                     if link['origin'] == 'sample_supported']
-        current = draft(wb, session_id, request, [
-            {'table': 'doc_hdr', 'name': 'SalesOrder', 'grain': '每个账簿内的一份销售单',
-             'identity': ['book', 'doc_no']},
-            {'table': 'doc_line', 'name': 'SalesOrderLine', 'grain': '销售单的一条明细',
-             'identity': ['book', 'doc_no', 'seq'],
-             'properties': [{'column': 'cents', 'name': 'amountInCents'}]},
-            {'table': 'party', 'name': 'Customer', 'grain': '每个客户一行',
-             'identity': ['party_no'],
-             'properties': [{'column': 'nm', 'name': 'name'}]},
-            {'table': 'retry_marker', 'name': 'RetryMarker', 'grain': '每行一条重试标记',
-             'identity': ['code']},
-        ], [
-            {'evidence_id': declared['id'], 'name': 'belongsToOrder'},
-            {'evidence_id': inferred['id'], 'name': 'orderedBy'},
-        ])
-        completion = full_completion(wb, session_id, current)
-        completion['concepts'].append({
-            'entity': 'RetryMarker', 'properties': {
-                'code': {'column': 'code', 'value_type': 'string', 'required': True},
-                'label': {'column': 'label', 'value_type': 'string'},
-            }, 'identity_fields': ['code'],
-        })
+        completion = two_source_completion(wb, session_id, request)
         with pytest.raises(ValueError, match='source changed since it was observed'):
             prepare(wb, completion)
+    finally:
+        keeper.close()
+
+
+def two_source_completion(wb, session_id, request):
+    declared, = [link for link in request['catalog']['relationships']
+                 if link['origin'] == 'declared']
+    inferred, = [link for link in request['catalog']['relationships']
+                 if link['origin'] == 'sample_supported']
+    current = draft(wb, session_id, request, [
+        {'table': 'doc_hdr', 'name': 'SalesOrder', 'grain': '每个账簿内的一份销售单',
+         'identity': ['book', 'doc_no']},
+        {'table': 'doc_line', 'name': 'SalesOrderLine', 'grain': '销售单的一条明细',
+         'identity': ['book', 'doc_no', 'seq'],
+         'properties': [{'column': 'cents', 'name': 'amountInCents'}]},
+        {'table': 'party', 'name': 'Customer', 'grain': '每个客户一行',
+         'identity': ['party_no'],
+         'properties': [{'column': 'nm', 'name': 'name'}]},
+        {'table': 'retry_marker', 'name': 'RetryMarker', 'grain': '每行一条重试标记',
+         'identity': ['code']},
+    ], [
+        {'evidence_id': declared['id'], 'name': 'belongsToOrder'},
+        {'evidence_id': inferred['id'], 'name': 'orderedBy'},
+    ])
+    completion = full_completion(wb, session_id, current)
+    completion['concepts'].append({
+        'entity': 'RetryMarker', 'properties': {
+            'code': {'column': 'code', 'value_type': 'string', 'required': True},
+            'label': {'column': 'label', 'value_type': 'string'},
+        }, 'identity_fields': ['code'],
+    })
+    return completion
+
+
+def test_wal_edit_during_secondary_probe_does_not_refresh_primary_version(tmp_path):
+    """The primary pin must be captured before the next source probes."""
+    wb, session_id, first, keeper = two_source_wal_workbench(
+        tmp_path, wrap_client=WALMutatingSecondaryClient)
+    try:
+        assert first['next_actions'] == ['retry_probe']
+        session = wb.sessions.get(session_id, wb.ctx)
+        primary_ref = session.selected_versions['profile:primary']
+        record = wb.store.current('source_version', session_id, scope=wb.scope)
+        primary_record = record['body']['sources']['primary']
+        # The capture is the WAL as it was when primary's probe returned; the
+        # secondary edited it afterwards while the advance was still running.
+        current_wal = 'sha256:' + hashlib.sha256(
+            (tmp_path / 'sales.db-wal').read_bytes()).hexdigest()
+        assert primary_record['state']['files']['wal'] != current_wal
+
+        request = invoke(wb, 'intake_advance', {'session_id': session_id}).data
+        session = wb.sessions.get(session_id, wb.ctx)
+        assert session.selected_versions['profile:primary'] == primary_ref
+        record = wb.store.current('source_version', session_id, scope=wb.scope)
+        assert record['body']['sources']['primary'] == primary_record
+        with pytest.raises(ValueError, match='source changed since it was observed'):
+            prepare(wb, two_source_completion(wb, session_id, request))
+    finally:
+        keeper.close()
+
+
+def test_unreadable_primary_stays_blocked_after_unrelated_retry(tmp_path):
+    """An unreadable pin must not be re-fixed just because another source retries."""
+    holder = {}
+
+    def wrap(client, keeper):
+        holder['client'] = UnreadablePrimaryClient(client, tmp_path / 'sales.db')
+        return holder['client']
+
+    wb, session_id, first, keeper = two_source_wal_workbench(
+        tmp_path, wrap_client=wrap)
+    try:
+        assert first['next_actions'] == ['retry_probe']
+        record = wb.store.current('source_version', session_id, scope=wb.scope)
+        assert record['body']['sources']['primary']['state'].get('unreadable')
+
+        # The source becomes readable again, but it has not been re-probed.
+        holder['client'].hidden.rename(holder['client'].path)
+        request = invoke(wb, 'intake_advance', {'session_id': session_id}).data
+        record = wb.store.current('source_version', session_id, scope=wb.scope)
+        assert record['body']['sources']['primary']['state'].get('unreadable')
+        with pytest.raises(ValueError, match='source observation version is missing'):
+            prepare(wb, two_source_completion(wb, session_id, request))
     finally:
         keeper.close()

@@ -45,11 +45,17 @@ class Workbench:
         workbench = self
 
         class _ObservedIntake(IntakeService):
-            """Record the source bytes each successful probe leaves behind."""
+            """Pin each source's bytes right after its profile is written.
 
-            def advance(self, session_id, ctx):
-                session = super().advance(session_id, ctx)
-                record_source_versions(workbench, session)
+            Intake probes sources one after another inside one advance.  Waiting
+            for the whole advance would let a later source rewrite an earlier
+            one before its baseline is pinned.
+            """
+
+            def _store_profile(self, session, versions, source, profile, ctx):
+                session = super()._store_profile(
+                    session, versions, source, profile, ctx)
+                record_source_versions(workbench, session, source.source_id)
                 return session
 
         self.intake=_ObservedIntake(self)

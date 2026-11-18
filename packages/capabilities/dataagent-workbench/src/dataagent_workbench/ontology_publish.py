@@ -158,13 +158,13 @@ def _source_state(workspace, source):
             'locator_ref': source.locator_ref, 'digest': _digest_file(path)}
 
 
-def record_source_versions(wb, session):
-    """Pin each source version when that source's probe writes an observation.
+def record_source_versions(wb, session, source_id=None):
+    """Pin a source's version when its profile is written.
 
-    A retry of source B must not refresh source A's pin: the record holds one
-    entry per source, tagged with the profile ref it was observed at, and only
-    the entry whose own profile ref changed is re-read.  A no-op advance
-    therefore cannot move any baseline past an external edit.
+    Called from ``_store_profile`` as each source finishes probing, before the
+    next source runs.  ``source_id`` limits the write to that source; the same
+    profile ref is never re-pinned, even when its capture was unreadable, so
+    recovering a file without re-probing cannot unblock publication.
     """
     if session is None or not is_discovery(session):
         return
@@ -173,15 +173,15 @@ def record_source_versions(wb, session):
     recorded = dict((previous_body or {}).get('sources') or {})
     changed = False
     for source in session.sources:
+        if source_id is not None and source.source_id != source_id:
+            continue
         if source.kind not in {'file', 'sqlite'}:
             continue
         ref = session.selected_versions.get('profile:' + source.source_id)
         if not ref:
             continue
         entry = recorded.get(source.source_id)
-        if (isinstance(entry, dict) and entry.get('profile_ref') == ref
-                and isinstance(entry.get('state'), dict)
-                and not entry['state'].get('unreadable')):
+        if isinstance(entry, dict) and entry.get('profile_ref') == ref:
             continue
         try:
             state = _source_state(wb.workspace, source)
