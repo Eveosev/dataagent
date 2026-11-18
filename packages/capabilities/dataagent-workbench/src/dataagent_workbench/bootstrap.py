@@ -46,6 +46,9 @@ class Workbench:
         self.discovery = DiscoveryService(self)
         from .ontology_publish import PublishService
         self.publisher = PublishService(self)
+        # Read-only published-instance queries (D4); no state of their own.
+        from .query_service import QueryService
+        self.queries = QueryService(self)
 
     def _default_target(self):
         return self.ontology.default_definition(self.ctx)

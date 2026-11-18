@@ -81,7 +81,17 @@ def _invoke(wb, name, args):
             typed.session_id, typed.proposal, typed.expected_revision, wb.ctx,
         ))
     if name == 'ontology_registry':
-        return CapabilityResult.ok(wb.ontology.registry(wb.ctx))
+        data = wb.ontology.registry(wb.ctx)
+        if not typed.include_deactivated:
+            data = {**data, 'ontologies': [
+                item for item in data['ontologies']
+                if item.get('state') == 'active']}
+        return CapabilityResult.ok(data)
+    if name == 'ontology_query':
+        # Read-only: published snapshots only, never the fact table.
+        return CapabilityResult.ok(wb.queries.query(typed, wb.ctx))
+    if name == 'ontology_instances_summary':
+        return CapabilityResult.ok(wb.queries.summary(typed, wb.ctx))
     if name == 'ontology_publish_prepare':
         candidate = wb.publisher.prepare(typed, wb.ctx)
         return CapabilityResult(status=CapabilityStatus.needs_input, data=candidate, issues=[Issue(
