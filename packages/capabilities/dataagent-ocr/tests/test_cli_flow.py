@@ -38,13 +38,16 @@ def configure(capsys, monkeypatch, server, profile="vl", model="qwen-vl-ocr", ke
     )
 
 
-def test_configure_verify_pin_status(capsys, monkeypatch, fake_openai, data_root):
+def test_configure_verify_pin_status(capsys, monkeypatch, fake_openai, data_root, home):
     code, out = configure(capsys, monkeypatch, fake_openai)
     assert code == 0 and out["profile"]["profile"] == "vl@r1"
     assert fake_openai.api_key not in json.dumps(out)
-    key_file = data_root / "secrets" / "ocr" / "ocr-vl.key"
+    secrets_root = home / ".dataagent" / "secrets"
+    key_file = secrets_root / "ocr" / "ocr-vl.key"
     assert stat.S_IMODE(key_file.stat().st_mode) == 0o600
-    assert (data_root / "secrets" / ".gitignore").read_text() == "*\n"
+    assert stat.S_IMODE(secrets_root.stat().st_mode) == 0o700
+    assert (secrets_root / ".gitignore").read_text() == "*\n"
+    assert not (data_root / "secrets").exists()
 
     code, out = run(capsys, monkeypatch, "verify", "--profile", "vl")
     assert code == 0, out

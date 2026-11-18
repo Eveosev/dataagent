@@ -48,8 +48,9 @@ def _credentials(selection, workspace, request):
         if refs:
             raise ValueError('this source kind does not accept credentials')
         return None
-    # Credential files are scoped to this workspace; a host environment
-    # variable must not redirect them to another data root.
+    # The runtime resolves the default external secrets directory first and
+    # falls back to this workspace's legacy directory (with a warning); a host
+    # data-root variable must not redirect either location.
     data_root = Path(workspace).resolve() / '.dataagent'
     for name, ref in refs.items():
         if not isinstance(name, str) or not isinstance(ref, str):

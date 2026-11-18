@@ -2,9 +2,13 @@
 
 OCR uses the platform credential resolver
 (``dataagent_runtime.policy.secrets``) so every layer accepts the same
-logical names: ``file:``, ``env:`` and ``keychain:``. OCR keys live under
-``<data_root>/secrets/ocr/``: the directory is 0700 and each key file 0600.
-Profiles, digests, events, CLI output and error text never contain the value.
+logical names: ``file:``, ``env:`` and ``keychain:``. New OCR keys live in
+the default external directory, ``$HOME/.dataagent/secrets/ocr/`` (or
+``DATAAGENT_SECRETS_DIR`` when it is an absolute path): the directory is 0700
+and each key file 0600. The legacy ``<data_root>/secrets/ocr/`` location is
+still read for existing installations and emits
+``LegacySecretLocationWarning``. Profiles, digests, events, CLI output and
+error text never contain the value.
 """
 
 from __future__ import annotations
@@ -19,6 +23,8 @@ __all__ = ["redact", "resolve", "secrets_dir", "store_file_secret", "validate_re
 
 
 def secrets_dir(data_root: Path) -> Path:
+    """The default OCR secrets directory (``$HOME/.dataagent/secrets/ocr``)."""
+
     return _secrets.secrets_dir(data_root) / "ocr"
 
 
@@ -33,12 +39,12 @@ def _shared_ref(ref: str) -> str:
 
 
 def store_file_secret(data_root: Path, name: str, value: str) -> str:
-    """Write ``value`` under ``.dataagent/secrets/ocr/`` and return its ref."""
+    """Write ``value`` under the default ``.dataagent/secrets/ocr/`` and return its ref."""
 
     if not isinstance(name, str) or not name or len(name) > 64 or "/" in name:
         raise ConfigError("invalid secret name", action="use a plain OCR profile id")
     try:
-        _secrets.store_file_secret(data_root, f"ocr/{name}", value)
+        _secrets.store_default_secret(f"ocr/{name}", value)
     except _secrets.InvalidSecretRef:
         raise ConfigError("invalid secret name", action="use a plain OCR profile id") from None
     except _secrets.SecretUnavailable as exc:
@@ -58,6 +64,8 @@ def validate_ref(ref: str) -> str:
 
 
 def resolve(ref: str, data_root: Path) -> str:
+    """Resolve a ref from the default directory, falling back to the workspace."""
+
     try:
         return _secrets.resolve(_shared_ref(ref), data_root)
     except _secrets.InvalidSecretRef:

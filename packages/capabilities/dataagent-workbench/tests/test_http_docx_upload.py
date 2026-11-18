@@ -83,9 +83,15 @@ def test_upload_accepts_docx_and_intake_profiles_its_text(tmp_path):
     profile = client.get(f"/api/sessions/{sid}/view", headers=headers).json()["profiles"][0]
     assert profile["kind"] == "docx"
     assert profile["coverage"] == "full"
-    texts = [record.get("text") for record in profile["records"]]
+    metadata = profile["metadata"]
+    # G4: a document with a data table defaults to that table; prose is kept
+    # in the independent paragraphs record set.
+    assert metadata["selected_record_set"] == "table:1"
+    paragraphs = metadata["record_sets"]["paragraphs"]["records"]
+    texts = [record.get("text") for record in paragraphs]
     assert "差旅费用报销规则" in texts
     assert any("出差住宿标准" in (text or "") for text in texts)
+    assert [record.get("城市") for record in profile["records"]] == ["一线"]
 
 
 def test_upload_still_rejects_unlisted_type(tmp_path):

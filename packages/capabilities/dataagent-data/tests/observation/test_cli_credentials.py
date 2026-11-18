@@ -9,6 +9,17 @@ from dataagent_runtime.policy import secrets
 SENTINEL = "T14-SENTINEL-5f0c9a7d2b8e4c61"
 
 
+@pytest.fixture()
+def home(tmp_path, monkeypatch):
+    """An isolated HOME so default file: secrets never touch the real one."""
+
+    path = tmp_path / "home"
+    path.mkdir()
+    monkeypatch.setenv("HOME", str(path))
+    monkeypatch.delenv("DATAAGENT_SECRETS_DIR", raising=False)
+    return path
+
+
 def _rest():
     return SourceSelection(source_id="api", kind="rest", locator_ref="http://127.0.0.1:9/invoices")
 
@@ -22,8 +33,9 @@ def _profile(*, gaps=(), issues=()):
     )
 
 
-def test_file_reference_is_resolved_only_inside_probe(workspace, ctx, monkeypatch):
+def test_file_reference_is_resolved_only_inside_probe(workspace, ctx, home, monkeypatch):
     ref = secrets.store_file_secret(workspace / ".dataagent", "rest-token", SENTINEL)
+    assert (home / ".dataagent" / "secrets" / "rest-token.key").is_file()
     seen = {}
 
     def fake_probe(selection, ctx, **options):
@@ -88,11 +100,20 @@ def test_env_reference_is_resolved_inside_probe(workspace, ctx, monkeypatch):
     assert SENTINEL not in profile.model_dump_json()
 
 
-def test_file_reference_is_scoped_to_workspace_not_data_root_env(workspace, ctx, tmp_path, monkeypatch):
-    inside = secrets.store_file_secret(workspace / ".dataagent", "rest-token", "INSIDE-VALUE")
-    outside = tmp_path / "outside"
-    secrets.store_file_secret(outside, "rest-token", SENTINEL)
-    monkeypatch.setenv("DATAAGENT_DATA_ROOT", str(outside))
+def test_default_secret_directory_wins_over_workspace_copy(
+        workspace, ctx, tmp_path, home, monkeypatch):
+    data_root = workspace / ".dataagent"
+    legacy_ref = secrets.store_file_secret(
+        data_root, "rest-token", "WORKSPACE-VALUE", scope="workspace")
+    other_root = tmp_path / "outside"
+    data_root_ref = secrets.store_file_secret(
+        other_root, "rest-token", "DATA-ROOT-VALUE", scope="workspace")
+    ref = secrets.store_file_secret(other_root, "rest-token", SENTINEL)
+    assert legacy_ref == data_root_ref == ref == "file:rest-token"
+    assert (home / ".dataagent" / "secrets" / "rest-token.key").is_file()
+    assert (data_root / "secrets" / "rest-token.key").is_file()
+    assert (other_root / "secrets" / "rest-token.key").is_file()
+    monkeypatch.setenv("DATAAGENT_DATA_ROOT", str(other_root))
     seen = {}
 
     def fake_probe(selection, ctx, **options):
@@ -103,10 +124,35 @@ def test_file_reference_is_scoped_to_workspace_not_data_root_env(workspace, ctx,
     cli.probe(_rest(), ctx, workspace, {
         "allowed_origins": ["http://127.0.0.1:9"],
         "credential_options": {"auth": "bearer"},
-        "credential_refs": {"token": inside},
+        "credential_refs": {"token": ref},
     })
-    assert seen["credentials"]["token"] == "INSIDE-VALUE"
-    assert seen["credentials"]["token"] != SENTINEL
+    # G5: the external default wins; neither data-root copy is consulted.
+    assert seen["credentials"]["token"] == SENTINEL
+    assert seen["credentials"]["token"] != "WORKSPACE-VALUE"
+    assert seen["credentials"]["token"] != "DATA-ROOT-VALUE"
+
+
+def test_workspace_file_reference_is_a_read_only_fallback(
+        workspace, ctx, home, monkeypatch):
+    data_root = workspace / ".dataagent"
+    ref = secrets.store_file_secret(
+        data_root, "rest-token", "LEGACY-VALUE", scope="workspace")
+    assert (data_root / "secrets" / "rest-token.key").is_file()
+    assert not (home / ".dataagent" / "secrets" / "rest-token.key").exists()
+    seen = {}
+
+    def fake_probe(selection, ctx, **options):
+        seen.update(options)
+        return _profile()
+
+    monkeypatch.setattr("dataagent_data.observation.http.probe_rest", fake_probe)
+    with pytest.warns(secrets.LegacySecretLocationWarning, match="legacy"):
+        cli.probe(_rest(), ctx, workspace, {
+            "allowed_origins": ["http://127.0.0.1:9"],
+            "credential_options": {"auth": "bearer"},
+            "credential_refs": {"token": ref},
+        })
+    assert seen["credentials"]["token"] == "LEGACY-VALUE"
 
 
 def test_probe_failure_payload_classifies_missing_dependency():
