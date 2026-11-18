@@ -4,7 +4,7 @@ from decimal import Decimal
 
 import pytest
 
-from dataagent_contracts.ontology import MappingSpec, ReviewDecision
+from dataagent_contracts.ontology import FieldBinding, MappingSpec, ReviewDecision
 from dataagent_workbench.bootstrap import Workbench
 from dataagent_workbench.intake_service import PreviewBlocked
 from dataagent_workbench.interfaces.mcp_server import handle
@@ -217,6 +217,16 @@ def test_inherit_old_task_corrections_on_the_same_source_revision(tmp_path):
         first.revision, wb.ctx)
     assert wb.sessions.get(first.id, wb.ctx).phase == 'saved'
 
+    # The fixture sources share the same revision digest.  Dropping source b
+    # must still invalidate inheritance: matching only revision values loses
+    # the source identity and would offer the correction for a different task.
+    subset = wb.intake.advance(start(wb, [_selection('a', 'a.csv')], 'g3').session_id, wb.ctx)
+    assert subset.phase == 'needs_input'
+    subset = wb.sessions.get(subset.id, wb.ctx)
+    wb.intake.submit_source_proposals(subset.id, {'a': proposals_for(wb, subset)['a']},
+                                      subset.revision, wb.ctx)
+    assert wb.intake.view(subset.id, wb.ctx)['inheritance'] is None
+
     second = wb.intake.advance(start(wb, [_selection('a', 'a.csv'), _selection('b', 'b.csv')],
                                     'g2').session_id, wb.ctx)
     # Reusing the saved mapping recreates the conflict; the previous task's
@@ -244,3 +254,45 @@ def test_inherit_old_task_corrections_on_the_same_source_revision(tmp_path):
         preview_ref=current.selected_versions['preview'], target_scope='mapping'),
         current.revision, wb.ctx)
     assert wb.sessions.get(second.id, wb.ctx).phase == 'saved'
+
+
+def test_inheritance_requires_the_original_object_evidence(tmp_path):
+    wb = Workbench(tmp_path)
+    wb.layer_client = StubProbeClient({
+        'a': csv_profile('a', [{'number': 'INV-1', 'amount_minor': '10000',
+                                'currency': 'CNY'}]),
+        'b': csv_profile('b', [{'number': 'INV-1', 'amount_minor': '20000',
+                                'currency': 'CNY'}]),
+    })
+    first = wb.intake.advance(start(wb, [_selection('a', 'a.csv'), _selection('b', 'b.csv')],
+                                    'g1').session_id, wb.ctx)
+    preview = wb.intake.submit_source_proposals(
+        first.id, proposals_for(wb, first), first.revision, wb.ctx)
+    first = wb.sessions.get(first.id, wb.ctx)
+    entity = preview.instances[0].id
+    wb.intake.apply(first.id, ReviewDecision(
+        preview_ref=preview.id + '@' + preview.revision, target_scope='instance',
+        changes={'entity_id': entity, 'property': 'amount', 'value': '150.00',
+                 'reason': '按发票原件核对'}), first.revision, wb.ctx)
+    first = wb.sessions.get(first.id, wb.ctx)
+    wb.intake.revalidate(first.id, first.revision, wb.ctx)
+    first = wb.sessions.get(first.id, wb.ctx)
+    wb.intake.apply(first.id, ReviewDecision(
+        preview_ref=first.selected_versions['preview'], target_scope='mapping'),
+        first.revision, wb.ctx)
+    assert wb.sessions.get(first.id, wb.ctx).phase == 'saved'
+
+    second = wb.intake.advance(start(wb, [_selection('a', 'a.csv'), _selection('b', 'b.csv')],
+                                    'g2').session_id, wb.ctx)
+    second = wb.sessions.get(second.id, wb.ctx)
+    proposals = proposals_for(wb, second)
+    # Same sources and revisions, but the amount now comes from a field whose
+    # evidence is not the evidence the old correction was made against.
+    changed = {
+        key: proposal.model_copy(update={
+            'bindings': {**proposal.bindings,
+                         'amount': FieldBinding(source_field='currency')}})
+        for key, proposal in proposals.items()
+    }
+    wb.intake.submit_source_proposals(second.id, changed, second.revision, wb.ctx)
+    assert wb.intake.view(second.id, wb.ctx)['inheritance'] is None

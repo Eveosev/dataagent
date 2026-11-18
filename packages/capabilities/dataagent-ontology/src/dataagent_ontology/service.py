@@ -134,14 +134,28 @@ class OntologyService:
         release_body={key:body[key] for key in ('ontology_revision','mapping','source_revisions')}
         release_body['instances']=[item for item in body['instances'] if item['id'] in saved_ids]
         release_body['issues']=[]
-        release_body['assertions']=[
-            item for item in body['assertions']
-            if any(role.get('role')=='subject' and role.get('value') in saved_ids
-                   for role in item.get('role_bindings',[]))]
-        release_body['facts']=[
-            item for item in body['facts']
-            if any(role.get('value_type')=='reference' and role.get('value') in saved_ids
-                   for role in item.get('role_bindings',[]))]
+        # A fact may use an entity role other than ``subject`` (for example
+        # ``price(invoice, amount, currency)``).  Keep an assertion only when
+        # every entity it references is in this release, and keep a fact only
+        # when every one of its assertions was kept as well.
+        release_assertions=[]
+        for item in body['assertions']:
+            references=[role for role in item.get('role_bindings',[])
+                        if role.get('value_type')=='reference']
+            if references and all(role.get('value') in saved_ids for role in references):
+                release_assertions.append(item)
+        assertion_ids={item['id'] for item in release_assertions}
+        release_facts=[]
+        for item in body['facts']:
+            references=[role for role in item.get('role_bindings',[])
+                        if role.get('value_type')=='reference']
+            refs=item.get('assertion_refs') or []
+            if (references and refs
+                    and all(role.get('value') in saved_ids for role in references)
+                    and all(ref in assertion_ids for ref in refs)):
+                release_facts.append(item)
+        release_body['assertions']=release_assertions
+        release_body['facts']=release_facts
         content={key:release_body[key]
                  for key in ('ontology_revision','mapping','source_revisions','instances','issues')}
         if body.get('extensions'):

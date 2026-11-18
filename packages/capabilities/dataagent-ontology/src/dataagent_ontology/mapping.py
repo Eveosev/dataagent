@@ -123,7 +123,10 @@ def _incomplete_source(source, partitions):
     total=source.total_partitions
     if total is None:return source.coverage!='full'
     completed=set(source.completed_partitions)
-    completed.update(partition for partition in partitions if isinstance(partition,int))
+    # Database partitions are table names, not integers.  Any audited
+    # not-applicable partition counts as acknowledged coverage, whatever its
+    # stable partition key type is.
+    completed.update(partition for partition in partitions if partition is not None)
     return len(completed)<total
 
 

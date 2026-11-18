@@ -1222,21 +1222,36 @@ class IntakeService:
         return applied, conflicts, unresolved
 
     def _inheritable_corrections(self, session, body):
-        """Corrections from older tasks over the same source revisions.
+        """Corrections from older tasks over the exact same source revisions.
 
-        A correction is inheritable when its origin preview was built from the
-        same source revision set and the object/property still exists in the
-        current preview.  Superseded or adoption-only entries are not offered.
+        A correction is inheritable only when its origin preview was built from
+        the same ``source_id -> source_revision`` mapping and the original
+        object evidence still resolves in the current preview.  Superseded or
+        adoption-only entries are not offered.
         """
         if not body:
             return []
         current_ref = session.selected_versions.get('preview')
-        current_revisions = {profile.source_revision for profile in self._profiles(session)}
-        current_entities = {instance['id'] for instance in body.get('instances') or []}
+        current_sources = body.get('source_revisions') or {}
+        current_instances = {instance['id']: instance
+                             for instance in body.get('instances') or []}
         current_keys = {(correction.get('entity_id'), correction.get('property'))
                         for correction in (*((body.get('extensions') or {}).get(_PENDING_CORRECTIONS) or []),
                                            *(body.get('corrections') or []))}
         ontology = self.wb.definition
+
+        def anchor_keys(instance, source_ids, prop=None):
+            anchors = instance.get('source_anchors') or {}
+            groups = [anchors.get(prop) or []] if prop is not None else list(anchors.values())
+            keys = set()
+            for group in groups:
+                for anchor in group:
+                    if not isinstance(anchor, dict) or anchor.get('source_ref') not in source_ids:
+                        continue
+                    keys.add((anchor.get('source_ref'), anchor.get('source_revision'),
+                              json.dumps(anchor.get('selector'), sort_keys=True, default=str)))
+            return keys
+
         found = {}
         cursor = 0
         while True:
@@ -1246,8 +1261,11 @@ class IntakeService:
                 if old_ref == current_ref:
                     continue
                 old = row['body']
-                source_revisions = set((old.get('source_revisions') or {}).values())
-                if not source_revisions or not source_revisions <= current_revisions:
+                old_sources = old.get('source_revisions') or {}
+                # Source identity matters as much as the revision value: two
+                # different sources can share a revision digest, and dropping
+                # one of them must invalidate an inherited correction.
+                if not old_sources or old_sources != current_sources:
                     continue
                 if old.get('ontology_revision') != body.get('ontology_revision'):
                     continue
@@ -1261,7 +1279,7 @@ class IntakeService:
                 for (entity_id, prop), correction in latest.items():
                     if (entity_id, prop) in current_keys:
                         continue
-                    if entity_id not in current_entities:
+                    if entity_id not in current_instances:
                         continue
                     if prop not in ontology.properties or prop in ontology.identity_fields:
                         continue
@@ -1274,7 +1292,22 @@ class IntakeService:
                         continue
                     if value is None:
                         continue
-                    instance = old_instances.get(entity_id) or {}
+                    instance = old_instances.get(entity_id)
+                    current_instance = current_instances.get(entity_id)
+                    if instance is None or current_instance is None:
+                        continue
+                    old_evidence = anchor_keys(instance, set(old_sources), prop)
+                    current_evidence = anchor_keys(current_instance, set(current_sources), prop)
+                    if old_evidence:
+                        if not old_evidence <= current_evidence:
+                            continue
+                    else:
+                        # Missing-value corrections are anchored by the
+                        # object's identity evidence rather than the property.
+                        old_evidence = anchor_keys(instance, set(old_sources))
+                        current_evidence = anchor_keys(current_instance, set(current_sources))
+                        if not old_evidence or not old_evidence <= current_evidence:
+                            continue
                     values = instance.get('values') or {}
                     label = ' · '.join(str(values[field]) for field in ontology.identity_fields
                                        if values.get(field) not in (None, ''))
@@ -1286,7 +1319,7 @@ class IntakeService:
                         'property': prop,
                         'value': to_jsonable_python(value),
                         'reason': correction.get('reason'),
-                        'source_revisions': old.get('source_revisions'),
+                        'source_revisions': old_sources,
                     }
             if len(rows) < 500:
                 break
