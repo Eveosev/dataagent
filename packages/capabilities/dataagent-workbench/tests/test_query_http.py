@@ -132,3 +132,61 @@ def test_unknown_ontology_is_404_not_an_empty_page(tmp_path):
     wb = Workbench(tmp_path)
     missing = _client(wb).get('/api/ontologies/does-not-exist/instances')
     assert missing.status_code == 404
+
+
+def test_instances_endpoint_supports_ordered_conditions_and_related_objects(tmp_path):
+    from test_query import expense_model
+    wb = expense_model(tmp_path)
+    api = _client(wb)
+
+    over = api.get('/api/ontologies/expense-model/instances',
+                   params={'concept': 'ExpenseLine', 'limit': 200,
+                           'where': json.dumps([
+                               {'property': 'amount', 'op': 'gt', 'value': '500'}])})
+    assert over.status_code == 200, over.json()
+    assert over.json()['total'] == 1
+    assert over.json()['items'][0]['values']['amount'] == '600'
+
+    dated = api.get('/api/ontologies/expense-model/instances',
+                    params={'concept': 'ExpenseLine', 'limit': 200,
+                            'where': json.dumps([
+                                {'property': 'spent_on', 'op': 'gte',
+                                 'value': '2026-03-02'}])})
+    assert dated.status_code == 200
+    assert dated.json()['total'] == 3
+
+    page = api.get('/api/ontologies/expense-model/instances',
+                   params={'concept': 'ExpenseLine', 'limit': 200,
+                           'include_related': json.dumps({
+                               'relation': 'usesStandard', 'fields': ['limit']})})
+    assert page.status_code == 200, page.json()
+    body = page.json()
+    assert body['related_stats'] == {
+        'relation': 'usesStandard', 'matched': 3, 'missing': 1, 'ambiguous': 0,
+    }
+    limits = sorted(item['related']['fields']['limit']
+                    for item in body['items'] if item['related'])
+    assert limits == ['500', '500', '80']
+    assert body['related_missing_count'] == 1
+    assert body['related_missing'][0]['values']['category'] == '交通'
+
+    shorthand = api.get('/api/ontologies/expense-model/instances',
+                        params={'concept': 'ExpenseLine', 'limit': 200,
+                                'related': 'usesStandard',
+                                'related_fields': 'limit'})
+    assert shorthand.status_code == 200, shorthand.json()
+    assert shorthand.json()['related_stats']['matched'] == 3
+    assert sorted(item['related']['fields']['limit']
+                  for item in shorthand.json()['items']
+                  if item['related']) == ['500', '500', '80']
+
+    invalid = api.get('/api/ontologies/expense-model/instances',
+                      params={'concept': 'ExpenseLine',
+                              'include_related': 'not-json'})
+    assert invalid.status_code == 422
+    unknown = api.get('/api/ontologies/expense-model/instances',
+                      params={'concept': 'ExpenseLine',
+                              'include_related': json.dumps({
+                                  'relation': 'missing', 'fields': ['limit']})})
+    assert unknown.status_code == 422
+    assert 'unknown relation' in unknown.json()['detail']
