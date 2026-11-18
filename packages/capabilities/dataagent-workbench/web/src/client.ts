@@ -18,6 +18,45 @@ export type Issue={code?:string;target?:string;row?:number;entity_id?:string;det
 export type ObjectView={session:IntakeSession;ontology:OntologyRevision;ontology_revision:string;ontology_draft:Record<string,unknown>|null;
  sources:(SourceProfile&{display_name:string})[];objects:WorkObject[];corrections:Correction[];correction_views:CorrectionView[];issues:Issue[];
  review_state:string|null;preview_ref?:string;mapping_revision:string|null;draft:Draft};
+// 问题分级对应后端约定：整批保存被任何未解决问题拦下（dataagent-ontology
+// service.py 的 prepare_review），其中这三个 code 能被对象页的实例纠正清除
+//（dataagent_workbench intake_service 的 _RESOLVABLE_ISSUES），其余问题在修订
+// 映射或来源前一直阻断。文案镜像 intake_service 的 _ISSUE_REASONS。
+export const correctableIssueCodes=new Set(['ontology.conflicting_values','ontology.required_value_missing','ontology.conversion_failed']);
+export const issueReasons:Record<string,string>={
+ 'ontology.conflicting_values':'各来源的字段值不一致',
+ 'ontology.required_value_missing':'缺少必填值',
+ 'ontology.required_binding_missing':'必填属性没有映射',
+ 'ontology.identity_unresolved':'缺少单据号，无法确定对象',
+ 'ontology.conversion_failed':'值无法按目标类型转换',
+ 'ontology.evidence_missing':'值没有来源定位',
+ 'ontology.incomplete_source':'来源未完整读取',
+ 'ontology.relation_unresolved':'关联字段不完整',
+ 'ontology.correction_conflict':'网页纠正无法沿用',
+ 'ontology.no_records':'没有可映射的记录',
+};
+export const issueBlocksSave=(issue:Issue)=>!correctableIssueCodes.has(issue.code||'');
+// 问题点回对象：带 entity_id 的直接命中；只带行号的问题（row 是来源内 0 起的记录
+// 序号）用对象证据锚点经来源 profile 解析回同一序号——每条来源记录只归一个对象，
+// 命中的即对应对象。映射层问题（无对象可点）返回 undefined。
+export function issueObject(issue:Issue,view:Pick<ObjectView,'objects'|'sources'>):WorkObject|undefined{
+ if(issue.entity_id){
+  const target=view.objects.find(o=>o.id===issue.entity_id);
+  if(target)return target;
+ }
+ if(issue.row===undefined)return undefined;
+ for(const object of view.objects){
+  for(const anchors of Object.values(object.evidence||{})){
+   for(const anchor of anchors){
+    if(issue.source_id&&anchor.source_id!==issue.source_id)continue;
+    const profile=view.sources.find(s=>s.source_id===anchor.source_id);
+    const hit=profile?findAnchorRow(profile,anchor):undefined;
+    if(hit&&hit.row===issue.row)return object;
+   }
+  }
+ }
+ return undefined;
+}
 export class ApiError extends Error {constructor(public status:number,message:string){super(message);}}
 // 后端原始报错按原文透出会给用户看不懂的英文；已知文案在这里换成中文说法。
 const errorTexts:Record<string,string>={
