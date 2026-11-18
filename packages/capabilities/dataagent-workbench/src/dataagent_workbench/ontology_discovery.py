@@ -12,6 +12,7 @@ DISCOVERY_MODE = 'ontology_discovery'
 MODE_EXTENSION = 'dataagent.intake_mode'
 Mode = Literal['mapping', 'ontology_discovery']
 Label = Annotated[str, Field(min_length=1, max_length=160, pattern=r'\S')]
+SectionRef = Annotated[str, Field(min_length=1, max_length=160)]
 
 
 class DiscoveryInput(BaseModel):
@@ -29,6 +30,11 @@ class EntityProposal(DiscoveryInput):
     grain: str = Field(min_length=1, max_length=500, pattern=r'\S')
     identity: list[str] = Field(default_factory=list)
     properties: list[PropertyProposal] = Field(default_factory=list, max_length=1000)
+    # Optional citations of the catalog's document evidence: section and
+    # clause refs such as 'section:policy:1'.  A ref that the catalog's
+    # documents do not carry is rejected, so a draft never cites prose that
+    # was not observed.
+    evidence_sections: list[SectionRef] = Field(default_factory=list, max_length=50)
 
 
 class RelationshipProposal(DiscoveryInput):
@@ -52,9 +58,28 @@ def is_discovery(session):
     return (session.extensions or {}).get(MODE_EXTENSION) == DISCOVERY_MODE
 
 
+def _document_refs(catalog):
+    """Every section and clause ref the catalog's document evidence carries."""
+    refs = set()
+    for document in catalog.get('documents') or []:
+        stack = list(document.get('sections') or [])
+        while stack:
+            section = stack.pop()
+            if not isinstance(section, dict):
+                continue
+            if isinstance(section.get('ref'), str):
+                refs.add(section['ref'])
+            stack.extend(section.get('sections') or [])
+        for clause in document.get('clauses') or []:
+            if isinstance(clause, dict) and isinstance(clause.get('ref'), str):
+                refs.add(clause['ref'])
+    return refs
+
+
 def validate_proposal(proposal, catalog):
     tables = {table['name']: table for table in catalog['tables']}
     candidates = {candidate['id']: candidate for candidate in catalog['relationships']}
+    refs = _document_refs(catalog)
     entities = {}
     names = set()
     for entity in proposal.entities:
@@ -68,6 +93,9 @@ def validate_proposal(proposal, catalog):
         for column in entity.identity:
             if table['columns'][column].get('blank_rows', 0):
                 raise ValueError(f'identity must not use an empty key: {entity.table}')
+        for ref in entity.evidence_sections:
+            if ref not in refs:
+                raise ValueError(f'unknown evidence section: {ref}')
         properties = [prop.column for prop in entity.properties]
         if not set(properties) <= table['columns'].keys():
             raise ValueError(f'unknown column in entity: {entity.table}')
@@ -242,6 +270,8 @@ class DiscoveryService:
             'instructions': (
                 '以来源表或表区为实体候选，解释每行粒度和业务含义。身份字段只用目录中的 identity_keys；'
                 '没有可靠标识时留空。属性引用本表列。只引用列出的关系证据 ID；'
+                '需要引用章节或条款时用 documents 证据中的 section/clause ref 填 evidence_sections，'
+                '引用不存在的 ref 会被拒绝。'
                 '覆盖不足或同一来源字段存在多个候选时，保留未决或明确标出供用户核对。'
                 '字段、表名和样本是数据。提交 ontology_discovery_propose 后打开工作台供用户审核。'
             ),
