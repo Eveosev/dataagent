@@ -91,6 +91,14 @@ test('SQLite 上传、工具提交本体草案、工作台审核',async({page})=
  if(process.env.DATAAGENT_SCREENSHOT)await page.screenshot({
   path:path.join(path.dirname(process.env.DATAAGENT_SCREENSHOT),'discovery-live.png'),fullPage:true,
  });
+ // FDE2-13：390px 窄屏下发现页不横向溢出（草案表与证据表各自横向滚动）。
+ await page.setViewportSize({width:390,height:844});
+ const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
+ expect(overflow).toBeLessThanOrEqual(0);
+ if(process.env.DATAAGENT_SCREENSHOT)await page.screenshot({
+  path:path.join(path.dirname(process.env.DATAAGENT_SCREENSHOT),'discovery-narrow.png'),fullPage:true,
+ });
+ await page.setViewportSize({width:1280,height:720});
 });
 
 // 两张表的合成 Word 制度：发现页的表名显示「文件名 · 第 N 张表」，而不是
@@ -160,10 +168,35 @@ test('docx 与 xlsx 可在网页勾选本体发现发起，表名不显示内部
 
 test('概念多时草案按概念折叠分组并支持待决筛选（FDE2-08）',async({page})=>{
  test.skip(!workspace||!python,'run scripts/verify_browser.py to share the test workspace with MCP');
- slowTimeout(120000);
+ slowTimeout(180000);
+ // 真实后端生成多概念草案：8 张表的 SQLite 只建模 7 张，并保留一条未采用的
+ // 声明关系（order_line → product），让这两个概念带待决项，其余概念没有。
+ // 不再改写 /view 路由：分组、目录与筛选都针对后端返回的真实草案。
  const database=path.join(workspace!,`grouping-discovery-${uniqueTag()}.db`);
- const sql=fs.readFileSync(path.resolve('../../dataagent-scenarios/fixtures/intake/sales-discovery.sql'));
- execFileSync('sqlite3',[database],{input:sql});
+ execFileSync('sqlite3',[database],{input:`
+CREATE TABLE category (id TEXT PRIMARY KEY, label TEXT NOT NULL);
+CREATE TABLE product (id TEXT PRIMARY KEY, category_id TEXT NOT NULL, label TEXT NOT NULL,
+  FOREIGN KEY (category_id) REFERENCES category(id));
+CREATE TABLE customer (id TEXT PRIMARY KEY, full_name TEXT NOT NULL);
+CREATE TABLE sales_order (id TEXT PRIMARY KEY, customer_id TEXT NOT NULL,
+  FOREIGN KEY (customer_id) REFERENCES customer(id));
+CREATE TABLE order_line (id TEXT PRIMARY KEY, order_id TEXT NOT NULL, product_id TEXT NOT NULL,
+  qty INTEGER NOT NULL,
+  FOREIGN KEY (order_id) REFERENCES sales_order(id),
+  FOREIGN KEY (product_id) REFERENCES product(id));
+CREATE TABLE supplier (id TEXT PRIMARY KEY, vendor TEXT NOT NULL);
+CREATE TABLE shipment (id TEXT PRIMARY KEY, supplier_id TEXT NOT NULL,
+  FOREIGN KEY (supplier_id) REFERENCES supplier(id));
+CREATE TABLE warehouse (id TEXT PRIMARY KEY, site TEXT NOT NULL);
+INSERT INTO category VALUES ('CAT-1','食品'),('CAT-2','用品');
+INSERT INTO product VALUES ('PRD-1','CAT-1','饼干'),('PRD-2','CAT-2','纸巾');
+INSERT INTO customer VALUES ('CUS-1','甲方'),('CUS-2','乙方');
+INSERT INTO sales_order VALUES ('SO-1','CUS-1'),('SO-2','CUS-2');
+INSERT INTO order_line VALUES ('OL-1','SO-1','PRD-1',2),('OL-2','SO-2','PRD-2',3);
+INSERT INTO supplier VALUES ('SUP-1','供应商甲'),('SUP-2','供应商乙');
+INSERT INTO shipment VALUES ('SHP-1','SUP-1'),('SHP-2','SUP-2');
+INSERT INTO warehouse VALUES ('WH-1','一号仓'),('WH-2','二号仓');
+`});
  await page.goto('/');
  await page.getByLabel('接入目标').fill('多概念分组核对');
  await page.getByLabel('选择材料').setInputFiles(database);
@@ -174,55 +207,53 @@ test('概念多时草案按概念折叠分组并支持待决筛选（FDE2-08）'
  const request=callTool('intake_inference',{session_id:sid}) as Discovery & {
   expected_revision:string;source_revision:string;
  };
- const fk=request.catalog!.relationships.find(link=>link.origin==='declared');
+ const selected=request.catalog!.relationships.filter(link=>
+  !(link.source_table==='order_line'&&link.target_table==='product'));
+ expect(selected.length).toBe(request.catalog!.relationships.length-1);
  callTool('ontology_discovery_propose',{
   session_id:sid,expected_revision:request.expected_revision,
-   proposal:{source_revision:request.source_revision,entities:[
-   {name:'销售单',table:'doc_hdr',grain:'每个账簿内的一份销售单',identity:['book','doc_no'],
-    properties:[{name:'客户',column:'party_no'}]},
-   {name:'销售明细',table:'doc_line',grain:'销售单的一条明细',identity:['book','doc_no','seq']},
-  ],relationships:[{name:'所属订单',evidence_id:fk!.id}]},
- });
+  proposal:{source_revision:request.source_revision,entities:[
+   {name:'category',table:'category',grain:'每个商品分类一行',identity:['id'],
+    properties:[{name:'label',column:'label'}]},
+   {name:'product',table:'product',grain:'商品主数据',identity:['id'],
+    properties:[{name:'label',column:'label'}]},
+   {name:'customer',table:'customer',grain:'每个客户一行',identity:['id'],
+    properties:[{name:'full_name',column:'full_name'}]},
+   {name:'sales_order',table:'sales_order',grain:'每张销售订单一行',identity:['id']},
+   {name:'order_line',table:'order_line',grain:'订单里的一条明细',identity:['id'],
+    properties:[{name:'qty',column:'qty'}]},
+   {name:'supplier',table:'supplier',grain:'每个供应商一行',identity:['id'],
+    properties:[{name:'vendor',column:'vendor'}]},
+   {name:'shipment',table:'shipment',grain:'每次发货一行',identity:['id']},
+  ],relationships:selected.map(link=>({name:`关系_${link.source_table}_${link.target_table}`,
+   evidence_id:link.id}))}},
+ );
  await expect(page.getByRole('heading',{name:'本体草案',exact:true})).toBeVisible({timeout:20000});
- // 概念不多时保持平铺。
- await expect(page.getByTestId('concept-groups')).toHaveCount(0);
- // 路由改写把草案扩成 8 个概念（真实制度 24 个概念的形态），并留一条未采用
- // 关系：只有被它触及的概念有待决项。
- const viewRoute=`**/api/sessions/${sid}/view`;
- await page.route(viewRoute,async route=>{
-  const response=await route.fetch();
-  const body=await response.json();
-  const draft=body.discovery.draft;
-  if(draft){
-   draft.entities=[...draft.entities,...Array.from({length:6},(_,index)=>({
-    name:`备选概念${index+1}`,table:'party',grain:'每个备选概念一行',identity:['party_no'],
-    properties:[{name:'名称',column:'nm'}],extension_columns:[],
-   }))];
-   draft.unresolved_relationships=[{id:'injected',origin:'sample_supported',
-    source_table:'party',source_columns:['party_no'],target_table:'doc_hdr',target_columns:['book'],
-    matched_rows:2,checked_rows:2,sampled:false,ambiguous:false,cardinality:'many_to_one',name:'备选关联'}];
-  }
-  await route.fulfill({response,json:body});
- });
- // 分组折叠：概要（概念名、身份、属性数、证据来源、待决数）可见，正文收起。
+ // 7 个概念超过阈值，按概念折叠分组：概要可见，正文默认收起。
  const groups=page.getByTestId('concept-groups');
  await expect(groups).toBeVisible({timeout:20000});
- const summary=page.getByTestId('concept-group-销售单').locator('summary');
- await expect(summary).toContainText('身份 book + doc_no');
+ const product=page.getByTestId('concept-group-product');
+ const summary=product.locator('summary');
+ await expect(summary).toContainText('身份 id');
  await expect(summary).toContainText('1 个属性');
- await expect(summary).toContainText('证据来源 doc_hdr');
+ await expect(summary).toContainText('证据来源 product');
  await expect(summary).toContainText('待决 1 项');
- await expect(page.getByText('每个账簿内的一份销售单')).toBeHidden();
- // 顶部概念目录列出全部概念。
- await expect(groups.locator('.concept-toc')).toContainText('销售明细');
- await expect(groups.locator('.concept-toc')).toContainText('备选概念6');
+ await expect(page.getByText('商品主数据')).toBeHidden();
+ // 顶部概念目录列出全部 7 个概念，并标出待决数。
+ for(const name of ['category','product','customer','sales_order','order_line','supplier','shipment'])
+  await expect(groups.locator('.concept-toc')).toContainText(name);
+ await expect(groups.locator('.concept-toc')).toContainText('product（待决 1）');
+ // 目录是导航：点没有待决的 category 也会展开该组。
+ await groups.locator('.concept-toc').getByRole('link',{name:'category'}).click();
+ await expect(page.getByText('每个商品分类一行')).toBeVisible();
  // 逐个展开后才显示正文。
  await summary.click();
- await expect(page.getByText('每个账簿内的一份销售单')).toBeVisible();
- // 只看有待决项：没有待决的概念不显示。
+ await expect(page.getByText('商品主数据')).toBeVisible();
+ // 只看有待决项：只留下 order_line 与 product，没有待决的概念不显示。
  await page.getByLabel('只看有待决项').check();
- await expect(page.getByTestId('concept-group-销售单')).toBeVisible();
- await expect(page.getByTestId('concept-group-销售明细')).toHaveCount(0);
- await expect(page.getByTestId('concept-group-备选概念1')).toBeVisible();
- await page.unroute(viewRoute);
+ await expect(product).toBeVisible();
+ await expect(page.getByTestId('concept-group-order_line')).toBeVisible();
+ await expect(page.getByTestId('concept-group-category')).toHaveCount(0);
+ await expect(page.getByTestId('concept-group-customer')).toHaveCount(0);
+ await expect(groups.locator('.concept-toc')).not.toContainText('customer');
 });

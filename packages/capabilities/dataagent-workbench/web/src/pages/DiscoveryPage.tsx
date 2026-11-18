@@ -1,5 +1,5 @@
 import {useEffect,useRef,useState} from 'react';
-import {api,ApiError,display,humanDetail,technicalDetail} from '../client';
+import {api,ApiError,draftEntityLabel,display,humanDetail,invalidateOntologyTitles,technicalDetail,valueTypeLabel,entityTypeLabel} from '../client';
 import type {View,PublishCandidate,PublishDisposition} from '../client';
 import type {IntakeSession} from '../generated/IntakeSession';
 import {DiscoveryConcepts} from '../components/DiscoveryConcepts';
@@ -50,7 +50,22 @@ function RelationshipList({items,tableName}:{items:Relationship[];tableName?:(na
 
 const coverageNames:Record<string,string>={sampled:'抽样观察',partial:'部分读取',unknown:'覆盖未知'};
 const dispositionKindNames:Record<string,string>={unresolved_table:'未建模的表',unresolved_relationship:'未采用的关系',coverage_gap:'覆盖缺口',coverage:'来源覆盖'};
-type OpenItem={kind:string;ref:string;label:string};
+// 候选与草案的差异（后端 candidate.dropped）：Agent 补全时没有带入候选的
+// 草案已选关系、概念与属性。发布确认区必须逐项列出并让用户勾选同意。
+type DroppedItem={kind:'relationship'|'concept'|'property';ref:string;name?:string;
+ table?:string;concept?:string;column?:string;source_table?:string;source_columns?:string[];
+ target_table?:string;target_columns?:string[];cardinality?:string};
+type PublishCandidateView=PublishCandidate&{
+ dropped?:DroppedItem[];
+ revision_diff?:{destructive?:boolean;
+  removed_properties?:{concept:string;property:string}[];
+  removed_concepts?:string[]};
+};
+type OpenItem={kind:string;ref:string;label:string;dropped?:boolean;
+ // 后端门禁要求 Agent 处置的项为 true；仅需用户确认的放弃项为 false。
+ needsDisposition?:boolean;
+ // 修订差异已经逐项列出并带「旧数据不迁移」确认的删除项，不再重复要求勾选。
+ externalAck?:boolean};
 // 草案里的未决项与覆盖缺口：发布前必须逐项排除或接受（D1 门禁在服务端复核，
 // 这里先点名给用户核对）。表名按来源文件转成可读标签，不显示内部记录集 ID。
 function openItems(draft:NonNullable<Discovery['draft']>,catalog:DiscoveryCatalog|null,session:IntakeSession):OpenItem[]{
@@ -67,6 +82,28 @@ function openItems(draft:NonNullable<Discovery['draft']>,catalog:DiscoveryCatalo
  if(coverage!=='full')
   items.push({kind:'coverage',ref:coverage,label:`来源覆盖 ${coverageNames[coverage]||coverage}`});
  return items;
+}
+function droppedItems(dropped:DroppedItem[],label:(table:string)=>string,
+ removed?:{properties:Set<string>;concepts:Set<string>}):OpenItem[]{
+ return dropped.map(item=>{
+  if(item.kind==='relationship'){
+   const endpoints=`${label(item.source_table||'')} → ${label(item.target_table||'')}`;
+   const detail=[item.name,endpoints].filter(Boolean).join(' · ');
+   return {kind:'unresolved_relationship',ref:item.ref,dropped:true,
+    needsDisposition:true,label:`补全时放弃的草案关系${detail?` ${detail}`:''}`};
+  }
+  // 防御分支：后端要求每个草案实体都补全，概念目前不会被放弃；关系与属性
+  // 才是可到达、需要逐项确认的删除项。
+  if(item.kind==='concept')
+   return {kind:'dropped_concept',ref:item.ref,dropped:true,needsDisposition:false,
+    externalAck:removed?.concepts.has(item.name||item.ref)===true,
+    label:`补全时放弃的草案概念 ${item.name||item.ref}`};
+  const name=[item.concept,item.name||item.column||item.ref].filter(Boolean).join('.');
+  const column=item.column&&item.column!==item.name?`（来源列 ${item.column}）`:'';
+  return {kind:'dropped_property',ref:item.ref,dropped:true,needsDisposition:false,
+   externalAck:removed?.properties.has(`${item.concept}.${item.name}`)===true,
+   label:`补全时放弃的草案属性 ${name}${column}`};
+ });
 }
 // Agent 处置的影响说明（FDE2-07）：勾选核对前把每种处置的后果说清楚。
 const dispositionImpacts:Record<string,Record<'exclude'|'accept',string>>={
@@ -85,12 +122,17 @@ const dispositionImpacts:Record<string,Record<'exclude'|'accept',string>>={
 };
 const impactOf=(item:OpenItem,action:'exclude'|'accept')=>
  dispositionImpacts[item.kind]?.[action]||'该处置随候选记录在案。';
+// 补全时被放弃的草案概念/属性没有 Agent 处置可核对；仍要说明不进入候选的影响。
+const droppedImpacts:Record<string,string>={
+ dropped_concept:'这个草案概念不会进入本体，发布后新任务按本体查询不到对应范围的数据。',
+ dropped_property:'这个草案属性不会进入本体，该字段的数据不在本体中提供。',
+};
 const shortDigest=(value:string|undefined)=>value?value.replace('sha256:','').slice(0,12):'—';
 
-// 发布区块：候选定义摘要、来源快照摘要、未决项处置状态。草案 pending 但
-// 已有有效候选时也直接显示，用户核对后一次确认即发布；Agent 已下的处置
-// 逐项列出并要求逐项勾选同意（FDE2-07），未处置项点名并阻断，确认由人
-// 勾选后提交（网页是唯一确认通道）。
+// 发布区块：候选定义摘要、来源快照摘要、未决项与补全放弃项的处置状态。草案
+// pending 但已有有效候选时也直接显示，用户核对后一次确认即发布；Agent 已下的
+// 处置与补全时放弃的草案项逐项列出并要求逐项勾选同意（FDE2-07），未处置项点名
+// 并阻断，确认由人勾选后提交（网页是唯一确认通道）。
 function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOntologies}:{
  session:IntakeSession;discovery:Discovery;reload:()=>Promise<void>;
  onError:(error:unknown)=>void;onOpenSession:(id:string)=>void;onOpenOntologies?:()=>void;
@@ -100,7 +142,7 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
  const tables:CatalogTable[]=catalog?.tables||[];
  const label=(table:string)=>tableLabel(table,tables,session);
  const base=`/api/sessions/${session.id}`;
- const [candidate,setCandidate]=useState<PublishCandidate|null>(null),[checked,setChecked]=useState(false),[busy,setBusy]=useState(false);
+ const [candidate,setCandidate]=useState<PublishCandidateView|null>(null),[checked,setChecked]=useState(false),[busy,setBusy]=useState(false);
  const [agreed,setAgreed]=useState<Record<string,boolean>>({});
  const [migrationAck,setMigrationAck]=useState(false);
  const [failure,setFailure]=useState<{text:string;action:'rediscover'|'refresh'}|null>(null),[copied,setCopied]=useState(false),[copiedReturn,setCopiedReturn]=useState(false);
@@ -108,9 +150,9 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
  // 记录被后端按过期拒绝的候选引用；只有换到不同且一致的候选才清除过期标记。
  const rejectedRef=useRef('');
  const summary=discovery.publish_candidate||null;
- const fetchCandidate=async()=>setCandidate(await api<PublishCandidate|null>(base+'/publish/candidate'));
+ const fetchCandidate=async()=>setCandidate(await api<PublishCandidateView|null>(base+'/publish/candidate'));
  useEffect(()=>{let cancelled=false;
-  (async()=>{try{const data=await api<PublishCandidate|null>(base+'/publish/candidate');if(!cancelled)setCandidate(data);}
+  (async()=>{try{const data=await api<PublishCandidateView|null>(base+'/publish/candidate');if(!cancelled)setCandidate(data);}
    catch(error){if(!cancelled)onError(error);}})();
   return()=>{cancelled=true;};
  },[summary?.ref,summary?.state,draft.ref,session.revision]);
@@ -133,12 +175,30 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
  // 过期候选（D1 会拒绝）：任务修订已越过候选记录的修订时，确认被禁用并提示
  // 重新准备，避免反复提交同一失效候选。
  const expired=staleHint||(!!current&&String(current.session_revision)!==String(session.revision));
- const items=openItems(draft,catalog,session);
  const dispositionOf=(item:OpenItem)=>(current?.dispositions||[]).find((entry:PublishDisposition)=>entry.kind===item.kind&&entry.ref===item.ref);
- const undisposed=items.filter(item=>!dispositionOf(item));
- // Agent 处置的逐项同意（FDE2-07）：每一项都要用户勾选核对，全部同意前确认发布禁用。
- const dispositionsAgreed=items.every(item=>{const disposition=dispositionOf(item);
-  return !disposition||agreed[`${item.kind}:${item.ref}`]===true;});
+ // 发布区覆盖候选里的全部处置：草案未决项之外，还要列出 Agent 补全时
+ // 放弃（未带入候选）的草案关系/概念/属性——数据取自后端候选与草案的
+ // 差异（candidate.dropped），不能只看草案自己声明的未决项。
+ const draftItems=openItems(draft,catalog,session);
+ const removedProperties=new Set((current?.revision_diff?.removed_properties||[])
+  .map(item=>`${item.concept}.${item.property}`));
+ const removedConcepts=new Set(current?.revision_diff?.removed_concepts||[]);
+ const dropped=droppedItems(current?.dropped||[],label,
+  {properties:removedProperties,concepts:removedConcepts});
+ const items=[...draftItems,...dropped.filter(candidateItem=>
+  !draftItems.some(existing=>existing.kind===candidateItem.kind&&existing.ref===candidateItem.ref))];
+ // 防御性兜底：后端若有发布区还没命名的处置，也逐项列出而不是静默漏掉。
+ const orphanDispositions=(current?.dispositions||[]).filter(entry=>
+  !items.some(item=>item.kind===entry.kind&&item.ref===entry.ref));
+ const allItems:OpenItem[]=[...items,...orphanDispositions.map(entry=>({kind:entry.kind,ref:entry.ref,
+  label:`${dispositionKindNames[entry.kind]||entry.kind} ${entry.ref}`}))];
+ // 未处置只阻断后端门禁要求 Agent 表态的项；补全时放弃的概念/属性只需用户确认。
+ const undisposed=allItems.filter(item=>item.needsDisposition!==false&&!dispositionOf(item));
+ // Agent 处置与被放弃项的逐项同意：每一项都要用户勾选核对，全部同意前确认发布禁用。
+ // 修订差异里的删除项同样逐项记录同意状态；「旧数据不迁移」迁移确认始终
+ // 独立，不论单项还是多项删除都不代勾任何被放弃项。
+ const agreements=allItems.filter(item=>item.needsDisposition===false||!!dispositionOf(item));
+ const dispositionsAgreed=agreements.every(item=>agreed[`${item.kind}:${item.ref}`]===true);
  const copyPrompt=(text:string,done:()=>void)=>navigator.clipboard.writeText(text).then(done).catch(onError);
  // 复制给用户转交 Agent 的指令只用业务话术，不出现内部工具名（FDE2-12）。
  const completionPrompt=`继续当前工作区的本体发现任务 ${session.id}。草案 ${draft.ref} ${draft.state==='pending'?'仍待审核':'已通过审核'}；请补全每个概念的属性值类型、必需性与身份字段，对关系给出端点与角色，对未决项与覆盖缺口逐项给出排除或接受的处置并说明影响，生成发布候选供我在工作台确认。`;
@@ -153,6 +213,8 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
     expected_revision:session.revision,confirmed:true,reason:'工作台人工确认发布',
     ...(revision?{acknowledge_no_migration:migrationAck}:{}),
    });
+   // 注册表新增了本体：清掉标题缓存，同页签后续新建任务的面包屑能拿到新标题。
+   invalidateOntologyTitles();
    setChecked(false);setMigrationAck(false);setFailure(null);
    await reload();await fetchCandidate();
   }catch(error){
@@ -212,50 +274,71 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
    <h3>候选定义摘要 · {current.title||current.ontology_id}</h3>
    <DiscoveryConcepts testid={name=>`publish-concept-${name}`} concepts={Object.entries(current.definition.concepts).map(([name,concept])=>{
     const entity=draft.entities.find(item=>item.name===name);
-    return {name,identity:concept.identity_fields.join(' + '),
+    return {name,label:draftEntityLabel(name),identity:concept.identity_fields.join(' + '),
      propertyCount:Object.keys(concept.properties).length,
      sourceLabel:entity?tableLabel(entity.table,tables,session):'—',
      pending:entity?conceptPending(entity.table,draft,label):[],
      content:<>
-      <h3>{name}</h3><dl><dt>实体类型</dt><dd><code>{concept.entity_type}</code></dd>
+      <h3>{draftEntityLabel(name)}</h3><dl><dt>实体类型</dt><dd><code>{entityTypeLabel(concept.entity_type)}</code></dd>
        <dt>身份字段</dt><dd>{concept.identity_fields.join(' + ')}</dd></dl>
-      <table className="mapping-table"><thead><tr><th>属性</th><th>值类型</th><th>必需</th></tr></thead>
+      <div className="mapping-table-scroll"><table className="mapping-table"><thead><tr><th>属性</th><th>值类型</th><th>必需</th></tr></thead>
        <tbody>{Object.entries(concept.properties).map(([prop,definition])=><tr key={prop}>
-        <td>{prop}</td><td>{definition.value_type}</td><td>{definition.required?'必需':'可选'}</td></tr>)}</tbody>
-      </table>
+        <td>{prop}</td><td>{valueTypeLabel(definition.value_type)}</td><td>{definition.required?'必需':'可选'}</td></tr>)}</tbody>
+      </table></div>
      </>};
    })}/>
    {Object.keys(current.definition.relations||{}).length>0&&<><h3>拟登记的关系</h3>
     <ul className="discovery-links">{Object.entries(current.definition.relations).map(([name,relation])=>{
      const roles=Array.isArray(relation)?relation:relation.roles;
-     return <li key={name}><div><strong>{name}</strong> · <code>{Array.isArray(relation)?name:relation.subject_concept}</code>（{roles[0]}） → <code>{Array.isArray(relation)?name:relation.object_concept}</code>（{roles[1]}）</div></li>;
+     return <li key={name}><div><strong>{name}</strong> · <code>{draftEntityLabel(Array.isArray(relation)?name:relation.subject_concept||name)}</code>（{roles[0]}） → <code>{draftEntityLabel(Array.isArray(relation)?name:relation.object_concept||name)}</code>（{roles[1]}）</div></li>;
     })}</ul></>}
    <h3>来源快照摘要</h3>
-   <dl className="publish-snapshot"><div><dt>来源修订</dt><dd><code title={current.source_revision}>{shortDigest(current.source_revision)}</code></dd></div>
-    <div><dt>结构指纹</dt><dd><code title={current.structure_fingerprint}>{shortDigest(current.structure_fingerprint)}</code></dd></div>
-    <div><dt>快照摘要</dt><dd><code title={current.source_snapshot}>{shortDigest(current.source_snapshot)}</code></dd></div>
-    <div><dt>本体标识</dt><dd><code>{current.ontology_id}</code> · 修订 {current.ontology_revision}</dd></div></dl>
+   {/* 内部哈希（来源修订、结构指纹、快照摘要）收进折叠的「技术详情」（FDE2-11），
+       正文只保留本体标识与修订号。 */}
+   <dl className="publish-snapshot"><div><dt>本体标识</dt><dd><code>{current.ontology_id}</code> · 修订 {current.ontology_revision}</dd></div></dl>
+   <details className="tech-detail publish-tech-detail" data-testid="publish-tech-detail"><summary>技术详情</summary>
+    <dl className="publish-snapshot">
+     <div><dt>来源修订</dt><dd><code title={current.source_revision}>{shortDigest(current.source_revision)}</code></dd></div>
+     <div><dt>结构指纹</dt><dd><code title={current.structure_fingerprint}>{shortDigest(current.structure_fingerprint)}</code></dd></div>
+     <div><dt>快照摘要</dt><dd><code title={current.source_snapshot}>{shortDigest(current.source_snapshot)}</code></dd></div>
+    </dl></details>
   </>:<div className="notice amber"><p>草案{draft.state==='pending'?'待审核':'已通过审核'}。让 Agent 补全值类型、必需性与身份字段并生成发布候选后，在这里人工确认发布；Agent 工具不能代为确认。</p>
    <div className="discovery-prompt"><code>{completionPrompt}</code><button className="secondary" onClick={()=>copyPrompt(completionPrompt,()=>setCopied(true))}>{copied?'已复制':'复制指令'}</button></div>
   </div>}
-  <h3>未决项与覆盖缺口</h3>
-  {items.length>0?<ul className="publish-items" data-testid="publish-open-items">{items.map(item=>{
+  <h3>未决项、补全放弃项与覆盖缺口</h3>
+  {allItems.length>0?<ul className="publish-items" data-testid="publish-open-items">{allItems.map(item=>{
    const disposition=dispositionOf(item);
    const key=`${item.kind}:${item.ref}`;
-   return <li key={key} data-testid="publish-open-item">
+   const dropped=item.dropped===true;
+   return <li key={key} data-testid={dropped?'publish-dropped-item':'publish-open-item'}
+    data-dropped={dropped?'true':undefined}>
     {disposition?<>
      <label className="publish-disposition">
       <input type="checkbox" checked={agreed[key]===true} disabled={!current||expired}
        onChange={event=>setAgreed(previous=>({...previous,[key]:event.target.checked}))}/>
       <span>{item.label} · <span className="ok">Agent 处置，待你核对</span></span>
      </label>
-     <p className="help">{disposition.action==='exclude'?'Agent 已排除':'Agent 已接受'}（{disposition.reason}）。影响：{impactOf(item,disposition.action)}</p>
+     <p className="help">{dropped&&'补全候选未带入该草案项。'}{disposition.action==='exclude'?'Agent 已排除':'Agent 已接受'}（{disposition.reason}）。影响：{impactOf(item,disposition.action)}</p>
+    </>:item.externalAck?<>
+     <label className="publish-disposition">
+      <input type="checkbox" checked={agreed[key]===true} disabled={!current||expired}
+       onChange={event=>setAgreed(previous=>({...previous,[key]:event.target.checked}))}/>
+      <span>{item.label} · <span className="warn">待你核对同意</span></span>
+     </label>
+      <p className="help">补全候选未带入该草案项。影响：{droppedImpacts[item.kind]||'该草案项不会进入本体。'}该删除项已在上方修订差异中列出，仍须单独勾选同意；「旧数据不迁移」迁移确认不能代替逐项同意。</p>
+    </>:item.needsDisposition===false?<>
+     <label className="publish-disposition">
+      <input type="checkbox" checked={agreed[key]===true} disabled={!current||expired}
+       onChange={event=>setAgreed(previous=>({...previous,[key]:event.target.checked}))}/>
+      <span>{item.label} · <span className="warn">未带入候选，待你核对同意</span></span>
+     </label>
+     <p className="help">补全候选未带入该草案项。影响：{droppedImpacts[item.kind]||'该草案项不会进入本体。'}</p>
     </>:<>{item.label} · <span className="warn">未处置</span></>}
-   </li>;})}</ul>:<p className="muted">无未决项与覆盖缺口。</p>}
+   </li>;})}</ul>:<p className="muted">无未决项、补全放弃项与覆盖缺口。</p>}
   {undisposed.length>0&&<div className="notice amber" data-testid="publish-blocked">
    <p>有 {undisposed.length} 项未处置，发布前必须逐项排除或接受：{undisposed.map(item=>item.label).join('；')}。请在补全指令中给出处置。</p>
   </div>}
-  {items.some(item=>dispositionOf(item))&&<details className="publish-return" data-testid="publish-return">
+  {allItems.some(item=>dispositionOf(item))&&<details className="publish-return" data-testid="publish-return">
    <summary>不同意某项处置？退回让 Agent 重做</summary>
    <p className="help">把这条指令发给 Agent：它会重新给出每项处置并生成新候选，新候选出现后再在这里核对；当前候选不会被它覆盖。</p>
    <div className="discovery-prompt"><code>{returnPrompt}</code><button className="secondary" onClick={()=>copyPrompt(returnPrompt,()=>setCopiedReturn(true))}>{copiedReturn?'已复制':'复制指令'}</button></div>
@@ -328,18 +411,18 @@ export function DiscoveryPage({view,reload,onNew,onError,onOpenSession,onOpenOnt
   </section>}
   {draft&&catalog&&<section className="discovery-card">
    <div className="panel-heading"><h2>本体草案</h2><span className="badge">{status}</span></div>
-   <DiscoveryConcepts concepts={draft.entities.map(entity=>({name:entity.name,
+   <DiscoveryConcepts concepts={draft.entities.map(entity=>({name:entity.name,label:draftEntityLabel(entity.name),
     identity:entity.identity.join(' + '),propertyCount:entity.properties.length,
     sourceLabel:label(entity.table),pending:conceptPending(entity.table,draft,label),
     content:<>
-     <h3>{entity.name}</h3><p>{entity.grain}</p>
+     <h3>{draftEntityLabel(entity.name)}</h3><p>{entity.grain}</p>
      <dl><dt>来源表</dt><dd><code>{label(entity.table)}</code></dd>
       <dt>标识</dt><dd>{entity.identity.length?entity.identity.join(' + '):'待确认'}</dd></dl>
-     {entity.properties.length>0&&<table className="mapping-table">
+     {entity.properties.length>0&&<div className="mapping-table-scroll"><table className="mapping-table">
       <thead><tr><th>属性</th><th>来源列</th><th>声明类型</th></tr></thead>
       <tbody>{entity.properties.map(prop=><tr key={prop.column}><td>{prop.name}</td>
-       <td><code>{prop.column}</code></td><td>{tables.find(item=>item.name===entity.table)?.columns[prop.column]?.type||'—'}</td></tr>)}</tbody>
-     </table>}
+       <td><code>{prop.column}</code></td><td>{valueTypeLabel(tables.find(item=>item.name===entity.table)?.columns[prop.column]?.type)}</td></tr>)}</tbody>
+     </table></div>}
      {entity.extension_columns.length>0&&<p className="muted">保留为扩展字段 · {entity.extension_columns.join(', ')}</p>}
     </>}))}/>
    <h3>拟采用的关系</h3><RelationshipList items={draft.relationships} tableName={label}/>
@@ -368,7 +451,11 @@ export function DiscoveryPage({view,reload,onNew,onError,onOpenSession,onOpenOnt
    onError={onError} onOpenSession={onOpenSession} onOpenOntologies={onOpenOntologies}/>}
   {catalog&&<section className="discovery-card">
    <h2>来源证据</h2>
-   <p className="muted">{catalog.tables.length} 张表 · 来源修订 <code title={discovery.source_revision}>{shortDigest(discovery.source_revision)}</code></p>
+   {/* 来源修订是内部哈希，收进折叠「技术详情」（FDE2-11）；details 是块级元素，
+       不嵌在 <p> 内。 */}
+   <p className="muted">{catalog.tables.length} 张表</p>
+   <details className="tech-detail"><summary>技术详情</summary>
+    来源修订 <code title={discovery.source_revision}>{shortDigest(discovery.source_revision)}</code></details>
    {catalog.tables.map(table=>{
     // 样本记录按表所属的来源取，多来源时不串表。
     const profile=table.source_id?profilesById.get(table.source_id):view.profiles[0];
@@ -380,11 +467,11 @@ export function DiscoveryPage({view,reload,onNew,onError,onOpenSession,onOpenOnt
     <summary><code>{label(table.name)}</code> <span className="muted">{table.rows_observed} 行{table.sampled?'抽样':'已观察'}{sourceNameOf(session,table.source_id)?` · ${sourceNameOf(session,table.source_id)}`:''}</span></summary>
     <p>主键与唯一键 · {table.keys.map(key=>key.join(' + ')).join(' / ')||'未观察到'}</p>
     {table.identity_keys.length<table.keys.length&&<p className="muted">含已观察空值的键不可用作标识。</p>}
-    <table className="mapping-table"><thead><tr><th>字段</th><th>声明类型</th><th>空值行</th><th>观测去重值</th>{rows.map((_,index)=><th key={index}>样本 {index+1}</th>)}</tr></thead>
+    <div className="mapping-table-scroll"><table className="mapping-table"><thead><tr><th>字段</th><th>声明类型</th><th>空值行</th><th>观测去重值</th>{rows.map((_,index)=><th key={index}>样本 {index+1}</th>)}</tr></thead>
      <tbody>{fields.map(column=><tr key={column.name}>
-      <td><code>{column.name}</code></td><td>{column.type||'—'}</td><td>{column.null_rows}</td><td>{column.distinct_values}</td>
+      <td><code>{column.name}</code></td><td>{valueTypeLabel(column.type)}</td><td>{column.null_rows}</td><td>{column.distinct_values}</td>
       {rows.map((row,index)=><td key={index}>{row.binary?.includes(column.name)?'二进制':display(row.values?.[column.name]).slice(0,160)}</td>)}
-     </tr>)}</tbody></table>
+     </tr>)}</tbody></table></div>
    </details>;})}
    {!draft&&<><h3>关系证据</h3><RelationshipList items={catalog.relationships} tableName={label}/></>}
    {catalog.gaps.length>0&&<ul>{catalog.gaps.map((gap,i)=><li key={i}>{gap.table?label(gap.table)+' · ':''}{gapLabels[gap.code]||gap.code}</li>)}</ul>}

@@ -1,5 +1,6 @@
 import {useEffect,useState} from 'react';
 import {api,translateError,originNames,ontologyStateNames,registryTitle} from '../client';
+import {browseConceptLabel} from '../ontologyBrowse';
 import type {BrowseRegistry,BrowseRegistryEntry} from '../ontologyBrowse';
 import {RevisionHistory,localDate} from '../components/RevisionHistory';
 
@@ -76,7 +77,9 @@ export function OntologiesPage({onNew,onBack,onError,onOpenInstances}:{
      <td><strong>{registryTitle(entry)}</strong><small><code>{entry.id}</code>{entry.published_at?` · 发布于 ${localDate(entry.published_at)}`:''}</small></td>
      <td>{entry.ontology_revision}</td>
      <td><span className="badge">{originNames[entry.origin]||entry.origin}</span></td>
-     <td>{entry.concepts.length>1?`${entry.concepts.length} 个概念 · ${entry.concepts.join('、')}`:entry.concepts[0]||'—'}</td>
+     <td>{entry.concepts.length>1
+      ?`${entry.concepts.length} 个概念 · ${entry.concepts.map(browseConceptLabel).join('、')}`
+      :entry.concepts[0]?browseConceptLabel(entry.concepts[0]):'—'}</td>
      <td data-testid={`ontology-counts-${entry.id}`}><div className="ontology-counts">
       {entry.concepts.length
        ?entry.concepts.map(name=>{
@@ -84,12 +87,12 @@ export function OntologiesPage({onNew,onBack,onError,onOpenInstances}:{
         return <div key={name} className="ontology-count-item">
          <button className="ontology-count-link"
           data-testid={`concept-count-${entry.id}-${name}`}
-          title={`按概念 ${name} 浏览当前修订的已发布对象`}
+          title={`按概念 ${browseConceptLabel(name)} 浏览当前修订的已发布对象`}
           onClick={()=>onOpenInstances(entry.id,name)}>
-          {entry.concepts.length>1?`${name} · `:''}<strong>{counts.current}</strong> 个对象</button>
+          {entry.concepts.length>1?`${browseConceptLabel(name)} · `:''}<strong>{counts.current}</strong> 个对象</button>
          {counts.history>0&&<button className="ontology-history-link"
           data-testid={`concept-history-${entry.id}-${name}`}
-          title={`查看概念 ${name} 历史修订中的 ${counts.history} 个已发布对象`}
+          title={`查看概念 ${browseConceptLabel(name)} 历史修订中的 ${counts.history} 个已发布对象`}
           onClick={()=>onOpenInstances(entry.id,name,true)}>历史累计 {counts.history} 个</button>}
         </div>;
        })

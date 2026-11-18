@@ -1,5 +1,5 @@
 import {useEffect,useRef,useState} from 'react';
-import {api,ApiError,display,transformNames,propertyLabel,entityTypeLabel,sourceProblem,issueReasons,conceptOf} from '../client';
+import {api,ApiError,display,transformNames,propertyLabel,sourceProblem,issueReasons,conceptOf,conceptLabel,builtinTitles,ontologyTitles} from '../client';
 import type {View,Draft,FieldBinding,IntakeSession,MappingSpec,SourceProfile,CorrectionView,DispositionOption,Issue} from '../client';
 import {SourceViewer} from '../components/SourceViewer';
 import {DiscoveryPage} from './DiscoveryPage';
@@ -69,6 +69,8 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession
  const [field,setField]=useState(''),[sourceId,setSourceId]=useState(''),[record,setRecord]=useState(0),[dirty,setDirty]=useState(false),[busy,setBusy]=useState(false),[onlyProblems,setOnlyProblems]=useState(false),[draftState,setDraftState]=useState('');
  // FDE-12：字段详情里的纠正同样给绿色成功提示；被其他问题挡住时点名，不走红色错误条。
  const [correctionNotice,setCorrectionNotice]=useState<{kind:'green'|'amber';text:string}|null>(null);
+ // 面包屑用的本体名：任务目标本体的注册表标题（FDE2-11）。
+ const [ontologyName,setOntologyName]=useState('');
  // FDE2-05：未映射来源的整源处置（本任务不使用该来源），原因必填、写入审计。
  const [disposalReasons,setDisposalReasons]=useState<Record<string,string>>({});
  // 用户显式勾选的来源范围（「纳入映射」）：与绑定是否被改过无关，沿用默认
@@ -134,6 +136,13 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession
   }
  }
  useEffect(()=>{load().catch(onError);const timer=setInterval(()=>load().catch(onError),1500);return()=>clearInterval(timer);},[sessionId]);
+ // 面包屑用任务目标本体的注册表标题（FDE2-11），一次拉取后缓存复用。
+ const targetOntologyId=view?.ontology.id;
+ useEffect(()=>{
+  let cancelled=false;
+  if(targetOntologyId)ontologyTitles().then(titles=>{if(!cancelled)setOntologyName(titles[targetOntologyId]||'');});
+  return()=>{cancelled=true;};
+ },[targetOntologyId]);
  const profile=sourceId?view?.profiles.find(p=>p.source_id===sourceId):view?.profiles[0];
  const multiple=(view?.session.sources.length||0)>1;
  function selectSource(id:string){
@@ -281,9 +290,13 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession
    const name=view.session.sources.find(s=>s.source_id===issue.source_id);
    return `${String((name as {options?:{display_name?:string}}|undefined)?.options?.display_name||'材料')} · 材料读取失败，请更换文件后重新接入`;
   }
-  return `${issue.object||'全部对象'}${issue.target?` · ${propertyLabel(issue.target)}`:''} · ${issue.reason||issueReasons[issue.code||'']||display(issue.code)}`;
+  // FDE2-11：已知 code 用前端的通用中文说法（不再用采购口径的「单据号」），
+  // 前端未收录的 code 才退回后端给的 reason。
+  return `${issue.object||'全部对象'}${issue.target?` · ${propertyLabel(issue.target)}`:''} · ${issueReasons[issue.code||'']||issue.reason||display(issue.code)}`;
  };
- return <main className="workspace"><div className="task-header"><div><div className="eyebrow">采购资料 / 接入任务</div><h1>{done?'接入已保存':'核对来源与 Ontology 映射'}</h1><p className={failed?'muted problem-text':'muted'}>{working?'正在识别材料并探查结构，已完成结果会持续保留。':failed?'材料读取失败，请查看左侧来源的问题说明并更换材料。':canRetry?'部分来源待重试，已取得的证据可以查看。':'识别与探查已完成'}{view.mapping_reused?' · 已复用经过验证的映射':''}</p></div><div className="save-buttons">
+ // 面包屑与标题跟随任务目标本体（FDE2-11）：不再写死「采购资料 / Ontology」。
+ const crumb=ontologyName||builtinTitles[view.ontology.id]||conceptLabel(conceptOf(view.ontology,view.ontology_concept));
+ return <main className="workspace"><div className="task-header"><div><div className="eyebrow">{crumb} / 接入任务</div><h1>{done?'接入已保存':'核对来源与本体映射'}</h1><p className={failed?'muted problem-text':'muted'}>{working?'正在识别材料并探查结构，已完成结果会持续保留。':failed?'材料读取失败，请查看左侧来源的问题说明并更换材料。':canRetry?'部分来源待重试，已取得的证据可以查看。':'识别与探查已完成'}{view.mapping_reused?' · 已复用经过验证的映射':''}</p></div><div className="save-buttons">
   {canRetry&&<button className="primary" disabled={busy||working} onClick={async()=>{
    setBusy(true);try{await api(base+'/advance','POST',{});await load(true);}catch(error){onError(error);}finally{setBusy(false);}
   }}>继续探查</button>}
@@ -292,7 +305,7 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession
  <div className="work-grid"><section className="source-panel"><div className="panel-heading"><strong>来源</strong><span className="badge">{view.session.sources.length} 份材料</span></div>
   <div className="source-tabs">{view.session.sources.map(s=><button key={s.source_id} className={(profile?.source_id===s.source_id?'active ':'')+'source-tab'} onClick={()=>selectSource(s.source_id)}><span>▤</span><span>{String(s.options?.display_name||s.locator_ref.split('/').pop())}</span></button>)}</div>
   <SourceViewer sessionId={sessionId} profile={profile} anchor={anchor as never} recordIndex={sourceRow} sourceField={binding?.source_field}/>
- </section><section className="mapping-panel"><div className="panel-heading"><strong>目标映射</strong><span className="badge">{entityTypeLabel(conceptOf(view.ontology,view.ontology_concept).entity_type)}</span></div>
+ </section><section className="mapping-panel"><div className="panel-heading"><strong>目标映射</strong><span className="badge">{conceptLabel(conceptOf(view.ontology,view.ontology_concept))}</span></div>
  <div className="mapping-toolbar"><span><strong>{Object.keys(bindings).length}</strong> / {Object.keys(conceptProperties).length} 字段已绑定</span><label><input type="checkbox" checked={onlyProblems} onChange={e=>setOnlyProblems(e.target.checked)}/>只看待处理</label></div>
  <div className="mapping-table-scroll"><table className="mapping-table"><thead><tr><th>本体属性</th><th>来源字段</th><th>转换方式</th><th>预览值</th></tr></thead><tbody>{fields.map(name=>{
   const b=bindings[name];const issue=view.preview?.issues.some(i=>(i as Record<string,unknown>).target===name);

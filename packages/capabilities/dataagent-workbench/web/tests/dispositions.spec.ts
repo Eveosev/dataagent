@@ -26,7 +26,7 @@ const missingNumberCsv=Buffer.from('number,amount,currency,issuer\nINV-001,1260,
 // 第 2 行把表头原样重复了一遍：探查会把它当数据记录，处置时才算「疑似表头行」。
 const repeatedHeaderCsv=Buffer.from('number,amount,currency,issuer\nnumber,amount,currency,issuer\nINV-001,1260,CNY,华信办公\n');
 
-async function openObjectPage(page:import('@playwright/test').Page,files:Parameters<import('@playwright/test').Page['setInputFiles']>[1]){
+async function openObjectPage(page:import('@playwright/test').Page,files:Parameters<import('@playwright/test').Page['setInputFiles']>[1],missingKey=false){
  await page.goto('/');
  await page.getByLabel('接入目标').fill('接入缺键记录并核对处置入口');
  await page.getByLabel('选择材料').setInputFiles(files);
@@ -34,19 +34,27 @@ async function openObjectPage(page:import('@playwright/test').Page,files:Paramet
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByText('识别与探查已完成')).toBeVisible();
  await page.getByRole('button',{name:'生成映射预览'}).click();
+ // 预览问题用中文说明并点名对象，不再显示内部代码（FDE2-11）。
+ await expect(page.getByTestId('mapping-issues')).not.toContainText('ontology.');
+ if(missingKey)await expect(page.getByTestId('mapping-issues')).toContainText('缺少身份字段值，无法确定对象');
  await page.getByRole('button',{name:'打开对象页'}).click();
  await expect(page.getByRole('heading',{name:'核对业务对象'})).toBeVisible();
 }
 
 test('缺键的真实数据行不给「排除表头行」处置',async({page})=>{
  slowTimeout(40000);
- await openObjectPage(page,{name:'发票.csv',mimeType:'text/csv',buffer:missingNumberCsv});
+ await openObjectPage(page,{name:'发票.csv',mimeType:'text/csv',buffer:missingNumberCsv},true);
  // FDE-11：缺键对象不显示 candidate:<哈希>，改用来源描述点名（第 3 行是文件里的原始行号）。
- await expect(page.locator('.source-tab').filter({hasText:'来源行 3'})).toContainText('发票.csv · 来源行 3（无单号）');
+ await expect(page.locator('.source-tab').filter({hasText:'来源行 3'})).toContainText('发票.csv · 来源行 3（缺少单据编号）');
  await expect(page.getByText(/candidate:/)).toHaveCount(0);
+ // FDE-11：徽标与列名是中文。
+ await expect(page.locator('.mapping-panel .panel-heading .badge')).toContainText('采购单据');
+ await expect(page.locator('.detail-panel .panel-heading .badge')).toContainText('未核对');
+ await expect(page.locator('.mapping-table thead th').first()).toHaveText('本体属性');
  // FDE2-06：这是真实数据行（900 / CNY / 北明科技），不是表头——不给「排除」，
- // 让用户去补单号或部分保存，而不是把真数据排掉。
- const issue=page.getByTestId('pending-issue').filter({hasText:'缺少单据号'});
+ // 让用户去补单号或部分保存，而不是把真数据排掉（问题文案沿用 FDE2-11 的
+ // 通用说法「缺少身份字段值」）。
+ const issue=page.getByTestId('pending-issue').filter({hasText:'缺少身份字段值'});
  await expect(issue).toContainText('阻断');
  await expect(issue.getByTestId('disposal-option')).toHaveCount(0);
  await expect(issue).not.toContainText('排除表头行或明显无关的记录');

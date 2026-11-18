@@ -41,6 +41,19 @@ export const ontologyStateNames:Record<string,string>={active:'在用',retired:'
 // 标题展示：内置 procurement 沿用中文习惯名，其余用注册表标题（缺省回 ID）。
 export const builtinTitles:Record<string,string>={procurement:'采购资料'};
 export const registryTitle=(entry:Pick<RegistryEntry,'id'|'title'>)=>builtinTitles[entry.id]||entry.title||entry.id;
+// 面包屑用的本体名（FDE2-11）：任务页不再写死「采购资料」，按任务目标本体
+// 显示注册表标题；注册表拉取失败时由调用方退回内置习惯名或概念名。
+let ontologyTitleCache:Promise<Record<string,string>>|null=null;
+// 发布会往注册表里写入新本体：确认发布后清掉缓存，面包屑下次进入任务页
+// 重新拉取，同页签新建的任务也能拿到新标题。
+export function invalidateOntologyTitles(){ontologyTitleCache=null;}
+export function ontologyTitles():Promise<Record<string,string>>{
+ if(!ontologyTitleCache)ontologyTitleCache=api<Registry>('/api/ontologies')
+  .then(data=>Object.fromEntries((data.ontologies||[]).map(entry=>[entry.id,registryTitle(entry)])))
+  // 失败不缓存，下一次调用重试，避免一次网络故障把空结果钉死到页签关闭。
+  .catch(()=>{ontologyTitleCache=null;return {};});
+ return ontologyTitleCache;
+}
 // 发布候选（GET /api/sessions/{sid}/publish/candidate）：人在网页确认的精确对象，
 // 携带完整定义、来源摘要与全部处置记录。
 export type PublishDisposition={kind:string;ref:string;action:'exclude'|'accept';reason:string};
@@ -60,7 +73,8 @@ export const issueReasons:Record<string,string>={
  'ontology.conflicting_values':'各来源的字段值不一致',
  'ontology.required_value_missing':'缺少必填值',
  'ontology.required_binding_missing':'必填属性没有映射',
- 'ontology.identity_unresolved':'缺少单据号，无法确定对象',
+ // FDE2-11：不再用采购口径的「单据号」，通用说法指向身份字段值。
+ 'ontology.identity_unresolved':'缺少身份字段值，无法确定对象',
  'ontology.conversion_failed':'值无法按目标类型转换',
  'ontology.evidence_missing':'值没有来源定位',
  'ontology.incomplete_source':'来源未完整读取',
@@ -193,7 +207,7 @@ export function humanDetail(raw:unknown):HumanDetail{
 // 探查缺口（FDE-10）：分区级缺口用中文直说，不显示内部代码。
 export const gapNames:Record<string,string>={
  ocr_engine_missing:'需要 OCR 引擎',ocr_empty:'该页没有可读文本（可能是空白页）',
- key_missing:'缺少单据号',time_budget_exceeded:'读取时间用尽，可继续探查',
+ key_missing:'缺少身份字段值',time_budget_exceeded:'读取时间用尽，可继续探查',
  malformed_row:'行列数不齐',invalid_input:'文件内容无法读取',probe_failed:'材料读取失败',
 };
 export type SourceProblem={title:string;detail?:string;next:string};
@@ -253,8 +267,35 @@ export const transformNames:Record<string,string>={identity:'保留原值',decim
 // 没有对应中文时保留原名，不猜不译。
 export const propertyNames:Record<string,string>={number:'单据编号',amount:'金额',currency:'币种',issuer:'开票方'};
 export const propertyLabel=(name:string)=>propertyNames[name]||name;
-export const entityTypeNames:Record<string,string>={PurchaseDocument:'采购单据'};
+// 实体类型中文标签（FDE2-11）：发现任务的常见英文实体名给中文说法；
+// 未收录的保留原名，不猜不译。
+export const entityTypeNames:Record<string,string>={
+ PurchaseDocument:'采购单据',SalesOrder:'销售单',SalesOrderLine:'销售明细',Customer:'客户',
+ ExpenseLine:'费用明细',ExpenseReport:'费用报销单',TravelRequest:'差旅申请',
+ TravelItinerary:'行程',Reimbursement:'报销单',ExpenseCategory:'费用类别',
+ TravelPolicy:'差旅标准',Employee:'员工',Department:'部门',City:'城市',
+ CostCenter:'成本中心',Invoice:'发票',
+};
 export const entityTypeLabel=(name:string)=>entityTypeNames[name]||name;
+// 草案实体 / 概念名（FDE2-11）：Agent 起的中文名保留原名，英文名查实体
+// 类型字典；都没有时保留原名。
+export function draftEntityLabel(name:string):string{
+ if(/[\u4e00-\u9fff]/.test(name))return name;
+ return entityTypeLabel(name);
+}
+// 概念徽标（FDE2-11）：本体定义里概念名本身是中文时直接用（发现任务的
+// Agent 常用中文命名），否则查实体类型字典，都没有时保留原名。
+export function conceptLabel(concept:{name:string;entity_type:string}):string{
+ if(/[\u4e00-\u9fff]/.test(concept.name))return concept.name;
+ return entityTypeLabel(concept.entity_type);
+}
+// 值类型中文标签（FDE2-11）：本体值类型（string/decimal…）与来源声明类型
+// （SQLite 的 text/numeric/date…）两套英文名统一成中文说法；未收录的保留原名。
+export const valueTypeNames:Record<string,string>={
+ string:'文本',decimal:'数字',integer:'整数',boolean:'布尔',date:'日期',datetime:'日期时间',reference:'引用',
+ text:'文本',numeric:'数字',real:'数字',float:'数字',blob:'二进制',int:'整数',
+};
+export const valueTypeLabel=(name:string|undefined|null)=>name?valueTypeNames[name]||name:'—';
 export const reviewStateNames:Record<string,string>={unreviewed:'未核对',needs_revalidation:'需重新校验',approved:'已通过',rejected:'已退回'};
 export function locate(selector:Selector|undefined,field?:string):string{
  if(!selector)return '—';

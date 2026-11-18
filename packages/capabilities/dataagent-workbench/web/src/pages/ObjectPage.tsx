@@ -1,12 +1,25 @@
 import {useEffect,useRef,useState} from 'react';
-import {api,ApiError,display,locate,findAnchorRow,isDecisionEvidence,decisionSourceName,issueBlocksSave,issueObject,issueReasons,propertyLabel,entityTypeLabel,reviewStateNames,humanDetail,technicalDetail,conceptOf,dedupeIssues,rowLevelIssueCodes} from '../client';
+import {api,ApiError,display,locate,findAnchorRow,isDecisionEvidence,decisionSourceName,issueBlocksSave,issueObject,issueReasons,propertyLabel,reviewStateNames,humanDetail,technicalDetail,conceptOf,conceptLabel,builtinTitles,ontologyTitles,valueTypeLabel,dedupeIssues,rowLevelIssueCodes} from '../client';
 import type {CorrectionView,ObjectView,SourceProfile,Issue,WorkObject,ConflictValue,DispositionOption,Selector} from '../client';
 import {SourceViewer} from '../components/SourceViewer';
 
 const ranges=[['instance','纠正当前对象的值'],['mapping','修改这类来源的映射'],['ontology','提出本体草案']] as const;
 const scopeIds=['instance','mapping','ontology'];
+// 对象标签过长时截断，悬停（title）仍显示完整标签（FDE2-10）。多段标签
+// （身份字段组合）只截前面的段、保留最后一段完整：末尾的身份值（单号）
+// 正是区分对象的部分，整体截尾或逐段截断都会让不同对象的标签变得一样。
+const LABEL_LIMIT=24;
+const clipped=(text:string)=>{
+ if(text.length<=LABEL_LIMIT)return text;
+ const parts=text.split(' · ');
+ if(parts.length>1){
+  const head=parts.slice(0,-1).map(part=>part.length>8?part.slice(0,7)+'…':part);
+  return [...head,parts[parts.length-1]].join(' · ');
+ }
+ return text.slice(0,LABEL_LIMIT-1)+'…';
+};
 
-export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:()=>void;onError:(e:unknown)=>void}){
+export function ObjectPage({sessionId,initialInstanceId,onBack,onError}:{sessionId:string;initialInstanceId?:string;onBack:()=>void;onError:(e:unknown)=>void}){
  const [view,setView]=useState<ObjectView|null>(null),[index,setIndex]=useState(0),[field,setField]=useState('');
  const [range,setRange]=useState('instance'),[value,setValue]=useState(''),[reason,setReason]=useState('');
  const [name,setName]=useState(''),[type,setType]=useState('string'),[busy,setBusy]=useState(false),[conflict,setConflict]=useState(false);
@@ -19,6 +32,9 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
  const [partialReason,setPartialReason]=useState('');
  const revision=useRef(''),base=useRef(''),editing=useRef(false),initialized=useRef(false),running=useRef(false);
  const objectRef=useRef(''),editObject=useRef(''),idxRef=useRef(0);
+ // FDE2-10：从本体库实例跳转带 instance 参数时，对象加载后选中并滚动到该对象；
+ // 用户手动切换对象后不再自动选中。
+ const jumpApplied=useRef(false),pendingScroll=useRef(false);
  const base_url=`/api/sessions/${sessionId}`;
  const localKey=`dataagent-object-draft:${sessionId}`;
  async function load(){
@@ -26,6 +42,11 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
   revision.current=data.session.revision;
   if(!editing.current)base.current=data.session.revision;
   setView(data);
+  // 用户已开始编辑时不自动改选对象，避免覆盖正在进行的纠正。
+  if(initialInstanceId&&!jumpApplied.current&&!editing.current){
+   const pos=data.objects.findIndex(o=>o.id===initialInstanceId);
+   if(pos>=0){jumpApplied.current=true;pendingScroll.current=true;setIndex(pos);}
+  }
   if(!initialized.current){
    initialized.current=true;
    const properties=Object.keys(conceptOf(data.ontology,data.ontology_concept).properties);
@@ -54,6 +75,14 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
   return data;
  }
  useEffect(()=>{load().catch(onError);const timer=setInterval(()=>load().catch(onError),1500);return()=>clearInterval(timer);},[sessionId]);
+ // 面包屑用的本体名：注册表标题（FDE2-11），一次拉取后缓存复用。
+ const targetOntologyId=view?.ontology.id;
+ const [ontologyName,setOntologyName]=useState('');
+ useEffect(()=>{
+  let cancelled=false;
+  if(targetOntologyId)ontologyTitles().then(titles=>{if(!cancelled)setOntologyName(titles[targetOntologyId]||'');});
+  return()=>{cancelled=true;};
+ },[targetOntologyId]);
  function touch(next:{property?:string;value?:string;reason?:string}={}){
   if(!editing.current){editing.current=true;base.current=revision.current;editObject.current=objectRef.current;}
   sessionStorage.setItem(localKey,JSON.stringify({object:editObject.current||objectRef.current,range,
@@ -63,6 +92,7 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
  // A correction is bound to one object: switching objects starts a clean edit.
  function selectObject(i:number){
   if(i===idxRef.current)return;
+  jumpApplied.current=true;
   setIndex(i);setValue('');setReason('');setConflict(false);setNotice(null);
   editing.current=false;editObject.current='';
   sessionStorage.removeItem(localKey);
@@ -74,7 +104,8 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
  }
  // 整批保存还被哪些对象挡住（FDE-12）：点名对象与属性，供纠正后的琥珀色说明。
  function blockedList(data:ObjectView):string{
-  // 缺单号的对象按任务固定概念的身份字段点名（多概念本体不再回退 'number'）。
+  // 缺身份值的对象按任务固定概念的身份字段点名（多概念本体不再回退 'number'），
+  // 文案用属性中文标签，不用采购口径的「单据号」（FDE2-11）。
   const concept=conceptOf(data.ontology,data.ontology_concept);
   const identity=concept.identity_fields[0]||'';
   const required=Object.entries(concept.properties).filter(([,definition])=>definition.required).map(([prop])=>prop);
@@ -82,7 +113,7 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
   for(const entry of data.objects){
    const label=objectLabel(entry,data);
    const keyValue=entry.values[identity];
-   if(keyValue===undefined||keyValue===null||keyValue===''){parts.push(`${label}（缺少单据号）`);continue;}
+   if(keyValue===undefined||keyValue===null||keyValue===''){parts.push(`${label}（缺少${propertyLabel(identity)||'身份字段值'}）`);continue;}
    for(const prop of required){
     const item=entry.values[prop];
     if(item===undefined||item===null||item==='')parts.push(`${label} · ${propertyLabel(prop)} 缺少必填值`);
@@ -210,6 +241,8 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
  const idx=Math.min(index,Math.max(0,(view?.objects.length||0)-1));
  idxRef.current=idx;
  if(!view)return <main className="loading">正在恢复任务…</main>;
+ // 面包屑用任务目标本体的注册表标题（FDE2-11），拉不到时退回内置习惯名或概念名。
+ const crumb=ontologyName||builtinTitles[view.ontology.id]||conceptLabel(conceptOf(view.ontology,view.ontology_concept));
  const conceptProperties=conceptOf(view.ontology,view.ontology_concept).properties;
  const properties=Object.keys(conceptProperties);
  const done=view.session.phase==='saved';
@@ -267,17 +300,24 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
   if(typeof uploadName==='string'&&uploadName)return uploadName;
   return display((data.sources.find(s=>s.source_id===sourceId)||{}).display_name);
  };
- // 缺键对象不显示内部 candidate 哈希，改用来源描述点名（FDE-11）。
+ // FDE2-10：对象标签用全部身份字段组合（如「BX-2026-0001 · 第 2 行」），第一个
+ // 身份字段重复时也能区分；身份值全缺时不显示内部 candidate 哈希，改用来源描述
+ // 点名（FDE-11），文案用身份字段的中文标签，不用采购口径的「单号」（FDE2-11）。
  const objectLabel=(entry:WorkObject,data:ObjectView=view)=>{
-  const keyValue=entry.values[conceptOf(data.ontology,data.ontology_concept).identity_fields[0]||''];
-  if(keyValue!==undefined&&keyValue!==null&&keyValue!=='')return String(keyValue);
+  const concept=conceptOf(data.ontology,data.ontology_concept);
+  const parts=concept.identity_fields
+   .map(field=>entry.values[field])
+   .filter(value=>value!==undefined&&value!==null&&value!=='')
+   .map(value=>String(value));
+  if(parts.length)return parts.join(' · ');
   for(const anchors of Object.values(entry.evidence||{})){
    for(const anchor of anchors){
     if(isDecisionEvidence(anchor))continue;
-    return `${sourceName(anchor.source_id,data)} · ${locate(anchor.selector)}（无单号）`;
+    const identity=concept.identity_fields[0]||'';
+    return `${sourceName(anchor.source_id,data)} · ${locate(anchor.selector)}（缺少${propertyLabel(identity)||'身份字段值'}）`;
    }
   }
-  return '未识别单据';
+  return '未识别对象';
  };
  // 问题没有可点的对象时仍要可区分、可处理：行号定位不了的（只有行号、来源不明、
  // 该行在问题来源里没有锚点）一律显示行号与来源待定；无行号的来源级问题点出具体
@@ -320,14 +360,17 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
   :`排除「${option.source_name}」${recordLabel(option.source_id,option.record)}`;
  const submitButton=(label:string)=><button className="secondary" disabled={busy||!object}
   onClick={conflict?confirmConflict:submit}>{conflict?'已核对，重新提交':label}</button>;
- return <main className="workspace"><div className="task-header"><div><div className="eyebrow">采购资料 / 对象页</div><h1>核对业务对象</h1><p className="muted">每个值都带来源定位；三种修改范围分别生效。{done?'接入已保存，对象为只读。':''}</p></div><div className="save-buttons"><button className="secondary" onClick={onBack}>返回映射页</button></div></div>
+ return <main className="workspace"><div className="task-header"><div><div className="eyebrow">{crumb} / 对象页</div><h1>核对业务对象</h1><p className="muted">每个值都带来源定位；三种修改范围分别生效。{done?'接入已保存，对象为只读。':''}</p></div><div className="save-buttons"><button className="secondary" onClick={onBack}>返回映射页</button></div></div>
  <div className="work-grid"><section className="source-panel"><div className="panel-heading"><strong>对象</strong><span className="badge">{view.objects.length} 个对象</span></div>
-  <div className="source-tabs">{view.objects.map((entry,i)=><button key={entry.id} className={(i===idx?'active ':'')+'source-tab'} onClick={()=>selectObject(i)} title={objectLabel(entry)}>
-   <span>▤</span><span>{objectLabel(entry)}</span>
-   {entry.unresolved.length>0&&<span className="badge">{entry.unresolved.length} 项未解决</span>}</button>)}</div>
+  <div className="source-tabs">{view.objects.map((entry,i)=>{
+   const label=objectLabel(entry);
+   return <button key={entry.id} data-testid="object-tab" className={(i===idx?'active ':'')+'source-tab'} onClick={()=>selectObject(i)} title={label}
+   ref={i===idx&&pendingScroll.current?(element=>{if(element){element.scrollIntoView({block:'nearest'});pendingScroll.current=false;}}):undefined}>
+   <span>▤</span><span>{clipped(label)}</span>
+   {entry.unresolved.length>0&&<span className="badge">{entry.unresolved.length} 项未解决</span>}</button>;})}</div>
   {view.objects.length===0&&<div className="empty">生成映射预览后，在这里查看对象。</div>}
   <SourceViewer sessionId={sessionId} profile={profile as SourceProfile|undefined} anchor={sourceAnchor?{source_ref:sourceAnchor.source_id,selector:sourceAnchor.selector}:undefined} recordIndex={sourceRow} sourceField={sourceField}/>
- </section><section className="mapping-panel"><div className="panel-heading"><strong>对象详情</strong><span className="badge">{entityTypeLabel(conceptOf(view.ontology,view.ontology_concept).entity_type)}</span></div>
+ </section><section className="mapping-panel"><div className="panel-heading"><strong>对象详情</strong><span className="badge">{conceptLabel(conceptOf(view.ontology,view.ontology_concept))}</span></div>
   {object?<><div className="mapping-table-scroll"><table className="mapping-table"><thead><tr><th>本体属性</th><th>当前值</th><th>来源定位</th><th>状态</th></tr></thead><tbody>{properties.map(prop=>{
    const anchors=object.evidence[prop]||[];const corrected=corrections.some(c=>c.property===prop);
    const issue=view.issues.some(i=>i.target===prop);
@@ -402,7 +445,7 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
      // 问题补充说明统一中文化：已知原文进主文案，未知英文折叠为「详情」。
      const human=humanDetail(issue.detail);
      return <><small className={issueBlocksSave(issue)?'warn':'ok'}>{issueBlocksSave(issue)?'阻断':'可纠正'}</small>
-      {' · '}{target?<button className="field-button" title={issue.target?`定位到 ${propertyLabel(issue.target)}`:undefined} onClick={()=>correctIssue(issue)}>{objectLabel(target)}</button>:<span className="muted">{issueLocation(issue)}</span>}
+      {' · '}{target?<button className="field-button" title={objectLabel(target)} onClick={()=>correctIssue(issue)}>{clipped(objectLabel(target))}</button>:<span className="muted">{issueLocation(issue)}</span>}
       {issue.target?` · ${propertyLabel(issue.target)}`:''} · {issueReasons[issue.code||'']||'该项未通过核对'}{issue.detail&&human.summary?` · ${human.summary}`:''}
       {issue.detail&&human.detail&&<details className="tech-detail"><summary>详情</summary><pre>{technicalDetail(human.detail)}</pre></details>}
       {/* 未映射来源的另一条出路：回映射页显式「纳入映射」，沿用默认绑定重新
@@ -462,13 +505,13 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
   </div>:<div className="edit-current">
    <label className="label" htmlFor="draft-property">建议新增的属性名</label><input id="draft-property" aria-label="建议新增的属性名" value={name} onChange={e=>{setName(e.target.value);touch();}}/>
    <label className="label" htmlFor="draft-type">值类型</label>
-   <select id="draft-type" aria-label="值类型" value={type} onChange={e=>{setType(e.target.value);touch();}}>{['string','decimal','integer','boolean','date','datetime'].map(kind=><option key={kind} value={kind}>{kind}</option>)}</select>
+   <select id="draft-type" aria-label="值类型" value={type} onChange={e=>{setType(e.target.value);touch();}}>{['string','decimal','integer','boolean','date','datetime'].map(kind=><option key={kind} value={kind}>{valueTypeLabel(kind)}</option>)}</select>
    <label className="label" htmlFor="draft-reason">修改原因</label><textarea id="draft-reason" rows={3} value={reason} onChange={e=>{setReason(e.target.value);touch({reason:e.target.value});}}/>
    <p className="help">生成本体草案，未经审核不改正式本体（当前 {view.ontology_revision}）。</p>
    {submitButton('提交本体草案')}
   </div>}
   {view.ontology_draft&&<div className="notice"><strong>本体草案待审核</strong><ul>
-   <li>{display(view.ontology_draft.property)} · {display(view.ontology_draft.value_type)}</li>
+   <li>{display(view.ontology_draft.property)} · {valueTypeLabel(String(view.ontology_draft.value_type))}</li>
    <li>正式本体仍为 {view.ontology_revision}，草案未生效</li></ul></div>}
  </aside></div>
  </main>;

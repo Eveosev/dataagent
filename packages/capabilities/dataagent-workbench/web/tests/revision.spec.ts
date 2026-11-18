@@ -269,9 +269,15 @@ test('破坏性修订删除属性必须额外勾选旧数据不迁移',async({pa
  await expect(page.getByTestId('revision-publish-notice')).toBeVisible({timeout:30000});
  await expect(page.getByTestId('revision-destructive')).toBeVisible();
  await expect(page.getByTestId('revision-no-migration')).not.toBeChecked();
+ // 被放弃的草案属性逐项列出，须单独勾选同意；迁移确认不代勾。
+ const dropped=page.getByTestId('publish-dropped-item');
+ await expect(dropped).toHaveCount(1);
+ await expect(dropped).toContainText('Customer.name');
  await page.getByLabel('我已核对候选定义与来源摘要，确认发布').check();
  await expect(page.getByRole('button',{name:'确认发布'})).toBeDisabled();
  await page.getByTestId('revision-no-migration').check();
+ await expect(page.getByRole('button',{name:'确认发布'})).toBeDisabled();
+ await dropped.locator('input[type=checkbox]').check();
  await expect(page.getByRole('button',{name:'确认发布'})).toBeEnabled();
  await page.getByRole('button',{name:'确认发布'}).click();
  await expect(page.getByTestId('publish-done'))

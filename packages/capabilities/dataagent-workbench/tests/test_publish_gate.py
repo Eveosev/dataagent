@@ -430,6 +430,67 @@ def test_unresolved_items_and_coverage_gaps_must_be_disposed(tmp_path):
     assert result.data['state'] == 'awaiting_human_confirmation'
 
 
+def test_dropped_draft_items_are_reported_in_the_candidate_summary(tmp_path):
+    """Every draft choice the completion leaves out is visible to the human.
+
+    A selected relationship and a proposed property can both be absent from
+    the completed candidate.  The candidate summary must name them (with the
+    evidence id the disposition gate uses for a dropped relationship) so the
+    publish page can list them and require explicit confirmation.
+    """
+    wb, session_id, request = workbench(tmp_path)
+    current = full_draft(wb, session_id, request)
+    completion = full_completion(wb, session_id, current)
+    ordered_by = next(item for item in completion['relations']
+                      if item['name'] == 'orderedBy')
+    completion['relations'].remove(ordered_by)
+    completion['dispositions'] = [{
+        'kind': 'unresolved_relationship', 'ref': ordered_by['evidence_id'],
+        'action': 'exclude', 'reason': '补全时未带入该关系',
+    }]
+    line = next(item for item in completion['concepts']
+                if item['entity'] == 'SalesOrderLine')
+    line['properties'].pop('amountInCents')
+
+    candidate = prepare(wb, completion).data
+    assert candidate['state'] == 'awaiting_human_confirmation'
+    dropped = {(item['kind'], item['ref']): item for item in candidate['dropped']}
+    relation = dropped[('relationship', ordered_by['evidence_id'])]
+    assert relation['name'] == 'orderedBy'
+    assert relation['source_table'] == 'doc_hdr'
+    assert relation['target_table'] == 'party'
+    assert relation['source_columns'] == ['party_no']
+    assert relation['target_columns'] == ['party_no']
+    prop = dropped[('property', 'SalesOrderLine.amountInCents')]
+    assert prop['concept'] == 'SalesOrderLine'
+    assert prop['column'] == 'cents'
+    assert prop['table'] == 'doc_line'
+    # The draft relationship is absent from the candidate definition; its
+    # explicit disposition is still part of the summary the page renders.
+    assert 'orderedBy' not in candidate['relations']
+    assert candidate['dispositions'] == [{
+        'kind': 'unresolved_relationship', 'ref': ordered_by['evidence_id'],
+        'action': 'exclude', 'reason': '补全时未带入该关系',
+    }]
+    # The stored candidate the web page fetches carries the same difference.
+    view = client(wb).get(
+        f'/api/sessions/{session_id}/publish/candidate').json()
+    assert view['dropped'] == candidate['dropped']
+
+
+def test_omitting_a_draft_entity_is_rejected_not_reported_as_dropped(tmp_path):
+    """Concepts cannot be dropped; the candidate diff only covers properties
+    and relationships.  The page's concept branch is defensive, not an
+    accepted flow, so the entity completeness gate stays in force."""
+    wb, session_id, request = workbench(tmp_path)
+    current = full_draft(wb, session_id, request)
+    completion = full_completion(wb, session_id, current)
+    completion['concepts'] = [item for item in completion['concepts']
+                              if item['entity'] != 'Customer']
+    with pytest.raises(ValueError, match='every draft entity must be completed'):
+        prepare(wb, completion)
+
+
 def test_stale_task_draft_and_source_confirmations_are_rejected(tmp_path):
     wb, session_id, request = workbench(tmp_path)
     current = full_draft(wb, session_id, request)

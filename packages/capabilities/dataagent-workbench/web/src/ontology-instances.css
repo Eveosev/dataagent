@@ -30,6 +30,14 @@
 .instance-table th{white-space:nowrap}
 .instance-table td{vertical-align:top}
 .instance-table td:first-child{min-width:120px}
+/* FDE2-13：窄屏横向滚动时身份列（与前两个）+ 第一个数值列粘性固定，
+   左偏移按列序用 CSS 变量内联给出（见页面 stickyStyle）。 */
+.instance-table .sticky-col{position:sticky;left:var(--sticky-left,0px);z-index:2}
+.instance-table thead .sticky-col{z-index:3}
+.instance-table tbody .sticky-col{background:#fff}
+.instance-sort-button{font-size:10px;font-weight:450;color:inherit;padding:0}
+.instance-sort-button:hover{color:var(--green)}
+.instance-sort-note{padding:0 18px}
 .instance-source{min-width:220px;font-size:11px;line-height:1.7;color:#53645a}
 .instance-anchor+.instance-anchor{margin-top:4px}
 .instance-task-link{text-align:left;color:var(--green);font-size:12px;line-height:1.6;text-decoration:underline;text-underline-offset:2px}
@@ -54,4 +62,12 @@
  .instance-control,.instance-filter .filter-value{min-width:0;width:100%}
  .instance-filter{gap:10px}
  .filter-actions{width:100%}
+}
+/* FDE2-13：390px 窄屏下实例表不换行、横向滚动，行高保持紧凑；
+   粘性列定宽截断，保证身份 + 第一个数值列始终可见。 */
+@media(max-width:560px){
+ .instance-table th,.instance-table td{white-space:nowrap}
+ .instance-table thead th.sticky-col,.instance-table tbody td.sticky-col{
+  width:90px;min-width:90px;max-width:90px;overflow:hidden;text-overflow:ellipsis}
+ .instance-table .instance-source{min-width:160px}
 }
