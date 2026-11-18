@@ -73,6 +73,7 @@ CHECKS = [
     ('N2.rediscover', True, ['N2']),
     ('N3', True, ['N3']),
     ('N3.evidence', False, ['N3', 'J8']),
+    ('N3.gate', True, ['N3']),
     ('N4', True, ['N4']),
     ('N4.property', True, ['N4']),
     ('N4.relation', True, ['N4']),
@@ -1663,6 +1664,7 @@ class Flow:
         if artifact.get('error'):
             self.results.fail('N3', '值重合反例未完成')
             self.results.fail('N3.evidence', '值重合反例未完成')
+            self.results.fail('N3.gate', '错误跨来源关系处置门禁未执行')
             return
         draft = artifact.get('draft') or {}
         candidate = artifact.get('candidate_body') or artifact.get('candidate') or {}
@@ -1681,22 +1683,34 @@ class Flow:
                     and all(('unresolved_relationship', str(link['id'])) in excluded for link in overlap) \
                     and not adopted:
                 self.results.ok('N3.evidence', '值重合候选被标为待核对/否决，未进入关系')
+                self.results.ok('N3.gate', '错误跨来源关系候选被草案待决并在发布前排除')
             else:
                 self.results.fail('N3.evidence', '值重合候选未被显式处置')
+                self.results.fail('N3.gate', '错误跨来源关系候选未被待决或排除')
         elif value_overlap:
             if any(_norm(left) != _norm(right) for _, left, _, right in value_overlap):
-                self.results.ok('N3.evidence', '值重合但列名不相近，未生成跨来源关系候选')
+                self.results.fail(
+                    'N3.evidence',
+                    '值重合但列名不相近，未生成关系候选；处置门禁未获验证')
             else:
                 self.results.fail('N3.evidence', '值重合且列名相近，但未生成关系候选')
+            self.results.fail('N3.gate', '错误跨来源关系处置门禁未获验证：本次没有关系候选')
+            artifact['gate_unverified'] = True
         else:
-            self.results.ok('N3.evidence', '证据层没有值重合候选（允许），草案未采纳')
+            self.results.fail('N3.evidence', '没有值重合候选；处置门禁未获验证')
+            self.results.fail('N3.gate', '错误跨来源关系处置门禁未获验证：没有值重合候选')
+            artifact['gate_unverified'] = True
         relations = definition.get('relations') or {}
         concepts = definition.get('concepts') or {}
         sources = {name: (candidate.get('evidence') or {}).get('concepts', {}).get(name, {}).get('table')
                    for name in concepts}
         merged = len(set(sources.values())) != len(sources)
         if not relations and len(concepts) == 2 and not merged and artifact.get('entry'):
-            self.results.ok('N3', '第三个来源为独立概念，草案/已发布本体无跨来源关系')
+            if artifact.get('gate_unverified'):
+                self.results.fail(
+                    'N3', '未观察到合并，但错误关系处置门禁未获验证（见 N3.gate）')
+            else:
+                self.results.ok('N3', '第三个来源为独立概念，草案/已发布本体无跨来源关系')
         else:
             self.results.fail('N3', '第三个来源被合并或出现跨来源关系')
 
@@ -1799,6 +1813,10 @@ def apply(report, project, args, context):
         except (OSError, ValueError) as exc:
             raise SetupError('gold.json is not readable') from exc
         flow.score(gold)
+        if flow.art.get('n3', {}).get('gate_unverified'):
+            report.setdefault('not_verified', []).append(
+                'N3 wrong cross-source relationship disposition gate '
+                '(no candidate in this run)')
     except SetupError as exc:
         report['status'] = 'failed'
         report['setup_error'] = True
