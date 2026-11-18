@@ -463,9 +463,14 @@ def _document_sources(project):
     assert standard['kind'] == 'docx' and standard['rows_observed'] == 6
     assert set(standard['columns']) == {'城市等级', '职级', '费用类型', '限额', '币种'}
     assert ['城市等级', '职级', '费用类型'] in standard['identity_keys']
-    # The table and its columns carry the record set's anchors, so the key and
-    # the link below replay to a concrete table position.
-    assert standard['anchor']['selector'] == {'kind': 'docx_table', 'table': 1}
+    # The table and its columns carry the record set's cell anchors, so the
+    # key and the link below replay to a concrete table position.  The table
+    # anchor is the record set's top-left cell and validates as a contract
+    # text_span anchor.
+    from dataagent_contracts.core import SourceAnchor
+    table_anchor = SourceAnchor.model_validate(standard['anchor'])
+    assert table_anchor.selector.kind == 'text_span'
+    assert table_anchor.selector.unit_ref == 'table:1/row:2/col:1'
     city = standard['columns']['城市等级']['anchor']['selector']
     assert (city['kind'], city['unit_ref']) == ('text_span', 'table:1/row:2/col:1')
 
@@ -502,8 +507,8 @@ def _document_sources(project):
     assert link['origin'] == 'sample_supported' and link['ambiguous'] is False
     assert link['matched_rows'] == 4 and link['checked_rows'] == 4
     assert link['matched_distinct_keys'] == 4
-    # The link's document endpoint replays to the table position of its evidence.
-    assert tables[link['target_table']]['anchor']['selector'] == {'kind': 'docx_table', 'table': 1}
+    # The link's document endpoint replays to a contract cell anchor of its table.
+    assert tables[link['target_table']]['anchor']['selector']['unit_ref'].startswith('table:1/')
 
     draft = call_workbench(project, 'ontology_discovery_propose', {
         **args, 'expected_revision': request['expected_revision'],

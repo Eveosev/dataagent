@@ -1,11 +1,14 @@
 """Discovery evidence for document sources: sections, clauses and tables."""
 import io
+import json
 import shutil
+import subprocess
 import zipfile
 from pathlib import Path
 
 import pytest
 
+from dataagent_contracts.core import SourceAnchor
 from dataagent_contracts.intake import SourceProfile
 from dataagent_workbench.adapters.layer_client import LayerClient
 from dataagent_workbench.bootstrap import Workbench
@@ -193,9 +196,12 @@ def test_document_sources_build_sections_clauses_and_table_evidence(tmp_path):
     assert standard['columns']['限额']['samples'] == ['400', '200', '350']
     assert ['限额'] in standard['keys']
     assert ['城市等级', '职级', '费用类型'] in standard['identity_keys']
-    # The table and its columns carry the record set's cell and table anchors,
-    # so the identity key and the link below replay to a concrete position.
-    assert standard['anchor']['selector'] == {'kind': 'docx_table', 'table': 1}
+    # The table and its columns carry the record set's cell anchors, so the
+    # identity key and the link below replay to a concrete position.  The
+    # table anchor is the record set's top-left cell: a contract text_span.
+    table_anchor = SourceAnchor.model_validate(standard['anchor'])
+    assert table_anchor.selector.kind == 'text_span'
+    assert table_anchor.selector.unit_ref == 'table:1/row:2/col:1'
     city = standard['columns']['城市等级']['anchor']['selector']
     assert (city['kind'], city['unit_ref']) == ('text_span', 'table:1/row:2/col:1')
     assert (city['char_start'], city['char_end']) == (0, 2)
@@ -242,8 +248,8 @@ def test_document_sources_build_sections_clauses_and_table_evidence(tmp_path):
     assert link['ambiguous'] is False
     assert link['matched_rows'] == 4 and link['checked_rows'] == 4
     assert link['matched_distinct_keys'] == 4
-    # The link replays to the table position of both of its endpoints.
-    assert tables[link['target_table']]['anchor']['selector']['kind'] == 'docx_table'
+    # The link replays to a contract cell anchor of its document endpoint.
+    assert tables[link['target_table']]['anchor']['selector']['unit_ref'].startswith('table:1/')
 
     draft = invoke(wb, 'ontology_discovery_propose', {
         'session_id': data['session_id'],
@@ -438,6 +444,8 @@ def test_pdf_sections_nest_across_pages_and_skip_non_headings():
         })
     catalog = build_catalog([profile], None)
     document, = catalog['documents']
+    # '差旅报销标准' qualifies as the document's leading title line; '备注：无'
+    # is a label and the sentence line is body text.
     title, chapter = document['sections']
     assert title['level'] == 1 and title['line_range'] == [1, 1]
     assert title['page_range'] == [1, 1]
@@ -450,6 +458,127 @@ def test_pdf_sections_nest_across_pages_and_skip_non_headings():
     assert title['title'] is None and subsection['title'] is None
     assert [clause['number'] for clause in document['clauses']] == ['1.']
     assert document['clauses'][0]['text'] is None
+
+
+def test_pdf_ordinary_short_prose_is_not_a_section():
+    """Review counterexample: punctuation-free prose stays chapter body."""
+    page = '第一章 总则\n本规定适用于员工\n第二章 标准'
+    profile = SourceProfile(
+        source_id='manual', source_revision='sha256:manual', kind='pdf',
+        records=[], fields=[],
+        metadata={
+            'pages': [{'page': 1, 'text': page, 'method': 'text'}],
+            'tables': [],
+            'structure_fingerprint': 'manual',
+        })
+    catalog = build_catalog([profile], {'manual': {'text'}})
+    document, = catalog['documents']
+    chapters = document['sections']
+    assert [section['title'] for section in chapters] == ['第一章 总则', '第二章 标准']
+    # The prose line belongs to the first chapter instead of truncating it.
+    assert chapters[0]['line_range'] == [1, 2]
+    assert chapters[1]['line_range'] == [3, 3]
+
+
+def test_pdf_unnumbered_heading_needs_title_position_or_larger_font():
+    text = '总则\n正文一段。\n费用说明\n正文二段。'
+    # '总则' is the document's leading line; '费用说明' is mid-page and only
+    # qualifies when its block is taller than the page's body text.
+    blocks = [
+        {'text': '总则', 'bbox': [72.0, 90.0, 120.0, 102.0], 'char_start': 0, 'char_end': 2},
+        {'text': '正文一段。', 'bbox': [72.0, 120.0, 300.0, 130.0], 'char_start': 3, 'char_end': 8},
+        {'text': '费用说明', 'bbox': [72.0, 150.0, 200.0, 168.0], 'char_start': 9, 'char_end': 13},
+        {'text': '正文二段。', 'bbox': [72.0, 180.0, 300.0, 190.0], 'char_start': 14, 'char_end': 19},
+    ]
+    profile = SourceProfile(
+        source_id='manual', source_revision='sha256:manual', kind='pdf',
+        records=[], fields=[],
+        metadata={
+            'pages': [{'page': 1, 'text': text, 'method': 'text', 'blocks': blocks}],
+            'tables': [],
+            'structure_fingerprint': 'manual',
+        })
+    catalog = build_catalog([profile], {'manual': {'text'}})
+    document, = catalog['documents']
+    assert [section['title'] for section in document['sections']] == ['总则', '费用说明']
+
+    # Without block evidence the mid-page line has no layout support: body text.
+    pages = [dict(page, blocks=[]) for page in profile.metadata['pages']]
+    profile = profile.model_copy(
+        update={'metadata': {**profile.metadata, 'pages': pages}})
+    catalog = build_catalog([profile], {'manual': {'text'}})
+    document, = catalog['documents']
+    assert [section['title'] for section in document['sections']] == ['总则']
+
+
+def test_docx_table_anchor_resolves_through_the_anchor_contract(tmp_path):
+    """The table anchor is a contract cell anchor the replay engine resolves.
+
+    The replay runs in the data layer's own interpreter, like the probe itself:
+    the workbench process must not import ``dataagent_data``.
+    """
+    units = {
+        'table:1/row:2/col:1': '一线',
+        'table:1/row:2/col:4': '400',
+    }
+
+    def cell(row, col, text):
+        return {'source_ref': 'manual', 'source_revision': 'sha256:manual',
+                'selector': {'kind': 'text_span',
+                             'unit_ref': f'table:1/row:{row}/col:{col}',
+                             'char_start': 0, 'char_end': len(text)},
+                'extensions': None}
+
+    profile = SourceProfile(
+        source_id='manual', source_revision='sha256:manual', kind='docx',
+        records=[], fields=[],
+        metadata={
+            'paragraphs': [],
+            'units': units,
+            'record_sets': {
+                'table:1': {
+                    'name': 'table:1', 'kind': 'table', 'table': 1, 'count': 1,
+                    'fields': ['城市等级', '限额'],
+                    'records': [{'城市等级': '一线', '限额': '400'}],
+                    'anchors': {'0.城市等级': [cell(2, 1, '一线')],
+                                '0.限额': [cell(2, 4, '400')]},
+                },
+            },
+            'structure_fingerprint': 'manual',
+        })
+    catalog = build_catalog([profile], {'manual': {'城市等级', '限额'}})
+    table, = catalog['tables']
+
+    # Contract validation: the anchor is a real SourceAnchor, selector and all.
+    anchor = SourceAnchor.model_validate(table['anchor'])
+    assert anchor.selector.kind == 'text_span'
+    assert anchor.selector.unit_ref == 'table:1/row:2/col:1'
+
+    script = tmp_path / 'replay_anchor.py'
+    script.write_text(
+        'import json, sys\n'
+        'from dataagent_contracts.core import SourceAnchor\n'
+        'from dataagent_data.anchors import AnchorResolver\n'
+        'payload = json.load(open(sys.argv[1], encoding="utf-8"))\n'
+        'resolved = AnchorResolver(units=payload["units"]).resolve(\n'
+        '    SourceAnchor.model_validate(payload["anchor"]))\n'
+        'print(json.dumps({"text": resolved.text, "reason": resolved.reason},\n'
+        '                 ensure_ascii=False))\n', encoding='utf-8')
+
+    def replay(anchor_dict):
+        payload = tmp_path / 'anchor.json'
+        payload.write_text(json.dumps({'anchor': anchor_dict, 'units': units}),
+                           encoding='utf-8')
+        result = subprocess.run(
+            [str(PACKAGES / 'dataagent-data/.venv/bin/python'), str(script), str(payload)],
+            capture_output=True, text=True)
+        assert result.returncode == 0, result.stderr
+        return json.loads(result.stdout)
+
+    # Replay through the data layer's resolver: table and column anchors
+    # resolve to the cells they point at.
+    assert replay(table['anchor']) == {'text': '一线', 'reason': ''}
+    assert replay(table['columns']['限额']['anchor']) == {'text': '400', 'reason': ''}
 
 
 def test_pdf_source_starts_discovery_intake_end_to_end(tmp_path):

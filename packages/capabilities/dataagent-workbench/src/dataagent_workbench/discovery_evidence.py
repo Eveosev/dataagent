@@ -390,15 +390,12 @@ _PDF_HEADING_LEVELS = (
     (re.compile(r'[一二三四五六七八九十]+、'), 3),
     (re.compile(r'\d{1,2}[.、．](?!\d)'), 3),
 )
+# A taller-than-body block is heading-sized font evidence for an unnumbered
+# line (12pt title over 10pt body is already above this ratio).
+_PDF_TITLE_HEIGHT_RATIO = 1.2
 
 
-def _pdf_heading_level(line):
-    """The heading level of a PDF line, or None when it is not a heading.
-
-    Numbered lines follow ``_PDF_HEADING_LEVELS``.  An unnumbered line is a
-    heading only as a standalone short line: not a sentence, not a label:value
-    pair and not a clause lead -- a page is never promoted wholesale.
-    """
+def _pdf_numbered_heading_level(line):
     stripped = line.strip()
     if not stripped:
         return None
@@ -409,11 +406,42 @@ def _pdf_heading_level(line):
             if not rest or (len(rest) <= 40 and rest[-1] not in _SENTENCE_END):
                 return level
             return None
-    if (_CLAUSE_START.match(stripped) or len(stripped) > 30
+    return None
+
+
+def _pdf_standalone_heading_level(line, leading, height, body_height):
+    """Whether an unnumbered line is a heading, from line layout alone.
+
+    Ordinary short prose must not become a section just because it happens to
+    lack ending punctuation: an unnumbered line qualifies only as the
+    document's leading line (the title position) or when its block is taller
+    than the page's body text (a title font).  Without layout evidence the
+    line is body text.
+    """
+    stripped = line.strip()
+    if (not stripped or _CLAUSE_START.match(stripped) or len(stripped) > 30
             or stripped[-1] in _SENTENCE_END or '：' in stripped or ':' in stripped
             or stripped[0].isdigit()):
         return None
-    return 1
+    if leading:
+        return 1
+    if height is not None and body_height and height >= body_height * _PDF_TITLE_HEIGHT_RATIO:
+        return 1
+    return None
+
+
+def _pdf_block_heights(page):
+    """(char_start, char_end, height) per text block, when block evidence exists."""
+    heights = []
+    for block in page.get('blocks') or []:
+        if not isinstance(block, dict):
+            continue
+        bbox = block.get('bbox')
+        start, end = block.get('char_start'), block.get('char_end')
+        if (isinstance(bbox, list) and len(bbox) == 4
+                and isinstance(start, int) and isinstance(end, int)):
+            heights.append((start, end, bbox[3] - bbox[1]))
+    return heights
 
 
 def _anchor(profile, selector):
@@ -498,6 +526,9 @@ def _docx_clauses(paragraphs, profile, disclose):
     return clauses
 
 
+_UNIT_CELL = re.compile(r'^table:(\d+)/row:(\d+)/col:(\d+)$')
+
+
 def _docx_cell_anchor(entry, field):
     """The first cell anchor a record set carries for a column, if any."""
     for key, values in (entry.get('anchors') or {}).items():
@@ -507,6 +538,28 @@ def _docx_cell_anchor(entry, field):
             if isinstance(value, dict) and isinstance(value.get('selector'), dict):
                 return value
     return None
+
+
+def _docx_table_anchor(entry):
+    """The record set's top-left cell anchor locates the table.
+
+    The anchor stays a contract ``text_span`` cell anchor -- the same kind the
+    record set and the replay engine already use -- so a link or a key
+    replays to a concrete table position through the existing contract.
+    """
+    best = None
+    for values in (entry.get('anchors') or {}).values():
+        for value in values or []:
+            selector = value.get('selector') if isinstance(value, dict) else None
+            if not isinstance(selector, dict) or selector.get('kind') != 'text_span':
+                continue
+            match = _UNIT_CELL.match(selector.get('unit_ref') or '')
+            if match:
+                position = (int(match.group(2)), int(match.group(3)))
+                if best is None or position < best[0]:
+                    best = (position, value)
+                break
+    return best[1] if best else None
 
 
 def _docx_tables(profile, allowed):
@@ -531,9 +584,6 @@ def _docx_tables(profile, allowed):
         columns = {field: _column_evidence(field, {}, rows, allowed) for field in fields}
         if not columns:
             continue
-        anchor = None
-        if isinstance(entry.get('table'), int):
-            anchor = _anchor(profile, {'kind': 'docx_table', 'table': entry['table']})
         for field, column in columns.items():
             cell = _docx_cell_anchor(entry, field)
             if cell is not None:
@@ -542,7 +592,7 @@ def _docx_tables(profile, allowed):
         tables.append(_table(name, profile.source_id, profile.kind, rows, columns, keys,
                              sampled=profile.sampled, coverage=profile.coverage,
                              key_origin='observed', partition=entry.get('table'),
-                             key_search=key_search, anchor=anchor))
+                             key_search=key_search, anchor=_docx_table_anchor(entry)))
     return tables
 
 
@@ -558,17 +608,27 @@ def _pdf_sections(profile, disclose):
     stack = []
     line_number = 0
     section_ordinal = clause_ordinal = 0
+    leading = True
     pages = profile.metadata.get('pages')
     for page in pages if isinstance(pages, list) else []:
         if not isinstance(page, dict) or not isinstance(page.get('page'), int):
             continue
         number, text = page['page'], page.get('text') or ''
+        blocks = _pdf_block_heights(page)
+        body_heights = sorted(height for _, _, height in blocks)
+        body_height = body_heights[len(body_heights) // 2] if body_heights else 0
         offset = 0
         for line in text.split('\n'):
             start, end = offset, offset + len(line)
             offset = end + 1
             line_number += 1
-            level = _pdf_heading_level(line)
+            level = _pdf_numbered_heading_level(line)
+            if level is None:
+                height = next((block_height for block_start, block_end, block_height
+                               in blocks if block_start <= start < block_end), None)
+                level = _pdf_standalone_heading_level(line, leading, height, body_height)
+            if line.strip():
+                leading = False
             if level is not None:
                 while stack and stack[-1]['level'] >= level:
                     stack.pop()
