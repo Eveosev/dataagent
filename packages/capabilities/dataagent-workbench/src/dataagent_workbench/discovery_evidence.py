@@ -25,6 +25,13 @@ TABLE_KINDS = DB_KINDS | SHEET_KINDS | FLAT_KINDS
 
 SQLITE_CASE_FOLD = str.maketrans(ascii_uppercase, ascii_lowercase)
 _CELL = re.compile(r'^([A-Z]+)([0-9]+)$')
+# Text shapes worth a typed inference: '400', '500.00' / '1,260.50', and the
+# ISO forms the sheet reader produces for date and datetime cells.
+_INTEGER_TEXT = re.compile(r'^[+-]?\d+$')
+_DECIMAL_TEXT = re.compile(r'^[+-]?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?$')
+_DATE_TEXT = re.compile(r'^\d{4}-\d{2}-\d{2}$')
+_DATETIME_TEXT = re.compile(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$')
+_MIDNIGHT = 'T00:00:00'
 _MAX_SAMPLES = 3
 _MAX_KEY_COLUMNS = 12
 _MAX_KEY_WIDTH = 5
@@ -72,20 +79,38 @@ def key_counts(rows, columns, *, skip_blank=False):
 
 
 def _observed_type(values):
+    """(type, family, origin) for a column without a declared type.
+
+    An all-text column is re-read for numeric and calendar shapes: '400' is
+    integer, '500.00' / '1,260.50' decimal, and the ISO strings a sheet
+    reader emits for cells become date or datetime.  The origin records that
+    the type came from parsing text ('observed_text') instead of from the
+    values' own storage classes ('observed').  Original values never change;
+    only the inferred type does.
+    """
     names = {type(value).__name__ for value in values}
     if not names:
-        return '', 'unknown'
+        return '', 'unknown', 'observed'
     if names == {'int'}:
-        return 'integer', 'integer'
+        return 'integer', 'integer', 'observed'
     if names == {'bool'}:
-        return 'boolean', 'boolean'
+        return 'boolean', 'boolean', 'observed'
     if names <= {'int', 'float', 'Decimal'}:
-        return ('numeric', 'numeric') if 'int' in names else ('real', 'real')
+        return ('numeric', 'numeric', 'observed') if 'int' in names else ('real', 'real', 'observed')
     if names <= {'str'}:
-        return 'text', 'text'
+        texts = [value for value in values if value.strip()]
+        if texts:
+            if all(_INTEGER_TEXT.match(value) for value in texts):
+                return 'integer', 'integer', 'observed_text'
+            if all(_DECIMAL_TEXT.match(value) for value in texts):
+                return 'decimal', 'numeric', 'observed_text'
+            if all(_DATE_TEXT.match(value) or _DATETIME_TEXT.match(value) for value in texts):
+                midnight = all(value[10:] in ('', _MIDNIGHT) for value in texts)
+                return ('date' if midnight else 'datetime'), 'numeric', 'observed_text'
+        return 'text', 'text', 'observed'
     if names <= {'bytes', 'bytearray', 'memoryview'}:
-        return 'blob', 'blob'
-    return 'mixed', 'unknown'
+        return 'blob', 'blob', 'observed'
+    return 'mixed', 'unknown', 'observed'
 
 
 def _sample_value(value):
@@ -101,7 +126,7 @@ def _value_key(value):
     return item if item is not None else ('other', type(value).__name__, repr(value)[:80])
 
 
-def _column_evidence(field, declared, rows, allowed):
+def _column_evidence(field, declared, rows):
     non_null = [(field in binary, row.get(field)) for row, binary in rows
                 if row.get(field) is not None]
     null_rows = len(rows) - len(non_null)
@@ -113,24 +138,26 @@ def _column_evidence(field, declared, rows, allowed):
         type_family = affinity(observed_type)
         type_origin = 'declared'
     else:
-        observed_type, type_family = _observed_type(values)
-        type_origin = 'observed'
+        observed_type, type_family, type_origin = _observed_type(values)
+    # Controlled samples are always disclosed (caliber A): without a policy
+    # the workspace is in local owner mode, and an explicit policy has already
+    # filtered the column set to its allowed fields.  Binary values never
+    # become samples, and strings are truncated like every other disclosure.
     samples = []
-    if allowed is not None:
-        seen = set()
-        for binary, value in non_null:
-            if binary:
-                continue
-            literal = _sample_value(value)
-            if literal is None:
-                continue
-            key = _value_key(literal)
-            if key in seen:
-                continue
-            seen.add(key)
-            samples.append(literal)
-            if len(samples) >= _MAX_SAMPLES:
-                break
+    seen = set()
+    for binary, value in non_null:
+        if binary:
+            continue
+        literal = _sample_value(value)
+        if literal is None:
+            continue
+        key = _value_key(literal)
+        if key in seen:
+            continue
+        seen.add(key)
+        samples.append(literal)
+        if len(samples) >= _MAX_SAMPLES:
+            break
     return {
         **declared,
         'name': field,
@@ -315,7 +342,7 @@ def _database_tables(profile, allowed):
             field = column.get('name') if isinstance(column, dict) else None
             if not field or (allowed is not None and field not in allowed):
                 continue
-            columns[field] = _column_evidence(field, column, rows, allowed)
+            columns[field] = _column_evidence(field, column, rows)
         declared_keys = [descriptor.get('primary_key') or [],
                          *(descriptor.get('unique_keys') or [])]
         keys = [list(key) for key in dict.fromkeys(tuple(key) for key in declared_keys)
@@ -341,7 +368,7 @@ def _sheet_tables(profile, allowed):
             for field in record:
                 if field in columns or (allowed is not None and field not in allowed):
                     continue
-                columns[field] = _column_evidence(field, {}, rows, allowed)
+                columns[field] = _column_evidence(field, {}, rows)
         keys, key_search = _inferred_keys(columns, rows)
         label = sheet or 'sheet'
         base = (label if per_sheet[sheet] == 1
@@ -363,7 +390,7 @@ def _flat_table(profile, allowed):
             if field not in fields and (allowed is None or field in allowed):
                 fields.append(field)
     rows = [(record, set()) for record in profile.records]
-    columns = {field: _column_evidence(field, {}, rows, allowed) for field in fields}
+    columns = {field: _column_evidence(field, {}, rows) for field in fields}
     keys, key_search = _inferred_keys(columns, rows)
     total_rows = profile.metadata.get('total_rows')
     total_rows = total_rows if isinstance(total_rows, int) else None
@@ -581,7 +608,7 @@ def _docx_tables(profile, allowed):
         fields = [field for field in (entry.get('fields') or
                                       dict.fromkeys(key for row in records for key in row))
                   if allowed is None or field in allowed]
-        columns = {field: _column_evidence(field, {}, rows, allowed) for field in fields}
+        columns = {field: _column_evidence(field, {}, rows) for field in fields}
         if not columns:
             continue
         for field, column in columns.items():
@@ -693,7 +720,7 @@ def _pdf_tables(profile, allowed):
             if any(value not in (None, '') for value in record.values()):
                 rows.append((record, set()))
         fields = [field for field in header if allowed is None or field in allowed]
-        columns = {field: _column_evidence(field, {}, rows, allowed) for field in fields}
+        columns = {field: _column_evidence(field, {}, rows) for field in fields}
         if not columns:
             continue
         keys, key_search = _inferred_keys(columns, rows)
@@ -727,15 +754,16 @@ def _paragraph_text_fields(profile):
 
 
 def _document_evidence(profile, allowed):
-    """Section structure and clause candidates; text only under a disclosure.
+    """Section structure and clause candidates; text under a disclosure.
 
     A configured policy alone is not consent to publish prose: the paragraph
     text field itself must be allowed -- a policy of table columns only keeps
-    titles and clause text hidden.  Disclosed text is truncated like a table
-    sample; structure and anchors are always given.
+    titles and clause text hidden.  Without any policy the workspace is in
+    local owner mode and the text is disclosed (caliber A).  Disclosed text is
+    truncated like a table sample; structure and anchors are always given.
     """
-    disclose = (allowed is not None
-                and any(field in allowed for field in _paragraph_text_fields(profile)))
+    disclose = (allowed is None
+                or any(field in allowed for field in _paragraph_text_fields(profile)))
     record_sets = []
     if profile.kind == 'docx':
         paragraphs = list(_docx_paragraphs(profile))

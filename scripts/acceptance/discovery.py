@@ -9,7 +9,10 @@ table) against a 报销明细 Excel and a department CSV whose codes coincidenta
 equal the table limits: the evidence must carry sections, clause candidates and
 the table's composite candidate key, the detail must link to the standard table
 through the three-column combination, and the coincidental codes must not link.
-All inputs are synthetic.
+No disclosure policy is configured, so every case also checks the local owner
+mode of caliber A (samples, section titles and clause text disclosed) and the
+partial-coverage candidates with their coverage records.  All inputs are
+synthetic.
 """
 
 import io
@@ -81,8 +84,9 @@ def _csv_and_json(project):
     assert column['affinity'] == 'text'
     assert column['null_rows'] == 0 and column['null_rate'] == 0.0
     assert column['distinct_values'] == 2 and column['unique'] is False
-    # No allowed_fields policy is configured: counts and type statistics only.
-    assert column['samples'] == []
+    # No allowed_fields policy is configured, so the workspace is in local
+    # owner mode and column samples are disclosed (caliber A).
+    assert column['samples'] == ['C-1001', 'C-1002']
     assert ['order_no'] in tables['orders']['keys']
     assert ['customer_no'] not in tables['orders']['keys']
     assert ['customer_no'] in tables['customers']['identity_keys']
@@ -297,7 +301,7 @@ def _rest_and_csv(project):
         billing = tables['billing']
         assert billing['rows_observed'] == 3
         assert billing['columns']['/customer_no']['affinity'] == 'text'
-        assert billing['columns']['/customer_no']['samples'] == []
+        assert billing['columns']['/customer_no']['samples'] == ['C-1001', 'C-1002']
         assert ['/invoice_no'] in billing['identity_keys']
         link = _link(request['catalog']['relationships'], 'billing', '/customer_no')
         assert link['target_table'] == 'rest_customers'
@@ -463,6 +467,11 @@ def _document_sources(project):
     assert standard['kind'] == 'docx' and standard['rows_observed'] == 6
     assert set(standard['columns']) == {'城市等级', '职级', '费用类型', '限额', '币种'}
     assert ['城市等级', '职级', '费用类型'] in standard['identity_keys']
+    # No policy is configured, so owner mode (caliber A) discloses the samples,
+    # and the all-integer text column is re-read as integer.
+    assert standard['columns']['限额']['samples'] == ['400', '200', '350']
+    assert (standard['columns']['限额']['type'],
+            standard['columns']['限额']['type_origin']) == ('integer', 'observed_text')
     # The table and its columns carry the record set's cell anchors, so the
     # key and the link below replay to a concrete table position.  The table
     # anchor is the record set's top-left cell and validates as a contract
@@ -477,36 +486,46 @@ def _document_sources(project):
     document, = request['catalog']['documents']
     assert document['source_id'] == 'policy' and document['kind'] == 'docx'
     title, = document['sections']
-    # No field-disclosure policy is configured in acceptance, so the evidence
-    # carries the heading structure and anchors without the titles themselves.
-    assert title['level'] == 1 and title['title'] is None
+    # No field-disclosure policy is configured in acceptance, so the workspace
+    # is in local owner mode and the titles and clause text are disclosed.
+    assert title['level'] == 1 and title['title'] == '差旅报销标准'
     assert title['paragraph_range'] == [1, 7]
     assert title['ref'] == 'section:policy:1'
     assert title['anchor']['selector']['unit_ref'] == 'paragraph:1'
-    assert [(section['level'], section['paragraph_range'])
-            for section in title['sections']] == [(2, [2, 4]), (2, [5, 5]), (2, [6, 7])]
+    assert [(section['title'], section['paragraph_range'])
+            for section in title['sections']] == [
+        ('总则', [2, 4]), ('费用标准', [5, 5]), ('附则', [6, 7])]
     assert [section['ref'] for section in title['sections']] == [
         'section:policy:2', 'section:policy:3', 'section:policy:4']
     assert [clause['number'] for clause in document['clauses']] == ['第一条', '第二条', '第三条']
     assert [clause['ref'] for clause in document['clauses']] == [
         'clause:policy:1', 'clause:policy:2', 'clause:policy:3']
-    assert all(clause['text'] is None and clause['anchor'] for clause in document['clauses'])
+    assert document['clauses'][0]['text'].startswith('第一条')
+    assert all(clause['text'] and clause['anchor'] for clause in document['clauses'])
     assert document['record_sets'] == [
         {'name': 'paragraphs', 'kind': 'paragraph', 'count': 7},
         {'name': 'table:1', 'kind': 'table', 'count': 6},
     ]
 
-    # The detail links through the three-column composite key; the department
-    # codes that coincidentally equal the limits must not become a link.
+    # The detail links through the three-column composite key.  Partial coverage
+    # also yields the reverse candidate (4 of 6 standard rows appear in the
+    # detail); the department codes that coincidentally equal the limits must
+    # not become a link.
     links = request['catalog']['relationships']
-    assert [(link['source_table'], link['source_columns'], link['target_table'],
-             link['target_columns']) for link in links] == [
-        ('明细', ['城市等级', '职级', '费用类型'], 'table:1',
-         ['城市等级', '职级', '费用类型'])]
-    link, = links
+    assert {(link['source_table'], tuple(link['source_columns']),
+             link['target_table'], tuple(link['target_columns'])) for link in links} == {
+        ('明细', ('城市等级', '职级', '费用类型'), 'table:1',
+         ('城市等级', '职级', '费用类型')),
+        ('table:1', ('城市等级', '职级', '费用类型'), '明细',
+         ('城市等级', '职级', '费用类型'))}
+    link, = [link for link in links if link['source_table'] == '明细']
     assert link['origin'] == 'sample_supported' and link['ambiguous'] is False
     assert link['matched_rows'] == 4 and link['checked_rows'] == 4
     assert link['matched_distinct_keys'] == 4
+    assert link['coverage']['rate'] == 1.0 and link['coverage']['unmatched_values'] == []
+    reverse, = [link for link in links if link['source_table'] == 'table:1']
+    assert reverse['coverage']['rate'] == 4 / 6
+    assert reverse['coverage']['unmatched_values'] == [['二线', 'P2', '住宿'], ['二线', 'P2', '交通']]
     # The link's document endpoint replays to a contract cell anchor of its table.
     assert tables[link['target_table']]['anchor']['selector']['unit_ref'].startswith('table:1/')
 
@@ -534,7 +553,7 @@ def _document_sources(project):
     assert standard_entity['evidence_sections'] == ['section:policy:3', 'clause:policy:2']
     return {
         'session_id': session_id,
-        'sections': [{'level': section['level'],
+        'sections': [{'level': section['level'], 'title': section['title'],
                       'paragraph_range': section['paragraph_range']}
                      for section in title['sections']],
         'clauses': [clause['number'] for clause in document['clauses']],
@@ -547,7 +566,8 @@ def _document_sources(project):
                          'target': link['target_table'],
                          'target_columns': link['target_columns'],
                          'matched_rows': link['matched_rows'],
-                         'matched_distinct_keys': link['matched_distinct_keys']},
+                         'matched_distinct_keys': link['matched_distinct_keys'],
+                         'coverage': link['coverage']},
         'draft_ref': draft['ref'],
     }
 
