@@ -76,12 +76,36 @@ const errorTexts:Record<string,string>={
  'null corrections require an explicit unresolved decision':'纠正为空值需要先明确标记为未解决',
  'identity correction would merge objects; resolve the mapping explicitly':'标识纠正会使多个对象合并，请先调整映射',
  'preview contains unresolved issues':'预览仍有未解决的问题，请逐项核对后再保存',
+ 'preview does not need correction validation':'当前预览不需要重新校验，请刷新页面后重试',
  'unsupported file type':'暂不支持该文件类型',
  'file exceeds 32 MiB limit':'文件超过 32 MiB 限制',
  'Failed to fetch':'网络连接失败，请稍后重试',
  'Not Found':'当前服务不支持该操作，请更新工作台服务后再试',
 };
 export function translateError(message:string):string{return errorTexts[message.trim()]||message;}
+// 用户可见的后端原文（问题 detail、报错 message）统一在这里中文化：已知原文
+// 映射成中文说法进主文案；未识别的英文原文不直接铺在主文案里，只作为折叠
+// 「详情」的原始证据保留（沿用 technicalDetail 的路径脱敏）。中文原文直接展示。
+const detailTexts:Record<string,string>={
+ 'nonfinite number':'数值超出可表示范围',
+ 'non-integral value':'不是整数',
+ 'timezone required for naive datetime':'时间缺少时区，无法转换',
+ 'unknown enum value':'不在枚举范围内',
+ 'boolean must be true or false':'布尔值只认 true / false',
+ 'nested value needs an explicit scalar mapping':'嵌套值需要显式的标量映射',
+ 'relation role has no value':'关联字段没有值',
+ 'probe returned the same checkpoint without progress':'探查没有新进展，已暂停',
+ 'segment limit reached in one advance':'单次探查分段数达到上限',
+};
+export type HumanDetail={summary:string;detail?:string};
+export function humanDetail(raw:unknown):HumanDetail{
+ const text=String(raw??'').trim();
+ if(!text)return {summary:''};
+ if(detailTexts[text])return {summary:detailTexts[text]};
+ // 中文原文按原文进主文案；未识别的英文原文只进折叠详情。
+ if(/[\u4e00-\u9fff]/.test(text))return {summary:text};
+ return {summary:'',detail:text};
+}
 // 探查缺口（FDE-10）：分区级缺口用中文直说，不显示内部代码。
 export const gapNames:Record<string,string>={
  ocr_engine_missing:'需要 OCR 引擎',ocr_empty:'该页没有可读文本（可能是空白页）',
@@ -121,6 +145,11 @@ export async function api<T>(path:string,method='GET',body?:unknown):Promise<T>{
  return data as T;
 }
 export const display=(value:unknown)=>value===null||value===undefined?'—':typeof value==='object'?JSON.stringify(value):String(value);
+// D0 起本体可携带多概念，legacy 单概念字段（entity_type / properties）在生成类型里
+// 变为可选；运行时单概念任务仍按原样序列化这些字段。页面统一从这里兜底取值，
+// 多概念的页面适配由 D1 基于 concepts 重做，这里不做结构改动。
+export const legacyProperties=(ontology:{properties?:Record<string,{required?:boolean}>}|null|undefined):Record<string,{required?:boolean}>=>ontology?.properties||{};
+export const legacyEntityType=(ontology:{entity_type?:string}|null|undefined):string=>ontology?.entity_type||'';
 export const transformNames:Record<string,string>={identity:'保留原值',decimal:'十进制数',minor_to_major:'分 → 元（÷100）',integer:'整数',date:'日期',datetime:'带时区时间',enum:'枚举映射',combine:'组合字段',choose:'条件选择'};
 // 中英对照标签（FDE-11）：本体属性、实体类型与审核状态都有中文说法；
 // 没有对应中文时保留原名，不猜不译。

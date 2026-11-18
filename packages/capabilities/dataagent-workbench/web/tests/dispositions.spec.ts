@@ -3,10 +3,14 @@ import {test,expect} from '@playwright/test';
 // G2 处置入口 + FDE-11 可读性：被拦的问题旁给出可用的处置（标记分区不适用、
 // 排除记录、只保存无问题对象），原因必填；缺键对象显示来源描述而不是内部哈希。
 //
-// 说明：处置提交依赖 POST /api/sessions/<id>/dispositions 与 /review 的
-// allow_partial 参数；这两个 HTTP 接口尚未在后端 http_api.py 挂出（MCP 工具
-// intake_dispose / mapping_apply 已有），已另派后端卡 B1。下面各 page.route
-// 拦截用于覆盖提交请求契约，待后端路由 B1 合入后去掉。
+// 处置提交走真实后端路由 POST /api/sessions/<id>/dispositions 与 /review 的
+// allow_partial（B1 已挂出）：请求与响应契约从真实网络交互里核对，不拦截；
+// 视图刷新（处置使预览失效、部分保存使接入落盘）用页面状态断言。
+const disposalUrl=/\/api\/sessions\/[^/]+\/dispositions$/;
+const reviewUrl=/\/api\/sessions\/[^/]+\/review$/;
+async function postResponse(page:import('@playwright/test').Page,url:RegExp){
+ return page.waitForResponse(response=>response.request().method()==='POST'&&url.test(response.url()));
+}
 const missingNumberCsv=Buffer.from('number,amount,currency,issuer\nINV-001,1260,CNY,华信办公\n,900,CNY,北明科技\n');
 
 async function openObjectPage(page:import('@playwright/test').Page,files:Parameters<import('@playwright/test').Page['setInputFiles']>[1]){
@@ -46,29 +50,34 @@ test('缺键对象显示来源描述，处置需要填写原因',async({page})=>
  await expect(disposal.getByRole('button',{name:'提交处置'})).toBeEnabled();
 });
 
-test('排除记录处置提交审计契约',async({page})=>{
+test('排除记录处置走真实后端并刷新视图',async({page})=>{
  test.setTimeout(40000);
  await openObjectPage(page,{name:'发票.csv',mimeType:'text/csv',buffer:missingNumberCsv});
- let payload:Record<string,unknown>|undefined;let revision='';
- // 待后端路由 B1 合入后去掉。
- await page.route('**/api/sessions/*/dispositions',async route=>{
-  payload=route.request().postDataJSON();
-  revision=String(payload.expected_revision);
-  await route.fulfill({json:{session_id:'mock',session_revision:'2',
-   disposition_ref:'mock@1',entry:payload,entries:[payload]}});
- });
  const issue=page.getByTestId('pending-issue').filter({hasText:'缺少单据号'});
  const disposal=issue.getByTestId('disposal-option');
  await disposal.getByLabel(/处置原因/).fill('表头行混入数据，排除该行');
- await disposal.getByRole('button',{name:'提交处置'}).click();
- await expect(page.getByTestId('correction-success')).toContainText('处置已记录');
+ const [response]=await Promise.all([
+  postResponse(page,disposalUrl),
+  disposal.getByRole('button',{name:'提交处置'}).click(),
+ ]);
+ expect(response.status()).toBe(200);
+ const request=response.request().postDataJSON() as Record<string,unknown>;
+ const body=await response.json();
  // 提交的是可审计的处置契约：动作、来源、记录与原因齐全，修订带校验。
- expect(payload).toMatchObject({action:'exclude_record',source_id:expect.any(String),
+ expect(request).toMatchObject({action:'exclude_record',source_id:expect.any(String),
   record:1,reason:'表头行混入数据，排除该行'});
- expect(revision).toMatch(/^[0-9]+$/);
+ expect(String(request.expected_revision)).toMatch(/^[0-9]+$/);
+ // 真实后端记录了处置审计并使预览失效。
+ expect(body.entry).toMatchObject({action:'exclude_record',record:1,
+  reason:'表头行混入数据，排除该行',source_id:expect.any(String)});
+ expect(String(body.session_revision)).toMatch(/^[0-9]+$/);
+ await expect(page.getByTestId('correction-success')).toContainText('处置已记录');
+ // 视图刷新：预览失效后对象区回到空态，阻断问题不再挂着。
+ await expect(page.getByText('生成映射预览后，在这里查看对象。')).toBeVisible();
+ await expect(page.getByTestId('pending-issues')).toHaveCount(0);
 });
 
-test('只保存无问题对象需要填写原因并提交 allow_partial',async({page})=>{
+test('只保存无问题对象需要填写原因并走真实后端 allow_partial',async({page})=>{
  test.setTimeout(40000);
  await openObjectPage(page,{name:'发票.csv',mimeType:'text/csv',buffer:missingNumberCsv});
  const partial=page.getByTestId('partial-save');
@@ -78,16 +87,25 @@ test('只保存无问题对象需要填写原因并提交 allow_partial',async({
  await expect(partial.getByRole('button',{name:'只保存无问题对象'})).toBeDisabled();
  await reason.fill('先保存有单号的对象，缺键记录单独处理');
  await expect(partial.getByRole('button',{name:'只保存无问题对象'})).toBeEnabled();
- let payload:Record<string,unknown>|undefined;
- // 待后端路由 B1 合入后去掉。
- await page.route('**/api/sessions/*/review',async route=>{
-  payload=route.request().postDataJSON();
-  await route.fulfill({json:{id:'mock',revision:'2',revalidate:[]}});
- });
- await partial.getByRole('button',{name:'只保存无问题对象'}).click();
- await expect(page.getByTestId('correction-success')).toContainText('已按部分保存放行无阻断的对象');
- expect(payload).toMatchObject({allow_partial:true,reason:'先保存有单号的对象，缺键记录单独处理',
+ const [response]=await Promise.all([
+  postResponse(page,reviewUrl),
+  partial.getByRole('button',{name:'只保存无问题对象'}).click(),
+ ]);
+ expect(response.status()).toBe(200);
+ const request=response.request().postDataJSON() as Record<string,unknown>;
+ const body=await response.json();
+ // 提交契约：allow_partial 与原因走顶层，决定范围是整批映射。
+ expect(request).toMatchObject({allow_partial:true,reason:'先保存有单号的对象，缺键记录单独处理',
   decision:{target_scope:'mapping',decision:'save'}});
+ // 真实后端按计划放行：INV-001 保存，缺键记录挂起为未识别，无对象被挡。
+ expect(body.partial).toBe(true);
+ expect(body.saved).toHaveLength(1);
+ expect((body.saved[0] as {values:{number?:string}}).values.number).toBe('INV-001');
+ expect(body.suspended).toHaveLength(0);
+ expect(body.unidentified_records).toHaveLength(1);
+ await expect(page.getByTestId('correction-success')).toContainText('已按部分保存放行无阻断的对象');
+ // 成功后视图刷新：接入进入已保存，对象只读。
+ await expect(page.getByText('接入已保存，对象为只读。')).toBeVisible();
 });
 
 test('空白页来源可标记分区不适用',async({page})=>{
@@ -106,16 +124,19 @@ test('空白页来源可标记分区不适用',async({page})=>{
  const disposal=issue.getByTestId('disposal-option');
  await expect(disposal).toContainText('标记「mixed.pdf」分区 2 不适用');
  await expect(disposal.getByRole('button',{name:'提交处置'})).toBeDisabled();
- let payload:Record<string,unknown>|undefined;
- // 待后端路由 B1 合入后去掉。
- await page.route('**/api/sessions/*/dispositions',async route=>{
-  payload=route.request().postDataJSON();
-  await route.fulfill({json:{session_id:'mock',session_revision:'2',
-   disposition_ref:'mock@1',entry:payload,entries:[payload]}});
- });
  await disposal.getByLabel(/处置原因/).fill('第 2 页是空白页，确认不适用');
- await disposal.getByRole('button',{name:'提交处置'}).click();
- await expect(page.getByTestId('correction-success')).toContainText('处置已记录');
- expect(payload).toMatchObject({action:'partition_not_applicable',partition:2,
+ const [response]=await Promise.all([
+  postResponse(page,disposalUrl),
+  disposal.getByRole('button',{name:'提交处置'}).click(),
+ ]);
+ expect(response.status()).toBe(200);
+ const request=response.request().postDataJSON() as Record<string,unknown>;
+ const body=await response.json();
+ expect(request).toMatchObject({action:'partition_not_applicable',partition:2,
   reason:'第 2 页是空白页，确认不适用'});
+ expect(body.entry).toMatchObject({action:'partition_not_applicable',partition:2,
+  reason:'第 2 页是空白页，确认不适用'});
+ await expect(page.getByTestId('correction-success')).toContainText('处置已记录');
+ // 视图刷新：预览失效后对象区回到空态。
+ await expect(page.getByText('生成映射预览后，在这里查看对象。')).toBeVisible();
 });
