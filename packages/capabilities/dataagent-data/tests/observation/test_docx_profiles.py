@@ -49,11 +49,17 @@ def test_docx_extracts_paragraphs_headings_tables_and_merged_cells(workspace, ct
         ['招待费', '800', '实报实销'],
     ]
     assert table['header_detected'] is True and table['header_row'] == 1
-    header_index = table['header_record']
-    assert profile.records[header_index] == {
-        '项目': '项目', '金额': '金额', '说明': '说明'}
-    assert profile.anchors[f'{header_index}.项目'][0].selector.unit_ref == (
-        'table:1/row:1/col:1')
+    assert table['header_record'] is None
+    assert table['headers'] == ['项目', '金额', '说明']
+    assert table['header_cells'][0]['unit_ref'] == 'table:1/row:1/col:1'
+    assert all(row.get('项目') != '项目' for row in profile.records)
+
+    record_sets = profile.metadata['record_sets']
+    assert profile.metadata['default_record_set'] == 'table:1'
+    assert record_sets['paragraphs']['count'] == 4
+    table_indices = record_sets['table:1']['record_indices']
+    assert len(table_indices) == 2
+    assert profile.records[table_indices[0]]['项目'] == '差旅费'
 
     by_item = {row['项目']: index for index, row in enumerate(profile.records) if row.get('项目')}
     assert profile.records[by_item['差旅费']]['说明'] == '实报实销'

@@ -18,7 +18,7 @@ from dataagent_contracts.core.refs import SourceAnchor
 from dataagent_contracts.intake import SourceProfile, CoverageGap
 from ..adapters.parsers.delimited import parse_delimited
 from ..adapters.parsers.json_records import parse_json_records
-from .documents import probe_document
+from .documents import _build_record_sets, probe_document
 
 
 BUDGET_GAP = 'time_budget_exceeded'
@@ -89,6 +89,74 @@ def _positive_int(value, default, maximum):
     return value
 
 
+def select_record_set(profile, name=None):
+    """Return a profile view restricted to one Word record set.
+
+    A .docx profile exposes independent record sets in
+    ``metadata.record_sets`` (``paragraphs`` and ``table:<n>``).  The default
+    is the table set with the most data rows; ``name=None`` selects it.  Pass
+    ``'paragraphs'`` explicitly to work with prose records, or ``'all'`` to
+    keep every record.  Non-Word profiles pass through unchanged.
+    """
+    metadata = profile.metadata if isinstance(profile.metadata, dict) else {}
+    sets = metadata.get('record_sets')
+    if not isinstance(sets, dict) or not sets:
+        if name not in (None, '', 'all'):
+            raise ValueError('the source profile has no selectable record sets')
+        return profile
+    chosen = name or metadata.get('default_record_set')
+    if chosen in (None, '', 'all'):
+        return profile.model_copy(update={
+            'metadata': {**metadata, 'selected_record_set': 'all'}})
+    if chosen not in sets:
+        available = ', '.join(sorted(sets))
+        raise ValueError(f'unknown record set {chosen!r}; available: {available}')
+    indices = [index for index in sets[chosen].get('record_indices', [])
+               if isinstance(index, int) and 0 <= index < len(profile.records)]
+    index_map = {old: new for new, old in enumerate(indices)}
+    records = [profile.records[index] for index in indices]
+    anchors = {}
+    for key, values in profile.anchors.items():
+        head, separator, field = key.partition('.')
+        if not separator:
+            continue
+        try:
+            old_index = int(head)
+        except ValueError:
+            continue
+        if old_index in index_map:
+            anchors[f'{index_map[old_index]}.{field}'] = list(values)
+    locations = []
+    for location in metadata.get('record_locations', []):
+        if not isinstance(location, dict):
+            continue
+        old_index = location.get('record')
+        if isinstance(old_index, int) and old_index in index_map:
+            item = dict(location)
+            item['record'] = index_map[old_index]
+            locations.append(item)
+    fields = list(dict.fromkeys(field for row in records for field in row))
+    selected_sets, default = _build_record_sets(
+        records, locations, metadata.get('tables', []))
+    summary = {set_name: {
+        'kind': entry.get('kind'), 'count': entry.get('count'),
+        'headers': list(entry.get('headers', [])),
+    } for set_name, entry in sets.items()}
+    selected_metadata = {
+        **metadata, 'record_locations': locations,
+        'selected_record_set': chosen, 'source_record_sets': summary,
+        'field_stats': {field: {'missing_in_sample': sum(row.get(field) is None
+                                                         for row in records)}
+                        for field in fields},
+    }
+    if selected_sets:
+        selected_metadata['record_sets'] = selected_sets
+        selected_metadata['default_record_set'] = default
+    return profile.model_copy(update={
+        'records': records, 'fields': fields, 'anchors': anchors,
+        'metadata': selected_metadata})
+
+
 def probe_file(selection, ctx, *, workspace, budget_rows=200, engine=None,
                previous=None, deadline=None, segment_rows=DEFAULT_SEGMENT_ROWS,
                segment_pages=DEFAULT_SEGMENT_PAGES,
@@ -100,6 +168,10 @@ def probe_file(selection, ctx, *, workspace, budget_rows=200, engine=None,
     segment_pages=_positive_int(segment_pages, DEFAULT_SEGMENT_PAGES, 1000)
     segment_blocks=_positive_int(segment_blocks, DEFAULT_SEGMENT_BLOCKS, 100000)
     segment_sheets=_positive_int(segment_sheets, DEFAULT_SEGMENT_SHEETS, 1000)
+    requested_record_set=selection.options.get('record_set')
+    if requested_record_set is not None and not isinstance(requested_record_set, str):
+        raise ValueError('record_set option must be a string')
+    requested_record_set=requested_record_set or None
     workspace=Path(workspace).resolve()
     path=_safe_path(workspace,selection.locator_ref)
     locator_ref=path.relative_to(workspace).as_posix()
@@ -266,7 +338,8 @@ def probe_file(selection, ctx, *, workspace, budget_rows=200, engine=None,
     else:
         records,anchors,metadata,completed,gaps,issues=probe_document(
             snapshot,selection.source_id,revision,engine=engine,previous=previous,
-            deadline=deadline,segment_pages=segment_pages,segment_blocks=segment_blocks)
+            deadline=deadline,segment_pages=segment_pages,segment_blocks=segment_blocks,
+            known_fields=selection.options.get('known_fields'))
         total=metadata.get('total_pages',metadata.get('total_blocks',1))
         if isinstance(metadata.get('resume'),dict):resume=metadata['resume']
     fields=list(dict.fromkeys(k for row in records for k in row))
@@ -276,9 +349,14 @@ def probe_file(selection, ctx, *, workspace, budget_rows=200, engine=None,
         'field_stats':{k:{'missing_in_sample':sum(row.get(k) is None for row in records)} for k in fields}})
     if resume is not None:
         metadata['resume']=resume
-    return SourceProfile(source_id=selection.source_id,source_revision=revision,kind=suffix.lstrip('.'),
+        if requested_record_set:
+            metadata['requested_record_set']=requested_record_set
+    profile=SourceProfile(source_id=selection.source_id,source_revision=revision,kind=suffix.lstrip('.'),
         records=records,fields=fields,anchors=anchors,metadata=metadata,total_partitions=total,
         completed_partitions=completed,gaps=gaps,issues=issues,sampled=sampled)
+    if requested_record_set and resume is None:
+        profile=select_record_set(profile,requested_record_set)
+    return profile
 
 
 def _xlsx_layout(sheet, hint, trim_empty_edges_with_offset):
