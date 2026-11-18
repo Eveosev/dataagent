@@ -2,7 +2,6 @@
 import json
 import os
 from pathlib import Path
-import shlex
 import signal
 import subprocess
 import sys
@@ -62,21 +61,6 @@ def _health_info(url):
     return payload if isinstance(payload, dict) else None
 
 
-def _command_workspace(command):
-    """The ``--workspace`` value in a process command line, if present."""
-
-    try:
-        parts = shlex.split(command)
-    except ValueError:
-        return None
-    for index, part in enumerate(parts):
-        if part == '--workspace' and index + 1 < len(parts):
-            return parts[index + 1]
-        if part.startswith('--workspace='):
-            return part.split('=', 1)[1]
-    return None
-
-
 def _pid_listens_on(pid, url):
     """Whether ``pid`` owns the listening socket behind ``url`` (legacy help)."""
 
@@ -98,27 +82,20 @@ def _pid_listens_on(pid, url):
     return f'n127.0.0.1:{port}' in result.stdout or f'n[::1]:{port}' in result.stdout
 
 
-def _is_workspace_service(pid, workspace, scope, url):
+def _is_workspace_service(pid, scope, url):
     """Signal only the process that serves this workspace's endpoint.
 
-    ``ps`` identifies the process as a workbench service and, when it carries
-    ``--workspace``, that argument must resolve to this workspace. The health
-    response then reports the serving pid, binding the descriptor's pid to the
-    URL; a legacy service without a pid is checked through its listening
-    socket. If neither binding is possible, nothing is signalled.
+    ``ps`` only confirms that the pid is a workbench service; its output is a
+    display string, not argv, and loses quoting around paths with spaces, so
+    the workspace path is never parsed from it. The health response binds the
+    serving pid to the descriptor's URL and scope instead. A legacy service
+    without a pid is checked through its listening socket; if that binding is
+    impossible, nothing is signalled.
     """
 
     command = _process_command(pid)
-    if command is not None:
-        if 'dataagent_workbench.interfaces.cli' not in command:
-            return False
-        stated = _command_workspace(command)
-        if stated is not None:
-            try:
-                if Path(stated).expanduser().resolve() != Path(workspace).resolve():
-                    return False
-            except OSError:
-                return False
+    if command is not None and 'dataagent_workbench.interfaces.cli' not in command:
+        return False
     info = _health_info(url)
     if info is None or info.get('scope') != scope:
         return False
@@ -141,7 +118,7 @@ def service_status(root):
         return None
     pid = data.get('pid')
     alive = _alive(pid) and _is_workspace_service(
-        pid, root.parent, data.get('scope'), data.get('url'))
+        pid, data.get('scope'), data.get('url'))
     return {'pid': pid, 'url': data.get('url'), 'scope': data.get('scope'),
             'alive': alive}
 
@@ -162,7 +139,7 @@ def stop_service(wb):
     if pid == os.getpid():
         return {'status': 'failed', 'workspace': str(wb.workspace),
                 'detail': 'refusing to stop the current process'}
-    if not _is_workspace_service(pid, wb.workspace, wb.scope, data.get('url')):
+    if not _is_workspace_service(pid, wb.scope, data.get('url')):
         return {'status': 'failed', 'workspace': str(wb.workspace),
                 'detail': f'pid {pid} is not a workbench service for this workspace'}
     try:

@@ -9,6 +9,7 @@ import time
 
 import pytest
 
+from dataagent_workbench import launcher
 from dataagent_workbench.bootstrap import Workbench
 from dataagent_workbench.interfaces import cli
 from dataagent_workbench.interfaces.cli import list_sessions
@@ -174,6 +175,28 @@ def test_stop_service_binds_the_pid_to_the_endpoint(tmp_path):
             if process.poll() is None:
                 process.kill()
                 process.wait(timeout=5)
+
+
+def test_stop_service_accepts_a_workspace_path_with_spaces(tmp_path, monkeypatch):
+    wb = Workbench(tmp_path / 'Mint Project')
+    service, url = _start_health(wb, tmp_path, 'space.port')
+    # ``ps`` prints this display string without keeping the argv boundary, so
+    # the path appears unquoted even though it contains a space.
+    monkeypatch.setattr(
+        launcher, '_process_command',
+        lambda pid: (f'{sys.executable} -m dataagent_workbench.interfaces.cli '
+                     f'--workspace {wb.workspace} serve'),
+    )
+    try:
+        descriptor = _descriptor(wb, service.pid, url)
+        result = stop_service(wb)
+        assert result['status'] == 'stopped', result
+        assert service.wait(timeout=5) is not None
+        assert descriptor.exists() is False
+    finally:
+        if service.poll() is None:
+            service.kill()
+            service.wait(timeout=5)
 
 
 def test_service_health_reports_the_serving_pid(tmp_path):
