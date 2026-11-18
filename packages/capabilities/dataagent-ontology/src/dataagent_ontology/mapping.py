@@ -16,6 +16,13 @@ class Materialized:
     issues: list[dict]
 
 
+def _date_only(parsed):
+    """A datetime can back a date only when its time part is exactly midnight."""
+    if (parsed.hour,parsed.minute,parsed.second,parsed.microsecond)!=(0,0,0,0):
+        raise ValueError('时间不是零点，不能按日期保存')
+    return parsed.date().isoformat()
+
+
 def convert(binding,record):
     if not isinstance(binding,FieldBinding):binding=FieldBinding.model_validate(binding)
     value=record.get(binding.source_field)
@@ -44,7 +51,7 @@ def convert(binding,record):
             return number
     if binding.transform=='date':
         if 'format' in options:
-            return datetime.strptime(str(value),options['format']).date().isoformat()
+            return _date_only(datetime.strptime(str(value),options['format']))
         text=str(value).strip()
         try:
             return date.fromisoformat(text).isoformat()
@@ -52,11 +59,13 @@ def convert(binding,record):
             # The Excel reader hands midnight date cells over as
             # ``YYYY-MM-DDTHH:MM:SS``.  A date binding without an explicit
             # format must still accept that ISO form; otherwise the column the
-            # evidence inferred as ``date`` cannot be mapped at all.
+            # evidence inferred as ``date`` cannot be mapped at all.  A
+            # non-midnight time is refused instead of being truncated.
             try:
-                return datetime.fromisoformat(text).date().isoformat()
+                parsed=datetime.fromisoformat(text)
             except ValueError:
                 raise ValueError('date value is not ISO 8601') from None
+            return _date_only(parsed)
     if binding.transform=='datetime':
         parsed=datetime.strptime(str(value),options['format']) if 'format' in options else datetime.fromisoformat(str(value))
         if parsed.tzinfo is None:

@@ -32,6 +32,12 @@ from dataagent_ontology.registry import entry_row, parse_entry
 MAX_LIMIT = 200
 DEFAULT_LIMIT = 50
 _READ_LIMIT = 1000
+# Related reports describe the returned page only (cursor pagination is the
+# unit the caller sees), and both lists are bounded so one page cannot emit an
+# unbounded payload.  A page has at most MAX_LIMIT rows, one missing entry per
+# row, so the missing cap only matters if the page limit grows.
+_MAX_RELATED_MISSING = MAX_LIMIT
+_MAX_RELATED_CANDIDATES = 20
 # Relations are materialized as role values, so a composite target identity is
 # usually carried as one joined string (a ``combine`` binding).  Well-known
 # separators are tried instead of asking the caller to repeat the binding.
@@ -483,22 +489,33 @@ class QueryService:
         releases = list(self._releases(request.ontology_id, revision))
         targets = (self._related_targets(releases, definition, related)
                    if related is not None else None)
-        related_facts = []
+        # Facts stay grouped by the release that carried them.  An instance is
+        # matched against its own release first; facts from another release of
+        # the same ontology revision are only a fallback.
+        related_facts = {}
+        relation_hidden = False
         if related is not None:
             seen_facts = set()
-            for _, snapshot in releases:
+            for release, snapshot in releases:
+                release_ref = release['ref']
+                hidden_relations = self._hidden_relations(snapshot['body'])
+                facts = []
                 for fact in snapshot['body'].get('facts') or []:
                     if fact.get('relation') != related['relation']:
                         continue
-                    if fact.get('id') in seen_facts:
+                    if fact.get('relation') in hidden_relations:
+                        relation_hidden = True
                         continue
-                    seen_facts.add(fact.get('id'))
-                    related_facts.append(fact)
+                    fact_key = fact.get('id') or json.dumps(
+                        fact, sort_keys=True, ensure_ascii=False, default=str)
+                    if fact_key in seen_facts:
+                        continue
+                    seen_facts.add(fact_key)
+                    facts.append(fact)
+                related_facts[release_ref] = facts
         items = []
         warnings = []
-        related_matched = related_missing = related_ambiguous = 0
-        related_missing_items = []
-        hidden_related_fields = set()
+        instances_by_key = {}
         for release, snapshot in releases:
             release_ref = release['ref']
             hidden = self._hidden_properties(snapshot['body'])
@@ -547,32 +564,9 @@ class QueryService:
                     'deactivated': state != 'active',
                     'unresolved': list(instance.get('unresolved') or []),
                 }
-                if related is not None:
-                    related_value, status, hidden_fields = self._related_for(
-                        instance=instance, concept=concept, spec=related,
-                        facts=related_facts, targets=targets)
-                    item['related'] = related_value
-                    if related_value is None:
-                        related_missing += 1
-                        related_missing_items.append({
-                            'release_ref': release_ref,
-                            'instance_id': instance.get('id'),
-                            'values': values,
-                        })
-                    else:
-                        related_matched += 1
-                    if status == 'ambiguous':
-                        related_ambiguous += 1
-                    for name in hidden_fields:
-                        if name not in hidden_related_fields:
-                            hidden_related_fields.add(name)
-                            warnings.append({
-                                'code': 'ontology.related_field_hidden',
-                                'relation': related['relation'],
-                                'property': name,
-                                'detail': '该属性不在披露范围内，未带回',
-                            })
                 items.append(item)
+                instances_by_key[(release_ref, instance.get('id'))] = (
+                    instance, concept)
         items.sort(key=lambda item: (item['release_ref'], item['instance_id'] or ''))
         if cursor_key is not None:
             items = [item for item in items
@@ -583,6 +577,48 @@ class QueryService:
         next_cursor = (_encode_cursor((page[-1]['release_ref'],
                                        page[-1]['instance_id'] or ''))
                        if has_more and page else None)
+        # Related lookups and their reports describe this page only.  Computing
+        # them before pagination made page 2 repeat page 1's counts and could
+        # grow ``related_missing`` with every row of the revision.
+        related_matched = related_missing = related_ambiguous = 0
+        related_missing_items = []
+        hidden_related_fields = set()
+        if related is not None:
+            for item in page:
+                instance, item_concept = instances_by_key[
+                    (item['release_ref'], item['instance_id'])]
+                related_value, status, hidden_fields = self._related_for(
+                    instance=instance, concept=item_concept, spec=related,
+                    facts=related_facts, release_ref=item['release_ref'],
+                    targets=targets)
+                item['related'] = related_value
+                if status == 'ambiguous':
+                    related_ambiguous += 1
+                elif related_value is None:
+                    related_missing += 1
+                    if len(related_missing_items) < _MAX_RELATED_MISSING:
+                        related_missing_items.append({
+                            'release_ref': item['release_ref'],
+                            'instance_id': item['instance_id'],
+                            'values': item['values'],
+                        })
+                else:
+                    related_matched += 1
+                for name in hidden_fields:
+                    if name not in hidden_related_fields:
+                        hidden_related_fields.add(name)
+                        warnings.append({
+                            'code': 'ontology.related_field_hidden',
+                            'relation': related['relation'],
+                            'property': name,
+                            'detail': '该属性不在披露范围内，未带回',
+                        })
+            if relation_hidden:
+                warnings.append({
+                    'code': 'ontology.related_relation_hidden',
+                    'relation': related['relation'],
+                    'detail': '该关系的角色来源字段不在披露范围内，关联未使用',
+                })
         response = {
             'ontology_id': request.ontology_id,
             'ontology_revision': '%s@%s' % (request.ontology_id, revision),
@@ -617,7 +653,9 @@ class QueryService:
                     'ambiguous': related_ambiguous,
                 },
                 'related_missing': related_missing_items,
-                'related_missing_count': len(related_missing_items),
+                'related_missing_count': related_missing,
+                'related_missing_truncated': (
+                    len(related_missing_items) < related_missing),
             })
         return response
 
@@ -669,6 +707,10 @@ class QueryService:
                         % (condition.op, condition.property, value_type))
                 if condition.value is None or isinstance(condition.value, list):
                     raise ValueError('%s requires a single value' % condition.op)
+                # Parse the comparison value before any instance is read.  An
+                # empty page must still reject ``gt "not-a-number"`` instead
+                # of silently returning no rows.
+                _order(condition.value, value_type, query=True)
 
     @staticmethod
     def _conditions_match(values: dict, conditions: Iterable[OntologyQueryCondition],
@@ -760,28 +802,49 @@ class QueryService:
                 'index': index}
 
     def _related_for(self, *, instance: dict, concept: ConceptDefinition, spec: dict,
-                     facts: list, targets: dict):
-        """Return (related|null, status, requested fields hidden by policy)."""
+                     facts: dict, release_ref: str, targets: dict):
+        """Return (related|null, status, requested fields hidden by policy).
+
+        ``facts`` maps a release ref to the facts that release carried.  The
+        instance's own release is authoritative: facts from the other releases
+        of the same ontology revision are only a fallback.  Every matching fact
+        in the chosen group contributes target ids; two or more distinct
+        targets are declared ambiguous instead of picking one arbitrarily.
+        """
         values = instance.get('values') or {}
         instance_id = instance.get('id')
         current_keys = _identity_keys(values, concept)
         current_keys.add(str(instance_id))
         source_role = spec['subject_role'] if spec['forward'] else spec['object_role']
         target_role = spec['object_role'] if spec['forward'] else spec['subject_role']
-        for fact in facts:
-            bindings = {binding.get('role'): binding
-                        for binding in fact.get('role_bindings') or []}
-            source_binding = bindings.get(source_role)
-            target_binding = bindings.get(target_role)
-            if source_binding is None or target_binding is None:
-                continue
-            if not _binding_hits(source_binding, instance_id, current_keys):
-                continue
-            target_ids = _target_ids(target_binding, targets)
+        own = facts.get(release_ref) or []
+        others = [fact for ref, group in facts.items() if ref != release_ref
+                  for fact in group]
+        for group in (own, others):
+            target_ids = set()
+            for fact in group:
+                bindings = {binding.get('role'): binding
+                            for binding in fact.get('role_bindings') or []}
+                source_binding = bindings.get(source_role)
+                target_binding = bindings.get(target_role)
+                if source_binding is None or target_binding is None:
+                    continue
+                if not _binding_hits(source_binding, instance_id, current_keys):
+                    continue
+                target_ids.update(_target_ids(target_binding, targets))
             if not target_ids:
                 continue
-            ambiguous = len(target_ids) > 1
-            target_id = sorted(target_ids)[0]
+            candidates = sorted(target_ids)
+            if len(candidates) > 1:
+                listed = candidates[:_MAX_RELATED_CANDIDATES]
+                return ({'relation': spec['relation'],
+                         'target_instance_id': None,
+                         'fields': {},
+                         'ambiguous': True,
+                         'candidates': listed,
+                         'candidates_truncated': len(listed) < len(candidates)},
+                        'ambiguous', [])
+            target_id = candidates[0]
             disclosed = targets['disclosed'].get(target_id) or {}
             hidden = targets['hidden'].get(target_id) or set()
             fields, hidden_fields = {}, []
@@ -794,9 +857,33 @@ class QueryService:
                     fields[name] = None
             return ({'relation': spec['relation'],
                      'target_instance_id': target_id,
-                     'fields': fields},
-                    'ambiguous' if ambiguous else 'matched', hidden_fields)
+                     'fields': fields,
+                     'ambiguous': False},
+                    'matched', hidden_fields)
         return None, 'missing', []
+
+    def _hidden_relations(self, preview_body: dict) -> set[str]:
+        """Relations whose role source field lies outside the disclosure scope.
+
+        A relation fact is materialized from source fields.  Joining two
+        objects on a source field outside ``allowed_model_fields`` and then
+        returning the far object's fields would disclose that hidden link, so
+        such facts are not usable by ``include_related`` at all.
+        """
+        allowed = self.wb.allowed_model_fields
+        if allowed is None:
+            return set()
+        hidden = set()
+        for source_id, mapping in self._mapping_pairs(preview_body):
+            allow = set(allowed.get(source_id, []))
+            for relation, roles in (mapping.get('relation_bindings') or {}).items():
+                for binding in (roles or {}).values():
+                    fields = ((binding.get('options') or {}).get('fields')
+                              or [binding.get('source_field')])
+                    if any(field != '$entity' and field not in allow
+                           for field in fields):
+                        hidden.add(relation)
+        return hidden
 
     def _all(self, kind: str):
         rows = []
@@ -940,23 +1027,32 @@ class QueryService:
                 })
         return index
 
+    @staticmethod
+    def _mapping_pairs(preview_body: dict):
+        """Every (source id, mapping) pair carried by one preview body.
+
+        Multi-source saves keep one mapping per source in the preview
+        extension; a single-source body stores its mapping directly.  When the
+        source cannot be identified the id is ``None``, which makes the
+        disclosure lookup treat the fields as not allowed.
+        """
+        extensions = preview_body.get('extensions') or {}
+        mappings = extensions.get('intake.source_mappings') or {}
+        if mappings:
+            return list(mappings.items())
+        if preview_body.get('mapping'):
+            sources = list((preview_body.get('source_revisions') or {}).keys())
+            return [(sources[0] if len(sources) == 1 else None,
+                     preview_body['mapping'])]
+        return []
+
     def _hidden_properties(self, preview_body: dict) -> set[str]:
         """Properties whose source fields are outside the model disclosure scope."""
         allowed = self.wb.allowed_model_fields
         if allowed is None:
             return set()
-        extensions = preview_body.get('extensions') or {}
-        mappings = extensions.get('intake.source_mappings') or {}
-        if mappings:
-            pairs = list(mappings.items())
-        elif preview_body.get('mapping'):
-            sources = list((preview_body.get('source_revisions') or {}).keys())
-            pairs = [(sources[0] if len(sources) == 1 else None,
-                      preview_body['mapping'])]
-        else:
-            pairs = []
         hidden = set()
-        for source_id, mapping in pairs:
+        for source_id, mapping in self._mapping_pairs(preview_body):
             allow = set(allowed.get(source_id, []))
             for name, binding in (mapping.get('bindings') or {}).items():
                 fields = ((binding.get('options') or {}).get('fields')
