@@ -266,15 +266,33 @@ test('未映射来源在处置一行后重新生成预览时保持不映射',asy
  const mapped=view.profiles.find(profile=>!profile.fields.includes('note'))!;
  const other=view.profiles.find(profile=>profile.fields.includes('note'))!;
  expect(mapped&&other).toBeTruthy();
- // Agent 的单来源提案：只给 ledger 建映射，另一份材料留在任务里但未映射。
- const proposal={id:'candidate',revision:'1',
+ const proposalFor=(source:typeof mapped)=>({id:'candidate',revision:'1',
   ontology_revision:`${view.ontology.id}@${view.ontology.revision}`,concept:view.ontology_concept,
-  source_fingerprint:mapped.metadata.structure_fingerprint,
-  bindings:{number:{source_field:'number'},amount:{source_field:'amount_minor',transform:'minor_to_major'},
-   currency:{source_field:'currency'}}};
+  source_fingerprint:source.metadata.structure_fingerprint,
+  bindings:{number:{source_field:'number'},
+   amount:source.fields.includes('amount_minor')
+    ?{source_field:'amount_minor',transform:'minor_to_major'}
+    :{source_field:'amount'},
+   currency:{source_field:'currency'}}});
+ const proposal=proposalFor(mapped),otherProposal=proposalFor(other);
+ // 用户此前编辑过来源 B：服务端草稿先留下 B 的绑定。随后 Agent 把范围
+ // 缩窄为只含 A；缩窄提案必须同时清掉草稿里的 B，否则最终保存仍会因
+ // 草稿含范围外来源而报冲突。
+ const stale=await page.request.put(`/api/sessions/${sid}/draft`,{
+  data:{expected_revision:view.session.revision,draft:{source_bindings:{
+   [mapped.source_id]:proposal.bindings,[other.source_id]:otherProposal.bindings}}}});
+ expect(stale.ok(),await stale.text()).toBeTruthy();
+ const staleView=await (await page.request.get(`/api/sessions/${sid}/view`)).json() as {
+  session:{revision:string};draft:{source_bindings:Record<string,unknown>}};
+ expect(staleView.draft.source_bindings[other.source_id]).toBeTruthy();
+ // Agent 的单来源提案：只给 ledger 建映射，另一份材料留在任务里但未映射。
  const posted=await page.request.post(`/api/sessions/${sid}/source-proposals`,{
-  data:{proposals:{[mapped.source_id]:proposal},expected_revision:view.session.revision}});
+  data:{proposals:{[mapped.source_id]:proposal},expected_revision:staleView.session.revision}});
  expect(posted.ok(),await posted.text()).toBeTruthy();
+ const narrowed=await (await page.request.get(`/api/sessions/${sid}/view`)).json() as {
+  session:{selected_versions:Record<string,string>};draft:{source_bindings:Record<string,unknown>}};
+ expect(narrowed.draft.source_bindings[other.source_id]).toBeUndefined();
+ expect(narrowed.session.selected_versions[`mapping:${other.source_id}`]).toBeFalsy();
  await page.reload();
  await expect(page.getByRole('button',{name:'打开对象页'})).toBeVisible();
  await page.getByRole('button',{name:'打开对象页'}).click();
@@ -336,6 +354,11 @@ test('未映射来源在处置一行后重新生成预览时保持不映射',asy
  await expect(page.getByRole('button',{name:'保存接入'})).toBeEnabled();
  await page.getByRole('button',{name:'保存接入'}).click();
  await expect(page.getByRole('heading',{name:'接入已保存'})).toBeVisible();
+ // 最终保存只含 ledger 的两个对象，未映射且已整源处置的 other 不再出现。
+ const saved=await (await page.request.get(`/api/sessions/${sid}/view`)).json() as {
+  preview:{instances:{values:{number?:string}}[]}|null};
+ expect(saved.preview?.instances.map(instance=>instance.values.number).sort())
+  .toEqual(['INV-001','INV-002']);
 });
 
 // FDE2-05 回归：先全量映射两份材料，再缩窄为只映射 ledger，最后在网页点

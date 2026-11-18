@@ -156,6 +156,39 @@ def test_ignore_source_disposition_is_audited_clears_the_issue_and_allows_save(t
                           wb.sessions.get(session.id, wb.ctx).revision, wb.ctx)
 
 
+def test_narrowing_prunes_stale_draft_and_final_save_keeps_only_mapped_objects(tmp_path):
+    wb, session = two_source_setup(tmp_path)
+    stale = {
+        source_id: {key: value.model_dump(mode='json')
+                    for key, value in proposal_for(wb, session, source_id).bindings.items()}
+        for source_id in ('rows', 'extra')
+    }
+    wb.intake.save_draft(session.id, {'source_bindings': stale}, session.revision, wb.ctx)
+
+    current = wb.sessions.get(session.id, wb.ctx)
+    wb.intake.submit_source_proposals(
+        session.id, {'rows': proposal_for(wb, current, 'rows')}, current.revision, wb.ctx)
+    draft = wb.store.current('ui_draft', session.id, scope=wb.scope)
+    # The narrowing proposal owns the scope: the old extra binding is gone
+    # before the source disposition and final save.
+    assert set(draft['body']['source_bindings']) == {'rows'}
+
+    current = wb.sessions.get(session.id, wb.ctx)
+    wb.intake.dispose(session.id, _dispose('ignore_source'), current.revision, wb.ctx)
+    current = wb.sessions.get(session.id, wb.ctx)
+    preview = wb.intake.submit_source_proposals(
+        session.id, {'rows': proposal_for(wb, current, 'rows')}, current.revision, wb.ctx)
+    assert preview.issues == []
+
+    current = wb.sessions.get(session.id, wb.ctx)
+    wb.intake.apply(session.id, ReviewDecision(
+        preview_ref=current.selected_versions['preview'], target_scope='mapping'),
+        current.revision, wb.ctx)
+    saved = wb.intake.view(session.id, wb.ctx)
+    assert wb.sessions.get(session.id, wb.ctx).phase == 'saved'
+    assert [instance['values'].get('number') for instance in saved['preview']['instances']] == ['INV-1']
+
+
 def test_ignore_source_over_the_wire_is_partition_not_applicable_without_partition(tmp_path):
     wb, session = two_source_setup(tmp_path)
     wb.intake.submit_source_proposals(
@@ -484,3 +517,27 @@ def test_issue_summary_uses_chinese_reason_for_unknown_code(tmp_path):
     assert item['reason'] == '该项未通过核对'
     assert 'Invalid' not in item['reason']
     assert item['detail'] == raw
+
+
+def clause_conversion_setup(tmp_path):
+    wb = Workbench(tmp_path)
+    profile = csv_profile('clause', [
+        {'number': 'CL-1', 'amount_minor': 'not-a-number', 'currency': 'CNY'},
+    ], kind='clause')
+    profile.metadata['selected_record_set'] = 'clause_records:费用标准'
+    wb.layer_client = StubProbeClient({'clause': profile})
+    session = wb.intake.advance(start(wb, [SourceSelection(
+        source_id='clause', kind='file', locator_ref='clause.pdf')]).session_id, wb.ctx)
+    return wb, session
+
+
+def test_clause_conversion_failure_has_no_exclude_record_option(tmp_path):
+    wb, session = clause_conversion_setup(tmp_path)
+    conversion = wb.intake.disposition_options(session, {'issues': [{
+        'code': 'ontology.conversion_failed', 'source_id': 'clause', 'row': 0}]})
+    assert not [option for option in conversion if option['action'] == 'exclude_record']
+    # 引文归属失败仍可按条款记录逐条排除（不是真实数据字段转换失败）。
+    attribution = wb.intake.disposition_options(session, {'issues': [{
+        'code': 'record_attribution_unverified', 'source_id': 'clause', 'row': 0}]})
+    assert [option['record'] for option in attribution
+            if option['action'] == 'exclude_record'] == [0]

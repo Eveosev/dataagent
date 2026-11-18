@@ -433,14 +433,19 @@ class IntakeService:
                     continue
                 # FDE2-06: only a row that itself reads like the header (or is
                 # entirely blank) may be excluded; a real data row with a bad
-                # value must be corrected or re-mapped instead.  Clause record
-                # sets keep the per-record escape: a record whose quote
-                # attribution failed or whose clause never stated a required
-                # value is resolved by dropping that record, not by re-mapping.
+                # value must be corrected or re-mapped instead.  A clause
+                # record may still be dropped when its quote attribution or a
+                # required value is missing (the clause never stated it), but
+                # a real clause value that failed conversion must be corrected
+                # or re-mapped, not excluded as an irrelevant row.
                 record_set = str((profile.metadata or {}).get('selected_record_set')
                                  or '')
-                if not record_set.startswith('clause_records:') \
-                        and not self._suspected_irrelevant_row(profile, row):
+                suspected = self._suspected_irrelevant_row(profile, row)
+                if record_set.startswith('clause_records:'):
+                    if issue.get('code') == 'ontology.conversion_failed' \
+                            and not suspected:
+                        continue
+                elif not suspected:
                     continue
                 key = (source_id, 'exclude_record', None, row)
                 if key in done:
@@ -1730,6 +1735,26 @@ class IntakeService:
                 matched.add(instance.get('id'))
         return matched.pop() if len(matched)==1 else None
 
+    def _prune_stale_source_draft(self,session,source_ids):
+        """Drop draft bindings for sources the latest proposal no longer maps.
+
+        A page that edited a source before an agent narrowed the mapping scope
+        leaves that source in ``ui_draft``.  Keeping it would make the final
+        save reject the preview even though the narrowed preview is clean.
+        """
+        wb=self.wb
+        draft=wb.store.current('ui_draft',session.id,scope=wb.scope)
+        if not draft:return None,None
+        body=dict(draft['body'])
+        source_bindings=body.get('source_bindings')
+        if not isinstance(source_bindings,dict):return None,None
+        kept={key:value for key,value in source_bindings.items() if key in source_ids}
+        if kept==source_bindings:return None,None
+        body['source_bindings']=kept
+        revision=str(int(draft['revision'])+1)
+        return (Write('ui_draft',session.id,wb.scope,body,draft['revision']),
+                session.id+'@'+revision)
+
     @staticmethod
     def _proposal_source(proposal,profiles,source_id=None):
         """The single source a standalone proposal names, if it names one.
@@ -1804,10 +1829,14 @@ class IntakeService:
             versions[f'mapping:{observation.source_id}']=mid+'@'+revision
         if prior_ref and pending:versions['corrections_from']=prior_ref
         else:versions.pop('corrections_from',None)
+        draft_write,draft_ref=self._prune_stale_source_draft(
+            s,{observation.source_id for observation in observations})
+        if draft_ref:versions['draft']=draft_ref
+        writes=[Write('preview',preview.id,wb.scope,body),
+                Write('mapping',mid,wb.scope,proposal.model_dump(mode='json'),prior['revision'] if prior else None)]
+        if draft_write:writes.append(draft_write)
         wb.sessions.update(s.id,s.revision,{'phase':'preview','selected_versions':versions,
-            'issues':preview.issues,'next_actions':['review_mapping']},ctx,extra_writes=[
-            Write('preview',preview.id,wb.scope,body),
-            Write('mapping',mid,wb.scope,proposal.model_dump(mode='json'),prior['revision'] if prior else None)])
+            'issues':preview.issues,'next_actions':['review_mapping']},ctx,extra_writes=writes)
         return preview
 
     def submit_source_proposals(self, session_id, proposals, expected_revision, ctx, *, reused=False):
@@ -1874,6 +1903,9 @@ class IntakeService:
         versions.update(preview=preview.id+'@1', mapping=f'{primary.id}@{primary.revision}')
         if prior_ref and pending:versions['corrections_from']=prior_ref
         else:versions.pop('corrections_from',None)
+        draft_write,draft_ref=self._prune_stale_source_draft(session,set(proposals))
+        if draft_ref:versions['draft']=draft_ref
+        if draft_write:writes.append(draft_write)
         wb.sessions.update(session_id, expected_revision, {
             'phase': 'preview', 'selected_versions': versions, 'issues': preview.issues,
             'next_actions': ['review_mapping'],
@@ -1893,7 +1925,12 @@ class IntakeService:
                 return {k:FieldBinding.model_validate(v).model_dump(mode='json',exclude_defaults=True,exclude_none=True) for k,v in bindings.items()}
             current=active['body']
             source_mappings=(current.get('extensions') or {}).get('intake.source_mappings', {})
-            if any(key not in source_mappings or normalize(bindings)!=normalize(source_mappings[key]['bindings'])
+            # The latest proposal owns the source scope.  A draft binding for
+            # a source outside it is stale (the narrowing proposal prunes it,
+            # but an older page can still race a write) and must not block the
+            # clean preview from being saved.
+            if any(key in source_mappings
+                   and normalize(bindings)!=normalize(source_mappings[key]['bindings'])
                    for key,bindings in draft['body'].get('source_bindings', {}).items()):
                 raise VersionConflict('draft changed; generate a new preview before saving')
             if 'bindings' in draft['body'] and normalize(draft['body']['bindings'])!=normalize(current['mapping']['bindings']):
