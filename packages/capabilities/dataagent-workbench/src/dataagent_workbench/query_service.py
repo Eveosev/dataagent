@@ -863,12 +863,14 @@ class QueryService:
         return None, 'missing', []
 
     def _hidden_relations(self, preview_body: dict) -> set[str]:
-        """Relations whose role source field lies outside the disclosure scope.
+        """Relations whose role source fields lie outside the disclosure scope.
 
-        A relation fact is materialized from source fields.  Joining two
-        objects on a source field outside ``allowed_model_fields`` and then
-        returning the far object's fields would disclose that hidden link, so
-        such facts are not usable by ``include_related`` at all.
+        A relation fact is materialized from the fields its role conversions
+        read.  Joining two objects through a field outside
+        ``allowed_model_fields`` and then returning the far object's fields
+        would disclose that hidden link, so such facts are not usable by
+        ``include_related`` at all.  ``choose`` reads its condition and both
+        branches, not the nominal ``source_field``.
         """
         allowed = self.wb.allowed_model_fields
         if allowed is None:
@@ -878,10 +880,8 @@ class QueryService:
             allow = set(allowed.get(source_id, []))
             for relation, roles in (mapping.get('relation_bindings') or {}).items():
                 for binding in (roles or {}).values():
-                    fields = ((binding.get('options') or {}).get('fields')
-                              or [binding.get('source_field')])
                     if any(field != '$entity' and field not in allow
-                           for field in fields):
+                           for field in self._binding_source_fields(binding)):
                         hidden.add(relation)
         return hidden
 
@@ -1046,6 +1046,26 @@ class QueryService:
                      preview_body['mapping'])]
         return []
 
+    @staticmethod
+    def _binding_source_fields(binding: dict) -> list[str]:
+        """Record fields a mapping conversion depends on for disclosure.
+
+        ``combine`` additionally reads ``options.fields`` and ``choose`` reads
+        its condition and both branches (``source_field`` itself is not used
+        by ``choose``).  The declared ``source_field`` stays in the set so a
+        hidden declared field never becomes usable merely because a conversion
+        leaves it unread.
+        """
+        transform = binding.get('transform', 'identity')
+        options = binding.get('options') or {}
+        fields = [binding.get('source_field')]
+        if transform == 'combine':
+            fields += list(options.get('fields') or [])
+        elif transform == 'choose':
+            fields += [options.get('when_field'), options.get('then_field'),
+                       options.get('else_field')]
+        return [field for field in fields if field]
+
     def _hidden_properties(self, preview_body: dict) -> set[str]:
         """Properties whose source fields are outside the model disclosure scope."""
         allowed = self.wb.allowed_model_fields
@@ -1055,9 +1075,8 @@ class QueryService:
         for source_id, mapping in self._mapping_pairs(preview_body):
             allow = set(allowed.get(source_id, []))
             for name, binding in (mapping.get('bindings') or {}).items():
-                fields = ((binding.get('options') or {}).get('fields')
-                          or [binding.get('source_field')])
-                if any(field not in allow for field in fields):
+                if any(field not in allow
+                       for field in self._binding_source_fields(binding)):
                     hidden.add(name)
         return hidden
 

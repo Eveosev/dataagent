@@ -583,6 +583,30 @@ def _relation_definition():
     })
 
 
+def _choose_definition():
+    """A property and a relation role materialized through ``choose``."""
+    return OntologyRevision.model_validate({
+        'id': 'choose-model', 'revision': '1',
+        'concepts': {
+            'source': {
+                'entity_type': 'Source',
+                'properties': {'marker': {'value_type': 'string', 'required': True},
+                               'secret': {'value_type': 'string'},
+                               'public': {'value_type': 'string'},
+                               'derived': {'value_type': 'string'}},
+                'identity_fields': ['marker']},
+            'target': {
+                'entity_type': 'Target',
+                'properties': {'code': {'value_type': 'string', 'required': True},
+                               'label': {'value_type': 'string'}},
+                'identity_fields': ['code']},
+        },
+        'relations': {'link': {'roles': ['source', 'target'],
+                                'subject_concept': 'source',
+                                'object_concept': 'target'}},
+    })
+
+
 def _save_concept(wb, concept, rows, bindings, relation_bindings=None,
                   ontology_id='expense-model'):
     from dataagent_contracts.intake import WorkSpec
@@ -868,6 +892,75 @@ def test_related_never_joins_on_a_hidden_relation_source_field(tmp_path):
     assert page['related_missing_count'] == 4
     assert any(warning['code'] == 'ontology.related_relation_hidden'
                for warning in page['warnings'])
+
+
+def _choose_model(tmp_path, allowed):
+    wb = Workbench(tmp_path, allowed_model_fields=allowed)
+    wb.ontology.register(_choose_definition(), wb.ctx)
+    _save_concept(wb, 'target', [{'code': 'T1', 'label': 'L1'}],
+        {'code': {'source_field': 'code'},
+         'label': {'source_field': 'label'}},
+        ontology_id='choose-model')
+    _save_concept(wb, 'source', [
+        {'marker': 'M1', 'secret': 'open', 'public': 'T1'},
+    ], {'marker': {'source_field': 'marker'},
+        'secret': {'source_field': 'secret'},
+        'public': {'source_field': 'public'},
+        'derived': {'source_field': 'marker',
+                    'transform': 'choose',
+                    'options': {'when_field': 'secret',
+                                'equals': 'open',
+                                'then_field': 'public',
+                                'else_field': 'marker'}}},
+        {'link': {'source': {'source_field': '$entity'},
+                  'target': {'source_field': 'marker',
+                             'transform': 'choose',
+                             'options': {'when_field': 'secret',
+                                         'equals': 'open',
+                                         'then_field': 'public',
+                                         'else_field': 'marker'}}}},
+        ontology_id='choose-model')
+    return wb
+
+
+def test_related_choose_role_is_hidden_when_a_read_field_is_hidden(tmp_path):
+    # choose reads when_field/then_field/else_field.  ``secret`` is the
+    # condition and is outside the disclosed scope, so both the derived
+    # property and the relation role would reveal whether secret == 'open'
+    # even though source_field (marker) is allowed.
+    wb = _choose_model(tmp_path, allowed={
+        'src-source': ['marker', 'public'],
+        'src-target': ['code', 'label'],
+    })
+    page = query(wb, ontology_id='choose-model', concept='source',
+                 include_related={'relation': 'link', 'fields': ['label']},
+                 limit=200)
+    item, = page['items']
+    assert item['values'] == {'marker': 'M1', 'public': 'T1'}
+    assert item['related'] is None
+    assert page['related_stats'] == {
+        'relation': 'link', 'matched': 0, 'missing': 1, 'ambiguous': 0,
+    }
+    assert any(warning['code'] == 'ontology.related_relation_hidden'
+               for warning in page['warnings'])
+
+
+def test_related_choose_role_links_when_every_read_field_is_disclosed(tmp_path):
+    wb = _choose_model(tmp_path, allowed={
+        'src-source': ['marker', 'secret', 'public'],
+        'src-target': ['code', 'label'],
+    })
+    page = query(wb, ontology_id='choose-model', concept='source',
+                 include_related={'relation': 'link', 'fields': ['label']},
+                 limit=200)
+    item, = page['items']
+    assert item['values'] == {'marker': 'M1', 'secret': 'open',
+                              'public': 'T1', 'derived': 'T1'}
+    assert item['related']['ambiguous'] is False
+    assert item['related']['fields'] == {'label': 'L1'}
+    assert page['related_stats'] == {
+        'relation': 'link', 'matched': 1, 'missing': 0, 'ambiguous': 0,
+    }
 
 
 def test_ordered_comparison_values_are_validated_before_any_row_is_read(tmp_path):
