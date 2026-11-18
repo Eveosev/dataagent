@@ -17,5 +17,6 @@ status: 实施中
 | [SQLite 本体发现](sqlite-ontology-discovery.md) | 发现入口、证据约束、草案审核和离线验收 |
 | [离线安装与链路验收](implementation-2026-11-11.md) | 可复跑命令、真实运行引用、评审修复与待验收场景 |
 | [打包桌面版 GUI 工具通道核实](gui-channel-check.md) | T02：打包版 Mint Agent 能起项目会话、能加载技能，但拿不到 DataAgent 的 MCP 工具 |
+| [Mint TUI 证据包摘要](evidence-tui.md) | T50：C-01 部分通过、C-02 通过、C-03 部分通过；缺陷清单、哨兵扫描与仓外证据包路径 |
 
 实施后按任务和轮次增加修复、评审与验收记录，并登记实际工作区、版本、输入范围与产物引用。
