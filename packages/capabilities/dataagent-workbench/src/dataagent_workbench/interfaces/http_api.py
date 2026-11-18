@@ -17,6 +17,7 @@ from dataagent_ontology.corrections import revalidate_corrections
 from dataagent_runtime.ports.workbench_store import VersionConflict,Write
 from pydantic_core import to_jsonable_python
 from ..ontology_discovery import DiscoveryReview
+from ..tool_schema import Dispose
 from ..view_service import ViewService
 
 
@@ -190,10 +191,24 @@ def create_app(wb):
         proposals = {key: MappingSpec.model_validate(value) for key, value in data['proposals'].items()}
         return wb.intake.submit_source_proposals(sid, proposals, data['expected_revision'], wb.ctx)
 
+    @app.post('/api/sessions/{sid}/dispositions')
+    async def dispose(sid:str,request:Request):
+        """Record an audited source disposition (intake_dispose over HTTP).
+
+        The acting subject is the host context; the body only carries the
+        disposition itself, and session identity comes from the route.
+        """
+        data=await request.json()
+        disposition=Dispose.model_validate({**data,'session_id':sid})
+        return wb.intake.dispose(sid,disposition,disposition.expected_revision,wb.ctx)
+
     @app.post('/api/sessions/{sid}/review')
     async def review(sid:str,request:Request):
         data=await request.json()
-        return wb.intake.apply(sid,ReviewDecision.model_validate(data['decision']),data['expected_revision'],wb.ctx)
+        return wb.intake.apply(sid,ReviewDecision.model_validate(data['decision']),
+            data['expected_revision'],wb.ctx,
+            allow_partial=bool(data.get('allow_partial',False)),
+            reason=str(data.get('reason') or ''))
 
     @app.post('/api/sessions/{sid}/revalidate')
     async def revalidate(sid:str,request:Request):
