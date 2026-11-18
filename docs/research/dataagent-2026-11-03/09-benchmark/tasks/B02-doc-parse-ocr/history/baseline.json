@@ -1,7 +1,18 @@
 {
   "task_id": "B02",
-  "run_id": null,
-  "updated": null,
-  "metrics": {},
-  "note": "尚无基线；首次 r 轮次完成后由裁定人写入"
+  "run_id": "r001-2026-11-18",
+  "updated": "2026-11-18T14:32:14+08:00",
+  "dataset_revision": "v0.2",
+  "metrics": {
+    "text_ned": {
+      "value": 0.517677,
+      "numerator": 31.060604,
+      "denominator": 60,
+      "split": "unseen_acceptance",
+      "direction": "lower"
+    }
+  },
+  "gate_tier": "block",
+  "verdict": "pending",
+  "note": "由 tools/set_baseline.py 从 r001-2026-11-18 的 scorecard 写入（split=unseen_acceptance）；首轮只建基线（06 Q10）"
 }

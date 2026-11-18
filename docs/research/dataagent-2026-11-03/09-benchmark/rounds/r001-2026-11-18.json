@@ -1,0 +1,122 @@
+{
+  "round_id": "r001-2026-11-18",
+  "label": "p1-intake",
+  "created": "2026-11-18T11:21:07+08:00",
+  "env": {
+    "adapter": "dataagent-cli",
+    "model": "none（dataagent-cli 确定性能力；OCR=rapidocr-local 1.4.4）",
+    "agent_kernel": "agent-kernel@ae6c3d5",
+    "dataagent": null,
+    "harness": "09-benchmark@v0.1"
+  },
+  "tasks": {
+    "B01": {
+      "run_dir": "tasks/B01-irregular-table/history/runs/r001-2026-11-18",
+      "status": "pending",
+      "verdict": "pending",
+      "gate": null
+    },
+    "B02": {
+      "run_dir": "tasks/B02-doc-parse-ocr/history/runs/r001-2026-11-18",
+      "status": "scored",
+      "verdict": "not_applicable",
+      "gate": null
+    },
+    "B03": {
+      "run_dir": "tasks/B03-field-extraction-anchor/history/runs/r001-2026-11-18",
+      "status": "scored",
+      "verdict": "unknown",
+      "gate": null
+    },
+    "B04": {
+      "run_dir": "tasks/B04-rule-applicability/history/runs/r001-2026-11-18",
+      "status": "pending",
+      "verdict": "pending",
+      "gate": null
+    },
+    "B05": {
+      "run_dir": "tasks/B05-metric-semantics/history/runs/r001-2026-11-18",
+      "status": "pending",
+      "verdict": "pending",
+      "gate": null
+    },
+    "B06": {
+      "run_dir": "tasks/B06-retrieval-sufficiency/history/runs/r001-2026-11-18",
+      "status": "pending",
+      "verdict": "pending",
+      "gate": null
+    },
+    "B07": {
+      "run_dir": "tasks/B07-e2e-analysis/history/runs/r001-2026-11-18",
+      "status": "pending",
+      "verdict": "pending",
+      "gate": null
+    },
+    "B08": {
+      "run_dir": "tasks/B08-forecast-optimization/history/runs/r001-2026-11-18",
+      "status": "pending",
+      "verdict": "pending",
+      "gate": null
+    },
+    "B09": {
+      "run_dir": "tasks/B09-spreadsheet-chart/history/runs/r001-2026-11-18",
+      "status": "pending",
+      "verdict": "pending",
+      "gate": null
+    },
+    "B10": {
+      "run_dir": "tasks/B10-drift-alerting/history/runs/r001-2026-11-18",
+      "status": "pending",
+      "verdict": "pending",
+      "gate": null
+    },
+    "B11": {
+      "run_dir": "tasks/B11-action-policy/history/runs/r001-2026-11-18",
+      "status": "pending",
+      "verdict": "pending",
+      "gate": null
+    },
+    "B12": {
+      "run_dir": "tasks/B12-data-security/history/runs/r001-2026-11-18",
+      "status": "pending",
+      "verdict": "pending",
+      "gate": null
+    },
+    "B13": {
+      "run_dir": "tasks/B13-memory-recall/history/runs/r001-2026-11-18",
+      "status": "pending",
+      "verdict": "pending",
+      "gate": null
+    },
+    "B14": {
+      "run_dir": "tasks/B14-modeling-elt/history/runs/r001-2026-11-18",
+      "status": "pending",
+      "verdict": "pending",
+      "gate": null
+    },
+    "B15": {
+      "run_dir": "tasks/B15-fde-delivery/history/runs/r001-2026-11-18",
+      "status": "pending",
+      "verdict": "pending",
+      "gate": null
+    },
+    "B16": {
+      "run_dir": "tasks/B16-multi-source-alignment/history/runs/r001-2026-11-18",
+      "status": "scored",
+      "verdict": "not_applicable",
+      "gate": null
+    },
+    "B17": {
+      "run_dir": "tasks/B17-schema-matching/history/runs/r001-2026-11-18",
+      "status": "scored",
+      "verdict": "not_applicable",
+      "gate": null
+    }
+  },
+  "aggregate": {
+    "gate": "pending",
+    "blockers": [],
+    "notes": null
+  },
+  "notes": "r001：首轮只建基线（06 的 Q10）。B02、B16、B17 写入基线；B03 不写（CORD-v2/FUNSD 图片未展开，ExtractBench 需要模型），verdict=unknown。B01、B04–B15 本轮未跑。"
+}

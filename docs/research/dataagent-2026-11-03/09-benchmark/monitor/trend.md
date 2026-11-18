@@ -5,22 +5,22 @@ do_not_edit: true
 
 # 迭代趋势
 
-任务 15 个，轮次 0 次。本文件由 `tools/report.py` 生成，不要手改；
+任务 17 个，轮次 1 次。本文件由 `tools/report.py` 生成，不要手改；
 迭代叙事写入 `tasks/<task>/NOTES.md`，告警归因写入 `monitor/incidents/`。
 
 ## 轮次总览
 
 | 轮次 | 标签 | 环境 | 已评分 | block 通过 | guard 告警 | 建成基线 | 结论 |
 |-|-|-|-|-|-|-|-|
-| — | 尚未开轮 | — | 0/15 | — | — | — | 见 README §5 第 1 步 |
+| r001-2026-11-18 | p1-intake | none（dataagent-cli 确定性能力；OCR=rapidocr-local 1.4.4） / agent-kernel@ae6c3d5 | 1/17 | 0/5 | 0 | 3/17 | 进行中 1/17 |
 
 ## 分任务最新值
 
 | 任务 | 主指标 | 取值 split | 最新轮 | 基线轮 | 最新值 | 基线值 | Δ | 门槛 | verdict |
 |-|-|-|-|-|-|-|-|-|-|
 | B01 不规则表格理解 | header_cell_accuracy | — | — | — | — | — | — | block | pending |
-| B02 文档解析与 OCR | text_ned | — | — | — | — | — | — | block | pending |
-| B03 字段抽取与锚点 | value_f1 | — | — | — | — | — | — | block | pending |
+| B02 文档解析与 OCR | text_ned | unseen_acceptance | r001-2026-11-18 | r001-2026-11-18 | 0.518 | 0.518 | 0.0000 | block | pending |
+| B03 字段抽取与锚点 | value_f1 | unseen_acceptance | r001-2026-11-18 | — | 0.000 | — | — | block | pending |
 | B04 制度 → 规则 → 可判定性与适用范围 | rule_selection_accuracy | — | — | — | — | — | — | block | pending |
 | B05 指标定义与语义查询编译 | execution_accuracy | — | — | — | — | — | — | block | pending |
 | B06 召回检索与检索充分性 | recall_at_k | — | — | — | — | — | — | warn | pending |
@@ -33,6 +33,8 @@ do_not_edit: true
 | B13 记忆与经验召回 | memory_accuracy | — | — | — | — | — | — | warn | pending |
 | B14 数据建模与物化 | srdel | — | — | — | — | — | — | warn | pending |
 | B15 FDE 交付效果 | time_to_first_trusted_answer | — | — | — | — | — | — | field | pending |
+| B16 多源对齐与实体解析 | entity_pair_f1 | unseen_acceptance | r001-2026-11-18 | r001-2026-11-18 | 0.865 | 0.865 | 0.0000 | warn | pending |
+| B17 字段映射 / schema matching | mapping_top1 | unseen_acceptance | r001-2026-11-18 | r001-2026-11-18 | 0.800 | 0.800 | 0.0000 | warn | pending |
 
 ## 数据就绪度
 
@@ -53,14 +55,16 @@ do_not_edit: true
 | B13 | v0.2/collecting | 120 | 60 | 60 | 2 | 2（240 例） |
 | B14 | v0.2/collecting | 120 | 54 | 50 | 1 | 2（224 例） |
 | B15 | v0.0/planned | 0 | 0 | 0 | 2 | 0（0 例） |
+| B16 | v0.11/collecting | 120 | 60 | 60 | 3 | 11（240 例） |
+| B17 | v0.4/collecting | 93 | 28 | 25 | 1 | 4（146 例） |
 
 ## 门槛状态
 
-- 仍有 `pending_baseline` 指标的任务：B01, B02, B03, B04, B05, B06, B07, B08, B09, B10, B11, B12, B13, B14, B15
+- 仍有 `pending_baseline` 指标的任务：B01, B02, B03, B04, B05, B06, B07, B08, B09, B10, B11, B12, B13, B14, B15, B16, B17
 - 绝对门槛 2 条：`monitor/thresholds.json`
 - 默认相对规则：阻断 -5.0pp / 告警 -2.0pp；最少样本 20
 
 ## 待办
 
-- 尚无基线的任务：B01, B02, B03, B04, B05, B06, B07, B08, B09, B10, B11, B12, B13, B14, B15
+- 尚无基线的任务：B01, B03, B04, B05, B06, B07, B08, B09, B10, B11, B12, B13, B14, B15
 - 开新轮：`python3 tools/new_round.py --label <标签>`；改完重跑本脚本
