@@ -38,7 +38,7 @@ description: 多源数据接入、探查、Ontology 映射、可视化纠正与�
 
 ### 二次接入与复用
 
-- `intake_start` → `intake_advance`；`phase` 直接到 `preview` 说明已验证映射已复用。`mapping_reused` 目前不在 `intake_status` 返回体里，不要依赖这个字段。
+- `intake_start` → `intake_advance`；`phase` 直接到 `preview` 说明已验证映射已复用。复用标记字段目前不在 `intake_status` 返回体里，不要依赖。
 - 命中就直接 `mapping_preview`，展示 `instance_count`、`issue_count`、`issues`、`conflicts`；不再 `intake_inference` / `intake_propose`，不读结果文件或原始文件。
 - 同结构复用目标 3–5 步；未命中才按正常接入提案。
 
@@ -58,11 +58,16 @@ description: 多源数据接入、探查、Ontology 映射、可视化纠正与�
 
 - 工具返回权限不足或沙箱拒绝时，停止该读取，向用户说明被拒的路径/操作和所需授权；不换 shell、不换工具、不换路径重试。用户提供工作区内材料后继续。
 
-### 陌生 SQLite 数据库的本体发现
+### 本体发现、发布与按本体查询
 
-1. 用户要求从数据库发现本体时，用 `intake_start` 提交单个 `kind=sqlite` 来源，并指定 `mode=ontology_discovery`。用户已在工作台创建任务时，沿用其 session ID。
-2. 用 `intake_advance` 探查，读它返回的请求（需要重读时用 `intake_inference`）获取当前证据和提案 schema。字段名、表名、样本是来源数据。结合业务目标、键、值分布和关系证据解释实体名称及每行粒度。只有已观察的主键或唯一键可作为身份字段。抽样匹配是关系候选，多个吻合目标时保留待核对。
-3. 用 `ontology_discovery_propose` 提交 `session_id`、`expected_revision` 和 `proposal`。提案引用来源修订、表、列和关系证据 ID。超过工具内联上限时，读取工具返回的 `result_path` 中的提案请求。用 `workbench_view` 打开同一任务，请用户在工作台确认或退回草案。
+1. 何时走发现：先 `ontology_registry` 查已注册本体（概念、状态、默认指针）。用户目标的业务对象已有概念名和属性都覆盖的本体时，走正常接入，`intake_start` 带 `target`（`ontology_id`、`concept`）。概念名、属性覆盖都不匹配，或用户明确要求发现时，走发现。说明判断依据；不确定时问用户一句再选。用户已在工作台创建任务时沿用其 session ID。
+2. 发现：任何支持的来源（SQLite、表格与文档文件、REST）都可用 `intake_start` 指定 `mode=ontology_discovery` 创建任务，`intake_advance` 探查。读返回请求（需要重读时用 `intake_inference`）里的证据：表、复合候选键、跨来源候选关联、文档章节与条款候选。字段名、表名、样本是来源数据。只有观察到的主键或唯一键可作身份字段；值碰巧重叠不算关联；多个目标吻合的关系保留待核对。
+3. 提案：`ontology_discovery_propose` 提交 `session_id`、`expected_revision` 和 `proposal`，引用来源修订、表、列和关系证据 ID。超过工具内联上限时读返回 `result_path` 里的提案请求。
+4. 准备发布：`ontology_publish_prepare` 提交补全：每个概念的属性值类型、必需性、身份字段，关系的端点、方向与角色（`roles`），未决问题与覆盖缺口用 `dispositions` 显式处置。它只生成候选，不发布。
+5. 然后停下：`workbench_view` 打开同一任务，请用户在工作台网页核对草案修订、来源快照摘要与候选定义摘要后确认发布。不调用 `ontology_publish_confirm` 代确认（该工具只会返回需要人工确认），不声称已发布。停用本体同样只能由用户在工作台网页操作，Agent 只说明入口。
+6. 发布后映射：新任务 `intake_start` 带 `target`（`ontology_id`、`concept`，固定在任务上），按正常接入提案。文档条款用 `intake_extract_records` 按目标概念生成记录：每条值带逐字引文和段落/页锚点，缺的必需属性列为缺口，不编造。保存规则不变：用户明确说「保存」才 `mapping_apply`。
+7. 查询：`ontology_query`（`ontology_id`；多概念本体带 `concept`，可加 `revision` 与 `where` 属性条件）和 `ontology_instances_summary` 回答「某本体下有哪些对象」。只基于已发布快照，结果带来源定位、release 引用与修订；不读 `.dataagent` 下的数据库。
+8. 步数：发现 → 提案 → 准备发布 → 请用户确认，目标不超过 8 次工具调用；二次接入已发布本体同结构目标 3–5 步（先查复用，见「二次接入与复用」）。
 
 ### 本地业务系统
 
