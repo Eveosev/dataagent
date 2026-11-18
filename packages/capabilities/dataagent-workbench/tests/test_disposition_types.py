@@ -417,6 +417,34 @@ def test_partial_save_reason_is_chinese_and_raw_detail_is_separate(tmp_path):
     assert all('Invalid' not in item['reason'] for item in reasons.values())
 
 
+def two_real_failures_setup(tmp_path):
+    """Two ordinary data rows whose amount column cannot be converted."""
+    wb = Workbench(tmp_path)
+    wb.layer_client = StubProbeClient({'ledger': csv_profile('ledger', [
+        {'number': 'INV-1', 'amount_minor': 'bad-one', 'currency': 'CNY'},
+        {'number': 'INV-2', 'amount_minor': 'bad-two', 'currency': 'CNY'},
+    ])})
+    session = wb.intake.advance(start(wb, [SourceSelection(
+        source_id='ledger', kind='file', locator_ref='ledger.csv')]).session_id, wb.ctx)
+    return wb, session
+
+
+def test_intake_status_reports_one_cause_and_two_affected_rows(tmp_path):
+    wb, session = two_real_failures_setup(tmp_path)
+    preview = wb.intake.submit_proposal(session.id, proposal_for(wb, session, 'ledger'),
+                                        session.revision, wb.ctx)
+    # Two ordinary rows fail the same amount column: one mapping root cause,
+    # two affected rows.  The status call must expose both counts separately.
+    assert len(preview.issues) == 2
+    status = invoke(wb, 'intake_status', {'session_id': session.id}).data
+    assert status['issue_count'] == len(status['issues']) == 1
+    assert status['issue_row_count'] == 2
+    assert status['issues'][0]['code'] == 'ontology.conversion_failed'
+    summary = wb.intake.view(session.id, wb.ctx)
+    assert summary['issue_count'] == 1
+    assert summary['preview']['issue_row_count'] == 2
+
+
 def test_failed_conversion_counts_one_root_cause_and_two_rows(tmp_path):
     wb, session = bad_rows_setup(tmp_path)
     preview = wb.intake.submit_proposal(session.id, proposal_for(wb, session, 'ledger'),
