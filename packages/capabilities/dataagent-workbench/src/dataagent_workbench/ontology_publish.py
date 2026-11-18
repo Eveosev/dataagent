@@ -288,6 +288,54 @@ def _allowed_columns(allowlist, source_id):
     return set(allowlist)
 
 
+def _dropped_draft_items(draft, completed_ids, completed_columns,
+                         concept_entities):
+    """Draft-selected items the completion left out of the candidate.
+
+    A completion may carry only some of the draft's properties and only some
+    of its selected relationships.  Draft entities may not be omitted: the
+    completeness gate below rejects that, so the ``concept`` branch here is
+    defensive only and is not an accepted publication path.  The candidate
+    summary lists every reachable difference so the publish page can show the
+    human exactly which draft choices the published definition drops.
+    Relationship references are the evidence ids the disposition gate already
+    uses, so the page can pair a dropped relationship with its disposition.
+    """
+    dropped = []
+    for link in draft.get('relationships') or []:
+        evidence_id = link.get('id')
+        if evidence_id in completed_ids:
+            continue
+        dropped.append({
+            'kind': 'relationship', 'ref': str(evidence_id),
+            'name': str(link.get('name') or ''),
+            'source_table': str(link.get('source_table') or ''),
+            'source_columns': list(link.get('source_columns') or []),
+            'target_table': str(link.get('target_table') or ''),
+            'target_columns': list(link.get('target_columns') or []),
+            'cardinality': str(link.get('cardinality') or ''),
+        })
+    for entity in draft.get('entities') or []:
+        name = str(entity.get('name') or '')
+        if name not in concept_entities:
+            dropped.append({
+                'kind': 'concept', 'ref': name, 'name': name,
+                'table': str(entity.get('table') or ''),
+            })
+            continue
+        carried = completed_columns.get(name, set())
+        for prop in entity.get('properties') or []:
+            if prop.get('column') in carried:
+                continue
+            dropped.append({
+                'kind': 'property', 'ref': '%s.%s' % (name, prop.get('name')),
+                'concept': name, 'name': str(prop.get('name') or ''),
+                'column': str(prop.get('column') or ''),
+                'table': str(entity.get('table') or ''),
+            })
+    return dropped
+
+
 def build_candidate(wb, draft, catalog, completion, *, revision='1'):
     """Validate a completion against its draft and catalog; return the definition.
 
@@ -309,6 +357,7 @@ def build_candidate(wb, draft, catalog, completion, *, revision='1'):
     concepts = {}
     evidence_concepts = {}
     concept_tables = {}
+    completed_columns = {}
     entity_types = set()
 
     seen_entities = set()
@@ -414,6 +463,7 @@ def build_candidate(wb, draft, catalog, completion, *, revision='1'):
         concepts[concept] = ConceptDefinition(entity_type=entity_type,
             properties=properties, identity_fields=identity)
         concept_tables[concept] = table['name']
+        completed_columns[spec.entity] = used_columns
         evidence_concepts[concept] = {
             'entity': spec.entity, 'source_id': table['source_id'],
             'table': table['name'], 'grain': entity.get('grain') or '',
@@ -423,6 +473,9 @@ def build_candidate(wb, draft, catalog, completion, *, revision='1'):
             'properties': anchors,
         }
 
+    # Gate boundary: a published concept is never silently dropped from the
+    # draft.  The diff's concept branch stays defensive for a future explicit
+    # flow; today only properties and relationships can be left out.
     missing_entities = sorted(set(entities) - seen_entities)
     if missing_entities:
         raise ValueError('every draft entity must be completed: %s'
@@ -472,6 +525,11 @@ def build_candidate(wb, draft, catalog, completion, *, revision='1'):
             'subject_concept': subject, 'object_concept': obj, 'roles': roles,
         }
 
+    concept_entities = {info['entity']: concept
+                        for concept, info in evidence_concepts.items()}
+    dropped = _dropped_draft_items(draft, completed_ids, completed_columns,
+                                   concept_entities)
+
     # Every selected relationship the completion drops, and every open item the
     # draft already knew about, must be excluded or accepted explicitly.
     required = []
@@ -516,8 +574,9 @@ def build_candidate(wb, draft, catalog, completion, *, revision='1'):
         'evidence': {'concepts': evidence_concepts,
                      'relations': evidence_relations,
                      'gaps': list(gaps), 'coverage': coverage,
-                     'dispositions': dispositions},
+                     'dispositions': dispositions, 'dropped': dropped},
         'dispositions': dispositions,
+        'dropped': dropped,
     }
 
 
@@ -733,6 +792,7 @@ class PublishService:
             'default_concept': candidate['default_concept'],
             'evidence': candidate['evidence'],
             'dispositions': candidate['dispositions'],
+            'dropped': candidate['dropped'],
             'completion': completion.model_dump(mode='json'),
             'state': 'candidate', 'created_at': _now(), 'created_by': ctx.subject_ref,
         }
@@ -764,6 +824,7 @@ class PublishService:
             'structure_fingerprint': body.get('structure_fingerprint', ''),
             'session_revision': body['session_revision'],
             'dispositions': body['dispositions'],
+            'dropped': list(body.get('dropped') or []),
             'confirm_route': '/api/sessions/%s/publish/confirm' % body['session_id'],
             'instructions': ('打开工作台，核对来源快照摘要与候选定义摘要后由人确认发布；'
                              '草案审核是可选步骤，草案仍待审核时确认发布会在同一事务里'

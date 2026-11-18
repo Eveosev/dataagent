@@ -53,6 +53,16 @@ function sessionId(page:{url():string}){
  return new URL(page.url()).hash.match(/session=([0-9a-f]+)/)![1];
 }
 
+// MCP 进程从工作区 .mint/packages/dataagent 找已安装数据层；验收工作区没有
+// 装包，把同一 checkout 的 dataagent-data 链接进去，探查仍走公开子进程入口。
+function ensureDataLayer(){
+ const packages=path.join(workspace!,'.mint','packages','dataagent');
+ fs.mkdirSync(packages,{recursive:true});
+ const link=path.join(packages,'data-layer@local');
+ if(!fs.existsSync(link))
+  fs.symlinkSync(path.resolve('../../dataagent-data'),link,'dir');
+}
+
 function fullProposal(request:{expected_revision:string;source_revision:string;
  catalog:{relationships:{id:string;origin:string}[]}|null}){
  const declared=request.catalog!.relationships.find(link=>link.origin==='declared')!;
@@ -346,8 +356,9 @@ test('SQLite 发现 → 草案 → 补全 → 网页确认发布 → 新接入�
  await expect(page.getByRole('heading',{name:'核对来源与 Ontology 映射'})).toBeVisible({timeout:20000});
 
  // 目标在任务创建时已固定；立即停用，缩短默认指针偏离内置的窗口，既有任务不受影响。
+ // 停用按钮限定在 sales-model 自己的行：并行的修订用例可能短暂留有未停用的本体。
  await page.getByRole('button',{name:'本体库'}).click();
- await page.getByRole('button',{name:'停用'}).click();
+ await page.getByTestId('ontology-sales-model').getByRole('button',{name:'停用'}).click();
  await expect(page.getByRole('button',{name:'确认停用'})).toBeDisabled();
  await page.getByLabel('停用原因（必填，写入审计）').fill('并入新的销售模型修订');
  await page.getByLabel('我确认停用该本体，新任务将不再默认选用').check();
@@ -365,11 +376,220 @@ test('SQLite 发现 → 草案 → 补全 → 网页确认发布 → 新接入�
  await page.getByRole('button',{name:'生成映射预览'}).click();
  await expect(page.getByTestId('preview-doc_no')).toHaveText('1001',{timeout:20000});
 
- // 停用后新建接入：选项不再出现，默认回到内置。
+ // 停用后新建接入：选项不再出现，也不再是默认。并行的修订用例不参与本用例的
+ // 指针锁，可能短暂把默认指针移到它自己发布的本体上，「回到内置」只在无其他
+ // 存活本体时成立，这里只断言已停用的 sales-model 不再被默认选中。
  await page.getByRole('button',{name:'新建接入'}).click();
  await expect(page.getByLabel('接入目标')).toBeVisible();
  await expect(page.getByRole('option',{name:/销售单据模型/})).toHaveCount(0);
- await expect(page.locator('#target-ontology')).toHaveValue('procurement',{timeout:20000});
+ await expect(page.locator('#target-ontology')).not.toHaveValue('sales-model',{timeout:20000});
+});
+
+test('Agent 补全时放弃草案关系 → 发布区逐项列出并需勾选同意',async({page})=>{
+ test.skip(!workspace||!python,'run scripts/verify_browser.py to share the test workspace with MCP');
+ slowTimeout(180000);
+ const tag=uniqueTag();
+ const database=path.join(workspace!,`publish-dropped-${tag}.db`);
+ const ontologyId=`publish-dropped-${tag}`;
+ execFileSync('sqlite3',[database],{input:fs.readFileSync(SEED)});
+
+ await page.goto('/');
+ await page.getByLabel('接入目标').fill('补全时放弃草案关系核对');
+ await page.getByLabel('选择材料').setInputFiles(database);
+ await page.getByRole('radio',{name:'从数据库发现本体'}).check();
+ await page.getByRole('button',{name:'开始接入'}).click();
+ await expect(page.getByRole('heading',{name:'来源证据'})).toBeVisible({timeout:20000});
+ const sid=sessionId(page);
+ const request=callTool('intake_inference',{session_id:sid});
+ callTool('ontology_discovery_propose',{session_id:sid,...fullProposal(request)});
+ await expect(page.getByRole('heading',{name:'本体草案',exact:true})).toBeVisible({timeout:20000});
+ await page.getByRole('button',{name:'确认当前草案'}).click();
+ await expect(page.getByText('已通过审核').first()).toBeVisible({timeout:20000});
+
+ // 补全时只带入一条草案关系；另一条已选关系被放弃。后端候选与草案的差异
+ // 必须出现在发布确认区，而不是只留在候选的 dispositions 里。
+ const fresh=callTool('intake_inference',{session_id:sid});
+ const completion=fullCompletion(sid,fresh.draft!.ref,fresh.expected_revision,fresh.catalog,
+  false,ontologyId,'补全放弃关系模型');
+ const droppedRelation=completion.relations.find(item=>item.name==='orderedBy')!;
+ completion.relations=completion.relations.filter(item=>item!==droppedRelation);
+ callTool('ontology_publish_prepare',{...completion,
+  dispositions:[{kind:'unresolved_relationship',ref:droppedRelation.evidence_id,
+   action:'exclude',reason:'补全时未带入该关系'}]});
+ await expect(page.getByText('候选定义摘要 · 补全放弃关系模型')).toBeVisible({timeout:20000});
+
+ const dropped=page.getByTestId('publish-dropped-item');
+ await expect(dropped).toHaveCount(1);
+ await expect(dropped).toContainText('补全时放弃的草案关系');
+ await expect(dropped).toContainText('orderedBy');
+ await expect(dropped).toContainText('doc_hdr');
+ await expect(dropped).toContainText('party');
+ await expect(dropped).toContainText('补全候选未带入该草案项。');
+ await expect(dropped).toContainText('影响：');
+ await expect(page.getByTestId('publish-blocked')).toHaveCount(0);
+ const candidate=await page.request.get(`/api/sessions/${sid}/publish/candidate`);
+ const body=await candidate.json() as {dropped:{kind:string;ref:string}[]};
+ expect(body.dropped.some(item=>item.kind==='relationship'
+  &&item.ref===droppedRelation.evidence_id)).toBeTruthy();
+
+ // 总核对勾选后仍禁用；逐项勾选这条被放弃的关系后才可确认发布。
+ const checkbox=dropped.locator('input[type=checkbox]');
+ await page.getByLabel('我已核对候选定义与来源摘要，确认发布').check();
+ await expect(page.getByRole('button',{name:'确认发布'})).toBeDisabled();
+ await checkbox.check();
+ await expect(page.getByRole('button',{name:'确认发布'})).toBeEnabled();
+ await checkbox.uncheck();
+ await expect(page.getByRole('button',{name:'确认发布'})).toBeDisabled();
+});
+
+test('修订候选放弃多项属性 → 每项分别勾选，迁移确认不能代勾',async({page})=>{
+ test.skip(!workspace||!python,'run scripts/verify_browser.py to share the test workspace with MCP');
+ slowTimeout(300000);
+ const tag=uniqueTag();
+ const ontologyId=`revision-dropped-${tag}`;
+ const database=`revision-dropped-${tag}.db`;
+ execFileSync('sqlite3',[path.join(workspace!,database)],{input:fs.readFileSync(SEED)});
+ ensureDataLayer();
+ await lockDefaultPointer(workspace!);
+ pointerLocked=true;
+ let published=false;
+ try{
+  // 先发布一个完整本体（两个属性都在），再用修订任务把两项属性一起删掉。
+  const initial=callTool('intake_start',{goal:'发布多删除修订的初始本体',
+   mode:'ontology_discovery',
+   sources:[{source_id:'db',kind:'sqlite',locator_ref:database}]});
+  const initialRequest=callTool('intake_advance',{session_id:initial.session_id});
+  callTool('ontology_discovery_propose',{session_id:initial.session_id,
+   ...fullProposal(initialRequest)});
+  const first=callTool('intake_inference',{session_id:initial.session_id});
+  const firstCandidate=callTool('ontology_publish_prepare',
+   fullCompletion(initial.session_id,first.draft.ref,first.expected_revision,first.catalog,
+    false,ontologyId,'多删除修订模型'));
+  const confirmed=await page.request.post(
+   `/api/sessions/${initial.session_id}/publish/confirm`,{data:{
+    candidate_ref:firstCandidate.candidate_ref,draft_ref:firstCandidate.draft_ref,
+    source_snapshot:firstCandidate.source_snapshot,
+    definition_digest:firstCandidate.definition_digest,
+    expected_revision:firstCandidate.session_revision,confirmed:true,
+    reason:'e2e 多删除修订的初始本体',
+   }});
+  expect(confirmed.ok(),await confirmed.text()).toBeTruthy();
+  published=true;
+
+  const revision=callTool('intake_start',{goal:'修订里同时删除两个属性',
+   mode:'ontology_discovery',
+   sources:[{source_id:'db',kind:'sqlite',locator_ref:database}],
+   revise_ontology_id:ontologyId});
+  const revisionRequest=callTool('intake_advance',{session_id:revision.session_id});
+  callTool('ontology_discovery_propose',{session_id:revision.session_id,
+   ...fullProposal(revisionRequest)});
+  const inferred=callTool('intake_inference',{session_id:revision.session_id});
+  const completion=fullCompletion(revision.session_id,inferred.draft.ref,
+   inferred.expected_revision,inferred.catalog,false,ontologyId,'多删除修订模型');
+  const line=completion.concepts.find(item=>item.entity==='SalesOrderLine')!;
+  const customer=completion.concepts.find(item=>item.entity==='Customer')!;
+  delete (line.properties as Record<string,unknown>).amountInCents;
+  delete (customer.properties as Record<string,unknown>).name;
+  const candidate=callTool('ontology_publish_prepare',completion);
+  expect(candidate.dropped).toHaveLength(2);
+  expect(candidate.revision_diff.removed_properties).toHaveLength(2);
+
+  await page.goto('/#session='+revision.session_id);
+  await expect(page.getByTestId('revision-publish-notice')).toBeVisible({timeout:30000});
+  const dropped=page.getByTestId('publish-dropped-item');
+  await expect(dropped).toHaveCount(2);
+  const amount=dropped.filter({hasText:'SalesOrderLine.amountInCents'});
+  const name=dropped.filter({hasText:'Customer.name'});
+  await expect(amount).toHaveCount(1);
+  await expect(name).toHaveCount(1);
+
+  // 迁移确认勾选后，两个被放弃属性仍各自未同意，确认发布保持禁用。
+  await page.getByLabel('我已核对候选定义与来源摘要，确认发布').check();
+  await page.getByTestId('revision-no-migration').check();
+  await expect(page.getByRole('button',{name:'确认发布'})).toBeDisabled();
+  await amount.locator('input[type=checkbox]').check();
+  await expect(page.getByRole('button',{name:'确认发布'})).toBeDisabled();
+  await name.locator('input[type=checkbox]').check();
+  await expect(page.getByRole('button',{name:'确认发布'})).toBeEnabled();
+  await amount.locator('input[type=checkbox]').uncheck();
+  await expect(page.getByRole('button',{name:'确认发布'})).toBeDisabled();
+ } finally {
+  if(published)
+   await page.request.post(`/api/ontologies/${ontologyId}/retire`,{
+    data:{reason:'e2e 多删除修订用例结束停用',confirmed:true}}).catch(()=>{});
+ }
+});
+
+test('修订候选只放弃一个属性 → 迁移确认不能代勾，仍须单独勾选',async({page})=>{
+ test.skip(!workspace||!python,'run scripts/verify_browser.py to share the test workspace with MCP');
+ slowTimeout(300000);
+ const tag=uniqueTag();
+ const ontologyId=`revision-dropped-single-${tag}`;
+ const database=`revision-dropped-single-${tag}.db`;
+ execFileSync('sqlite3',[path.join(workspace!,database)],{input:fs.readFileSync(SEED)});
+ ensureDataLayer();
+ await lockDefaultPointer(workspace!);
+ pointerLocked=true;
+ let published=false;
+ try{
+  // 先发布完整本体，再修订只删除一个属性：唯一被放弃项也不与「旧数据不迁移」同步。
+  const initial=callTool('intake_start',{goal:'发布单删除修订的初始本体',
+   mode:'ontology_discovery',
+   sources:[{source_id:'db',kind:'sqlite',locator_ref:database}]});
+  const initialRequest=callTool('intake_advance',{session_id:initial.session_id});
+  callTool('ontology_discovery_propose',{session_id:initial.session_id,
+   ...fullProposal(initialRequest)});
+  const first=callTool('intake_inference',{session_id:initial.session_id});
+  const firstCandidate=callTool('ontology_publish_prepare',
+   fullCompletion(initial.session_id,first.draft.ref,first.expected_revision,first.catalog,
+    false,ontologyId,'单删除修订模型'));
+  const confirmed=await page.request.post(
+   `/api/sessions/${initial.session_id}/publish/confirm`,{data:{
+    candidate_ref:firstCandidate.candidate_ref,draft_ref:firstCandidate.draft_ref,
+    source_snapshot:firstCandidate.source_snapshot,
+    definition_digest:firstCandidate.definition_digest,
+    expected_revision:firstCandidate.session_revision,confirmed:true,
+    reason:'e2e 单删除修订的初始本体',
+   }});
+  expect(confirmed.ok(),await confirmed.text()).toBeTruthy();
+  published=true;
+
+  const revision=callTool('intake_start',{goal:'修订里删除一个属性',
+   mode:'ontology_discovery',
+   sources:[{source_id:'db',kind:'sqlite',locator_ref:database}],
+   revise_ontology_id:ontologyId});
+  const revisionRequest=callTool('intake_advance',{session_id:revision.session_id});
+  callTool('ontology_discovery_propose',{session_id:revision.session_id,
+   ...fullProposal(revisionRequest)});
+  const inferred=callTool('intake_inference',{session_id:revision.session_id});
+  const completion=fullCompletion(revision.session_id,inferred.draft.ref,
+   inferred.expected_revision,inferred.catalog,false,ontologyId,'单删除修订模型');
+  const line=completion.concepts.find(item=>item.entity==='SalesOrderLine')!;
+  delete (line.properties as Record<string,unknown>).amountInCents;
+  const candidate=callTool('ontology_publish_prepare',completion);
+  expect(candidate.dropped).toHaveLength(1);
+  expect(candidate.revision_diff.removed_properties).toHaveLength(1);
+
+  await page.goto('/#session='+revision.session_id);
+  await expect(page.getByTestId('revision-publish-notice')).toBeVisible({timeout:30000});
+  const dropped=page.getByTestId('publish-dropped-item');
+  await expect(dropped).toHaveCount(1);
+  const amount=dropped.filter({hasText:'SalesOrderLine.amountInCents'});
+  await expect(amount).toHaveCount(1);
+
+  // 候选只有一个被放弃项：总确认与迁移确认都勾上也不放行，必须单独勾选该项。
+  await page.getByLabel('我已核对候选定义与来源摘要，确认发布').check();
+  await page.getByTestId('revision-no-migration').check();
+  await expect(page.getByRole('button',{name:'确认发布'})).toBeDisabled();
+  await amount.locator('input[type=checkbox]').check();
+  await expect(page.getByRole('button',{name:'确认发布'})).toBeEnabled();
+  await amount.locator('input[type=checkbox]').uncheck();
+  await expect(page.getByRole('button',{name:'确认发布'})).toBeDisabled();
+ } finally {
+  if(published)
+   await page.request.post(`/api/ontologies/${ontologyId}/retire`,{
+    data:{reason:'e2e 单删除修订用例结束停用',confirmed:true}}).catch(()=>{});
+ }
 });
 
 test('pending 草案 + 候选 → 网页一次确认发布 → 草案 approved',async({page})=>{
