@@ -89,6 +89,7 @@ class DispatcherTests(unittest.TestCase):
             "DATAAGENT_FAKE_OCR": str(self.out / "ocr"),
             "DATAAGENT_FAKE_OCR_REMOTE": str(self.out / "ocr-remote"),
             "DATAAGENT_FAKE_CONNECTIONS_BAD": str(self.out / "connections-bad"),
+            "DATAAGENT_FAKE_PGREP_ARGS": str(self.out / "pgrep-args"),
             "DATAAGENT_HOST_SUBJECT_REF": "user:alice",
             "DATAAGENT_HOST_PURPOSE": "monthly_report",
             "MINT_MODEL_API_KEY": "secret-token",
@@ -365,6 +366,28 @@ class DispatcherTests(unittest.TestCase):
         self.assertEqual(failed.returncode, 3, failed.stdout + failed.stderr)
         self.assertIn("credential token (env:FAKE_TOKEN): missing", failed.stderr)
         self.assertIn("repair: export FAKE_TOKEN=<value>", failed.stderr)
+
+    def test_doctor_reports_other_services_without_command_lines(self):
+        """FDE-16: report fixed service fields, never a process command line."""
+        _make_layer(self.project, "workbench", "0.1.0")
+        bin_dir = self.out / "bin"
+        bin_dir.mkdir(exist_ok=True)
+        pgrep = bin_dir / "pgrep"
+        pgrep.write_text(
+            "#!/bin/sh\n"
+            'printf "%s\\n" "$@" > "$DATAAGENT_FAKE_PGREP_ARGS"\n'
+            "echo 424242\n",
+            encoding="utf-8",
+        )
+        pgrep.chmod(0o755)
+        self.env["PATH"] = f"{bin_dir}:{self.env['PATH']}"
+
+        result = self._run("doctor")
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("pid=424242 state=running", result.stdout)
+        calls = (self.out / "pgrep-args").read_text(encoding="utf-8").split()
+        self.assertNotIn("-l", calls)
 
     def test_setup_ocr_root_installs_verified_directory(self):
         _make_layer(self.project, "data-layer", "0.1.0")

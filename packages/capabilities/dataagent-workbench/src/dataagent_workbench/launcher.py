@@ -2,11 +2,13 @@
 import json
 import os
 from pathlib import Path
+import shlex
 import signal
 import subprocess
 import sys
 import time
 import urllib.request
+from urllib.parse import urlsplit
 import webbrowser
 
 
@@ -49,33 +51,81 @@ def _process_command(pid):
     return result.stdout.strip()
 
 
-def _health_scope(url):
+def _health_info(url):
     if not isinstance(url, str) or not url.startswith('http://127.0.0.1:'):
         return None
     try:
         with urllib.request.urlopen(url+'/health', timeout=.5) as response:
-            return json.load(response).get('scope')
+            payload = json.load(response)
     except (OSError, ValueError):
         return None
+    return payload if isinstance(payload, dict) else None
+
+
+def _command_workspace(command):
+    """The ``--workspace`` value in a process command line, if present."""
+
+    try:
+        parts = shlex.split(command)
+    except ValueError:
+        return None
+    for index, part in enumerate(parts):
+        if part == '--workspace' and index + 1 < len(parts):
+            return parts[index + 1]
+        if part.startswith('--workspace='):
+            return part.split('=', 1)[1]
+    return None
+
+
+def _pid_listens_on(pid, url):
+    """Whether ``pid`` owns the listening socket behind ``url`` (legacy help)."""
+
+    try:
+        port = urlsplit(url).port
+    except ValueError:
+        return False
+    if not port:
+        return False
+    try:
+        result = subprocess.run(
+            ['lsof', '-nP', '-a', '-p', str(pid), f'-iTCP:{port}',
+             '-sTCP:LISTEN', '-Fn'],
+            capture_output=True, text=True, timeout=5)
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    if result.returncode != 0:
+        return False
+    return f'n127.0.0.1:{port}' in result.stdout or f'n[::1]:{port}' in result.stdout
 
 
 def _is_workspace_service(pid, workspace, scope, url):
-    """Signal only the workbench process started for this workspace.
+    """Signal only the process that serves this workspace's endpoint.
 
-    ``ps`` gives the strongest identity check. Restricted sandboxes may deny
-    executing it; then the loopback health endpoint must confirm the same
-    workspace scope before a pid is signalled.
+    ``ps`` identifies the process as a workbench service and, when it carries
+    ``--workspace``, that argument must resolve to this workspace. The health
+    response then reports the serving pid, binding the descriptor's pid to the
+    URL; a legacy service without a pid is checked through its listening
+    socket. If neither binding is possible, nothing is signalled.
     """
 
     command = _process_command(pid)
     if command is not None:
         if 'dataagent_workbench.interfaces.cli' not in command:
             return False
-        if str(Path(workspace).resolve()) in command:
-            return True
-    # ``ps`` may be unavailable, or the service may have been started through
-    # a symlinked workspace path; the scope-checked health endpoint decides.
-    return _health_scope(url) == scope
+        stated = _command_workspace(command)
+        if stated is not None:
+            try:
+                if Path(stated).expanduser().resolve() != Path(workspace).resolve():
+                    return False
+            except OSError:
+                return False
+    info = _health_info(url)
+    if info is None or info.get('scope') != scope:
+        return False
+    reported = info.get('pid')
+    if isinstance(reported, int) and not isinstance(reported, bool):
+        return reported == pid
+    return _pid_listens_on(pid, url)
 
 
 def service_status(root):

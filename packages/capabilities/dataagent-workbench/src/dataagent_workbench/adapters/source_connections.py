@@ -37,6 +37,28 @@ MANIFEST_ENV = 'DATAAGENT_SOURCE_CONNECTIONS'
 MANIFEST_DEFAULT_ENV = 'DATAAGENT_SOURCE_CONNECTIONS_DEFAULT'
 WORKSPACE_MANIFEST = 'source-connections.json'
 DATAAGENT_MANIFEST = '.dataagent/source-connections.json'
+_ACTIVE_WORKSPACE = None
+
+
+def bind_workspace(workspace):
+    """Bind connection lookups to the workspace a boundary process serves.
+
+    ``SourceConnections()`` is called from layers that do not receive the
+    ``Workbench`` (HTTP routes, service tools and the data-layer client). The
+    CLI binds the resolved workspace once at startup so those paths cannot
+    fall back to the process cwd.
+    """
+
+    global _ACTIVE_WORKSPACE
+    _ACTIVE_WORKSPACE = (None if workspace is None
+                         else Path(workspace).expanduser().resolve())
+
+
+def bound_workspace():
+    """The workspace bound by the current boundary process, if any."""
+
+    return _ACTIVE_WORKSPACE
+
 
 _SECRET_OPTIONS = {'token', 'password', 'secret', 'api_key', 'apikey', 'authorization'}
 _SECRET_KEYS = _SECRET_OPTIONS | {
@@ -186,6 +208,8 @@ def workspace_root(workspace=None):
 
     if workspace is not None:
         return Path(workspace).expanduser().resolve()
+    if _ACTIVE_WORKSPACE is not None:
+        return _ACTIVE_WORKSPACE
     configured = os.environ.get('DATAAGENT_WORKSPACE')
     return Path(configured).expanduser().resolve() if configured else Path.cwd()
 

@@ -437,13 +437,21 @@ doctor_cmd() {
     else
         echo "connections: not checked (workbench not installed)" >&2
     fi
-    # Any other workspace's detached service is reported too (FDE-16).
+    # Any other workspace's detached service is reported too (FDE-16), but
+    # only with fixed fields: a process command line may contain user input or
+    # credential values and must never reach doctor's output.
     if command -v pgrep >/dev/null 2>&1; then
-        running=$(pgrep -fl 'dataagent_workbench[.]interfaces[.]cli' 2>/dev/null || true)
-        if [ -n "$running" ]; then
-            echo "services: running workbench processes"
-            printf '%s\n' "$running" | sed 's/^/          /'
-        fi
+        service_pid=$(printf '%s\n' "${service_out:-}" | sed -n 's/.*pid=\([0-9][0-9]*\).*/\1/p' | head -1)
+        shown=0
+        for pid in $(pgrep -f 'dataagent_workbench[.]interfaces[.]cli' 2>/dev/null || true); do
+            [ "$pid" = "$$" ] && continue
+            [ -n "$service_pid" ] && [ "$pid" = "$service_pid" ] && continue
+            if [ "$shown" -eq 0 ]; then
+                echo "services: other workbench processes (pid only; command lines omitted)"
+                shown=1
+            fi
+            echo "          pid=$pid state=running"
+        done
     fi
     # OCR is the data layer's explicit dependency (07 §2.3 T20): the check
     # runs where the data layer is installed and, like the policy check

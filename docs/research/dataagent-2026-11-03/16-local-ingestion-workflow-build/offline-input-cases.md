@@ -101,7 +101,7 @@ REST_FIXTURE_PID=$!
 
 `credential_refs` 使用逻辑名：`env:<VAR>` 读启动进程的环境变量，`keychain:<service>/<account>` 读 macOS 钥匙串，`file:<name>` 读 `.dataagent/secrets/<name>.key`。REST bearer 只接受 `token`；basic 接受 `user`、`password`，并在 `credential_options` 给出 `"auth":"basic"` 和 user。PostgreSQL 接受 `user`、`password`。钥匙串写入示例：`security add-generic-password -s dataagent -a invoice-api -w '<token>'`。
 
-测试服务要求 `Authorization: Bearer <token>`，配置正确后两页各返回 200。结束时停止测试服务 `kill "$REST_FIXTURE_PID"`。带第 2 页 429 的断点续跑由组合验收脚本覆盖。
+上面的 `python3 -m http.server` 只是静态样例，不校验 `Authorization`；它用于验证 locator、分页和清单结构。接入真实 REST 服务时，服务端必须校验 `Authorization: Bearer <token>`，否则 `credential_refs` 只表示“发送了凭据”，不构成鉴权保护。结束时停止测试服务 `kill "$REST_FIXTURE_PID"`。带第 2 页 429 的断点续跑由组合验收脚本覆盖。
 
 启动工作台或 Mint 前先在工作区根目录运行 `dataagent doctor`，确认连接与凭据均可解析。显式导出 `DATAAGENT_SOURCE_CONNECTIONS="$DATAAGENT_TEST/source-connections.json"` 仍可作为覆盖，但不是必须。
 
