@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import {api,display} from '../client';
+import {api,display,humanDetail,technicalDetail} from '../client';
 import type {View} from '../client';
 
 export type Relationship = {
@@ -57,7 +57,7 @@ export function DiscoveryPage({view,reload,onNew,onError}:{
  const recordKeys=profile?.metadata?.record_keys as {table:string}[]|undefined;
  const binaryFields=profile?.metadata?.binary_fields as Record<string,string[]>|undefined;
  const displayName=String(source.extensions?.['dataagent.display_name']||source.locator_ref.split('/').pop());
- const prompt=`继续当前工作区的 SQLite 本体发现任务 ${session.id}。调用 intake_inference 获取当前证据，提出实体、粒度、标识、属性和关系，再用 ontology_discovery_propose 提交草案供我在工作台审核。`;
+ const prompt=`继续当前工作区的本体发现任务 ${session.id}。调用 intake_inference 获取当前证据，提出实体、粒度、标识、属性和关系，再用 ontology_discovery_propose 提交草案供我在工作台审核。`;
  const base=`/api/sessions/${session.id}`;
  async function review(decision:'approve'|'reject'){
   if(!draft)return;
@@ -77,13 +77,15 @@ export function DiscoveryPage({view,reload,onNew,onError}:{
  const status=draft?.state==='approved'?'已通过审核':draft?.state==='rejected'?'已退回':
   draft?.state==='pending'?'待审核':catalog?.tables.length?'等待 Agent 提案':
   catalog?'未找到可探查的表':'正在探查';
+ // 重新探查的原因统一中文化：已知原文进主文案，未知英文折叠为「详情」。
+ const probe=humanDetail((session.issues?.[0] as {detail?:string}|undefined)?.detail||'来源探查未完成');
  return <main className="workspace discovery-page">
   <header className="task-header">
-   <div><div className="eyebrow">{displayName}</div><h1>SQLite 本体发现</h1><p className="muted">{status}</p></div>
+   <div><div className="eyebrow">{displayName}</div><h1>本体发现</h1><p className="muted">{status}</p></div>
    <button className="secondary" onClick={onNew}>新建接入</button>
   </header>
   {session.next_actions?.includes('retry_probe')&&<div className="notice amber">
-   <p>{String((session.issues?.[0] as {detail?:string}|undefined)?.detail||'来源探查未完成')}</p>
+   <p>{probe.summary||'来源探查未完成'}{probe.detail&&<details className="tech-detail"><summary>详情</summary><pre>{technicalDetail(probe.detail)}</pre></details>}</p>
    <button className="secondary" disabled={busy} onClick={retry}>重新探查</button>
   </div>}
   {!!catalog?.tables.length&&(!draft||draft.state==='rejected')&&<section className="discovery-card">

@@ -29,7 +29,7 @@ test('SQLite 上传、工具提交本体草案、工作台审核',async({page})=
  await page.getByLabel('选择材料').setInputFiles(database);
  await page.getByRole('radio',{name:'从数据库发现本体'}).check();
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByRole('heading',{name:'SQLite 本体发现'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'本体发现'})).toBeVisible();
  await expect(page.getByRole('heading',{name:'来源证据'})).toBeVisible();
  await expect(page.getByText('观测值匹配',{exact:false})).toBeVisible();
  const session_id=new URLSearchParams(new URL(page.url()).hash.slice(1)).get('session');

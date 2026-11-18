@@ -1,5 +1,5 @@
 import {useEffect,useRef,useState} from 'react';
-import {api,ApiError,display,locate,findAnchorRow,isDecisionEvidence,decisionSourceName,issueBlocksSave,issueObject,issueReasons,propertyLabel,entityTypeLabel,reviewStateNames} from '../client';
+import {api,ApiError,display,locate,findAnchorRow,isDecisionEvidence,decisionSourceName,issueBlocksSave,issueObject,issueReasons,propertyLabel,entityTypeLabel,reviewStateNames,humanDetail,technicalDetail,legacyProperties,legacyEntityType} from '../client';
 import type {CorrectionView,ObjectView,SourceProfile,Issue,WorkObject,ConflictValue,DispositionOption,Selector} from '../client';
 import {SourceViewer} from '../components/SourceViewer';
 
@@ -11,8 +11,9 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
  const [range,setRange]=useState('instance'),[value,setValue]=useState(''),[reason,setReason]=useState('');
  const [name,setName]=useState(''),[type,setType]=useState('string'),[busy,setBusy]=useState(false),[conflict,setConflict]=useState(false);
  const [showAllIssues,setShowAllIssues]=useState(false);
- // FDE-12：纠正结果用绿色成功提示或琥珀色「其他对象挡住」说明，不再走红色错误条。
- const [notice,setNotice]=useState<{kind:'green'|'amber';text:string}|null>(null);
+ // FDE-12：纠正结果用绿色成功提示或琥珀色「其他对象挡住」说明，不再走红色错误条；
+ // 未知英文报错不进主文案，收进折叠的「详情」（D5a）。
+ const [notice,setNotice]=useState<{kind:'green'|'amber';text:string;detail?:string}|null>(null);
  // G2 处置：每个处置一条必填的原因，空白原因不能提交。
  const [disposalReasons,setDisposalReasons]=useState<Record<string,string>>({});
  const [partialReason,setPartialReason]=useState('');
@@ -27,7 +28,7 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
   setView(data);
   if(!initialized.current){
    initialized.current=true;
-   const properties=Object.keys(data.ontology.properties);
+   const properties=Object.keys(legacyProperties(data.ontology));
    if(properties.length)setField(properties[0]);
    const pending=sessionStorage.getItem(localKey);
    if(pending&&data.session.phase!=='saved'){
@@ -74,7 +75,7 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
  // 整批保存还被哪些对象挡住（FDE-12）：点名对象与属性，供纠正后的琥珀色说明。
  function blockedList(data:ObjectView):string{
   const identity=data.ontology.identity_fields?.[0]||'number';
-  const required=Object.entries(data.ontology.properties).filter(([,definition])=>definition.required).map(([prop])=>prop);
+  const required=Object.entries(legacyProperties(data.ontology)).filter(([,definition])=>definition.required).map(([prop])=>prop);
   const parts:string[]=[];
   for(const entry of data.objects){
    const label=objectLabel(entry,data);
@@ -98,9 +99,11 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
   }catch(error){
    if(error instanceof ApiError&&error.status===409){setConflict(true);onError(error);return;}
    const blocked=blockedList(fresh);
+   // 重新校验未通过的原因主文案只给中文；未知英文原文折叠为「详情」。
+   const human=humanDetail(error instanceof Error?error.message:String(error));
    setNotice({kind:'amber',text:blocked
     ?`纠正已保存：${propertyLabel(prop)} → ${display(corrected)}。整批保存仍被其他问题挡住：${blocked}。`
-    :`纠正已保存，但重新校验未通过：${error instanceof Error?error.message:String(error)}`});
+    :`纠正已保存，但重新校验未通过${human.summary?`：${human.summary}`:''}。`,detail:human.detail});
   }
  }
  async function submit(){
@@ -202,7 +205,8 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
  const idx=Math.min(index,Math.max(0,(view?.objects.length||0)-1));
  idxRef.current=idx;
  if(!view)return <main className="loading">正在恢复任务…</main>;
- const properties=Object.keys(view.ontology.properties);
+ const conceptProperties=legacyProperties(view.ontology);
+ const properties=Object.keys(conceptProperties);
  const done=view.session.phase==='saved';
  const object=view.objects[idx];
  objectRef.current=object?.id||'';
@@ -283,13 +287,13 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
    {entry.unresolved.length>0&&<span className="badge">{entry.unresolved.length} 项未解决</span>}</button>)}</div>
   {view.objects.length===0&&<div className="empty">生成映射预览后，在这里查看对象。</div>}
   <SourceViewer sessionId={sessionId} profile={profile as SourceProfile|undefined} anchor={sourceAnchor?{source_ref:sourceAnchor.source_id,selector:sourceAnchor.selector}:undefined} recordIndex={sourceRow} sourceField={sourceField}/>
- </section><section className="mapping-panel"><div className="panel-heading"><strong>对象详情</strong><span className="badge">{entityTypeLabel(view.ontology.entity_type)}</span></div>
+ </section><section className="mapping-panel"><div className="panel-heading"><strong>对象详情</strong><span className="badge">{entityTypeLabel(legacyEntityType(view.ontology))}</span></div>
   {object?<><div className="mapping-table-scroll"><table className="mapping-table"><thead><tr><th>本体属性</th><th>当前值</th><th>来源定位</th><th>状态</th></tr></thead><tbody>{properties.map(prop=>{
    const anchors=object.evidence[prop]||[];const corrected=corrections.some(c=>c.property===prop);
    const issue=view.issues.some(i=>i.target===prop);
    const mappingChanged=view.correction_views.some(c=>c.entity_id===object.id&&c.property===prop);
    return <tr key={prop} className={field===prop?'active-mapping':''} onClick={()=>setField(prop)}>
-    <td><button className="field-button" title={prop} onClick={()=>setField(prop)}>{propertyLabel(prop)}</button>{view.ontology.properties[prop].required&&<span className="required">必需</span>}</td>
+    <td><button className="field-button" title={prop} onClick={()=>setField(prop)}>{propertyLabel(prop)}</button>{conceptProperties[prop]&&conceptProperties[prop].required&&<span className="required">必需</span>}</td>
     <td data-testid={`object-${prop}`} className="mapped-value">{display(object.values[prop])}</td>
     <td className="object-evidence">{anchors.length?anchors.map((anchor,i)=><div key={i}>{isDecisionEvidence(anchor)?decisionSourceName(anchor.source_id):`${sourceName(anchor.source_id)} · ${locate(anchor.selector,propertyLabel(prop))}`}</div>):<span className="muted">无来源定位</span>}</td>
     <td><small className={object.unresolved.includes(prop)||issue||mappingChanged?'warn':'ok'}>{corrected?(mappingChanged?'已纠正 · 映射已变化':'已纠正'):object.unresolved.includes(prop)?'未解决':issue?'需核对':'已核对'}</small></td>
@@ -312,14 +316,18 @@ export function ObjectPage({sessionId,onBack,onError}:{sessionId:string;onBack:(
   </div>}
   {object.extensions&&<details className="extension-box"><summary>查看扩展字段</summary><pre>{JSON.stringify(object.extensions,null,2)}</pre></details>}</>
   :<div className="empty">选择左侧对象查看值与来源定位。</div>}
-  {notice&&<div className={notice.kind==='green'?'notice green':'notice amber'} data-testid={notice.kind==='green'?'correction-success':'correction-blocked'} role="status">{notice.text}</div>}
+  {notice&&<div className={notice.kind==='green'?'notice green':'notice amber'} data-testid={notice.kind==='green'?'correction-success':'correction-blocked'} role="status">{notice.text}
+   {notice.detail&&<details className="tech-detail"><summary>详情</summary><pre>{technicalDetail(notice.detail)}</pre></details>}</div>}
   {/* 待核对问题不依赖选中对象：预览没有实例时（如 no_records）仍要全部列出。 */}
   {view.issues.length>0&&<div className="notice amber" data-testid="pending-issues"><strong>{view.issues.length} 项待核对 · 阻断 {blockingCount} 项</strong>
    <ul>{sortedIssues.slice(0,showAllIssues?sortedIssues.length:10).map((issue,i)=>{
     const target=issueObject(issue,view);
+    // 问题补充说明统一中文化：已知原文进主文案，未知英文折叠为「详情」。
+    const human=humanDetail(issue.detail);
     return <li key={i} data-testid="pending-issue"><small className={issueBlocksSave(issue)?'warn':'ok'}>{issueBlocksSave(issue)?'阻断':'可纠正'}</small>
      {' · '}{target?<button className="field-button" onClick={()=>selectObject(view.objects.indexOf(target))}>{objectLabel(target)}</button>:<span className="muted">{issueLocation(issue)}</span>}
-     {issue.target?` · ${propertyLabel(issue.target)}`:''} · {issueReasons[issue.code||'']||display(issue.code)}{issue.detail?` · ${display(issue.detail)}`:''}
+     {issue.target?` · ${propertyLabel(issue.target)}`:''} · {issueReasons[issue.code||'']||display(issue.code)}{issue.detail&&human.summary?` · ${human.summary}`:''}
+     {issue.detail&&human.detail&&<details className="tech-detail"><summary>详情</summary><pre>{technicalDetail(human.detail)}</pre></details>}
      {issueDisposals(issue).map(option=><div key={disposalKey(option)} className="disposal" data-testid="disposal-option">
       <span className="muted">{disposalText(option)} · {option.reason_hint}</span>
       <div className="disposal-controls">
