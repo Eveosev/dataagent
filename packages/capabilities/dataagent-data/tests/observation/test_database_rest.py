@@ -146,6 +146,44 @@ def test_rest_follows_pages_preserves_nesting_and_response_anchors(tmp_path,http
     assert profile.metadata['record_keys'][0]['keys']==[{'field':'id','type':'int','value':1}]
 
 
+def test_rest_paged_anchors_carry_the_response_page(tmp_path,http_source):
+    from dataagent_data.observation.http import PAGE_EXTENSION,probe_rest
+    origin,routes,_=http_source
+    headers={'X-Source-Version':'r1'}
+    routes['/items']=(200,{'items':[{'id':1,'amount':10}],'next':'/items?p=2'},headers)
+    routes['/items?p=2']=(200,{'items':[{'id':2,'amount':20}],'next':'/items?p=3'},headers)
+    routes['/items?p=3']=(200,{'items':[{'id':3,'amount':30}],'next':None},headers)
+    profile=probe_rest(rest_selection(origin),None,workspace=tmp_path,allowed_origins=[origin])
+    assert profile.coverage=='full'
+    selectors=[profile.anchors[f'{index}./amount'][0].selector for index in range(3)]
+    # The JSON Pointer restarts at /items/0 on every page; the page extension
+    # is what keeps the three selectors distinct.
+    assert [selector.pointer for selector in selectors]==['/items/0/amount']*3
+    assert [selector.extensions[PAGE_EXTENSION] for selector in selectors]==[1,2,3]
+    assert len({json.dumps(selector.model_dump(mode='json'),sort_keys=True)
+                for selector in selectors})==3
+
+
+def test_legacy_rest_anchors_without_a_page_still_read(tmp_path,http_source):
+    from dataagent_contracts.intake import SourceProfile
+    from dataagent_data.anchors import resolve_json_pointer
+    from dataagent_data.observation.http import probe_rest
+    origin,routes,_=http_source
+    headers={'X-Source-Version':'r1'}
+    routes['/items']=(200,{'items':[{'id':1,'amount':10}],'next':'/items?p=2'},headers)
+    routes['/items?p=2']=(200,{'items':[{'id':2,'amount':20}],'next':None},headers)
+    profile=probe_rest(rest_selection(origin),None,workspace=tmp_path,allowed_origins=[origin])
+    legacy=profile.model_dump(mode='json')
+    for anchors in legacy['anchors'].values():
+        for anchor in anchors:
+            anchor['selector'].pop('extensions',None)
+    restored=SourceProfile.model_validate(legacy)
+    selector=restored.anchors['1./amount'][0].selector
+    assert selector.pointer=='/items/0/amount'
+    assert selector.extensions is None
+    assert resolve_json_pointer({'items':[{'amount':20}]},selector.pointer)==20
+
+
 @pytest.mark.parametrize('status,code',[(429,'rate_limited'),(500,'http_error')])
 def test_rest_retains_successful_page_when_later_request_fails(tmp_path,http_source,status,code):
     from dataagent_data.observation.http import probe_rest
