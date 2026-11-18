@@ -5,9 +5,11 @@ standards in a single sentence and none of them sits in a table.  The agent
 reads the disclosed clause candidates (D2b) and submits records for the task's
 pinned target concept; this module never trusts that submission.  Every quote
 must match the observed paragraph or page text verbatim at its cited position,
-every property must belong to the concept and parse under its value type, and a
-required attribute the clause never states stays an explicit coverage gap
-instead of being invented.  Accepted records become a
+every property must belong to the concept and parse under its value type, and
+a required attribute the clause never states stays an explicit coverage gap
+instead of being invented.  Numbers, amounts and dates must equal what their
+own quote parses to, and one source span must carry the same value no matter
+which record or property cites it.  Accepted records become a
 ``clause_records:<concept>`` record set with paragraph anchors, so the normal
 mapping preview and materialization treat them like any other source rows.
 """
@@ -20,6 +22,10 @@ from pydantic_core import to_jsonable_python
 from dataagent_contracts.core.refs import SourceAnchor
 from dataagent_ontology.mapping import _typed
 from .discovery_evidence import _paragraph_text_fields
+
+# Value types whose submitted value must equal the quote's own parse: a
+# quote of 800 cannot carry a submitted value of 900.
+_VERIFIED_QUOTE_TYPES = frozenset({'decimal', 'integer', 'date', 'datetime'})
 
 
 class ClauseValue(BaseModel):
@@ -140,14 +146,26 @@ def _pdf_units(profile):
 
 
 def _require_disclosure(profile, allowed_fields, kind):
-    """The paragraph text field itself must be allowed, as in D2b discovery."""
+    """The paragraph text field itself must be allowed, as in D2b discovery.
+
+    Disclosure follows the mapping path's rule (``intake_extract`` /
+    ``extract_fields``): no model-context.json (``allowed_fields=None``) means
+    the local-owner mode grants the text; an explicit policy must include the
+    paragraph text field, otherwise PermissionError.
+    """
     text_fields = (_paragraph_text_fields(profile) if kind == 'docx' else ['text'])
     if allowed_fields is not None and not any(field in allowed_fields for field in text_fields):
         raise PermissionError('document text or derived field is outside model disclosure scope')
 
 
 def _resolve(texts, raw_records, concept):
-    """Validate every submitted value; returns per-record values plus shared spans."""
+    """Validate every submitted value; returns per-record values plus shared spans.
+
+    A span is identified by its source position (unit plus character range)
+    only: the same span cited by different records or different properties
+    must carry the same value, and spans cited by more than one record are
+    marked as shared evidence.
+    """
     resolved = []
     shared = {}
     for raw_values in raw_records:
@@ -161,20 +179,35 @@ def _resolve(texts, raw_records, concept):
             if prop in values:
                 raise ValueError(f'同一条款记录里属性 {prop} 重复')
             kind_key, selector, start, end, label = texts.locate(raw)
+            value_type = concept.properties[prop].value_type
             try:
-                typed = _typed(raw.get('value'), concept.properties[prop].value_type)
+                typed = _typed(raw.get('value'), value_type)
             except (ValueError, ArithmeticError) as exc:
                 raise ValueError(f'属性 {prop} 的值无法按目标类型解析: {exc}') from exc
             if typed is None:
                 raise ValueError(f'属性 {prop} 的值不能为空')
-            span = (*kind_key, prop, start, end)
-            if span in shared:
-                if shared[span]['value'] != typed:
-                    raise ValueError(f'同一引文跨记录必须携带同一个值: {prop}')
-                shared[span]['records'].append(len(resolved))
+            if value_type in _VERIFIED_QUOTE_TYPES:
+                # A number, amount or date must be what its own quote says.
+                try:
+                    quoted = _typed(raw.get('quote'), value_type)
+                except (ValueError, ArithmeticError) as exc:
+                    raise ValueError(
+                        f'属性 {prop} 的引文无法按目标类型解析，请引用数值或日期本身') from exc
+                if quoted != typed:
+                    raise ValueError(f'属性 {prop} 的提交值与引文不一致：'
+                                     f'引文为 {quoted}，提交为 {typed}')
+            span = (*kind_key, start, end)
+            entry = shared.get(span)
+            if entry is None:
+                shared[span] = {'selector': selector, 'value': typed,
+                                'records': [len(resolved)], 'properties': [prop]}
             else:
-                shared[span] = {'property': prop, 'selector': selector,
-                                'value': typed, 'records': [len(resolved)]}
+                if entry['value'] != typed:
+                    raise ValueError(f'同一引文必须携带同一个值: {prop}')
+                if len(resolved) not in entry['records']:
+                    entry['records'].append(len(resolved))
+                if prop not in entry['properties']:
+                    entry['properties'].append(prop)
             values[prop] = typed
             evidence[prop] = {'property': prop, 'value': to_jsonable_python(typed),
                               'quote': str(raw.get('quote')), 'char_start': start,
@@ -188,6 +221,10 @@ def _resolve(texts, raw_records, concept):
         missing = [field for field in concept.identity_fields if field not in values]
         if missing:
             raise ValueError('记录缺少身份字段: ' + ', '.join(missing))
+        blank = [field for field in concept.identity_fields
+                 if isinstance(values[field], str) and not values[field].strip()]
+        if blank:
+            raise ValueError('身份字段的值不能为空: ' + ', '.join(blank))
         resolved.append({'values': values, 'evidence': evidence,
                          'paragraphs': paragraphs, 'pages': pages})
     return resolved, shared
@@ -225,7 +262,7 @@ def _build(profile, raw_records, concept, *, concept_name, ontology_revision,
             for index, record in enumerate(resolved)
             for prop, definition in sorted(concept.properties.items())
             if definition.required and prop not in record['values']]
-    shared_spans = [{'property': entry['property'], 'selector': entry['selector'],
+    shared_spans = [{'properties': list(entry['properties']), 'selector': entry['selector'],
                      'value': to_jsonable_python(entry['value']),
                      'records': list(entry['records'])}
                     for entry in shared.values() if len(entry['records']) > 1]

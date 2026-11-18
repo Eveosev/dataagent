@@ -216,12 +216,15 @@ def test_one_clause_yields_multiple_records_with_replayable_anchors(tmp_path):
     summary = result['clause_records']
     assert summary['record_set'] == 'clause_records:费用标准'
     assert summary['count'] == 4 and summary['gaps'] == []
-    shared = {(item['property'], tuple(item['records']))
+    shared = {(tuple(item['properties']), tuple(item['records']), item['value'])
               for item in summary['shared_spans']}
     # The clause names each city class once for two standards (one per rank):
-    # those two quotes are shared evidence across their records.  The rank and
-    # expense-type quotes each cite a different occurrence, so they are not.
-    assert shared == {('城市等级', (0, 1)), ('城市等级', (2, 3))}
+    # those two source spans are shared evidence across their records.  The
+    # rank and expense-type quotes each cite a different occurrence, so they
+    # are not shared.
+    assert (('城市等级',), (0, 1), '一类') in shared
+    assert (('城市等级',), (2, 3), '二类') in shared
+    assert len(summary['shared_spans']) == 2
 
     view = wb.intake.view(session.id, wb.ctx)
     profile = view['profiles'][0]
@@ -280,10 +283,26 @@ def test_one_clause_yields_multiple_records_with_replayable_anchors(tmp_path):
     (lambda r: r[0].update(values=[r[0]['values'][3]]), '记录缺少身份字段'),
     # A paragraph this task never observed.
     (lambda r: r[0]['values'][3].update(paragraph=60), '第 60 段未在本任务观测到'),
-    # The same quote must carry the same value in every record.
+    # The same source span must carry the same value in every record.
     (lambda r: r[2]['values'][0].update(value='二类', quote='一类城市',
                                         char_start=_offset('一类城市')),
-     '同一引文跨记录必须携带同一个值'),
+     '同一引文必须携带同一个值'),
+    # The same span reused for a different property must still carry the
+    # same value: the span, not the property name, identifies the evidence.
+    (lambda r: r[1]['values'][1].update(quote='一类城市', value='员工级',
+                                        char_start=None),
+     '同一引文必须携带同一个值'),
+    # A number, amount or date must equal what its own quote parses to.
+    (lambda r: r[0]['values'][3].update(value='900'),
+     '提交值与引文不一致'),
+    # A numeric property whose quote is not itself a number: the value can
+    # no longer be verified against the source, so it is refused.
+    (lambda r: r[0]['values'][3].update(quote='住宿', value='800',
+                                        char_start=_offset('住宿', 1)),
+     '引文无法按目标类型解析'),
+    # An identity value that is empty or whitespace-only names no object.
+    (lambda r: r[0]['values'][0].update(value='   '),
+     '身份字段的值不能为空'),
     # A quote that is not in the paragraph at all and has no char_start.
     (lambda r: r[0]['values'][3].update(quote='999', char_start=None),
      '引文在第 6 段中不唯一或不存在'),
@@ -349,6 +368,17 @@ def test_clause_records_require_paragraph_text_disclosure(tmp_path):
         extract_records(wb, session, clause_records())
 
 
+def test_clause_records_allowed_without_a_disclosure_policy(tmp_path):
+    # No model-context.json at all is the local-owner mode; the mapping path
+    # (intake_extract / extract_fields) grants the text in that case.
+    write_policy_docx(tmp_path / 'policy.docx')
+    wb = workbench(tmp_path, None)
+    wb.ontology.register(expense_policy_ontology(), wb.ctx)
+    session = start_policy_session(wb)
+    result = extract_records(wb, session, clause_records()).data
+    assert result['clause_records']['count'] == 4
+
+
 def test_changed_source_breaks_clause_record_replay(tmp_path):
     wb, session = setup(tmp_path)
     save_clause_mapping(wb, session)
@@ -406,6 +436,16 @@ class StubProbeClient:
         return self.profile
 
 
+def lodging_ontology():
+    return OntologyRevision.model_validate({
+        'id': 'pdf-policy', 'revision': '1',
+        'concepts': {'住宿标准': {
+            'entity_type': 'LodgingStandard',
+            'properties': {'城市': {'value_type': 'string'},
+                           '限额': {'value_type': 'decimal', 'required': True}},
+            'identity_fields': ['城市']}}})
+
+
 PDF_TEXT = '报销制度\n第三条 住宿标准为每晚 400 元，适用于一类城市。'
 
 
@@ -426,13 +466,7 @@ def pdf_profile():
 def test_text_pdf_clause_records_minimal_positive(tmp_path):
     wb = Workbench(tmp_path)
     wb.layer_client = StubProbeClient(pdf_profile())
-    wb.ontology.register(OntologyRevision.model_validate({
-        'id': 'pdf-policy', 'revision': '1',
-        'concepts': {'住宿标准': {
-            'entity_type': 'LodgingStandard',
-            'properties': {'城市': {'value_type': 'string'},
-                           '限额': {'value_type': 'decimal', 'required': True}},
-            'identity_fields': ['城市']}}}), wb.ctx)
+    wb.ontology.register(lodging_ontology(), wb.ctx)
     task = invoke(wb, 'intake_start', {
         'goal': '从文本 PDF 条款生成记录',
         'target': {'ontology_id': 'pdf-policy', 'concept': '住宿标准'},
@@ -466,4 +500,75 @@ def test_text_pdf_clause_records_minimal_positive(tmp_path):
                   '限额': {'source_field': '限额', 'transform': 'decimal'}}),
         session.revision, wb.ctx)
     assert len(preview.instances) == 1 and not preview.issues
+    assert str(preview.instances[0].values['限额']) == '400'
+
+
+PDF_LINES = ['Travel Expense Policy',
+             'Article 3: First-class city lodging limit is 400 CNY per night.']
+
+
+def write_text_pdf(path, lines):
+    """A minimal one-page text PDF; the probe extracts its text layer."""
+    stream = ('BT\n/F1 12 Tf\n72 720 Td\n14 TL\n'
+              + ''.join(f'({line}) Tj\nT*\n' for line in lines) + 'ET\n')
+    objects = [
+        '<< /Type /Catalog /Pages 2 0 R >>',
+        '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+        '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] '
+        '/Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>',
+        '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+        f'<< /Length {len(stream)} >>\nstream\n{stream}endstream',
+    ]
+    out = bytearray(b'%PDF-1.4\n')
+    offsets = []
+    for number, body in enumerate(objects, 1):
+        offsets.append(len(out))
+        out += f'{number} 0 obj\n{body}\nendobj\n'.encode()
+    xref = len(out)
+    out += f'xref\n0 {len(objects) + 1}\n0000000000 65535 f \n'.encode()
+    for offset in offsets:
+        out += f'{offset:010d} 00000 n \n'.encode()
+    out += (f'trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\n'
+            f'startxref\n{xref}\n%%EOF\n').encode()
+    path.write_bytes(bytes(out))
+
+
+def test_real_text_pdf_clause_records_end_to_end(tmp_path):
+    write_text_pdf(tmp_path / 'policy.pdf', PDF_LINES)
+    wb = workbench(tmp_path, {'policy': ['text', '城市', '限额']})
+    wb.ontology.register(lodging_ontology(), wb.ctx)
+    task = invoke(wb, 'intake_start', {
+        'goal': '从文本 PDF 条款生成住宿标准记录',
+        'target': {'ontology_id': 'pdf-policy', 'concept': '住宿标准'},
+        'sources': [{'source_id': 'policy', 'kind': 'file',
+                     'locator_ref': 'policy.pdf'}]})
+    session = wb.intake.advance(task.data['session_id'], wb.ctx)
+    result = invoke(wb, 'intake_extract_records', {
+        'session_id': session.id, 'source_id': 'policy',
+        'expected_revision': session.revision,
+        'records': [{'values': [
+            {'property': '城市', 'value': 'First-class', 'quote': 'First-class',
+             'page': 1},
+            {'property': '限额', 'value': '400', 'quote': '400', 'page': 1},
+        ]}]}).data
+    assert result['clause_records']['count'] == 1
+
+    view = wb.intake.view(session.id, wb.ctx)
+    profile = view['profiles'][0]
+    page = profile['metadata']['pages'][0]
+    selector = profile['anchors']['0.限额'][0]['selector']
+    assert selector['kind'] == 'pdf_text_span' and selector['page'] == 1
+    assert page['text'][selector['char_start']:selector['char_end']] == '400'
+
+    session = wb.sessions.get(session.id, wb.ctx)
+    request = wb.intake.inference_request(session.id, wb.ctx)
+    preview = wb.intake.submit_proposal(session.id, MappingSpec(
+        id='candidate', revision='1', ontology_revision='pdf-policy@1',
+        concept='住宿标准',
+        source_fingerprint=request['sources'][0]['structure_fingerprint'],
+        bindings={'城市': {'source_field': '城市'},
+                  '限额': {'source_field': '限额', 'transform': 'decimal'}}),
+        session.revision, wb.ctx)
+    assert len(preview.instances) == 1 and not preview.issues
+    assert preview.instances[0].values['城市'] == 'First-class'
     assert str(preview.instances[0].values['限额']) == '400'
