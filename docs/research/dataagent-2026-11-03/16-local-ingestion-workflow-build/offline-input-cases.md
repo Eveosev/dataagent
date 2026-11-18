@@ -52,19 +52,36 @@ Mint 固定提案复跑命令为 `bash scripts/verify_local.sh --phase files --o
 | --- | --- | --- |
 | D01 SQLite 映射 | 上传 `invoice.db`，或让 Mint 接入当前项目的 SQLite 发票表 | 在采购资料映射中绑定 `number`、`amount`、`currency` 同名字段，金额单位已经是元。预览 `INV-003` 为 1260 CNY，来源是 `invoice` 表，记录键是 `number=INV-003` |
 | D02 SQLite 本体发现 | 上传 `sales-discovery.db`，选「从数据库发现本体」 | 看见 `party`、`doc_hdr`、`doc_line` 共 7 行。明细 → 订单是声明的复合外键，同值 3/3。订单 → 客户是观测值候选，同值 2/2。用 Mint 提案或固定提案验收脚本提交后，核对粒度和标识、确认草案并刷新 |
-| D03 PostgreSQL | 已配置连接「测试发票库」或 Mint 连接 ID `ledger` | 映射 `number`、`amount`、`currency`，金额已是元。核对 `INV-003`、1260 CNY、日期 `2026-11-11` 的来源证据和 `invoice` 表主键，保存 |
+| D03 PostgreSQL（P1，不验收） | P1 范围外，用例保留作本机参考 | 映射 `number`、`amount`、`currency`，金额已是元。核对 `INV-003`、1260 CNY、日期 `2026-11-11` 的来源证据和 `invoice` 表主键，保存。M1 验收不包含本项 |
 | D04 分页 REST | 已配置连接「测试发票 API」或 Mint 连接 ID `accounting` | 绑定 `/code`、`/amount`、`/currency`。金额使用十进制转换。核对两页、两个对象 `INV-003` 为 1260 CNY、`INV-004` 为 900 CNY。切到第二个对象核对 `/items/0/amount`，在探查结果的 `metadata.record_keys` 核对其页码为 2 |
 
-### 配置环回 REST 样例
+### 连接配置位置
+
+连接清单的唯一推荐位置是工作区根目录 `source-connections.json`。工作台按启动进程的 `--workspace`（默认当前目录）查找该文件，Mint 与 `dataagent workbench` 都适用；安装包只把 `.dataagent/source-connections.json` 当作兜底，不覆盖工作区根目录的清单。
+
+解析顺序：
+
+1. 显式环境变量 `DATAAGENT_SOURCE_CONNECTIONS`（宿主透传用户设置时优先）；
+2. 工作区根目录 `source-connections.json`；
+3. 工作区 `.dataagent/source-connections.json`（兼容旧位置）。
+
+根目录与 `.dataagent` 同时存在时使用根目录文件并告警。`dataagent doctor` 打印清单路径、已配置连接（名称、类型）和每个凭据逻辑名的状态（可解析、缺失、权限不对）；任一凭据缺失时退出码非 0 并给出修复命令。doctor 只报有无，不输出凭据值。
+
+### 带 token 的 REST 样例
+
+token 只保存在 `.dataagent/secrets/invoice-api.key`：目录 0700、文件 0600。清单以 `file:invoice-api` 引用该逻辑名，凭据值不写进清单。
 
 ```sh
-mkdir -p "$DATAAGENT_TEST/http-fixture"
+mkdir -p "$DATAAGENT_TEST/http-fixture" "$DATAAGENT_TEST/.dataagent/secrets"
+chmod 700 "$DATAAGENT_TEST/.dataagent/secrets"
 cat > "$DATAAGENT_TEST/http-fixture/page1.json" <<'JSON'
 {"version":"fixture-1","items":[{"code":"INV-003","amount":"1260.00","currency":"CNY"}],"next":"/page2.json"}
 JSON
 cat > "$DATAAGENT_TEST/http-fixture/page2.json" <<'JSON'
 {"version":"fixture-1","items":[{"code":"INV-004","amount":"900.00","currency":"CNY"}],"next":null}
 JSON
+printf '%s' '<token>' > "$DATAAGENT_TEST/.dataagent/secrets/invoice-api.key"
+chmod 600 "$DATAAGENT_TEST/.dataagent/secrets/invoice-api.key"
 cat > "$DATAAGENT_TEST/source-connections.json" <<'JSON'
 {
   "accounting": {
@@ -72,18 +89,25 @@ cat > "$DATAAGENT_TEST/source-connections.json" <<'JSON'
     "label":"测试发票 API",
     "locator":"http://127.0.0.1:8766/page1.json",
     "allowed_origins":["http://127.0.0.1:8766"],
-    "options":{"records_path":"/items","keys":["/code"],"source_version_path":"/version","pagination":{"next_path":"/next"}}
+    "options":{"records_path":"/items","keys":["/code"],"source_version_path":"/version","pagination":{"next_path":"/next"}},
+    "credential_options":{"auth":"bearer"},
+    "credential_refs":{"token":"file:invoice-api"}
   }
 }
 JSON
-export DATAAGENT_SOURCE_CONNECTIONS="$DATAAGENT_TEST/source-connections.json"
 python3 -m http.server 8766 --bind 127.0.0.1 --directory "$DATAAGENT_TEST/http-fixture" &
 REST_FIXTURE_PID=$!
 ```
 
-从同一终端启动本机工作台或 Mint，使进程继承连接配置。结束时停止测试服务 `kill "$REST_FIXTURE_PID"`。这条用例的两页都正常返回。带第 2 页 429 的断点续跑由组合验收脚本覆盖。
+`credential_refs` 使用逻辑名：`env:<VAR>` 读启动进程的环境变量，`keychain:<service>/<account>` 读 macOS 钥匙串，`file:<name>` 读 `.dataagent/secrets/<name>.key`。REST bearer 只接受 `token`；basic 接受 `user`、`password`，并在 `credential_options` 给出 `"auth":"basic"` 和 user。PostgreSQL 接受 `user`、`password`。钥匙串写入示例：`security add-generic-password -s dataagent -a invoice-api -w '<token>'`。
 
-### 配置本机 PostgreSQL 样例
+测试服务要求 `Authorization: Bearer <token>`，配置正确后两页各返回 200。结束时停止测试服务 `kill "$REST_FIXTURE_PID"`。带第 2 页 429 的断点续跑由组合验收脚本覆盖。
+
+启动工作台或 Mint 前先在工作区根目录运行 `dataagent doctor`，确认连接与凭据均可解析。显式导出 `DATAAGENT_SOURCE_CONNECTIONS="$DATAAGENT_TEST/source-connections.json"` 仍可作为覆盖，但不是必须。
+
+### 配置本机 PostgreSQL 样例（P1，不验收）
+
+PostgreSQL 已移出 P1（06 Q12），本节仅保留为 P1 范围外的本机验证参考，不计入 M1 验收。`verify_local.sh --phase sources` 不带 `--postgres-locator` 时跳过该项。
 
 使用已有的本机 PostgreSQL 测试实例。将 `LOCAL_TEST_POSTGRES_ADMIN` 设为可在独立测试库建表和授权的连接串，将 `LOCAL_TEST_POSTGRES` 设为同一库的环回连接串。在测试实例尚无该角色时，用管理员连接执行 `CREATE ROLE dataagent_reader LOGIN`。按本机认证设置提供该角色的凭据。
 
@@ -96,7 +120,7 @@ GRANT SELECT ON invoice TO dataagent_reader;
 SQL
 ```
 
-在 `source-connections.json` 根对象加入以下连接，保留同时测试的其他连接。将 `locator` 改为实际环回地址。按本机认证要求设置 `DATAAGENT_PG_PASSWORD`，需要密码时在连接的 `credential_env` 增加 `"password":"DATAAGENT_PG_PASSWORD"`。
+在 `source-connections.json` 根对象加入以下连接，保留同时测试的其他连接。将 `locator` 改为实际环回地址。需要密码时把密码写入 `.dataagent/secrets/pg-reader.key`（0600），并在连接中加入 `"credential_refs":{"password":"file:pg-reader"}`；也可改用 `"credential_refs":{"password":"env:DATAAGENT_PG_PASSWORD"}`。
 
 ```json
 {
@@ -110,7 +134,7 @@ SQL
 }
 ```
 
-导出 `DATAAGENT_SOURCE_CONNECTIONS="$DATAAGENT_TEST/source-connections.json"` 后从同一终端启动工作台或 Mint。若测试角色可通过本机认证直接登录，可从工作树运行 `bash scripts/verify_local.sh --phase sources --postgres-locator "$LOCAL_TEST_POSTGRES"`。预期 CSV、SQLite、PostgreSQL、REST 对齐为一个 `INV-003`，REST 第 2 页重试后完成，第 1 页读取一次。
+从工作区根目录启动工作台或 Mint。若测试角色可通过本机认证直接登录，可从工作树运行 `bash scripts/verify_local.sh --phase sources --postgres-locator "$LOCAL_TEST_POSTGRES"`。预期 CSV、SQLite、PostgreSQL、REST 对齐为一个 `INV-003`，REST 第 2 页重试后完成，第 1 页读取一次（P1 参考，不验收）。
 
 ## 业务 API 和 GUI 操作
 

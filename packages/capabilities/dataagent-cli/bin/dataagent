@@ -19,8 +19,10 @@
 #                                  uv sync --frozen for all layers; with
 #                                  --ocr-root, install a verified OCR
 #                                  directory into <data_root>/ocr
-#   dataagent doctor               check packages, .venv, policy, data_root,
-#                                  ocr engine + model, mode
+#   dataagent doctor               check packages, .venv, data_root,
+#                                  connections + credential references,
+#                                  running workbench service, policy, OCR, mode
+#   dataagent workbench list|stop  list tasks; stop this workspace's service
 #
 # POSIX sh only, no Python dependency.
 
@@ -80,7 +82,7 @@ count_lines() {
 resolve_dir() {
     pkg=$1
     root=./.mint/packages/dataagent
-    [ -d "$root" ] || die "no installed dataagent packages under $root (mint add dataagent/preset-s0)"
+    [ -d "$root" ] || die "no installed dataagent packages under $root — 请在 Mint 项目目录执行 (in the project run: mint add dataagent/preset-intake)"
     dirs=$(installed_dirs "$pkg")
     n=$(count_lines "$dirs")
     [ "$n" -ne 0 ] || die "package dataagent/$pkg is not installed"
@@ -121,7 +123,7 @@ run_layer_dir() {
     fi
     dirs=$(installed_dirs "$pkg")
     n=$(count_lines "$dirs")
-    [ "$n" -ne 0 ] || die "package dataagent/$pkg is not installed (build/local or .mint/packages is missing)"
+    [ "$n" -ne 0 ] || die "package dataagent/$pkg is not installed (build/local or .mint/packages is missing; 请在 Mint 项目目录执行，mint add dataagent/preset-intake)"
     [ "$n" -eq 1 ] || die "dataagent/$pkg has $n installed versions; run \`mint sync\` to match mint.lock"
     printf '%s\n' "$dirs"
 }
@@ -218,6 +220,40 @@ if profile.kind == "engine":
 print(f"ocr:      {profile.kind} {name} version={verification.engine_version or pin.ref} verification={verification.verification_id}")
 '
 
+# Connections doctor probe (FDE-1): list the configured connections and report
+# whether each logical credential reference resolves. The probe reads values
+# only to prove they exist; it never prints, stores or returns one. It exits 1
+# when any reference is missing, denied by permissions or malformed, so doctor
+# collects it as a failing check with the repair hint.
+CONNECTION_PROBE='
+# DATAAGENT_CONNECTIONS_DOCTOR_PROBE
+import sys
+from dataagent_workbench.adapters.source_connections import doctor_report
+lines, failed = doctor_report(sys.argv[1], sys.argv[2])
+for line in lines:
+    print(line)
+raise SystemExit(1 if failed else 0)
+'
+
+# Workbench service probe (FDE-16): report the service bound to this workspace.
+# A stale descriptor is reported, not treated as a failing check: the service
+# is started on demand.
+SERVICE_PROBE='
+# DATAAGENT_WORKBENCH_SERVICE_DOCTOR_PROBE
+import sys
+from dataagent_workbench.launcher import service_status
+status = service_status(sys.argv[1])
+if status is None:
+    print("service:  none for this workspace")
+    raise SystemExit(0)
+pid = status.get("pid")
+url = status.get("url")
+if status.get("alive"):
+    print(f"service:  workbench pid={pid} url={url} (running)")
+else:
+    print(f"service:  stale descriptor pid={pid} (run: dataagent workbench stop)")
+'
+
 # §5.4: clear every variable unrelated to DataAgent before exec'ing the
 # layer process; keep only the whitelist + DATAAGENT_*.
 scrub_env() {
@@ -232,7 +268,7 @@ scrub_env() {
 dispatch() {
     layer=$1
     shift
-    pkg=$(layer_pkg "$layer") || die "unknown layer: $layer (data | app | gov)"
+    pkg=$(layer_pkg "$layer") || die "unknown layer: $layer (data | app | gov | workbench | ops)"
     module=$(module_of "$layer")
     dir=$(resolve_dir "$pkg")
     py=$(python_of "$dir")
@@ -326,7 +362,9 @@ setup_cmd() {
 # doctor: report, don't die — collect every failing check into one exit
 # status (3). A missing policy is a failing check, not a success with a
 # note (r5-review D14): enforce-mode runs would exit 3 on the next
-# --authorize anyway.
+# --authorize anyway. Connections are checked the same way (FDE-1): an
+# unresolvable credential would fail the next probe, so doctor says which
+# reference is missing and how to repair it, never its value.
 doctor_cmd() {
     status=0
     for layer in $(active_layers); do
@@ -335,7 +373,7 @@ doctor_cmd() {
         dir=$(installed_dirs "$pkg")
         n=$(count_lines "$dir")
         if [ "$n" -eq 0 ]; then
-            echo "package  dataagent/$pkg: MISSING (mint add dataagent/preset-s0)" >&2
+            echo "package  dataagent/$pkg: MISSING (in the project run: mint add dataagent/preset-intake)" >&2
             status=3
             continue
         fi
@@ -362,6 +400,50 @@ doctor_cmd() {
         echo "data_root: $root"
     else
         echo "data_root: $root (will be created on first run)"
+    fi
+    # Connections and credentials (FDE-1). The manifest uses the same lookup
+    # as the workbench: an exported DATAAGENT_SOURCE_CONNECTIONS first, then
+    # the workspace root source-connections.json, then .dataagent. The probe
+    # lists name, kind and manifest path and reports only whether each logical
+    # reference resolves; it never outputs a value.
+    workspace=${DATAAGENT_WORKSPACE:-$PWD}
+    # The workbench owns <workspace>/.dataagent (secrets and the service
+    # descriptor), independent of DATAAGENT_DATA_ROOT which drives OCR.
+    workbench_root="$workspace/.dataagent"
+    workbench_dir=$(installed_dirs workbench)
+    if [ "$(count_lines "$workbench_dir")" -eq 1 ] && [ -x "$workbench_dir/.venv/bin/python" ]; then
+        rc=0
+        connections_out=$("$workbench_dir/.venv/bin/python" -c "$CONNECTION_PROBE" "$workspace" "$workbench_root" 2>&1) || rc=$?
+        if [ -n "$connections_out" ]; then
+            if [ "$rc" -eq 0 ]; then
+                printf '%s\n' "$connections_out"
+            else
+                printf '%s\n' "$connections_out" >&2
+            fi
+        fi
+        case $rc in
+            0) ;;
+            1) status=3 ;;
+            *) echo "connections: check failed" >&2
+               status=3 ;;
+        esac
+        rc=0
+        service_out=$("$workbench_dir/.venv/bin/python" -c "$SERVICE_PROBE" "$workbench_root" 2>&1) || rc=$?
+        if [ -n "$service_out" ]; then
+            printf '%s\n' "$service_out"
+        elif [ "$rc" -ne 0 ]; then
+            echo "service:  check failed" >&2
+        fi
+    else
+        echo "connections: not checked (workbench not installed)" >&2
+    fi
+    # Any other workspace's detached service is reported too (FDE-16).
+    if command -v pgrep >/dev/null 2>&1; then
+        running=$(pgrep -fl 'dataagent_workbench[.]interfaces[.]cli' 2>/dev/null || true)
+        if [ -n "$running" ]; then
+            echo "services: running workbench processes"
+            printf '%s\n' "$running" | sed 's/^/          /'
+        fi
     fi
     # OCR is the data layer's explicit dependency (07 §2.3 T20): the check
     # runs where the data layer is installed and, like the policy check
@@ -424,6 +506,7 @@ usage: dataagent <layer> <command> [flags]
        dataagent link
        dataagent setup [--ocr-root <verified ocr dir>]
        dataagent doctor
+       dataagent workbench list|status <session id>|stop
 
 layers: data | app | gov | workbench | ops
 
@@ -437,6 +520,8 @@ layer commands (see `dataagent <layer> <op> --help` for the parameter table):
                                                   run one 09-benchmark case
   dataagent gov policy apply <file>                write an access policy
   dataagent gov confirm <file>                     confirm acceptance criteria
+  dataagent workbench list                         tasks, phases and releases
+  dataagent workbench stop                         stop this workspace service
 
 stdout is a summary JSON (status, issues, handles, result_path); the full
 result lands in .dataagent/results/<invocation_id>.json. exit: 0 ok/partial/
