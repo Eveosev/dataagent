@@ -28,13 +28,33 @@ DEFAULT_SEGMENT_BLOCKS = 200
 DEFAULT_SEGMENT_SHEETS = 5
 
 
+def _outside_workspace(locator, resolved, workspace):
+    return PermissionError(
+        f'source file is not inside the workspace: {locator!r} resolves to '
+        f'{str(resolved)!r}; workspace is {str(workspace)!r}')
+
+
 def _safe_path(workspace, locator):
-    requested=Path(locator)
-    if requested.is_absolute() or '..' in requested.parts:
-        raise PermissionError('source must be inside the selected workspace')
     workspace=Path(workspace).resolve()
+    requested=Path(locator)
+    if requested.is_absolute():
+        # A dropped file arrives as an absolute path.  Accept it only when it
+        # resolves back inside the workspace, and carry on with the equivalent
+        # workspace-relative locator.
+        resolved=requested.resolve()
+        try:
+            requested=resolved.relative_to(workspace)
+        except ValueError:
+            raise _outside_workspace(locator, resolved, workspace) from None
+    elif '..' in requested.parts:
+        resolved=(workspace/requested).resolve()
+        if not resolved.is_relative_to(workspace):
+            raise _outside_workspace(locator, resolved, workspace)
+        raise PermissionError('source must be inside the selected workspace')
     path=(workspace/requested).resolve()
-    if not path.is_relative_to(workspace) or path.is_relative_to(workspace/'.mint'):
+    if not path.is_relative_to(workspace):
+        raise _outside_workspace(locator, path, workspace)
+    if path.is_relative_to(workspace/'.mint'):
         raise PermissionError('source path escapes allowed workspace')
     return path
 
@@ -80,7 +100,9 @@ def probe_file(selection, ctx, *, workspace, budget_rows=200, engine=None,
     segment_pages=_positive_int(segment_pages, DEFAULT_SEGMENT_PAGES, 1000)
     segment_blocks=_positive_int(segment_blocks, DEFAULT_SEGMENT_BLOCKS, 100000)
     segment_sheets=_positive_int(segment_sheets, DEFAULT_SEGMENT_SHEETS, 1000)
+    workspace=Path(workspace).resolve()
     path=_safe_path(workspace,selection.locator_ref)
+    locator_ref=path.relative_to(workspace).as_posix()
     with path.open('rb') as f:
         payload=f.read(32*1024*1024+1)
     if len(payload)>32*1024*1024:
@@ -250,7 +272,7 @@ def probe_file(selection, ctx, *, workspace, budget_rows=200, engine=None,
     fields=list(dict.fromkeys(k for row in records for k in row))
     if 'structure_fingerprint' not in metadata:
         metadata['structure_fingerprint']=hashlib.sha256(json.dumps({'kind':suffix,'fields':sorted(fields)},sort_keys=True).encode()).hexdigest()
-    metadata.update({'snapshot_ref':str(snapshot.relative_to(workspace)),'extractor_version':'dataagent-probe@1',
+    metadata.update({'locator_ref':locator_ref,'snapshot_ref':str(snapshot.relative_to(workspace)),'extractor_version':'dataagent-probe@1',
         'field_stats':{k:{'missing_in_sample':sum(row.get(k) is None for row in records)} for k in fields}})
     if resume is not None:
         metadata['resume']=resume

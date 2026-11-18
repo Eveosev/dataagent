@@ -9,6 +9,11 @@ from ..adapters.sources.rest import origin, approved, auth_headers, fetch
 
 _MISSING=object()
 RETRYABLE_GAPS = {'connection_failed', 'rate_limited', 'http_error'}
+# JSON Pointers restart at ``/items/0`` on every page, so the pointer alone
+# cannot tell two pages apart.  The 1-based response page rides in the
+# selector's contract-provided ``extensions`` map; anchors written before
+# this key existed remain valid and resolve through ``pointer`` unchanged.
+PAGE_EXTENSION = 'dataagent.page'
 
 
 def pointer(document, path):
@@ -113,7 +118,8 @@ def probe_rest(selection, ctx, *, workspace, budget_rows=200, credentials=None, 
             record_path=records_path+(f'/{local_index}' if isinstance(selected,list) else '')
             for field in flat:
                 anchors[f'{index}.{field}']=[SourceAnchor(source_ref=selection.source_id,source_revision=revision,extraction_ref=ref,
-                    selector={'kind':'json_pointer','pointer':record_path+field})]
+                    selector={'kind':'json_pointer','pointer':record_path+field,
+                        'extensions':{PAGE_EXTENSION:page_number}})]
         page['rows_observed']=len(chosen)
         if len(raw)-start>remaining:
             sampled=True;row_offset=start+remaining;break

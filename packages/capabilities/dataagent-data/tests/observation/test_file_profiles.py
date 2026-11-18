@@ -125,6 +125,29 @@ def test_path_escape_and_content_mismatch_are_rejected(workspace,ctx,tmp_path):
         probe_file(selection('fake.pdf'),ctx,workspace=workspace)
 
 
+def test_absolute_path_inside_workspace_is_normalized(workspace,ctx):
+    (workspace/'nested').mkdir()
+    (workspace/'nested'/'in.csv').write_text('id,amount\nA,100\n')
+    absolute=str((workspace/'nested'/'in.csv').resolve())
+    dotted=str(workspace/'nested'/'..'/'nested'/'in.csv')
+    for locator in (absolute,dotted):
+        profile=probe_file(selection(locator),ctx,workspace=workspace)
+        assert profile.records==[{'id':'A','amount':'100'}]
+        assert profile.metadata['locator_ref']=='nested/in.csv'
+        assert not Path(profile.metadata['snapshot_ref']).is_absolute()
+
+
+def test_absolute_path_outside_workspace_names_the_workspace(workspace,ctx,tmp_path):
+    outside=tmp_path/'outside.csv';outside.write_text('id\nx\n')
+    (workspace/'alias.csv').symlink_to(outside)
+    for locator in (str(outside.resolve()),str(workspace/'alias.csv'),'../outside.csv'):
+        with pytest.raises(PermissionError) as error:
+            probe_file(selection(locator),ctx,workspace=workspace)
+        message=str(error.value)
+        assert 'not inside the workspace' in message
+        assert str(workspace.resolve()) in message
+
+
 def test_json_pointer_preserves_root_and_selected_array(workspace,ctx):
     (workspace/'object.json').write_text('{"amount":"100"}')
     obj=probe_file(selection('object.json'),ctx,workspace=workspace)
