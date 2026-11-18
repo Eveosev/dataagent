@@ -27,7 +27,7 @@ from dataagent_ontology.registry import (
     pointer_row,
 )
 from dataagent_runtime.ports.workbench_store import ChangeSet, VersionConflict, Write
-from .ontology_discovery import is_discovery
+from .ontology_discovery import DISCOVERY_MODE, is_discovery
 
 
 CANDIDATE_KIND = 'ontology_candidate'
@@ -130,6 +130,49 @@ class RetireRequest(_Input):
 
 def _now():
     return datetime.now(timezone.utc).isoformat()
+
+
+# A review writes a new draft revision whose proposal content is unchanged;
+# only these fields describe where the review stands.  Candidate validity is
+# bound to the proposal content and its lineage, never to a review-only
+# revision, so approving a pending draft does not invalidate a candidate.
+_REVIEW_FIELDS = frozenset({'ref', 'state', 'reviewed_draft_ref'})
+
+
+def draft_content(draft):
+    """The part of a draft a publication candidate is built from."""
+    return {key: value for key, value in draft.items() if key not in _REVIEW_FIELDS}
+
+
+def draft_content_digest(draft):
+    return digest(draft_content(draft))
+
+
+def draft_content_ref(draft):
+    """The proposal a draft's content came from; stable across its review."""
+    return draft.get('reviewed_draft_ref') or draft.get('ref')
+
+
+def _session_content(session):
+    """The parts of a task revision a candidate's content depends on.
+
+    A review changes the task revision and the draft pointer; it changes
+    neither the sources, their observation refs nor the task identity.
+    """
+    return {
+        'goal_ref': session.goal_ref,
+        'sources': [source.model_dump(mode='json') for source in session.sources],
+        'extensions': session.extensions or {},
+        'selected_versions': {
+            key: value for key, value in session.selected_versions.items()
+            if key != DISCOVERY_MODE},
+    }
+
+
+def _candidate_matches_draft(body, draft):
+    """Whether a candidate was built from this draft's content and proposal."""
+    return (body.get('draft_content_digest') == draft_content_digest(draft)
+            and body.get('draft_content_ref') == draft_content_ref(draft))
 
 
 def _digest_file(path):
@@ -587,7 +630,8 @@ class PublishService:
         draft = state.get('draft')
         if draft is None:
             raise ValueError('submit a discovery draft before completing it')
-        if draft.get('ref') != completion.draft_ref:
+        if (draft.get('ref') != completion.draft_ref
+                and draft.get('reviewed_draft_ref') != completion.draft_ref):
             raise VersionConflict('discovery draft changed; complete the latest draft')
         if draft.get('state') == 'rejected':
             raise ValueError('rejected discovery drafts cannot be published')
@@ -613,7 +657,10 @@ class PublishService:
         body = {
             'ref': ref, 'session_id': session.id,
             'session_revision': session.revision,
+            'session_content_digest': digest(_session_content(session)),
             'draft_ref': draft['ref'], 'draft_state': draft.get('state'),
+            'draft_content_digest': draft_content_digest(draft),
+            'draft_content_ref': draft_content_ref(draft),
             'source_revision': catalog.get('source_revision'),
             'structure_fingerprint': catalog.get('structure_fingerprint'),
             'profile_refs': profile_refs,
@@ -654,16 +701,41 @@ class PublishService:
             'session_revision': body['session_revision'],
             'dispositions': body['dispositions'],
             'confirm_route': '/api/sessions/%s/publish/confirm' % body['session_id'],
-            'instructions': ('打开工作台，核对草案修订、来源快照摘要与候选定义摘要后，'
-                             '由人确认发布；MCP 工具不能代为确认。'),
+            'instructions': ('打开工作台，核对来源快照摘要与候选定义摘要后由人确认发布；'
+                             '草案审核是可选步骤，草案仍待审核时确认发布会在同一事务里'
+                             '一并审核。MCP 工具不能代为确认。'),
         }
 
     def candidate(self, session_id, ctx):
-        self.wb.sessions.get(session_id, ctx)
+        session = self.wb.sessions.get(session_id, ctx)
         row = self.wb.store.current(CANDIDATE_KIND, session_id, scope=self.wb.scope)
         if row is None:
             return None
-        return {**row['body'], 'candidate_revision': row['revision']}
+        body = row['body']
+        view = {**body, 'candidate_revision': row['revision']}
+        # Reviewing the draft moves the draft pointer and the task revision but
+        # keeps the proposal content.  Present the candidate against that
+        # reviewed draft so the web page neither calls it stale nor confirms a
+        # draft reference the task no longer points at.
+        draft = self._selected_draft(session)
+        if (body.get('state') == 'candidate' and draft is not None
+                and _candidate_matches_draft(body, draft)):
+            view.update(draft_ref=draft['ref'], draft_state=draft.get('state'),
+                        session_revision=session.revision)
+        return view
+
+    def _selected_draft(self, session):
+        """The draft the task currently points at, without rebuilding evidence."""
+        ref = session.selected_versions.get(DISCOVERY_MODE)
+        if not ref:
+            return None
+        try:
+            draft_id, revision = ref.rsplit('@', 1)
+        except ValueError:
+            return None
+        row = self.wb.store.get(DISCOVERY_MODE, draft_id, revision,
+                                scope=self.wb.scope)
+        return row['body'] if row is not None else None
 
     # ---------------------------------------------------------------- confirm
     def confirm(self, session_id, confirmation, ctx):
@@ -673,8 +745,6 @@ class PublishService:
         session = wb.sessions.get(session_id, ctx)
         if not is_discovery(session):
             raise ValueError('publication requires an ontology_discovery task')
-        if session.revision != confirmation.expected_revision:
-            raise VersionConflict('task changed; prepare the candidate again')
         try:
             candidate_id, candidate_revision = confirmation.candidate_ref.rsplit('@', 1)
         except ValueError:
@@ -694,10 +764,14 @@ class PublishService:
                     and current['body'].get('ref') == confirmation.candidate_ref):
                 raise VersionConflict('candidate was already published')
             raise VersionConflict('candidate is stale; prepare it again')
-        if body.get('session_revision') != session.revision:
-            raise VersionConflict('candidate is stale; prepare it again')
-        if body.get('draft_ref') != confirmation.draft_ref:
-            raise VersionConflict('confirmation does not name the prepared draft')
+        # A draft review moves the task revision without touching content.  A
+        # confirmation built from the candidate's own task revision stays
+        # valid; every content-bearing check below decides staleness.
+        if confirmation.expected_revision not in {session.revision,
+                                                  body.get('session_revision')}:
+            raise VersionConflict('task changed; prepare the candidate again')
+        if body.get('session_content_digest') != digest(_session_content(session)):
+            raise VersionConflict('task content changed; prepare the candidate again')
         if body.get('source_snapshot') != confirmation.source_snapshot:
             raise VersionConflict('confirmation does not name the prepared source snapshot')
         if body.get('definition_digest') != confirmation.definition_digest:
@@ -705,10 +779,12 @@ class PublishService:
 
         profiles, state = self._state(session)
         draft = state.get('draft')
-        if draft is None or draft.get('ref') != body['draft_ref']:
+        if draft is None or not _candidate_matches_draft(body, draft):
             raise VersionConflict('discovery draft changed; prepare the candidate again')
         if draft.get('state') == 'rejected':
             raise ValueError('rejected discovery drafts cannot be published')
+        if confirmation.draft_ref not in {body.get('draft_ref'), draft.get('ref')}:
+            raise VersionConflict('confirmation does not name the prepared draft')
         catalog = state['catalog']
         if catalog.get('source_revision') != body.get('source_revision'):
             raise ValueError('source changed since it was observed; discover again')
@@ -731,19 +807,86 @@ class PublishService:
             raise ValueError('ontology id is already registered: %s' % definition.id)
 
         now = _now()
+        writes = []
+        events = []
+        bundled_review = None
+        approved_ref = draft['ref']
+        if draft.get('state') == 'pending':
+            # One human confirmation also approves the pending draft: the
+            # publication transaction carries the review, so the user does not
+            # have to approve the draft and then confirm the publication.
+            draft_row = wb.store.current(DISCOVERY_MODE, session.id, scope=wb.scope)
+            if draft_row is None or draft_row['body'].get('ref') != draft['ref']:
+                raise VersionConflict('discovery draft changed; prepare it again')
+            approved_ref = '%s@%s' % (session.id, int(draft_row['revision']) + 1)
+            approved = {**draft, 'ref': approved_ref, 'state': 'approved',
+                        'reviewed_draft_ref': draft['ref']}
+            updated_session = session.model_dump(mode='json')
+            updated_session.update({
+                'revision': str(int(session.revision) + 1),
+                'phase': 'saved', 'next_actions': [],
+                'selected_versions': {**session.selected_versions,
+                                      DISCOVERY_MODE: approved_ref},
+            })
+            bundled_review = {
+                'decision': 'approve', 'target_scope': 'discovery',
+                'draft_ref': draft['ref'], 'approved_draft_ref': approved_ref,
+                'via': 'publish_confirmation',
+                'note': '随发布确认一并审核',
+                'subject_ref': ctx.subject_ref, 'recorded_at': now,
+                'reason': confirmation.reason,
+            }
+            writes.extend([
+                Write(DISCOVERY_MODE, session.id, wb.scope, approved,
+                      draft_row['revision']),
+                Write('session', session.id, wb.scope, updated_session,
+                      session.revision),
+                Write('review', uuid4().hex, wb.scope, bundled_review),
+            ])
+            job = wb.store.current('job', session.job_ref, scope=wb.scope)
+            if job is not None:
+                writes.append(Write('job', session.job_ref, wb.scope, {
+                    **job['body'], 'state': 'completed', 'checkpoint': 'approved',
+                    'result_ref': approved_ref,
+                }, job['revision']))
+            events.append({
+                'session_id': session.id, 'scope': wb.scope,
+                'type': 'intake.updated', 'phase': 'saved',
+                'revision': updated_session['revision'],
+            })
         entry = build_entry(definition, origin='discovery', title=body['title'],
             source_snapshot=body['source_snapshot'], published_by=ctx.subject_ref,
             published_at=now)
         pointer = pointer_row(wb.store, wb.scope)
+        publication_extensions = None
+        if bundled_review is not None:
+            publication_extensions = {'dataagent.draft_review': {
+                'decision': 'approve', 'via': 'publish_confirmation',
+                'draft_ref': draft['ref'], 'approved_draft_ref': approved_ref,
+                'note': '随发布确认一并审核',
+            }}
         publication = OntologyPublication(action='publish', ontology_id=definition.id,
             ontology_revision=definition.revision,
             definition_digest=body['definition_digest'],
             source_snapshot=body['source_snapshot'], draft_ref=body['draft_ref'],
-            subject_ref=ctx.subject_ref, recorded_at=now, reason=confirmation.reason)
+            subject_ref=ctx.subject_ref, recorded_at=now, reason=confirmation.reason,
+            extensions=publication_extensions)
         publication_id = uuid4().hex
         updated = {**body, 'state': 'published', 'publication_ref': publication_id,
-                   'confirmed_at': now, 'confirmed_by': ctx.subject_ref}
-        writes = [
+                   'confirmed_at': now, 'confirmed_by': ctx.subject_ref,
+                   'confirmed_draft_ref': draft['ref']}
+        publish_audit = {
+            'decision': 'publish', 'target_scope': 'ontology',
+            'ontology_id': definition.id, 'candidate_ref': body['ref'],
+            'draft_ref': body['draft_ref'],
+            'source_snapshot': body['source_snapshot'],
+            'definition_digest': body['definition_digest'],
+            'subject_ref': ctx.subject_ref, 'recorded_at': now,
+            'reason': confirmation.reason,
+        }
+        if bundled_review is not None:
+            publish_audit['draft_review'] = bundled_review
+        writes.extend([
             Write('ontology', definition.id, wb.scope,
                   definition.model_dump(mode='json')),
             Write(REGISTRY_KIND, definition.id, wb.scope,
@@ -754,18 +897,10 @@ class PublishService:
             }, pointer['revision'] if pointer is not None else None),
             Write(PUBLICATION_KIND, publication_id, wb.scope,
                   publication.model_dump(mode='json')),
-            Write('review', uuid4().hex, wb.scope, {
-                'decision': 'publish', 'target_scope': 'ontology',
-                'ontology_id': definition.id, 'candidate_ref': body['ref'],
-                'draft_ref': body['draft_ref'],
-                'source_snapshot': body['source_snapshot'],
-                'definition_digest': body['definition_digest'],
-                'subject_ref': ctx.subject_ref, 'recorded_at': now,
-                'reason': confirmation.reason,
-            }),
+            Write('review', uuid4().hex, wb.scope, publish_audit),
             Write(CANDIDATE_KIND, session.id, wb.scope, updated, candidate_revision),
-        ]
-        wb.store.commit(ChangeSet(writes=writes, events=[{
+        ])
+        wb.store.commit(ChangeSet(writes=writes, events=[*events, {
             'session_id': session.id, 'scope': wb.scope,
             'type': 'ontology.published', 'ontology_id': definition.id,
             'revision': definition.revision,
@@ -776,6 +911,10 @@ class PublishService:
             'definition_digest': body['definition_digest'],
             'source_snapshot': body['source_snapshot'],
             'draft_ref': body['draft_ref'], 'candidate_ref': body['ref'],
+            'confirmed_draft_ref': draft['ref'],
+            'approved_draft_ref': approved_ref,
+            'draft_review': ('approved_with_publish_confirmation'
+                             if bundled_review is not None else 'already_approved'),
             'confirmed_by': ctx.subject_ref, 'confirmed_at': now,
             'publication_ref': publication_id,
             'default_concept': entry.default_concept,

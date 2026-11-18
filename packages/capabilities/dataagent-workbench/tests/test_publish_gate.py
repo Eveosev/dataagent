@@ -869,3 +869,145 @@ def test_unreadable_primary_stays_blocked_after_unrelated_retry(tmp_path):
             prepare(wb, two_source_completion(wb, session_id, request))
     finally:
         keeper.close()
+
+
+# ------------------------------------------------ draft review and publication
+def review_draft(wb, session_id, current, decision='approve'):
+    return client(wb).post(f'/api/sessions/{session_id}/discovery/review', json={
+        'expected_revision': wb.sessions.get(session_id, wb.ctx).revision,
+        'draft_ref': current['ref'],
+        'decision': decision,
+    })
+
+
+def selected_draft(wb, session_id):
+    session = wb.sessions.get(session_id, wb.ctx)
+    ref = session.selected_versions['ontology_discovery']
+    draft_id, revision = ref.rsplit('@', 1)
+    return wb.store.get('ontology_discovery', draft_id, revision,
+                        scope=wb.scope)['body']
+
+
+def test_reviewing_the_draft_does_not_invalidate_the_candidate(tmp_path):
+    """pending → prepare → web review: the candidate still publishes as-is.
+
+    A review writes a new draft revision and a new task revision but keeps the
+    proposal content.  The candidate is bound to that content, so the exact
+    confirmation prepared before the review must remain valid.
+    """
+    wb, session_id, request = workbench(tmp_path)
+    current = full_draft(wb, session_id, request)
+    candidate = prepare(wb, full_completion(wb, session_id, current)).data
+
+    approved = review_draft(wb, session_id, current)
+    assert approved.status_code == 200, approved.json()
+    approved_body = approved.json()
+    assert approved_body['state'] == 'approved'
+    assert approved_body['ref'] != current['ref']
+
+    # The candidate view follows the reviewed draft instead of reporting the
+    # review-only revision as staleness.
+    shown = client(wb).get(
+        f'/api/sessions/{session_id}/publish/candidate').json()
+    assert shown['draft_ref'] == approved_body['ref']
+    assert shown['draft_state'] == 'approved'
+    assert shown['session_revision'] == wb.sessions.get(
+        session_id, wb.ctx).revision
+
+    published = publish(wb, session_id, candidate)
+    assert published.status_code == 200, published.json()
+    body = published.json()
+    assert body['state'] == 'published'
+    assert body['draft_review'] == 'already_approved'
+    assert body['confirmed_draft_ref'] == approved_body['ref']
+    assert wb.store.current('ontology', 'sales-model',
+                            scope=wb.scope) is not None
+
+
+def test_reviewed_candidate_confirms_from_the_web_candidate_view(tmp_path):
+    """The page confirms the refreshed candidate view after the review."""
+    wb, session_id, request = workbench(tmp_path)
+    current = full_draft(wb, session_id, request)
+    prepare(wb, full_completion(wb, session_id, current))
+
+    approved = review_draft(wb, session_id, current)
+    assert approved.status_code == 200, approved.json()
+    shown = client(wb).get(
+        f'/api/sessions/{session_id}/publish/candidate').json()
+
+    response = client(wb).post(f'/api/sessions/{session_id}/publish/confirm', json={
+        'candidate_ref': shown['ref'],
+        'draft_ref': shown['draft_ref'],
+        'source_snapshot': shown['source_snapshot'],
+        'definition_digest': shown['definition_digest'],
+        'expected_revision': shown['session_revision'],
+        'confirmed': True,
+        'reason': '工作台人工确认发布',
+    })
+    assert response.status_code == 200, response.json()
+    assert response.json()['state'] == 'published'
+    assert response.json()['draft_review'] == 'already_approved'
+
+
+def test_pending_draft_is_approved_by_the_publish_confirmation(tmp_path):
+    """pending → prepare → confirm: one human confirmation approves and publishes."""
+    wb, session_id, request = workbench(tmp_path)
+    current = full_draft(wb, session_id, request)
+    assert selected_draft(wb, session_id)['state'] == 'pending'
+    candidate = prepare(wb, full_completion(wb, session_id, current)).data
+
+    published = publish(wb, session_id, candidate)
+    assert published.status_code == 200, published.json()
+    body = published.json()
+    assert body['state'] == 'published'
+    assert body['draft_review'] == 'approved_with_publish_confirmation'
+
+    draft = selected_draft(wb, session_id)
+    assert draft['state'] == 'approved'
+    assert draft['reviewed_draft_ref'] == current['ref']
+    session = wb.sessions.get(session_id, wb.ctx)
+    assert session.phase == 'saved'
+    assert session.selected_versions['ontology_discovery'] == draft['ref']
+
+    reviews = [row['body'] for row in wb.store.query('review', wb.scope)]
+    bundled, = [item for item in reviews
+                if item.get('note') == '随发布确认一并审核']
+    assert bundled['decision'] == 'approve'
+    assert bundled['draft_ref'] == current['ref']
+    assert bundled['approved_draft_ref'] == draft['ref']
+    publish_audit, = [item for item in reviews
+                      if item.get('decision') == 'publish']
+    assert publish_audit['draft_review']['note'] == '随发布确认一并审核'
+    publication, = wb.store.query('ontology_publication', wb.scope)
+    assert (publication['body']['extensions']['dataagent.draft_review']['note']
+            == '随发布确认一并审核')
+
+
+def test_rejected_draft_confirmation_is_refused(tmp_path):
+    """pending → prepare → web reject: the candidate may not be published."""
+    wb, session_id, request = workbench(tmp_path)
+    current = full_draft(wb, session_id, request)
+    candidate = prepare(wb, full_completion(wb, session_id, current)).data
+
+    rejected = review_draft(wb, session_id, current, decision='reject')
+    assert rejected.status_code == 200, rejected.json()
+    assert rejected.json()['state'] == 'rejected'
+
+    response = publish(wb, session_id, candidate)
+    assert response.status_code == 422
+    assert 'rejected discovery drafts cannot be published' in response.json()['detail']
+    assert selected_draft(wb, session_id)['state'] == 'rejected'
+    assert wb.store.current('ontology', 'sales-model', scope=wb.scope) is None
+
+
+def test_reproposal_after_prepare_invalidates_the_candidate(tmp_path):
+    """A new proposal revision is a content change even if the content repeats."""
+    wb, session_id, request = workbench(tmp_path)
+    current = full_draft(wb, session_id, request)
+    candidate = prepare(wb, full_completion(wb, session_id, current)).data
+
+    replacement = full_draft(wb, session_id, request)
+    assert replacement['ref'] != current['ref']
+    stale = publish(wb, session_id, candidate)
+    assert stale.status_code == 409
+    assert 'draft changed' in stale.json()['detail']
