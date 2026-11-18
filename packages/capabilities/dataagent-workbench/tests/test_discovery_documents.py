@@ -752,13 +752,16 @@ def test_xlsx_date_cells_infer_date_and_datetime(tmp_path):
     ], goal='从日期表发现对象'))
     columns = data['catalog']['tables'][0]['columns']
     # The reader hands the cells over as ISO strings; every time part is
-    # midnight, so the column is date.
+    # midnight, so the column is date.  The values are text, so the inferred
+    # calendar type keeps text affinity: a numeric affinity would make
+    # consumers read the column as a decimal and reject the very values the
+    # evidence sampled.
     assert (columns['日期']['type'], columns['日期']['affinity'],
-            columns['日期']['type_origin']) == ('date', 'numeric', 'observed_text')
+            columns['日期']['type_origin']) == ('date', 'text', 'observed_text')
     assert columns['日期']['samples'] == ['2026-11-01T00:00:00', '2026-11-02T00:00:00']
     # A nonzero time part keeps the column datetime.
     assert (columns['时间']['type'], columns['时间']['affinity'],
-            columns['时间']['type_origin']) == ('datetime', 'numeric', 'observed_text')
+            columns['时间']['type_origin']) == ('datetime', 'text', 'observed_text')
     assert columns['时间']['samples'] == ['2026-11-01T12:00:00', '2026-11-02T12:00:00']
 
 

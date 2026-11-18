@@ -33,6 +33,21 @@ def test_minor_units_use_decimal():
     assert not result.issues
 
 
+def test_date_binding_accepts_the_midnight_iso_form_the_sheet_reader_emits():
+    onto=OntologyRevision(id='invoice',revision='1',entity_type='Invoice',
+        properties={'number':{'value_type':'string','required':True},
+                    'day':{'value_type':'date','required':True}},
+        identity_fields=['number'])
+    m=MappingSpec(id='m',revision='1',ontology_revision='invoice@1',source_fingerprint='schema',
+        bindings={'number':{'source_field':'number'},
+                  'day':{'source_field':'day','transform':'date'}})
+    p=profile([{'number':'A','day':'2026-04-08T00:00:00'}]).model_copy(
+        update={'fields':['number','day']})
+    result=materialize(onto,m,[p],scope='T')
+    assert result.instances[0].values=={'number':'A','day':'2026-04-08'}
+    assert not result.issues
+
+
 def test_missing_required_binding_is_reported():
     m=mapping();m.bindings.pop('amount');m.unmapped['minor']='extension'
     result=materialize(ontology(),m,[profile([{'number':'A','company':'C','minor':'100'}])],scope='T')

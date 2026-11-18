@@ -27,7 +27,7 @@ import urllib.request
 import zipfile
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from xml.etree import ElementTree
@@ -84,6 +84,7 @@ CHECKS = [
 ]
 
 _NUMBER = re.compile(r'-?\d+(?:\.\d+)?')
+_GROUPED_NUMBER = re.compile(r'-?\d{1,3}(?:,\d{3})+(?:\.\d+)?')
 _DATE = re.compile(r'\d{4}-\d{2}-\d{2}')
 _DATETIME = re.compile(r'\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(?::\d{2})?(?:\.\d+)?')
 _CELL = re.compile(r'^([A-Z]+)(\d+)$')
@@ -395,6 +396,10 @@ class Results:
     def ok(self, key, reason='通过'):
         self.set(key, 'pass', reason)
 
+    def na(self, key, reason):
+        """A check the gold set explicitly allows this run not to exercise."""
+        self.set(key, 'not_applicable', reason)
+
     def fail(self, key, reason):
         self.set(key, 'fail', reason)
 
@@ -412,12 +417,20 @@ class Results:
         total = len(checks)
         passed = sum(1 for item in checks if item['status'] == 'pass')
         failed = sum(1 for item in checks if item['status'] == 'fail')
+        not_applicable = [item['id'] for item in checks
+                          if item['status'] == 'not_applicable']
+        # A not-applicable check is allowed by the gold set; it is reported
+        # with its reason and excluded from the pass rate instead of counting
+        # as a failure.
+        evaluated = total - len(not_applicable)
         required_failed = [item['id'] for item in checks
                            if item['required'] and item['status'] == 'fail']
         return {
             'total': total, 'passed': passed, 'failed': failed,
-            'pass_rate': round(passed / total, 4) if total else 0.0,
-            'pass_rate_percent': round(100.0 * passed / total, 1) if total else 0.0,
+            'not_applicable': len(not_applicable),
+            'not_applicable_ids': not_applicable,
+            'pass_rate': round(passed / evaluated, 4) if evaluated else 0.0,
+            'pass_rate_percent': round(100.0 * passed / evaluated, 1) if evaluated else 0.0,
             'required_failed': required_failed,
         }
 
@@ -478,6 +491,21 @@ def _norm(name):
 
 
 def _infer_type(column, values):
+    # An explicit observed/declared type is stronger evidence than affinity:
+    # the sheet reader emits calendar cells as ISO text, whose storage
+    # affinity is text while the column type is date.  Reading affinity first
+    # used to turn such a date column into a decimal mapping.
+    observed = str(column.get('type') or '').strip().lower()
+    if observed in {'integer', 'int', 'bigint', 'smallint', 'tinyint'}:
+        return 'integer'
+    if observed in {'decimal', 'numeric', 'number', 'real', 'float', 'double'}:
+        return 'decimal'
+    if observed == 'boolean':
+        return 'boolean'
+    if observed == 'date':
+        return 'date'
+    if observed == 'datetime':
+        return 'datetime'
     affinity = str(column.get('affinity') or '')
     if affinity == 'integer':
         return 'integer'
@@ -1115,14 +1143,49 @@ class Flow:
                     'issue_count': preview.get('issue_count'),
                 }
             except ToolRejected as exc:
-                self.art['mapping'][key] = {'error': _code(exc.payload)}
+                self.art['mapping'][key] = {'error': _code(exc.payload),
+                                            'issues': _issue_reasons(exc.payload)}
         mapped = [item for item in self.art['mapping'].values()
                   if item.get('receipt') and not item.get('issue_count')]
         if len(mapped) == 2:
             self.results.ok('CHAIN.mapping', '两个概念分别映射并保存成功')
         else:
-            self.results.fail('CHAIN.mapping', '映射保存未全部成功')
+            details = self._mapping_failure_details()
+            self.results.fail(
+                'CHAIN.mapping',
+                '映射保存未全部成功' + ('（%s）' % '；'.join(details) if details else ''))
         self._query()
+
+    def _mapping_failure_details(self):
+        """Which target failed and the workbench's own issue codes/reasons.
+
+        Only the stable machine code and the Chinese explanation are copied;
+        object labels, source values and row numbers stay out of the report.
+        """
+        details = []
+        for key in ('C1', 'C2'):
+            item = self.art['mapping'].get(key) or {}
+            if item.get('receipt') and not item.get('issue_count'):
+                continue
+            notes = item.get('issues') or []
+            if notes:
+                details.append('%s 映射保存未通过：%s' % (key, '；'.join(notes)))
+            elif item.get('issue_count'):
+                details.append('%s 预览仍有 %s 项阻断问题' % (key, item['issue_count']))
+            elif item.get('error'):
+                details.append('%s 映射保存未通过：%s' % (key, item['error']))
+            else:
+                details.append('%s 映射未执行' % key)
+        return details
+
+    def _mapping_note(self, key):
+        item = (self.art.get('mapping') or {}).get(key) or {}
+        notes = item.get('issues') or []
+        if notes:
+            return '（%s 映射保存未通过：%s）' % (key, '；'.join(notes))
+        if item.get('error'):
+            return '（%s 映射保存未通过：%s）' % (key, item['error'])
+        return ''
 
     def _binding(self, definition, source, property_name):
         kind = definition.get('value_type')
@@ -1138,13 +1201,16 @@ class Flow:
             binding['transform'] = 'date' if kind == 'date' else 'datetime'
             if re.fullmatch(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}', sample):
                 binding['options'] = {'format': '%Y-%m-%dT%H:%M:%S'}
-            elif kind == 'datetime':
-                binding['options'] = {'timezone': 'UTC'}
+            if kind == 'datetime':
+                # A format only controls parsing; a naive datetime still needs
+                # an explicit zone before materialization.
+                binding.setdefault('options', {})['timezone'] = 'UTC'
         return binding
 
     def _query(self):
         collected = {}
-        for key, concept in (('C1', self.art['mapping']['C1']), ('C2', self.art['mapping']['C2'])):
+        for key in ('C1', 'C2'):
+            concept = self.art['mapping'].get(key) or {}
             if not concept.get('receipt'):
                 continue
             try:
@@ -1163,7 +1229,19 @@ class Flow:
                 and collected['C1']['total'] and collected['C2']['total']:
             self.results.ok('CHAIN.query', '两个概念均从已发布快照查到实例')
         else:
-            self.results.fail('CHAIN.query', '按本体查询未返回已发布实例')
+            details = []
+            for key in ('C1', 'C2'):
+                if (collected.get(key) or {}).get('total'):
+                    continue
+                item = self.art['mapping'].get(key) or {}
+                notes = item.get('issues') or []
+                if notes:
+                    details.append('%s 映射保存未通过：%s' % (key, '；'.join(notes)))
+                else:
+                    details.append('%s 没有可查询的已发布实例' % key)
+            self.results.fail(
+                'CHAIN.query',
+                '按本体查询未返回已发布实例' + ('（%s）' % '；'.join(details) if details else ''))
 
     def stage_retire(self):
         entry = self.entry('expense-policy')
@@ -1410,13 +1488,14 @@ class Flow:
             by_column = {column: name for name, column in columns.items() if column}
             expected_columns = [item['name'] for item in gold['properties']]
             published = self.art['query'].get(key) or {}
+            mapping_note = self._mapping_note(key)
             count = published.get('total')
             grain_ok = evidence.get('rows_observed') == gold['实例数'] and count == gold['实例数']
             source_ok = set(columns.values()) == set(expected_columns)
             if grain_ok and source_ok and evidence.get('grain'):
                 self.results.ok(prefix, '粒度/来源/实例数与金标一致（%d 个实例）' % gold['实例数'])
             else:
-                self.results.fail(prefix, '粒度/来源/实例数与金标不一致')
+                self.results.fail(prefix, '粒度/来源/实例数与金标不一致' + mapping_note)
             identity = set(evidence.get('identity_columns') or [])
             expected_identity = set(gold['身份']['fields'])
             if identity == expected_identity and len(identity) == len(gold['身份']['fields']):
@@ -1441,7 +1520,9 @@ class Flow:
                 if actual != expected:
                     type_failures.append('%s->%s' % (expected, actual))
             if type_failures:
-                self.results.fail(prefix + '.types', '值类型与金标不一致（%d 项）' % len(type_failures))
+                self.results.fail(
+                    prefix + '.types',
+                    '值类型与金标不一致（%d 项）%s' % (len(type_failures), mapping_note))
             else:
                 self.results.ok(prefix + '.types', '值类型与金标一致')
             forbidden = self._forbidden_concept(key, gold, evidence, definition, published)
@@ -1634,7 +1715,20 @@ class Flow:
         if not issues and checked:
             self.results.ok('E1', '%d 个属性锚点回放到同一值且绑定来源摘要' % checked)
         else:
-            self.results.fail('E1', '有锚点无法回放到同一值或来源摘要不一致（%d 处）' % max(1, len(issues)))
+            counts = {kind: issues.count(kind) for kind in ('missing', 'digest', 'value')}
+            parts = []
+            if counts['missing']:
+                parts.append('缺少锚点 %d' % counts['missing'])
+            if counts['digest']:
+                parts.append('来源摘要不一致 %d' % counts['digest'])
+            if counts['value']:
+                parts.append('值与原文不一致 %d' % counts['value'])
+            other = len(issues) - sum(counts.values())
+            if other:
+                parts.append('无实例或无来源 %d' % other)
+            self.results.fail(
+                'E1', '有锚点无法回放到同一值或来源摘要不一致（%d 处：%s）'
+                % (max(1, len(issues)), '、'.join(parts)))
 
     def _value_overlap_pairs(self, tables):
         values = {}
@@ -1674,11 +1768,17 @@ class Flow:
         overlap = [link for link in links
                    if link.get('source_table') in tables and link.get('target_table') in tables]
         value_overlap = self._value_overlap_pairs(tables)
+        relations = definition.get('relations') or {}
+        concepts = definition.get('concepts') or {}
+        sources = {name: (candidate.get('evidence') or {}).get('concepts', {}).get(name, {}).get('table')
+                   for name in concepts}
+        merged = len(set(sources.values())) != len(sources)
+        published = artifact.get('entry') is not None
         if overlap:
             unresolved = {str(item.get('id')) for item in draft.get('unresolved_relationships') or []}
             excluded = {(item.get('kind'), item.get('ref')) for item in candidate.get('dispositions') or []}
             adopted = any(item.get('evidence_id') in {link['id'] for link in overlap}
-                          for item in (definition.get('relations') or {}).values())
+                          for item in relations.values())
             if all(str(link['id']) in unresolved for link in overlap) \
                     and all(('unresolved_relationship', str(link['id'])) in excluded for link in overlap) \
                     and not adopted:
@@ -1687,30 +1787,33 @@ class Flow:
             else:
                 self.results.fail('N3.evidence', '值重合候选未被显式处置')
                 self.results.fail('N3.gate', '错误跨来源关系候选未被待决或排除')
-        elif value_overlap:
-            if any(_norm(left) != _norm(right) for _, left, _, right in value_overlap):
-                self.results.fail(
-                    'N3.evidence',
-                    '值重合但列名不相近，未生成关系候选；处置门禁未获验证')
-            else:
-                self.results.fail('N3.evidence', '值重合且列名相近，但未生成关系候选')
-            self.results.fail('N3.gate', '错误跨来源关系处置门禁未获验证：本次没有关系候选')
-            artifact['gate_unverified'] = True
         else:
-            self.results.fail('N3.evidence', '没有值重合候选；处置门禁未获验证')
-            self.results.fail('N3.gate', '错误跨来源关系处置门禁未获验证：没有值重合候选')
-            artifact['gate_unverified'] = True
-        relations = definition.get('relations') or {}
-        concepts = definition.get('concepts') or {}
-        sources = {name: (candidate.get('evidence') or {}).get('concepts', {}).get(name, {}).get('table')
-                   for name in concepts}
-        merged = len(set(sources.values())) != len(sources)
-        if not relations and len(concepts) == 2 and not merged and artifact.get('entry'):
-            if artifact.get('gate_unverified'):
-                self.results.fail(
-                    'N3', '未观察到合并，但错误关系处置门禁未获验证（见 N3.gate）')
+            # J8 allows the evidence layer to produce no value-overlap
+            # candidate at all.  N3 then only requires that no wrong relation
+            # was adopted and that the two sources stayed independent; the
+            # disposition gate has nothing to exercise and is not applicable
+            # instead of failed.
+            if relations:
+                self.results.fail('N3.evidence', '证据层未生成值重合候选，但草案/发布采纳了跨来源关系')
+            elif value_overlap:
+                self.results.ok('N3.evidence',
+                                '源值存在重合但列名不相近，证据层未生成关系候选（金标 J8 允许）；'
+                                '草案与发布未采纳跨来源关系')
             else:
+                self.results.ok('N3.evidence',
+                                '证据层未生成值重合关系候选（金标 J8 允许）；草案与发布未采纳跨来源关系')
+            reason = ('本次没有值重合关系候选，错误关系处置门禁未触发；'
+                      '金标 J8 允许证据层无候选，记为 not_applicable')
+            self.results.na('N3.gate', reason)
+            artifact['gate_unverified'] = True
+        if not relations and len(concepts) == 2 and not merged and published:
+            if overlap:
                 self.results.ok('N3', '第三个来源为独立概念，草案/已发布本体无跨来源关系')
+            else:
+                self.results.ok(
+                    'N3', '证据层未生成值重合关联，草案与发布未采纳错误关系，来源未合并')
+        elif not relations and len(concepts) == 2 and not merged:
+            self.results.fail('N3', '值重合反例的对象未合并，但本次没有完成发布')
         else:
             self.results.fail('N3', '第三个来源被合并或出现跨来源关系')
 
@@ -1746,23 +1849,92 @@ def _detail(payload):
     return str(payload.get('detail') or '')
 
 
+def _issue_reasons(payload, limit=4):
+    """The workbench's stable issue code plus its Chinese reason.
+
+    Object labels and row numbers are deliberately dropped: the report must
+    stay free of sample values while still naming what the save was blocked on.
+    """
+    reasons = []
+    issues = payload.get('issues') if isinstance(payload, dict) else None
+    for issue in issues or []:
+        if not isinstance(issue, dict):
+            continue
+        code = str(issue.get('code') or '').strip()
+        # Only the workbench's own summary reason is copied.  Raw ``detail``
+        # can carry an exception string or a source value, so it never enters
+        # the report.
+        reason = str(issue.get('reason') or '').strip()
+        text = ('%s %s' % (code, reason)).strip()
+        if not text or text in reasons:
+            continue
+        reasons.append(text)
+        if len(reasons) >= limit:
+            break
+    return reasons
+
+
+def _number_text(value):
+    if isinstance(value, str):
+        text = value.strip()
+        # Only a well-formed grouped number loses its thousands separators;
+        # arbitrary text must still fail the decimal comparison.
+        if _GROUPED_NUMBER.fullmatch(text):
+            return text.replace(',', '')
+    return str(value)
+
+
 def _same_number(left, right):
     try:
-        return Decimal(str(left)) == Decimal(str(right))
+        return Decimal(_number_text(left)) == Decimal(_number_text(right))
     except (InvalidOperation, ValueError):
         return False
+
+
+def _is_number(value):
+    if isinstance(value, bool):
+        return False
+    if isinstance(value, (int, float, Decimal)):
+        return True
+    if isinstance(value, str):
+        text = value.strip()
+        return bool(_NUMBER.fullmatch(text) or _GROUPED_NUMBER.fullmatch(text))
+    return False
+
+
+def _canonical_temporal(value):
+    """Collapse the midnight form of a calendar value to its date.
+
+    The Excel reader hands a date-only cell over as ``YYYY-MM-DDT00:00:00``
+    while a mapped ``date`` property stores ``YYYY-MM-DD``; both denote the
+    same cell value, so anchor replay compares them as one value.  A real time
+    part is preserved.
+    """
+    if isinstance(value, datetime):
+        return value.date().isoformat() if value.time() == time(0, 0) else value.isoformat()
+    if isinstance(value, date):
+        return value.isoformat()
+    if isinstance(value, str):
+        text = value.strip()
+        if _DATETIME.fullmatch(text):
+            try:
+                parsed = datetime.fromisoformat(text)
+            except ValueError:
+                return value
+            if parsed.time() == time(0, 0):
+                return parsed.date().isoformat()
+            return parsed.isoformat()
+    return value
 
 
 def _same_cell(value, cell):
     if cell is None:
         return False
-    if isinstance(cell, datetime):
-        cell = cell.date().isoformat()
-    elif isinstance(cell, date):
-        cell = cell.isoformat()
-    if isinstance(value, (int, float, Decimal)) or (isinstance(value, str) and _NUMBER.fullmatch(value)):
-        return _same_number(value, cell)
-    return str(value) == str(cell)
+    left = _canonical_temporal(value)
+    right = _canonical_temporal(cell)
+    if _is_number(left) or _is_number(right):
+        return _same_number(left, right)
+    return str(left) == str(right)
 
 
 def _entry_matches(row, entry):
@@ -1770,9 +1942,7 @@ def _entry_matches(row, entry):
         if key in {'evidence', 'cell'}:
             continue
         actual = row.get(key)
-        numeric = isinstance(value, (int, float, Decimal)) or (
-            isinstance(value, str) and _NUMBER.fullmatch(value))
-        if numeric:
+        if _is_number(value):
             if not _same_number(actual, value):
                 return False
         elif str(actual) != str(value):
@@ -1790,6 +1960,7 @@ def apply(report, project, args, context):
         report['reason'] = '%s is not set' % GOLD_ENV
         report['checks'] = []
         report['summary'] = {'total': 0, 'passed': 0, 'failed': 0,
+                             'not_applicable': 0, 'not_applicable_ids': [],
                              'pass_rate': 0.0, 'pass_rate_percent': 0.0,
                              'required_failed': []}
         return
@@ -1801,6 +1972,7 @@ def apply(report, project, args, context):
         report['reason'] = str(exc)
         report['checks'] = []
         report['summary'] = {'total': 0, 'passed': 0, 'failed': 0,
+                             'not_applicable': 0, 'not_applicable_ids': [],
                              'pass_rate': 0.0, 'pass_rate_percent': 0.0,
                              'required_failed': []}
         return
@@ -1816,7 +1988,7 @@ def apply(report, project, args, context):
         if flow.art.get('n3', {}).get('gate_unverified'):
             report.setdefault('not_verified', []).append(
                 'N3 wrong cross-source relationship disposition gate '
-                '(no candidate in this run)')
+                '(not applicable: the evidence layer produced no candidate)')
     except SetupError as exc:
         report['status'] = 'failed'
         report['setup_error'] = True

@@ -8,6 +8,7 @@ import pytest
 from dataagent_contracts.intake import SourceAnchor, SourceProfile
 from dataagent_workbench.adapters.layer_client import LayerClient
 from dataagent_workbench.bootstrap import Workbench
+from dataagent_workbench.discovery_evidence import affinity
 from dataagent_workbench.service_tools import invoke
 
 
@@ -34,6 +35,17 @@ def request(wb, session_id):
 
 def write(path, content):
     path.write_text(content, encoding='utf-8')
+
+
+def test_declared_calendar_types_share_the_text_value_family():
+    # Date properties are validated against the observed value family; a
+    # declared DATE/TIMESTAMP column stores ISO text, so it belongs with the
+    # text family rather than falling through to numeric.
+    assert affinity('DATE') == 'text'
+    assert affinity('DATETIME') == 'text'
+    assert affinity('TIMESTAMP WITH TIME ZONE') == 'text'
+    assert affinity('INTEGER') == 'integer'
+    assert affinity('NUMERIC(10, 2)') == 'numeric'
 
 
 def csv_sources(tmp_path):
