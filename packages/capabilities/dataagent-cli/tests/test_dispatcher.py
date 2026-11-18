@@ -302,6 +302,8 @@ class DispatcherTests(unittest.TestCase):
             "approval: never + project sandbox workspace-write", result.stderr)
         self.assertIn(
             "mint config set core.approval_policy on-request", result.stderr)
+        # FDE3-07: the hint must say the command changes user-level global settings.
+        self.assertIn("用户级全局设置", result.stderr)
 
 
 

@@ -1,6 +1,6 @@
 ---
-version: 3
-date: 2026-11-18
+version: 4
+date: 2026-11-19
 dataagent_commit: feat/p1-intake
 kernel_commit: 8439ec884cab9844631a0f8a574810f8bcb522f2
 mint_cli: 0.1.31
@@ -31,15 +31,9 @@ bash scripts/prepare_acceptance.sh
 test -f build/local/manifest.json
 ```
 
-`scripts/prepare_acceptance.sh` 是后端与安装闭包的正式构建入口。它对每个 `packages/capabilities/dataagent-*` 执行 `uv sync --frozen`，再用工作台的 `build_bundle.py --out build/local` 生成 `build/local/preset-intake`。不要按旧手册分别运行 `npm … run build` 和 `build_bundle.py`。
+`scripts/prepare_acceptance.sh` 是后端、前端与安装闭包的正式构建入口。它对每个 `packages/capabilities/dataagent-*` 执行 `uv sync --frozen`；`packages/capabilities/dataagent-workbench/src/dataagent_workbench/static/index.html` 缺失，或任一前端输入（`web/src/`、`public/`、`index.html`、`package.json`、`package-lock.json`、`vite.config.ts`、`tsconfig.json`、`tools/`）比它新时，在 `packages/capabilities/dataagent-workbench/web` 执行 `npm ci --prefer-offline --no-audit --no-fund` 和 `npm run build`；最后用工作台的 `build_bundle.py --out build/local` 生成 `build/local/preset-intake`。打包进去的始终是本次构建的前端，不要按旧手册分别运行前端构建和 `build_bundle.py`。
 
-脚本不生成前端。它直接打包 `packages/capabilities/dataagent-workbench/src/dataagent_workbench/static/` 里已有的产物；该目录当前不在版本库中，新检出如果缺少 `static/index.html`，先执行一次前端构建（需要已安装的 Node 依赖），再运行 `prepare_acceptance.sh`：
-
-```sh
-npm --prefix packages/capabilities/dataagent-workbench/web run build
-```
-
-前端构建是否应并入 `prepare_acceptance.sh` 或改为提交静态产物，待确认。
+前端构建需要 Node 与 npm；首次或缓存未命中时 `npm ci` 会按 `web/package-lock.json` 下载依赖。`static/` 不在版本库中，新检出的第一次 `prepare_acceptance.sh` 一定会重建前端。
 
 ### 1.2 创建 Mint 测试项目
 
@@ -114,18 +108,22 @@ if ! grep -q '^\[core.sandbox\]' mint.toml; then
 fi
 ```
 
-片段设置 `workspace-write` 和 `deny_paths`（`.dataagent/secrets/`、`.mint/config.toml`、`.mint/credentials.toml`、`credentials.toml`）。它只能收紧用户已有的策略，不能扩大授权；用户策略是只读时，项目仍不能写 `.dataagent`。`workspace-write` 给整个工作区写权限，不按路径过滤；新凭据默认放在项目外的 `$HOME/.dataagent/secrets`。
+片段设置 `workspace-write` 和 `deny_paths`（`.dataagent/secrets/`、`.dataagent/content/`、`.dataagent/db/`、`.mint/config.toml`、`.mint/credentials.toml`、`credentials.toml`）。它只能收紧用户已有的策略，不能扩大授权；用户策略是只读时，项目仍不能写 `.dataagent`。`workspace-write` 给整个工作区写权限，不按路径过滤；新凭据默认放在项目外的 `$HOME/.dataagent/secrets`。
 
-**先检查审批策略再应用片段（FDE2-03）。** 如果用户级配置是 `[core] approval_policy = "never"` 加 `[core.sandbox] policy = "full-access"`，Mint 原先靠 `full-access + never` 自动放行所有需要审批的调用；片段把沙箱收紧到 `workspace-write` 后，这个捷径不再成立，而 `never` 又不允许发起审批，于是所有 DataAgent 工具都在调用前被拒（`tool/policy-denied … never 禁止询问审批`），MCP 服务器和 `.dataagent` 写入本身没有问题。`mint run --approve all` 也不会覆盖用户级 `never`。追加前后各跑一次：
+`.dataagent/content/` 是原始材料的副本，`.dataagent/db/` 是工作台的状态 sqlite（任务、来源与本体）；两者对 Agent 的文件工具（`fs_read`、`fs_list`、`fs_grep`、`fs_write`）一律拒绝（FDE3-03）。`.dataagent/results/` 不拒：工具返回 `result_path` 后，Agent 仍需读一次结果。`deny_paths` 只约束 Agent 侧；MCP 工作台服务是 Mint 拉起的独立子进程，不套这层限制，它自己读写这两个目录不受影响。macOS 上同一组 `deny_paths` 也会进入 `shell_exec` 的 sandbox-exec profile；profile 生效时 shell 同样读不到这两处。
+
+**先检查审批策略再应用片段（FDE2-03）。** 如果用户级配置是 `[core] approval_policy = "never"` 加 `[core.sandbox] policy = "full-access"`，Mint 原先靠 `full-access + never` 自动放行所有需要审批的调用；片段把沙箱收紧到 `workspace-write` 后，这个捷径不再成立，而 `never` 又不允许发起审批，于是所有 DataAgent 工具都在调用前被拒（`tool/policy-denied … never 禁止询问审批`），MCP 服务器和 `.dataagent` 写入本身没有问题。`mint run --approve all` 也不会覆盖用户级 `never`。
+
+审批策略只从用户级配置读取：写在项目 `mint.toml` 的 `[core] approval_policy` 会被 Mint 忽略，stderr 只有一条 WARN（FDE3-07），所以只能改用户级。下面这条改的就是用户级全局设置，会影响所有 Mint 项目，不是只影响当前项目；评测或演示后可改回 `never`。追加前后各跑一次：
 
 ```sh
 mint config get core.approval_policy
 mint config get core.sandbox.policy
-# 交互使用：允许 TUI 逐个确认 DataAgent 工具（会影响所有 Mint 项目，用完可改回 never）
+# 交互使用：允许 TUI 逐个确认 DataAgent 工具（改的是用户级全局设置，评测或演示后可改回 never）
 mint config set core.approval_policy on-request
 ```
 
-`dataagent doctor` 在项目已追加片段、用户级审批是 `never` 且项目策略不是 `full-access` 时会打印 `approval:` 行并以 3 退出。这是 Mint 的审批策略与项目沙箱组合问题，不是片段让 MCP 起不来；上游修复见 [08 iface 协议缺口与贡献](<../../../dataagent/08 iface 协议缺口与贡献.md>) 的 IF-17。
+`dataagent doctor` 在项目已追加片段、用户级审批是 `never` 且项目策略不是 `full-access` 时会打印 `approval:` 行并以 3 退出；提示里同样说明改的是用户级全局设置。这是 Mint 的审批策略与项目沙箱组合问题，不是片段让 MCP 起不来；上游修复见 [08 iface 协议缺口与贡献](<../../../dataagent/08 iface 协议缺口与贡献.md>) 的 IF-17。
 
 ## 2. 审批
 
