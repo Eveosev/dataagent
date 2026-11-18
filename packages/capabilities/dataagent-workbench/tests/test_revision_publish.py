@@ -385,6 +385,65 @@ def test_rev1_released_instances_stay_queryable_after_rev2(tmp_path):
 
 
 
+def test_revision_candidate_names_current_revision_counts_and_reintake(tmp_path):
+    """FDE3-01: the candidate summary tells the confirmation page what the
+    new revision means for published data.
+
+    Per concept it counts the objects on the revision being replaced, and it
+    names the concepts that need taking in again: the new revision is
+    registered empty, so every released object stays invisible to queries
+    that default to it.  A first publication has neither a current revision
+    to count nor stranded objects.
+    """
+    wb, session_id, request = workbench(tmp_path)
+    _, first_candidate, _ = publish_initial(wb, session_id, request)
+    assert first_candidate['current_revision_instance_counts'] == {}
+    assert first_candidate['reintake_concepts'] == []
+
+    # Publish two SalesOrder objects on revision 1.
+    (tmp_path / 'orders.csv').write_text(
+        'book,doc_no\nSALE,1001\nSALE,1002\n')
+    wb.layer_client = StubProbeClient({'orders': csv_profile('orders', [
+        {'book': 'SALE', 'doc_no': '1001'},
+        {'book': 'SALE', 'doc_no': '1002'},
+    ])})
+    goal = WorkSpec(id='map', goal='接入销售数据',
+                    acceptance_criteria=['来源可核对'],
+                    authorization_ref=wb.authorization)
+    started = wb.sessions.start(
+        [SourceSelection(source_id='orders', kind='file',
+                         locator_ref='orders.csv')], goal, wb.ctx,
+        target={'ontology_id': 'sales-model', 'concept': 'SalesOrder'})
+    mapping_session = wb.intake.advance(started.session_id, wb.ctx)
+    mapping_source, = wb.intake.inference_request(
+        mapping_session.id, wb.ctx)['sources']
+    save_single(wb, mapping_session, MappingSpec(
+        id='orders', revision='1', ontology_revision='sales-model@1',
+        concept='SalesOrder',
+        source_fingerprint=mapping_source['structure_fingerprint'],
+        bindings={'book': {'source_field': 'book'},
+                  'doc_no': {'source_field': 'doc_no',
+                             'transform': 'integer'}}))
+
+    wb.layer_client = LayerClient(DATA)
+    _, revision_session, revision_request = workbench(
+        tmp_path, revise_ontology_id='sales-model')
+    _, candidate = revision_candidate(
+        wb, revision_session, revision_request, doc_no_type='string')
+    assert candidate['previous_revision'] == '1'
+    # Both revisions' concepts carry a count from the current revision;
+    # only SalesOrder has objects, so only it needs taking in again.
+    assert candidate['current_revision_instance_counts'] == {
+        'SalesOrder': 2, 'SalesOrderLine': 0, 'Customer': 0}
+    assert candidate['reintake_concepts'] == ['SalesOrder']
+
+    # The web candidate view serves the same fields the summary reports.
+    view = client(wb).get(
+        f'/api/sessions/{revision_session}/publish/candidate').json()
+    assert view['current_revision_instance_counts']['SalesOrder'] == 2
+    assert view['reintake_concepts'] == ['SalesOrder']
+
+
 def test_revision_field_does_not_change_existing_target_validation():
     source = {'source_id': 'f', 'kind': 'file', 'locator_ref': 'orders.csv'}
     plain = Start.model_validate({

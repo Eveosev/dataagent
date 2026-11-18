@@ -132,9 +132,11 @@ const shortDigest=(value:string|undefined)=>value?value.replace('sha256:','').sl
 // 发布区块：候选定义摘要、来源快照摘要、未决项与补全放弃项的处置状态。草案
 // pending 但已有有效候选时也直接显示，用户核对后一次确认即发布；Agent 已下的
 // 处置与补全时放弃的草案项逐项列出并要求逐项勾选同意（FDE2-07），未处置项点名
-// 并阻断，确认由人勾选后提交（网页是唯一确认通道）。
-function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOntologies}:{
- session:IntakeSession;discovery:Discovery;reload:()=>Promise<void>;
+// 并阻断，确认由人勾选后提交（网页是唯一确认通道）。候选由 DiscoveryPage 统一
+// 取数（草案卡片也要用候选的值类型做「以发布候选为准」标注，FDE3-09）。
+function PublishBlock({session,discovery,candidate,reloadCandidate,reload,onError,onOpenSession,onOpenOntologies}:{
+ session:IntakeSession;discovery:Discovery;candidate:PublishCandidateView|null;
+ reloadCandidate:()=>Promise<void>;reload:()=>Promise<void>;
  onError:(error:unknown)=>void;onOpenSession:(id:string)=>void;onOpenOntologies?:()=>void;
 }){
  const draft=discovery.draft!;
@@ -142,23 +144,18 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
  const tables:CatalogTable[]=catalog?.tables||[];
  const label=(table:string)=>tableLabel(table,tables,session);
  const base=`/api/sessions/${session.id}`;
- const [candidate,setCandidate]=useState<PublishCandidateView|null>(null),[checked,setChecked]=useState(false),[busy,setBusy]=useState(false);
+ const [checked,setChecked]=useState(false),[busy,setBusy]=useState(false);
  const [agreed,setAgreed]=useState<Record<string,boolean>>({});
  const [migrationAck,setMigrationAck]=useState(false);
+ const [reintakeAck,setReintakeAck]=useState(false);
  const [failure,setFailure]=useState<{text:string;action:'rediscover'|'refresh'}|null>(null),[copied,setCopied]=useState(false),[copiedReturn,setCopiedReturn]=useState(false);
  const [staleHint,setStaleHint]=useState(false);
  // 记录被后端按过期拒绝的候选引用；只有换到不同且一致的候选才清除过期标记。
  const rejectedRef=useRef('');
  const summary=discovery.publish_candidate||null;
- const fetchCandidate=async()=>setCandidate(await api<PublishCandidateView|null>(base+'/publish/candidate'));
- useEffect(()=>{let cancelled=false;
-  (async()=>{try{const data=await api<PublishCandidateView|null>(base+'/publish/candidate');if(!cancelled)setCandidate(data);}
-   catch(error){if(!cancelled)onError(error);}})();
-  return()=>{cancelled=true;};
- },[summary?.ref,summary?.state,draft.ref,session.revision]);
  // 候选替换（引用或定义摘要变化）时重置人工核对勾选：核对必须绑定实际确认的候选，
- // 不能用对旧定义的确认发布新定义；Agent 处置的逐项同意也一并重置。
- useEffect(()=>{setChecked(false);setAgreed({});setMigrationAck(false);},[candidate?.ref,candidate?.definition_digest]);
+ // 不能用对旧定义的确认发布新定义；Agent 处置的逐项同意与修订专项确认也一并重置。
+ useEffect(()=>{setChecked(false);setAgreed({});setMigrationAck(false);setReintakeAck(false);},[candidate?.ref,candidate?.definition_digest]);
  // 刷新取得与被拒候选不同、且与当前任务修订一致的候选时清除过期标记，发布流程可恢复；
  // 候选仍过期时派生校验会继续禁用确认。
  useEffect(()=>{
@@ -204,7 +201,7 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
  const completionPrompt=`继续当前工作区的本体发现任务 ${session.id}。草案 ${draft.ref} ${draft.state==='pending'?'仍待审核':'已通过审核'}；请补全每个概念的属性值类型、必需性与身份字段，对关系给出端点与角色，对未决项与覆盖缺口逐项给出排除或接受的处置并说明影响，生成发布候选供我在工作台确认。`;
  const returnPrompt=`继续当前工作区的本体发现任务 ${session.id}。草案 ${draft.ref} 的发布候选里，对未决项与覆盖缺口的处置我不认可，请逐项重新给出排除或接受的处置、说明理由与影响，生成新的发布候选供我在工作台确认。`;
  async function confirm(){
-  if(!current||expired||revisionBlocksConfirm(current,migrationAck))return;
+  if(!current||expired||revisionBlocksConfirm(current,migrationAck,reintakeAck))return;
   setBusy(true);
   try{
    await api(base+'/publish/confirm','POST',{
@@ -215,8 +212,8 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
    });
    // 注册表新增了本体：清掉标题缓存，同页签后续新建任务的面包屑能拿到新标题。
    invalidateOntologyTitles();
-   setChecked(false);setMigrationAck(false);setFailure(null);
-   await reload();await fetchCandidate();
+   setChecked(false);setMigrationAck(false);setReintakeAck(false);setFailure(null);
+   await reload();await reloadCandidate();
   }catch(error){
    // 来源变更给新建发现任务入口；过期/重复确认给刷新候选入口，并标记候选
    // 已过期，避免「刷新候选」后反复提交同一失效候选。
@@ -249,7 +246,7 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
  }
  async function refreshCandidate(){
   setBusy(true);
-  try{await reload();await fetchCandidate();setFailure(null);}
+  try{await reload();await reloadCandidate();setFailure(null);}
   catch(error){onError(error);}finally{setBusy(false);}
  }
  if(published)
@@ -270,7 +267,8 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
    <p>候选已过期：任务修订已更新，后端会拒绝该候选。请让 Agent 重新生成发布候选后再确认。</p>
   </div>}
   {current?<><RevisionPublishNotice candidate={current} acknowledged={migrationAck}
-    onAcknowledge={setMigrationAck} disabled={expired}/>
+    onAcknowledge={setMigrationAck} reintakeAcknowledged={reintakeAck}
+    onReintakeAcknowledge={setReintakeAck} disabled={expired}/>
    <h3>候选定义摘要 · {current.title||current.ontology_id}</h3>
    <DiscoveryConcepts testid={name=>`publish-concept-${name}`} concepts={Object.entries(current.definition.concepts).map(([name,concept])=>{
     const entity=draft.entities.find(item=>item.name===name);
@@ -343,12 +341,15 @@ function PublishBlock({session,discovery,reload,onError,onOpenSession,onOpenOnto
    <p className="help">把这条指令发给 Agent：它会重新给出每项处置并生成新候选，新候选出现后再在这里核对；当前候选不会被它覆盖。</p>
    <div className="discovery-prompt"><code>{returnPrompt}</code><button className="secondary" onClick={()=>copyPrompt(returnPrompt,()=>setCopiedReturn(true))}>{copiedReturn?'已复制':'复制指令'}</button></div>
   </details>}
-  <p className="help">发布后将成为新任务的默认目标本体；既有任务与已发布实例不受影响。</p>
+  {/* FDE3-01：修订发布后新修订下没有对象，不能笼统写「已发布实例不受影响」。 */}
+  <p className="help">{revision
+   ?<>发布后将成为新任务的默认目标本体；既有任务固定在原修订，旧修订实例仍可按修订号查询，不会自动出现在新修订下。</>
+   :<>发布后将成为新任务的默认目标本体；既有任务与已发布实例不受影响。</>}</p>
   {draft.state==='pending'&&current&&<p className="help" data-testid="publish-pending-note">当前草案待审核：点「确认发布」会一并审核该草案并发布为正式本体，不需要先单独确认草案。</p>}
   <div className="discovery-review">
    <label><input type="checkbox" checked={checked} disabled={!current||undisposed.length>0||expired}
     onChange={e=>setChecked(e.target.checked)}/> 我已核对候选定义与来源摘要，确认发布</label>
-   <button className="primary" disabled={!current||undisposed.length>0||expired||!checked||!dispositionsAgreed||revisionBlocksConfirm(current,migrationAck)||busy} onClick={confirm}>{busy?'正在发布…':'确认发布'}</button>
+   <button className="primary" disabled={!current||undisposed.length>0||expired||!checked||!dispositionsAgreed||revisionBlocksConfirm(current,migrationAck,reintakeAck)||busy} onClick={confirm}>{busy?'正在发布…':'确认发布'}</button>
   </div>
  </section>;
 }
@@ -359,20 +360,42 @@ export function DiscoveryPage({view,reload,onNew,onError,onOpenSession,onOpenOnt
 }){
  const [busy,setBusy]=useState(false),[copied,setCopied]=useState(false);
  const {session,discovery}=view;
+ const draft=discovery?discovery.draft:null;
+ // pending 草案只在候选仍锚定当前草案时开放发布区；rejected 永不显示。
+ const candidateSummary=discovery?discovery.publish_candidate:undefined;
+ const pendingCandidate=!!draft&&draft.state==='pending'
+  &&candidateSummary?.state==='candidate'
+  &&candidateSummary.draft_ref===draft.ref;
+ const showPublishBlock=!!draft&&(draft.state==='approved'||pendingCandidate);
+ const base=`/api/sessions/${session.id}`;
+ // 候选取数提升到页面级：发布区与草案卡片的「以发布候选为准」标注（FDE3-09）
+ // 共用同一份候选；只有发布区本会挂载时才请求，发布确认后由 PublishBlock 重载。
+ const [publishCandidate,setPublishCandidate]=useState<PublishCandidateView|null>(null);
+ const reloadPublishCandidate=async()=>
+  setPublishCandidate(await api<PublishCandidateView|null>(base+'/publish/candidate'));
+ useEffect(()=>{let cancelled=false;
+  if(!showPublishBlock){setPublishCandidate(null);return;}
+  (async()=>{try{const data=await api<PublishCandidateView|null>(base+'/publish/candidate');if(!cancelled)setPublishCandidate(data);}
+   catch(error){if(!cancelled)onError(error);}})();
+  return()=>{cancelled=true;};
+ },[showPublishBlock,candidateSummary?.ref,candidateSummary?.state,draft?.ref,session.revision]);
  if(!discovery)return null;
- const {catalog,draft}=discovery;
+ const {catalog}=discovery;
  // 发现页对所有来源类型通用：显示名与样本行按表所属来源解析，不假设唯一来源。
  const profilesById=new Map(view.profiles.map(profile=>[profile.source_id,profile]));
  const tables:CatalogTable[]=catalog?.tables||[];
  const label=(name:string)=>tableLabel(name,tables,session);
- // pending 草案只在候选仍锚定当前草案时开放发布区；rejected 永不显示。
- const candidateSummary=discovery.publish_candidate;
- const pendingCandidate=!!draft&&draft.state==='pending'
-  &&candidateSummary?.state==='candidate'
-  &&candidateSummary.draft_ref===draft.ref;
+ // 修订候选可能把属性改成与观察列不同的值类型，草案卡片与候选会各显示一种；
+ // 以发布候选为准并在草案卡片标注（FDE3-09），确认的就是候选里的类型。
+ const anchoredCandidate=publishCandidate&&draft&&publishCandidate.draft_ref===draft.ref
+  ?publishCandidate:null;
+ const candidateTypeOf=(entityName:string,propertyName:string)=>{
+  const type=anchoredCandidate?.definition?.concepts?.[entityName]
+   ?.properties?.[propertyName]?.value_type;
+  return typeof type==='string'?type:undefined;
+ };
  // 复制给用户转交 Agent 的指令只用业务话术，不出现内部工具名（FDE2-12）。
  const prompt=`继续当前工作区的本体发现任务 ${session.id}。请基于当前证据提出实体、粒度、标识、属性和关系，提交本体草案供我在工作台审核。`;
- const base=`/api/sessions/${session.id}`;
  async function review(decision:'approve'|'reject'){
   if(!draft)return;
   setBusy(true);
@@ -420,8 +443,18 @@ export function DiscoveryPage({view,reload,onNew,onError,onOpenSession,onOpenOnt
       <dt>标识</dt><dd>{entity.identity.length?entity.identity.join(' + '):'待确认'}</dd></dl>
      {entity.properties.length>0&&<div className="mapping-table-scroll"><table className="mapping-table">
       <thead><tr><th>属性</th><th>来源列</th><th>声明类型</th></tr></thead>
-      <tbody>{entity.properties.map(prop=><tr key={prop.column}><td>{prop.name}</td>
-       <td><code>{prop.column}</code></td><td>{valueTypeLabel(tables.find(item=>item.name===entity.table)?.columns[prop.column]?.type)}</td></tr>)}</tbody>
+      <tbody>{entity.properties.map(prop=>{
+       // sqlite 声明类型是大写（INTEGER/TEXT），统一小写后取中文标签再与候选
+       // 比较；否则 TEXT 对文本也会被当成不一致（FDE3-09）。
+       const declared=tables.find(item=>item.name===entity.table)?.columns[prop.column]?.type;
+       const observed=valueTypeLabel(declared?.toLowerCase());
+       const candidateType=candidateTypeOf(entity.name,prop.name);
+       const candidateLabel=candidateType!==undefined?valueTypeLabel(candidateType):undefined;
+       return <tr key={prop.column}><td>{prop.name}</td>
+        <td><code>{prop.column}</code></td>
+        <td>{candidateLabel&&candidateLabel!==observed
+         ?<>{candidateLabel}<span className="muted">（草案声明 {observed}，以发布候选为准）</span></>
+         :observed}</td></tr>;})}</tbody>
      </table></div>}
      {entity.extension_columns.length>0&&<p className="muted">保留为扩展字段 · {entity.extension_columns.join(', ')}</p>}
     </>}))}/>
@@ -447,7 +480,8 @@ export function DiscoveryPage({view,reload,onNew,onError,onOpenSession,onOpenOnt
       <button className="primary" disabled={busy} onClick={()=>review('approve')}>确认当前草案</button>
      </div>)}
   </section>}
-  {draft&&(draft.state==='approved'||pendingCandidate)&&<PublishBlock session={session} discovery={discovery} reload={reload}
+  {showPublishBlock&&<PublishBlock session={session} discovery={discovery} candidate={publishCandidate}
+   reloadCandidate={reloadPublishCandidate} reload={reload}
    onError={onError} onOpenSession={onOpenSession} onOpenOntologies={onOpenOntologies}/>}
   {catalog&&<section className="discovery-card">
    <h2>来源证据</h2>

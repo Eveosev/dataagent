@@ -89,6 +89,45 @@ def test_date_binding_with_an_explicit_format_also_refuses_a_non_midnight_time()
     assert not accepted.issues
 
 
+def test_string_target_stores_a_midnight_date_the_way_the_date_transform_would():
+    """FDE3-09: a revision retyping date to string keeps the published values.
+
+    The identity binding on a string property used to store the sheet
+    reader's ``2026-04-08T00:00:00`` verbatim, so the same source no longer
+    compared equal to revision 1's ``2026-04-08``.
+    """
+    onto=OntologyRevision(id='invoice',revision='2',entity_type='Invoice',
+        properties={'number':{'value_type':'string','required':True},
+                    'day':{'value_type':'string','required':True}},
+        identity_fields=['number'])
+    m=MappingSpec(id='m',revision='1',ontology_revision='invoice@2',source_fingerprint='schema',
+        bindings={'number':{'source_field':'number'},
+                  'day':{'source_field':'day'}})
+    p=profile([{'number':'A','day':'2026-04-08T00:00:00'}]).model_copy(
+        update={'fields':['number','day']})
+    result=materialize(onto,m,[p],scope='T')
+    assert result.instances[0].values=={'number':'A','day':'2026-04-08'}
+    assert not result.issues
+
+
+def test_string_target_keeps_a_non_midnight_time_and_a_malformed_date_text():
+    onto=OntologyRevision(id='invoice',revision='2',entity_type='Invoice',
+        properties={'number':{'value_type':'string','required':True},
+                    'note':{'value_type':'string'}},
+        identity_fields=['number'])
+    m=MappingSpec(id='m',revision='1',ontology_revision='invoice@2',source_fingerprint='schema',
+        bindings={'number':{'source_field':'number'},
+                  'note':{'source_field':'note'}})
+    p=profile([{'number':'A','note':'2026-04-08T09:30:00'},
+               {'number':'B','note':'not-a-dateT00:00:00'},
+               {'number':'C','note':'2026-04-08'}]).model_copy(
+        update={'fields':['number','note']})
+    result=materialize(onto,m,[p],scope='T')
+    assert [instance.values['note'] for instance in result.instances]==[
+        '2026-04-08T09:30:00','not-a-dateT00:00:00','2026-04-08']
+    assert not result.issues
+
+
 def test_missing_required_binding_is_reported():
     m=mapping();m.bindings.pop('amount');m.unmapped['minor']='extension'
     result=materialize(ontology(),m,[profile([{'number':'A','company':'C','minor':'100'}])],scope='T')

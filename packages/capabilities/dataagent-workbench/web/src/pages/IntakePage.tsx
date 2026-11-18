@@ -55,7 +55,7 @@ export function IntakePage({onStart,onError}:{onStart:(id:string)=>void;onError:
   </div>)}</fieldset>}
   {canDiscover&&<fieldset className="intake-mode"><legend>接入方式</legend>
    <label><input type="radio" name="intake-mode" checked={!discover} onChange={()=>setDiscover(false)}/>映射到已有本体</label>
-   <label><input type="radio" name="intake-mode" checked={discover} onChange={()=>setDiscover(true)}/>从数据库发现本体（Word、PDF、Excel、CSV 等文件材料也可以）</label>
+   <label><input type="radio" name="intake-mode" checked={discover} onChange={()=>setDiscover(true)}/>从材料发现本体（数据库、表格、Word、PDF）</label>
   </fieldset>}
   {mode==='mapping'&&<fieldset className="intake-mode"><legend>目标本体</legend>
    <label className="label" htmlFor="target-ontology">映射到的本体</label>

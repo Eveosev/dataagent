@@ -80,9 +80,28 @@ def convert(binding,record):
     return value
 
 
+def _date_text(value):
+    """A string target keeps the source text, with one exception (FDE3-09).
+
+    The sheet reader hands date cells over as midnight ISO strings
+    (``YYYY-MM-DDT00:00:00``); a property retyped from ``date`` to ``string``
+    must keep storing the date the way the ``date`` transform did, or the
+    same source would publish values that no longer compare equal to the
+    previous revision's.
+    """
+    text=str(value)
+    if text[10:]=='T00:00:00':
+        try:
+            return date.fromisoformat(text[:10]).isoformat()
+        except ValueError:
+            pass
+    return text
+
+
 def _typed(value,kind):
     if value is None:return None
-    if kind in {'string','reference'}:return str(value)
+    if kind=='string':return _date_text(value)
+    if kind=='reference':return str(value)
     if kind=='decimal':return convert(FieldBinding(source_field='x',transform='decimal'),{'x':value})
     if kind=='integer':return convert(FieldBinding(source_field='x',transform='integer'),{'x':value})
     if kind=='boolean':
