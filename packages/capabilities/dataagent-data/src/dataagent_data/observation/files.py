@@ -93,6 +93,14 @@ def _source_anchor(value):
     return value if isinstance(value, SourceAnchor) else SourceAnchor.model_validate(value)
 
 
+def _pending_table_view(profile):
+    """A partial Word profile before any table data must not expose prose."""
+    metadata = {**profile.metadata, 'record_locations': [], 'field_stats': {},
+                'selected_record_set': 'pending_table'}
+    return profile.model_copy(update={'records': [], 'fields': [], 'anchors': {},
+                                      'metadata': metadata})
+
+
 def select_record_set(profile, name=None):
     """Return a profile view restricted to one Word record set.
 
@@ -109,6 +117,10 @@ def select_record_set(profile, name=None):
     if not isinstance(sets, dict) or not sets:
         if name not in (None, '', 'all'):
             raise ValueError('the source profile has no selectable record sets')
+        return profile
+    if name in (None, '') and metadata.get('selected_record_set') == 'pending_table':
+        # A partial profile has not reached its data table yet; keep the safe
+        # empty view unless the caller explicitly asks for paragraphs.
         return profile
     chosen = name or metadata.get('default_record_set')
     if chosen in (None, '', 'all'):
@@ -360,13 +372,36 @@ def probe_file(selection, ctx, *, workspace, budget_rows=200, engine=None,
         metadata['resume']=resume
         if requested_record_set:
             metadata['requested_record_set']=requested_record_set
+        # The partial profile only exposes a safe selected view; keep the
+        # unfiltered evidence for the next segment.
+        if suffix == '.docx' and metadata.get('record_sets'):
+            metadata['resume_data']={
+                'records':[dict(row) for row in records],
+                'anchors':{key:[anchor.model_dump(mode='json') for anchor in values]
+                           for key,values in anchors.items()},
+                'record_locations':[dict(location) for location in metadata.get('record_locations', [])],
+            }
     profile=SourceProfile(source_id=selection.source_id,source_revision=revision,kind=suffix.lstrip('.'),
         records=records,fields=fields,anchors=anchors,metadata=metadata,total_partitions=total,
         completed_partitions=completed,gaps=gaps,issues=issues,sampled=sampled)
     # A Word document with a data table defaults to that table; prose stays in
     # metadata.record_sets and is opt-in through options['record_set'].
-    if resume is None and metadata.get('record_sets'):
-        profile=select_record_set(profile,requested_record_set)
+    if metadata.get('record_sets'):
+        pending_requested_table = (
+            resume is not None and suffix == '.docx' and requested_record_set
+            and requested_record_set.startswith('table:')
+            and requested_record_set not in metadata['record_sets'])
+        if pending_requested_table:
+            # The requested table has not been reached by this segment yet;
+            # return the safe empty view and keep resuming.
+            profile=_pending_table_view(profile)
+        else:
+            profile=select_record_set(profile,requested_record_set)
+            if (resume is not None and suffix == '.docx' and not requested_record_set
+                    and profile.metadata.get('selected_record_set') == 'paragraphs'):
+                # The first segment may only contain prose.  Do not let it become
+                # a candidate before the data table is reached.
+                profile=_pending_table_view(profile)
     return profile
 
 

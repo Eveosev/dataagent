@@ -47,6 +47,34 @@ def _carry(previous):
             list(previous.completed_partitions), gaps, list(previous.issues))
 
 
+def _resume_evidence(previous):
+    """Restore the unfiltered accumulated records from a partial profile.
+
+    A partial Word profile exposes only its safe default view (the data table,
+    or no records while the table has not been reached), so its
+    ``records``/``anchors`` cannot be used as the resume base.  ``probe_file``
+    stores the unfiltered evidence in ``metadata.resume_data`` for this case.
+    """
+    data = previous.metadata.get('resume_data') if isinstance(previous.metadata, dict) else None
+    if not isinstance(data, dict):
+        return None
+    records, anchors, locations = data.get('records'), data.get('anchors'), data.get('record_locations')
+    if (not isinstance(records, list) or not isinstance(anchors, dict)
+            or not isinstance(locations, list)
+            or any(not isinstance(record, dict) for record in records)
+            or any(not isinstance(location, dict) for location in locations)):
+        return None
+    try:
+        restored_anchors = {
+            key: [value if isinstance(value, SourceAnchor) else SourceAnchor.model_validate(value)
+                  for value in values]
+            for key, values in anchors.items()}
+    except Exception:  # noqa: BLE001 - a malformed resume payload falls back safely
+        return None
+    return ([dict(record) for record in records], restored_anchors,
+            [dict(location) for location in locations])
+
+
 def _expired(deadline):
     return deadline is not None and time.monotonic() >= deadline
 
@@ -494,8 +522,12 @@ def probe_docx(path, source_id, revision, *, previous=None, deadline=None,
     prior = _resume(previous, revision, 'docx')
     if prior:
         records, anchors, completed, gaps, issues = _carry(previous)
+        saved = _resume_evidence(previous)
+        if saved is not None:
+            records, anchors, record_locations = saved
+        else:
+            record_locations = list(previous.metadata.get('record_locations', []))
         units = dict(previous.metadata.get('units', {}))
-        record_locations = list(previous.metadata.get('record_locations', []))
         paragraphs_meta = list(previous.metadata.get('paragraphs', []))
         tables_meta = list(previous.metadata.get('tables', []))
         paragraph_structure = list(prior.get('paragraph_structure', []))
