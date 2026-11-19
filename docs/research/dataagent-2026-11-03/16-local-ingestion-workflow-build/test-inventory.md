@@ -1,5 +1,5 @@
 ---
-version: 2
+version: 3
 date: 2026-11-19
 status: M1 验收盘点
 ---
@@ -10,8 +10,8 @@ status: M1 验收盘点
 
 | 里程碑 | 已有证据 | 当前验收状态 |
 | --- | --- | --- |
-| M1 文件接入 | 离线装包、真实 Mint Agent、Mint TUI 首次接入与复用、Chrome 文件映射、RapidOCR 扫描 PDF；M1 收口复跑安装产物 files 阶段（8 类 + docx）、sources 阶段与浏览器 e2e | 功能已验证到安装产物与 TUI 主路径；GUI 归 T51（外部阻断）；浏览器 e2e 稳定性缺陷 D1 使 M1 结论暂为不可验收，见 [r1-review](r1-review.md) §6 |
-| M2 数据库和 API | CSV、SQLite、PostgreSQL 和分页 REST 对齐并保存，429 断点续跑；M1 收口复跑 sources 阶段 | 已验证（M1 范围）：SQLite、REST token/分页/429、跨源冲突与部分保存通过；Mint GUI 归 T51（外部阻断） |
+| M1 文件接入 | 离线装包、真实 Mint Agent、Mint TUI 首次接入与复用、Chrome 文件映射、RapidOCR 扫描 PDF；M1 收口复跑安装产物 files 阶段（8 类 + docx）、sources 阶段与浏览器 e2e | 功能已验证到安装产物与 TUI 主路径；GUI 的 C-01/C-02 待验（非 Kernel 布局 `mint gui` 已可见 56 个 DataAgent 工具，打包版 `Mint Agent.app` 仍为 IF-13 外部阻断）；浏览器 e2e 门禁缺陷 D1、D2 使 M1 结论暂为不可验收，见 [r1-review](r1-review.md) §6 |
+| M2 数据库和 API | CSV、SQLite、PostgreSQL 和分页 REST 对齐并保存，429 断点续跑；M1 收口复跑 sources 阶段 | 已验证（M1 范围）：SQLite、REST token/分页/429、跨源冲突与部分保存通过；Mint GUI 的 C-01/C-02 待 T51 验（打包版 IF-13） |
 | M3 API 工作流 | API 环境探查、候选校验、合成报销提交、审批等待和重启恢复 | Mint Agent 根据自然语言形成候选待验收 |
 | M4 Computer Use 与交付 | 实际浏览器读取控件、必填项变化、API 结果未知后的只读浏览器对账、Ossie 交换 | 浏览器写入绑定、登录失效后的局部重规划和独立变体验收待完成 |
 
@@ -23,7 +23,7 @@ status: M1 验收盘点
 | --- | --- |
 | 各能力包的 `tests/` | 契约、读写边界、规则计算、治理、包内容一致性和各组件行为 |
 | M1 后端测试 | `dataagent-data`、`dataagent-workbench`、`dataagent-ontology`、`dataagent-contracts`、`dataagent-runtime`、`dataagent-ocr`、`dataagent-cli` 的 `tests/`：文件与 docx 探查、SQLite/REST 分页与 429 续跑、分段与映射复用、凭据逻辑名、发现/发布/修订/停用、查询、部分保存与处置 |
-| M1 浏览器 e2e | `packages/capabilities/dataagent-workbench/web/tests/` 的 18 个 spec、76 条用例：上传、字段选择、映射修订、对象页纠正、冲突、发现、发布、修订、按本体浏览、坏输入、刷新与服务重启恢复 |
+| M1 浏览器 e2e | `packages/capabilities/dataagent-workbench/web/tests/` 的 18 个 spec、76 条用例：上传、字段选择、映射修订、对象页纠正、冲突、发现、发布、修订、按本体浏览、坏输入、刷新与服务重启恢复；首轮 1 failed + 1 flaky、复跑 1 flaky，见 [r1-review](r1-review.md) §2 |
 | M1 验收阶段 | `scripts/verify_local.sh` 的 `bootstrap`、`files`、`sources`、`discovery`、`ontology`：安装产物、8 类文件、跨源、发现证据、D0–D7 全链 |
 | 验收脚本单测 | [`scripts/acceptance/tests/test_ontology.py`](../../../../scripts/acceptance/tests/test_ontology.py)：D7 报告解包、原因过滤、日期比较与打分辅助 |
 | [S0 跨层场景](../../../../packages/capabilities/dataagent-scenarios/README.md) | 授权复检、判定、计算和验收报告 |
@@ -93,17 +93,17 @@ M1 收口复跑：11 个包 1975 passed、2 skipped、3 warning。分项：appli
 
 | 编号 | 场景 | 已有证据 | 通过条件及待补验证 |
 | --- | --- | --- | --- |
-| M1-01 | 本地装包与任务恢复 | 已验证。本次 bootstrap 复跑：Mint 0.1.31 安装清单 5 个包，doctor 报 data-layer/workbench/operations venv ok、OCR 1.4.4、策略模式与连接状态；安装目录无开发仓路径 | GUI 与完整体验归 T51/T52 |
-| M1-02 | 真实 Mint Agent 首次接入 | 已验证（3 份材料任务）。T50 C-01 真实 Mint Agent 会话完成探查、提案、预览、网页纠正和回聊天保存；4 份材料任务在 T50 时被 D6/D2 阻断；本轮未重跑 | T50 采集于 `f84a514`，F2/F6 修复后未重跑 TUI；GUI 归 T51 |
+| M1-01 | 本地装包与任务恢复 | 已验证。本次 bootstrap 复跑：Mint 0.1.31 安装清单 5 个包，doctor 报 data-layer/workbench/operations venv ok、OCR 1.4.4、策略模式与连接状态；安装目录无开发仓路径 | GUI 与完整体验归 T51（C-01/C-02 待验）/T52 |
+| M1-02 | 真实 Mint Agent 首次接入 | 已验证（3 份材料任务）。T50 C-01 真实 Mint Agent 会话完成探查、提案、预览、网页纠正和回聊天保存；4 份材料任务在 T50 时被 T50 缺陷 D6/D2 阻断；本轮未重跑 | T50 采集于 `f84a514`，F2/F6 修复后未重跑 TUI；GUI 归 T51（C-01/C-02 待验） |
 | M1-03 | CSV 浏览器闭环 | 已验证。`verify_browser.py` 的 intake.spec 在真实工作台服务上完成上传、字段选择、分转元、预览、刷新恢复和保存 | 首次预览时间、完成时间、主动操作归 T52 |
-| M1-04 | 文本 PDF 来源对照 | 已验证。files 阶段 invoice-lines.pdf 第 1 页 coverage=full、锚点与独立期望一致；T50 C-01 看到原图与高亮 | GUI 同一任务复跑归 T51（外部阻断） |
+| M1-04 | 文本 PDF 来源对照 | 已验证。files 阶段 invoice-lines.pdf 第 1 页 coverage=full、锚点与独立期望一致；T50 C-01 看到原图与高亮 | GUI 同一任务复跑归 T51（C-01/C-02 待验；打包版 IF-13） |
 | M1-05 | 扫描 PDF 和混合 PDF | 已验证。files 阶段 scan.pdf 与 mixed-pages.pdf 与期望一致（第 2 页 `ocr_empty`）；RapidOCR 1.4.4 | 真实混排、低置信度数字和扫描框在浏览器的复核归 T51/T52 |
 | M1-06 | Excel/JSON 来源接入 | 已验证。files 阶段 Excel/JSON/JSONL/TSV 样本 coverage=full，单元格/JSON Pointer 锚点与期望一致 | 无；安装后接入已由 files 阶段覆盖 |
-| M1-07 | 审核与三种修改范围 | 已验证。intake.spec 覆盖三种修改范围；mapping.spec、source-preview.spec 覆盖映射修订 | 浏览器 e2e 稳定性缺陷 D1 见 [r1-review](r1-review.md) §6；功能路径在复跑中通过 |
-| M1-08 | 并发、刷新和重启 | 已验证。intake.spec 覆盖并发修改、过期决定拒绝、服务重启恢复；workbench 单测覆盖事务回滚 | D1 修复后需连续两次 0 failed、0 flaky |
+| M1-07 | 审核与三种修改范围 | 已验证。intake.spec 覆盖三种修改范围；mapping.spec、source-preview.spec 覆盖映射修订 | 浏览器 e2e 门禁缺陷 D1（共享默认本体隔离）、D2（`bad-input.spec.ts:45` flaky 待查）见 [r1-review](r1-review.md) §6，均转 S2；功能路径在复跑中通过 |
+| M1-08 | 并发、刷新和重启 | 已验证。intake.spec 覆盖并发修改、过期决定拒绝、服务重启恢复；workbench 单测覆盖事务回滚 | S2（D1/D2）合入后需连续两次 0 failed、0 flaky |
 | M1-09 | Mint TUI 复用与保存 | 部分通过。T50 C-03：单来源与不含扫描件多来源 `mapping_reused=true`；含扫描件组合不复用（T50 缺陷 D3，F6 已修但未在 TUI 重跑）；T50 C-01 的 3 份材料任务也未复用已存映射；无交互终端录屏 | F6 后重跑含扫描件组合并录屏 |
-| M1-10 | Mint GUI | 外部阻断。T02 的 GUI 看不到 MCP 工具；T51 依赖 Mint 侧 IF-13/IF-14 | Mint 侧修复后按 T50 路径复跑 |
-| M1-11 | 本地认证与模型披露 | 已验证到组件边界。一次性浏览器入口、跨站请求、任务成员、披露字段过滤有测试；真实会话令牌问题已脱敏，修复后无文件/Shell 读取 | 宿主级注入与默认审批归 T51/G1.5 |
+| M1-10 | Mint GUI | 部分通过。非 Kernel 布局的 `mint gui` 冒烟得到 80 个工具，其中 DataAgent 56 个（workbench 13、data 32、operations 11），与 `mint run` 一致（[gui-channel-check](gui-channel-check.md)）；C-01/C-02 场景未跑。打包版 `Mint Agent.app`（kernel-stdio-v1）看不到工具，仍是 IF-13 | 按 `mint gui` 跑 C-01/C-02 并采证；打包版待 Mint 侧 IF-13 |
+| M1-11 | 本地认证与模型披露 | 已验证到组件边界。一次性浏览器入口、跨站请求、任务成员、披露字段过滤有测试；真实会话令牌问题已脱敏，修复后的那次复验会话内未再出现文件/Shell 读取 | 宿主级注入与默认审批归 T51/G1.5；收口前查询抽查仍出现擦边读取（L2），见 [r1-review](r1-review.md) §5 |
 | M1-12 | docx 正文与表格 | 已验证。files 阶段 docx coverage=full，正文 `paragraph:2`、表格 `table:1/row:2/col:2` 锚点与期望一致；docx 单测与安装产物依赖测试通过 | 复杂页眉页脚、文本框不在 M1 |
 | M1-13 | D0–D7 本体发现全链 | 已验证。ontology 阶段 36 项检查 35 通过、1 不适用（N3.gate），覆盖发现→审核→发布→映射→查询；discovery 阶段覆盖表格/文档证据；真实 Agent TUI 运行见 `$PRIVATE_DIR/d7-agent-run/` | 模型提案质量与 GUI 渲染不在此列；N3.gate 在本次证据下不适用 |
 
@@ -111,13 +111,13 @@ M1 收口复跑：11 个包 1975 passed、2 skipped、3 warning。分项：appli
 
 | 编号 | 场景 | 已有证据 | 通过条件及待补验证 |
 | --- | --- | --- | --- |
-| M2-01 | SQLite 有界读取 | 已验证。sources 阶段复合主键、名称冲突、NULL、范围与锚点同金标一致；T50 C-02 已看来源定位 | GUI 来源定位归 T51（外部阻断） |
+| M2-01 | SQLite 有界读取 | 已验证。sources 阶段复合主键、名称冲突、NULL、范围与锚点同金标一致；T50 C-02 已看来源定位 | GUI 来源定位归 T51（C-01/C-02 待验） |
 | M2-02 | PostgreSQL 实库 | 临时 PostgreSQL 只读角色读取复合主键、Decimal 与日期，数据已进入跨源发布 | 在 Mint 双端复核来源定位；PostgreSQL 不在 M1 范围 |
-| M2-03 | REST 嵌套与分页 | 已验证。sources 阶段逐页响应、JSON Pointer、分页覆盖与期望一致；T50 C-02 已看来源定位 | GUI 来源定位归 T51 |
-| M2-04 | REST 中断、恢复与漂移 | 已验证。sources 阶段第 2 页 429 后续跑完成，第 1 页只请求一次，已保存锚点保留 | 更大范围游标与版本变化后重新探查留作后续 |
+| M2-03 | REST 嵌套与分页 | 已验证。sources 阶段逐页响应、JSON Pointer、分页覆盖与期望一致；T50 C-02 已看来源定位 | GUI 来源定位归 T51（C-01/C-02 待验） |
+| M2-04 | REST 中断、恢复与漂移 | 部分通过。已验证范围限于 429 续跑：sources 阶段第 2 页 429 后续跑完成，第 1 页只请求一次，已保存锚点保留 | 游标范围变化、版本变化后的重新探查未验证 |
 | M2-05 | 多源身份与冲突 | 已验证。sources 阶段 13 个对象（10 有键 + 3 缺键）、5 个冲突字段落在 4 个对象上，保存被拦；T50 C-02 同路径 | 跨业务域身份与真实混排 PDF 同对象样例留作后续 |
-| M2-06 | 来源权限和用户入口 | 部分通过。远端使用宿主连接 ID，拒绝工具参数改写范围；浏览器工作台列出连接名和类型；TUI 发起 SQLite + REST，哨兵 0 命中 | 从 Mint GUI 发起数据库/API 归 T51（外部阻断） |
-| M2-07 | 陌生 SQLite 本体发现 | 部分通过。ontology 阶段脚本化提案、人工发布、映射与查询全链通过；TUI 真实模型发现走通；单测覆盖两个等价客户表的歧义 | GUI 从同一证据生成草案归 T51 |
+| M2-06 | 来源权限和用户入口 | 部分通过。远端使用宿主连接 ID，拒绝工具参数改写范围；浏览器工作台列出连接名和类型；TUI 发起 SQLite + REST，哨兵 0 命中 | 从 Mint GUI 发起数据库/API 归 T51 待验（非 Kernel `mint gui` 工具可见；打包版 IF-13） |
+| M2-07 | 陌生 SQLite 本体发现 | 部分通过。ontology 阶段脚本化提案、人工发布、映射与查询全链通过；TUI 真实模型发现走通；单测覆盖两个等价客户表的歧义 | GUI 从同一证据生成草案归 T51 待验 |
 
 ### M3 API 环境探查与持久工作流
 
@@ -150,6 +150,7 @@ M1 收口复跑：11 个包 1975 passed、2 skipped、3 warning。分项：appli
 | 实际浏览器映射界面 | [mapping-live.png](../../../../.superpowers/sdd/16-local-ingestion-workflow-build-plan/acceptance/mapping-live.png) |
 | 本地 RapidOCR 固定及验证 | [ocr-install-result.json](../../../../.superpowers/sdd/16-local-ingestion-workflow-build-plan/acceptance/ocr-install-result.json)、[ocr-verification.json](../../../../.superpowers/sdd/16-local-ingestion-workflow-build-plan/acceptance/ocr-verification.json) |
 | TUI 保存及终态回退 | [tui-state-audit.json](../../../../.superpowers/sdd/16-local-ingestion-workflow-build-plan/acceptance/tui-state-audit.json) |
+| 收口前真实 Agent 查询抽查 | `$PRIVATE_DIR/m1-query-check/`：两问答对；同口径合并问法 23 秒 / 8 步 / 72.6 万 input token；20 行约 21 KB 内联；L1–L4 见 [r1-review](r1-review.md) §4.3 |
 | 本地检查入口 | [verify_local.sh](../../../../scripts/verify_local.sh)、[verify_browser.py](../../../../scripts/verify_browser.py) |
 
 内核基线为 `agent-kernel@4c6e4fdb1970059b6911fd69ea143e63faa3fad8`。Mint TUI 复验使用 Core 0.1.47。各入口的实际结果和可复跑命令见 [离线安装与链路验收](implementation-2026-11-11.md)。
