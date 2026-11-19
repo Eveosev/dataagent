@@ -186,6 +186,7 @@ test('未知问题码也只显示中文原因，原始异常进折叠详情',asy
  await page.goto('/');
  await page.getByLabel('接入目标').fill('接入发票并核对未知问题码');
  await page.getByLabel('选择材料').setInputFiles({name:'invoice.csv',mimeType:'text/csv',buffer:csv});
+ await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByRole('button',{name:'生成映射预览'})).toBeEnabled();
  await page.getByRole('button',{name:'生成映射预览'}).click();

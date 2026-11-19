@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import type {Discovery} from '../src/pages/DiscoveryPage';
-import {slowTimeout,uniqueTag} from './support';
+import {awaitEvidenceProbed,slowTimeout,uniqueTag} from './support';
 
 let workspace=process.env.DATAAGENT_TEST_WORKSPACE||'';
 const python=process.env.DATAAGENT_TEST_PYTHON;
@@ -59,7 +59,7 @@ test('SQLite 上传、工具提交本体草案、工作台审核',async({page})=
  await page.getByRole('radio',{name:'从材料发现本体'}).check();
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByRole('heading',{name:'本体发现'})).toBeVisible();
- await expect(page.getByRole('heading',{name:'来源证据'})).toBeVisible();
+ await awaitEvidenceProbed(page);
  await expect(page.getByText('观测值匹配',{exact:false})).toBeVisible();
  // 复制给用户转交 Agent 的指令只用业务话术，不出现内部工具名（FDE2-12）。
  await expect(page.getByText(/intake_inference|ontology_discovery_propose|ontology_publish_prepare/)).toHaveCount(0);
@@ -139,7 +139,7 @@ test('docx 与 xlsx 可在网页勾选本体发现发起，表名不显示内部
  await page.getByRole('radio',{name:'从材料发现本体'}).check();
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByRole('heading',{name:'本体发现'})).toBeVisible({timeout:30000});
- await expect(page.getByRole('heading',{name:'来源证据'})).toBeVisible({timeout:30000});
+ await awaitEvidenceProbed(page,30000);
  const session_id=new URLSearchParams(new URL(page.url()).hash.slice(1)).get('session');
  const request=callTool('intake_inference',{session_id}) as Discovery & {
   expected_revision:string;source_revision:string;
@@ -202,7 +202,7 @@ INSERT INTO warehouse VALUES ('WH-1','一号仓'),('WH-2','二号仓');
  await page.getByLabel('选择材料').setInputFiles(database);
  await page.getByRole('radio',{name:'从材料发现本体'}).check();
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByRole('heading',{name:'来源证据'})).toBeVisible({timeout:20000});
+ await awaitEvidenceProbed(page,20000);
  const sid=new URLSearchParams(new URL(page.url()).hash.slice(1)).get('session');
  const request=callTool('intake_inference',{session_id:sid}) as Discovery & {
   expected_revision:string;source_revision:string;

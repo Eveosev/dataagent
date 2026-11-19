@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 import path from 'node:path';
 import {readFileSync,writeFileSync} from 'node:fs';
-import {pinBuiltinOntology,slowTimeout} from './support';
+import {awaitProbed,pinBuiltinOntology,slowTimeout} from './support';
 
 function sessionId(page:{url():string},key:string){
  return new URL(page.url()).hash.match(new RegExp(key+'=([0-9a-f]+)'))![1];
@@ -14,7 +14,7 @@ test('对象页完成当前值纠正、映射修订与本体草案',async({page}
  await page.getByLabel('选择材料').setInputFiles(path.resolve('../../dataagent-scenarios/fixtures/intake/invoices.csv'));
  await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ await awaitProbed(page);
  await page.getByLabel('金额 来源字段').selectOption('amount_minor');
  await page.getByLabel('金额 转换方式').selectOption('minor_to_major');
  await page.getByRole('button',{name:'生成映射预览'}).click();
@@ -72,7 +72,7 @@ test('采用新映射值后保存只发布最新金额',async({page,request})=>{
  await page.getByLabel('选择材料').setInputFiles(csv);
  await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ await awaitProbed(page);
  await page.getByLabel('金额 来源字段').selectOption('amount_minor');
  await page.getByLabel('金额 转换方式').selectOption('minor_to_major');
  await page.getByRole('button',{name:'生成映射预览'}).click();
@@ -106,7 +106,7 @@ async function openObjectPageWithPreview(page:import('@playwright/test').Page){
  await page.getByLabel('选择材料').setInputFiles(path.resolve('../../dataagent-scenarios/fixtures/intake/invoices.csv'));
  await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ await awaitProbed(page);
  await page.getByLabel('金额 来源字段').selectOption('amount_minor');
  await page.getByLabel('金额 转换方式').selectOption('minor_to_major');
  await page.getByRole('button',{name:'生成映射预览'}).click();
@@ -175,7 +175,7 @@ test('准备重启恢复的任务状态',async({page})=>{
  await page.getByLabel('选择材料').setInputFiles(path.resolve('../../dataagent-scenarios/fixtures/intake/invoices.csv'));
  await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ await awaitProbed(page);
  await page.getByLabel('币种 来源字段').selectOption('');
  await page.getByLabel('金额 来源字段').selectOption('amount_minor');
  await page.getByLabel('金额 转换方式').selectOption('integer');

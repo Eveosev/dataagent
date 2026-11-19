@@ -4,7 +4,7 @@ import {execFileSync} from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import {lockDefaultPointer,pinBuiltinOntology,slowTimeout,uniqueTag,unlockDefaultPointer} from './support';
+import {awaitEvidenceProbed,lockDefaultPointer,pinBuiltinOntology,slowTimeout,uniqueTag,unlockDefaultPointer} from './support';
 
 // FDE2-11 第 2 轮返工的验收：差旅（费用）本体走英文实体名（ExpenseReport /
 // ExpenseLine）时，网页可见位置一律显示中文标签；并覆盖「同一页签先打开过
@@ -123,7 +123,7 @@ test('差旅本体：英文实体名统一中文标签；发布后同页签面�
  await page.getByRole('radio',{name:'从材料发现本体'}).check();
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByRole('heading',{name:'本体发现'})).toBeVisible({timeout:20000});
- await expect(page.getByRole('heading',{name:'来源证据'})).toBeVisible({timeout:20000});
+ await awaitEvidenceProbed(page,20000);
  const sid=sessionId(page);
  const request=callTool('intake_inference',{session_id:sid});
  callTool('ontology_discovery_propose',{session_id:sid,expected_revision:request.expected_revision,

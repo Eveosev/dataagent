@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 import {humanDetail} from '../src/client';
-import {pinBuiltinOntology,slowTimeout} from './support';
+import {awaitProbed,pinBuiltinOntology,slowTimeout} from './support';
 
 // D5a 补审：humanDetail 对中英混合原文的判定。主文案只出现映射后的中文；
 // 未识别的英文或混合原文（含少量中文的英文报错）只进可展开的「详情」。
@@ -38,7 +38,7 @@ test('对象页问题主文案不出现未识别英文，原文折叠进详情',
   buffer:Buffer.from('number,amount,currency,issuer\nINV-001,1250,CNY,华信办公\n')});
  await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ await awaitProbed(page);
  await page.getByRole('button',{name:'生成映射预览'}).click();
  await page.getByRole('button',{name:'打开对象页'}).click();
  await expect(page.getByRole('heading',{name:'核对业务对象'})).toBeVisible();

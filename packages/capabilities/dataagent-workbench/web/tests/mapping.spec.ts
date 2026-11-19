@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 import path from 'node:path';
-import {pinBuiltinOntology} from './support';
+import {awaitProbed,pinBuiltinOntology} from './support';
 
 test('文件探查、映射试算、刷新恢复和保存',async({page})=>{
  await page.goto('/');
@@ -8,7 +8,7 @@ test('文件探查、映射试算、刷新恢复和保存',async({page})=>{
  await page.getByLabel('选择材料').setInputFiles(path.resolve('../../dataagent-scenarios/fixtures/intake/invoices.csv'));
  await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ await awaitProbed(page);
  await page.getByLabel('金额 来源字段').selectOption('amount_minor');
  await page.getByLabel('金额 转换方式').selectOption('minor_to_major');
  await page.getByRole('button',{name:'生成映射预览'}).click();
@@ -29,7 +29,7 @@ test('PDF 来源定位、金额转换与发布后查看', async ({page}) => {
   await page.getByLabel('选择材料').setInputFiles(path.resolve('../../dataagent-scenarios/fixtures/intake/invoice.pdf'));
   await pinBuiltinOntology(page);
   await page.getByRole('button', {name: '开始接入'}).click();
-  await expect(page.getByText('识别与探查已完成')).toBeVisible();
+  await awaitProbed(page);
   await page.getByLabel('金额 来源字段').selectOption('amount_minor');
   await page.getByLabel('金额 转换方式').selectOption('minor_to_major');
   await page.getByRole('button', {name: '生成映射预览'}).click();
@@ -52,7 +52,7 @@ test('两份材料分别映射并归并为同一对象', async ({page}) => {
   ]);
   await pinBuiltinOntology(page);
   await page.getByRole('button', {name: '开始接入'}).click();
-  await expect(page.getByText('识别与探查已完成')).toBeVisible();
+  await awaitProbed(page);
   await page.getByLabel('金额 来源字段').selectOption('amount_minor');
   await page.getByLabel('金额 转换方式').selectOption('minor_to_major');
   await page.getByRole('button', {name: 'invoice.json'}).click();
@@ -77,7 +77,7 @@ test('轮询期间保留本地编辑的基准修订', async ({page, context}) =>
   await page.getByLabel('选择材料').setInputFiles(path.resolve('../../dataagent-scenarios/fixtures/intake/invoices.csv'));
   await pinBuiltinOntology(page);
   await page.getByRole('button', {name: '开始接入'}).click();
-  await expect(page.getByText('识别与探查已完成')).toBeVisible();
+  await awaitProbed(page);
   await page.getByLabel('金额 来源字段').selectOption('amount_minor');
   await expect(page.getByText('草稿已保存')).toBeVisible();
   const second = await context.newPage();

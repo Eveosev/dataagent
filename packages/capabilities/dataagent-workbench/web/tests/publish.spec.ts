@@ -4,7 +4,7 @@ import {execFileSync} from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import {lockDefaultPointer,slowTimeout,uniqueTag,unlockDefaultPointer} from './support';
+import {awaitEvidenceProbed,awaitProbed,lockDefaultPointer,slowTimeout,uniqueTag,unlockDefaultPointer} from './support';
 
 let workspace=process.env.DATAAGENT_TEST_WORKSPACE||'';
 const python=process.env.DATAAGENT_TEST_PYTHON;
@@ -120,7 +120,7 @@ async function startDiscovery(page:import('@playwright/test').Page,goal:string,d
  await page.getByLabel('选择材料').setInputFiles(database);
  await page.getByRole('radio',{name:'从材料发现本体'}).check();
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByRole('heading',{name:'来源证据'})).toBeVisible({timeout:20000});
+ await awaitEvidenceProbed(page,20000);
  return sessionId(page);
 }
 
@@ -162,7 +162,7 @@ test('SQLite 发现 → 草案 → 补全 → 网页确认发布 → 新接入�
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByRole('heading',{name:'本体发现'})).toBeVisible({timeout:20000});
  // 等探查完成（来源证据出现）再取证据，catalog 才有表与关系。
- await expect(page.getByRole('heading',{name:'来源证据'})).toBeVisible({timeout:20000});
+ await awaitEvidenceProbed(page,20000);
  const sid=sessionId(page);
  const request=callTool('intake_inference',{session_id:sid});
 
@@ -324,6 +324,8 @@ test('SQLite 发现 → 草案 → 补全 → 网页确认发布 → 新接入�
  await expect(page).not.toHaveURL(new RegExp(publishSid),{timeout:20000});
  const rediscoverySid=sessionId(page);
  expect(rediscoverySid).not.toBe(publishSid);
+ // 新任务重新观察变更后的来源：探查偶发失败时走页面重试再等证据。
+ await awaitEvidenceProbed(page,20000);
  // 新任务重新观察变更后的来源：party 表从 2 行变为 3 行。
  await expect(page.locator('.discovery-table summary',{hasText:'party'})).toContainText('3 行',{timeout:20000});
 
@@ -362,7 +364,8 @@ test('SQLite 发现 → 草案 → 补全 → 网页确认发布 → 新接入�
  await expect(page.getByRole('heading',{name:'核对来源与本体映射'})).toBeVisible({timeout:20000});
 
  // 目标在任务创建时已固定；立即停用，缩短默认指针偏离内置的窗口，既有任务不受影响。
- // 停用按钮限定在 sales-model 自己的行：并行的修订用例可能短暂留有未停用的本体。
+ // 停用按钮限定在 sales-model 自己的行：revision.spec 的修订用例与本用例共用
+ // 指针锁，但锁外窗口内可能短暂留有其他用例发布的本体。
  await page.getByRole('button',{name:'本体库'}).click();
  await page.getByTestId('ontology-sales-model').getByRole('button',{name:'停用'}).click();
  await expect(page.getByRole('button',{name:'确认停用'})).toBeDisabled();
@@ -377,14 +380,15 @@ test('SQLite 发现 → 草案 → 补全 → 网页确认发布 → 新接入�
  await expect(page.getByRole('button',{name:'book',exact:true})).toBeVisible({timeout:20000});
  await expect(page.getByRole('button',{name:'doc_no',exact:true})).toBeVisible();
  // 等探查完成（阶段提示）再编辑，避免草稿保存与探查更新撞修订。
- await expect(page.getByText('识别与探查已完成')).toBeVisible({timeout:20000});
+ await awaitProbed(page,20000);
  await page.getByLabel('doc_no 转换方式').selectOption('integer');
  await page.getByRole('button',{name:'生成映射预览'}).click();
  await expect(page.getByTestId('preview-doc_no')).toHaveText('1001',{timeout:20000});
 
- // 停用后新建接入：选项不再出现，也不再是默认。并行的修订用例不参与本用例的
- // 指针锁，可能短暂把默认指针移到它自己发布的本体上，「回到内置」只在无其他
- // 存活本体时成立，这里只断言已停用的 sales-model 不再被默认选中。
+ // 停用后新建接入：选项不再出现，也不再是默认。revision.spec 的修订用例与本
+ // 用例共用指针锁，但锁外窗口内其他用例发布的本体可能短暂持有默认指针，
+ // 「回到内置」只在无其他存活本体时成立，这里只断言已停用的 sales-model
+ // 不再被默认选中。
  await page.getByRole('button',{name:'新建接入'}).click();
  await expect(page.getByLabel('接入目标')).toBeVisible();
  await expect(page.getByRole('option',{name:/销售单据模型/})).toHaveCount(0);
@@ -404,7 +408,7 @@ test('Agent 补全时放弃草案关系 → 发布区逐项列出并需勾选同
  await page.getByLabel('选择材料').setInputFiles(database);
  await page.getByRole('radio',{name:'从材料发现本体'}).check();
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByRole('heading',{name:'来源证据'})).toBeVisible({timeout:20000});
+ await awaitEvidenceProbed(page,20000);
  const sid=sessionId(page);
  const request=callTool('intake_inference',{session_id:sid});
  callTool('ontology_discovery_propose',{session_id:sid,...fullProposal(request)});
@@ -612,7 +616,7 @@ test('pending 草案 + 候选 → 网页一次确认发布 → 草案 approved',
  await page.getByRole('radio',{name:'从材料发现本体'}).check();
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByRole('heading',{name:'本体发现'})).toBeVisible({timeout:20000});
- await expect(page.getByRole('heading',{name:'来源证据'})).toBeVisible({timeout:20000});
+ await awaitEvidenceProbed(page,20000);
  const sid=sessionId(page);
 
  const request=callTool('intake_inference',{session_id:sid});
@@ -666,7 +670,7 @@ test('prepare → 网页审核草案 → 发布区仍显示候选 → 确认发�
  await page.getByLabel('选择材料').setInputFiles(database);
  await page.getByRole('radio',{name:'从材料发现本体'}).check();
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByRole('heading',{name:'来源证据'})).toBeVisible({timeout:20000});
+ await awaitEvidenceProbed(page,20000);
  const sid=sessionId(page);
  const request=callTool('intake_inference',{session_id:sid});
  callTool('ontology_discovery_propose',{session_id:sid,...fullProposal(request)});

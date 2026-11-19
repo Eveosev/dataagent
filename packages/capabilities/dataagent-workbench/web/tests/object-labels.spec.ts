@@ -1,5 +1,5 @@
 import {expect,test} from '@playwright/test';
-import {pinBuiltinOntology,slowTimeout} from './support';
+import {awaitProbed,pinBuiltinOntology,slowTimeout} from './support';
 
 // FDE2-10：对象标签用全部身份字段组合。路由把内置采购本体的身份字段改成
 // 「币种 + 单据编号」，三份材料的币种相同（第一个身份字段重复），标签仍要
@@ -23,7 +23,7 @@ test('对象标签用全部身份字段，第一个字段重复也能区分',asy
   buffer:Buffer.from(`number,amount_minor,currency\nBX-2026-0001,126000,${sharedCurrency}\nBX-2026-0002,90000,${sharedCurrency}\nBX-2026-0003,75000,${sharedCurrency}\n`)});
  await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ await awaitProbed(page);
  await page.getByRole('button',{name:'生成映射预览'}).click();
  await page.getByRole('button',{name:'打开对象页'}).click();
  await expect(page.getByRole('heading',{name:'核对业务对象'})).toBeVisible();

@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {compareDisplayText} from '../src/client';
-import {lockDefaultPointer,pinBuiltinOntology,slowTimeout,uniqueTag,unlockDefaultPointer} from './support';
+import {awaitProbed,lockDefaultPointer,pinBuiltinOntology,slowTimeout,uniqueTag,unlockDefaultPointer} from './support';
 
 const python=process.env.DATAAGENT_TEST_PYTHON;
 let workspace='';
@@ -181,7 +181,7 @@ test('限额表与明细同任务：不符来源被拦截并可整源处置',asy
  ]);
  await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ await awaitProbed(page);
  // 尚无提案固定来源范围：首次生成预览会把两份材料一起提案。
  await page.getByRole('button',{name:'生成映射预览'}).click();
  const issues=page.getByTestId('mapping-issues');
@@ -263,7 +263,14 @@ test('目标=明细行：限额表 docx 与明细 xlsx 同任务时整源拦截'
  // 只能读工作区里已落盘的探查结果，不能自己探查。
  const advanced=await page.request.post(`/api/sessions/${discovery}/advance`,{data:{}});
  expect(advanced.ok(),await advanced.text()).toBeTruthy();
- const request=callTool('intake_inference',{session_id:discovery});
+ let request=callTool('intake_inference',{session_id:discovery});
+ // 探查子进程偶发失败（retryable，结果只带空 catalog）：重发 advance 走产品的
+ // 重探路径，有界两次；仍失败则由后续对 catalog 的使用按原样失败。
+ for(let attempt=0;attempt<2&&!request.catalog?.tables?.length;attempt++){
+  const retry=await page.request.post(`/api/sessions/${discovery}/advance`,{data:{}});
+  expect(retry.ok(),await retry.text()).toBeTruthy();
+  request=callTool('intake_inference',{session_id:discovery});
+ }
  callTool('ontology_discovery_propose',{session_id:discovery,
   expected_revision:request.expected_revision,
   proposal:{source_revision:request.source_revision,entities:[
@@ -294,7 +301,7 @@ test('目标=明细行：限额表 docx 与明细 xlsx 同任务时整源拦截'
  ]);
  await page.locator('#target-ontology').selectOption(ontologyId);
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ await awaitProbed(page);
  // 任务固定目标概念为明细行（单概念本体，页面不出现概念下拉）。
  await expect(page.locator('.mapping-panel > .panel-heading .badge')).toHaveText('明细行');
  await page.getByRole('button',{name:'生成映射预览'}).click();
@@ -344,7 +351,7 @@ test('结构匹配但语义错绑的来源可在来源页签整源不使用',asy
  ]);
  await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ await awaitProbed(page);
  await page.locator('.source-tab').filter({hasText:`limits-${tag}.csv`}).click();
  // 把限额表三列分别错绑到 number/currency/amount：结构上每个槽位都有值，
  // 因此预览里仍会出现它的对象，也不会有来源级不符问题。

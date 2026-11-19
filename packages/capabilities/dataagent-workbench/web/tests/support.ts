@@ -1,4 +1,4 @@
-import {test} from '@playwright/test';
+import {expect,test} from '@playwright/test';
 import type {Page} from '@playwright/test';
 import {randomUUID} from 'node:crypto';
 import fs from 'node:fs';
@@ -17,8 +17,8 @@ export function uniqueTag(){
 }
 
 // 依赖内置采购本体的用例显式固定目标：发布本体的用例（publish.spec、
-// browse.spec）会临时把注册表默认指针移到新本体，这里不依赖默认值，
-// 用例间互不影响。
+// browse.spec、revision.spec、expense-labels.spec、mapping-source-fit.spec）
+// 会临时把注册表默认指针移到新本体，这里不依赖默认值，用例间互不影响。
 export async function pinBuiltinOntology(page:Page){
  await page.getByLabel('映射到的本体').selectOption('procurement');
 }
@@ -44,4 +44,34 @@ export async function lockDefaultPointer(workspace:string){
 }
 export function unlockDefaultPointer(workspace:string){
  try{fs.rmSync(lockDir(workspace),{recursive:true,force:true});}catch{/* 锁不存在视为已释放 */}
+}
+
+// 探查子进程偶发失败（多 worker 验收的高负载下出现过一次 probe_failed），后端
+// 把它标记为 retryable，页面给出「继续探查 / 重新探查」入口。探查相关的等待统一
+// 走这两个助手：完成或出现重试入口前先等，出现了就点页面的重试再等。不放宽
+// 断言：有界重试耗尽后仍按原来的完成条件失败。
+export async function awaitProbed(page:Page,timeout?:number){
+ const done=page.getByText('识别与探查已完成');
+ const retry=page.getByRole('button',{name:'继续探查'});
+ const options=timeout?{timeout}:{};
+ for(let attempt=0;attempt<2;attempt++){
+  await expect(done.or(retry)).toBeVisible(options);
+  if(await done.isVisible())return;
+  await retry.click();
+ }
+ await expect(done).toBeVisible(options);
+}
+
+// 发现任务的来源证据：探查失败时证据区也会出现（0 张表），据此不能用「证据
+// 出现」当完成条件；失败时页面给「重新探查」入口，出现就重试再等。
+export async function awaitEvidenceProbed(page:Page,timeout?:number){
+ const evidence=page.getByRole('heading',{name:'来源证据'});
+ const retry=page.getByRole('button',{name:'重新探查'});
+ const options=timeout?{timeout}:{};
+ await expect(evidence).toBeVisible(options);
+ for(let attempt=0;attempt<2&&await retry.isVisible();attempt++){
+  await retry.click();
+  await expect(evidence).toBeVisible(options);
+ }
+ await expect(retry).toHaveCount(0);
 }

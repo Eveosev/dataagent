@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test';
-import {pinBuiltinOntology,slowTimeout} from './support';
+import {awaitProbed,pinBuiltinOntology,slowTimeout} from './support';
 
 // 两份同构 CSV 对同一张单据给出不同金额：对象页冲突字段并排显示各来源原值，
 // 一键采用后左侧未解决计数即时更新（FDE-5）。
@@ -11,7 +11,7 @@ async function openConflictingObjectPage(page:import('@playwright/test').Page){
   {name:'发票-b.csv',mimeType:'text/csv',buffer:Buffer.from('number,amount,currency,issuer\nINV-105,2510,CNY,华信办公\n')}]);
  await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ await awaitProbed(page);
  await page.getByRole('button',{name:'生成映射预览'}).click();
  await page.getByRole('button',{name:'打开对象页'}).click();
  await expect(page.getByTestId('object-number')).toHaveText('INV-105');
@@ -49,7 +49,7 @@ test('同一来源的多个冲突原值逐个展示并都可采用',async({page}
   buffer:Buffer.from('number,amount,currency,issuer\nINV-105,1250,CNY,华信办公\nINV-105,2510,CNY,华信办公\n')});
  await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ await awaitProbed(page);
  await page.getByRole('button',{name:'生成映射预览'}).click();
  await page.getByRole('button',{name:'打开对象页'}).click();
  await expect(page.getByTestId('object-number')).toHaveText('INV-105');
@@ -84,7 +84,7 @@ test('同一来源的重复原值不把全部行号标成每个原值的定位',
   buffer:Buffer.from('number,amount,currency,issuer\nINV-105,1250,CNY,华信办公\nINV-105,2510,CNY,华信办公\nINV-105,1250,CNY,华信办公\n')});
  await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ await awaitProbed(page);
  await page.getByRole('button',{name:'生成映射预览'}).click();
  await page.getByRole('button',{name:'打开对象页'}).click();
  await expect(page.getByTestId('object-number')).toHaveText('INV-105');
