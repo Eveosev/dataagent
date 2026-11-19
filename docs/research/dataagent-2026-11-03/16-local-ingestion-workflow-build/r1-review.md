@@ -1,28 +1,36 @@
 ---
 round: m1-review
 date: 2026-11-19
-subject: M1 最小 MVP 范围（feat/p1-intake@99266984）
-commit: 99266984a110ec7419c8e1bd58dc5c600d38a98a
-verdict: 不可验收（S2 门禁未过；T50 C-01/C-03 部分通过待裁定）
+subject: M1 最小 MVP 范围（feat/p1-intake@0e16b094；首轮评审 @99266984）
+commit: 0e16b09409b467a19b2d8d2ffd09f8b48b990f85
+verdict: 可验收（S2、RU1 已合入；T50 C-01/C-03 已由验收人逐条裁定）
 ---
 # M1 独立评审
 
 ## 0. 结论
 
-**结论：不可验收，缺陷 2 项（D1、D2），均转 S2（测试隔离与 flaky 计入门禁）。**
+**结论：可验收。改判条件 (1)(2) 均已满足，S2、RU1 已合入。**
 
-M1 六项能力的可复跑证据已建立：11 个包 1975 项测试通过、2 项跳过，安装产物的 bootstrap / files / sources / discovery / ontology 五个阶段全部通过，D7 本体发现链 36 项检查 35 项通过、1 项不适用。但这不能概括为“功能齐全”：T50 的 C-01、C-03 仍是部分通过（§7.1），浏览器 e2e 门禁也不稳定。D1 是映射类用例读共享工作区的默认本体，并发下默认指针被其他用例移动；D2 是 `bad-input.spec.ts:45` 首轮 flaky，失败摘要未保留，不能归入 D1。两项都只能由 S2 修复后用连续两次 0 failed、0 flaky 复核。
+条件 (1)，浏览器 e2e 门禁：S2（测试隔离与 flaky 计入门禁）合入 `7ebf7af0`。在 `feat/p1-intake` @ `7ebf7af0` 与 @ `0e16b094` 各连续运行两次 `scripts/verify_browser.py`，四次均为 78 passed、恢复阶段 1 passed、flaky 清单为空、退出码 0。D1、D2 标为「已修复（S2）」，见 §6。S2 起脚本默认把 flaky 计为失败，`--allow-flaky` 只用于本地排查，退出码 0 不再掩盖重试后通过的用例。
 
-T50 的 C-01 与 C-03 部分通过及相关项包括：C-01 的 4 份材料原样保存被混排 PDF 的孤儿记录（T50 缺陷 D6）与重新提案丢失网页纠正（T50 缺陷 D2）叠加阻断；C-03 的含扫描件组合不复用（T50 缺陷 D3），C-02 组合没有已验证映射；另有交互式 TUI 与终端录屏未验证、Agent 未经要求保存（A1）、Agent 绕过工作台读原件与内部库（A2）。逐条现象、证据与影响见 §7.1，需验收人裁定，评审不替验收人决定。M1-10 在非 Kernel 布局的 `mint gui` 下已可见 56 个 DataAgent 工具，C-01/C-02 场景待验，打包版 `Mint Agent.app` 仍受 IF-13 阻断。
+条件 (2)，验收人裁定：payne 于 2026-11-19 依据当前代码 `040e8a1b` 的真实 Agent 复跑 `$PRIVATE_DIR/t50-rerun/run2/` 逐条裁定 §7.1：
 
-真实 Agent 运行的安全结论只对记录在案的会话成立：`$PRIVATE_DIR/d7-agent-run/` 的 8 轮未自确认、未越权读取原始材料；收口前的查询抽查 `$PRIVATE_DIR/m1-query-check/` 仍出现擦边读取旧结果与工作区材料、未用工具侧比较、技能注入不稳定、无原文核对入口（L1–L4，见 §4.3 与 §5），不能据此宣称“真实 Agent 不会读取文件”。
+- C-01-1 接受为已知限制：混排 PDF 跨页币种成无编号记录仍在，可用现有处置完成保存；网页纠正在重新提案后保留，原 T50 缺陷 D2 不再复现。
+- C-01-2 接受，安排真人在交互式 TUI 补测；本环境无 TTY。
+- C-01-3 关闭：复跑中 `mapping_apply` 只出现在用户说「保存」的轮次。
+- C-01-4 接受为已知限制：不再用 shell/sqlite3/curl 读原件或内部库；残留 shell 列目录、读 `source-connections.json`、grep results；`--approve all` 下 shell 放行。
+- C-03-1 关闭：含扫描件组合二次接入 `mapping_reused=true`。
+- C-03-2 转修复卡 RU1 并已修完合入 `0e16b094`：部分覆盖来源也复用已验证映射，缺口照常列为待处置问题；sources 验收阶段新增二次接入复用断言并通过。
 
-改判为「可验收」需同时满足：
+最终复跑 @ `0e16b094`：`bash scripts/test_all.sh` 11 个包全部通过；`bootstrap`、`files`（`--ocr-root`）、`sources`、`discovery`、`ontology` 五个阶段全部 `passed`；ontology 36 项检查 35 通过、1 不适用（N3.gate）。RU1 新增的 8 条工作台用例与 sources 阶段复用断言均在本次复跑通过。
 
-- (1) S2（测试隔离与 flaky 计入门禁）合入，并连续两次 `verify_browser.py` 达到 0 failed、0 flaky。
-- (2) 验收人对 §7.1 的 T50 C-01/C-03 部分通过项逐条裁定「接受为已知限制」或「转修复卡并修完」。
+能证明：M1 六项能力的自动化验收路径在安装产物上可复跑；8 类文件、docx、SQLite、分页 REST、跨源冲突与部分保存、发现/发布/映射/查询主链、浏览器 e2e 主路径与恢复路径都有脚本化证据；S2 后浏览器门禁连续四次 0 flaky；RU1 后部分覆盖来源的二次接入复用有正例，缺口不被静默吞掉。
 
-两项全部满足前，结论保持「不可验收」。
+不能证明：交互式 TUI 的真实键鼠、拖入与终端体验（C-01-2 待真人补测）；GUI 的 C-01/C-02（T51 待跑，打包版 `Mint Agent.app` 仍为 IF-13）；真实客户文件的版式与识别质量；默认审批与治理层（G1.5）；多租户隔离；模型生成提案的质量。§5 的 17 项已知限制继续有效，其中 C-01-1、C-01-4 已由验收人接受为已知限制。
+
+真实 Agent 运行的安全结论只对记录在案的会话成立：`$PRIVATE_DIR/d7-agent-run/` 的 8 轮未自确认、未越权读取原始材料；`$PRIVATE_DIR/m1-query-check/` 仍出现擦边读取旧结果与工作区材料、未用工具侧比较、技能注入不稳定、无原文核对入口（L1–L4，见 §4.3 与 §5），不能据此宣称“真实 Agent 不会读取文件”。
+
+T54 可记「M1 合入」；验收状态由验收人填写。本文结论不替代 P1 全量验收（V1.1–V1.15、V1.16 不在本轮范围）。
 
 除 D1、D2 外，本评审未发现新的产品功能缺陷；已知限制见 §5。
 
@@ -30,12 +38,17 @@ T50 的 C-01 与 C-03 部分通过及相关项包括：C-01 的 4 份材料原�
 
 | 项 | 值 |
 |---|---|
-| 被测提交 | `99266984a110ec7419c8e1bd58dc5c600d38a98a` |
-| 工作树 | `55dd1d9e72b516894c0b6a2e4c12c04445164933` |
+| 首轮评审提交 | `99266984a110ec7419c8e1bd58dc5c600d38a98a` |
+| 最终复跑提交 | `0e16b09409b467a19b2d8d2ffd09f8b48b990f85` |
+| 首轮评审工作树 | `55dd1d9e72b516894c0b6a2e4c12c04445164933` |
 | 集成分支 | `feat/p1-intake` |
+| S2 门禁修复 | `7ebf7af0` |
+| RU1 复用修复 | `0e16b094` |
 | iface 基线 | `agent-kernel@ae6c3d549244030c790ca5a7e1713484edb7413d`（`packaging/iface-baseline.toml`） |
 | 本机验收环境 | Mint CLI 0.1.31；RapidOCR 1.4.4；Chrome（Playwright 系统通道） |
 | 评审边界 | 只复跑 M1 已合入卡与 T50；不改代码、测试、分支和 `.git` |
+
+首轮评审基于 `99266984`；S2、RU1 合入后按最终复跑更新结论。T50 的裁定依据为 `040e8a1b` 的真实 Agent 复跑，见 §7.1。
 
 | 层 | 卡 | 合入 |
 |---|---|---|
@@ -43,12 +56,15 @@ T50 的 C-01 与 C-03 部分通过及相关项包括：C-01 的 4 份材料原�
 | 文件与工作台 | T20、T21、T14、T13、T22、T23、T25、T26、T26b | `bc7b3c9d`、`3102be0a`、`2e5e24e2`、`f84a5144`、`20a1e27a`、`61f6febe`、`c9ef9147`、`1d1c6931`、`89928a01` |
 | 评测与证据 | T30、T31、T32、T38、T50 | `9acb15ef`、`5715ef10`、`e026fd98`、`d2b883a0`、`170d4550` |
 | D 线与修复 | D0–D7，R1、R2、W2、E1–E3、V1–V6、V1b、S1、CX1–CX3、D7b、X1–X4 | `34387594`–`99266984` |
+| 门禁与复用修复 | S2、RU1 | `7ebf7af0`、`0e16b094` |
 
 T51 的状态以 [gui-channel-check](gui-channel-check.md) 的补充记录为准：非 Kernel 布局的 `mint gui` 冒烟得到 80 个工具，其中 DataAgent 56 个（workbench 13、data 32、operations 11），与 `mint run` 一致；C-01/C-02 尚未在该入口跑。打包版 `Mint Agent.app`（kernel-stdio-v1）看不到工具，仍是 IF-13，不挡 P1。
 
 本轮不覆盖：V1.1–V1.15 全量 P1 验收、V1.16；GUI 的 C-01/C-02（T51，上述入口待跑）；默认审批与治理层（G1.5）；T52 体验观察；T15、T24；T34–T36 的令才 L2/L3；PostgreSQL 验收。
 
 ## 2. 复跑总表
+
+### 2.1 首轮复跑（@99266984）
 
 | # | 命令 | 退出码 | 关键结果 |
 |---|---|---|---|
@@ -62,7 +78,24 @@ T51 的状态以 [gui-channel-check](gui-channel-check.md) 的补充记录为准
 | 8 | `$CAP/dataagent-workbench/.venv/bin/python scripts/verify_browser.py`（首轮） | 1 | 73 passed、1 failed、1 flaky、1 skipped；失败 `object-issues.spec.ts:176`，flaky `bad-input.spec.ts:45` |
 | 9 | `$CAP/dataagent-workbench/.venv/bin/python scripts/verify_browser.py`（复跑） | 0 | 74 passed、1 flaky、1 skipped；flaky `dispositions.spec.ts:388`；恢复阶段 1 passed、1 skipped |
 
-第 8、9 行的 flaky 是两次不同用例：首轮 `bad-input.spec.ts:45`（D2，失败摘要未保留），复跑 `dispositions.spec.ts:388`（D1）。首轮失败 `object-issues.spec.ts:176` 也在 D1。`verify_browser.py` 把 flaky 计为通过并以 0 退出，M1 收口不能只看退出码。
+第 8、9 行是 S2 前的记录，保留为 D1、D2 的复现证据：两次 flaky 是不同用例，首轮 `bad-input.spec.ts:45`（D2，失败摘要未保留），复跑 `dispositions.spec.ts:388`（D1）；首轮失败 `object-issues.spec.ts:176` 也在 D1。当时 `verify_browser.py` 把 flaky 计为通过并以 0 退出，M1 收口不能只看退出码。
+
+### 2.2 最终复跑（S2、RU1 合入后）
+
+| # | 基线 | 命令 | 退出码 | 关键结果 |
+|---|---|---|---|---|
+| 10 | `7ebf7af0` | `$CAP/dataagent-workbench/.venv/bin/python scripts/verify_browser.py`（第 1 次） | 0 | 78 passed；恢复阶段 1 passed；flaky 清单为空 |
+| 11 | `7ebf7af0` | `$CAP/dataagent-workbench/.venv/bin/python scripts/verify_browser.py`（第 2 次） | 0 | 78 passed；恢复阶段 1 passed；flaky 清单为空 |
+| 12 | `0e16b094` | `$CAP/dataagent-workbench/.venv/bin/python scripts/verify_browser.py`（第 1 次） | 0 | 78 passed；恢复阶段 1 passed；flaky 清单为空 |
+| 13 | `0e16b094` | `$CAP/dataagent-workbench/.venv/bin/python scripts/verify_browser.py`（第 2 次） | 0 | 78 passed；恢复阶段 1 passed；flaky 清单为空 |
+| 14 | `0e16b094` | `bash scripts/test_all.sh` | 0 | 11 个包全部通过 |
+| 15 | `0e16b094` | `bash scripts/verify_local.sh --phase bootstrap --output <dir>` | 0 | `passed` |
+| 16 | `0e16b094` | `bash scripts/verify_local.sh --phase files --ocr-root "$OCR_ROOT" --output <dir>` | 0 | `passed` |
+| 17 | `0e16b094` | `bash scripts/verify_local.sh --phase sources --output <dir>` | 0 | `passed`；含 RU1 的二次接入复用断言 |
+| 18 | `0e16b094` | `bash scripts/verify_local.sh --phase discovery --output <dir>` | 0 | `passed` |
+| 19 | `0e16b094` | `D7_GOLD_DIR="$PRIVATE_DIR/d7-discovery" bash scripts/verify_local.sh --phase ontology --output <dir>` | 0 | `passed`；36 项检查 35 通过、1 不适用（N3.gate） |
+
+第 10–13 行每次都要求 0 failed、0 flaky；S2 起 flaky 默认使脚本以非 0 退出，因此“flaky 清单为空”直接对应门禁通过。恢复阶段与主阶段分开运行，固定另记 1 passed。RU1 在工作台新增 8 条用例（`tests/test_reuse_partial.py` 7 条、`tests/test_disposition_tools.py` 1 条），并在 sources 阶段新增部分覆盖来源的二次接入复用断言；这些用例在 @ `0e16b094` 的复跑中通过。
 
 补充：`cd scripts/acceptance && uv run --no-project --with 'pytest>=8,<9' python -m pytest tests -q` 为 22 passed。
 
@@ -70,7 +103,7 @@ T51 的状态以 [gui-channel-check](gui-channel-check.md) 的补充记录为准
 
 ## 3. 按 M1 能力项
 
-以下每项列出验收命令、本次结果和证据边界。自动化通过只证明脚本覆盖的路径与断言，不等于人工验收；TUI 的人工观察以 T50 为准，GUI 的对应场景尚未跑。
+以下每项列出验收命令、本次结果和证据边界。自动化通过只证明脚本覆盖的路径与断言，不等于人工验收；TUI 的人工观察以 T50 与 `$PRIVATE_DIR/t50-rerun/run2/` 为准，交互式 TUI 待 C-01-2 补测；GUI 的对应场景尚未跑。
 
 ### 3.1 8 类本地文件、docx、SQLite、带 token REST
 
@@ -97,8 +130,8 @@ T51 的状态以 [gui-channel-check](gui-channel-check.md) 的补充记录为准
 
 | 本次结果 | 能证明什么 | 不能证明什么 |
 |---|---|---|
-| 复跑 74 passed、1 flaky、1 skipped；覆盖上传、探查、字段选择、分/元转换、预览、刷新恢复、聊天与页面并发、过期决定拒绝、对象页纠正、映射修订、来源预览、冲突核对、docx 表格、坏输入 | 网页主路径在真实后端上可走通；修改决定有版本冲突保护；刷新与服务重启后能恢复 | 稳定性未达标：首轮 1 failed + 1 flaky（`object-issues.spec.ts:176` 失败、`bad-input.spec.ts:45` flaky），复跑 1 flaky（`dispositions.spec.ts:388`），见 D1/D2；真人可用性、首次预览时间与完成时间归 T52 |
-| 工作台单测 377 passed | 页面状态、接口契约、错误文案、并发与回滚在组件层有覆盖 | 浏览器渲染、真实用户操作、弱网与窄屏 |
+| 最终复跑 78 passed（恢复阶段 1 passed）、flaky 清单为空；@ `7ebf7af0`、@ `0e16b094` 各连续两次均如此；覆盖上传、探查、字段选择、分/元转换、预览、刷新恢复、聊天与页面并发、过期决定拒绝、对象页纠正、映射修订、来源预览、冲突核对、docx 表格、坏输入、探查重试 | 网页主路径在真实后端上可走通；修改决定有版本冲突保护；刷新与服务重启后能恢复；S2 后映射类用例固定目标本体，探查重试有“响应返回前只点击一次”的回归 | 真人可用性、首次预览时间与完成时间归 T52；交互式 TUI 归 C-01-2（安排真人补测） |
+| 工作台单测 385 passed（RU1 后） | 页面状态、接口契约、错误文案、并发与回滚在组件层有覆盖；部分覆盖来源复用与处置有新增用例 | 浏览器渲染、真实用户操作、弱网与窄屏 |
 
 ### 3.4 单次工具调用 60 秒、分段续跑、映射复用
 
@@ -107,7 +140,7 @@ T51 的状态以 [gui-channel-check](gui-channel-check.md) 的补充记录为准
 | 本次结果 | 能证明什么 | 不能证明什么 |
 |---|---|---|
 | 30 MB 样本 8 次 advance 完成，单次最长 0.85 秒，分段结果与一次性一致；files 阶段同时校验抽样记录和锚点 | 探查按分区落盘，超预算返回续跑点而不是整段重做；大文件不会在一次调用里做全量 | 宿主 60 秒硬超时、真实网络/OCR 抖动、模型在续跑间隙的决策质量 |
-| `test_proposal_loop` 覆盖单来源、多来源、部分失败/429、扫描件变化；无变化复用、变化不复用，不复用时不静默沿用旧映射 | 映射复用有正反例，失败不会伪装成复用 | TUI 中含扫描件的组合（T50 C-03 未在 F6 修复后重跑）；真实用户对“复用/重建”的感知 |
+| `test_proposal_loop` 覆盖单来源、多来源、部分失败/429、扫描件变化；无变化复用、变化不复用，不复用时不静默沿用旧映射。RU1 的 `test_reuse_partial.py` 覆盖部分覆盖来源复用；sources 阶段新增二次接入断言，校验 `mapping_reused=true`、REST 缺键缺口仍列待处置、未自动保存、`mapping_apply` 仍被预览问题拦截 | 映射复用有正反例，失败不会伪装成复用；部分保存后的同结构二次接入也能复用已验证映射，缺口不被静默吞掉 | TUI 中 Agent 对“复用/重建”的感知；真实用户操作归 T52 |
 
 ### 3.5 凭据逻辑名注入与 doctor 检查
 
@@ -162,7 +195,7 @@ FDE 两轮审核：第一轮（FDE 第 2 轮）15 项问题；第二轮（FDE �
 
 ## 5. 已知限制与后续
 
-下表合并 FDE 两轮审核、X1–X4 核对与 `$PRIVATE_DIR/followups.md` 中仍有效的条目；私有证据只写目录名和聚合数。
+下表合并 FDE 两轮审核、X1–X4 核对、`$PRIVATE_DIR/followups.md` 中仍有效的条目与 §7.1 接受为已知限制的项；私有证据只写目录名和聚合数。
 
 | # | 限制 | 位置 | 影响 | 后续 |
 |---|---|---|---|---|
@@ -181,19 +214,23 @@ FDE 两轮审核：第一轮（FDE 第 2 轮）15 项问题；第二轮（FDE �
 | 13 | L3 技能注入不稳定：部分会话 `skill_read=0` | Mint 技能注入；08 文档 IF 表候选 | 技能约束不总生效，行为随会话漂移 | 技能常驻或工具级策略；待 payne 定 iface 缺口 |
 | 14 | L4 查询侧无原文核对入口 | `tool_schema.py:251` 的查询工具只返回实例 | Agent 核对条款时转去读原件，触发 L2 | 增加条款/原文核对工具或在查询结果带条款引用 |
 | 15 | 信任边界为本机单用户 `local-owner`；同用户 shell、工作区材料与旧结果不在文件工具防护范围 | `packages/capabilities/dataagent-workbench/src/dataagent_workbench/bootstrap.py:24-25`；`sandbox.toml:50-58` | 同机同用户进程可绕开工作台直接读文件；M1 不承诺多租户隔离 | 文档明示；多用户/共享工作区前补宿主级隔离 |
+| 16 | 混排/跨页 PDF 首次接入仍产生跨页币种的无编号记录 | `packages/capabilities/dataagent-scenarios/fixtures/intake/mixed.pdf`；§7.1 C-01-1 | 4 份材料原样保存需先处置该记录；网页纠正已在重新提案后保留 | 接受为已知限制；T50 缺陷 D6 的通用修复另立卡 |
+| 17 | shell 残留读取目录、`source-connections.json` 与 results；`--approve all` 下 shell 放行 | §7.1 C-01-4；`packages/capabilities/dataagent-intake/sandbox.toml:50-58` | 同机同用户可绕过工作台；连接清单与历史结果可能进入上下文 | 接受为已知限制；随宿主级隔离与默认审批处理 |
 
 ## 6. 缺陷清单
 
 本节的 D1、D2 是本评审编号；T50 证据包里的 D1–D7 是另一套编号，引用时写“T50 缺陷”。
 
-| ID | 级别 | 位置 | 现象与复现 | 影响 | 处理建议 |
-|---|---|---|---|---|---|
-| D1 | P1（阻断验收门禁） | `packages/capabilities/dataagent-workbench/web/tests/object-issues.spec.ts:176`；`dispositions.spec.ts:388`；`support.ts` 的 `pinBuiltinOntology`/`lockDefaultPointer` | 默认 4 worker 跑 `scripts/verify_browser.py`：首轮 `object-issues.spec.ts:176` 在重试后仍失败于“生成映射预览”不可用，页面提示 `ontology is retired for new tasks: sales-model`，目标下拉仍是“销售单据模型（默认）”；复跑时 `dispositions.spec.ts:388` 重试后通过。两个用例都依赖工作区默认本体，没有固定目标 | 同一 suite 两次结果不同，浏览器 e2e 不能作为稳定门禁；M1-07/08 的网页证据只能算“功能通过、门禁不稳定” | S2：所有映射类用例显式 `pinBuiltinOntology(page)`，或每个 worker 独立 workspace；把 flaky 计数纳入门禁（0 容忍）。不动产品代码即可修 |
-| D2 | P1（门禁待查） | `packages/capabilities/dataagent-workbench/web/tests/bad-input.spec.ts:45` | 首轮 `verify_browser.py` 中“只有表头的文件直说没有数据行”为 1 flaky，重试后通过；未保留失败摘要。该用例只走到识别与探查失败，不涉及映射目标选择，D1 的共享默认本体解释不直接适用；不能排除共享工作区并发的间接影响 | 无法证明固定本体后即可达到 0 flaky；D2 与 D1 叠加使浏览器门禁的稳定性结论不成立 | S2 追查该用例的失败摘要与复现条件，与 D1 同一张卡收口；修复后连续两次 0 failed、0 flaky |
+| ID | 状态 | 级别 | 位置 | 现象与复现 | 影响 | 处理结果 |
+|---|---|---|---|---|---|---|
+| D1 | 已修复（S2） | P1（阻断验收门禁） | `packages/capabilities/dataagent-workbench/web/tests/object-issues.spec.ts:176`；`dispositions.spec.ts:388`；`support.ts` 的 `pinBuiltinOntology`/`lockDefaultPointer` | 默认 4 worker 跑 `scripts/verify_browser.py`：首轮 `object-issues.spec.ts:176` 在重试后仍失败于“生成映射预览”不可用，页面提示 `ontology is retired for new tasks: sales-model`，目标下拉仍是“销售单据模型（默认）”；复跑时 `dispositions.spec.ts:388` 重试后通过。两个用例都依赖工作区默认本体，没有固定目标 | 同一 suite 两次结果不同，浏览器 e2e 不能作为稳定门禁；M1-07/08 的网页证据只能算“功能通过、门禁不稳定” | S2 合入 `7ebf7af0`：映射类用例显式 `pinBuiltinOntology`，`publish`/`browse` 等移动默认指针的用例仍由 `lockDefaultPointer` 串行；`object-issues`、`dispositions`、`bad-input` 固定目标。连续四次复跑 0 flaky |
+| D2 | 已修复（S2） | P1（门禁待查） | `packages/capabilities/dataagent-workbench/web/tests/bad-input.spec.ts:45` | 首轮 `verify_browser.py` 中“只有表头的文件直说没有数据行”为 1 flaky，重试后通过；未保留失败摘要。该用例只走到识别与探查失败，不涉及映射目标选择，D1 的共享默认本体解释不直接适用；不能排除共享工作区并发的间接影响 | 无法证明固定本体后即可达到 0 flaky；D2 与 D1 叠加使浏览器门禁的稳定性结论不成立 | S2 合入 `7ebf7af0`：`bad-input.spec.ts` 固定内置本体；同卡把探查等待统一为 `awaitProbed`/`awaitEvidenceProbed`，以本次 `advance` 的真实响应作为重试完成依据。连续四次复跑未复现 |
 
-D1 的根因边界：`publish.spec.ts:127-139` 与 `browse.spec.ts:120-130` 在 `lockDefaultPointer` 内发布/停用并移动或清空注册表默认指针；`object-issues.spec.ts:176` 和 `dispositions.spec.ts:388` 没有调用 `pinBuiltinOntology`，读的是共享默认值。产品侧的停用回退由 ontology 阶段 N7 验证通过，因此这不是“停用后仍默认选中已停用本体”的产品缺陷，而是测试隔离缺陷。
+D1 的根因边界：`publish.spec.ts:127-139` 与 `browse.spec.ts:120-130` 在 `lockDefaultPointer` 内发布/停用并移动或清空注册表默认指针；`object-issues.spec.ts:176` 和 `dispositions.spec.ts:388` 没有调用 `pinBuiltinOntology`，读的是共享默认值。产品侧的停用回退由 ontology 阶段 N7 验证通过，因此这不是“停用后仍默认选中已停用本体”的产品缺陷，而是测试隔离缺陷。S2 的修法与这个边界一致。
 
-D2 的边界：现有记录只有“1 flaky”，没有该用例的失败页、错误栈或 trace；不能把它归入 D1，也不能假定给映射类用例固定本体后就会消失。S2 需要先保留失败摘要或稳定复现，再决定修法。
+D2 的边界：首轮记录只有“1 flaky”，没有该用例的失败页、错误栈或 trace；不能把它归入 D1。S2 给该用例固定内置本体，并在同卡收紧探查重试的等待与点击；修复后 @ `7ebf7af0`、@ `0e16b094` 各连续两次均未复现，D2 关闭。若后续再现，按同一用例的失败摘要与 trace 重开。
+
+S2 的改动集中在测试与门禁：`support.ts` 新增 `awaitProbed`、`awaitEvidenceProbed`，点击「继续探查/重新探查」前登记在途 `advance`，只以本次点击触发的 POST 响应判断完成；`probe-retry.spec.ts` 与 `probe-retry-helper.spec.ts` 作为回归；`verify_browser.py` 默认把 flaky 计为失败，`--allow-flaky` 只用于本地排查。复核为 @ `7ebf7af0`、@ `0e16b094` 各连续两次，每次 78 passed、恢复阶段 1 passed、flaky 清单为空、退出码 0。
 
 复跑命令：
 
@@ -202,29 +239,30 @@ bash scripts/prepare_acceptance.sh
 $CAP/dataagent-workbench/.venv/bin/python scripts/verify_browser.py
 ```
 
-修复后连续跑两次，要求两次都是 0 failed、0 flaky；当前脚本把 flaky 计为通过并以 0 退出，M1 收口不能只看退出码。
+门禁要求连续两次 0 failed、0 flaky；S2 后脚本默认把 flaky 计为失败，`--allow-flaky` 只用于本地排查。
 
 ## 7. 结论与建议
 
-1. 当前结论仍为**不可验收**：D1、D2 使浏览器 e2e 门禁不稳定；T50 的 C-01、C-03 仍是部分通过（§7.1），不能用“六项能力功能齐全”概括。M1 只进入 T54 的合入准备。
-2. 改判为「可验收」需同时满足：
-   - (1) S2（测试隔离与 flaky 计入门禁）合入，并连续两次 `verify_browser.py` 达到 0 failed、0 flaky。
-   - (2) 验收人对 §7.1 的 T50 C-01/C-03 部分通过项逐条裁定「接受为已知限制」或「转修复卡并修完」。
-   两项全部满足前，结论保持「不可验收」。
-3. T51 不再整体外部阻断：非 Kernel 布局的 `mint gui` 已可见 56 个 DataAgent 工具，C-01/C-02 待跑；打包版 `Mint Agent.app` 仍按 IF-13 记为外部阻断，不挡 P1。
-4. 建议开一张 S2 测试隔离与 flaky 计入门禁卡：给映射类用例固定内置本体或按 worker 隔离工作区，追查 `bad-input.spec.ts:45` 的 flaky，把 flaky 清单纳入 0 容忍门禁；不改产品逻辑。修复后由 T53 复跑两次，按 §7.1 条件更新本文件结论。
-5. 若 S2 在 T54 前未完成，或 §7.1 条件未全部满足，T54 只能记“M1 合入”，不能记 P1 验收；§5 的 15 项限制继续留在 followups，不转成 M1 阻断项。
-6. §7.1 的条件由验收人逐项裁定；评审不替验收人决定。
+1. **结论：可验收。** 改判条件 (1)(2) 均已满足；S2 合入 `7ebf7af0`，RU1 合入 `0e16b094`。
+2. 条件 (1)：S2 于 `7ebf7af0` 合入。@ `7ebf7af0` 与 @ `0e16b094` 各连续两次 `scripts/verify_browser.py`，每次 78 passed、恢复阶段 1 passed、flaky 清单为空、退出码 0；D1、D2 已修复（S2），见 §6。
+3. 条件 (2)：payne 于 2026-11-19 依据 `040e8a1b` 的真实 Agent 复跑逐条裁定 §7.1：C-01-1 接受为已知限制，C-01-2 接受并安排真人 TUI 补测，C-01-3 关闭，C-01-4 接受为已知限制，C-03-1 关闭，C-03-2 转 RU1 并已修完合入。
+4. 最终复跑 @ `0e16b094`：`bash scripts/test_all.sh` 11 个包全部通过；bootstrap、files（`--ocr-root`）、sources、discovery、ontology 五个阶段全部 `passed`；ontology 36 项检查 35 通过、1 不适用（N3.gate）。
+5. T54 可记「M1 合入」；验收状态由验收人填写。§5 的 17 项限制与 §7.1 接受为已知限制的项继续留在 followups，不转成 M1 阻断项。
+6. 范围边界：交互式 TUI 的真实键鼠与拖入待 C-01-2 补测；GUI 的 C-01/C-02 待 T51，打包版 `Mint Agent.app` 仍为 IF-13；默认审批与治理层（G1.5）、多租户隔离、真实客户文件质量、P1 全量验收（V1.1–V1.15、V1.16）不在本结论内。
+7. T51 不再整体外部阻断：非 Kernel 布局的 `mint gui` 已可见 56 个 DataAgent 工具，C-01/C-02 待跑；打包版 `Mint Agent.app` 仍按 IF-13 记为外部阻断，不挡 P1。
+8. §7.1 的裁定由验收人完成；评审只记录结果，不替验收人决定。
 
-### 7.1 可验收条件清单（需验收人裁定）
+### 7.1 T50 C-01/C-03 部分通过项与裁定结果
 
-下表只列 T50 C-01/C-03 的部分通过项与相关行为项；每项需验收人选择「接受为已知限制」或「转修复卡并修完」，评审不替验收人决定。T50 证据采集于 `f84a514`，证据包在 `$PRIVATE_DIR/t50/evidence/`（manifest 188 个文件）。默认审批（G1.5）已在 M1 外，不列入本表。
+下表列 T50 C-01/C-03 的部分通过项与相关行为项。验收人 payne 已于 2026-11-19 依据当前代码 `040e8a1b` 的真实 Agent 复跑 `$PRIVATE_DIR/t50-rerun/run2/` 逐条裁定；T50 证据采集于 `f84a514`，证据包在 `$PRIVATE_DIR/t50/evidence/`（manifest 188 个文件）。默认审批（G1.5）已在 M1 外，不列入本表。
 
-| 编号 | 来源 | 现象 | 证据位置 | 影响 | 需验收人裁定 |
+| 编号 | 来源 | 现象（T50） | 证据位置 | 影响（T50） | 裁定结果（payne，2026-11-19） |
 |---|---|---|---|---|---|
-| C-01-1 | C-01 | 4 份材料（含 mixed.pdf）原样保存被拦：混排 PDF 第 3 页币种成无编号孤儿记录（T50 缺陷 D6），重新提案又丢掉网页纠正（T50 缺陷 D2） | `evidence-tui.md` §3、§6 D2/D6；`$PRIVATE_DIR/t50/evidence/` | 混排/跨页 PDF 的首次接入不能原样保存；网页纠正会在重新提案时丢失；去掉 mixed.pdf 的 3 份材料任务通过并得到发布引用 | 需验收人裁定：接受为已知限制，或转修复卡并修完 |
-| C-01-2 | C-01 | 交互式 TUI 与终端录屏未验证；T50 用同内核的 `mint run --json` 代替，拖入用绝对路径话术模拟 | `evidence-tui.md` §2、§8 | TUI 真实交互、拖入动作和终端体验未覆盖；M1 的 TUI 主路径证据不是交互式 TUI | 需验收人裁定：接受为已知限制，或转修复卡并修完 |
-| C-01-3 | C-01 / C-03 | Agent 在用户只说“接进来”时执行 `mapping_apply` 并发布（A1）；C-01 t_2、C-03 单来源与含扫描件组合均有出现 | `evidence-tui.md` §3、§5、§6 A1 | 二次接入可能多出发布；与技能第 4 步“用户要求保存”不一致 | 需验收人裁定：接受为已知限制，或转修复卡并修完 |
-| C-01-4 | C-01 / C-03 | Agent 用 `shell_exec`、`sqlite3`、`curl` 等绕过工作台读原件、来源库和 `.dataagent/db/workbench.sqlite3`（A2）；`--approve all` 下放行 | `evidence-tui.md` §3、§5、§6 A2；本文件 §4.3、§5 L2（部分行为） | 工作台校验可被绕过，材料原文与内部状态进入上下文 | 需验收人裁定：接受为已知限制，或转修复卡并修完 |
-| C-03-1 | C-03 | 含扫描件的多来源组合（invoice.pdf + scan.pdf + xlsx）二次接入 `mapping_reused=false`（T50 缺陷 D3），`intake_advance` 返回 `needs_input`；Agent 用 `sqlite3` 读内部库抄回上周映射 | `evidence-tui.md` §5、§6 D3 | M1 的“同结构二次接入复用映射”在含扫描件组合上不成立；F6 修复后未在 TUI 复跑 | 需验收人裁定：接受为已知限制，或转修复卡并修完 |
-| C-03-2 | C-03 | C-02 组合（PDF+SQLite+REST）首次保存即被拦，没有已验证映射，二次接入无从复用 | `evidence-tui.md` §5 末行、§8 | 多来源含 SQLite/REST 的复用未验证，M2 场景的复用证据缺失 | 需验收人裁定：接受为已知限制，或转修复卡并修完 |
+| C-01-1 | C-01 | 4 份材料（含 mixed.pdf）原样保存被拦：混排 PDF 第 3 页币种成无编号孤儿记录（T50 缺陷 D6），重新提案又丢掉网页纠正（T50 缺陷 D2） | `evidence-tui.md` §3、§6 D2/D6；`$PRIVATE_DIR/t50/evidence/` | 混排/跨页 PDF 的首次接入不能原样保存；网页纠正会在重新提案时丢失；去掉 mixed.pdf 的 3 份材料任务通过并得到发布引用 | 接受为已知限制：混排 PDF 跨页币种成无编号记录仍在，可用现有处置完成保存；网页纠正在重新提案后保留，原 T50 缺陷 D2 不再复现 |
+| C-01-2 | C-01 | 交互式 TUI 与终端录屏未验证；T50 用同内核的 `mint run --json` 代替，拖入用绝对路径话术模拟 | `evidence-tui.md` §2、§8 | TUI 真实交互、拖入动作和终端体验未覆盖；M1 的 TUI 主路径证据不是交互式 TUI | 接受；安排真人在交互式 TUI 补测（本环境无 TTY） |
+| C-01-3 | C-01 / C-03 | Agent 在用户只说“接进来”时执行 `mapping_apply` 并发布（A1）；C-01 t_2、C-03 单来源与含扫描件组合均有出现 | `evidence-tui.md` §3、§5、§6 A1 | 二次接入可能多出发布；与技能第 4 步“用户要求保存”不一致 | 关闭；复跑中 `mapping_apply` 只出现在用户说「保存」的轮次 |
+| C-01-4 | C-01 / C-03 | Agent 用 `shell_exec`、`sqlite3`、`curl` 等绕过工作台读原件、来源库和 `.dataagent/db/workbench.sqlite3`（A2）；`--approve all` 下放行 | `evidence-tui.md` §3、§5、§6 A2；本文件 §4.3、§5 L2（部分行为） | 工作台校验可被绕过，材料原文与内部状态进入上下文 | 接受为已知限制：不再用 shell/sqlite3/curl 读原件或内部库；残留 shell 列目录、读 `source-connections.json`、grep results；`--approve all` 下 shell 放行 |
+| C-03-1 | C-03 | 含扫描件的多来源组合（invoice.pdf + scan.pdf + xlsx）二次接入 `mapping_reused=false`（T50 缺陷 D3），`intake_advance` 返回 `needs_input`；Agent 用 `sqlite3` 读内部库抄回上周映射 | `evidence-tui.md` §5、§6 D3 | M1 的“同结构二次接入复用映射”在含扫描件组合上不成立；F6 修复后未在 TUI 复跑 | 关闭；含扫描件组合二次接入 `mapping_reused=true` |
+| C-03-2 | C-03 | C-02 组合（PDF+SQLite+REST）首次保存即被拦，没有已验证映射，二次接入无从复用 | `evidence-tui.md` §5 末行、§8 | 多来源含 SQLite/REST 的复用未验证，M2 场景的复用证据缺失 | 转修复卡 RU1 并已修完合入 `0e16b094`：部分覆盖来源也复用已验证映射，缺口照常列为待处置问题；sources 验收阶段新增二次接入复用断言并通过 |
+
+裁定后仍有效的已知限制：C-01-1（混排/跨页 PDF 无编号记录；网页纠正保留）、C-01-4（shell 残留读取）、C-01-2（交互式 TUI 待真人补测）。C-01-3、C-03-1 关闭；C-03-2 由 RU1 修复。
