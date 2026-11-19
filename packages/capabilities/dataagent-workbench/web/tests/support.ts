@@ -48,22 +48,28 @@ export function unlockDefaultPointer(workspace:string){
 
 // 探查子进程偶发失败（多 worker 验收的高负载下出现过一次 probe_failed），后端
 // 把它标记为 retryable，页面给出「继续探查 / 重新探查」入口。探查相关的等待统一
-// 走这两个助手：完成或出现重试入口前先等，出现了就点页面的重试再等。不放宽
-// 断言：有界重试耗尽后仍按原来的完成条件失败。
+// 走这两个助手：完成或出现重试入口前先等，出现了就点页面的重试并等本次请求
+// 结束再判断——请求期间按钮保持可见但被禁用，不等到结束就再次判断会去点一个
+// 即将消失的禁用按钮。不放宽断言：有界重试耗尽后仍按原来的完成条件失败。
 export async function awaitProbed(page:Page,timeout?:number){
  const done=page.getByText('识别与探查已完成');
  const retry=page.getByRole('button',{name:'继续探查'});
+ const retryReady=page.getByRole('button',{name:'继续探查',disabled:false});
  const options=timeout?{timeout}:{};
  for(let attempt=0;attempt<2;attempt++){
   await expect(done.or(retry)).toBeVisible(options);
   if(await done.isVisible())return;
   await retry.click();
+  // 本次重试结束的标志：成功则完成文案出现，失败则按钮重新可用；
+  // 二者都没出现前不进入下一次判断。
+  await expect(done.or(retryReady)).toBeVisible(options);
  }
  await expect(done).toBeVisible(options);
 }
 
 // 发现任务的来源证据：探查失败时证据区也会出现（0 张表），据此不能用「证据
-// 出现」当完成条件；失败时页面给「重新探查」入口，出现就重试再等。
+// 出现」当完成条件；失败时页面给「重新探查」入口，出现就重试并等本次请求结束
+// （成功则入口消失，失败则按钮重新可用）再判断是否需要下一次。
 export async function awaitEvidenceProbed(page:Page,timeout?:number){
  const evidence=page.getByRole('heading',{name:'来源证据'});
  const retry=page.getByRole('button',{name:'重新探查'});
@@ -71,7 +77,10 @@ export async function awaitEvidenceProbed(page:Page,timeout?:number){
  await expect(evidence).toBeVisible(options);
  for(let attempt=0;attempt<2&&await retry.isVisible();attempt++){
   await retry.click();
-  await expect(evidence).toBeVisible(options);
+  await expect.poll(async()=>{
+   const count=await retry.count();
+   return count===0||await retry.isEnabled();
+  },options).toBeTruthy();
  }
  await expect(retry).toHaveCount(0);
 }
