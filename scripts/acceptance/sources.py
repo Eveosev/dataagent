@@ -454,6 +454,58 @@ def _verify_partial_save(project, args, env, before, preview, preview_body, gold
     }
 
 
+def _verify_reuse_after_partial(project, args, env, diffs):
+    """RU1: a second intake over the same partial sources reuses the mapping.
+
+    The cross-source group is saved partially because of conflicts and three
+    keyless records.  Its mapping is still structurally verified, so the next
+    intake with the same source structure must reach a preview with
+    ``mapping_reused=true``, list the REST keyless gap, and not save by itself.
+    """
+
+    first = call_workbench(project, 'intake_status', args, env=env)
+    sources = [dict(source) for source in first['sources']]
+    started = call_workbench(project, 'intake_start', {
+        'goal': '同一来源组合再次接入，核验已验证映射复用',
+        'sources': sources,
+    }, env=env)
+    second_args = {'session_id': started['session_id']}
+    advanced = call_workbench(project, 'intake_advance', second_args, env=env)
+    status = call_workbench(project, 'intake_status', second_args, env=env)
+    if advanced.get('phase') != 'preview' or status.get('phase') != 'preview':
+        diffs.add('（全部）', 'reuse.phase', 'preview',
+                  [advanced.get('phase'), status.get('phase')])
+    preview_ref = status['selected_versions'].get('preview')
+    if not preview_ref:
+        diffs.add('（全部）', 'reuse.preview', '存在', preview_ref)
+        return {'phase': status.get('phase'), 'mapping_reused': None}
+    body = _stored_record(project, 'preview', preview_ref)
+    if body.get('mapping_reused') is not True:
+        diffs.add('（全部）', 'reuse.mapping_reused', True, body.get('mapping_reused'))
+    gaps = [{'code': issue.get('code'), 'source_id': issue.get('source_id'),
+             'row': issue.get('row')}
+            for issue in body.get('issues') or []
+            if issue.get('source_id') == 'rest'
+            and issue.get('code') in {'ontology.identity_unresolved',
+                                      'ontology.required_value_missing'}]
+    if not gaps:
+        diffs.add('rest 缺键记录', 'reuse.preview_gap', '预览问题',
+                  body.get('issues'))
+    if 'release' in status['selected_versions']:
+        diffs.add('（全部）', 'reuse.auto_saved', '未保存',
+                  status['selected_versions'].get('release'))
+    blocked = call_workbench(project, 'mapping_apply', {
+        **second_args, 'expected_revision': status['revision'],
+        'decision': {'preview_ref': preview_ref, 'target_scope': 'mapping'},
+    }, env=env, error=True)
+    if blocked.get('detail') != PREVIEW_BLOCK_DETAIL:
+        diffs.add('（全部）', 'reuse.save_blocked', PREVIEW_BLOCK_DETAIL,
+                  blocked.get('detail'))
+    return {'phase': status.get('phase'), 'mapping_reused': body.get('mapping_reused'),
+            'preview_ref': preview_ref, 'gap_issues': gaps,
+            'save_blocked': blocked.get('detail') == PREVIEW_BLOCK_DETAIL}
+
+
 def verify_cross_source(project, url, token_ref, diffs, cross_reads, cross_unauthorized):
     """T25: PDF + SQLite + paginated REST mapped together, compared to gold."""
 
@@ -638,6 +690,7 @@ def verify_cross_source(project, url, token_ref, diffs, cross_reads, cross_unaut
     }
     summary['partial_save'] = _verify_partial_save(
         project, args, env, after, preview, preview_body, gold, diffs)
+    summary['reuse'] = _verify_reuse_after_partial(project, args, env, diffs)
     summary['sources'] = {source_id: {'records': len(profiles[source_id]['records']),
                                       'coverage': profiles[source_id]['coverage'],
                                       'source_revision': profiles[source_id]['source_revision']}
