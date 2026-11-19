@@ -526,7 +526,7 @@ except Exception:
     if [ -n "$project_policy" ] && [ "$project_policy" != "full-access" ] && command -v mint >/dev/null 2>&1; then
         approval=$(mint config get core.approval_policy 2>/dev/null | sed -n 's/.*= "\([^"]*\)".*/\1/p' | head -1)
         if [ "$approval" = "never" ]; then
-            echo "approval: never + project sandbox $project_policy — DataAgent 的 MCP 工具需要审批，never 下会被全部拒绝（FDE2-03）；交互使用先运行: mint config set core.approval_policy on-request" >&2
+            echo "approval: never + project sandbox $project_policy — DataAgent 的 MCP 工具需要审批，never 下会被全部拒绝（FDE2-03）；交互使用先运行: mint config set core.approval_policy on-request（改的是用户级全局设置，影响所有 Mint 项目，评测或演示后可改回 never）" >&2
             status=3
         fi
     fi

@@ -180,6 +180,27 @@ def test_instances_endpoint_supports_ordered_conditions_and_related_objects(tmp_
                   for item in shorthand.json()['items']
                   if item['related']) == ['500', '500', '80']
 
+    # FDE3-02: slim rows by default, anchors on demand, comparison in one call.
+    assert 'source' in body['items'][0]
+    assert 'source_anchors' not in body['items'][0]
+    detail = api.get('/api/ontologies/expense-model/instances',
+                     params={'concept': 'ExpenseLine', 'limit': 1,
+                             'detail': 'anchors'})
+    assert detail.status_code == 200, detail.json()
+    assert detail.json()['items'][0]['source_anchors']
+    assert 'source' not in detail.json()['items'][0]
+
+    compared = api.get('/api/ontologies/expense-model/instances',
+                       params={'concept': 'ExpenseLine', 'limit': 200,
+                               'include_related': json.dumps({
+                                   'relation': 'usesStandard'}),
+                               'where': json.dumps([
+                                   {'field': 'amount', 'op': 'gt',
+                                    'related_field': 'limit'}])})
+    assert compared.status_code == 200, compared.json()
+    assert compared.json()['total'] == 2
+    assert compared.json()['comparison']['missing'] == 1
+
     invalid = api.get('/api/ontologies/expense-model/instances',
                       params={'concept': 'ExpenseLine',
                               'include_related': 'not-json'})

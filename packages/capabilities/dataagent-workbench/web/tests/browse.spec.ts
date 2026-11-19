@@ -462,3 +462,25 @@ test('发布本体后按本体浏览已发布实例',async({page})=>{
  if(process.env.DATAAGENT_SCREENSHOT)await page.screenshot({
   path:path.join(path.dirname(process.env.DATAAGENT_SCREENSHOT),'browse-history.png'),fullPage:true});
 });
+
+test('REST 精简定位在本体实例页显示响应页号',async({page})=>{
+ const entry={id:'rest-model',ontology_revision:'1',origin:'discovery',
+  state:'active',title:'REST 来源模型',concepts:['Item'],default_concept:'Item',
+  source_snapshot:'snapshot',published_at:'2026-01-01T00:00:00Z',
+  published_by:'test',retired_at:null,retired_by:null,retire_reason:null,
+  registry_revision:'1',is_default:true,instance_counts:{Item:1},
+  current_revision_instance_counts:{Item:1}};
+ await page.route(/\/api\/ontologies$/,route=>route.fulfill({json:{
+  ontologies:[entry],default_ontology:'rest-model',pointer:null}}));
+ await page.route(/\/api\/ontologies\/rest-model\/instances/,route=>route.fulfill({json:{
+  ontology_id:'rest-model',ontology_revision:'rest-model@1',revision:'1',
+  concept:'Item',entity_type:'Item',ontology_state:'active',deactivated:false,
+  items:[{instance_id:'rest-1',concept:'Item',revision:'1',
+   values:{amount:'42'},release_ref:'release:test',session_id:'',
+   task:'REST 接口',
+   source:[{source_ref:'rest-src',locations:{amount:[
+    {kind:'json_pointer',pointer:'/items/0/amount',page:2}]}}]}],
+  count:1,total:1,limit:10,has_more:false,next_cursor:null}}));
+ await page.goto('/#instances=rest-model');
+ await expect(page.getByTestId('instance-source')).toContainText('第 2 页');
+});

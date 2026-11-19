@@ -4,7 +4,7 @@ import {api,compareDisplayText,display,isDecisionSelector,registryTitle,translat
 import type {Correction,RegistryEntry,View} from '../client';
 import {
  anchorLocation,anchorRowLocation,browseConceptLabel,browsePropertyLabel,comparisonOps,comparableValueTypes,conceptMap,
- filterOpNames,isComparisonOp,sourceDisplayName,
+ filterOpNames,instanceSources,isComparisonOp,locationSelector,sourceDisplayName,
 } from '../ontologyBrowse';
 import type {FilterOp} from '../ontologyBrowse';
 import type {
@@ -364,34 +364,35 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,initial
   // （FDE2-13 余项：不再每个属性一行）。合并键必须带 source_ref：两个
   // 同名文件是不同来源，展示名相同也不能把同表同行合成一条定位。
   const groups:{sourceId:string;source:string;location:string;labels:string[]}[]=[];
-  const anchorMap=item.source_anchors||{};
-  const properties=[...new Set([...Object.keys(anchorMap),
-   ...(item.locations||[]).map(location=>location.property)])];
-  for(const property of properties){
-   if(!propertyNames.includes(property))continue;
-   const anchors=anchorMap[property]?.length
-    ?anchorMap[property]
-    :(item.locations||[]).filter(location=>location.property===property);
-   for(const anchor of anchors){
-    const decision=isDecisionSelector(anchor.selector);
-    const located=decision?'':anchorRowLocation(anchor,anchorLocation(anchor));
-    if(!decision&&!located)continue;
-    const label=browsePropertyLabel(property);
-    if(decision){
-     // 人工纠正的证据锚点是审核决定里的 /decision/changes/value，不是来源文件。
-     // 用任务里的纠正原因显示中文来源，绝不把内部 JSON 指针或决定 ID 露给用户。
-     const reason=contexts[item.session_id]?.corrections?.[`${item.instance_id}:${property}`];
-     const location=reason?`对象页 · ${reason}`:'对象页';
-     const group=groups.find(entry=>entry.sourceId==='__decision__'&&entry.location===location);
+  // 精简行的 source 分组与旧 source_anchors/locations 都走 instanceSources；
+  // 每个属性保留一句话定位，合并键使用来源 ID + 表行定位。
+  for(const source of instanceSources(item)){
+   for(const [property,locations] of Object.entries(source.locations||{})){
+    if(!propertyNames.includes(property))continue;
+    for(const location of locations){
+     const selector=locationSelector(location);
+     const decision=isDecisionSelector(selector);
+     const anchor={...location,selector};
+     const located=decision?'':anchorLocation(anchor);
+     const locatedRow=decision?'':anchorRowLocation(anchor,located);
+     if(!decision&&!locatedRow)continue;
+     const label=browsePropertyLabel(property);
+     if(decision){
+      // 人工纠正的证据锚点是审核决定里的 /decision/changes/value，不是来源文件。
+      // 用任务里的纠正原因显示中文来源，绝不把内部 JSON 指针或决定 ID 露给用户。
+      const reason=contexts[item.session_id]?.corrections?.[`${item.instance_id}:${property}`];
+      const location=reason?`对象页 · ${reason}`:'对象页';
+      const group=groups.find(entry=>entry.sourceId==='__decision__'&&entry.location===location);
+      if(group){if(!group.labels.includes(label))group.labels.push(label);}
+      else groups.push({sourceId:'__decision__',source:'人工纠正',location,labels:[label]});
+      continue;
+     }
+     const sourceId=source.source_ref||location.source_ref||'';
+     const sourceLabel=sourceName(item,sourceId);
+     const group=groups.find(entry=>entry.sourceId===sourceId&&entry.location===locatedRow);
      if(group){if(!group.labels.includes(label))group.labels.push(label);}
-     else groups.push({sourceId:'__decision__',source:'人工纠正',location,labels:[label]});
-     continue;
+     else groups.push({sourceId,source:sourceLabel,location:locatedRow,labels:[label]});
     }
-    const sourceId=anchor.source_ref||'';
-    const source=sourceName(item,sourceId);
-    const group=groups.find(entry=>entry.sourceId===sourceId&&entry.location===located);
-    if(group){if(!group.labels.includes(label))group.labels.push(label);}
-    else groups.push({sourceId,source,location:located,labels:[label]});
    }
   }
   return groups.length
@@ -406,9 +407,12 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,initial
    <p>已发布实例仍在，清除筛选即可查看全部。</p>
    <button className="secondary" onClick={clearFilter}>清除筛选</button>
   </div>;
+  const hint=visiblePage?.hint;
   return <div className="empty ontology-instance-empty" data-testid="instances-empty">
-   <strong>{entry&&entry.concepts.length>1?`概念 ${browseConceptLabel(concept)} 还没有已发布实例`:'这个本体还没有已发布实例'}</strong>
-   <p>发布后才会出现；未发布的预览不会显示在这里。</p>
+   <strong>{hint?'当前修订还没有已发布对象':entry&&entry.concepts.length>1?`概念 ${browseConceptLabel(concept)} 还没有已发布实例`:'这个本体还没有已发布实例'}</strong>
+   {hint
+    ?<p>修订 {hint.older_revision} 有 {hint.count} 条已发布对象；{hint.reason||'新修订尚未接入'}。可在上方切换到旧修订查看。</p>
+    :<p>发布后才会出现；未发布的预览不会显示在这里。</p>}
    <button className="primary" onClick={onNew}>新建接入</button>
   </div>;
  }
@@ -553,9 +557,9 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,initial
        <td className="instance-source" data-testid="instance-source">{sourceLines(item)}</td>
        <td data-testid="instance-task">{item.session_id
         ?<button type="button" className="instance-task-link" title="打开该接入任务的对象页（只读）"
-          onClick={()=>onOpenTask(item.session_id,item.entity_id)}>{taskName(item)}</button>
+          onClick={()=>onOpenTask(item.session_id,item.entity_id||item.instance_id)}>{taskName(item)}</button>
         :<span className="muted">未知</span>}</td>
-       <td data-testid="instance-revision"><span className="badge">修订 {item.revision}</span>
+       <td data-testid="instance-revision"><span className="badge">修订 {revision}</span>
         {item.partial_release&&<small className="warn">部分发布</small>}</td>
       </tr>)}</tbody>
      </table></div>

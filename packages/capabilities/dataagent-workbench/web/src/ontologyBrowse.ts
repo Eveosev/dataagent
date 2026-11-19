@@ -46,10 +46,14 @@ export type InstanceAnchor={
  char_end?:number;
 };
 export type InstanceLocation={
- property:string;
+ property?:string;
  source_ref?:string;
  source_revision?:string;
  selector?:Selector;
+ // 精简行的定位字段：kind/pointer/keys 只在需要还原 selector 时出现。
+ kind?:string;
+ pointer?:string;
+ keys?:Record<string,unknown>;
  page?:number;
  paragraph?:number;
  line?:number;
@@ -60,19 +64,27 @@ export type InstanceLocation={
  char_start?:number;
  char_end?:number;
 };
+// 精简行按来源分组：每组一份 source_ref，locations 按属性列一句话定位。
+// 老形状的 source_anchors/locations 仍可读，便于与旧结果文件共存。
+export type InstanceSource={
+ source_ref?:string;
+ source_revision?:string;
+ locations:Record<string,InstanceLocation[]>;
+};
 export type PublishedInstance={
- ontology_id:string;
- ontology_revision:string;
- revision:string;
- concept:string;
- entity_type:string;
+ ontology_id?:string;
+ ontology_revision?:string;
+ revision?:string;
+ concept?:string;
+ entity_type?:string;
  instance_id:string;
- entity_id:string;
- id:string;
+ entity_id?:string;
+ id?:string;
  values:Record<string,unknown>;
- source_refs:string[];
- source_anchors:Record<string,InstanceAnchor[]>;
- locations:InstanceLocation[];
+ source?:InstanceSource[];
+ source_refs?:string[];
+ source_anchors?:Record<string,InstanceAnchor[]>;
+ locations?:InstanceLocation[];
  release_ref:string;
  release_digest?:string;
  partial_release?:boolean;
@@ -96,6 +108,8 @@ export type InstancePage={
  has_more:boolean;
  next_cursor?:string|null;
  warnings?:{code?:string}[];
+ // 当前修订无对象、旧修订有对象时的提示（FDE3-01）。
+ hint?:{reason?:string;revision?:string;older_revision?:string;count?:number;concept?:string};
 };
 
 // 概念属性中文标签（FDE-11 的同一做法）：常见发现字段给中文，未收录的保留原名，
@@ -159,6 +173,39 @@ export function conceptMap(ontology:OntologyRevision|null|undefined):Record<stri
  if(!name)return {};
  return {[name]:{entity_type:name,properties:ontology.properties||{},
   identity_fields:ontology.identity_fields||[]}};
+}
+
+// 精简行把 selector 压成定位字段；需要中文说法或识别人工纠正时再还原成 selector。
+export function locationSelector(location:InstanceLocation):Selector|undefined{
+ if(location.selector)return location.selector;
+ const kind=location.kind;
+ if(kind==='json_pointer')return {kind:'json_pointer',pointer:location.pointer,page:location.page};
+ if(kind==='record_key'&&location.keys)return {kind:'record_key',keys:location.keys};
+ if(location.sheet!==undefined&&location.range!==undefined)
+  return {kind:'excel_cell',sheet:location.sheet,range:location.range};
+ if(location.row!==undefined)return {kind:'record_key',keys:{row:location.row}};
+ if(location.line!==undefined)return {kind:'record_key',keys:{line:location.line}};
+ if(location.unit_ref!==undefined)
+  return {kind:'text_span',unit_ref:location.unit_ref,char_start:location.char_start,char_end:location.char_end};
+ if(location.page!==undefined)return {kind:'pdf_text_span',page:location.page};
+ return undefined;
+}
+
+// 兼容两种结果形状：后端精简行的 source，或旧结果的 source_anchors/locations。
+export function instanceSources(item:PublishedInstance):InstanceSource[]{
+ if(item.source?.length)return item.source;
+ const locations:Record<string,InstanceLocation[]>={};
+ for(const [property,anchors] of Object.entries(item.source_anchors||{})){
+  for(const anchor of anchors){
+   (locations[property]||=[]).push({property,...anchor});
+  }
+ }
+ if(!Object.keys(locations).length){
+  for(const location of item.locations||[]){
+   if(location.property)(locations[location.property]||=[]).push(location);
+  }
+ }
+ return Object.keys(locations).length?[{locations}]:[];
 }
 
 // 锚点中文描述：PDF 页、Word 段/表行、CSV/数据库行、Excel 单元格都走 client.locate，

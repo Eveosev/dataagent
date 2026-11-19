@@ -8,6 +8,13 @@ from dataagent_contracts.ontology import ReviewDecision
 from .ontology_discovery import DISCOVERY_MODE, discovery_detail, evidence_summary
 from .tool_schema import MODELS
 
+# A query page is a table of business rows, not raw evidence: it is worth
+# inlining a little past the generic result cap so the model can answer
+# without reading the result file.  Anchors stay in the file (and behind
+# detail=anchors), which keeps the model-facing rows small.
+_QUERY_INLINE_LIMIT = 32000
+_DEFAULT_INLINE_LIMIT = 24000
+
 
 def _public_output(value):
     """Remove credential-bearing fields before a result leaves the workbench."""
@@ -109,9 +116,14 @@ def _invoke(wb, name, args):
                     inference_request=request)])
         return CapabilityResult.ok({'session_id':session.id,'phase':session.phase,'revision':session.revision})
     if name == 'ontology_discovery_propose':
-        return CapabilityResult.ok(wb.discovery.propose(
+        draft = wb.discovery.propose(
             typed.session_id, typed.proposal, typed.expected_revision, wb.ctx,
-        ))
+        )
+        # The proposal advances the session revision.  Return it so the next
+        # call (publish prepare) does not have to reload inputs and retry after
+        # a version_conflict.
+        session = wb.sessions.get(typed.session_id, wb.ctx)
+        return CapabilityResult.ok({**draft, 'session_revision': session.revision})
     if name == 'ontology_registry':
         data = wb.ontology.registry(wb.ctx)
         if not typed.include_deactivated:
@@ -120,8 +132,13 @@ def _invoke(wb, name, args):
                 if item.get('state') == 'active']}
         return CapabilityResult.ok(data)
     if name == 'ontology_query':
-        # Read-only: published snapshots only, never the fact table.
-        return CapabilityResult.ok(wb.queries.query(typed, wb.ctx))
+        # Read-only: published snapshots only, never the fact table.  The
+        # complete payload (with anchors) goes to the result file; the slim
+        # rows are what the model sees when the page fits the inline limit.
+        model, full = wb.queries.query_with_artifacts(typed, wb.ctx)
+        model['_query_full'] = full
+        model['_inline_limit'] = _QUERY_INLINE_LIMIT
+        return CapabilityResult.ok(model)
     if name == 'ontology_instances_summary':
         return CapabilityResult.ok(wb.queries.summary(typed, wb.ctx))
     if name == 'ontology_publish_prepare':
@@ -232,9 +249,18 @@ def result_summary(wb, result):
         return {'status':payload['status'],
                 'result_path':str(path.relative_to(wb.workspace)),
                 'summary':True,'result':summary}
+    inline_limit = _DEFAULT_INLINE_LIMIT
+    model_payload = payload
+    if isinstance(data, dict) and isinstance(data.get('_query_full'), dict):
+        # The result file keeps the complete rows (anchors included); the
+        # model-facing payload is the slim page.  Measure and inline the
+        # model payload, never the complete artifact.
+        full = data.pop('_query_full')
+        inline_limit = int(data.pop('_inline_limit', inline_limit))
+        payload = {**payload, 'data': full}
     path.write_text(json.dumps(payload,ensure_ascii=False,indent=2))
     summary = {'status':payload['status'],'result_path':str(path.relative_to(wb.workspace))}
-    encoded = json.dumps(payload,ensure_ascii=False)
-    if len(encoded.encode()) < 24000:
-        summary['result'] = payload
+    encoded = json.dumps(model_payload,ensure_ascii=False)
+    if len(encoded.encode()) < inline_limit:
+        summary['result'] = model_payload
     return summary
