@@ -1,9 +1,9 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
 import type {CSSProperties} from 'react';
-import {api,display,isDecisionSelector,registryTitle,translateError} from '../client';
+import {api,compareDisplayText,display,isDecisionSelector,registryTitle,translateError} from '../client';
 import type {Correction,RegistryEntry,View} from '../client';
 import {
- anchorLocation,browseConceptLabel,browsePropertyLabel,comparisonOps,comparableValueTypes,conceptMap,
+ anchorLocation,anchorRowLocation,browseConceptLabel,browsePropertyLabel,comparisonOps,comparableValueTypes,conceptMap,
  filterOpNames,instanceSources,isComparisonOp,locationSelector,sourceDisplayName,
 } from '../ontologyBrowse';
 import type {FilterOp} from '../ontologyBrowse';
@@ -27,12 +27,27 @@ const errorText=(error:unknown)=>error instanceof Error?translateError(error.mes
 function contextOf(view:View):SessionContext{
  // 来源名优先取任务里保存的显示名；SQLite 上传把它放在 extensions，
  // 文件上传放在 options。都没有时退回来源定位（显示前已去掉本机路径与 UUID）。
- const names:Record<string,string>={};
- for(const source of view.session?.sources||[]){
+ // 两个来源可能同名；给它们加序号，实例定位才不会看起来像同一条。
+ const sources=view.session?.sources||[];
+ const rawNames:Record<string,string>={};
+ const counts:Record<string,number>={};
+ for(const source of sources){
   const raw=source.options?.['display_name']
    ??(source.extensions as Record<string,unknown>|null|undefined)?.['dataagent.display_name']
    ??source.locator_ref;
-  names[source.source_id]=sourceDisplayName(raw);
+  const name=sourceDisplayName(raw);
+  rawNames[source.source_id]=name;
+  counts[name]=(counts[name]||0)+1;
+ }
+ const names:Record<string,string>={};
+ const seen:Record<string,number>={};
+ for(const source of sources){
+  const name=rawNames[source.source_id];
+  if(counts[name]>1){
+   const index=(seen[name]||0)+1;
+   seen[name]=index;
+   names[source.source_id]=`${name}（同名来源 ${index}）`;
+  }else names[source.source_id]=name;
  }
  const corrections:Record<string,string>={};
  for(const correction of (view.preview?.corrections as Correction[]|undefined)||[]){
@@ -259,7 +274,9 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,initial
    const na=Number(left),nb=Number(right);
    if(Number.isFinite(na)&&Number.isFinite(nb))return na-nb;
   }
-  return a.localeCompare(b,'zh-Hans-CN');
+  // FDE2-13 余项：中文序数（一类/二类/三类、第一/第二）按序数值排序，
+  // 不再按拼音（拼音序会把 二、三、一 排成「二、三、一」开头的顺序）。
+  return compareDisplayText(a,b);
  }
  function compareItems(a:PublishedInstance,b:PublishedInstance):number{
   let result=0;
@@ -342,37 +359,44 @@ export function OntologyInstancesPage({id,initialConcept,initialRevision,initial
  };
 
  function sourceLines(item:PublishedInstance){
-  // 同一来源位置的多个属性合并成一行（账簿、单据号 · 文件 · 来源行 N），
-  // 避免同一对象重复展示同一段定位。
-  const groups:{source:string;location:string;labels:string[]}[]=[];
-  const merge=(source:string,location:string,label:string)=>{
-   const group=groups.find(entry=>entry.source===source&&entry.location===location);
-   if(group){if(!group.labels.includes(label))group.labels.push(label);}
-   else groups.push({source,location,labels:[label]});
-  };
-  // 精简行按 source 分组，每个属性一份一句话定位；旧结果退回 source_anchors。
+  // 同一来源位置的多个属性合并成一行（账簿、单据号 · 文件 · 来源行 N）；
+  // Word/Excel 同一表格行的多个单元格也按行合并，属性标签已经标明列
+  // （FDE2-13 余项：不再每个属性一行）。合并键必须带 source_ref：两个
+  // 同名文件是不同来源，展示名相同也不能把同表同行合成一条定位。
+  const groups:{sourceId:string;source:string;location:string;labels:string[]}[]=[];
+  // 精简行的 source 分组与旧 source_anchors/locations 都走 instanceSources；
+  // 每个属性保留一句话定位，合并键使用来源 ID + 表行定位。
   for(const source of instanceSources(item)){
    for(const [property,locations] of Object.entries(source.locations||{})){
     if(!propertyNames.includes(property))continue;
     for(const location of locations){
      const selector=locationSelector(location);
      const decision=isDecisionSelector(selector);
-     const located=decision?'':anchorLocation({...location,selector});
-     if(!decision&&!located)continue;
+     const anchor={...location,selector};
+     const located=decision?'':anchorLocation(anchor);
+     const locatedRow=decision?'':anchorRowLocation(anchor,located);
+     if(!decision&&!locatedRow)continue;
      const label=browsePropertyLabel(property);
      if(decision){
       // 人工纠正的证据锚点是审核决定里的 /decision/changes/value，不是来源文件。
       // 用任务里的纠正原因显示中文来源，绝不把内部 JSON 指针或决定 ID 露给用户。
       const reason=contexts[item.session_id]?.corrections?.[`${item.instance_id}:${property}`];
-      merge('人工纠正',reason?`对象页 · ${reason}`:'对象页',label);
+      const location=reason?`对象页 · ${reason}`:'对象页';
+      const group=groups.find(entry=>entry.sourceId==='__decision__'&&entry.location===location);
+      if(group){if(!group.labels.includes(label))group.labels.push(label);}
+      else groups.push({sourceId:'__decision__',source:'人工纠正',location,labels:[label]});
       continue;
      }
-     merge(sourceName(item,source.source_ref||location.source_ref),located,label);
+     const sourceId=source.source_ref||location.source_ref||'';
+     const sourceLabel=sourceName(item,sourceId);
+     const group=groups.find(entry=>entry.sourceId===sourceId&&entry.location===locatedRow);
+     if(group){if(!group.labels.includes(label))group.labels.push(label);}
+     else groups.push({sourceId,source:sourceLabel,location:locatedRow,labels:[label]});
     }
    }
   }
   return groups.length
-   ?groups.map(group=><div key={`${group.source}:${group.location}`} className="instance-anchor">
+   ?groups.map(group=><div key={`${group.sourceId}:${group.location}`} className="instance-anchor">
     {group.labels.join('、')} · {group.source} · {group.location}</div>)
    :<span className="muted">无来源定位</span>;
  }

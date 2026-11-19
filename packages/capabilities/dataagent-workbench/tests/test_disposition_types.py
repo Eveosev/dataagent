@@ -212,19 +212,89 @@ def test_ignore_source_over_the_wire_is_partition_not_applicable_without_partiti
     assert 'partition' not in entry
 
 
-def test_ignore_source_rejects_a_mapped_source_and_blank_reason(tmp_path):
+def test_ignore_source_allows_a_mapped_source_and_rejects_blank_reason(tmp_path):
     wb, session = two_source_setup(tmp_path)
     wb.intake.submit_source_proposals(
         session.id, {'rows': proposal_for(wb, session, 'rows')}, session.revision, wb.ctx)
     current = wb.sessions.get(session.id, wb.ctx)
-    with pytest.raises(ValueError, match='source is used by the current mapping'):
-        wb.intake.dispose(session.id, _dispose('ignore_source', source_id='rows'),
-                          current.revision, wb.ctx)
-    blank = _dispose('ignore_source')
+    # A mapped source can still be semantically wrong (for example a limit
+    # table bound to number/currency/amount); the user's audited decision is
+    # the fallback, and it invalidates the preview before save.
+    result = wb.intake.dispose(
+        session.id, _dispose('ignore_source', source_id='rows'), current.revision, wb.ctx)
+    assert result['entry']['action'] == 'ignore_source'
+    assert result['entry']['source_id'] == 'rows'
+    assert 'preview' not in wb.sessions.get(session.id, wb.ctx).selected_versions
+    rows = wb.store.query('disposition', wb.scope)
+    assert [entry['source_id'] for entry in rows[0]['body']['entries']] == ['rows']
+    # A blank reason is still rejected, and a failed attempt writes nothing.
+    current = wb.sessions.get(session.id, wb.ctx)
+    blank = _dispose('ignore_source', source_id='extra')
     blank.reason = ' \t '
     with pytest.raises(ValueError, match='处置原因不能为空'):
         wb.intake.dispose(session.id, blank, current.revision, wb.ctx)
-    assert not wb.store.query('disposition', wb.scope)
+    rows = wb.store.query('disposition', wb.scope)
+    assert [entry['source_id'] for entry in rows[0]['body']['entries']] == ['rows']
+
+
+def test_semantically_misbound_columns_can_still_drop_the_whole_source(tmp_path):
+    """A source can bind every slot positionally and still be the wrong table.
+
+    Codex review: columns 序号/费用类别/限额 bound to number/currency/amount
+    make ``_source_matches_concept`` accept the source.  The preview then
+    contains its objects (and may have no issue at all), so structural
+    matching cannot be the only escape.  The user can record a whole-source
+    disposition with a reason; the next proposal rebuilds without it.
+    """
+    wb = Workbench(tmp_path)
+    wb.layer_client = StubProbeClient({
+        'rows': csv_profile('rows', [
+            {'number': 'INV-1', 'amount': '100', 'currency': 'CNY'}]),
+        'limits': csv_profile('limits', [
+            {'序号': 'Z-1', '费用类别': '差旅', '限额': '1000'}]),
+    })
+    session = wb.intake.advance(start(wb, [
+        SourceSelection(source_id='rows', kind='file', locator_ref='rows.csv'),
+        SourceSelection(source_id='limits', kind='file', locator_ref='limits.csv')]).session_id, wb.ctx)
+    request = wb.intake.inference_request(session.id, wb.ctx)
+    sources = {source['source_id']: source for source in request['sources']}
+    rows = MappingSpec(
+        id='candidate', revision='1', ontology_revision='procurement@1',
+        source_fingerprint=sources['rows']['structure_fingerprint'],
+        bindings=bindings(sources['rows']))
+    limits = MappingSpec(
+        id='candidate', revision='1', ontology_revision='procurement@1',
+        source_fingerprint=sources['limits']['structure_fingerprint'],
+        bindings={
+            'number': {'source_field': '序号'},
+            'currency': {'source_field': '费用类别'},
+            'amount': {'source_field': '限额', 'transform': 'decimal'}})
+    preview = wb.intake.submit_source_proposals(
+        session.id, {'rows': rows, 'limits': limits}, session.revision, wb.ctx)
+    # The wrong table passes the structural check; this is exactly why the
+    # whole-source disposition must not depend on a source-level issue.
+    assert set(preview.source_revisions) == {'rows', 'limits'}
+    assert {instance.values.get('number') for instance in preview.instances} == {'INV-1', 'Z-1'}
+    assert not [issue for issue in preview.issues if issue.get('source_id') == 'limits']
+    summary = wb.intake.view(session.id, wb.ctx)
+    assert [option['reason_hint'] for option in summary['preview']['disposition_options']
+            if option.get('source_id') == 'limits' and option.get('scope') == 'source'] == \
+        ['本任务不使用该来源']
+    current = wb.sessions.get(session.id, wb.ctx)
+    entry = wb.intake.dispose(
+        session.id, _dispose('ignore_source', source_id='limits'), current.revision, wb.ctx)['entry']
+    assert entry['action'] == 'ignore_source'
+    assert entry['reason'] == '测试处置'
+    current = wb.sessions.get(session.id, wb.ctx)
+    assert current.phase == 'needs_input'
+    assert 'preview' not in current.selected_versions
+    rebuilt = wb.intake.submit_source_proposals(
+        session.id, {'rows': rows}, current.revision, wb.ctx)
+    assert set(rebuilt.source_revisions) == {'rows'}
+    assert [instance.values.get('number') for instance in rebuilt.instances] == ['INV-1']
+    assert not [issue for issue in rebuilt.issues if issue.get('source_id') == 'limits']
+    assert [entry['source_id'] for entry in wb.intake.disposition_entries(
+        wb.sessions.get(session.id, wb.ctx))] == ['limits']
 
 
 def bad_rows_setup(tmp_path):

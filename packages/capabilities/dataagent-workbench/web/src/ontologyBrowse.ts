@@ -223,3 +223,25 @@ export function anchorLocation(anchor:InstanceAnchor):string{
  if(anchor.sheet&&anchor.range)return `${anchor.sheet} · ${anchor.range}`;
  return '';
 }
+
+// FDE2-13 余项：同一来源行的多个属性合并成一行定位。Word 表格一行拆成多个
+// 单元格锚点（unit_ref 的 col 不同），Excel 同一行的单元格 range 也不同；
+// 属性标签已经说明是哪一列，定位只保留行，避免同一个对象把同一行重复展示
+// 成「城市等级 · 表 1 第 9 行 · 第 1 列」「职级 · 表 1 第 9 行 · 第 2 列」。
+export function anchorRowLocation(anchor:InstanceAnchor,located:string):string{
+ if(anchor.selector?.kind==='text_span'){
+  const match=String(anchor.selector.unit_ref||'').match(/^table:(\d+)\/row:(\d+)/);
+  if(match)return `表 ${match[1]} 第 ${match[2]} 行`;
+ }
+ if(anchor.selector?.kind==='excel_cell'){
+  const sheet=String(anchor.selector.sheet||'');
+  const range=String(anchor.selector.range||'');
+  const match=range.match(/^([A-Za-z]+)(\d+)(?::([A-Za-z]+)(\d+))?$/);
+  // 只合并单行区间；跨行范围的定位保留原样，避免把两行内容并成一行。
+  if(match&&(!match[4]||match[4]===match[2])){
+   const row=Number(match[2]);
+   return sheet?`${sheet} · 第 ${row} 行`:`第 ${row} 行`;
+  }
+ }
+ return located;
+}

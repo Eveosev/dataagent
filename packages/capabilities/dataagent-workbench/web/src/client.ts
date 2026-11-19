@@ -79,6 +79,7 @@ export const issueReasons:Record<string,string>={
  'ontology.evidence_missing':'值没有来源定位',
  'ontology.incomplete_source':'来源未完整读取',
  'ontology.source_unmapped':'该来源未用于当前映射',
+ 'ontology.source_concept_mismatch':'该来源与目标概念不符',
  'ontology.relation_unresolved':'关联字段不完整',
  'ontology.correction_conflict':'网页纠正无法沿用',
  'ontology.no_records':'没有可映射的记录',
@@ -86,9 +87,9 @@ export const issueReasons:Record<string,string>={
 };
 export const issueBlocksSave=(issue:Issue)=>!correctableIssueCodes.has(issue.code||'');
 // 按行重复的问题 code（FDE2-06）：同一列同一类问题跨多行时按根因合并成一条。
-// 必填值缺失不在此列：每个对象要各自补值/纠正，逐行保留；转换失败等
-// 同一列缺陷才按根因合并。
-export const rowLevelIssueCodes=new Set(['ontology.conversion_failed','ontology.identity_unresolved','ontology.evidence_missing','record_attribution_unverified']);
+// 必填值缺失同样按列合并成一条根因（后端同款分组）；逐行明细收进
+// 「查看各行」，每个对象仍可各自补值/纠正。
+export const rowLevelIssueCodes=new Set(['ontology.conversion_failed','ontology.identity_unresolved','ontology.required_value_missing','ontology.evidence_missing','record_attribution_unverified']);
 // 同一行同一列：转换失败的记录不再重复报「缺少必填值」（后端同款去重，
 // 页面在这里再做一遍，路由改写注入的原始问题也能按同一口径计数）。
 export function dedupeIssues(issues:Issue[]):Issue[]{
@@ -243,6 +244,45 @@ export async function api<T>(path:string,method='GET',body?:unknown):Promise<T>{
  return data as T;
 }
 export const display=(value:unknown)=>value===null||value===undefined?'—':typeof value==='object'?JSON.stringify(value):String(value);
+// FDE2-13：中文序数按序数值比较，不按拼音（一类 < 二类 < 三类、第二 < 第十一）。
+// 数字段（零一二两三四五六七八九十百千的连续段）按数值比，其余段退回中文排序。
+const CHINESE_DIGITS:Record<string,number>={'零':0,'一':1,'二':2,'两':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9};
+const CHINESE_UNITS:Record<string,number>={'十':10,'百':100,'千':1000};
+export function chineseNumber(text:string):number|null{
+ if(!text)return null;
+ let total=0,current=0;
+ for(const ch of text){
+  const unit=CHINESE_UNITS[ch];
+  if(unit!==undefined){total+=(current||1)*unit;current=0;continue;}
+  const digit=CHINESE_DIGITS[ch];
+  if(digit===undefined)return null;
+  current=current*10+digit;
+ }
+ return total+current;
+}
+const ORDINAL_CHARS=/[零一二两三四五六七八九十百千]/;
+function ordinalTokens(text:string):string[]{
+ const tokens:string[]=[];let current='';let currentNum=ORDINAL_CHARS.test(text[0]);
+ for(const ch of text){
+  const isNum=ORDINAL_CHARS.test(ch);
+  if(isNum===currentNum)current+=ch;
+  else{tokens.push(current);current=ch;currentNum=isNum;}
+ }
+ if(current)tokens.push(current);
+ return tokens;
+}
+// 两个展示文本的排序比较：先按段比，同为中文数字段时按序数值比（一类 1、
+// 二十三 23），其余段沿用中文排序；长度不同时短段在前。
+export function compareDisplayText(left:string,right:string):number{
+ const a=ordinalTokens(left),b=ordinalTokens(right);
+ for(let i=0;i<Math.min(a.length,b.length);i++){
+  const la=chineseNumber(a[i]),rb=chineseNumber(b[i]);
+  if(la!==null&&rb!==null){if(la!==rb)return la-rb;}
+  else{const cmp=a[i].localeCompare(b[i],'zh-Hans-CN');if(cmp)return cmp;}
+ }
+ if(a.length!==b.length)return a.length-b.length;
+ return left.localeCompare(right,'zh-Hans-CN');
+}
 // D0 起本体可携带多概念，legacy 单概念字段（entity_type / properties）在生成类型里
 // 变为可选；运行时单概念任务仍按原样序列化这些字段。页面统一从这里取任务固定
 // 概念：多概念本体走 concepts[任务固定的 concept]，旧字段兜底。

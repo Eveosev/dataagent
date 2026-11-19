@@ -357,7 +357,12 @@ def test_save_rejection_lists_objects_through_mcp(tmp_path):
 
 def candidate_setup(tmp_path, rows=6):
     wb = Workbench(tmp_path)
-    records = [{'amount_minor': str(1000 + index), 'currency': 'CNY'}
+    # The identity column exists (so the source matches the concept) but every
+    # row leaves it empty: each object stays unidentified and each row still
+    # needs its own correction, which is what these tests exercise.  A source
+    # without the identity column at all is held out as a concept mismatch
+    # (FDE3-04, see test_intake_source_fit.py).
+    records = [{'number': '', 'amount_minor': str(1000 + index), 'currency': 'CNY'}
                for index in range(rows)]
     wb.layer_client = StubProbeClient({'f': csv_profile('f', records)})
     session = wb.intake.advance(start(wb, [SourceSelection(
@@ -383,18 +388,18 @@ def test_candidate_objects_get_readable_labels_not_hashes(tmp_path):
 
 
 def test_issue_list_is_not_truncated_and_reports_the_total(tmp_path):
-    wb, session_id, _ = candidate_setup(tmp_path)
+    wb, session_id, _ = candidate_setup(tmp_path, rows=12)
     summary = invoke(wb, 'mapping_preview', {'session_id': session_id}).data
-    # 12 per-row problems for locating/correcting each row.  The six missing
-    # numbers are object-level gaps (kept one per row), while the six
-    # unresolved identities are one row-level root cause with six rows.
+    # 12 per-row problems for locating/correcting each row, but one root cause:
+    # every row leaves the same identity column empty (FDE2-06 余项: 同列同类
+    # 失败合为 1 条).  The list itself is not truncated.
     assert len(summary['issues']) == 12
-    assert summary['issue_count'] == 7
+    assert summary['issue_count'] == 1
     view = wb.intake.view(session_id, wb.ctx)
-    assert view['preview']['issue_row_count'] == 6
-    assert summary['issue_count'] > 1
+    assert view['preview']['issue_row_count'] == 12
+    assert summary['issue_count'] < len(summary['issues'])
     assert {issue['object'] for issue in summary['issues']} == {
-        f'第 {row + 1} 行' for row in range(6)}
+        f'第 {row + 1} 行' for row in range(12)}
 
 
 # --- U5: read-only connection listing ----------------------------------

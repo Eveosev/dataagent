@@ -182,7 +182,8 @@ test('准备重启恢复的任务状态',async({page})=>{
  await expect(page.getByText('草稿已保存')).toBeVisible();
  await page.getByRole('button',{name:'生成映射预览'}).click();
  await expect(page.getByTestId('preview-amount')).toHaveText('126000');
- await expect(page.getByText('3 项待核对')).toBeVisible();
+ // 币种未绑定：1 条必填属性未映射 + 同列缺必填值合并成 1 条根因（FDE2-06 余项）。
+ await expect(page.getByText('2 项根因')).toBeVisible();
  const {writeFileSync}=await import('node:fs');
  writeFileSync(stateFile!,JSON.stringify({session_id:sessionId(page,'session')}));
 });
@@ -198,7 +199,7 @@ test('服务重启后恢复材料、草稿与未解决项',async({page})=>{
  await expect(page.getByText('INV-001').first()).toBeVisible();
  // 未解决项恢复。
  await expect(page.getByText('未解决').first()).toBeVisible();
- await expect(page.getByText('3 项待核对')).toBeVisible();
+ await expect(page.getByText('2 项待核对')).toBeVisible();
  // 草稿恢复。
  await page.getByRole('button',{name:'返回映射页'}).click();
  await expect(page.getByLabel('金额 转换方式')).toHaveValue('integer');

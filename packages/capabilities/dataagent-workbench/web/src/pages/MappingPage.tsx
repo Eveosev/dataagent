@@ -10,11 +10,25 @@ function savedMappings(view:View){
 }
 
 // 默认绑定按任务固定概念的属性名与来源字段同名匹配（多概念本体不再读全局旧字段）。
-function defaultBindings(view:View,sourceId:string){
+// 来源把同一业务字段拆成最小单位（amount_minor/amount_cents）时，默认按
+// minor_to_major 绑定；否则对象页会把它当成未映射字段，既没有金额值也没有
+// 来源定位。同名精确列优先，不会被最小单位列覆盖。
+function defaultBindings(view:View,sourceId:string):Record<string,FieldBinding>{
  const profile=view.profiles.find(p=>p.source_id===sourceId);
  const properties=conceptOf(view.ontology,view.ontology_concept).properties;
- return Object.fromEntries(Object.keys(properties).filter(k=>profile?.fields?.includes(k))
-  .map(k=>[k,{source_field:k,transform:'identity' as const}]));
+ const fields=profile?.fields||[];
+ const bindings:Record<string,FieldBinding>={};
+ for(const name of Object.keys(properties)){
+  if(fields.includes(name))bindings[name]={source_field:name,transform:'identity'};
+ }
+ for(const name of Object.keys(properties)){
+  if(bindings[name])continue;
+  for(const suffix of ['_minor','_cents']){
+   const field=`${name}${suffix}`;
+   if(fields.includes(field)){bindings[name]={source_field:field,transform:'minor_to_major'};break;}
+  }
+ }
+ return bindings;
 }
 
 // FDE2-05：已固定的映射来源范围（提案写进 selected_versions 的 mapping:<来源>）。
@@ -278,13 +292,23 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession
  const problemCount=view.preview?.issue_count??issueItems.length;
  const issueRowCount=view.preview?.issue_row_count
   ??new Set(issueItems.filter(issue=>issue.row!==undefined).map(issue=>`${issue.source_id??''}|${issue.row}`)).size;
- // 来源级问题（未映射来源、来源不完整）及操作永远排在最前，不参与只显示
- // 前 8 条的截断；否则前面的行级问题一多，「纳入映射」入口就不可达。
+ // 来源级问题（未映射来源、来源与概念不符、来源不完整）及操作永远排在最前，
+ // 不参与只显示前 8 条的截断；否则前面的行级问题一多，「纳入映射」入口就不可达。
  const sourceLevelIssue=(issue:Issue)=>issue.code==='ontology.source_unmapped'
-  ||issue.code==='ontology.incomplete_source';
+  ||issue.code==='ontology.incomplete_source'
+  ||issue.code==='ontology.source_concept_mismatch';
  const sourceIssues=issueItems.filter(sourceLevelIssue);
  const rowIssues=issueItems.filter(issue=>!sourceLevelIssue(issue));
  const visibleIssues=[...sourceIssues,...rowIssues.slice(0,8)];
+ // 整源处置不能只挂在「未映射/不符」问题上：结构上能绑定、但业务上明显
+ // 是另一张表（例如限额表被错绑成金额/币种）时，来源页签里也要能带原因
+ // 选择不使用。已有来源级问题行时由问题行提供入口，避免重复控件。
+ const sourceLevelIssueIds=new Set(issueItems
+  .filter(issue=>issue.code==='ontology.source_unmapped'||issue.code==='ontology.source_concept_mismatch')
+  .map(issue=>issue.source_id).filter((id):id is string=>!!id));
+ const hasAnySourceIssue=sourceLevelIssueIds.size>0;
+ const sourceDisposals=(view.disposition_options||[]).filter(option=>option.scope==='source'
+  && !sourceLevelIssueIds.has(option.source_id));
  const issueText=(issue:{code?:string;target?:string;object?:string;reason?:string;source_id?:string})=>{
   if(issue.code==='intake.probe_failed'){
    const name=view.session.sources.find(s=>s.source_id===issue.source_id);
@@ -305,6 +329,19 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession
  <div className="work-grid"><section className="source-panel"><div className="panel-heading"><strong>来源</strong><span className="badge">{view.session.sources.length} 份材料</span></div>
   <div className="source-tabs">{view.session.sources.map(s=><button key={s.source_id} className={(profile?.source_id===s.source_id?'active ':'')+'source-tab'} onClick={()=>selectSource(s.source_id)}><span>▤</span><span>{String(s.options?.display_name||s.locator_ref.split('/').pop())}</span></button>)}</div>
   <SourceViewer sessionId={sessionId} profile={profile} anchor={anchor as never} recordIndex={sourceRow} sourceField={binding?.source_field}/>
+  {!done&&sourceDisposals.length>0&&<div className="source-disposals">
+   {sourceDisposals.map(option=>{
+    const key=`${option.action}:${option.source_id}`;
+    return <div key={key} className="disposal source-disposal" data-testid="source-disposal">
+     <div data-testid={hasAnySourceIssue?'source-disposal-option':'disposal-option'}>
+      <span className="muted">本任务不使用「{option.source_name}」 · {option.reason_hint}</span>
+      <div className="disposal-controls">
+       <input aria-label={`处置原因：本任务不使用「${option.source_name}」`} value={disposalReasons[key]||''} onChange={e=>setDisposalReasons(previous=>({...previous,[key]:e.target.value}))} placeholder="处置原因（必填，写入审计）"/>
+       <button className="secondary" disabled={busy||done||!(disposalReasons[key]||'').trim()} onClick={()=>submitDisposal(option,disposalReasons[key])}>提交处置</button>
+      </div>
+     </div>
+    </div>;})}
+  </div>}
  </section><section className="mapping-panel"><div className="panel-heading"><strong>目标映射</strong><span className="badge">{conceptLabel(conceptOf(view.ontology,view.ontology_concept))}</span></div>
  <div className="mapping-toolbar"><span><strong>{Object.keys(bindings).length}</strong> / {Object.keys(conceptProperties).length} 字段已绑定</span><label><input type="checkbox" checked={onlyProblems} onChange={e=>setOnlyProblems(e.target.checked)}/>只看待处理</label></div>
  <div className="mapping-table-scroll"><table className="mapping-table"><thead><tr><th>本体属性</th><th>来源字段</th><th>转换方式</th><th>预览值</th></tr></thead><tbody>{fields.map(name=>{
@@ -316,7 +353,7 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession
   <td className="mapped-value">{dirty?'待更新':display(instance?.values?.[name])}{correction&&!dirty&&<small className="warn">纠正值生效 · 映射值 {display(correction.mapping_value)}</small>}</td></tr>;})}</tbody></table></div>
  <div className="mapping-actions"><span className="muted">{draftState||'原值与转换后的值均可核对'}</span><button className="primary" disabled={busy||working||done||!profile} onClick={preview}>{busy?'正在校验…':'生成映射预览'}</button></div>
  {correctionNotice&&<div className={correctionNotice.kind==='green'?'notice green':'notice amber'} data-testid="mapping-correction-notice" role="status">{correctionNotice.text}</div>}
- {problemCount>0&&<div className="notice amber"><strong>{problemCount} 项待核对{issueRowCount?` · 涉及 ${issueRowCount} 行`:''}</strong><ul data-testid="mapping-issues">{visibleIssues.map((issue,i)=><li key={i}>{issueText(issue)}
+ {problemCount>0&&<div className="notice amber"><strong>{problemCount} 项根因{issueRowCount?` · 影响 ${issueRowCount} 行`:''}</strong><ul data-testid="mapping-issues">{visibleIssues.map((issue,i)=><li key={i}>{issueText(issue)}
    {/* 未映射来源的第一条出路：显式纳入映射。点一次即记录来源范围选择，
        沿用当前绑定（未改过时就是默认同名绑定）重新提案，不要求先改绑定。 */}
    {issue.code==='ontology.source_unmapped'&&issue.source_id&&(()=>{
@@ -329,8 +366,8 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession
       <button className="secondary" disabled={busy||done||included} onClick={()=>includeSource(id)}>{included?'已纳入，待生成预览':'纳入映射'}</button>
      </div>
     </div>;})()}
-   {/* 未映射来源的整源处置：写审计、必填原因，处置后重新生成预览即可。 */}
-   {issue.code==='ontology.source_unmapped'&&(view.disposition_options||[]).filter(option=>option.scope==='source'&&option.source_id===issue.source_id).map(option=>{
+   {/* 未映射/与概念不符来源的整源处置：写审计、必填原因，处置后重新生成预览即可。 */}
+   {(issue.code==='ontology.source_unmapped'||issue.code==='ontology.source_concept_mismatch')&&(view.disposition_options||[]).filter(option=>option.scope==='source'&&option.source_id===issue.source_id).map(option=>{
     const key=`${option.action}:${option.source_id}`;
     return <div key={key} className="disposal" data-testid="disposal-option">
      <span className="muted">本任务不使用「{option.source_name}」 · {option.reason_hint}</span>
