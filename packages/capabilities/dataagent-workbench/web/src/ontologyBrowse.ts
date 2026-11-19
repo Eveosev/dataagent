@@ -179,7 +179,7 @@ export function conceptMap(ontology:OntologyRevision|null|undefined):Record<stri
 export function locationSelector(location:InstanceLocation):Selector|undefined{
  if(location.selector)return location.selector;
  const kind=location.kind;
- if(kind==='json_pointer')return {kind:'json_pointer',pointer:location.pointer};
+ if(kind==='json_pointer')return {kind:'json_pointer',pointer:location.pointer,page:location.page};
  if(kind==='record_key'&&location.keys)return {kind:'record_key',keys:location.keys};
  if(location.sheet!==undefined&&location.range!==undefined)
   return {kind:'excel_cell',sheet:location.sheet,range:location.range};

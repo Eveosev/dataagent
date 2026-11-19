@@ -47,6 +47,14 @@ _RELATED_SEPARATORS = ('|', ',', '/', '·', '-', ' ', '_', '\t', '::',
 
 _ORDERED_TYPES = frozenset({'decimal', 'integer', 'date'})
 _ORDERED_OPS = frozenset({'gt', 'gte', 'lt', 'lte'})
+# A dict carrying any of these keys is one condition object, not a shorthand
+# map of property names to equality values.  ``field`` is the MCP-facing alias
+# of ``property``; ``op``/``related_field`` only occur in condition objects.
+_CONDITION_KEYS = frozenset({'property', 'field', 'op', 'related_field'})
+
+
+def _is_condition_object(value: dict) -> bool:
+    return bool(_CONDITION_KEYS.intersection(value))
 
 
 class OntologyQueryCondition(BaseModel):
@@ -134,11 +142,11 @@ class OntologyQuery(BaseModel):
     @field_validator('where', mode='before')
     @classmethod
     def _where_shorthand(cls, value):
-        """Accept an object mapping properties to values as equality filters."""
+        """Accept one condition object or a property->value equality map."""
         if value is None:
             return []
         if isinstance(value, dict):
-            if 'property' in value:
+            if _is_condition_object(value):
                 return [value]
             return [{'property': name, 'op': 'eq', 'value': item}
                     for name, item in value.items()]
@@ -170,7 +178,7 @@ def parse_where(text: str | None) -> list[OntologyQueryCondition]:
     except json.JSONDecodeError as exc:
         raise ValueError('where must be valid JSON') from exc
     if isinstance(data, dict):
-        if 'property' in data or 'field' in data or 'related_field' in data:
+        if _is_condition_object(data):
             return [OntologyQueryCondition.model_validate(data)]
         return [OntologyQueryCondition(property=name, op='eq', value=value)
                 for name, value in data.items()]
@@ -692,9 +700,10 @@ class QueryService:
                     facts=related_facts, release_ref=item['release_ref'],
                     targets=targets)
         comparison = None
+        comparison_hidden = set()
         if comparison_conditions:
             before = len(items)
-            kept, comparison = self._apply_related_conditions(
+            kept, comparison, comparison_hidden = self._apply_related_conditions(
                 items, request.where, concept, related, related_cache)
             items = kept
             comparison['evaluated'] = before
@@ -709,8 +718,18 @@ class QueryService:
         # grow ``related_missing`` with every row of the revision.
         related_matched = related_missing = related_ambiguous = 0
         related_missing_items = []
-        hidden_related_fields = set()
+        # Comparison resolves candidates before pagination; a hidden field can
+        # leave no page row at all.  Carry its warning up from the candidates
+        # instead of reporting it only when a page row happens to survive.
+        hidden_related_fields = set(comparison_hidden)
         if related is not None:
+            for name in sorted(hidden_related_fields):
+                warnings.append({
+                    'code': 'ontology.related_field_hidden',
+                    'relation': related['relation'],
+                    'property': name,
+                    'detail': '该属性不在披露范围内，未带回，也未参与跨字段比较',
+                })
             for item in page:
                 related_value, status, hidden_fields = related_cache[
                     (item['release_ref'], item['instance_id'])]
@@ -876,6 +895,12 @@ class QueryService:
             location['kind'] = 'json_pointer'
             if selector.get('pointer') is not None:
                 location['pointer'] = selector['pointer']
+            # REST 分页把 1 起的响应页号放在 extensions，不随 selector 平铺；
+            # 精简定位仍要保留，否则实例页只剩指针、看不出第几页。
+            extensions = selector.get('extensions')
+            if (isinstance(extensions, dict)
+                    and extensions.get('dataagent.page') is not None):
+                location.setdefault('page', extensions['dataagent.page'])
         elif kind:
             location['kind'] = kind
         return {key: value for key, value in location.items()
@@ -1002,10 +1027,11 @@ class QueryService:
                       if condition.related_field is not None]
         target = related['target_definition']
         kept = []
-        matched = missing = ambiguous = uncomparable = 0
+        matched = missing = ambiguous = uncomparable = hidden = 0
+        hidden_names = set()
         missing_items = []
         for item in items:
-            related_value, status, _ = related_cache[
+            related_value, status, hidden_fields = related_cache[
                 (item['release_ref'], item['instance_id'])]
             if status == 'ambiguous':
                 ambiguous += 1
@@ -1013,6 +1039,20 @@ class QueryService:
             if status != 'matched' or related_value is None:
                 missing += 1
                 missing_items.append(self._missing_stub(item, 'related_missing'))
+                continue
+            # The disclosure layer drops hidden fields before they reach here.
+            # Comparing a missing key would look like a normal predicate miss,
+            # so report the row as uncomparable and carry the field name up to
+            # the response warning.
+            hidden_predicates = {
+                condition.related_name() for condition in predicates
+            }.intersection(hidden_fields or ())
+            if hidden_predicates:
+                hidden_names.update(hidden_predicates)
+                hidden += 1
+                uncomparable += 1
+                missing_items.append(
+                    self._missing_stub(item, 'related_field_hidden'))
                 continue
             holds, reason = self._compare_related(
                 item['values'], related_value.get('fields') or {},
@@ -1038,10 +1078,12 @@ class QueryService:
             'missing': missing,
             'uncomparable': uncomparable,
             'ambiguous': ambiguous,
+            'hidden': hidden,
+            'hidden_fields': sorted(hidden_names),
             'missing_items': missing_items[:_MAX_RELATED_MISSING],
             'missing_truncated': len(missing_items) > _MAX_RELATED_MISSING,
         }
-        return kept, comparison
+        return kept, comparison, hidden_names
 
     @staticmethod
     def _missing_stub(item: dict, reason: str) -> dict:

@@ -18,6 +18,7 @@ from dataagent_contracts.ontology import MappingSpec, OntologyRevision, ReviewDe
 from dataagent_ontology.identity import digest
 from dataagent_runtime.ports.workbench_store import ChangeSet, Write
 from dataagent_workbench.bootstrap import Workbench
+from dataagent_workbench.query_service import QueryService
 from dataagent_workbench.service_tools import invoke, result_summary
 from dataagent_workbench.tool_schema import MODELS, TOOLS
 from test_intake_repairs import StubProbeClient, csv_profile, save_single, start
@@ -1078,6 +1079,66 @@ def test_related_field_comparison_flags_rows_in_one_step(tmp_path):
                   limit=200)
     assert mixed['total'] == 1  # 600 >= 500 and category=住宿; 450 >= 500 is false
     assert [item['values']['number'] for item in mixed['items']] == ['BX-1']
+
+
+def test_single_where_object_with_field_is_one_comparison(tmp_path):
+    """The MCP entry accepts one condition object, not three equality filters.
+
+    A shorthand map is still accepted, but any dict carrying ``field``/``op``/
+    ``related_field`` is one condition.  Splitting the keys would fail on the
+    undefined properties ``field``/``op``/``related_field``.
+    """
+    wb = expense_model(tmp_path)
+    single = invoke(wb, 'ontology_query', {
+        'ontology_id': 'expense-model', 'concept': 'ExpenseLine', 'limit': 200,
+        'include_related': {'relation': 'usesStandard'},
+        'where': {'field': 'amount', 'op': 'gt', 'related_field': 'limit'},
+    }).data
+    assert single['total'] == 2
+    assert len(single['filters']) == 1
+    assert single['filters'][0]['property'] == 'amount'
+    assert single['filters'][0]['op'] == 'gt'
+    assert single['filters'][0]['related_field'] == 'limit'
+    assert single['filters'][0]['value'] is None
+
+
+def test_related_field_comparison_hidden_field_warns_not_missing(tmp_path):
+    wb = expense_model(tmp_path, allowed={
+        'src-ExpenseLine': ['number', 'line', 'spent_on', 'category', 'amount'],
+        # The relation role (category) stays visible; limit is hidden.
+        'src-ExpenseStandard': ['category'],
+    })
+    page = query(wb, ontology_id='expense-model', concept='ExpenseLine',
+                 include_related={'relation': 'usesStandard'},
+                 where=[{'field': 'amount', 'op': 'gt',
+                         'related_field': 'limit'}],
+                 limit=200)
+    assert page['items'] == []
+    assert page['total'] == 0
+    comparison = page['comparison']
+    assert comparison['evaluated'] == 4
+    assert comparison['matched'] == 0
+    assert comparison['missing'] == 1  # 交通 has no standard row
+    assert comparison['uncomparable'] == 3
+    assert comparison['hidden'] == 3
+    assert comparison['hidden_fields'] == ['limit']
+    reasons = [item['reason'] for item in comparison['missing_items']]
+    assert reasons.count('related_field_hidden') == 3
+    assert reasons.count('related_missing') == 1
+    warning, = [warning for warning in page['warnings']
+                if warning['code'] == 'ontology.related_field_hidden']
+    assert warning['relation'] == 'usesStandard'
+    assert warning['property'] == 'limit'
+
+
+def test_slim_json_pointer_location_keeps_rest_response_page():
+    location = QueryService._compact_location({
+        'source_ref': 'api',
+        'selector': {'kind': 'json_pointer', 'pointer': '/items/0/amount',
+                     'extensions': {'dataagent.page': 2}},
+    })
+    assert location == {'kind': 'json_pointer', 'pointer': '/items/0/amount',
+                        'page': 2}
 
 
 def test_related_field_comparison_rejects_ambiguous_shapes(tmp_path):
