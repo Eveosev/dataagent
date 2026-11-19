@@ -336,6 +336,27 @@ def _dropped_draft_items(draft, completed_ids, completed_columns,
     return dropped
 
 
+def _date_text_properties(previous, definition):
+    """Properties this revision retyped from ``date`` to ``string``.
+
+    The sheet reader serializes a date cell and a text cell with the same
+    midnight ISO text, so value shape alone cannot decide formatting.  The
+    revision itself is the evidence: a property that was a ``date`` and is
+    now stored as text keeps the date formatting for default mappings.  A
+    plain string property is never interpreted.
+    """
+    names=[]
+    for concept_name,concept in definition.concepts.items():
+        old=previous.concepts.get(concept_name)
+        if old is None:continue
+        for name,prop in concept.properties.items():
+            old_prop=old.properties.get(name)
+            if (old_prop is not None and old_prop.value_type=='date'
+                    and prop.value_type=='string'):
+                names.append(f'{concept_name}.{name}')
+    return sorted(names)
+
+
 def build_candidate(wb, draft, catalog, completion, *, revision='1'):
     """Validate a completion against its draft and catalog; return the definition.
 
@@ -345,6 +366,17 @@ def build_candidate(wb, draft, catalog, completion, *, revision='1'):
     direction must match the evidence.  Missing identity, unsatisfiable types,
     fabricated fields and unhandled open items raise ``ValueError``.
     """
+    previous = None
+    if revision != '1':
+        try:
+            previous_revision = str(int(revision) - 1)
+        except ValueError:
+            previous_revision = ''
+        if previous_revision:
+            previous_row = wb.store.get('ontology', completion.ontology_id,
+                                        previous_revision, scope=wb.scope)
+            if previous_row is not None:
+                previous = OntologyRevision.model_validate(previous_row['body'])
     tables = _table_index(catalog)
     entities = {}
     for entity in draft.get('entities') or []:
@@ -567,6 +599,12 @@ def build_candidate(wb, draft, catalog, completion, *, revision='1'):
 
     definition = OntologyRevision(id=completion.ontology_id, revision=revision,
         concepts=concepts, relations=relations)
+    if previous is not None:
+        date_text=_date_text_properties(previous, definition)
+        if date_text:
+            definition=definition.model_copy(update={
+                'extensions': {**(definition.extensions or {}),
+                               'dataagent.date_text': date_text}})
     return {
         'definition': definition,
         'definition_digest': digest(definition.model_dump(mode='json')),

@@ -93,8 +93,15 @@ def full_draft(wb, session_id, request):
 
 def completion(wb, session_id, current_draft, ontology_id='sales-model', *,
                doc_no_type='integer', include_customer_name=True,
-               title='销售单据模型'):
+               title='销售单据模型', day_type=None):
     relations = {link['name']: link for link in current_draft['relationships']}
+    order_properties = {
+        'book': {'column': 'book', 'value_type': 'string', 'required': True},
+        'doc_no': {'column': 'doc_no', 'value_type': doc_no_type,
+                   'required': True},
+    }
+    if day_type is not None:
+        order_properties['day'] = {'column': 'day', 'value_type': day_type}
     customer_properties = {
         'party_no': {'column': 'party_no', 'value_type': 'string', 'required': True},
     }
@@ -107,11 +114,8 @@ def completion(wb, session_id, current_draft, ontology_id='sales-model', *,
         'ontology_id': ontology_id,
         'title': title,
         'concepts': [
-            {'entity': 'SalesOrder', 'properties': {
-                'book': {'column': 'book', 'value_type': 'string', 'required': True},
-                'doc_no': {'column': 'doc_no', 'value_type': doc_no_type,
-                           'required': True},
-            }, 'identity_fields': ['book', 'doc_no']},
+            {'entity': 'SalesOrder', 'properties': order_properties,
+             'identity_fields': ['book', 'doc_no']},
             {'entity': 'SalesOrderLine', 'properties': {
                 'book': {'column': 'book', 'value_type': 'string', 'required': True},
                 'doc_no': {'column': 'doc_no', 'value_type': 'integer',
@@ -487,6 +491,63 @@ def test_revision_confirm_rejects_a_candidate_after_old_revision_releases(tmp_pa
     published = publish(revision_wb, revision_session, refreshed)
     assert published.status_code == 200, published.json()
     assert published.json()['ontology_revision'] == '2'
+
+
+def test_revision_date_to_string_formats_a_default_mapping(tmp_path):
+    """FDE3-09: date→string revision keeps date formatting for default mappings.
+
+    The source is an xlsx date column whose cells the sheet reader serializes
+    as midnight ISO text.  The revision records the retype, so a mapping that
+    omits ``transform`` (the default identity binding) still stores
+    ``YYYY-MM-DD``.  A plain string property is not touched.
+    """
+    with sqlite3.connect(tmp_path / 'sales.db') as connection:
+        connection.executescript(SEED.read_text())
+        connection.execute('ALTER TABLE doc_hdr ADD COLUMN day TEXT')
+        connection.execute(
+            "UPDATE doc_hdr SET day=CASE doc_no "
+            "WHEN 1001 THEN '2026-04-08' ELSE '2026-04-09' END")
+    wb, session_id, request = workbench(tmp_path)
+    current = full_draft(wb, session_id, request)
+    first = invoke(wb, 'ontology_publish_prepare',
+                   completion(wb, session_id, current, day_type='date')).data
+    assert publish(wb, session_id, first).status_code == 200
+
+    revision_wb, revision_session, revision_request = workbench(
+        tmp_path, revise_ontology_id='sales-model')
+    current, candidate = revision_candidate(
+        revision_wb, revision_session, revision_request, day_type='string')
+    assert candidate['definition']['extensions']['dataagent.date_text'] == [
+        'SalesOrder.day']
+    assert publish(revision_wb, revision_session, candidate).status_code == 200
+
+    rows = [{'book': 'SALE', 'doc_no': '1001', 'day': '2026-04-08T00:00:00'},
+            {'book': 'SALE', 'doc_no': '1002', 'day': '2026-04-09T00:00:00'}]
+    (tmp_path / 'orders.csv').write_text(
+        'book,doc_no,day\n' + '\n'.join(
+            f"{row['book']},{row['doc_no']},{row['day']}" for row in rows) + '\n')
+    revision_wb.layer_client = StubProbeClient({
+        'orders': csv_profile('orders', rows).model_copy(update={'kind': 'xlsx'})})
+    goal = WorkSpec(id='map', goal='接入销售数据',
+                    acceptance_criteria=['来源可核对'],
+                    authorization_ref=revision_wb.authorization)
+    started = revision_wb.sessions.start(
+        [SourceSelection(source_id='orders', kind='file',
+                         locator_ref='orders.csv')], goal, revision_wb.ctx,
+        target={'ontology_id': 'sales-model', 'concept': 'SalesOrder'})
+    mapping_session = revision_wb.intake.advance(started.session_id, revision_wb.ctx)
+    mapping_source, = revision_wb.intake.inference_request(
+        mapping_session.id, revision_wb.ctx)['sources']
+    preview = save_single(revision_wb, mapping_session, MappingSpec(
+        id='orders', revision='1', ontology_revision='sales-model@2',
+        concept='SalesOrder',
+        source_fingerprint=mapping_source['structure_fingerprint'],
+        bindings={'book': {'source_field': 'book'},
+                  'doc_no': {'source_field': 'doc_no', 'transform': 'integer'},
+                  'day': {'source_field': 'day'}}))
+    assert {instance.values['day'] for instance in preview.instances} == {
+        '2026-04-08', '2026-04-09'}
+    revision_wb.layer_client = LayerClient(DATA)
 
 
 def test_revision_field_does_not_change_existing_target_validation():

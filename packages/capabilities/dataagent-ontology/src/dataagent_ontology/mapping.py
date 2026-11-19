@@ -80,10 +80,25 @@ def convert(binding,record):
     return value
 
 
+def _midnight_date_text(value):
+    """The ``YYYY-MM-DD`` for a midnight ISO date cell, else ``None``.
+
+    Used only for a property a revision explicitly retyped from ``date`` to
+    ``string``.  A non-midnight time or any other text is left untouched.
+    """
+    text=str(value).strip()
+    if len(text)!=19 or text[10:]!='T00:00:00':
+        return None
+    try:
+        return date.fromisoformat(text[:10]).isoformat()
+    except ValueError:
+        return None
+
+
 def _typed(value,kind):
-    # String targets store text verbatim.  Date formatting belongs to the
-    # explicit ``date`` transform; text that happens to look like a sheet
-    # date (including identity fields) is never shortened by guesswork.
+    # String targets store text verbatim.  Date formatting is either an
+    # explicit ``date`` transform or the revision marker handled by
+    # ``materialize``; text that merely looks like a date is never shortened.
     if value is None:return None
     if kind=='string':return str(value)
     if kind=='reference':return str(value)
@@ -165,6 +180,9 @@ def _incomplete_source(source, partitions):
 def materialize(ontology,mapping,observations,*,scope,source_mappings=None,dispositions=None):
     concept_name,concept=_validate_mapping(ontology, mapping, scope)
     disposed=_disposition_index(dispositions)
+    # A revision that retyped a date property to string marks it explicitly;
+    # text that merely looks like a date is never guessed from its shape.
+    date_text=set((ontology.extensions or {}).get('dataagent.date_text') or ())
     issues=[]
     instances,assertions,facts={},[],{}
     for source in observations:
@@ -189,7 +207,12 @@ def materialize(ontology,mapping,observations,*,scope,source_mappings=None,dispo
             values,field_anchors,row_issues={},{},[]
             for target,binding in mapping.bindings.items():
                 try:
-                    value=_typed(convert(binding,row),concept.properties[target].value_type)
+                    raw=convert(binding,row)
+                    if (binding.transform=='identity' and raw is not None
+                            and f'{concept_name}.{target}' in date_text
+                            and concept.properties[target].value_type=='string'):
+                        raw=_midnight_date_text(raw) or raw
+                    value=_typed(raw,concept.properties[target].value_type)
                     if value is not None:values[target]=value
                     fields=binding.options.get('fields',[binding.source_field])
                     field_anchors[target]=[a for f in fields for a in source.anchors.get(f'{rownum}.{f}',[])]
