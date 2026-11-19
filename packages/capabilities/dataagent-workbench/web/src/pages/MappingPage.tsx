@@ -300,6 +300,15 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession
  const sourceIssues=issueItems.filter(sourceLevelIssue);
  const rowIssues=issueItems.filter(issue=>!sourceLevelIssue(issue));
  const visibleIssues=[...sourceIssues,...rowIssues.slice(0,8)];
+ // 整源处置不能只挂在「未映射/不符」问题上：结构上能绑定、但业务上明显
+ // 是另一张表（例如限额表被错绑成金额/币种）时，来源页签里也要能带原因
+ // 选择不使用。已有来源级问题行时由问题行提供入口，避免重复控件。
+ const sourceLevelIssueIds=new Set(issueItems
+  .filter(issue=>issue.code==='ontology.source_unmapped'||issue.code==='ontology.source_concept_mismatch')
+  .map(issue=>issue.source_id).filter((id):id is string=>!!id));
+ const hasAnySourceIssue=sourceLevelIssueIds.size>0;
+ const sourceDisposals=(view.disposition_options||[]).filter(option=>option.scope==='source'
+  && !sourceLevelIssueIds.has(option.source_id));
  const issueText=(issue:{code?:string;target?:string;object?:string;reason?:string;source_id?:string})=>{
   if(issue.code==='intake.probe_failed'){
    const name=view.session.sources.find(s=>s.source_id===issue.source_id);
@@ -320,6 +329,19 @@ export function MappingPage({sessionId,onNew,onError,onOpenObjects,onOpenSession
  <div className="work-grid"><section className="source-panel"><div className="panel-heading"><strong>来源</strong><span className="badge">{view.session.sources.length} 份材料</span></div>
   <div className="source-tabs">{view.session.sources.map(s=><button key={s.source_id} className={(profile?.source_id===s.source_id?'active ':'')+'source-tab'} onClick={()=>selectSource(s.source_id)}><span>▤</span><span>{String(s.options?.display_name||s.locator_ref.split('/').pop())}</span></button>)}</div>
   <SourceViewer sessionId={sessionId} profile={profile} anchor={anchor as never} recordIndex={sourceRow} sourceField={binding?.source_field}/>
+  {!done&&sourceDisposals.length>0&&<div className="source-disposals">
+   {sourceDisposals.map(option=>{
+    const key=`${option.action}:${option.source_id}`;
+    return <div key={key} className="disposal source-disposal" data-testid="source-disposal">
+     <div data-testid={hasAnySourceIssue?'source-disposal-option':'disposal-option'}>
+      <span className="muted">本任务不使用「{option.source_name}」 · {option.reason_hint}</span>
+      <div className="disposal-controls">
+       <input aria-label={`处置原因：本任务不使用「${option.source_name}」`} value={disposalReasons[key]||''} onChange={e=>setDisposalReasons(previous=>({...previous,[key]:e.target.value}))} placeholder="处置原因（必填，写入审计）"/>
+       <button className="secondary" disabled={busy||done||!(disposalReasons[key]||'').trim()} onClick={()=>submitDisposal(option,disposalReasons[key])}>提交处置</button>
+      </div>
+     </div>
+    </div>;})}
+  </div>}
  </section><section className="mapping-panel"><div className="panel-heading"><strong>目标映射</strong><span className="badge">{conceptLabel(conceptOf(view.ontology,view.ontology_concept))}</span></div>
  <div className="mapping-toolbar"><span><strong>{Object.keys(bindings).length}</strong> / {Object.keys(conceptProperties).length} 字段已绑定</span><label><input type="checkbox" checked={onlyProblems} onChange={e=>setOnlyProblems(e.target.checked)}/>只看待处理</label></div>
  <div className="mapping-table-scroll"><table className="mapping-table"><thead><tr><th>本体属性</th><th>来源字段</th><th>转换方式</th><th>预览值</th></tr></thead><tbody>{fields.map(name=>{

@@ -327,6 +327,59 @@ test('目标=明细行：限额表 docx 与明细 xlsx 同任务时整源拦截'
  await expect(page.getByText('接入已保存')).toBeVisible();
 });
 
+
+// Codex 第 5 轮：结构匹配不等于业务匹配。列名为「序号/费用类别/限额」的限额表
+// 被手工错绑成 number/currency/amount 后，结构检查仍会放行；用户必须在来源页签
+// 里能带原因整源不使用，重新生成预览后它的对象与问题不再出现。
+test('结构匹配但语义错绑的来源可在来源页签整源不使用',async({page})=>{
+ slowTimeout(60000);
+ const tag=uniqueTag();
+ const good=Buffer.from(`number,amount,currency\nINV-${tag},100,CNY\n`);
+ const wrong=Buffer.from(`序号,费用类别,限额\nZ-${tag},差旅,1000\n`);
+ await page.goto('/');
+ await page.getByLabel('接入目标').fill('核对结构匹配但语义错误的来源能否整源不使用');
+ await page.getByLabel('选择材料').setInputFiles([
+  {name:`good-${tag}.csv`,mimeType:'text/csv',buffer:good},
+  {name:`limits-${tag}.csv`,mimeType:'text/csv',buffer:wrong},
+ ]);
+ await pinBuiltinOntology(page);
+ await page.getByRole('button',{name:'开始接入'}).click();
+ await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ await page.locator('.source-tab').filter({hasText:`limits-${tag}.csv`}).click();
+ // 把限额表三列分别错绑到 number/currency/amount：结构上每个槽位都有值，
+ // 因此预览里仍会出现它的对象，也不会有来源级不符问题。
+ await page.getByLabel('单据编号 来源字段').selectOption('序号');
+ await page.getByLabel('币种 来源字段').selectOption('费用类别');
+ await page.getByLabel('金额 来源字段').selectOption('限额');
+ await page.getByLabel('金额 转换方式').selectOption('decimal');
+ await page.getByRole('button',{name:'生成映射预览'}).click();
+ await expect(page.locator('.object-section .badge').first()).toHaveText('2 个对象');
+ await expect(page.getByTestId('mapping-issues')).toHaveCount(0);
+ // 来源页签提供整源处置；原因必填，提交走真实后端并写审计。
+ const sourceDisposal=page.getByTestId('source-disposal')
+  .filter({hasText:`本任务不使用「limits-${tag}.csv」`});
+ await expect(sourceDisposal).toHaveCount(1);
+ const option=sourceDisposal.getByTestId('disposal-option');
+ const submit=option.getByRole('button',{name:'提交处置'});
+ await expect(submit).toBeDisabled();
+ await option.getByLabel(/处置原因：本任务不使用/).fill('限额表不是费用明细，本任务不使用');
+ await expect(submit).toBeEnabled();
+ const [disposed]=await Promise.all([
+  page.waitForResponse(response=>response.request().method()==='POST'&&/\/sessions\/[^/]+\/dispositions$/.test(response.url())),
+  submit.click(),
+ ]);
+ expect(disposed.status()).toBe(200);
+ expect((await disposed.json() as {entry:{action:string;reason:string}}).entry)
+  .toMatchObject({action:'ignore_source',reason:'限额表不是费用明细，本任务不使用'});
+ // 处置清掉预览：不重新生成不能保存。
+ await expect(page.getByRole('button',{name:'保存接入'})).toBeDisabled();
+ await page.getByRole('button',{name:'生成映射预览'}).click();
+ await expect(page.locator('.object-section .badge').first()).toHaveText('1 个对象');
+ await expect(page.getByTestId('mapping-issues')).toHaveCount(0);
+ await expect(page.locator('.object-values')).not.toContainText(`Z-${tag}`);
+ await expect(page.getByRole('button',{name:'保存接入'})).toBeEnabled();
+});
+
 // codex 审核：实例页按展示文件名 + 行位置合并定位，两个同名文件的不同来源
 // 会被合成一条。合并键必须带 source_ref；这里用两份同名 CSV 生成同一对象，
 // 两个来源在同一行各有锚点，实例页必须显示两条定位而不是一条。

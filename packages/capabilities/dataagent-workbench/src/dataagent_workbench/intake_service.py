@@ -636,10 +636,11 @@ class IntakeService:
                                 'source_name': names.get(profile.source_id, profile.source_id),
                                 'partition': gap.partition, 'gap': gap.code,
                                 'reason_hint': '确认该分区为空或不适用'})
+        profiles = {profile.source_id: profile
+                    for profile in self._profiles(session)}
+        ignored = self._ignored_source_ids(session)
+        source_option_ids = set()
         if body:
-            profiles = {profile.source_id: profile
-                        for profile in self._profiles(session)}
-            ignored = self._ignored_source_ids(session)
             for issue in body.get('issues') or []:
                 if issue.get('code') in {'ontology.source_unmapped',
                                          _SOURCE_CONCEPT_MISMATCH}:
@@ -651,6 +652,7 @@ class IntakeService:
                     source_id = issue.get('source_id')
                     if source_id in ignored:
                         continue
+                    source_option_ids.add(source_id)
                     options.append({'action': 'partition_not_applicable',
                                     'scope': 'source', 'partition': None,
                                     'source_id': source_id,
@@ -687,6 +689,22 @@ class IntakeService:
                 options.append({'action': 'exclude_record', 'source_id': source_id,
                                 'source_name': names.get(source_id, source_id),
                                 'record': row, 'reason_hint': '排除表头行或明显无关的记录'})
+        # Every source gets the whole-source escape hatch, including one the
+        # current mapping uses: a mapping can bind every required slot and
+        # still be semantically wrong (for example a limit table bound to
+        # number/currency/amount).  The preview cannot detect that reliably;
+        # the user can decide, with an audited reason, that the task does not
+        # use the source.  Sources already flagged above keep their single
+        # source-level option.
+        for profile in profiles.values():
+            source_id = profile.source_id
+            if source_id in ignored or source_id in source_option_ids:
+                continue
+            options.append({'action': 'partition_not_applicable',
+                            'scope': 'source', 'partition': None,
+                            'source_id': source_id,
+                            'source_name': names.get(source_id, source_id),
+                            'reason_hint': '本任务不使用该来源'})
         unique = []
         for option in options:
             if option not in unique:
@@ -697,12 +715,14 @@ class IntakeService:
         """Record an audited source disposition and invalidate the preview.
 
         ``partition_not_applicable`` acknowledges an unread/blank partition and
-        ``exclude_record`` removes one source row.  A source that the task's
-        mapping does not use can be dropped as a whole (``ignore_source``);
-        over the wire that arrives as ``partition_not_applicable`` without a
-        partition, because the tool schema's literal has no third action.  The
-        disposition record is a new revision with who/when/why; the next
-        proposal rebuilds a preview with the disposition applied.
+        ``exclude_record`` removes one source row.  Any observed source can be
+        dropped as a whole (``ignore_source``), whether or not the current
+        mapping uses it: a structurally complete binding may still be
+        semantically wrong.  Over the wire that arrives as
+        ``partition_not_applicable`` without a partition, because the tool
+        schema's literal has no third action.  The disposition record is a new
+        revision with who/when/why, and it removes the preview so the next
+        proposal must rebuild without the source before save.
         """
         if not str(getattr(disposition, 'reason', '') or '').strip():
             raise ValueError('处置原因不能为空')
@@ -726,40 +746,29 @@ class IntakeService:
         entry = {'action': 'ignore_source' if source_level else action,
                  'source_id': disposition.source_id,
                  'reason': disposition.reason}
-        if source_level:
-            # Ignore a source only when the preview under review does not map
-            # it; an older mapping entry alone does not keep it in use.  A
-            # source the active preview itself flags as not matching the
-            # concept stays ignorable: the wrong mapping must not pin it into
-            # the task (FDE3-04).
-            active = self._preview_source_ids(session)
-            used = active if active is not None else self._mapped_source_ids(session)
-            if disposition.source_id in used:
-                body = self._active_preview_body(session)
-                flagged = body is not None and any(
-                    issue.get('code') == _SOURCE_CONCEPT_MISMATCH
-                    and issue.get('source_id') == disposition.source_id
-                    for issue in body.get('issues') or [])
-                if not flagged:
-                    raise ValueError('source is used by the current mapping; '
-                                     'dispose a partition or a record instead')
-        elif action == 'partition_not_applicable':
-            partition = disposition.partition
-            observed = {gap.partition for gap in profile.gaps}
-            observed.update(profile.completed_partitions)
-            if partition not in observed:
-                raise ValueError('partition is not part of the source observation')
-            entry['partition'] = partition
-        elif action == 'exclude_record':
-            record = disposition.record
-            if not isinstance(record, int) or isinstance(record, bool):
-                raise ValueError('exclude_record needs a record index')
-            if not 0 <= record < len(profile.records):
-                raise ValueError('record index is outside the source observation')
-            entry['record'] = record
-            entry['record_values'] = dict(profile.records[record])
-        else:
-            raise ValueError('unknown disposition action')
+        # Whole-source disposal is a user decision, not a statement that the
+        # mapping is absent or structurally invalid.  A semantically wrong
+        # source can bind every required slot; refusing disposal here leaves
+        # no escape.  The audit entry and the mandatory re-preview are what
+        # keep the save from using it silently.
+        if not source_level:
+            if action == 'partition_not_applicable':
+                partition = disposition.partition
+                observed = {gap.partition for gap in profile.gaps}
+                observed.update(profile.completed_partitions)
+                if partition not in observed:
+                    raise ValueError('partition is not part of the source observation')
+                entry['partition'] = partition
+            elif action == 'exclude_record':
+                record = disposition.record
+                if not isinstance(record, int) or isinstance(record, bool):
+                    raise ValueError('exclude_record needs a record index')
+                if not 0 <= record < len(profile.records):
+                    raise ValueError('record index is outside the source observation')
+                entry['record'] = record
+                entry['record_values'] = dict(profile.records[record])
+            else:
+                raise ValueError('unknown disposition action')
         prior, prior_revision = self._disposition_row(session)
         entries = list(prior['body'].get('entries') or []) if prior is not None else []
         duplicate = [item for item in entries

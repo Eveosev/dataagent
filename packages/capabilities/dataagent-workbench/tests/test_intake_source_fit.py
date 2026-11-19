@@ -281,8 +281,11 @@ def test_proposal_omitting_an_existing_identity_binding_keeps_objects(tmp_path):
     summary = wb.intake.view(session.id, wb.ctx)
     assert not any(issue['code'] == 'ontology.source_concept_mismatch'
                    for issue in summary['preview']['issues'])
-    assert not [option for option in summary['preview']['disposition_options']
-                if option['source_id'] == 's' and option['scope'] == 'source']
+    # The source-level escape hatch is now universal, not a mismatch marker:
+    # a user may still decide this structurally valid source is not wanted.
+    options = [option for option in summary['preview']['disposition_options']
+               if option['source_id'] == 's' and option['scope'] == 'source']
+    assert [option['reason_hint'] for option in options] == ['本任务不使用该来源']
 
 
 def test_proposal_omitting_existing_required_bindings_keeps_objects(tmp_path):
@@ -310,8 +313,9 @@ def test_proposal_omitting_existing_required_bindings_keeps_objects(tmp_path):
     assert {issue['target'] for issue in preview.issues
             if issue['code'] == 'ontology.required_binding_missing'} == {'amount', 'currency'}
     summary = wb.intake.view(session.id, wb.ctx)
-    assert not [option for option in summary['preview']['disposition_options']
-                if option['source_id'] == 's' and option['scope'] == 'source']
+    options = [option for option in summary['preview']['disposition_options']
+               if option['source_id'] == 's' and option['scope'] == 'source']
+    assert [option['reason_hint'] for option in options] == ['本任务不使用该来源']
 
 
 def test_unproposed_alias_columns_are_not_a_concept_mismatch(tmp_path):
