@@ -94,6 +94,29 @@ def test_partition_not_applicable_clears_incomplete_source_and_is_audited(tmp_pa
     assert wb.sessions.get(session.id, wb.ctx).phase == 'saved'
 
 
+def test_partition_numeric_string_is_accepted_as_integer(tmp_path):
+    wb = Workbench(tmp_path)
+    wb.layer_client = StubProbeClient({'doc': blank_page_profile()})
+    session = wb.intake.advance(start(wb, [SourceSelection(
+        source_id='doc', kind='file', locator_ref='mixed.pdf')]).session_id, wb.ctx)
+    wb.intake.submit_proposal(session.id, proposal_for_source(wb, session, 'doc'),
+                              session.revision, wb.ctx)
+
+    result = invoke(wb, 'intake_dispose', {
+        'session_id': session.id,
+        'expected_revision': wb.sessions.get(session.id, wb.ctx).revision,
+        'action': 'partition_not_applicable', 'source_id': 'doc', 'partition': '2',
+        'reason': '第 2 页为空白页，用户确认无需补录',
+    }).data
+    assert result['entry']['partition'] == 2
+    disposed = wb.sessions.get(session.id, wb.ctx)
+    preview = wb.intake.submit_proposal(
+        disposed.id, proposal_for_source(wb, disposed, 'doc'),
+        disposed.revision, wb.ctx)
+    assert not any(issue['code'] == 'ontology.incomplete_source'
+                   for issue in preview.issues)
+
+
 def test_exclude_record_drops_header_row_and_keeps_the_rest(tmp_path):
     wb = Workbench(tmp_path)
     profile = csv_profile('ledger', [

@@ -24,6 +24,24 @@ from .session_service import mapping_target
 
 BUDGET_GAP = 'time_budget_exceeded'
 _REST_RETRY_GAPS = {'connection_failed','rate_limited','http_error'}
+# Coverage gaps that describe content the preview can show and the user can
+# still dispose of: a blank OCR page, one record without an identity key, a
+# malformed/grid row, or a page that was not read because of the page budget.
+# Every other gap (transport/protocol failure, source_unreadable, OCR failure)
+# means the source itself could not be read and must be repaired before its
+# structurally matching mapping may be reused.
+_REUSABLE_GAP_CODES = frozenset({
+    'key_missing', 'ocr_empty', 'malformed_row', 'record_not_object',
+    'grid_error', 'page_budget_exceeded',
+})
+# Problems that point at the mapping itself rather than at the source data.
+# A partial save that still carries one of these must not cache a verified
+# mapping: a later intake would faithfully replay a defective mapping.
+_MAPPING_DEFECT_ISSUES = frozenset({
+    'ontology.required_binding_missing', 'ontology.conversion_failed',
+    'ontology.evidence_missing', 'ontology.relation_unresolved',
+    'ontology.correction_conflict', 'ontology.no_records',
+})
 _MIN_SEGMENT_SECONDS = 0.25
 _MAX_SEGMENTS = 500
 _DEFAULT_BUDGET_SECONDS = 50.0
@@ -171,6 +189,34 @@ def _exhausted_failure(profile):
     """A failure that must not be retried automatically any more."""
     state = _failure_state(profile)
     return bool(state and (not state[2] or state[1] >= 2))
+
+
+def _source_reusable(profile):
+    """Whether a structurally matching source may reuse a verified mapping.
+
+    Partial coverage is allowed, because the preview can still list the
+    remaining gaps and the user decides how to dispose of them.  Read
+    failures and gaps that mean the source itself is unavailable are not:
+    replaying a mapping over unread material would look complete while the
+    data is missing.
+    """
+    metadata = profile.metadata if isinstance(profile.metadata, dict) else {}
+    if metadata.get('probe_error') or profile.sampled:
+        return False
+    if profile.coverage == 'full':
+        return True
+    if profile.coverage != 'partial' or not profile.gaps:
+        return False
+    return all(gap.code in _REUSABLE_GAP_CODES for gap in profile.gaps)
+
+
+def _partition_key(value):
+    """A page number sent as ``"2"`` names the observed integer partition."""
+    if isinstance(value, str):
+        text = value.strip()
+        if text.isdigit():
+            return int(text)
+    return value
 
 
 def _segment_budget(value):
@@ -501,6 +547,141 @@ class IntakeService:
                                'source_id': profile.source_id})
         return issues
 
+    def _coverage_gap_issues(self, session, body):
+        """Make every observed partial-coverage gap visible on the preview.
+
+        ``materialize`` already emits ``ontology.incomplete_source`` for an
+        unread partition.  A ``key_missing`` gap is normally attached to the
+        keyless record's identity issue so it does not suspend every other row
+        from the same source.  When the mapping resolves identity from another
+        column there is no identity issue, and the gap itself becomes a
+        source-level blocking issue; otherwise it would disappear and the
+        batch could save silently.
+        """
+        issues = list(body.get('issues') or [])
+        mapped = set(body.get('source_revisions') or {})
+        profiles = {profile.source_id: profile for profile in self._profiles(session)
+                    if profile.gaps and profile.source_id in mapped}
+        if not profiles:
+            return issues
+        covered = {}
+        for issue in issues:
+            if issue.get('code') != 'ontology.incomplete_source':
+                continue
+            source = profiles.get(issue.get('source_id'))
+            if source is None:
+                continue
+            for partition in issue.get('partitions') or []:
+                covered.setdefault(source.source_id, set()).add(
+                    _partition_key(partition))
+        acknowledged = {}
+        excluded = {}
+        for entry in self.disposition_entries(session):
+            if entry.get('action') == 'partition_not_applicable':
+                acknowledged.setdefault(entry.get('source_id'), set()).add(
+                    _partition_key(entry.get('partition')))
+            elif entry.get('action') == 'exclude_record':
+                record = entry.get('record')
+                if isinstance(record, int) and not isinstance(record, bool):
+                    excluded.setdefault(entry.get('source_id'), set()).add(record)
+        for source_id, profile in profiles.items():
+            done = covered.get(source_id, set()) | acknowledged.get(source_id, set())
+            missing = [gap for gap in profile.gaps
+                       if _partition_key(gap.partition) not in done]
+            key_gaps = [gap for gap in missing if gap.code == 'key_missing']
+            other = [gap for gap in missing if gap.code != 'key_missing']
+            if key_gaps:
+                key_partitions = {_partition_key(gap.partition) for gap in key_gaps}
+                all_details = [dict(item) for item in profile.issues or []
+                               if item.get('code') == 'key_missing'
+                               and _partition_key(item.get('partition'))
+                               in key_partitions]
+                keys = (profile.metadata.get('record_keys')
+                        if isinstance(profile.metadata, dict) else None)
+
+                def record_index(detail):
+                    """Flattened profile row for a page-local REST issue row."""
+                    row = detail.get('row')
+                    if isinstance(keys, list) and isinstance(row, int):
+                        for index, key in enumerate(keys):
+                            if (isinstance(key, dict)
+                                    and key.get('page') == detail.get('partition')
+                                    and key.get('row') == row):
+                                return index
+                    return row
+
+                excluded_rows = excluded.get(source_id, set())
+                details = []
+                for detail in all_details:
+                    row = record_index(detail)
+                    if isinstance(row, int) and row in excluded_rows:
+                        continue
+                    details.append(detail)
+                # An exclude_record disposition is matched to the key_missing
+                # issue for the same flattened row.  If every such row is
+                # excluded there is no gap left; if one partition has both an
+                # excluded and a live keyless row, keep only the live row's
+                # partition so the remaining gap still blocks the save.
+                if all_details:
+                    if not details:
+                        key_gaps = []
+                    else:
+                        active_partitions = {_partition_key(detail.get('partition'))
+                                             for detail in details}
+                        key_gaps = [gap for gap in key_gaps
+                                    if _partition_key(gap.partition)
+                                    in active_partitions]
+                if key_gaps:
+                    annotated = False
+                    for issue in issues:
+                        if (issue.get('code') != 'ontology.identity_unresolved'
+                                or issue.get('source_id') != source_id):
+                            continue
+                        annotated = True
+                        gaps = issue.setdefault('gaps', [])
+                        for gap in key_gaps:
+                            item = {'code': gap.code, 'partition': gap.partition}
+                            if item not in gaps:
+                                gaps.append(item)
+                        issue.setdefault('gap', {
+                            'code': 'key_missing',
+                            'partitions': [gap.partition for gap in key_gaps]})
+                        if details:
+                            issue.setdefault('gap_records', details)
+                    if not annotated:
+                        # The mapping can resolve identity from another column
+                        # even though the source's configured probe key is
+                        # absent.  In that case materialize emits no identity
+                        # issue, so the key_missing gap would otherwise
+                        # disappear and the batch would save.  Keep the gap as
+                        # a locatable source-level blocking issue: it is a
+                        # source incompleteness, not a defect of the ontology
+                        # identity binding.
+                        records = details or [
+                            {'partition': gap.partition, 'field': None, 'row': None}
+                            for gap in key_gaps]
+                        for detail in records:
+                            partition = detail.get('partition')
+                            row = record_index(detail)
+                            issues.append({
+                                'code': 'ontology.incomplete_source',
+                                'source_id': source_id,
+                                'coverage': profile.coverage,
+                                'partitions': [partition],
+                                'row': row,
+                                'target': detail.get('field'),
+                                'gap': {'code': 'key_missing',
+                                        'partitions': [partition]},
+                                'gap_records': [detail],
+                            })
+            if other:
+                # Defensive: materialize normally covers these already.
+                issues.append({'code': 'ontology.incomplete_source',
+                               'source_id': source_id,
+                               'coverage': profile.coverage,
+                               'partitions': [gap.partition for gap in other]})
+        return issues
+
     @staticmethod
     def _deduped_issues(issues):
         """One problem per row and root cause.
@@ -620,22 +801,38 @@ class IntakeService:
         """
         options = []
         done = {(entry.get('source_id'), entry.get('action'),
-                 entry.get('partition'), entry.get('record'))
+                 _partition_key(entry.get('partition')), entry.get('record'))
                 for entry in self.disposition_entries(session)}
         names = {key: value['source_name'] for key, value in
                  self._source_descriptors(session).items()}
+        # A key_missing gap normally belongs to an identity_unresolved record
+        # and is handled by excluding that record, so it is not a source-wide
+        # disposition.  The exception is the fallback issue for a record whose
+        # mapped identity is complete: there is no record to exclude, and the
+        # user can only acknowledge the source key gap itself.
+        key_gap_partitions = {
+            (issue.get('source_id'),
+             _partition_key((issue.get('partitions') or [None])[0]))
+            for issue in (body or {}).get('issues') or []
+            if issue.get('code') == 'ontology.incomplete_source'
+            and (issue.get('gap') or {}).get('code') == 'key_missing'}
         for profile in self._profiles(session):
             for gap in profile.gaps:
-                if gap.code == 'key_missing':
+                if gap.code == 'key_missing' and (
+                        profile.source_id, _partition_key(gap.partition)) \
+                        not in key_gap_partitions:
                     continue
-                key = (profile.source_id, 'partition_not_applicable', gap.partition, None)
+                key = (profile.source_id, 'partition_not_applicable',
+                       _partition_key(gap.partition), None)
                 if key in done:
                     continue
                 options.append({'action': 'partition_not_applicable',
                                 'source_id': profile.source_id,
                                 'source_name': names.get(profile.source_id, profile.source_id),
                                 'partition': gap.partition, 'gap': gap.code,
-                                'reason_hint': '确认该分区为空或不适用'})
+                                'reason_hint': '确认该来源键缺失记录仍可识别'
+                                               if gap.code == 'key_missing'
+                                               else '确认该分区为空或不适用'})
         profiles = {profile.source_id: profile
                     for profile in self._profiles(session)}
         ignored = self._ignored_source_ids(session)
@@ -753,7 +950,7 @@ class IntakeService:
         # keep the save from using it silently.
         if not source_level:
             if action == 'partition_not_applicable':
-                partition = disposition.partition
+                partition = _partition_key(disposition.partition)
                 observed = {gap.partition for gap in profile.gaps}
                 observed.update(profile.completed_partitions)
                 if partition not in observed:
@@ -997,7 +1194,7 @@ class IntakeService:
             if not any(_resumable(profile) for profile in prior_profiles.values()):
                 profiles=list(prior_profiles.values())
                 if (not is_discovery(s) and profiles and not s.issues
-                        and all(profile.coverage=='full' for profile in profiles)):
+                        and all(_source_reusable(profile) for profile in profiles)):
                     self._reuse_verified_mapping(s,profiles,ctx)
                     # Reload even when reuse was refused: the refusal records
                     # the fields that must be extracted again.
@@ -1095,7 +1292,7 @@ class IntakeService:
             'next_actions':[next_action]},ctx,
             extra_writes=[Write('job',s.job_ref,wb.scope,{**job['body'],'state':'needs_input','checkpoint':'profiles'},job['revision'])])
         if (not is_discovery(s) and profiles and not errors and not retry
-                and all(profile.coverage=='full' for profile in profiles)):
+                and all(_source_reusable(profile) for profile in profiles)):
             self._reuse_verified_mapping(s,profiles,ctx)
             return wb.sessions.get(s.id,ctx)
         return s
@@ -1121,6 +1318,63 @@ class IntakeService:
 
     def _same_mapping(self,left,right):
         return self._mapping_body(left)==self._mapping_body(right)
+
+    def _verified_mapping_write(self, session, body, release_ref):
+        """The durable mapping cache written by a full or partial save.
+
+        A partial save releases only unblocked objects but still proves the
+        mapping is structurally usable for every mapped source.  Caching it
+        lets the next intake reuse the mapping and show the same suspended
+        objects as preview issues instead of starting from a fresh proposal.
+        """
+        wb = self.wb
+        selected = {source.source_id for source in session.sources}
+        source_mappings = (body.get('extensions') or {}).get('intake.source_mappings') or {}
+        selections = {source.source_id: source for source in session.sources}
+        profiles = {profile.source_id: profile for profile in self._profiles(session)}
+
+        def record(source_id, locator_ref, kind, item):
+            entry = {'source_id': source_id, 'locator_ref': locator_ref,
+                     'kind': kind, 'mapping': item}
+            profile = profiles.get(source_id) if source_id else None
+            if profile is not None and profile.metadata.get('derived_fields'):
+                # Keep the exact text spans so the next intake can rebuild
+                # fields that the source structure alone cannot reproduce.
+                entry['derived_fields'] = profile.metadata['derived_fields']
+            if profile is not None and profile.metadata.get('clause_records'):
+                # The same for clause records: the quotes and positions are
+                # what a later intake replays against a fresh observation.
+                entry['clause_records'] = profile.metadata['clause_records']
+            return entry
+
+        if source_mappings:
+            records = [record(source_id, selections[source_id].locator_ref,
+                              selections[source_id].kind, item)
+                       for source_id, item in source_mappings.items()
+                       if source_id in selections]
+        else:
+            # A single mapping with more sources in the task names the one
+            # source it actually covered, so the cached record stays matchable
+            # after a source-level disposition removed the rest.
+            mapped = selected & set(body.get('source_revisions') or {})
+            source = selections.get(next(iter(mapped))) if len(mapped) == 1 else None
+            records = [record(source.source_id if source else None,
+                              source.locator_ref if source else None,
+                              source.kind if source else None, body['mapping'])]
+        if len(records) != len(selected - self._ignored_source_ids(session)):
+            return None
+        fingerprints = sorted({record['mapping']['source_fingerprint']
+                               for record in records})
+        ontology, concept_name, _ = self._target(session)
+        key = digest([wb.scope, fingerprints,
+                      f'{ontology.id}@{ontology.revision}', concept_name])
+        cached = wb.store.current('verified_mapping', key, scope=wb.scope)
+        entry = {'source_fingerprints': fingerprints, 'sources': records,
+                 'release_ref': release_ref}
+        if len(records) == 1:
+            entry['mapping'] = records[0]['mapping']
+        return Write('verified_mapping', key, wb.scope, entry,
+                     cached['revision'] if cached else None)
 
     def _cached_sources(self,body):
         records=body.get('sources')
@@ -1518,7 +1772,8 @@ class IntakeService:
                     'reason': reason}
             if issue.get('detail') and str(issue['detail']) != reason:
                 item['detail'] = str(issue['detail'])
-            for key in ('entity_id', 'row', 'source_id'):
+            for key in ('entity_id', 'row', 'source_id', 'gap', 'gaps', 'gap_records',
+                        'partitions', 'coverage'):
                 if key in issue:
                     item[key] = issue[key]
             conflict = conflicts.get((issue.get('entity_id'), issue.get('target')))
@@ -1846,14 +2101,126 @@ class IntakeService:
             cursor += 500
         return sorted(found.values(), key=lambda item: (str(item['object']), item['property']))
 
+    def _session_source_revisions(self, session_body):
+        """The profile revision selected by each source of one stored task."""
+        revisions = {}
+        versions = session_body.get('selected_versions') or {}
+        for key, ref in versions.items():
+            if not key.startswith('profile:') or not isinstance(ref, str) or '@' not in ref:
+                continue
+            profile_id, revision = ref.rsplit('@', 1)
+            row = self.wb.store.get('profile', profile_id, revision, scope=self.wb.scope)
+            if row is None:
+                continue
+            revisions[key[len('profile:'):]] = row['body'].get('source_revision')
+        return revisions
+
+    def _inheritable_dispositions(self, session, body):
+        """Older source dispositions that still match this observation.
+
+        A disposition is only a hint: ``partition_not_applicable`` must still
+        name an observed gap/partition and ``exclude_record`` must still point
+        at the same record.  Matching the source revision keeps a changed
+        source from inheriting a stale partition or row decision.  Nothing is
+        applied automatically; the caller records a new audited disposition.
+        """
+        if not body:
+            return []
+        current_revisions = body.get('source_revisions') or {}
+        profiles = {profile.source_id: profile for profile in self._profiles(session)}
+        names = {key: value['source_name'] for key, value in
+                 self._source_descriptors(session).items()}
+        done = {(entry.get('source_id'), entry.get('action'),
+                 _partition_key(entry.get('partition')), entry.get('record'))
+                for entry in self.disposition_entries(session)}
+        found = {}
+        cursor = 0
+        while True:
+            rows = self.wb.store.query('disposition', self.wb.scope,
+                                       cursor=cursor, limit=500)
+            for row in rows:
+                record = row.get('body') or {}
+                old_session_id = record.get('session_id')
+                if not old_session_id or old_session_id == session.id:
+                    continue
+                old_session = self.wb.store.current('session', old_session_id,
+                                                    scope=self.wb.scope)
+                if old_session is None:
+                    continue
+                old_revisions = self._session_source_revisions(old_session['body'])
+                for entry in record.get('entries') or []:
+                    source_id = entry.get('source_id')
+                    action = entry.get('action')
+                    if source_id not in profiles or action not in {
+                            'partition_not_applicable', 'exclude_record'}:
+                        continue
+                    current_revision = current_revisions.get(source_id)
+                    if (current_revision is None
+                            or old_revisions.get(source_id) != current_revision):
+                        continue
+                    profile = profiles[source_id]
+                    partition = _partition_key(entry.get('partition'))
+                    if action == 'partition_not_applicable':
+                        if partition is None:
+                            continue
+                        observed = {gap.partition for gap in profile.gaps}
+                        if partition not in observed:
+                            continue
+                    else:
+                        index = entry.get('record')
+                        if not isinstance(index, int) or isinstance(index, bool) \
+                                or not 0 <= index < len(profile.records):
+                            continue
+                        values = entry.get('record_values')
+                        if values is not None and dict(profile.records[index]) != values:
+                            continue
+                    key = (source_id, action, partition, entry.get('record'))
+                    if key in done or key in found:
+                        continue
+                    found[key] = {
+                        'decision_ref': entry.get('decision_ref'),
+                        'source_id': source_id,
+                        'source_name': names.get(source_id, source_id),
+                        'action': action,
+                        'partition': partition,
+                        'record': entry.get('record'),
+                        'reason': entry.get('reason'),
+                        'recorded_at': entry.get('recorded_at'),
+                        'source_revision': current_revision,
+                    }
+            if len(rows) < 500:
+                break
+            cursor += 500
+        return sorted(found.values(), key=lambda item: (
+            str(item['source_id']), str(item['action']),
+            str(item.get('partition')), str(item.get('record'))))
+
     def inheritance_hint(self, session, body):
         corrections = self._inheritable_corrections(session, body)
-        if not corrections:
+        dispositions = self._inheritable_dispositions(session, body)
+        if not corrections and not dispositions:
             return None
-        return {'count': len(corrections),
-                'message': f'旧任务有 {len(corrections)} 处纠正，可继承',
-                'operations': ['intake_inherit'],
+        hint = {'count': len(corrections) + len(dispositions),
+                'message': f'旧任务有 {len(corrections)} 处纠正，可继承'
+                           if corrections else '',
+                'operations': ['intake_inherit'] if corrections else [],
                 'corrections': corrections}
+        if dispositions:
+            hint['disposition_count'] = len(dispositions)
+            hint['disposition_message'] = (
+                f'旧任务在同一来源修订上有 {len(dispositions)} 项处置，可继承；'
+                '请确认后通过 intake_dispose 重新记录，不会自动应用')
+            hint['disposition_operations'] = ['intake_dispose']
+            hint['dispositions'] = dispositions
+            if not corrections:
+                hint['message'] = hint['disposition_message']
+                hint['operations'] = hint['disposition_operations']
+            else:
+                hint['message'] = (
+                    f'旧任务有 {len(corrections)} 处纠正、'
+                    f'{len(dispositions)} 项处置，可继承')
+                hint['operations'] = ['intake_inherit', 'intake_dispose']
+        return hint
 
     def inherit_corrections(self, session_id, expected_revision, decision_refs, ctx):
         wb = self.wb
@@ -2081,6 +2448,7 @@ class IntakeService:
             *self._source_scope_issues(
                 s,{observation.source_id for observation in observations},covering),
             *self._clause_attribution_issues(s,body)])
+        body['issues']=self._coverage_gap_issues(s,body)
         body['mapping_reused']=reused
         prior_ref,_,conflicts,pending=self._carry_corrections(s,body)
         hint=self.inheritance_hint(s,body)
@@ -2187,6 +2555,7 @@ class IntakeService:
             *self._source_scope_issues(session, {profile.source_id for profile
                                                   in materialized}, proposals),
             *self._clause_attribution_issues(session, body)])
+        body['issues'] = self._coverage_gap_issues(session, body)
         body['mapping_reused'] = reused
         prior_ref,_,conflicts,pending=self._carry_corrections(session,body)
         hint=self.inheritance_hint(session,body)
@@ -2243,6 +2612,15 @@ class IntakeService:
                 audit=(receipt.extensions or {}).get('intake.partial_save') or {}
                 versions={**s.selected_versions,'preview':id+'@'+receipt.revision,
                           'release':audit.get('release_ref')}
+                if not any(issue.get('code') in _MAPPING_DEFECT_ISSUES
+                           for issue in active['body'].get('issues') or []):
+                    # The mapping is structurally usable even though some
+                    # objects stay pending; cache it so a later intake can
+                    # reuse it instead of proposing the same bindings again.
+                    cache=self._verified_mapping_write(
+                        s,active['body'],audit.get('release_ref'))
+                    if cache is not None:
+                        writes.append(cache)
                 job=wb.store.current('job',s.job_ref,scope=wb.scope)
                 writes.append(Write('job',s.job_ref,wb.scope,{**job['body'],
                     'state':'completed','checkpoint':'partial_save',
@@ -2267,43 +2645,9 @@ class IntakeService:
             writes=[w for w in writes if w.kind!='preview']+release_writes
             versions['release']=release.id+'@'+release.revision
             phase='saved'
-            mapping=body['mapping']
-            source_mappings=(body.get('extensions') or {}).get('intake.source_mappings') or {}
-            selections={source.source_id:source for source in s.sources}
-            profiles={profile.source_id:profile for profile in self._profiles(s)}
-            def record(source_id,locator_ref,kind,item):
-                entry={'source_id':source_id,'locator_ref':locator_ref,'kind':kind,'mapping':item}
-                profile=profiles.get(source_id) if source_id else None
-                if profile is not None and profile.metadata.get('derived_fields'):
-                    # Keep the exact text spans so the next intake can rebuild
-                    # fields that the source structure alone cannot reproduce.
-                    entry['derived_fields']=profile.metadata['derived_fields']
-                if profile is not None and profile.metadata.get('clause_records'):
-                    # The same for clause records: the quotes and positions are
-                    # what a later intake replays against a fresh observation.
-                    entry['clause_records']=profile.metadata['clause_records']
-                return entry
-            if source_mappings:
-                records=[record(source_id,selections[source_id].locator_ref,
-                                selections[source_id].kind,item)
-                         for source_id,item in source_mappings.items() if source_id in selections]
-            else:
-                # A single mapping with more sources in the task names the one
-                # source it actually covered, so the cached record stays
-                # matchable after a source-level disposition removed the rest.
-                mapped=selected & set(body['source_revisions'])
-                source=selections.get(next(iter(mapped))) if len(mapped)==1 else None
-                records=[record(source.source_id if source else None,
-                                source.locator_ref if source else None,
-                                source.kind if source else None,mapping)]
-            if len(records)==len(selected-self._ignored_source_ids(s)):
-                fingerprints=sorted({record['mapping']['source_fingerprint'] for record in records})
-                ontology,concept_name,_=self._target(s)
-                key=digest([wb.scope,fingerprints,f'{ontology.id}@{ontology.revision}',concept_name])
-                cached=wb.store.current('verified_mapping',key,scope=wb.scope)
-                entry={'source_fingerprints':fingerprints,'sources':records,'release_ref':versions['release']}
-                if len(records)==1:entry['mapping']=records[0]['mapping']
-                writes.append(Write('verified_mapping',key,wb.scope,entry,cached['revision'] if cached else None))
+            cache=self._verified_mapping_write(s,body,versions['release'])
+            if cache is not None:
+                writes.append(cache)
             job=wb.store.current('job',s.job_ref,scope=wb.scope)
             writes.append(Write('job',s.job_ref,wb.scope,{**job['body'],'state':'completed','result_ref':versions['release']},job['revision']))
         wb.sessions.update(s.id,s.revision,{'phase':phase,'selected_versions':versions,

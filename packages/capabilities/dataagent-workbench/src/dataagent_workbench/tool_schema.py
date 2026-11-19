@@ -161,7 +161,7 @@ class Dispose(Session):
     action: Literal['partition_not_applicable', 'exclude_record']
     source_id: str
     partition: int | str | None = Field(default=None,
-        description='partition_not_applicable 必填：来源分区（如 PDF 页码）')
+        description='partition_not_applicable 必填：来源分区（如 PDF 页码；数字字符串按整数处理）')
     record: int | None = Field(default=None, ge=0,
         description='exclude_record 必填：来源记录下标（0 起，如表头行）')
     reason: str = Field(min_length=1, description='处置原因，写入审计')
