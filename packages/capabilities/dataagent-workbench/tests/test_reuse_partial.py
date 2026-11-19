@@ -213,6 +213,94 @@ def test_probe_key_missing_with_complete_mapped_identity_still_blocks_save(tmp_p
     assert wb.sessions.get(second.id, wb.ctx).phase == 'saved'
 
 
+def test_excluding_the_only_keyless_record_clears_the_rest_key_gap(tmp_path):
+    """Excluding the keyless row is a record-level disposition of its gap."""
+    wb = Workbench(tmp_path)
+    wb.layer_client = StubProbeClient({REST: rest_profile(
+        rest_records(keyless=True), key_gap=True)})
+    first = wb.intake.advance(start(wb, [SourceSelection(
+        source_id=REST, kind='rest', locator_ref='invoice-api')]).session_id, wb.ctx)
+    preview = wb.intake.submit_proposal(first.id, rest_proposal(wb, first),
+                                        first.revision, wb.ctx)
+    assert any(issue['code'] == 'ontology.identity_unresolved'
+               and issue['source_id'] == REST and issue['row'] == 1
+               for issue in preview.issues)
+    invoke(wb, 'intake_dispose', {
+        'session_id': first.id,
+        'expected_revision': wb.sessions.get(first.id, wb.ctx).revision,
+        'action': 'exclude_record', 'source_id': REST, 'record': 1,
+        'reason': '该行缺少 /code，不进入本次对象',
+    })
+    session = wb.sessions.get(first.id, wb.ctx)
+    clean = wb.intake.submit_proposal(first.id, rest_proposal(wb, first),
+                                      session.revision, wb.ctx)
+    assert clean.issues == []
+    wb.intake.apply(first.id, ReviewDecision(
+        preview_ref=clean.id + '@' + clean.revision, target_scope='mapping'),
+        wb.sessions.get(first.id, wb.ctx).revision, wb.ctx)
+    assert wb.sessions.get(first.id, wb.ctx).phase == 'saved'
+
+
+def test_excluding_one_keyless_record_keeps_another_gap_on_the_same_page(tmp_path):
+    """A page-level gap must not hide a second, unexcluded keyless row."""
+    fields = ['/code', '/invoice_no', '/amount', '/currency', '/issuer']
+    records = [
+        {'/code': 'INV-1', '/invoice_no': 'EXT-1', '/amount': '100.00',
+         '/currency': 'CNY', '/issuer': 'Alpha'},
+        {'/invoice_no': 'EXT-2', '/amount': '200.00',
+         '/currency': 'CNY', '/issuer': 'Beta'},
+        {'/invoice_no': 'EXT-3', '/amount': '300.00',
+         '/currency': 'CNY', '/issuer': 'Gamma'},
+    ]
+    wb = Workbench(tmp_path)
+    wb.layer_client = StubProbeClient({REST: rest_profile(
+        records, key_gap=True, fields=fields)})
+    first = wb.intake.advance(start(wb, [SourceSelection(
+        source_id=REST, kind='rest', locator_ref='invoice-api')]).session_id, wb.ctx)
+    preview = wb.intake.submit_proposal(
+        first.id, rest_proposal(wb, first, REST_ALTERNATE_ID), first.revision, wb.ctx)
+    assert not [issue for issue in preview.issues
+                if issue['code'] == 'ontology.identity_unresolved']
+    assert sorted(issue['row'] for issue in preview.issues
+                  if issue['code'] == 'ontology.incomplete_source') == [1, 2]
+
+    invoke(wb, 'intake_dispose', {
+        'session_id': first.id,
+        'expected_revision': wb.sessions.get(first.id, wb.ctx).revision,
+        'action': 'exclude_record', 'source_id': REST, 'record': 1,
+        'reason': '只排除第一条缺键行',
+    })
+    session = wb.sessions.get(first.id, wb.ctx)
+    blocked = wb.intake.submit_proposal(
+        first.id, rest_proposal(wb, first, REST_ALTERNATE_ID),
+        session.revision, wb.ctx)
+    remaining = [issue for issue in blocked.issues
+                 if issue['code'] == 'ontology.incomplete_source'
+                 and issue.get('source_id') == REST]
+    assert [issue['row'] for issue in remaining] == [2]
+    assert remaining[0]['gap'] == {'code': 'key_missing', 'partitions': [1]}
+    with pytest.raises(PreviewBlocked):
+        wb.intake.apply(first.id, ReviewDecision(
+            preview_ref=blocked.id + '@' + blocked.revision,
+            target_scope='mapping'), wb.sessions.get(first.id, wb.ctx).revision, wb.ctx)
+
+    invoke(wb, 'intake_dispose', {
+        'session_id': first.id,
+        'expected_revision': wb.sessions.get(first.id, wb.ctx).revision,
+        'action': 'exclude_record', 'source_id': REST, 'record': 2,
+        'reason': '第二条缺键行也不进入本次对象',
+    })
+    session = wb.sessions.get(first.id, wb.ctx)
+    clean = wb.intake.submit_proposal(
+        first.id, rest_proposal(wb, first, REST_ALTERNATE_ID),
+        session.revision, wb.ctx)
+    assert clean.issues == []
+    wb.intake.apply(first.id, ReviewDecision(
+        preview_ref=clean.id + '@' + clean.revision, target_scope='mapping'),
+        wb.sessions.get(first.id, wb.ctx).revision, wb.ctx)
+    assert wb.sessions.get(first.id, wb.ctx).phase == 'saved'
+
+
 def blank_page(fingerprint):
     pages = [{'page': 1, 'text': 'number: INV-1\namount: 1260.00\ncurrency: CNY'},
              {'page': 2, 'text': ''}]

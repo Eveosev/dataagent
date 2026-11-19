@@ -575,10 +575,15 @@ class IntakeService:
                 covered.setdefault(source.source_id, set()).add(
                     _partition_key(partition))
         acknowledged = {}
+        excluded = {}
         for entry in self.disposition_entries(session):
             if entry.get('action') == 'partition_not_applicable':
                 acknowledged.setdefault(entry.get('source_id'), set()).add(
                     _partition_key(entry.get('partition')))
+            elif entry.get('action') == 'exclude_record':
+                record = entry.get('record')
+                if isinstance(record, int) and not isinstance(record, bool):
+                    excluded.setdefault(entry.get('source_id'), set()).add(record)
         for source_id, profile in profiles.items():
             done = covered.get(source_id, set()) | acknowledged.get(source_id, set())
             missing = [gap for gap in profile.gaps
@@ -587,63 +592,88 @@ class IntakeService:
             other = [gap for gap in missing if gap.code != 'key_missing']
             if key_gaps:
                 key_partitions = {_partition_key(gap.partition) for gap in key_gaps}
-                details = [dict(item) for item in profile.issues or []
-                           if item.get('code') == 'key_missing'
-                           and _partition_key(item.get('partition'))
-                           in key_partitions]
-                annotated = False
-                for issue in issues:
-                    if (issue.get('code') != 'ontology.identity_unresolved'
-                            or issue.get('source_id') != source_id):
+                all_details = [dict(item) for item in profile.issues or []
+                               if item.get('code') == 'key_missing'
+                               and _partition_key(item.get('partition'))
+                               in key_partitions]
+                keys = (profile.metadata.get('record_keys')
+                        if isinstance(profile.metadata, dict) else None)
+
+                def record_index(detail):
+                    """Flattened profile row for a page-local REST issue row."""
+                    row = detail.get('row')
+                    if isinstance(keys, list) and isinstance(row, int):
+                        for index, key in enumerate(keys):
+                            if (isinstance(key, dict)
+                                    and key.get('page') == detail.get('partition')
+                                    and key.get('row') == row):
+                                return index
+                    return row
+
+                excluded_rows = excluded.get(source_id, set())
+                details = []
+                for detail in all_details:
+                    row = record_index(detail)
+                    if isinstance(row, int) and row in excluded_rows:
                         continue
-                    annotated = True
-                    gaps = issue.setdefault('gaps', [])
-                    for gap in key_gaps:
-                        item = {'code': gap.code, 'partition': gap.partition}
-                        if item not in gaps:
-                            gaps.append(item)
-                    issue.setdefault('gap', {
-                        'code': 'key_missing',
-                        'partitions': [gap.partition for gap in key_gaps]})
-                    if details:
-                        issue.setdefault('gap_records', details)
-                if not annotated:
-                    # The mapping can resolve identity from another column even
-                    # though the source's configured probe key is absent.  In
-                    # that case materialize emits no identity issue, so the
-                    # key_missing gap would otherwise disappear and the batch
-                    # would save.  Keep the gap as a locatable source-level
-                    # blocking issue: it is a source incompleteness, not a
-                    # defect of the ontology identity binding.
-                    records = details or [
-                        {'partition': gap.partition, 'field': None, 'row': None}
-                        for gap in key_gaps]
-                    keys = (profile.metadata.get('record_keys')
-                            if isinstance(profile.metadata, dict) else None)
-                    for detail in records:
-                        partition = detail.get('partition')
-                        row = detail.get('row')
-                        # REST issues carry a page-local row; preview issues
-                        # and record dispositions use the flattened profile
-                        # index.  record_keys preserves that mapping.
-                        if isinstance(keys, list) and isinstance(row, int):
-                            for index, key in enumerate(keys):
-                                if (isinstance(key, dict)
-                                        and key.get('page') == partition
-                                        and key.get('row') == row):
-                                    row = index
-                                    break
-                        issues.append({
-                            'code': 'ontology.incomplete_source',
-                            'source_id': source_id,
-                            'coverage': profile.coverage,
-                            'partitions': [partition],
-                            'row': row,
-                            'target': detail.get('field'),
-                            'gap': {'code': 'key_missing',
-                                    'partitions': [partition]},
-                            'gap_records': [detail],
-                        })
+                    details.append(detail)
+                # An exclude_record disposition is matched to the key_missing
+                # issue for the same flattened row.  If every such row is
+                # excluded there is no gap left; if one partition has both an
+                # excluded and a live keyless row, keep only the live row's
+                # partition so the remaining gap still blocks the save.
+                if all_details:
+                    if not details:
+                        key_gaps = []
+                    else:
+                        active_partitions = {_partition_key(detail.get('partition'))
+                                             for detail in details}
+                        key_gaps = [gap for gap in key_gaps
+                                    if _partition_key(gap.partition)
+                                    in active_partitions]
+                if key_gaps:
+                    annotated = False
+                    for issue in issues:
+                        if (issue.get('code') != 'ontology.identity_unresolved'
+                                or issue.get('source_id') != source_id):
+                            continue
+                        annotated = True
+                        gaps = issue.setdefault('gaps', [])
+                        for gap in key_gaps:
+                            item = {'code': gap.code, 'partition': gap.partition}
+                            if item not in gaps:
+                                gaps.append(item)
+                        issue.setdefault('gap', {
+                            'code': 'key_missing',
+                            'partitions': [gap.partition for gap in key_gaps]})
+                        if details:
+                            issue.setdefault('gap_records', details)
+                    if not annotated:
+                        # The mapping can resolve identity from another column
+                        # even though the source's configured probe key is
+                        # absent.  In that case materialize emits no identity
+                        # issue, so the key_missing gap would otherwise
+                        # disappear and the batch would save.  Keep the gap as
+                        # a locatable source-level blocking issue: it is a
+                        # source incompleteness, not a defect of the ontology
+                        # identity binding.
+                        records = details or [
+                            {'partition': gap.partition, 'field': None, 'row': None}
+                            for gap in key_gaps]
+                        for detail in records:
+                            partition = detail.get('partition')
+                            row = record_index(detail)
+                            issues.append({
+                                'code': 'ontology.incomplete_source',
+                                'source_id': source_id,
+                                'coverage': profile.coverage,
+                                'partitions': [partition],
+                                'row': row,
+                                'target': detail.get('field'),
+                                'gap': {'code': 'key_missing',
+                                        'partitions': [partition]},
+                                'gap_records': [detail],
+                            })
             if other:
                 # Defensive: materialize normally covers these already.
                 issues.append({'code': 'ontology.incomplete_source',
