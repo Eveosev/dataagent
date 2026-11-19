@@ -8,6 +8,7 @@ of other packages that name no workbench tool are out of scope.
 """
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
@@ -87,11 +88,49 @@ def test_query_comparison_and_evidence_bounds_are_part_of_the_skill():
     # FDE2-07: publish prepare dispositions need an explicit user decision.
     assert 'accept' in skill and 'exclude' in skill
     assert '第 10 条' in skill
+    # FDE3-02: the cross-field comparison is one tool call, not two reads.
+    assert 'related_field' in skill
+    assert 'comparison' in skill and 'uncomparable' in skill
+    # FDE3-02: rows are slim; anchors are opt-in.
+    assert 'detail="anchors"' in skill
+    # FDE3-08: answer numbers come from the tool counts, never estimates.
+    assert '计数字段' in skill and '不估算' in skill
+    # FDE3-11: Chinese business names; column_N is not an identity field.
+    assert '中文业务名' in skill and 'column_N' in skill
+    # FDE3-11: no sub-agent spawning from the skill.
+    assert 'spawn_agent' in skill
 
     schema = MODELS['ontology_query'].model_json_schema()
     assert 'include_related' in schema['properties']
+    assert schema['properties']['detail']['enum'] == ['slim', 'anchors']
     condition = schema['$defs']['OntologyQueryCondition']
     assert set(condition['properties']['op']['enum']) == {
         'eq', 'in', 'contains', 'gt', 'gte', 'lt', 'lte'}
+    assert {'property', 'field', 'related_field'} <= set(condition['properties'])
     evidence = MODELS['intake_inference'].model_json_schema()['properties']
     assert {'detail_table', 'detail_section', 'detail_offset', 'detail_limit'} <= set(evidence)
+
+
+def test_skill_comparison_example_is_a_where_array():
+    """The comparison example must be one where element, not three filters.
+
+    A bare object after ``where`` is not a list; the MCP layer would not parse
+    it as one cross-field condition.  The example is extracted from the skill
+    and validated against the same model the tool schema declares.
+    """
+    skill = (REPOSITORY / 'packages/capabilities/dataagent-intake/skills/'
+             'dataagent-intake/SKILL.md').read_text(encoding='utf-8')
+    match = re.search(r'`where` 写 `(\[[^`]+\])`', skill)
+    assert match, 'skill must show the comparison inside a where array'
+    example = json.loads(match.group(1))
+    assert isinstance(example, list) and len(example) == 1
+    query = MODELS['ontology_query'].model_validate(
+        {'ontology_id': 'demo', 'where': example})
+    condition, = query.where
+    assert condition.field == '金额'
+    assert condition.related_field == '限额'
+    assert condition.op == 'gt'
+    assert condition.value is None
+    # One cross-field comparison, not field=金额 + op=gt + related_field=限额.
+    assert condition.property_name() == '金额'
+    assert condition.related_name() == '限额'

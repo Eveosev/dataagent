@@ -7,6 +7,7 @@ properties and multi-concept concept naming.
 """
 from __future__ import annotations
 
+import json
 import sqlite3
 
 import pytest
@@ -17,7 +18,8 @@ from dataagent_contracts.ontology import MappingSpec, OntologyRevision, ReviewDe
 from dataagent_ontology.identity import digest
 from dataagent_runtime.ports.workbench_store import ChangeSet, Write
 from dataagent_workbench.bootstrap import Workbench
-from dataagent_workbench.service_tools import invoke
+from dataagent_workbench.query_service import QueryService
+from dataagent_workbench.service_tools import invoke, result_summary
 from dataagent_workbench.tool_schema import MODELS, TOOLS
 from test_intake_repairs import StubProbeClient, csv_profile, save_single, start
 from test_partial_save import conflict_and_keyless_setup
@@ -77,11 +79,11 @@ def test_preview_is_invisible_and_published_rows_carry_values_and_provenance(tmp
                               preview_session.revision, wb.ctx)
 
     page = query(wb, ontology_id='procurement')
+    assert page['ontology_id'] == 'procurement'
+    assert page['ontology_revision'] == 'procurement@1'
+    assert page['revision'] == '1'
     assert page['total'] == 1
     item, = page['items']
-    assert item['ontology_id'] == 'procurement'
-    assert item['ontology_revision'] == 'procurement@1'
-    assert item['revision'] == '1'
     assert item['concept'] == 'PurchaseDocument'
     assert item['instance_id'].startswith('entity:')
     assert item['values'] == {'number': 'INV-1', 'amount': '100',
@@ -90,14 +92,21 @@ def test_preview_is_invisible_and_published_rows_carry_values_and_provenance(tmp
     assert item['session_id'] == session.id
     assert item['task'] == '接入采购资料'
     assert item['deactivated'] is False
-    anchor = item['source_anchors']['number'][0]
+    # The default row is slim: a compact one-line source location, no anchors
+    # and no duplicated instances/locations arrays.
+    assert 'source_anchors' not in item and 'locations' not in item
+    assert 'instances' not in page
+    source, = item['source']
+    assert source['source_ref'] == 'f'
+    assert source['locations']['number'] == [{'row': 2}]
+    # Anchor detail is fetched on demand.
+    detail = query(wb, ontology_id='procurement', detail='anchors')
+    detail_item, = detail['items']
+    anchor = detail_item['source_anchors']['number'][0]
     assert anchor['source_ref'] == 'f'
     assert anchor['selector']['kind'] == 'record_key'
     assert anchor['selector']['keys'] == {'row': 2}
     assert anchor['selector']['field'] == 'number'
-    assert item['locations'][0]['property'] == 'number'
-    assert item['locations'][0]['row'] == 2
-    assert item['locations'][0]['source_ref'] == 'f'
     assert all(row['values'].get('number') != 'INV-9' for row in page['items'])
 
 
@@ -500,8 +509,10 @@ def test_disallowed_property_values_and_anchors_are_not_disclosed(tmp_path):
     item, = query(wb, ontology_id='procurement')['items']
     assert item['values'] == {'number': 'INV-1', 'amount': '100',
                               'currency': 'CNY'}
-    assert 'issuer' not in item['source_anchors']
     assert 'Private Co' not in str(item)
+    detail_item, = query(wb, ontology_id='procurement', detail='anchors')['items']
+    assert 'issuer' not in detail_item['source_anchors']
+    assert 'Private Co' not in str(detail_item)
 
 
 def test_queries_do_not_write_to_the_workbench_store(tmp_path):
@@ -976,3 +987,222 @@ def test_ordered_comparison_values_are_validated_before_any_row_is_read(tmp_path
     with pytest.raises(ValueError, match='does not match ordered date'):
         query(wb, ontology_id='expense-model', concept='ExpenseLine',
               where=[{'property': 'spent_on', 'op': 'lt', 'value': 'not-a-date'}])
+
+
+# ------------------------------------------- FDE3-02 slim rows and comparison
+def test_slim_rows_are_small_and_the_result_file_keeps_anchor_detail(tmp_path):
+    wb = expense_model(tmp_path)
+    result = invoke(wb, 'ontology_query', {
+        'ontology_id': 'expense-model', 'concept': 'ExpenseLine', 'limit': 200})
+    page = result.data
+    assert page['detail'] == 'slim'
+    assert 'instances' not in page
+    assert page['total'] == 4
+    for item in page['items']:
+        assert 'source_anchors' not in item and 'locations' not in item
+        assert item['source']
+        # One row stays far below the old anchor+location payload (~5.5 KB).
+        assert len(json.dumps(item, ensure_ascii=False)) < 1200
+
+    summary = result_summary(wb, result)
+    model_page = summary['result']['data']
+    assert model_page['items'][0]['source']
+    assert 'source_anchors' not in model_page['items'][0]
+    # The complete artifact keeps per-property anchors (E1 replays them), but
+    # the model never has to read it for the page itself.
+    stored = json.loads(
+        (wb.workspace / summary['result_path']).read_text())
+    assert stored['data']['items'][0]['source_anchors']
+    assert 'locations' not in stored['data']['items'][0]
+    assert 'instances' not in stored['data']
+
+    # A 20-row page used to be 465 KB and could only be read from the file.
+    # The slim page fits the query inline limit, so the model sees the rows.
+    (tmp_path / 'many').mkdir()
+    many_wb, _ = saved_rows(tmp_path / 'many', [
+        {'number': 'INV-%d' % index, 'amount_minor': str(index * 100),
+         'currency': 'CNY'} for index in range(20)])
+    many = result_summary(many_wb, invoke(many_wb, 'ontology_query', {
+        'ontology_id': 'procurement', 'limit': 200}))
+    assert 'result' in many, 'a 20-row slim page should be inlined'
+    inline = many['result']['data']
+    assert inline['count'] == 20
+    assert max(len(json.dumps(item, ensure_ascii=False))
+               for item in inline['items']) < 900
+    assert len(json.dumps(many['result'], ensure_ascii=False)) < 32000
+
+    # detail=anchors goes through the same summary path: the model payload and
+    # the file payload must be separate objects, not a self-referencing dict.
+    anchors = result_summary(wb, invoke(wb, 'ontology_query', {
+        'ontology_id': 'expense-model', 'concept': 'ExpenseLine', 'limit': 1,
+        'detail': 'anchors'}))
+    anchored = anchors['result']['data']
+    assert anchored['detail'] == 'anchors'
+    assert anchored['items'][0]['source_anchors']
+    assert 'source' not in anchored['items'][0]
+    assert json.loads((wb.workspace / anchors['result_path']).read_text()
+                      )['data']['items'][0]['source_anchors']
+
+
+def test_related_field_comparison_flags_rows_in_one_step(tmp_path):
+    wb = expense_model(tmp_path)
+    page = query(wb, ontology_id='expense-model', concept='ExpenseLine',
+                 include_related={'relation': 'usesStandard', 'fields': ['limit']},
+                 where=[{'field': 'amount', 'op': 'gt', 'related_field': 'limit'}],
+                 limit=200)
+    assert page['total'] == 2
+    assert sorted((item['values']['number'], item['values']['line'])
+                  for item in page['items']) == [('BX-1', 1), ('BX-2', 1)]
+    comparison = page['comparison']
+    assert comparison['field'] == 'amount' and comparison['op'] == 'gt'
+    assert comparison['related_field'] == 'limit'
+    assert comparison['relation'] == 'usesStandard'
+    assert comparison['matched'] == 2
+    assert comparison['missing'] == 1 and comparison['uncomparable'] == 0
+    assert comparison['ambiguous'] == 0
+    assert comparison['missing_truncated'] is False
+    missing_item, = comparison['missing_items']
+    assert missing_item['values'] == {'number': 'BX-2', 'line': 2,
+                                      'spent_on': '2026-03-04',
+                                      'category': '交通', 'amount': '30'}
+    assert missing_item['reason'] == 'related_missing'
+    # Page-level related stats describe the rows that survived the comparison.
+    assert page['related_stats'] == {
+        'relation': 'usesStandard', 'matched': 2, 'missing': 0, 'ambiguous': 0}
+
+    # ``related.`` prefix, integer/decimal mix and extra equality filters.
+    mixed = query(wb, ontology_id='expense-model', concept='ExpenseLine',
+                  include_related={'relation': 'usesStandard'},
+                  where=[{'property': 'amount', 'op': 'gte',
+                          'related_field': 'related.limit'},
+                         {'property': 'category', 'op': 'eq', 'value': '住宿'}],
+                  limit=200)
+    assert mixed['total'] == 1  # 600 >= 500 and category=住宿; 450 >= 500 is false
+    assert [item['values']['number'] for item in mixed['items']] == ['BX-1']
+
+
+def test_single_where_object_with_field_is_one_comparison(tmp_path):
+    """The MCP entry accepts one condition object, not three equality filters.
+
+    A shorthand map is still accepted, but any dict carrying ``field``/``op``/
+    ``related_field`` is one condition.  Splitting the keys would fail on the
+    undefined properties ``field``/``op``/``related_field``.
+    """
+    wb = expense_model(tmp_path)
+    single = invoke(wb, 'ontology_query', {
+        'ontology_id': 'expense-model', 'concept': 'ExpenseLine', 'limit': 200,
+        'include_related': {'relation': 'usesStandard'},
+        'where': {'field': 'amount', 'op': 'gt', 'related_field': 'limit'},
+    }).data
+    assert single['total'] == 2
+    assert len(single['filters']) == 1
+    assert single['filters'][0]['property'] == 'amount'
+    assert single['filters'][0]['op'] == 'gt'
+    assert single['filters'][0]['related_field'] == 'limit'
+    assert single['filters'][0]['value'] is None
+
+
+def test_related_field_comparison_hidden_field_warns_not_missing(tmp_path):
+    wb = expense_model(tmp_path, allowed={
+        'src-ExpenseLine': ['number', 'line', 'spent_on', 'category', 'amount'],
+        # The relation role (category) stays visible; limit is hidden.
+        'src-ExpenseStandard': ['category'],
+    })
+    page = query(wb, ontology_id='expense-model', concept='ExpenseLine',
+                 include_related={'relation': 'usesStandard'},
+                 where=[{'field': 'amount', 'op': 'gt',
+                         'related_field': 'limit'}],
+                 limit=200)
+    assert page['items'] == []
+    assert page['total'] == 0
+    comparison = page['comparison']
+    assert comparison['evaluated'] == 4
+    assert comparison['matched'] == 0
+    assert comparison['missing'] == 1  # 交通 has no standard row
+    assert comparison['uncomparable'] == 3
+    assert comparison['hidden'] == 3
+    assert comparison['hidden_fields'] == ['limit']
+    reasons = [item['reason'] for item in comparison['missing_items']]
+    assert reasons.count('related_field_hidden') == 3
+    assert reasons.count('related_missing') == 1
+    warning, = [warning for warning in page['warnings']
+                if warning['code'] == 'ontology.related_field_hidden']
+    assert warning['relation'] == 'usesStandard'
+    assert warning['property'] == 'limit'
+
+
+def test_slim_json_pointer_location_keeps_rest_response_page():
+    location = QueryService._compact_location({
+        'source_ref': 'api',
+        'selector': {'kind': 'json_pointer', 'pointer': '/items/0/amount',
+                     'extensions': {'dataagent.page': 2}},
+    })
+    assert location == {'kind': 'json_pointer', 'pointer': '/items/0/amount',
+                        'page': 2}
+
+
+def test_related_field_comparison_rejects_ambiguous_shapes(tmp_path):
+    wb = expense_model(tmp_path)
+    with pytest.raises(ValueError, match='requires include_related'):
+        query(wb, ontology_id='expense-model', concept='ExpenseLine',
+              where=[{'property': 'amount', 'op': 'gt',
+                      'related_field': 'limit'}])
+    with pytest.raises(ValueError, match='not defined on related concept'):
+        query(wb, ontology_id='expense-model', concept='ExpenseLine',
+              include_related={'relation': 'usesStandard'},
+              where=[{'property': 'amount', 'op': 'gt',
+                      'related_field': 'secret'}])
+    with pytest.raises(ValueError, match='only supported on decimal/integer/date'):
+        query(wb, ontology_id='expense-model', concept='ExpenseLine',
+              include_related={'relation': 'usesStandard'},
+              where=[{'property': 'category', 'op': 'gt',
+                      'related_field': 'limit'}])
+    with pytest.raises(ValueError, match='date cannot be compared'):
+        query(wb, ontology_id='expense-model', concept='ExpenseLine',
+              include_related={'relation': 'usesStandard'},
+              where=[{'property': 'spent_on', 'op': 'gt',
+                      'related_field': 'limit'}])
+    with pytest.raises(ValidationError, match='omit value'):
+        query(wb, ontology_id='expense-model', concept='ExpenseLine',
+              include_related={'relation': 'usesStandard'},
+              where=[{'property': 'amount', 'op': 'gt', 'value': '1',
+                      'related_field': 'limit'}])
+    with pytest.raises(ValidationError, match='exactly one'):
+        query(wb, ontology_id='expense-model', concept='ExpenseLine',
+              where=[{'property': 'amount', 'field': 'amount', 'op': 'eq',
+                      'value': '1'}])
+
+
+# ------------------------------------------------- FDE3-01 revision hints
+def test_empty_current_revision_points_at_the_older_revision(tmp_path):
+    wb, _ = saved_rows(tmp_path, [
+        {'number': 'INV-1', 'amount_minor': '10000', 'currency': 'CNY'},
+    ])
+    # A new revision is registered but no task has mapped into it yet.
+    wb.ontology.register(wb.definition.model_copy(update={'revision': '2'}), wb.ctx)
+
+    page = query(wb, ontology_id='procurement')
+    assert page['revision'] == '2' and page['total'] == 0
+    assert page['hint'] == {
+        'reason': '新修订尚未接入', 'revision': '2', 'concept': 'PurchaseDocument',
+        'older_revision': '1', 'count': 1,
+    }
+
+    summary = query(wb, ontology_id='procurement', revision='1')
+    assert summary['total'] == 1 and 'hint' not in summary
+    # An empty *filtered* page on a populated revision is not a revision hint.
+    filtered = query(wb, ontology_id='procurement', revision='1',
+                     where=[{'property': 'currency', 'op': 'eq', 'value': 'USD'}])
+    assert filtered['total'] == 0 and 'hint' not in filtered
+
+    listing = wb.queries.summary({'ontology_id': 'procurement'}, wb.ctx)
+    entry, = listing['ontologies']
+    assert entry['current_revision_instances'] == 0
+    assert entry['hint'] == {
+        'reason': '新修订尚未接入', 'revision': '2', 'older_revision': '1',
+        'count': 1,
+    }
+    concept = next(item for item in entry['concepts']
+                   if item['concept'] == 'PurchaseDocument')
+    assert concept['hint']['older_revision'] == '1'
+    assert concept['hint']['count'] == 1

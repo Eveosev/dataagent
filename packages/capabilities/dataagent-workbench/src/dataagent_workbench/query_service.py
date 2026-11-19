@@ -20,7 +20,7 @@ from decimal import Decimal, InvalidOperation
 from itertools import permutations
 from typing import Any, Iterable, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from dataagent_contracts.ontology import (
     ConceptDefinition, OntologyRevision, RelationDefinition,
@@ -45,19 +45,67 @@ _RELATED_SEPARATORS = ('|', ',', '/', '·', '-', ' ', '_', '\t', '::',
                        '\x1f', '\x01', '')
 
 
+_ORDERED_TYPES = frozenset({'decimal', 'integer', 'date'})
+_ORDERED_OPS = frozenset({'gt', 'gte', 'lt', 'lte'})
+# A dict carrying any of these keys is one condition object, not a shorthand
+# map of property names to equality values.  ``field`` is the MCP-facing alias
+# of ``property``; ``op``/``related_field`` only occur in condition objects.
+_CONDITION_KEYS = frozenset({'property', 'field', 'op', 'related_field'})
+
+
+def _is_condition_object(value: dict) -> bool:
+    return bool(_CONDITION_KEYS.intersection(value))
+
+
 class OntologyQueryCondition(BaseModel):
     """One attribute predicate.
 
     ``gt``/``gte``/``lt``/``lte`` compare by value and are accepted only for
     ``decimal``, ``integer`` and ``date`` properties; other comparisons keep
     the string/array semantics.
+
+    ``field`` is accepted as an alias for ``property``.  A condition carrying
+    ``related_field`` compares the property against the named property of the
+    object fetched through ``include_related`` (for example amount gt limit);
+    that form takes no ``value`` and is only accepted for ordered types.
     """
     model_config = ConfigDict(extra='forbid')
 
-    property: str = Field(min_length=1, description='概念已定义的属性名')
+    property: str | None = Field(default=None,
+        description='概念已定义的属性名（与 field 二选一）')
+    field: str | None = Field(default=None,
+        description='property 的别名（与 property 二选一）')
     op: Literal['eq', 'in', 'contains', 'gt', 'gte', 'lt', 'lte'] = Field(
         default='eq', description='比较方式；gt/gte/lt/lte 只用于 decimal/integer/date 属性')
     value: Any = Field(default=None, description='比较值；in 必须是数组')
+    related_field: str | None = Field(default=None,
+        description='与关联对象的该属性比较（需同时给 include_related；只用于 '
+                    'decimal/integer/date，如 {"property":"amount","op":"gt",'
+                    '"related_field":"limit"}）；可写 related.limit')
+
+    @model_validator(mode='after')
+    def _check_shape(self):
+        if bool(self.property) == bool(self.field):
+            raise ValueError('exactly one of property or field is required')
+        if self.related_field is not None:
+            if not self.related_name():
+                raise ValueError('related_field must name an attribute')
+            if self.op not in _ORDERED_OPS:
+                raise ValueError(
+                    'related_field comparison only supports gt/gte/lt/lte')
+            if self.value is not None:
+                raise ValueError(
+                    'related_field compares against the related object; omit value')
+        return self
+
+    def property_name(self) -> str:
+        return str(self.property or self.field or '').strip()
+
+    def related_name(self) -> str:
+        text = str(self.related_field or '').strip()
+        if text.startswith('related.'):
+            return text[len('related.'):]
+        return text
 
 
 class OntologyQueryRelated(BaseModel):
@@ -79,9 +127,14 @@ class OntologyQuery(BaseModel):
     revision: str | None = Field(default=None,
         description='本体修订号（如 "1" 或 "sales-model@1"）；缺省用注册表当前修订')
     where: list[OntologyQueryCondition] = Field(default_factory=list, max_length=50,
-        description='属性条件，多个条件按与（AND）组合；支持 eq/in/contains/gt/gte/lt/lte')
+        description='属性条件，多个条件按与（AND）组合；支持 eq/in/contains/gt/gte/lt/lte；'
+                    '对比关联属性用 {"property":"amount","op":"gt","related_field":"limit"}')
     include_related: OntologyQueryRelated | None = Field(default=None,
-        description='沿已发布关系带回关联对象的指定属性；每条结果附 related，未命中为 null 并计数')
+        description='沿已发布关系带回关联对象的指定属性；每条结果附 related，未命中为 null 并计数；'
+                    'related_field 比较必须同时给这一项')
+    detail: Literal['slim', 'anchors'] = Field(default='slim',
+        description='slim（默认）每行只带实例 id、属性值、来源一句话定位、release_ref 与所属任务；'
+                    'anchors 额外带逐属性来源锚点（按需取）')
     limit: int = Field(default=DEFAULT_LIMIT, ge=1, le=MAX_LIMIT,
         description='本页条数，最大 200')
     cursor: str | None = Field(default=None, description='上一页返回的 next_cursor')
@@ -89,11 +142,11 @@ class OntologyQuery(BaseModel):
     @field_validator('where', mode='before')
     @classmethod
     def _where_shorthand(cls, value):
-        """Accept an object mapping properties to values as equality filters."""
+        """Accept one condition object or a property->value equality map."""
         if value is None:
             return []
         if isinstance(value, dict):
-            if 'property' in value:
+            if _is_condition_object(value):
                 return [value]
             return [{'property': name, 'op': 'eq', 'value': item}
                     for name, item in value.items()]
@@ -125,7 +178,7 @@ def parse_where(text: str | None) -> list[OntologyQueryCondition]:
     except json.JSONDecodeError as exc:
         raise ValueError('where must be valid JSON') from exc
     if isinstance(data, dict):
-        if 'property' in data:
+        if _is_condition_object(data):
             return [OntologyQueryCondition.model_validate(data)]
         return [OntologyQueryCondition(property=name, op='eq', value=value)
                 for name, value in data.items()]
@@ -267,6 +320,30 @@ def _matches(actual: Any, expected: Any, op: str, value_type: str) -> bool:
         return {'gt': left > right, 'gte': left >= right,
                 'lt': left < right, 'lte': left <= right}[op]
     raise ValueError(f'unknown comparison: {op}')
+
+
+def _comparison_type(left: str, right: str) -> str:
+    """A common ordered type for ``property op related_field``.
+
+    Two numeric types compare as decimals so an integer column can be compared
+    with a decimal limit; dates only compare with dates.
+    """
+    if left == 'date' or right == 'date':
+        if left != right:
+            raise ValueError(
+                'date cannot be compared with %s; both sides must be dates'
+                % (right if left == 'date' else left))
+        return 'date'
+    if left not in _ORDERED_TYPES or right not in _ORDERED_TYPES:
+        raise ValueError('comparison is only supported on decimal/integer/date')
+    return 'decimal' if 'decimal' in {left, right} else 'integer'
+
+
+def _revision_key(value: str):
+    try:
+        return (1, int(str(value)))
+    except (TypeError, ValueError):
+        return (0, str(value))
 
 
 def _norm_scalar(value: Any) -> str:
@@ -421,15 +498,21 @@ class QueryService:
                     names.append(name)
             for name in names:
                 concept_time = (entry_stats.get('concept_times') or {}).get(name)
-                concepts.append({
+                current_count = (revision_stats.get('concepts') or {}).get(name, 0)
+                concept = {
                     'concept': name,
                     'published_instances': (entry_stats.get('concepts') or {}).get(name, 0),
-                    'current_revision_instances': (revision_stats.get('concepts') or {}).get(name, 0),
+                    'current_revision_instances': current_count,
                     'last_published_at': concept_time,
                     'last_published_at_note': '未知' if not concept_time else None,
                     'last_published_at_unknown': not bool(concept_time),
-                })
-            items.append({
+                }
+                hint = (self._older_revision_hint(ontology_id, revision, name)
+                        if current_count == 0 else None)
+                if hint is not None:
+                    concept['hint'] = hint
+                concepts.append(concept)
+            item = {
                 'ontology_id': ontology_id,
                 'title': entry.get('title') or ontology_id,
                 'origin': entry.get('origin'),
@@ -454,7 +537,13 @@ class QueryService:
                     }
                     for rev, value in (entry_stats.get('revisions') or {}).items()
                 },
-            })
+            }
+            if item['current_revision_instances'] == 0 and item['published_instances']:
+                hint = self._older_revision_total_hint(
+                    ontology_id, revision, entry_stats)
+                if hint is not None:
+                    item['hint'] = hint
+            items.append(item)
         return {
             'ontologies': items,
             'default_ontology': registry.get('default_ontology'),
@@ -465,6 +554,27 @@ class QueryService:
 
     # ------------------------------------------------------------------- query
     def query(self, request: OntologyQuery | dict, ctx):
+        """The model-facing query result (slim rows unless ``detail=anchors``)."""
+        response = self._query_full(request, ctx)
+        detail = response.pop('_detail')
+        return self._render(response, detail)
+
+    def query_with_artifacts(self, request: OntologyQuery | dict, ctx):
+        """Return (model result, complete result) for one query.
+
+        The MCP transport stores the complete result (anchor detail included)
+        in its result file and inlines the slim model result when it fits, so
+        an agent never has to read the file just to see the rows.
+        """
+        response = self._query_full(request, ctx)
+        detail = response.pop('_detail')
+        model = self._render(response, detail)
+        # Always a separate object: service_tools attaches the full payload to
+        # the model result, and sharing the same dict would create a cycle.
+        full = self._render(response, 'anchors')
+        return model, full
+
+    def _query_full(self, request: OntologyQuery | dict, ctx):
         self.check(ctx)
         request = (request if isinstance(request, OntologyQuery)
                    else OntologyQuery.model_validate(request))
@@ -481,8 +591,16 @@ class QueryService:
         revision, definition = self._definition(
             request.ontology_id, request.revision or default_revision)
         concept_name, concept = self._concept(definition, request.concept)
-        self._validate_conditions(request.where, concept)
-        related = self._related_spec(definition, concept_name, request.include_related)
+        comparison_conditions = [condition for condition in request.where
+                                 if condition.related_field is not None]
+        if comparison_conditions and request.include_related is None:
+            raise ValueError(
+                'related_field requires include_related naming the relation to compare through')
+        related = self._related_spec(
+            definition, concept_name, request.include_related,
+            extra_fields=[condition.related_name()
+                          for condition in comparison_conditions])
+        self._validate_conditions(request.where, concept, related)
 
         cursor_key = _decode_cursor(request.cursor) if request.cursor else None
         session_index = self._session_index()
@@ -541,21 +659,15 @@ class QueryService:
                 if not self._conditions_match(values, request.where, concept):
                     continue
                 item = {
-                    'ontology_id': request.ontology_id,
-                    'ontology_revision': '%s@%s' % (request.ontology_id, revision),
-                    'revision': revision,
                     'concept': instance_concept,
-                    'entity_type': instance.get('entity_type'),
+                    'revision': revision,
                     'instance_id': instance.get('id'),
-                    'entity_id': instance.get('id'),
-                    'id': instance.get('id'),
                     'values': values,
                     'source_refs': sorted({
                         anchor.get('source_ref') for items in anchors.values()
                         for anchor in items if anchor.get('source_ref')
                     }),
                     'source_anchors': anchors,
-                    'locations': self._locations(anchors),
                     'release_ref': release_ref,
                     'release_digest': release['digest'],
                     'partial_release': snapshot['partial'],
@@ -571,6 +683,30 @@ class QueryService:
         if cursor_key is not None:
             items = [item for item in items
                      if (item['release_ref'], item['instance_id'] or '') > cursor_key]
+        # Resolve the related object once per candidate row.  Comparison needs
+        # it before pagination so ``total`` counts the rows that actually
+        # satisfy the cross-field predicate.
+        related_cache = {}
+        if related is not None:
+            # Without a cross-field predicate only the page needs the related
+            # object; a comparison filters before pagination, so it resolves
+            # every candidate row.
+            wanted = items if comparison_conditions else items[:request.limit]
+            for item in wanted:
+                key = (item['release_ref'], item['instance_id'])
+                instance, item_concept = instances_by_key[key]
+                related_cache[key] = self._related_for(
+                    instance=instance, concept=item_concept, spec=related,
+                    facts=related_facts, release_ref=item['release_ref'],
+                    targets=targets)
+        comparison = None
+        comparison_hidden = set()
+        if comparison_conditions:
+            before = len(items)
+            kept, comparison, comparison_hidden = self._apply_related_conditions(
+                items, request.where, concept, related, related_cache)
+            items = kept
+            comparison['evaluated'] = before
         total = len(items)
         page = items[:request.limit]
         has_more = len(items) > len(page)
@@ -582,15 +718,21 @@ class QueryService:
         # grow ``related_missing`` with every row of the revision.
         related_matched = related_missing = related_ambiguous = 0
         related_missing_items = []
-        hidden_related_fields = set()
+        # Comparison resolves candidates before pagination; a hidden field can
+        # leave no page row at all.  Carry its warning up from the candidates
+        # instead of reporting it only when a page row happens to survive.
+        hidden_related_fields = set(comparison_hidden)
         if related is not None:
+            for name in sorted(hidden_related_fields):
+                warnings.append({
+                    'code': 'ontology.related_field_hidden',
+                    'relation': related['relation'],
+                    'property': name,
+                    'detail': '该属性不在披露范围内，未带回，也未参与跨字段比较',
+                })
             for item in page:
-                instance, item_concept = instances_by_key[
+                related_value, status, hidden_fields = related_cache[
                     (item['release_ref'], item['instance_id'])]
-                related_value, status, hidden_fields = self._related_for(
-                    instance=instance, concept=item_concept, spec=related,
-                    facts=related_facts, release_ref=item['release_ref'],
-                    targets=targets)
                 item['related'] = related_value
                 if status == 'ambiguous':
                     related_ambiguous += 1
@@ -620,6 +762,7 @@ class QueryService:
                     'detail': '该关系的角色来源字段不在披露范围内，关联未使用',
                 })
         response = {
+            '_detail': request.detail,
             'ontology_id': request.ontology_id,
             'ontology_revision': '%s@%s' % (request.ontology_id, revision),
             'revision': revision,
@@ -628,15 +771,18 @@ class QueryService:
             'ontology_state': state,
             'deactivated': state != 'active',
             'items': page,
-            'instances': page,
             'count': len(page),
             'total': total,
             'limit': request.limit,
             'has_more': has_more,
             'next_cursor': next_cursor,
-            'filters': [condition.model_dump(mode='json') for condition in request.where],
+            'filters': [self._condition_dump(condition) for condition in request.where],
             'warnings': warnings,
         }
+        if total == 0:
+            hint = self._older_revision_hint(request.ontology_id, revision, concept_name)
+            if hint is not None:
+                response['hint'] = hint
         if related is not None:
             response.update({
                 'include_related': {
@@ -657,7 +803,108 @@ class QueryService:
                 'related_missing_truncated': (
                     len(related_missing_items) < related_missing),
             })
+        if comparison is not None:
+            response['comparison'] = comparison
         return response
+
+    # ------------------------------------------------------- payload rendering
+    @staticmethod
+    def _condition_dump(condition: OntologyQueryCondition) -> dict:
+        data = {'property': condition.property_name(), 'op': condition.op,
+                'value': condition.value}
+        if condition.related_field is not None:
+            data['related_field'] = condition.related_name()
+        return data
+
+    def _render(self, response: dict, detail: str) -> dict:
+        """Replace full rows with the requested row detail."""
+        data = {key: value for key, value in response.items() if key != 'items'}
+        data['detail'] = detail
+        data['items'] = [self._render_item(item, detail)
+                         for item in response.get('items') or []]
+        return data
+
+    def _render_item(self, item: dict, detail: str) -> dict:
+        slim = {
+            'instance_id': item['instance_id'],
+            'concept': item['concept'],
+            'revision': item['revision'],
+            'values': item['values'],
+            'release_ref': item['release_ref'],
+            'session_id': item['session_id'],
+            'task': item['task'],
+            'partial_release': item['partial_release'],
+            'deactivated': item['deactivated'],
+            'unresolved': list(item.get('unresolved') or []),
+        }
+        if detail == 'anchors':
+            slim['source_refs'] = list(item.get('source_refs') or [])
+            slim['source_anchors'] = item['source_anchors']
+        else:
+            slim['source'] = self._compact_sources(item.get('source_anchors') or {})
+        if 'related' in item:
+            slim['related'] = item['related']
+        return slim
+
+    @staticmethod
+    def _compact_sources(anchors: dict) -> list[dict]:
+        """One-line source locations, grouped by source and property.
+
+        Full anchors repeat the same selector, source revision and extraction
+        reference for every property; the compact form keeps only the location
+        fields a reader needs and names the properties that share a location.
+        """
+        groups: dict[Any, dict] = {}
+        for name, entries in anchors.items():
+            for anchor in entries:
+                source_ref = anchor.get('source_ref')
+                group = groups.setdefault(source_ref, {
+                    'source_ref': source_ref, 'locations': {}})
+                location = QueryService._compact_location(anchor)
+                bucket = group['locations'].setdefault(name, [])
+                if location not in bucket:
+                    bucket.append(location)
+        return list(groups.values())
+
+    @staticmethod
+    def _compact_location(anchor: dict) -> dict:
+        selector = anchor.get('selector') or {}
+        location = {}
+        for key in ('page', 'paragraph', 'line'):
+            if selector.get(key) is not None:
+                location[key] = selector[key]
+        kind = selector.get('kind')
+        if kind == 'record_key':
+            keys = selector.get('keys') or {}
+            if keys.get('row') is not None:
+                location['row'] = keys['row']
+            elif keys.get('line') is not None:
+                location['line'] = keys['line']
+            elif keys:
+                location['kind'] = 'record_key'
+                location['keys'] = keys
+        elif kind == 'excel_cell':
+            for key in ('sheet', 'range'):
+                if selector.get(key) is not None:
+                    location[key] = selector[key]
+        elif kind == 'text_span':
+            for key in ('unit_ref', 'char_start', 'char_end'):
+                if selector.get(key) is not None:
+                    location[key] = selector[key]
+        elif kind == 'json_pointer':
+            location['kind'] = 'json_pointer'
+            if selector.get('pointer') is not None:
+                location['pointer'] = selector['pointer']
+            # REST 分页把 1 起的响应页号放在 extensions，不随 selector 平铺；
+            # 精简定位仍要保留，否则实例页只剩指针、看不出第几页。
+            extensions = selector.get('extensions')
+            if (isinstance(extensions, dict)
+                    and extensions.get('dataagent.page') is not None):
+                location.setdefault('page', extensions['dataagent.page'])
+        elif kind:
+            location['kind'] = kind
+        return {key: value for key, value in location.items()
+                if value is not None}
 
     # ------------------------------------------------------------------ helper
     def _definition(self, ontology_id: str, revision: str):
@@ -688,23 +935,40 @@ class QueryService:
 
     @staticmethod
     def _validate_conditions(conditions: Iterable[OntologyQueryCondition],
-                             concept: ConceptDefinition):
+                             concept: ConceptDefinition,
+                             related: dict | None = None):
         for condition in conditions:
-            if condition.property not in concept.properties:
+            if condition.property_name() not in concept.properties:
                 raise ValueError(
                     'property %r is not defined on concept %r'
-                    % (condition.property, concept.entity_type))
-            value_type = concept.properties[condition.property].value_type
+                    % (condition.property_name(), concept.entity_type))
+            value_type = concept.properties[condition.property_name()].value_type
             if condition.op == 'in' and not isinstance(condition.value, list):
                 raise ValueError('in requires a JSON array')
             if condition.op == 'contains' and condition.value is None:
                 raise ValueError('contains requires a value')
+            if condition.related_field is not None:
+                if related is None:
+                    raise ValueError(
+                        'related_field requires include_related naming the relation')
+                target = related['target_definition']
+                if condition.related_name() not in target.properties:
+                    raise ValueError(
+                        'related_field %r is not defined on related concept %r'
+                        % (condition.related_name(), target.entity_type))
+                if condition.op not in _ORDERED_OPS:
+                    raise ValueError(
+                        'related_field comparison only supports gt/gte/lt/lte')
+                _comparison_type(
+                    value_type,
+                    target.properties[condition.related_name()].value_type)
+                continue
             if condition.op in {'gt', 'gte', 'lt', 'lte'}:
                 if value_type not in {'decimal', 'integer', 'date'}:
                     raise ValueError(
                         'comparison %s is only supported on decimal/integer/date '
                         'properties; %r is %s'
-                        % (condition.op, condition.property, value_type))
+                        % (condition.op, condition.property_name(), value_type))
                 if condition.value is None or isinstance(condition.value, list):
                     raise ValueError('%s requires a single value' % condition.op)
                 # Parse the comparison value before any instance is read.  An
@@ -716,15 +980,124 @@ class QueryService:
     def _conditions_match(values: dict, conditions: Iterable[OntologyQueryCondition],
                           concept: ConceptDefinition):
         for condition in conditions:
-            value_type = concept.properties[condition.property].value_type
-            if not _matches(values.get(condition.property), condition.value,
+            if condition.related_field is not None:
+                continue
+            value_type = concept.properties[condition.property_name()].value_type
+            if not _matches(values.get(condition.property_name()), condition.value,
                             condition.op, value_type):
                 return False
         return True
 
     @staticmethod
+    def _compare_related(values: dict, related_fields: dict,
+                         conditions: list[OntologyQueryCondition],
+                         concept: ConceptDefinition,
+                         target: ConceptDefinition):
+        """Whether every related-field predicate holds for one row.
+
+        Returns ``(matched, reason)``.  ``reason`` distinguishes a false
+        predicate (a normal non-match that is dropped silently) from a row
+        that cannot be compared because the related object or its value is
+        missing.
+        """
+        for condition in conditions:
+            left = values.get(condition.property_name())
+            right = related_fields.get(condition.related_name())
+            if left is None or right is None:
+                return False, 'missing_value'
+            value_type = _comparison_type(
+                concept.properties[condition.property_name()].value_type,
+                target.properties[condition.related_name()].value_type)
+            left_order = _order(left, value_type)
+            right_order = _order(right, value_type)
+            if left_order is None or right_order is None:
+                return False, 'uncomparable'
+            holds = {'gt': left_order > right_order,
+                     'gte': left_order >= right_order,
+                     'lt': left_order < right_order,
+                     'lte': left_order <= right_order}[condition.op]
+            if not holds:
+                return False, 'not_matched'
+        return True, ''
+
+    def _apply_related_conditions(self, items, conditions, concept, related,
+                                  related_cache):
+        """Filter rows by the cross-field predicates and count the rest."""
+        predicates = [condition for condition in conditions
+                      if condition.related_field is not None]
+        target = related['target_definition']
+        kept = []
+        matched = missing = ambiguous = uncomparable = hidden = 0
+        hidden_names = set()
+        missing_items = []
+        for item in items:
+            related_value, status, hidden_fields = related_cache[
+                (item['release_ref'], item['instance_id'])]
+            if status == 'ambiguous':
+                ambiguous += 1
+                continue
+            if status != 'matched' or related_value is None:
+                missing += 1
+                missing_items.append(self._missing_stub(item, 'related_missing'))
+                continue
+            # The disclosure layer drops hidden fields before they reach here.
+            # Comparing a missing key would look like a normal predicate miss,
+            # so report the row as uncomparable and carry the field name up to
+            # the response warning.
+            hidden_predicates = {
+                condition.related_name() for condition in predicates
+            }.intersection(hidden_fields or ())
+            if hidden_predicates:
+                hidden_names.update(hidden_predicates)
+                hidden += 1
+                uncomparable += 1
+                missing_items.append(
+                    self._missing_stub(item, 'related_field_hidden'))
+                continue
+            holds, reason = self._compare_related(
+                item['values'], related_value.get('fields') or {},
+                predicates, concept, target)
+            if holds:
+                kept.append(item)
+                matched += 1
+            elif reason in {'missing_value', 'uncomparable'}:
+                uncomparable += 1
+                missing_items.append(self._missing_stub(item, reason))
+            # reason == 'not_matched' is a normal predicate miss: drop it.
+        first = predicates[0]
+        comparison = {
+            'field': first.property_name(),
+            'op': first.op,
+            'related_field': first.related_name(),
+            'relation': related['relation'],
+            'conditions': [
+                {'property': condition.property_name(), 'op': condition.op,
+                 'related_field': condition.related_name()}
+                for condition in predicates],
+            'matched': matched,
+            'missing': missing,
+            'uncomparable': uncomparable,
+            'ambiguous': ambiguous,
+            'hidden': hidden,
+            'hidden_fields': sorted(hidden_names),
+            'missing_items': missing_items[:_MAX_RELATED_MISSING],
+            'missing_truncated': len(missing_items) > _MAX_RELATED_MISSING,
+        }
+        return kept, comparison, hidden_names
+
+    @staticmethod
+    def _missing_stub(item: dict, reason: str) -> dict:
+        return {
+            'release_ref': item['release_ref'],
+            'instance_id': item['instance_id'],
+            'values': item['values'],
+            'reason': reason,
+        }
+
+    @staticmethod
     def _related_spec(definition: OntologyRevision, concept_name: str,
-                      request: OntologyQueryRelated | None):
+                      request: OntologyQueryRelated | None,
+                      extra_fields: Iterable[str] = ()):
         """Resolve a published relation into a traversal in one direction."""
         if request is None:
             return None
@@ -751,6 +1124,9 @@ class QueryService:
             raise ValueError('relation %r names an unknown concept: %s'
                              % (request.relation, target_concept)) from None
         fields = list(dict.fromkeys(request.fields)) or list(target.identity_fields)
+        for field in extra_fields:
+            if field not in fields:
+                fields.append(field)
         for field in fields:
             if field not in target.properties:
                 raise ValueError(
@@ -1143,6 +1519,59 @@ class QueryService:
             for ref in refs:
                 times.setdefault(ref, recorded_at)
         return times
+
+    def _older_revision_hint(self, ontology_id: str, revision: str,
+                             concept: str) -> dict | None:
+        """Point at the newest older revision that still has this concept's rows.
+
+        A new ontology revision starts with no published instances until a task
+        maps into it.  Reporting zero alone reads as "there is no data", so the
+        count of the newest older revision travels with the empty page.
+        """
+        entry = self._stats().get(ontology_id) or {}
+        current_key = _revision_key(revision)
+        current = (entry.get('revisions') or {}).get(revision) or {}
+        if (current.get('concepts') or {}).get(concept, 0):
+            # The revision does have rows; an empty filtered page is a filter
+            # result, not an unconnected revision.
+            return None
+        older = []
+        for rev, data in (entry.get('revisions') or {}).items():
+            if rev == revision or _revision_key(rev) >= current_key:
+                continue
+            count = (data.get('concepts') or {}).get(concept, 0)
+            if count:
+                older.append((rev, count))
+        if not older:
+            return None
+        older_revision, count = max(older, key=lambda item: _revision_key(item[0]))
+        return {
+            'reason': '新修订尚未接入',
+            'revision': revision,
+            'concept': concept,
+            'older_revision': older_revision,
+            'count': count,
+        }
+
+    def _older_revision_total_hint(self, ontology_id: str, revision: str,
+                                   entry_stats: dict) -> dict | None:
+        """The ontology-level form of :meth:`_older_revision_hint`."""
+        current_key = _revision_key(revision)
+        older = []
+        for rev, data in (entry_stats.get('revisions') or {}).items():
+            if rev == revision or _revision_key(rev) >= current_key:
+                continue
+            if data.get('count'):
+                older.append((rev, data['count']))
+        if not older:
+            return None
+        older_revision, count = max(older, key=lambda item: _revision_key(item[0]))
+        return {
+            'reason': '新修订尚未接入',
+            'revision': revision,
+            'older_revision': older_revision,
+            'count': count,
+        }
 
     def _stats(self):
         """Aggregate published instances by ontology, revision and concept."""
