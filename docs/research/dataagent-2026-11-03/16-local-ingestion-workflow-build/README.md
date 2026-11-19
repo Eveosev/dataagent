@@ -1,6 +1,6 @@
 ---
-version: 2
-date: 2026-11-18
+version: 5
+date: 2026-11-19
 status: 实施中
 ---
 
@@ -18,5 +18,6 @@ status: 实施中
 | [离线安装与链路验收](implementation-2026-11-11.md) | 可复跑命令、真实运行引用、评审修复与待验收场景 |
 | [打包桌面版 GUI 工具通道核实](gui-channel-check.md) | T02：打包版 Mint Agent 能起项目会话、能加载技能，但拿不到 DataAgent 的 MCP 工具；非 Kernel 布局的 `mint gui` 可用 |
 | [Mint TUI 证据包摘要](evidence-tui.md) | T50：C-01 部分通过、C-02 通过、C-03 部分通过；缺陷清单、哨兵扫描与仓外证据包路径 |
+| [M1 独立评审](r1-review.md) | T53：M1 六项能力的复跑结果、FDE 两轮审核、真实 Agent 查询抽查 L1–L4、缺陷 D1/D2（转 S2）、T50 C-01/C-03 可验收条件（§7.1）、已知限制与验收结论 |
 
 实施后按任务和轮次增加修复、评审与验收记录，并登记实际工作区、版本、输入范围与产物引用。
