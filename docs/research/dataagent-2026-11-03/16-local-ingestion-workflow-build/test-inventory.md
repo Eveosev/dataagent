@@ -101,7 +101,7 @@ M1 收口复跑：11 个包 1975 passed、2 skipped、3 warning。分项：appli
 | M1-06 | Excel/JSON 来源接入 | 已验证。files 阶段 Excel/JSON/JSONL/TSV 样本 coverage=full，单元格/JSON Pointer 锚点与期望一致 | 无；安装后接入已由 files 阶段覆盖 |
 | M1-07 | 审核与三种修改范围 | 已验证。intake.spec 覆盖三种修改范围；mapping.spec、source-preview.spec 覆盖映射修订 | 浏览器 e2e 门禁缺陷 D1（共享默认本体隔离）、D2（`bad-input.spec.ts:45` flaky 待查）见 [r1-review](r1-review.md) §6，均转 S2；功能路径在复跑中通过 |
 | M1-08 | 并发、刷新和重启 | 已验证。intake.spec 覆盖并发修改、过期决定拒绝、服务重启恢复；workbench 单测覆盖事务回滚 | S2（D1/D2）合入后需连续两次 0 failed、0 flaky |
-| M1-09 | Mint TUI 复用与保存 | 部分通过。T50 C-03：单来源与不含扫描件多来源 `mapping_reused=true`；含扫描件组合不复用（T50 缺陷 D3，F6 已修但未在 TUI 重跑）；T50 C-01 的 3 份材料任务也未复用已存映射；无交互终端录屏 | 需验收人裁定：接受为已知限制，或转修复卡；条件与证据见 [r1-review](r1-review.md) §7.1（含扫描件映射复用、TUI 未交互复跑） |
+| M1-09 | Mint TUI 复用与保存 | 部分通过。T50 C-03：单来源与不含扫描件多来源 `mapping_reused=true`；含扫描件组合不复用（T50 缺陷 D3，F6 已修但未在 TUI 重跑）；T50 C-01 的 3 份材料任务也未复用已存映射；无交互终端录屏 | 需验收人裁定：接受为已知限制，或转修复卡并修完；条件与证据见 [r1-review](r1-review.md) §7.1（含扫描件映射复用、TUI 未交互复跑） |
 | M1-10 | Mint GUI | 部分通过。非 Kernel 布局的 `mint gui` 冒烟得到 80 个工具，其中 DataAgent 56 个（workbench 13、data 32、operations 11），与 `mint run` 一致（[gui-channel-check](gui-channel-check.md)）；C-01/C-02 场景未跑。打包版 `Mint Agent.app`（kernel-stdio-v1）看不到工具，仍是 IF-13 | 按 `mint gui` 跑 C-01/C-02 并采证；打包版待 Mint 侧 IF-13 |
 | M1-11 | 本地认证与模型披露 | 已验证到组件边界。一次性浏览器入口、跨站请求、任务成员、披露字段过滤有测试；真实会话令牌问题已脱敏，修复后的那次复验会话内未再出现文件/Shell 读取 | 宿主级注入与默认审批归 T51/G1.5；收口前查询抽查仍出现擦边读取（L2），见 [r1-review](r1-review.md) §5 |
 | M1-12 | docx 正文与表格 | 已验证。files 阶段 docx coverage=full，正文 `paragraph:2`、表格 `table:1/row:2/col:2` 锚点与期望一致；docx 单测与安装产物依赖测试通过 | 复杂页眉页脚、文本框不在 M1 |
