@@ -89,13 +89,36 @@ def test_date_binding_with_an_explicit_format_also_refuses_a_non_midnight_time()
     assert not accepted.issues
 
 
-def test_string_target_stores_a_midnight_date_the_way_the_date_transform_would():
-    """FDE3-09: a revision retyping date to string keeps the published values.
+def test_string_target_keeps_two_date_looking_text_values():
+    """FDE3-09 review: text that merely looks like a date stays text.
 
-    The identity binding on a string property used to store the sheet
-    reader's ``2026-04-08T00:00:00`` verbatim, so the same source no longer
-    compared equal to revision 1's ``2026-04-08``.  Only a confirmed sheet
-    date column is reformatted; see the preservation cases below.
+    The sheet reader hands both a date cell and a text cell containing
+    ``2026-04-08T00:00:00`` over as the same string.  Value shape is not
+    evidence: two such rows are ordinary text and keep their exact value.
+    """
+    onto=OntologyRevision(id='invoice',revision='2',entity_type='Invoice',
+        properties={'number':{'value_type':'string','required':True},
+                    'note':{'value_type':'string','required':True}},
+        identity_fields=['number'])
+    m=MappingSpec(id='m',revision='1',ontology_revision='invoice@2',source_fingerprint='schema',
+        bindings={'number':{'source_field':'number'},
+                  'note':{'source_field':'note'}})
+    p=profile([{'number':'A','note':'2026-04-08T00:00:00'},
+               {'number':'B','note':'2026-04-09T00:00:00'}]).model_copy(
+        update={'kind':'xlsx','fields':['number','note']})
+    result=materialize(onto,m,[p],scope='T')
+    assert [instance.values['note'] for instance in result.instances]==[
+        '2026-04-08T00:00:00','2026-04-09T00:00:00']
+    assert not result.issues
+
+
+def test_string_target_formats_a_single_date_cell_through_the_date_transform():
+    """FDE3-09: date formatting is explicit, so one row is enough.
+
+    A revision retyping ``date`` to ``string`` names the ``date`` conversion
+    for that column.  The conversion validates the real cell and stores
+    ``YYYY-MM-DD``; no value-shape guessing is involved, and a single-row
+    source formats exactly like a larger one.
     """
     onto=OntologyRevision(id='invoice',revision='2',entity_type='Invoice',
         properties={'number':{'value_type':'string','required':True},
@@ -103,13 +126,11 @@ def test_string_target_stores_a_midnight_date_the_way_the_date_transform_would()
         identity_fields=['number'])
     m=MappingSpec(id='m',revision='1',ontology_revision='invoice@2',source_fingerprint='schema',
         bindings={'number':{'source_field':'number'},
-                  'day':{'source_field':'day'}})
-    p=profile([{'number':'A','day':'2026-04-08T00:00:00'},
-               {'number':'B','day':'2026-04-09T00:00:00'}]).model_copy(
+                  'day':{'source_field':'day','transform':'date'}})
+    p=profile([{'number':'A','day':'2026-04-08T00:00:00'}]).model_copy(
         update={'kind':'xlsx','fields':['number','day']})
     result=materialize(onto,m,[p],scope='T')
-    assert [instance.values['day'] for instance in result.instances]==[
-        '2026-04-08','2026-04-09']
+    assert result.instances[0].values['day']=='2026-04-08'
     assert not result.issues
 
 
@@ -150,7 +171,7 @@ def test_string_target_keeps_a_date_looking_text_in_an_ordinary_column():
 
 
 def test_string_target_keeps_a_lone_date_looking_text():
-    """A single value cannot confirm a date column; keep it verbatim."""
+    """One text value is still text, not proof of a date cell."""
     onto=OntologyRevision(id='invoice',revision='2',entity_type='Invoice',
         properties={'number':{'value_type':'string','required':True},
                     'note':{'value_type':'string'}},
@@ -164,19 +185,20 @@ def test_string_target_keeps_a_lone_date_looking_text():
     assert result.instances[0].values['note']=='2026-04-08T00:00:00'
 
 
-def test_string_identity_field_keeps_a_date_looking_text():
-    """FDE3-09 review: an identity value is never shortened by guesswork."""
+def test_string_identity_field_keeps_two_date_looking_text_values():
+    """FDE3-09 review: identity text is never shortened, so identities stay put."""
     onto=OntologyRevision(id='invoice',revision='2',entity_type='Invoice',
         properties={'number':{'value_type':'string','required':True}},
         identity_fields=['number'])
     m=MappingSpec(id='m',revision='1',ontology_revision='invoice@2',source_fingerprint='schema',
         bindings={'number':{'source_field':'number'}})
     p=profile([{'number':'2026-04-08T00:00:00'},
-               {'number':'STAFF-1'}]).model_copy(
+               {'number':'2026-04-09T00:00:00'}]).model_copy(
         update={'kind':'xlsx','fields':['number']})
     result=materialize(onto,m,[p],scope='T')
     assert sorted(instance.values['number'] for instance in result.instances)==[
-        '2026-04-08T00:00:00','STAFF-1']
+        '2026-04-08T00:00:00','2026-04-09T00:00:00']
+    assert len({instance.id for instance in result.instances})==2
     assert not result.issues
 
 
