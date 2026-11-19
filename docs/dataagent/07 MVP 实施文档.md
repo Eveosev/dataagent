@@ -483,7 +483,9 @@ flowchart LR
 | 领域词 | `python3 scripts/check_domain_words.py` | T16 之后每张卡 |
 | 工具注解 | `python3 scripts/check_tool_annotations.py --servers data,application,governance,workbench,operations` | T12b 之后改 MCP 工具的卡 |
 | 安装后验收 | `bash scripts/prepare_acceptance.sh && bash scripts/verify_local.sh --phase <阶段>` | 改动接入链路的卡；合入集成分支前 |
-| D7 本体发现端到端 | `bash scripts/verify_local.sh --phase ontology` | 本体发现接入链路改动后 |
+| 浏览器 e2e | `bash scripts/prepare_acceptance.sh && $CAP/dataagent-workbench/.venv/bin/python scripts/verify_browser.py` | 改工作台前端、对象页、发现/发布/修订流程的卡；M1 收口与合入集成分支前。报告缺失或结构不符即失败；flaky 清单为空才记通过 |
+| 验收脚本单测 | `cd scripts/acceptance && uv run --no-project --with 'pytest>=8,<9' python -m pytest tests -q` | 改 `scripts/acceptance/` 的卡 |
+| D7 本体发现端到端 | `D7_GOLD_DIR="$PRIVATE_DIR/d7-discovery" bash scripts/verify_local.sh --phase ontology` | 本体发现接入链路改动后；M1 收口与合入集成分支前 |
 | 评测 | `$BENCH` 下 `harness/run.py` + `tools/check.py`（每次新 `$RID`） | T30 之后改动能力的卡跑对应任务的探索轮 |
 | 私有数据 | `python3 -I $BENCH/tools/check_private_leak.py --dataset "$LINGCAI_DATASET"` | T33 之后每次合入 |
 | 审核 | codex 只读审核，结论为通过 / 要改 / 阻塞 | 每个 crew 任务 |
