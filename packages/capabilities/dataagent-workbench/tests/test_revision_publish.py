@@ -93,8 +93,15 @@ def full_draft(wb, session_id, request):
 
 def completion(wb, session_id, current_draft, ontology_id='sales-model', *,
                doc_no_type='integer', include_customer_name=True,
-               title='销售单据模型'):
+               title='销售单据模型', day_type=None):
     relations = {link['name']: link for link in current_draft['relationships']}
+    order_properties = {
+        'book': {'column': 'book', 'value_type': 'string', 'required': True},
+        'doc_no': {'column': 'doc_no', 'value_type': doc_no_type,
+                   'required': True},
+    }
+    if day_type is not None:
+        order_properties['day'] = {'column': 'day', 'value_type': day_type}
     customer_properties = {
         'party_no': {'column': 'party_no', 'value_type': 'string', 'required': True},
     }
@@ -107,11 +114,8 @@ def completion(wb, session_id, current_draft, ontology_id='sales-model', *,
         'ontology_id': ontology_id,
         'title': title,
         'concepts': [
-            {'entity': 'SalesOrder', 'properties': {
-                'book': {'column': 'book', 'value_type': 'string', 'required': True},
-                'doc_no': {'column': 'doc_no', 'value_type': doc_no_type,
-                           'required': True},
-            }, 'identity_fields': ['book', 'doc_no']},
+            {'entity': 'SalesOrder', 'properties': order_properties,
+             'identity_fields': ['book', 'doc_no']},
             {'entity': 'SalesOrderLine', 'properties': {
                 'book': {'column': 'book', 'value_type': 'string', 'required': True},
                 'doc_no': {'column': 'doc_no', 'value_type': 'integer',
@@ -193,6 +197,34 @@ def registry_entry(wb, ontology_id='sales-model'):
     registry = client(wb).get('/api/ontologies').json()
     return next(item for item in registry['ontologies']
                 if item['id'] == ontology_id)
+
+
+def save_sales_orders(wb, tmp_path, rows=None):
+    """Release SalesOrder objects into revision 1 through a pinned task."""
+    rows = rows or [{'book': 'SALE', 'doc_no': '1001'},
+                    {'book': 'SALE', 'doc_no': '1002'}]
+    (tmp_path / 'orders.csv').write_text(
+        'book,doc_no\n' + '\n'.join(
+            f"{row['book']},{row['doc_no']}" for row in rows) + '\n')
+    wb.layer_client = StubProbeClient({'orders': csv_profile('orders', rows)})
+    goal = WorkSpec(id='map', goal='接入销售数据',
+                    acceptance_criteria=['来源可核对'],
+                    authorization_ref=wb.authorization)
+    started = wb.sessions.start(
+        [SourceSelection(source_id='orders', kind='file',
+                         locator_ref='orders.csv')], goal, wb.ctx,
+        target={'ontology_id': 'sales-model', 'concept': 'SalesOrder'})
+    mapping_session = wb.intake.advance(started.session_id, wb.ctx)
+    mapping_source, = wb.intake.inference_request(
+        mapping_session.id, wb.ctx)['sources']
+    save_single(wb, mapping_session, MappingSpec(
+        id='orders', revision='1', ontology_revision='sales-model@1',
+        concept='SalesOrder',
+        source_fingerprint=mapping_source['structure_fingerprint'],
+        bindings={'book': {'source_field': 'book'},
+                  'doc_no': {'source_field': 'doc_no',
+                             'transform': 'integer'}}))
+    wb.layer_client = LayerClient(DATA)
 
 
 # ------------------------------------------------------------------ positive
@@ -383,6 +415,139 @@ def test_rev1_released_instances_stay_queryable_after_rev2(tmp_path):
     assert current_page['ontology_revision'] == 'sales-model@2'
     assert current_page['total'] == 0  # rev1 data is not silently migrated
 
+
+
+def test_revision_candidate_names_current_revision_counts_and_reintake(tmp_path):
+    """FDE3-01: the candidate summary tells the confirmation page what the
+    new revision means for published data.
+
+    Per concept it counts the objects on the revision being replaced, and it
+    names the concepts that need taking in again: the new revision is
+    registered empty, so every released object stays invisible to queries
+    that default to it.  A first publication has neither a current revision
+    to count nor stranded objects.
+    """
+    wb, session_id, request = workbench(tmp_path)
+    _, first_candidate, _ = publish_initial(wb, session_id, request)
+    assert first_candidate['current_revision_instance_counts'] == {}
+    assert first_candidate['reintake_concepts'] == []
+
+    # Publish two SalesOrder objects on revision 1.
+    save_sales_orders(wb, tmp_path)
+
+    _, revision_session, revision_request = workbench(
+        tmp_path, revise_ontology_id='sales-model')
+    _, candidate = revision_candidate(
+        wb, revision_session, revision_request, doc_no_type='string')
+    assert candidate['previous_revision'] == '1'
+    # Both revisions' concepts carry a count from the current revision;
+    # only SalesOrder has objects, so only it needs taking in again.
+    assert candidate['current_revision_instance_counts'] == {
+        'SalesOrder': 2, 'SalesOrderLine': 0, 'Customer': 0}
+    assert candidate['reintake_concepts'] == ['SalesOrder']
+
+    # The web candidate view serves the same fields the summary reports.
+    view = client(wb).get(
+        f'/api/sessions/{revision_session}/publish/candidate').json()
+    assert view['current_revision_instance_counts']['SalesOrder'] == 2
+    assert view['reintake_concepts'] == ['SalesOrder']
+
+
+def test_revision_confirm_rejects_a_candidate_after_old_revision_releases(tmp_path):
+    """FDE3-01 review: the re-intake outlook is rechecked at confirmation.
+
+    Preparing a revision while revision 1 is empty tells the user no concept
+    needs re-intake.  A release into revision 1 made after that point makes
+    the statement false; confirming the stale candidate would publish a
+    revision whose objects the user was told are unaffected, so the server
+    refuses and demands a fresh candidate.
+    """
+    wb, session_id, request = workbench(tmp_path)
+    publish_initial(wb, session_id, request)
+
+    revision_wb, revision_session, revision_request = workbench(
+        tmp_path, revise_ontology_id='sales-model')
+    current, candidate = revision_candidate(
+        revision_wb, revision_session, revision_request, doc_no_type='string')
+    assert candidate['current_revision_instance_counts'] == {
+        'SalesOrder': 0, 'SalesOrderLine': 0, 'Customer': 0}
+    assert candidate['reintake_concepts'] == []
+
+    # Another task releases objects into revision 1 after prepare.
+    save_sales_orders(revision_wb, tmp_path)
+    stale = publish(revision_wb, revision_session, candidate)
+    assert stale.status_code == 409, stale.json()
+    assert 'published instances changed' in stale.json()['detail']
+    assert revision_wb.store.current(
+        'ontology', 'sales-model',
+        scope=revision_wb.scope)['body']['revision'] == '1'
+
+    # A fresh candidate carries the new outlook; confirming it publishes.
+    refreshed = invoke(revision_wb, 'ontology_publish_prepare',
+                       completion(revision_wb, revision_session, current)).data
+    assert refreshed['candidate_ref'] != candidate['candidate_ref']
+    assert refreshed['current_revision_instance_counts']['SalesOrder'] == 2
+    assert refreshed['reintake_concepts'] == ['SalesOrder']
+    published = publish(revision_wb, revision_session, refreshed)
+    assert published.status_code == 200, published.json()
+    assert published.json()['ontology_revision'] == '2'
+
+
+def test_revision_date_to_string_formats_a_default_mapping(tmp_path):
+    """FDE3-09: date→string revision keeps date formatting for default mappings.
+
+    The source is an xlsx date column whose cells the sheet reader serializes
+    as midnight ISO text.  The revision records the retype, so a mapping that
+    omits ``transform`` (the default identity binding) still stores
+    ``YYYY-MM-DD``.  A plain string property is not touched.
+    """
+    with sqlite3.connect(tmp_path / 'sales.db') as connection:
+        connection.executescript(SEED.read_text())
+        connection.execute('ALTER TABLE doc_hdr ADD COLUMN day TEXT')
+        connection.execute(
+            "UPDATE doc_hdr SET day=CASE doc_no "
+            "WHEN 1001 THEN '2026-04-08' ELSE '2026-04-09' END")
+    wb, session_id, request = workbench(tmp_path)
+    current = full_draft(wb, session_id, request)
+    first = invoke(wb, 'ontology_publish_prepare',
+                   completion(wb, session_id, current, day_type='date')).data
+    assert publish(wb, session_id, first).status_code == 200
+
+    revision_wb, revision_session, revision_request = workbench(
+        tmp_path, revise_ontology_id='sales-model')
+    current, candidate = revision_candidate(
+        revision_wb, revision_session, revision_request, day_type='string')
+    assert candidate['definition']['extensions']['dataagent.date_text'] == [
+        'SalesOrder.day']
+    assert publish(revision_wb, revision_session, candidate).status_code == 200
+
+    rows = [{'book': 'SALE', 'doc_no': '1001', 'day': '2026-04-08T00:00:00'},
+            {'book': 'SALE', 'doc_no': '1002', 'day': '2026-04-09T00:00:00'}]
+    (tmp_path / 'orders.csv').write_text(
+        'book,doc_no,day\n' + '\n'.join(
+            f"{row['book']},{row['doc_no']},{row['day']}" for row in rows) + '\n')
+    revision_wb.layer_client = StubProbeClient({
+        'orders': csv_profile('orders', rows).model_copy(update={'kind': 'xlsx'})})
+    goal = WorkSpec(id='map', goal='接入销售数据',
+                    acceptance_criteria=['来源可核对'],
+                    authorization_ref=revision_wb.authorization)
+    started = revision_wb.sessions.start(
+        [SourceSelection(source_id='orders', kind='file',
+                         locator_ref='orders.csv')], goal, revision_wb.ctx,
+        target={'ontology_id': 'sales-model', 'concept': 'SalesOrder'})
+    mapping_session = revision_wb.intake.advance(started.session_id, revision_wb.ctx)
+    mapping_source, = revision_wb.intake.inference_request(
+        mapping_session.id, revision_wb.ctx)['sources']
+    preview = save_single(revision_wb, mapping_session, MappingSpec(
+        id='orders', revision='1', ontology_revision='sales-model@2',
+        concept='SalesOrder',
+        source_fingerprint=mapping_source['structure_fingerprint'],
+        bindings={'book': {'source_field': 'book'},
+                  'doc_no': {'source_field': 'doc_no', 'transform': 'integer'},
+                  'day': {'source_field': 'day'}}))
+    assert {instance.values['day'] for instance in preview.instances} == {
+        '2026-04-08', '2026-04-09'}
+    revision_wb.layer_client = LayerClient(DATA)
 
 
 def test_revision_field_does_not_change_existing_target_validation():

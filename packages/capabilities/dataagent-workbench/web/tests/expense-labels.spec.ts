@@ -120,7 +120,7 @@ test('差旅本体：英文实体名统一中文标签；发布后同页签面�
  await page.getByRole('button',{name:'新建接入'}).click();
  await page.getByLabel('接入目标').fill('从差旅报销数据库发现本体并发布');
  await page.getByLabel('选择材料').setInputFiles(database);
- await page.getByRole('radio',{name:'从数据库发现本体'}).check();
+ await page.getByRole('radio',{name:'从材料发现本体'}).check();
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByRole('heading',{name:'本体发现'})).toBeVisible({timeout:20000});
  await expect(page.getByRole('heading',{name:'来源证据'})).toBeVisible({timeout:20000});

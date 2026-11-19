@@ -118,7 +118,7 @@ async function startDiscovery(page:import('@playwright/test').Page,goal:string,d
  await page.getByRole('button',{name:'新建接入'}).click();
  await page.getByLabel('接入目标').fill(goal);
  await page.getByLabel('选择材料').setInputFiles(database);
- await page.getByRole('radio',{name:'从数据库发现本体'}).check();
+ await page.getByRole('radio',{name:'从材料发现本体'}).check();
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByRole('heading',{name:'来源证据'})).toBeVisible({timeout:20000});
  return sessionId(page);
@@ -158,7 +158,7 @@ test('SQLite 发现 → 草案 → 补全 → 网页确认发布 → 新接入�
  await page.goto('/');
  await page.getByLabel('接入目标').fill('从销售数据库发现本体并发布');
  await page.getByLabel('选择材料').setInputFiles(database);
- await page.getByRole('radio',{name:'从数据库发现本体'}).check();
+ await page.getByRole('radio',{name:'从材料发现本体'}).check();
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByRole('heading',{name:'本体发现'})).toBeVisible({timeout:20000});
  // 等探查完成（来源证据出现）再取证据，catalog 才有表与关系。
@@ -402,7 +402,7 @@ test('Agent 补全时放弃草案关系 → 发布区逐项列出并需勾选同
  await page.goto('/');
  await page.getByLabel('接入目标').fill('补全时放弃草案关系核对');
  await page.getByLabel('选择材料').setInputFiles(database);
- await page.getByRole('radio',{name:'从数据库发现本体'}).check();
+ await page.getByRole('radio',{name:'从材料发现本体'}).check();
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByRole('heading',{name:'来源证据'})).toBeVisible({timeout:20000});
  const sid=sessionId(page);
@@ -609,7 +609,7 @@ test('pending 草案 + 候选 → 网页一次确认发布 → 草案 approved',
  await page.goto('/');
  await page.getByLabel('接入目标').fill('pending 草案一次确认发布');
  await page.getByLabel('选择材料').setInputFiles(database);
- await page.getByRole('radio',{name:'从数据库发现本体'}).check();
+ await page.getByRole('radio',{name:'从材料发现本体'}).check();
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByRole('heading',{name:'本体发现'})).toBeVisible({timeout:20000});
  await expect(page.getByRole('heading',{name:'来源证据'})).toBeVisible({timeout:20000});
@@ -664,7 +664,7 @@ test('prepare → 网页审核草案 → 发布区仍显示候选 → 确认发�
  await page.goto('/');
  await page.getByLabel('接入目标').fill('审核草案后继续确认发布');
  await page.getByLabel('选择材料').setInputFiles(database);
- await page.getByRole('radio',{name:'从数据库发现本体'}).check();
+ await page.getByRole('radio',{name:'从材料发现本体'}).check();
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByRole('heading',{name:'来源证据'})).toBeVisible({timeout:20000});
  const sid=sessionId(page);

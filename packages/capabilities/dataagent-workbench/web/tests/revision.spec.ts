@@ -212,6 +212,25 @@ test('非破坏性修订显示类型与必需性差异，网页一次确认发�
 
  await page.goto('/#session='+revision.sid);
  await expect(page.getByTestId('revision-publish-notice')).toBeVisible({timeout:30000});
+ // FDE3-01：这个本体没有任何已发布实例，所以没有「需要重新接入」清单，但
+ // 「新修订下暂无对象」仍要讲清，不额外要求勾选。
+ await expect(page.getByTestId('revision-reintake')).toHaveCount(0);
+ await expect(page.getByTestId('revision-reintake-empty'))
+  .toContainText('发布后新修订 2 下暂无对象');
+ await expect(page.getByTestId('revision-reintake-empty'))
+  .toContainText('旧修订数据仍可按修订号查询');
+ // 确认按钮上方也写明「新修订下暂无对象」，不笼统说既有实例不受影响。
+ await expect(page.getByTestId('publish-revision-impact'))
+  .toContainText('既有任务固定在原修订');
+ await expect(page.getByTestId('publish-revision-impact'))
+  .toContainText('发布后新修订 2 下暂无对象');
+ await expect(page.getByTestId('publish-revision-impact'))
+  .toContainText('旧修订数据仍可按修订号查询');
+ await expect(page.getByTestId('publish-revision-impact'))
+  .not.toContainText('既有任务与已发布实例不受影响');
+ // FDE3-09：草案按观察列把 amountInCents 显示为整数，候选改为数字；两处类型
+ // 不一致时以候选为准并在草案卡片标注。
+ await expect(page.getByText('（草案声明 整数，以发布候选为准）')).toBeVisible();
  await expect(page.getByTestId('revision-diff'))
   .toContainText('SalesOrder.doc_no 值类型 integer → string');
  await expect(page.getByTestId('revision-diff'))
@@ -278,6 +297,69 @@ test('破坏性修订删除属性必须额外勾选旧数据不迁移',async({pa
  await page.getByTestId('revision-no-migration').check();
  await expect(page.getByRole('button',{name:'确认发布'})).toBeDisabled();
  await dropped.locator('input[type=checkbox]').check();
+ await expect(page.getByRole('button',{name:'确认发布'})).toBeEnabled();
+ await page.getByRole('button',{name:'确认发布'}).click();
+ await expect(page.getByTestId('publish-done'))
+  .toContainText('修订 1 → 2',{timeout:20000});
+
+ await retire(page,ontologyId);
+});
+
+test('修订 1 有实例时确认区点名需重新接入的概念并必勾',async({page})=>{
+ test.skip(!python,'run scripts/verify_browser.py to share the test workspace with MCP');
+ test.setTimeout(300000);
+ workspace=await resolveWorkspace(page);
+ ensureDataLayer();
+ const ontologyId=`sales-reintake-${Date.now()}`;
+ await publishInitial(page,ontologyId);
+
+ // 修订 1 下先发布两个 SalesOrder 实例：CSV 上传后走真实工具链提交映射并保存。
+ const csv='book,doc_no\nSALE,1001\nSALE,1002\n';
+ const upload=await page.request.post('/api/files',{
+  headers:{'x-dataagent-token':process.env.DATAAGENT_TEST_TOKEN||'',
+   'x-file-name':`reintake-orders-${ontologyId}.csv`},
+  data:csv});
+ expect(upload.ok(),await upload.text()).toBeTruthy();
+ const orderSource=await upload.json() as {source_id:string;kind:string;locator_ref:string};
+ const mapping=callTool('intake_start',{goal:'接入销售订单到修订 1',sources:[orderSource],
+  target:{ontology_id:ontologyId,concept:'SalesOrder'}});
+ const mappingRequest=callTool('intake_advance',{session_id:mapping.session_id});
+ const proposal=callTool('intake_propose',{session_id:mapping.session_id,
+  expected_revision:mappingRequest.expected_revision,
+  proposal:{id:'orders',revision:'1',ontology_revision:`${ontologyId}@1`,
+   concept:'SalesOrder',
+   source_fingerprint:mappingRequest.sources[0].structure_fingerprint,
+   bindings:{book:{source_field:'book'},
+    doc_no:{source_field:'doc_no',transform:'integer'}}}});
+ const saved=callTool('mapping_apply',{session_id:mapping.session_id,
+  expected_revision:proposal.session_revision,
+  decision:{preview_ref:proposal.preview_ref,target_scope:'mapping'}});
+ expect(saved.decision_ref).toBeTruthy();
+ const instances=callTool('ontology_instances_summary',{ontology_id:ontologyId});
+ expect(instances.ontologies[0].current_revision_instances).toBe(2);
+
+ const revision=await prepareRevision(ontologyId,
+  {docNoType:'string',title:'销售单据修订模型·修订二'});
+ expect(revision.candidate.current_revision_instance_counts)
+  .toMatchObject({SalesOrder:2,SalesOrderLine:0,Customer:0});
+ expect(revision.candidate.reintake_concepts).toEqual(['SalesOrder']);
+
+ await page.goto('/#session='+revision.sid);
+ await expect(page.getByTestId('revision-publish-notice')).toBeVisible({timeout:30000});
+ const reintake=page.getByTestId('revision-reintake');
+ await expect(reintake).toContainText('发布后新修订 2 下暂无对象');
+ await expect(reintake).toContainText('需要重新接入：SalesOrder（2 个对象）');
+ await expect(reintake).toContainText('旧修订数据仍可按修订号查询');
+ // 确认按钮上方同样点名需重接的概念与旧修订查询方式。
+ const impact=page.getByTestId('publish-revision-impact');
+ await expect(impact).toContainText('需要重新接入：SalesOrder（2 个对象）');
+ await expect(impact).toContainText('旧修订数据仍可按修订号查询');
+ await expect(impact).not.toContainText('既有任务与已发布实例不受影响');
+ // 「新修订下暂无对象」是必勾核对项：总确认勾了也不能直接发布。
+ await expect(page.getByTestId('revision-reintake-ack')).not.toBeChecked();
+ await page.getByLabel('我已核对候选定义与来源摘要，确认发布').check();
+ await expect(page.getByRole('button',{name:'确认发布'})).toBeDisabled();
+ await page.getByTestId('revision-reintake-ack').check();
  await expect(page.getByRole('button',{name:'确认发布'})).toBeEnabled();
  await page.getByRole('button',{name:'确认发布'}).click();
  await expect(page.getByTestId('publish-done'))

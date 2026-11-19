@@ -56,7 +56,7 @@ test('SQLite 上传、工具提交本体草案、工作台审核',async({page})=
  await page.goto('/');
  await page.getByLabel('接入目标').fill('识别销售订单和订单明细');
  await page.getByLabel('选择材料').setInputFiles(database);
- await page.getByRole('radio',{name:'从数据库发现本体'}).check();
+ await page.getByRole('radio',{name:'从材料发现本体'}).check();
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByRole('heading',{name:'本体发现'})).toBeVisible();
  await expect(page.getByRole('heading',{name:'来源证据'})).toBeVisible();
@@ -135,8 +135,8 @@ test('docx 与 xlsx 可在网页勾选本体发现发起，表名不显示内部
  await page.getByLabel('接入目标').fill('从制度文档与发票表发现本体');
  await page.getByLabel('选择材料').setInputFiles([docx,xlsx]);
  // 文件材料（docx + xlsx，多文件）也能勾选「本体发现」发起。
- await expect(page.getByRole('radio',{name:'从数据库发现本体'})).toBeVisible();
- await page.getByRole('radio',{name:'从数据库发现本体'}).check();
+ await expect(page.getByRole('radio',{name:'从材料发现本体'})).toBeVisible();
+ await page.getByRole('radio',{name:'从材料发现本体'}).check();
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByRole('heading',{name:'本体发现'})).toBeVisible({timeout:30000});
  await expect(page.getByRole('heading',{name:'来源证据'})).toBeVisible({timeout:30000});
@@ -200,7 +200,7 @@ INSERT INTO warehouse VALUES ('WH-1','一号仓'),('WH-2','二号仓');
  await page.goto('/');
  await page.getByLabel('接入目标').fill('多概念分组核对');
  await page.getByLabel('选择材料').setInputFiles(database);
- await page.getByRole('radio',{name:'从数据库发现本体'}).check();
+ await page.getByRole('radio',{name:'从材料发现本体'}).check();
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByRole('heading',{name:'来源证据'})).toBeVisible({timeout:20000});
  const sid=new URLSearchParams(new URL(page.url()).hash.slice(1)).get('session');

@@ -336,6 +336,27 @@ def _dropped_draft_items(draft, completed_ids, completed_columns,
     return dropped
 
 
+def _date_text_properties(previous, definition):
+    """Properties this revision retyped from ``date`` to ``string``.
+
+    The sheet reader serializes a date cell and a text cell with the same
+    midnight ISO text, so value shape alone cannot decide formatting.  The
+    revision itself is the evidence: a property that was a ``date`` and is
+    now stored as text keeps the date formatting for default mappings.  A
+    plain string property is never interpreted.
+    """
+    names=[]
+    for concept_name,concept in definition.concepts.items():
+        old=previous.concepts.get(concept_name)
+        if old is None:continue
+        for name,prop in concept.properties.items():
+            old_prop=old.properties.get(name)
+            if (old_prop is not None and old_prop.value_type=='date'
+                    and prop.value_type=='string'):
+                names.append(f'{concept_name}.{name}')
+    return sorted(names)
+
+
 def build_candidate(wb, draft, catalog, completion, *, revision='1'):
     """Validate a completion against its draft and catalog; return the definition.
 
@@ -345,6 +366,17 @@ def build_candidate(wb, draft, catalog, completion, *, revision='1'):
     direction must match the evidence.  Missing identity, unsatisfiable types,
     fabricated fields and unhandled open items raise ``ValueError``.
     """
+    previous = None
+    if revision != '1':
+        try:
+            previous_revision = str(int(revision) - 1)
+        except ValueError:
+            previous_revision = ''
+        if previous_revision:
+            previous_row = wb.store.get('ontology', completion.ontology_id,
+                                        previous_revision, scope=wb.scope)
+            if previous_row is not None:
+                previous = OntologyRevision.model_validate(previous_row['body'])
     tables = _table_index(catalog)
     entities = {}
     for entity in draft.get('entities') or []:
@@ -567,6 +599,12 @@ def build_candidate(wb, draft, catalog, completion, *, revision='1'):
 
     definition = OntologyRevision(id=completion.ontology_id, revision=revision,
         concepts=concepts, relations=relations)
+    if previous is not None:
+        date_text=_date_text_properties(previous, definition)
+        if date_text:
+            definition=definition.model_copy(update={
+                'extensions': {**(definition.extensions or {}),
+                               'dataagent.date_text': date_text}})
     return {
         'definition': definition,
         'definition_digest': digest(definition.model_dump(mode='json')),
@@ -688,6 +726,63 @@ class PublishService:
             raise ValueError('source changed since it was observed; discover again')
 
     # ---------------------------------------------------------------- prepare
+    def _revision_instance_outlook(self, ontology_id, previous, definition):
+        """Instance counts per concept on the revision being replaced, and the
+        concepts whose published objects stay behind on it (FDE3-01).
+
+        A new revision is registered empty: every task keeps its own pinned
+        revision, so the current revision's released objects are invisible to
+        any query that defaults to the new one until the data is taken in
+        again.  The confirmation page names those concepts instead of the old
+        blanket「已发布实例不受影响」, which read as the data still being
+        visible.
+        """
+        stats = self.wb.queries._stats()
+        released = ((stats.get(ontology_id, {}).get('revisions') or {})
+                    .get(previous.revision, {}).get('concepts') or {})
+        names = list(definition.concepts) + [name for name in previous.concepts
+                                             if name not in definition.concepts]
+        counts = {name: int(released.get(name, 0)) for name in names}
+        reintake = [name for name in definition.concepts
+                    if counts.get(name, 0) > 0]
+        return counts, reintake
+
+    def _verify_revision_outlook(self, body, definition):
+        """Recompute the candidate's released-instance outlook before publishing
+        (FDE3-01 review).
+
+        The confirmation page uses the outlook captured at prepare time to
+        decide whether the new revision needs a re-intake acknowledgement.
+        Another task can release objects into the current revision after that
+        point; confirming the stale outlook would publish a revision whose
+        objects the user was told are unaffected.  Any change in the counts or
+        in the concepts needing re-intake requires a fresh candidate and a
+        fresh human check.
+        """
+        previous_row = self.wb.store.get('ontology', body['ontology_id'],
+                                         body['previous_revision'],
+                                         scope=self.wb.scope)
+        if previous_row is None:
+            raise VersionConflict(
+                'ontology revision changed; prepare the candidate again')
+        previous = OntologyRevision.model_validate(previous_row['body'])
+        counts, reintake = self._revision_instance_outlook(
+            body['ontology_id'], previous, definition)
+        recorded_counts = {}
+        if isinstance(body.get('current_revision_instance_counts'), dict):
+            for name, count in body['current_revision_instance_counts'].items():
+                try:
+                    recorded_counts[str(name)] = int(count)
+                except (TypeError, ValueError):
+                    recorded_counts[str(name)] = -1
+        recorded_reintake = sorted(str(name) for name in
+                                   (body.get('reintake_concepts') or []))
+        if (recorded_counts != counts
+                or recorded_reintake != sorted(reintake)):
+            raise VersionConflict(
+                'candidate is stale; published instances changed; '
+                'prepare the candidate again')
+
     def prepare(self, completion, ctx):
         wb = self.wb
         session = wb.sessions.get(completion.session_id, ctx)
@@ -759,6 +854,13 @@ class PublishService:
             previous_revision = previous_definition.revision
             diff = definition_diff(previous_definition, candidate['definition'])
             destructive = diff['destructive']
+        # FDE3-01: appended candidate fields.  The counts describe the
+        # revision being replaced, never the candidate definition.
+        instance_counts, reintake_concepts = ({}, [])
+        if previous_definition is not None:
+            instance_counts, reintake_concepts = self._revision_instance_outlook(
+                completion.ontology_id, previous_definition,
+                candidate['definition'])
         profile_refs = list(draft.get('profile_refs') or state.get('profile_refs') or [])
         source_snapshot = source_snapshot_digest(catalog, profile_refs)
 
@@ -784,6 +886,8 @@ class PublishService:
                                   if entry_current is not None else None),
             'revision_diff': diff,
             'destructive': destructive,
+            'current_revision_instance_counts': instance_counts,
+            'reintake_concepts': reintake_concepts,
             'title': (completion.title
                       or (entry.title if entry is not None else '')
                       or completion.ontology_id),
@@ -811,6 +915,9 @@ class PublishService:
             'revision_diff': body.get('revision_diff') or {},
             'destructive': bool(body.get('destructive')),
             'requires_no_migration_ack': bool(body.get('destructive')),
+            'current_revision_instance_counts':
+                dict(body.get('current_revision_instance_counts') or {}),
+            'reintake_concepts': list(body.get('reintake_concepts') or []),
             'title': body['title'],
             'default_concept': body['default_concept'],
             'concept_names': list((body['definition'].get('concepts') or {}).keys()),
@@ -972,6 +1079,9 @@ class PublishService:
                 raise ValueError('ontology not registered: %s' % definition.id)
             definition_expected = current_definition['revision']
             registry_expected = entry_current['revision']
+            # The candidate's re-intake outlook is a snapshot; release writes
+            # made after prepare must force a new candidate (FDE3-01 review).
+            self._verify_revision_outlook(body, definition)
         else:
             if current_definition is not None:
                 raise ValueError('ontology id is already registered: %s' % definition.id)
