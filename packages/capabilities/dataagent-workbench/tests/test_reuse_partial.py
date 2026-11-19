@@ -23,7 +23,7 @@ REST = 'api'
 REST_FINGERPRINT = digest(['api', 'rest invoice list'])
 
 
-def rest_profile(records, *, key_gap=False):
+def rest_profile(records, *, key_gap=False, fields=None):
     """A REST observation; a missing /code is the expected keyless record."""
     revision = 'sha256:rest-fixture'
     anchors = {}
@@ -44,7 +44,7 @@ def rest_profile(records, *, key_gap=False):
                       for index, row in enumerate(records) if not row.get('/code'))
     return SourceProfile(
         source_id=REST, source_revision=revision, kind='rest',
-        records=records, fields=['/code', '/amount', '/currency', '/issuer'],
+        records=records, fields=fields or ['/code', '/amount', '/currency', '/issuer'],
         anchors=anchors,
         metadata={'structure_fingerprint': REST_FINGERPRINT},
         total_partitions=1, completed_partitions=[1], gaps=gaps, issues=issues)
@@ -56,14 +56,18 @@ REST_BINDINGS = {
     'currency': {'source_field': '/currency'},
     'issuer': {'source_field': '/issuer'},
 }
+REST_ALTERNATE_ID = {
+    **REST_BINDINGS,
+    'number': {'source_field': '/invoice_no'},
+}
 
 
-def rest_proposal(wb, session):
+def rest_proposal(wb, session, bindings=REST_BINDINGS):
     source = next(item for item in wb.intake.inference_request(
         session.id, wb.ctx)['sources'] if item['source_id'] == REST)
     return MappingSpec(id='candidate', revision='1', ontology_revision='procurement@1',
                        source_fingerprint=source['structure_fingerprint'],
-                       bindings=REST_BINDINGS)
+                       bindings=bindings)
 
 
 def rest_records(*, keyless):
@@ -118,6 +122,95 @@ def test_rest_key_missing_partial_save_is_reused_with_the_gap_listed(tmp_path):
     assert str(blocked.value) == 'preview contains unresolved issues'
     assert wb.sessions.get(second.id, wb.ctx).phase == 'preview'
     assert 'release' not in wb.sessions.get(second.id, wb.ctx).selected_versions
+
+
+def test_probe_key_missing_with_complete_mapped_identity_still_blocks_save(tmp_path):
+    """A mapped identity from another column must not erase the probe-key gap."""
+    fields = ['/code', '/invoice_no', '/amount', '/currency', '/issuer']
+    records = [
+        {'/code': 'INV-1', '/invoice_no': 'EXT-1', '/amount': '100.00',
+         '/currency': 'CNY', '/issuer': 'Alpha'},
+        {'/code': 'INV-2', '/invoice_no': 'EXT-2', '/amount': '200.00',
+         '/currency': 'CNY', '/issuer': 'Beta'},
+    ]
+    wb = Workbench(tmp_path)
+    wb.layer_client = StubProbeClient({REST: rest_profile(records, fields=fields)})
+    first = wb.intake.advance(start(wb, [SourceSelection(
+        source_id=REST, kind='rest', locator_ref='invoice-api')]).session_id, wb.ctx)
+    preview = wb.intake.submit_proposal(
+        first.id, rest_proposal(wb, first, REST_ALTERNATE_ID), first.revision, wb.ctx)
+    assert preview.issues == []
+    session = wb.sessions.get(first.id, wb.ctx)
+    wb.intake.apply(first.id, ReviewDecision(
+        preview_ref=preview.id + '@' + preview.revision, target_scope='mapping'),
+        session.revision, wb.ctx)
+    assert wb.sessions.get(first.id, wb.ctx).phase == 'saved'
+
+    # The second probe reports the configured /code key missing, but the
+    # mapping still resolves the object through /invoice_no.  No identity issue
+    # is produced; the gap itself must remain visible and blocking.
+    keyless = [records[0], {key: value for key, value in records[1].items()
+                            if key != '/code'}]
+    wb.layer_client = StubProbeClient({REST: rest_profile(
+        keyless, key_gap=True, fields=fields)})
+    second = wb.intake.advance(start(wb, [SourceSelection(
+        source_id=REST, kind='rest', locator_ref='invoice-api')], 'g2').session_id, wb.ctx)
+    assert second.phase == 'preview'
+    view = wb.intake.view(second.id, wb.ctx)
+    assert view['mapping_reused'] is True
+    assert not [issue for issue in view['preview']['issues']
+                if issue['code'] == 'ontology.identity_unresolved']
+    gap, = [issue for issue in view['preview']['issues']
+            if issue['code'] == 'ontology.incomplete_source'
+            and issue.get('source_id') == REST]
+    assert gap['coverage'] == 'partial'
+    assert gap['partitions'] == [1]
+    assert gap['row'] == 1
+    assert gap['target'] == '/code'
+    assert gap['gap'] == {'code': 'key_missing', 'partitions': [1]}
+    assert gap['gap_records'] == [{'code': 'key_missing', 'partition': 1,
+                                   'field': '/code', 'row': 1}]
+    options = wb.intake.disposition_options(
+        wb.sessions.get(second.id, wb.ctx), view['preview'])
+    option, = [item for item in options
+               if item['action'] == 'partition_not_applicable'
+               and item.get('source_id') == REST
+               and item.get('gap') == 'key_missing']
+    assert option['partition'] == 1
+    assert '仍可识别' in option['reason_hint']
+
+    current = wb.sessions.get(second.id, wb.ctx)
+    with pytest.raises(PreviewBlocked) as blocked:
+        wb.intake.apply(second.id, ReviewDecision(
+            preview_ref=view['preview']['id'] + '@' + view['preview']['revision'],
+            target_scope='mapping'), current.revision, wb.ctx)
+    assert str(blocked.value) == 'preview contains unresolved issues'
+    # A source-level key gap is not silently bypassed by a partial save either.
+    with pytest.raises(PreviewBlocked):
+        wb.intake.apply(second.id, ReviewDecision(
+            preview_ref=view['preview']['id'] + '@' + view['preview']['revision'],
+            target_scope='mapping'), current.revision, wb.ctx, allow_partial=True)
+    assert wb.sessions.get(second.id, wb.ctx).phase == 'preview'
+    assert 'release' not in wb.sessions.get(second.id, wb.ctx).selected_versions
+
+    # The user can acknowledge the source key gap explicitly; only then does
+    # the batch save become available.
+    invoke(wb, 'intake_dispose', {
+        'session_id': second.id,
+        'expected_revision': current.revision,
+        'action': 'partition_not_applicable', 'source_id': REST, 'partition': 1,
+        'reason': '该页缺 /code，但映射用 /invoice_no 完整识别对象',
+    })
+    session = wb.sessions.get(second.id, wb.ctx)
+    clean = wb.intake.submit_proposal(
+        second.id, rest_proposal(wb, session, REST_ALTERNATE_ID),
+        session.revision, wb.ctx)
+    assert clean.issues == []
+    session = wb.sessions.get(second.id, wb.ctx)
+    wb.intake.apply(second.id, ReviewDecision(
+        preview_ref=clean.id + '@' + clean.revision, target_scope='mapping'),
+        session.revision, wb.ctx)
+    assert wb.sessions.get(second.id, wb.ctx).phase == 'saved'
 
 
 def blank_page(fingerprint):
