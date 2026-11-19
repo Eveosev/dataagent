@@ -1,6 +1,7 @@
 import {defineConfig} from '@playwright/test';
 // 并发、重试与超时均可配：多张卡并行验收时机器负载高，负载下偶发超时
-// 由重试兜底（flaky 不算失败，但 verify_browser.py 会列出清单）。
+// 由重试兜底（重试后通过的用例会被 verify_browser.py 计为 flaky 并默认
+// 判失败，门禁不接受 flaky；本地排查可用 --allow-flaky）。
 // 单用例超时的用例内放大系数见 tests/support.ts 的 slowTimeout。
 const workers=Number(process.env.DATAAGENT_TEST_WORKERS||4);
 const retries=Number(process.env.DATAAGENT_TEST_RETRIES??'1');

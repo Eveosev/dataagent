@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {humanDetail} from '../src/client';
-import {pinBuiltinOntology,slowTimeout} from './support';
+import {awaitProbed,pinBuiltinOntology,slowTimeout} from './support';
 
 // G2 处置入口 + FDE-11 可读性 + FDE2-06 按问题类型给处置：真实数据行的缺键、
 // 转换失败不再给「排除表头行」（只有疑似表头或无关行才给排除）；类型转换失败
@@ -32,7 +32,7 @@ async function openObjectPage(page:import('@playwright/test').Page,files:Paramet
  await page.getByLabel('选择材料').setInputFiles(files);
  await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ await awaitProbed(page);
  await page.getByRole('button',{name:'生成映射预览'}).click();
  // 预览问题用中文说明并点名对象，不再显示内部代码（FDE2-11）。
  await expect(page.getByTestId('mapping-issues')).not.toContainText('ontology.');
@@ -136,7 +136,7 @@ test('空白页来源可标记分区不适用',async({page})=>{
   buffer:await import('node:fs').then(fs=>fs.readFileSync('../../dataagent-scenarios/fixtures/intake/mixed.pdf'))});
  await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ await awaitProbed(page);
  await page.getByRole('button',{name:'生成映射预览'}).click();
  await page.getByRole('button',{name:'打开对象页'}).click();
  const issue=page.getByTestId('pending-issue').filter({hasText:'来源未完整读取'});
@@ -213,8 +213,9 @@ test('xlsx 日期列错绑为 decimal：按根因合并计数，处置按类型�
  await page.goto('/');
  await page.getByLabel('接入目标').fill('接入报销明细并核对日期列的处置');
  await page.getByLabel('选择材料').setInputFiles(buildDateColumnXlsx());
+ await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ await awaitProbed(page);
  // 默认绑定把日期列绑到金额（decimal）：5 行全部转换失败。
  await page.getByRole('button',{name:'生成映射预览'}).click();
  // FDE2-06 余项：映射页标题按根因计数（「N 项根因 · 影响 M 行」）。
@@ -269,8 +270,9 @@ test('未映射来源在处置一行后重新生成预览时保持不映射',asy
   {name:'ledger.csv',mimeType:'text/csv',buffer:ledgerCsv},
   {name:'other.csv',mimeType:'text/csv',buffer:otherCsv},
  ]);
+ await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ await awaitProbed(page);
  const sid=new URLSearchParams(new URL(page.url()).hash.slice(1)).get('session')!;
  expect(sid).toBeTruthy();
  const view=await (await page.request.get(`/api/sessions/${sid}/view`)).json() as {
@@ -395,8 +397,9 @@ test('未映射来源可沿用默认绑定纳入映射并重新提案',async({pa
   {name:'ledger.csv',mimeType:'text/csv',buffer:cleanLedger},
   {name:'other.csv',mimeType:'text/csv',buffer:otherCsv},
  ]);
+ await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ await awaitProbed(page);
  const sid=new URLSearchParams(new URL(page.url()).hash.slice(1)).get('session')!;
  expect(sid).toBeTruthy();
  const view=await (await page.request.get(`/api/sessions/${sid}/view`)).json() as {
@@ -465,8 +468,9 @@ test('前面的行级问题超过 8 条时未映射来源的纳入按钮仍可�
   {name:'ledger.csv',mimeType:'text/csv',buffer:badLedger},
   {name:'other.csv',mimeType:'text/csv',buffer:otherCsv},
  ]);
+ await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ await awaitProbed(page);
  const sid=new URLSearchParams(new URL(page.url()).hash.slice(1)).get('session')!;
  expect(sid).toBeTruthy();
  const view=await (await page.request.get(`/api/sessions/${sid}/view`)).json() as {
@@ -510,8 +514,9 @@ test('全量映射后缩窄来源，网页重建不再加回已移除的来源',
   {name:'ledger.csv',mimeType:'text/csv',buffer:ledgerCsv},
   {name:'other.csv',mimeType:'text/csv',buffer:otherCsv},
  ]);
+ await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ await awaitProbed(page);
  const sid=new URLSearchParams(new URL(page.url()).hash.slice(1)).get('session')!;
  const view=await (await page.request.get(`/api/sessions/${sid}/view`)).json() as {
   session:{revision:string;selected_versions:Record<string,string>};ontology:{id:string;revision:string};
@@ -580,8 +585,9 @@ test('缩窄提案后旧草稿不会把来源重新纳入预览',async({page})=>
   {name:'ledger.csv',mimeType:'text/csv',buffer:ledgerCsv},
   {name:'other.csv',mimeType:'text/csv',buffer:otherCsv},
  ]);
+ await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ await awaitProbed(page);
  const sid=new URLSearchParams(new URL(page.url()).hash.slice(1)).get('session')!;
  const view=await (await page.request.get(`/api/sessions/${sid}/view`)).json() as {
   session:{revision:string};ontology:{id:string;revision:string};ontology_concept:string;

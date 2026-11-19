@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {anchorRowLocation} from '../src/ontologyBrowse';
-import {lockDefaultPointer,slowTimeout,uniqueTag,unlockDefaultPointer} from './support';
+import {awaitEvidenceProbed,awaitProbed,lockDefaultPointer,slowTimeout,uniqueTag,unlockDefaultPointer} from './support';
 
 const python=process.env.DATAAGENT_TEST_PYTHON;
 const SEED=path.resolve('../../dataagent-scenarios/fixtures/intake/sales-discovery.sql');
@@ -163,7 +163,7 @@ test('发布本体后按本体浏览已发布实例',async({page})=>{
  await page.getByRole('radio',{name:'从材料发现本体'}).check();
  await page.getByRole('button',{name:'开始接入'}).click();
  await expect(page.getByRole('heading',{name:'本体发现'})).toBeVisible({timeout:20000});
- await expect(page.getByRole('heading',{name:'来源证据'})).toBeVisible({timeout:20000});
+ await awaitEvidenceProbed(page,20000);
  const discoverySid=sessionId(page);
  const request=callTool('intake_inference',{session_id:discoverySid}) as {
   expected_revision:string;source_revision:string;catalog:Catalog};
@@ -211,7 +211,7 @@ test('发布本体后按本体浏览已发布实例',async({page})=>{
  await page.goto('/#session='+mappingSid);
  await page.reload();
  await expect(page.getByRole('heading',{name:'核对来源与本体映射'})).toBeVisible({timeout:20000});
- await expect(page.getByText('识别与探查已完成')).toBeVisible({timeout:20000});
+ await awaitProbed(page,20000);
  // FDE2-11：面包屑跟随任务目标本体（browse-sales 的注册表标题），不再写死「采购资料」。
  await expect(page.locator('.eyebrow')).toContainText('浏览用销售模型 / 接入任务');
 

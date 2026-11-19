@@ -4,9 +4,12 @@ import {execFileSync} from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import {lockDefaultPointer,unlockDefaultPointer} from './support';
 
-// 三个用例都会发布/停用本体并移动默认指针，串行执行避免并行用例互相争用
-// 默认本体；它们仍与其它测试文件并行。
+// 四个用例都会发布/停用本体并移动默认指针：本文件内部 serial，并与其他
+// 移动指针的用例（publish.spec、browse.spec、expense-labels.spec、
+// mapping-source-fit.spec）按工作区加同一把文件锁串行；其余只读默认值的
+// 用例已显式 pinBuiltinOntology，不依赖指针取值。
 test.describe.configure({mode:'serial'});
 
 // V6：已发布本体发布新修订。初始本体走 MCP + HTTP 人工确认；修订任务以
@@ -130,7 +133,11 @@ function startDiscovery(ontologyId:string,revise?:string){
  };
  if(revise)args.revise_ontology_id=revise;
  const started=callTool('intake_start',args);
- const request=callTool('intake_advance',{session_id:started.session_id});
+ let request=callTool('intake_advance',{session_id:started.session_id});
+ // 探查子进程偶发失败（retryable，MCP 结果只带空 catalog）：重发 advance 走
+ // 产品的重探路径，有界两次；仍失败则由后续对 catalog 的使用按原样失败。
+ for(let attempt=0;attempt<2&&!request.catalog?.tables?.length;attempt++)
+  request=callTool('intake_advance',{session_id:started.session_id});
  return {sid:started.session_id as string,request};
 }
 
@@ -181,12 +188,28 @@ async function retire(page:Page,ontologyId:string){
  expect(retired.ok(),await retired.text()).toBeTruthy();
 }
 
+// 发布/停用本体移动注册表默认指针（共享状态）：锁的释放挂在 afterEach 上
+// （用例失败也释放）。失败清理：发布成功后、停用前失败会让本体带着默认指针
+// 残留，破坏本用例的重试与并行用例；先在锁内尽力停用，再释放锁。
+let pointerLocked=false,publishedOntology='';
+test.beforeEach(()=>{pointerLocked=false;publishedOntology='';});
+test.afterEach(async({request},testInfo)=>{
+ if(!pointerLocked)return;
+ if(testInfo.status!=='passed'&&publishedOntology)
+  await request.post(`/api/ontologies/${publishedOntology}/retire`,
+   {data:{reason:'用例失败后的清理停用，恢复默认指针',confirmed:true}}).catch(()=>{});
+ unlockDefaultPointer(workspace);
+ pointerLocked=false;
+});
+
 test('非破坏性修订显示类型与必需性差异，网页一次确认发布修订 2',async({page})=>{
  test.skip(!python,'run scripts/verify_browser.py to share the test workspace with MCP');
  test.setTimeout(300000);
  workspace=await resolveWorkspace(page);
  ensureDataLayer();
  const ontologyId=`sales-revision-${Date.now()}`;
+ await lockDefaultPointer(workspace);
+ pointerLocked=true;publishedOntology=ontologyId;
  await publishInitial(page,ontologyId);
 
  // 修订任务：doc_no integer→string，Customer.name 可选→必需，同时把关系
@@ -275,6 +298,8 @@ test('破坏性修订删除属性必须额外勾选旧数据不迁移',async({pa
  workspace=await resolveWorkspace(page);
  ensureDataLayer();
  const ontologyId=`sales-destructive-${Date.now()}`;
+ await lockDefaultPointer(workspace);
+ pointerLocked=true;publishedOntology=ontologyId;
  await publishInitial(page,ontologyId);
 
  const revision=await prepareRevision(ontologyId,
@@ -311,6 +336,8 @@ test('修订 1 有实例时确认区点名需重新接入的概念并必勾',asy
  workspace=await resolveWorkspace(page);
  ensureDataLayer();
  const ontologyId=`sales-reintake-${Date.now()}`;
+ await lockDefaultPointer(workspace);
+ pointerLocked=true;publishedOntology=ontologyId;
  await publishInitial(page,ontologyId);
 
  // 修订 1 下先发布两个 SalesOrder 实例：CSV 上传后走真实工具链提交映射并保存。
@@ -374,6 +401,8 @@ test('来源变更后新建发现任务保留修订目标',async({page})=>{
  workspace=await resolveWorkspace(page);
  ensureDataLayer();
  const ontologyId=`sales-rediscover-${Date.now()}`;
+ await lockDefaultPointer(workspace);
+ pointerLocked=true;publishedOntology=ontologyId;
  await publishInitial(page,ontologyId);
 
  const revision=await prepareRevision(ontologyId,{docNoType:'string'});

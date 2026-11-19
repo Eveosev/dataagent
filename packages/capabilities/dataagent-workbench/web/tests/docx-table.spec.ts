@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test';
-import {pinBuiltinOntology,slowTimeout} from './support';
+import {awaitProbed,pinBuiltinOntology,slowTimeout} from './support';
 
 // 最小可解析的合成 Word 登记表：首尾各一段，中间一张 3×4 表（表头 + 2 行数据）。
 // 数据层探查默认选 table:1 记录集，单元格锚点 unit_ref = table:1/row:r/col:c。
@@ -37,7 +37,7 @@ test('Word 表格单元格定位显示表与行列而不是字符偏移（G4）'
   mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',buffer:docx});
  await pinBuiltinOntology(page);
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ await awaitProbed(page);
  await page.getByRole('button',{name:'生成映射预览'}).click();
  await page.getByRole('button',{name:'打开对象页'}).click();
  await expect(page.getByTestId('object-number')).toHaveText('INV-001');

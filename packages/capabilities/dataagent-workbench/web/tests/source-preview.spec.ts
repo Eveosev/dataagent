@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 import path from 'node:path';
-import {slowTimeout} from './support';
+import {awaitProbed,slowTimeout} from './support';
 
 // 每个接入都显式固定内置采购本体：publish.spec 并行运行时会短暂把注册表默认指针
 // 移到新发布的本体，这里不依赖默认值，避免并行用例互相干扰。
@@ -11,7 +11,7 @@ test('CSV 对象值的来源定位',async({page})=>{
  await page.getByLabel('选择材料').setInputFiles(path.resolve('../../dataagent-scenarios/fixtures/intake/invoices.csv'));
  await page.getByLabel('映射到的本体').selectOption('procurement');
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ await awaitProbed(page);
  await page.getByLabel('金额 来源字段').selectOption('amount_minor');
  await page.getByLabel('金额 转换方式').selectOption('minor_to_major');
  await page.getByRole('button',{name:'生成映射预览'}).click();
@@ -36,7 +36,7 @@ test('PDF 对象值定位到页面与原文',async({page})=>{
  await page.getByLabel('选择材料').setInputFiles(path.resolve('../../dataagent-scenarios/fixtures/intake/invoice.pdf'));
  await page.getByLabel('映射到的本体').selectOption('procurement');
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ await awaitProbed(page);
  await page.getByLabel('金额 来源字段').selectOption('amount_minor');
  await page.getByLabel('金额 转换方式').selectOption('minor_to_major');
  await page.getByRole('button',{name:'生成映射预览'}).click();

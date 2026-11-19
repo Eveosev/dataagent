@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 import path from 'node:path';
-import {slowTimeout} from './support';
+import {awaitProbed,slowTimeout} from './support';
 
 // 每个接入都显式固定内置采购本体：publish.spec 并行运行时会短暂把注册表默认指针
 // 移到新发布的本体，这里不依赖默认值，避免并行用例互相干扰。
@@ -12,7 +12,7 @@ test('SQLite 对象值的来源定位显示表与主键',async({page})=>{
  await page.getByLabel('选择材料').setInputFiles(path.resolve('../../dataagent-scenarios/fixtures/intake/cross-source/samples/ledger.db'));
  await page.getByLabel('映射到的本体').selectOption('procurement');
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ await awaitProbed(page);
  await page.getByRole('button',{name:'生成映射预览'}).click();
  await page.getByRole('button',{name:'打开对象页'}).click();
  await expect(page.getByRole('heading',{name:'核对业务对象'})).toBeVisible();
@@ -65,7 +65,7 @@ async function openPagedObjectPage(page:import('@playwright/test').Page,mode:'wi
  await page.getByLabel('选择材料').setInputFiles({name:'invoice.csv',mimeType:'text/csv',buffer:pagedCsv});
  await page.getByLabel('映射到的本体').selectOption('procurement');
  await page.getByRole('button',{name:'开始接入'}).click();
- await page.getByText('识别与探查已完成').waitFor();
+ await awaitProbed(page);
  await page.getByRole('button',{name:'生成映射预览'}).click();
  await page.getByRole('button',{name:'打开对象页'}).click();
  await expect(page.getByRole('heading',{name:'核对业务对象'})).toBeVisible();
@@ -119,7 +119,7 @@ test('纠正成功但其他必填属性挡住时用琥珀色说明点名（FDE-1
   buffer:Buffer.from('number,amount_minor,currency\nINV-001,126000,CNY\n')});
  await page.getByLabel('映射到的本体').selectOption('procurement');
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ await awaitProbed(page);
  // currency 不映射：纠正金额后必填属性仍未解决，重新校验被拦。
  await page.getByLabel('币种 来源字段').selectOption('');
  await page.getByLabel('金额 来源字段').selectOption('amount_minor');
@@ -154,7 +154,7 @@ test('映射页字段纠正成功给绿色提示（FDE-12）',async({page})=>{
   buffer:Buffer.from('number,amount_minor,currency\nINV-001,126000,CNY\n')});
  await page.getByLabel('映射到的本体').selectOption('procurement');
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ await awaitProbed(page);
  await page.getByLabel('金额 来源字段').selectOption('amount_minor');
  await page.getByRole('button',{name:'生成映射预览'}).click();
  await expect(page.getByTestId('preview-amount')).toHaveText('1260');
@@ -176,7 +176,7 @@ test('纠正后的值显示用户纠正来源而不是内部路径',async({page}
   buffer:Buffer.from('number,amount_minor,currency\nINV-001,126000,CNY\n')});
  await page.getByLabel('映射到的本体').selectOption('procurement');
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ await awaitProbed(page);
  await page.getByLabel('金额 来源字段').selectOption('amount_minor');
  await page.getByRole('button',{name:'生成映射预览'}).click();
  await expect(page.getByTestId('preview-amount')).toHaveText('1260');
@@ -201,7 +201,7 @@ test('纠正无原始证据的属性时左侧显示决定定位且不高亮来�
   buffer:Buffer.from('number,amount_minor,currency\nINV-001,126000,CNY\n')});
  await page.getByLabel('映射到的本体').selectOption('procurement');
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ await awaitProbed(page);
  await page.getByRole('button',{name:'生成映射预览'}).click();
  await page.getByRole('button',{name:'打开对象页'}).click();
  // issuer 未映射也没有原始证据：纠正后证据只有审核决定本身。
@@ -226,7 +226,7 @@ test('断网时错误提示为中文',async({page})=>{
   buffer:Buffer.from('number,amount_minor,currency\nINV-001,126000,CNY\n')});
  await page.getByLabel('映射到的本体').selectOption('procurement');
  await page.getByRole('button',{name:'开始接入'}).click();
- await expect(page.getByText('识别与探查已完成')).toBeVisible();
+ await awaitProbed(page);
  await page.getByRole('button',{name:'生成映射预览'}).click();
  await page.getByRole('button',{name:'打开对象页'}).click();
  await expect(page.getByRole('heading',{name:'核对业务对象'})).toBeVisible();
