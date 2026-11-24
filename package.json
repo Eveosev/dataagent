@@ -1,0 +1,26 @@
+{
+  "name": "@eveosev/dataagent-skill",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Install the DataAgent FDE skill for Codex or Claude Code",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/Eveosev/dataagent.git"
+  },
+  "bin": {
+    "dataagent-skill": "packages/capabilities/dataagent-fde/bin/dataagent-skill.mjs"
+  },
+  "files": [
+    "packages/capabilities/dataagent-fde/bin/dataagent-skill.mjs",
+    "packages/capabilities/dataagent-fde/skills/fde-engineer/SKILL.md",
+    "packages/capabilities/dataagent-fde/skills/fde-engineer/references/policy-extraction.md",
+    "packages/capabilities/dataagent-fde/skills/fde-engineer/scripts/policy_source.py",
+    "packages/capabilities/dataagent-fde/安装说明.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test packages/capabilities/dataagent-fde/tests/install-skill.test.mjs"
+  }
+}

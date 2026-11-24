@@ -4,6 +4,12 @@ DataAgent / FDE Agent 的能力包、方案与实施记录。狭义 DataAgent �
 
 在 AgentOS 宿主中挂载于 `domains/dataagent/`；工作约定见 [AGENTS.md](AGENTS.md)。
 
+## 在对话里试用制度提取
+
+要在其他项目里使用同一份 Skill，可用 npm 从本仓库的开发分支安装到 Codex 或 Claude Code，见[安装命令与试用方法](packages/capabilities/dataagent-fde/安装说明.md)。
+
+用 Codex 打开本项目，新建对话，输入“帮我提取 `packages/capabilities/dataagent-fde/examples/reimbursement` 里的费用制度，沿用上次的表”。如需试用历史格式，将[上次提取结果](packages/capabilities/dataagent-fde/examples/上次提取结果.md)一起提供。目录里有两份演示原件，等助手询问版本后，回复“用 11 月版，只看差旅”。应收到带条号的差旅凭证、通勤排除和紧急抢修例外。也可以直接指定自己的附件。[Skill 入口](packages/capabilities/dataagent-fde/skills/fde-engineer/SKILL.md)
+
 ## 布局
 
 ```text
