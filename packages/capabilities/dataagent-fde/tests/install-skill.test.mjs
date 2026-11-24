@@ -27,7 +27,10 @@ for (const [host, folder] of [['codex', '.agents'], ['claude', '.claude'], ['zco
     await Promise.all([install(cwd, host), install(cwd, host)]);
     const entry = join(cwd, folder, 'skills', 'fde-engineer');
     assert.equal(await realpath(entry), await realpath(skill));
-    for (const name of ['SKILL.md', 'references/policy-extraction.md', 'scripts/policy_source.py']) {
+    for (const name of [
+      'SKILL.md', 'references/field-delivery.md', 'scripts/sample_check.py',
+      'references/policy-extraction.md', 'scripts/policy_source.py',
+    ]) {
       assert.deepEqual(await readFile(join(entry, name)), await readFile(join(skill, name)));
     }
   });

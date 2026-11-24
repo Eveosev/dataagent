@@ -4,11 +4,15 @@ DataAgent / FDE Agent 的能力包、方案与实施记录。狭义 DataAgent �
 
 在 AgentOS 宿主中挂载于 `domains/dataagent/`；工作约定见 [AGENTS.md](AGENTS.md)。
 
-## 在对话里试用制度提取
+## 在对话里使用 FDE Agent
+
+从手上的工作开始，例如“把两份门店导出接成可重跑的日报”，或“昨夜批处理重试后出现重复记录，帮我查影响范围”。Agent 在当前项目探查材料和环境，用实际样例确认业务口径，按委托实现、验收或维护链路。交付结果、运行入口和依据会回到同一对话。
 
 要在其他项目里使用同一份 Skill，可用 npm 从本仓库的开发分支安装到 Codex、Claude Code、ZCode 或 dsh，见[安装命令与试用方法](packages/capabilities/dataagent-fde/安装说明.md)。
 
-用 Codex 打开本项目，新建对话，输入“帮我提取 `packages/capabilities/dataagent-fde/examples/reimbursement` 里的费用制度，沿用上次的表”。如需试用历史格式，将[上次提取结果](packages/capabilities/dataagent-fde/examples/上次提取结果.md)一起提供。目录里有两份演示原件，等助手询问版本后，回复“用 11 月版，只看差旅”。应收到带条号的差旅凭证、通勤排除和紧急抢修例外。也可以直接指定自己的附件。[Skill 入口](packages/capabilities/dataagent-fde/skills/fde-engineer/SKILL.md)
+试跑工程交付时，给 Agent [门店合成样本](packages/capabilities/dataagent-fde/examples/retail/)，委托它“从 sales.csv 和 visits.csv 生成每店每天的票数和客流，交一个可重跑的本地入口，用 expected.csv 独立验收”。A 店有两张票、五人次客流，直接逐票关联再累加会误算成十人次。可以再问“输入缺一间店怎么办”，检验失败处理和交接。
+
+条款提取是其中一个可复演的案例。在此项目给出 [两份示例制度](packages/capabilities/dataagent-fde/examples/reimbursement/) 和 [历史结果](packages/capabilities/dataagent-fde/examples/上次提取结果.md)，要求“沿用上次的表”。等助手询问版本后，回复“用 11 月版，只看差旅”，可核对凭证要求、通勤排除和紧急抢修例外。[Skill 入口](packages/capabilities/dataagent-fde/skills/fde-engineer/SKILL.md)
 
 ## 布局
 
