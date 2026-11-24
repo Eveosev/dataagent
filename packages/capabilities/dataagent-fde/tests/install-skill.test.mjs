@@ -33,10 +33,16 @@ for (const [host, folder] of [['codex', '.agents'], ['claude', '.claude'], ['zco
   });
 }
 
-test('zcode and dsh share one project entry and print their native invocation', async (t) => {
+test('zcode prints the desktop skill picker and terminal command separately', async (t) => {
   const cwd = await project(t);
-  const { stdout: zcode } = await install(cwd, 'zcode');
-  assert.match(zcode, /\/skill fde-engineer/);
+  const { stdout } = await install(cwd, 'zcode');
+  assert.match(stdout, /桌面版[^\n]*\/fde-engineer[^\n]*SKILLS[^\n]*\$fde-engineer/);
+  assert.match(stdout, /终端[^\n]*\/skill fde-engineer/);
+});
+
+test('zcode and dsh share one project entry and dsh prints its own invocation', async (t) => {
+  const cwd = await project(t);
+  await install(cwd, 'zcode');
   const entry = join(cwd, '.agents/skills/fde-engineer');
   const before = await lstat(entry);
   const { stdout: dsh } = await install(cwd, 'dsh');

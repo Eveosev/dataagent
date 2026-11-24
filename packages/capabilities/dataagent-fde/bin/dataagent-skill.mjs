@@ -62,7 +62,13 @@ async function install(args) {
       throw new Error(`同名入口已存在：${entry}。如要改用 npm 版本，请先移走原入口，再运行此命令。`);
     }
   }
-  console.log(`Skill 已就绪：${entry}\n在新对话中输入 ${config.invocation} 即可使用。`);
+  console.log(`Skill 已安装到 ${entry}`);
+  if (host === 'zcode') {
+    console.log('在 ZCode 桌面版的新任务输入框键入 /fde-engineer，从 SKILLS 中选中 $fde-engineer（可按 Tab），再写下任务。');
+    console.log(`在 ZCode 终端交互版输入 ${config.invocation}，后面加上任务描述。`);
+  } else {
+    console.log(`在新对话中输入 ${config.invocation} 即可使用。`);
+  }
 }
 
 install(process.argv.slice(2)).catch((error) => {
