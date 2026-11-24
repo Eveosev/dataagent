@@ -21,7 +21,7 @@ function install(cwd, host) {
   return run(process.execPath, [cli, host, '--project'], { cwd });
 }
 
-for (const [host, folder] of [['codex', '.agents'], ['claude', '.claude']]) {
+for (const [host, folder] of [['codex', '.agents'], ['claude', '.claude'], ['zcode', '.agents'], ['dsh', '.agents']]) {
   test(host + ' registers the complete skill and concurrent retries are harmless', async (t) => {
     const cwd = await project(t);
     await Promise.all([install(cwd, host), install(cwd, host)]);
@@ -32,6 +32,33 @@ for (const [host, folder] of [['codex', '.agents'], ['claude', '.claude']]) {
     }
   });
 }
+
+test('zcode and dsh share one project entry and print their native invocation', async (t) => {
+  const cwd = await project(t);
+  const { stdout: zcode } = await install(cwd, 'zcode');
+  assert.match(zcode, /\/skill fde-engineer/);
+  const entry = join(cwd, '.agents/skills/fde-engineer');
+  const before = await lstat(entry);
+  const { stdout: dsh } = await install(cwd, 'dsh');
+  assert.match(dsh, /\/fde-engineer/);
+  assert.equal((await lstat(entry)).ino, before.ino);
+});
+
+test('dsh selects the nearest Git root even from a nested worktree directory', async (t) => {
+  const cwd = await project(t);
+  await writeFile(join(cwd, '.git'), 'gitdir: ../worktree-metadata');
+  const nested = join(cwd, 'a', 'b');
+  await mkdir(nested, { recursive: true });
+  await install(nested, 'dsh');
+  assert.equal(await realpath(join(cwd, '.agents/skills/fde-engineer')), await realpath(skill));
+});
+
+test('dsh personal install follows its shared skills home override', async (t) => {
+  const cwd = await project(t);
+  const sharedHome = join(cwd, 'shared agents');
+  await run(process.execPath, [cli, 'dsh'], { cwd, env: { ...process.env, DSH_AGENTS_HOME: sharedHome } });
+  assert.equal(await realpath(join(sharedHome, 'skills/fde-engineer')), await realpath(skill));
+});
 
 test('an existing ZIP installation is preserved', async (t) => {
   const cwd = await project(t);
