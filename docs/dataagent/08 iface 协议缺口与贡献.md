@@ -3,6 +3,8 @@ doc_id: iface-contrib
 title: 08 iface 协议缺口与贡献
 answers: DataAgent 用到的 iface 协议哪里不够；哪些我们可以贡献、贡献什么、找谁
 status: 草稿 v0.1（2026-11-18；条目以飞书「iface 贡献清单」表为准）
+feishu_node: RW30wDtqsi8WM0ksq1Wc3hG8nuf
+feishu_obj: FFAcdsj2jo3H9HxP6rDcPGzqneg
 ---
 # 08 iface 协议缺口与贡献
 
