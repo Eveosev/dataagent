@@ -4,6 +4,8 @@ title: 广义 DataAgent 文档集
 ---
 # 广义 DataAgent 文档集
 
+11 月 25 日盘点：[DataAgent 现状与 FDE Harness 选路](19-DataAgent现状与FDE-Harness选路.md)。查主线已交付范围、FDE 分支、复用边界和待裁决的项目归属，从这篇进入。
+
 > 状态：草稿 v0.3（2026-11-17；00–07 成套；各篇决策已拍：P1 不提 agent-kernel PR，其余按推荐）。
 > 输入：[附B 原始诉求](<附B 原始诉求.md>)。
 > 读法：先读 00 的统一词汇，再按编号顺序读；只想知道接下来做什么，直接读分期路线、PRD、MVP 实施文档。
