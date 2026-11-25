@@ -28,6 +28,7 @@ title: 广义 DataAgent 文档集
 | 07 | 07 MVP 实施文档 | P1（多源数据接入）的任务清单：每个任务改哪些文件、跑什么命令、怎么验收、怎么回滚，谁来做 | 草稿 v0.5（11-18 最小 MVP 调整：M1 单独里程碑，16 张卡暂缓，新增 T11c、T26、T26b，共 40 张任务卡；11-17 已拍：P1 不提 agent-kernel PR，T40–T43 暂缓；执行方为 Mac 上的 Claude Code + crew，payne 只做确认、凭据、真人环节与验收签字） | [链接](https://modelbest.feishu.cn/wiki/QkPrw4kegiVZdZkHtJHcLIEinVg) |
 | 08 | 08 iface 协议缺口与贡献 | DataAgent 用到的 iface 协议哪里不够；哪些我们可以贡献、贡献什么、找谁 | 草稿 v0.1（2026-11-18；条目以飞书「iface 贡献清单」表为准） | [链接](https://modelbest.feishu.cn/wiki/RW30wDtqsi8WM0ksq1Wc3hG8nuf) |
 | 19 | 19 DataAgent 现状与 FDE Harness 选路 | 已有哪些可用资产，哪些仍在试验，FDE Harness 应在哪里建设，怎样验证这次分工 | 现状已核对，立项建议待裁决 | [链接](https://modelbest.feishu.cn/wiki/YTJXw46qjiNdMTkRWlrcNydnnhh) |
+| 20 | 20 FDE Harness 设计是否值得实施 | 与历史方案和已实现接口相比，哪些设计有新增价值，投入做到哪一步才有依据 | 设计评审完成，试点投入待裁决 | [链接](https://modelbest.feishu.cn/wiki/QAQzwYqi5i7oYEkpK2YcnbW0nh5) |
 | 附B | 附B 原始诉求 | 提需求时的原话 | 已有 | [链接](https://modelbest.feishu.cn/wiki/TsWkwjM5HiESY9k5oeocbqmrnff) |
 <!-- bigproj:doc-list end -->
 

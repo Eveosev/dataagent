@@ -3,6 +3,8 @@ doc_id: fde-harness-design-review
 title: 20 FDE Harness 设计是否值得实施
 answers: 与历史方案和已实现接口相比，哪些设计有新增价值，投入做到哪一步才有依据
 status: 设计评审完成，试点投入待裁决
+feishu_node: QAQzwYqi5i7oYEkpK2YcnbW0nh5
+feishu_obj: TYkjdpJcwoQP7Txw0HscJoOtnir
 date: 2026-11-25
 ---
 # 20 FDE Harness 设计是否值得实施
