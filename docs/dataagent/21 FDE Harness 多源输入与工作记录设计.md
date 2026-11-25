@@ -3,6 +3,8 @@ doc_id: fde-harness-work-record
 title: 21 FDE Harness 多源输入与工作记录设计
 answers: 谁解释输入、谁决定下一步，换会话后怎样依证据继续同一项工作
 status: 架构设计，待试点验证
+feishu_node: JMf6w4x6xi7u7gk9LpIcaarhnLR
+feishu_obj: Xms1durCooRgDXxVZ2mcyOgen7f
 date: 2026-11-25
 ---
 # 21 FDE Harness 多源输入与工作记录设计

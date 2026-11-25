@@ -31,6 +31,7 @@ title: 广义 DataAgent 文档集
 | 08 | 08 iface 协议缺口与贡献 | DataAgent 用到的 iface 协议哪里不够；哪些我们可以贡献、贡献什么、找谁 | 草稿 v0.1（2026-11-18；条目以飞书「iface 贡献清单」表为准） | [链接](https://modelbest.feishu.cn/wiki/RW30wDtqsi8WM0ksq1Wc3hG8nuf) |
 | 19 | 19 DataAgent 现状与 FDE Harness 选路 | 已有哪些可用资产，哪些仍在试验，FDE Harness 应在哪里建设，怎样验证这次分工 | 现状已核对，立项建议待裁决 | [链接](https://modelbest.feishu.cn/wiki/YTJXw46qjiNdMTkRWlrcNydnnhh) |
 | 20 | 20 FDE Harness 设计是否值得实施 | 与历史方案和已实现接口相比，哪些设计有新增价值，投入做到哪一步才有依据 | 设计评审完成，试点投入待裁决 | [链接](https://modelbest.feishu.cn/wiki/QAQzwYqi5i7oYEkpK2YcnbW0nh5) |
+| 21 | 21 FDE Harness 多源输入与工作记录设计 | 谁解释输入、谁决定下一步，换会话后怎样依证据继续同一项工作 | 架构设计，待试点验证 | [链接](https://modelbest.feishu.cn/wiki/JMf6w4x6xi7u7gk9LpIcaarhnLR) |
 | 附B | 附B 原始诉求 | 提需求时的原话 | 已有 | [链接](https://modelbest.feishu.cn/wiki/TsWkwjM5HiESY9k5oeocbqmrnff) |
 <!-- bigproj:doc-list end -->
 
