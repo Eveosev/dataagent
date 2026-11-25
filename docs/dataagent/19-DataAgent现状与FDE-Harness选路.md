@@ -3,6 +3,8 @@ doc_id: dataagent-fde-harness-review
 title: 19 DataAgent 现状与 FDE Harness 选路
 answers: 已有哪些可用资产，哪些仍在试验，FDE Harness 应在哪里建设，怎样验证这次分工
 status: 现状已核对，立项建议待裁决
+feishu_node: YTJXw46qjiNdMTkRWlrcNydnnhh
+feishu_obj: GPH7dDxfRouxPoxqemIcX7PenPW
 date: 2026-11-25
 ---
 # 19 DataAgent 现状与 FDE Harness 选路
