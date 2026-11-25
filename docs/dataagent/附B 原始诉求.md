@@ -123,3 +123,5 @@ feishu_obj: THaBd1ahRowfMex56mBcKU9Anwh
 > 不要先入为主的认为我给你方案就是好的；你要做的事公平的结合历史方案，历史接口，评价FDE Harness的设计是否合理，值得实施
 
 > 理论上，获取HAR也是FDE Harness内的一个指导；
+
+> 或者说，HAR也是多源输入的一种格式
